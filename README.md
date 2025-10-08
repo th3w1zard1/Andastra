@@ -27,19 +27,12 @@ A complete rewrite of HoloPatcher in C#/.NET with Avalonia UI framework.
   - Modifications2DA container
 - ✅ Comprehensive unit tests (xUnit + FluentAssertions)
 
-### In Progress
-
-- 🚧 INI parsing and configuration reading
-- 🚧 Mod installation engine
-- 🚧 File patching operations (GFF, 2DA, TLK, NSS, NCS, SSF)
-
 ### TODO
 
-- ⏳ Uninstall/backup restore functionality
 - ⏳ Permission fixing tools
 - ⏳ iOS case sensitivity fixing
 - ⏳ Auto-update system
-- ⏳ RTF/RTE file handling
+- ⏳ RTF file handling
 - ⏳ Complete test coverage
 
 ## Requirements
