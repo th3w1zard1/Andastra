@@ -1405,7 +1405,7 @@ public class ConfigReader
 
     private string? RowLabel2DA(string identifier, KeyDataCollection modifiers)
     {
-        return GetValue(modifiers, "RowLabel") ?? GetValue(modifiers, "NewRowLabel");
+        return GetValue(modifiers, "RowLabel") ?? GetValue(modifiers, "NewRowLabel") ?? GetValue(modifiers, "label");
     }
 
     private AddColumn2DA ReadAddColumn(KeyDataCollection modifiers, string identifier)
