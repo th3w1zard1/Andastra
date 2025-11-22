@@ -11,7 +11,7 @@ public class PatcherMemory
     /// 2DAMemory# (token) -> string value
     /// </summary>
     public Dictionary<int, string> Memory2DA { get; } = new();
-    
+
     /// <summary>
     /// StrRef# (token) -> dialog.tlk index
     /// </summary>

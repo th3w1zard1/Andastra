@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using Xunit;
 using FluentAssertions;
 using TSLPatcher.Core.Common;
+using Xunit;
 
 namespace TSLPatcher.Tests.Common;
 
@@ -131,7 +131,7 @@ public class CaseAwarePathTests
 
         filePath.IsRelativeTo(folderPath).Should().BeTrue();
 
-        var relativePath = filePath.RelativeTo(folderPath);
+        string relativePath = filePath.RelativeTo(folderPath);
         relativePath.ToString().Should().Be(@"to\something.test");
     }
 
@@ -144,7 +144,7 @@ public class CaseAwarePathTests
 
         filePath.IsRelativeTo(folderPath).Should().BeTrue();
 
-        var relativePath = filePath.RelativeTo(folderPath);
+        string relativePath = filePath.RelativeTo(folderPath);
         relativePath.ToString().Should().Be(@"to\something.test");
     }
 
@@ -324,7 +324,7 @@ public class CaseAwarePathTests
     {
         // Python test: test_custom_path_edge_cases_os_specific_case_aware_path (selected cases)
         var path = new CaseAwarePath(input);
-        var normalized = path.ToString().Replace("\\", "/");
+        string normalized = path.ToString().Replace("\\", "/");
         normalized.Should().Be(expected);
     }
 

@@ -40,7 +40,7 @@ public static class ERFTypeExtensions
 
     public static ERFType FromExtension(string extension)
     {
-        var ext = extension.TrimStart('.').ToLowerInvariant();
+        string ext = extension.TrimStart('.').ToLowerInvariant();
         return ext switch
         {
             "erf" => ERFType.ERF,

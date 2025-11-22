@@ -1,78 +1,120 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Resources;
 
 namespace TSLPatcher.Core.Installation;
 
 /// <summary>
-/// Provides utilities for working with KOTOR game installations.
+/// Represents a KOTOR/TSL game installation and provides centralized resource access.
+/// Handles resource loading from override, modules, chitin, texture packs, and stream directories.
 /// </summary>
-public static class Installation
+public class Installation
 {
-    /// <summary>
-    /// Determines which KOTOR game is installed at the specified path.
-    /// </summary>
-    /// <param name="gamePath">Path to the game installation directory</param>
-    /// <returns>The detected game, or null if unable to determine</returns>
-    public static Game? DetermineGame(string gamePath)
+    private readonly string _path;
+    private readonly Game _game;
+    private readonly InstallationResourceManager _resourceManager;
+
+    // Hardcoded module names for better UI display
+    private static readonly Dictionary<string, string> HardcodedModuleNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        if (!Directory.Exists(gamePath))
-        {
+        ["STUNT_00"] = "Ebon Hawk - Cutscene (Vision Sequences)",
+        ["STUNT_03A"] = "Leviathan - Cutscene (Destroy Taris)",
+        ["STUNT_06"] = "Leviathan - Cutscene (Resume Bombardment)",
+        ["STUNT_07"] = "Ebon Hawk - Cutscene (Escape Taris)",
+        ["STUNT_12"] = "Leviathan - Cutscene (Calo Nord)",
+        ["STUNT_14"] = "Leviathan - Cutscene (Darth Bandon)",
+        ["STUNT_16"] = "Ebon Hawk - Cutscene (Leviathan Capture)",
+        ["STUNT_18"] = "Unknown World - Cutscene (Bastila Torture)",
+        ["STUNT_19"] = "Star Forge - Cutscene (Jawless Malak)",
+        ["STUNT_31B"] = "Unknown World - Cutscene (Revan Reveal)",
+        ["STUNT_34"] = "Ebon Hawk - Cutscene (Star Forge Arrival)",
+        ["STUNT_35"] = "Ebon Hawk - Cutscene (Lehon Crash)",
+        ["STUNT_42"] = "Ebon Hawk - Cutscene (LS Dodonna Call)",
+        ["STUNT_44"] = "Ebon Hawk - Cutscene (DS Dodonna Call)",
+        ["STUNT_50A"] = "Dodonna Flagship - Cutscene (Break In Formation)",
+        ["STUNT_51A"] = "Dodonna Flagship - Cutscene (Bastila Against Us)",
+        ["STUNT_54A"] = "Dodonna Flagship - Cutscene (Pull Back)",
+        ["STUNT_55A"] = "Unknown World - Cutscene (DS Ending)",
+        ["STUNT_56A"] = "Dodona Flagship - Cutscene (Star Forge Destroyed)",
+        ["STUNT_57"] = "Unknown World - Cutscene (LS Ending)",
+        ["001EBO"] = "Ebon Hawk - Interior (Prologue)",
+        ["004EBO"] = "Ebon Hawk - Interior (Red Eclipse)",
+        ["005EBO"] = "Ebon Hawk - Interior (Escaping Peragus)",
+        ["006EBO"] = "Ebon Hawk - Cutscene (After Rebuilt Enclave)",
+        ["007EBO"] = "Ebon Hawk - Cutscene (After Goto's Yatch)",
+        ["154HAR"] = "Harbinger - Cutscene (Sion Introduction)",
+        ["205TEL"] = "Citadel Station - Cutscene (Carth Discussion)",
+        ["352NAR"] = "Nar Shaddaa - Cutscene (Goto Introduction)",
+        ["853NIH"] = "Ravager - Cutscene (Nihilus Introduction)",
+        ["856NIH"] = "Ravager - Cutscene (Sion vs. Nihilus)"
+    };
+
+    public string Path => _path;
+    public Game Game => _game;
+    public InstallationResourceManager Resources => _resourceManager;
+
+    public Installation(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentNullException(nameof(path));
+
+        if (!Directory.Exists(path))
+            throw new DirectoryNotFoundException($"Installation path does not exist: {path}");
+
+        _path = path;
+        _game = DetermineGame(path)
+            ?? throw new InvalidOperationException($"Could not determine game type for path: {path}");
+
+        _resourceManager = new InstallationResourceManager(path);
+    }
+
+    /// <summary>
+    /// Determines the game type from an installation path.
+    /// </summary>
+    public static Game? DetermineGame(string installPath)
+    {
+        if (string.IsNullOrWhiteSpace(installPath) || !Directory.Exists(installPath))
             return null;
-        }
 
-        // Check for KOTOR 2 specific files
-        var k2Indicators = new[]
-        {
-            Path.Combine(gamePath, "swkotor2.exe"),
-            Path.Combine(gamePath, "KOTOR2.exe"),
-            Path.Combine(gamePath, "modules", "262TEL.rim"),
-            Path.Combine(gamePath, "modules", "003EBO.rim")
-        };
+        // Check for swkotor2.exe (TSL)
+        string tsl64Exe = System.IO.Path.Combine(installPath, "swkotor2.exe");
+        string tsl32Exe = System.IO.Path.Combine(installPath, "SWKOTOR2.EXE");
 
-        foreach (var indicator in k2Indicators)
-        {
-            if (File.Exists(indicator))
-            {
-                return Game.K2;
-            }
-        }
+        if (File.Exists(tsl64Exe) || File.Exists(tsl32Exe))
+            return Common.Game.TSL;
 
-        // Check for KOTOR 1 specific files
-        var k1Indicators = new[]
-        {
-            Path.Combine(gamePath, "swkotor.exe"),
-            Path.Combine(gamePath, "KOTOR.exe"),
-            Path.Combine(gamePath, "modules", "tar_m02aa.rim"),
-            Path.Combine(gamePath, "modules", "danm13.rim")
-        };
+        // Check for swkotor.exe (K1)
+        string k164Exe = System.IO.Path.Combine(installPath, "swkotor.exe");
+        string k132Exe = System.IO.Path.Combine(installPath, "SWKOTOR.EXE");
 
-        foreach (var indicator in k1Indicators)
-        {
-            if (File.Exists(indicator))
-            {
-                return Game.K1;
-            }
-        }
+        if (File.Exists(k164Exe) || File.Exists(k132Exe))
+            return Common.Game.K1;
 
-        // Check for dialog.tlk as a fallback (both games have this)
-        if (File.Exists(Path.Combine(gamePath, "dialog.tlk")))
+        // Check for chitin.key as fallback indicator
+        string chitinPath = System.IO.Path.Combine(installPath, "chitin.key");
+        if (File.Exists(chitinPath))
         {
-            // Try to determine by checking modules directory
-            var modulesPath = Path.Combine(gamePath, "modules");
+            // Try to guess based on module files
+            string modulesPath = GetModulesPath(installPath);
             if (Directory.Exists(modulesPath))
             {
-                var moduleFiles = Directory.GetFiles(modulesPath, "*.rim", SearchOption.TopDirectoryOnly);
+                // TSL has modules like 001EBO, 004EBO
+                // K1 has modules like danm13, danm14
+                var modules = Directory.GetFiles(modulesPath, "*.rim")
+                    .Concat(Directory.GetFiles(modulesPath, "*.mod"))
+                    .Select(System.IO.Path.GetFileNameWithoutExtension)
+                    .ToList();
 
-                // KOTOR 2 has more modules than KOTOR 1
-                if (moduleFiles.Length > 60)
-                {
-                    return Game.K2;
-                }
-                if (moduleFiles.Length > 30)
-                {
-                    return Game.K1;
-                }
+                if (modules.Any(m => m?.StartsWith("001", StringComparison.OrdinalIgnoreCase) == true ||
+                                     m?.StartsWith("004", StringComparison.OrdinalIgnoreCase) == true))
+                    return Common.Game.TSL;
+
+                if (modules.Any(m => m?.StartsWith("dan", StringComparison.OrdinalIgnoreCase) == true ||
+                                     m?.StartsWith("tar", StringComparison.OrdinalIgnoreCase) == true))
+                    return Common.Game.K1;
             }
         }
 
@@ -80,46 +122,217 @@ public static class Installation
     }
 
     /// <summary>
-    /// Gets the module root name from a full path or filename.
+    /// Gets the override directory path for an installation.
     /// </summary>
-    /// <param name="path">Module filename or path (e.g., "001ebo.rim", "modules/001ebo_s.rim")</param>
-    /// <returns>The module root (e.g., "001ebo")</returns>
-    public static string GetModuleRoot(string path)
+    public static string GetOverridePath(string installPath)
     {
-        var filename = Path.GetFileNameWithoutExtension(path);
+        return System.IO.Path.Combine(installPath, "Override");
+    }
 
-        // Remove suffixes like _s, _dlg
-        if (filename.Contains("_"))
+    /// <summary>
+    /// Gets the modules directory path for an installation.
+    /// </summary>
+    public static string GetModulesPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "modules");
+    }
+
+    /// <summary>
+    /// Gets the data directory path for an installation (contains BIF files).
+    /// </summary>
+    public static string GetDataPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "data");
+    }
+
+    /// <summary>
+    /// Gets the chitin.key file path for an installation.
+    /// </summary>
+    public static string GetChitinPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "chitin.key");
+    }
+
+    /// <summary>
+    /// Gets the texture packs directory path for an installation.
+    /// </summary>
+    public static string GetTexturePacksPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "TexturePacks");
+    }
+
+    /// <summary>
+    /// Gets the StreamMusic directory path for an installation.
+    /// </summary>
+    public static string GetStreamMusicPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "StreamMusic");
+    }
+
+    /// <summary>
+    /// Gets the StreamSounds directory path for an installation.
+    /// </summary>
+    public static string GetStreamSoundsPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "StreamSounds");
+    }
+
+    /// <summary>
+    /// Gets the StreamVoice directory path for a TSL installation.
+    /// </summary>
+    public static string GetStreamVoicePath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "StreamVoice");
+    }
+
+    /// <summary>
+    /// Gets the StreamWaves directory path for a K1 installation.
+    /// </summary>
+    public static string GetStreamWavesPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "StreamWaves");
+    }
+
+    /// <summary>
+    /// Gets the lips directory path for an installation.
+    /// </summary>
+    public static string GetLipsPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "lips");
+    }
+
+    /// <summary>
+    /// Gets the rims directory path for an installation (TSL only).
+    /// </summary>
+    public static string GetRimsPath(string installPath)
+    {
+        return System.IO.Path.Combine(installPath, "rims");
+    }
+
+    /// <summary>
+    /// Extracts the module root name from a module filename.
+    /// Example: "danm13.rim" -> "danm13", "danm13_s.rim" -> "danm13"
+    /// </summary>
+    public static string GetModuleRoot(string moduleName)
+    {
+        if (string.IsNullOrEmpty(moduleName))
+            return string.Empty;
+
+        // Remove extension
+        string nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(moduleName);
+
+        // Remove suffix like _s, _dlg, etc.
+        int underscoreIndex = nameWithoutExt.IndexOf('_');
+        if (underscoreIndex > 0)
         {
-            var parts = filename.Split('_');
-            return parts[0];
+            return nameWithoutExt.Substring(0, underscoreIndex);
         }
 
-        return filename;
+        return nameWithoutExt;
     }
 
     /// <summary>
-    /// Checks if the specified path is a valid KOTOR game installation.
+    /// Gets the display name for a module, using hardcoded names when available.
     /// </summary>
-    public static bool IsValidInstallation(string gamePath)
+    public static string GetModuleDisplayName(string moduleRoot)
     {
-        return DetermineGame(gamePath) != null;
+        if (HardcodedModuleNames.TryGetValue(moduleRoot, out string? displayName))
+            return displayName;
+
+        return moduleRoot;
     }
 
     /// <summary>
-    /// Gets the Override directory path for a game installation.
+    /// Looks up a single resource by name and type.
     /// </summary>
-    public static string GetOverridePath(string gamePath)
+    public ResourceResult? Resource(
+        string resname,
+        ResourceType restype,
+        SearchLocation[]? searchOrder = null,
+        string? moduleRoot = null)
     {
-        return Path.Combine(gamePath, "Override");
+        return _resourceManager.LookupResource(resname, restype, searchOrder, moduleRoot);
     }
 
     /// <summary>
-    /// Gets the Modules directory path for a game installation.
+    /// Locates all instances of a resource across the installation.
     /// </summary>
-    public static string GetModulesPath(string gamePath)
+    public List<LocationResult> Locate(
+        string resname,
+        ResourceType restype,
+        SearchLocation[]? searchOrder = null,
+        string? moduleRoot = null)
     {
-        return Path.Combine(gamePath, "modules");
+        return _resourceManager.LocateResource(resname, restype, searchOrder, moduleRoot);
+    }
+
+    /// <summary>
+    /// Gets all module roots available in the installation.
+    /// </summary>
+    public List<string> GetModuleRoots()
+    {
+        string modulesPath = GetModulesPath(_path);
+        if (!Directory.Exists(modulesPath))
+            return new List<string>();
+
+        var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in Directory.GetFiles(modulesPath))
+        {
+            string ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
+            if (ext is ".rim" or ".mod" or ".erf")
+            {
+                string root = GetModuleRoot(System.IO.Path.GetFileName(file));
+                if (!string.IsNullOrEmpty(root))
+                {
+                    roots.Add(root);
+                }
+            }
+        }
+
+        return roots.OrderBy(r => r).ToList();
+    }
+
+    /// <summary>
+    /// Gets all module files for a specific module root.
+    /// </summary>
+    public List<string> GetModuleFiles(string moduleRoot)
+    {
+        string modulesPath = GetModulesPath(_path);
+        if (!Directory.Exists(modulesPath))
+            return new List<string>();
+
+        var files = new List<string>();
+
+        foreach (var file in Directory.GetFiles(modulesPath))
+        {
+            string ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
+            if (ext is ".rim" or ".mod" or ".erf")
+            {
+                string root = GetModuleRoot(System.IO.Path.GetFileName(file));
+                if (root.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase))
+                {
+                    files.Add(file);
+                }
+            }
+        }
+
+        return files;
+    }
+
+    /// <summary>
+    /// Clears all cached resources, forcing a reload on next access.
+    /// </summary>
+    public void ClearCache()
+    {
+        _resourceManager.ClearCache();
+    }
+
+    /// <summary>
+    /// Reloads a specific module's resources.
+    /// </summary>
+    public void ReloadModule(string moduleName)
+    {
+        _resourceManager.ReloadModule(moduleName);
     }
 }
-

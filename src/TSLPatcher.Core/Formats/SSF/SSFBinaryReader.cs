@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using TSLPatcher.Core.Formats;
 
 namespace TSLPatcher.Core.Formats.SSF;
 
@@ -8,31 +9,18 @@ namespace TSLPatcher.Core.Formats.SSF;
 /// Reads SSF (Sound Set File) binary data.
 /// Matches Python SSFBinaryReader class.
 /// </summary>
-public class SSFBinaryReader
+public class SSFBinaryReader : BinaryFormatReaderBase
 {
-    private readonly byte[] _data;
-    private readonly BinaryReader _reader;
-
-    public SSFBinaryReader(byte[] data)
+    public SSFBinaryReader(byte[] data) : base(data, Encoding.ASCII)
     {
-        _data = data;
-        _reader = new BinaryReader(new MemoryStream(data), Encoding.ASCII);
     }
 
-    public SSFBinaryReader(string filepath)
+    public SSFBinaryReader(string filepath) : base(filepath, Encoding.ASCII)
     {
-        _data = File.ReadAllBytes(filepath);
-        _reader = new BinaryReader(new MemoryStream(_data), Encoding.ASCII);
     }
 
-    public SSFBinaryReader(Stream source)
+    public SSFBinaryReader(Stream source) : base(source, Encoding.ASCII)
     {
-        using (var ms = new MemoryStream())
-        {
-            source.CopyTo(ms);
-            _data = ms.ToArray();
-        }
-        _reader = new BinaryReader(new MemoryStream(_data), Encoding.ASCII);
     }
 
     public SSF Load()
@@ -42,8 +30,8 @@ public class SSFBinaryReader
             var ssf = new SSF();
 
             // Read header
-            string fileType = Encoding.ASCII.GetString(_reader.ReadBytes(4));
-            string fileVersion = Encoding.ASCII.GetString(_reader.ReadBytes(4));
+            string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));
+            string fileVersion = Encoding.ASCII.GetString(Reader.ReadBytes(4));
 
             if (fileType != "SSF ")
             {
@@ -55,38 +43,38 @@ public class SSFBinaryReader
                 throw new InvalidDataException("The supplied SSF file version is not supported.");
             }
 
-            uint soundsOffset = _reader.ReadUInt32();
-            _reader.BaseStream.Seek(soundsOffset, SeekOrigin.Begin);
+            uint soundsOffset = Reader.ReadUInt32();
+            Reader.BaseStream.Seek(soundsOffset, SeekOrigin.Begin);
 
-        // Read all 28 sound references in order
-        ssf.SetData(SSFSound.BATTLE_CRY_1, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BATTLE_CRY_2, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BATTLE_CRY_3, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BATTLE_CRY_4, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BATTLE_CRY_5, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BATTLE_CRY_6, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.SELECT_1, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.SELECT_2, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.SELECT_3, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.ATTACK_GRUNT_1, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.ATTACK_GRUNT_2, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.ATTACK_GRUNT_3, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.PAIN_GRUNT_1, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.PAIN_GRUNT_2, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.LOW_HEALTH, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.DEAD, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.CRITICAL_HIT, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.TARGET_IMMUNE, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.LAY_MINE, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.DISARM_MINE, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BEGIN_STEALTH, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BEGIN_SEARCH, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.BEGIN_UNLOCK, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.UNLOCK_FAILED, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.UNLOCK_SUCCESS, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.SEPARATED_FROM_PARTY, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.REJOINED_PARTY, ReadInt32MaxNeg1());
-        ssf.SetData(SSFSound.POISONED, ReadInt32MaxNeg1());
+            // Read all 28 sound references in order
+            ssf.SetData(SSFSound.BATTLE_CRY_1, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BATTLE_CRY_2, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BATTLE_CRY_3, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BATTLE_CRY_4, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BATTLE_CRY_5, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BATTLE_CRY_6, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.SELECT_1, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.SELECT_2, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.SELECT_3, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.ATTACK_GRUNT_1, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.ATTACK_GRUNT_2, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.ATTACK_GRUNT_3, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.PAIN_GRUNT_1, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.PAIN_GRUNT_2, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.LOW_HEALTH, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.DEAD, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.CRITICAL_HIT, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.TARGET_IMMUNE, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.LAY_MINE, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.DISARM_MINE, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BEGIN_STEALTH, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BEGIN_SEARCH, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.BEGIN_UNLOCK, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.UNLOCK_FAILED, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.UNLOCK_SUCCESS, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.SEPARATED_FROM_PARTY, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.REJOINED_PARTY, ReadInt32MaxNeg1());
+            ssf.SetData(SSFSound.POISONED, ReadInt32MaxNeg1());
 
             return ssf;
         }
@@ -101,7 +89,7 @@ public class SSFBinaryReader
     /// </summary>
     private int ReadInt32MaxNeg1()
     {
-        uint value = _reader.ReadUInt32();
+        uint value = Reader.ReadUInt32();
         return value == 0xFFFFFFFF ? -1 : (int)value;
     }
 }

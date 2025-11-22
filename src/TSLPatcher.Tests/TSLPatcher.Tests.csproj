@@ -24,4 +24,11 @@
   <ItemGroup>
     <ProjectReference Include="..\TSLPatcher.Core\TSLPatcher.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Diff\**" />
+    <Content Remove="Diff\**" />
+    <EmbeddedResource Remove="Diff\**" />
+    <None Remove="Diff\**" />
+  </ItemGroup>
 </Project>

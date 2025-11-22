@@ -18,7 +18,7 @@ public class Capsule : IEnumerable<CapsuleResource>
 {
     private readonly List<CapsuleResource> _resources = new();
     private readonly CaseAwarePath _path;
-    private CapsuleType _capsuleType;
+    private readonly CapsuleType _capsuleType;
 
     public CaseAwarePath Path => _path;
     public CapsuleType Type => _capsuleType;
@@ -41,7 +41,7 @@ public class Capsule : IEnumerable<CapsuleResource>
 
     private static CapsuleType DetermineCapsuleType(string extension)
     {
-        var ext = extension.TrimStart('.').ToLowerInvariant();
+        string ext = extension.TrimStart('.').ToLowerInvariant();
         return ext switch
         {
             "rim" => CapsuleType.RIM,
@@ -68,7 +68,7 @@ public class Capsule : IEnumerable<CapsuleResource>
         {
             // Write empty ERF
             using var writer = new BinaryWriter(File.Create(_path.GetResolvedPath()));
-            var fourCC = _capsuleType == CapsuleType.ERF ? "ERF " : "MOD ";
+            string fourCC = _capsuleType == CapsuleType.ERF ? "ERF " : "MOD ";
             writer.Write(System.Text.Encoding.ASCII.GetBytes(fourCC));
             writer.Write(System.Text.Encoding.ASCII.GetBytes("V1.0"));
             writer.Write(0); // language count
@@ -82,7 +82,9 @@ public class Capsule : IEnumerable<CapsuleResource>
             writer.Write(0xFFFFFFFF); // description strref
             // Pad to 160 bytes
             for (int i = 0; i < 116; i++)
+            {
                 writer.Write((byte)0);
+            }
         }
     }
 
@@ -91,15 +93,19 @@ public class Capsule : IEnumerable<CapsuleResource>
         _resources.Clear();
 
         if (!_path.IsFile())
+        {
             return;
+        }
 
         using var reader = new BinaryReader(File.OpenRead(_path.GetResolvedPath()));
 
-        var fileType = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4));
-        var fileVersion = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4));
+        string fileType = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4));
+        string fileVersion = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4));
 
         if (fileVersion != "V1.0")
+        {
             throw new InvalidDataException($"Unsupported capsule version: {fileVersion}");
+        }
 
         if (fileType == "RIM ")
         {
@@ -127,18 +133,18 @@ public class Capsule : IEnumerable<CapsuleResource>
         reader.BaseStream.Seek(offsetToKeys, SeekOrigin.Begin);
         for (uint i = 0; i < entryCount; i++)
         {
-            var resref = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(16)).TrimEnd('\0');
-            var restype = reader.ReadUInt32();
-            var resid = reader.ReadUInt32();
-            var offset = reader.ReadUInt32();
-            var size = reader.ReadUInt32();
+            string resref = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(16)).TrimEnd('\0');
+            uint restype = reader.ReadUInt32();
+            uint resid = reader.ReadUInt32();
+            uint offset = reader.ReadUInt32();
+            uint size = reader.ReadUInt32();
             entries.Add((resref, restype, resid, offset, size));
         }
 
         foreach (var entry in entries)
         {
             reader.BaseStream.Seek(entry.offset, SeekOrigin.Begin);
-            var data = reader.ReadBytes((int)entry.size);
+            byte[] data = reader.ReadBytes((int)entry.size);
             var resType = ResourceType.FromId((int)entry.restype);
             _resources.Add(new CapsuleResource(entry.resref, resType, data, (int)entry.size, (int)entry.offset, _path.ToString()));
         }
@@ -161,9 +167,9 @@ public class Capsule : IEnumerable<CapsuleResource>
         reader.BaseStream.Seek(offsetToKeys, SeekOrigin.Begin);
         for (uint i = 0; i < entryCount; i++)
         {
-            var resref = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(16)).TrimEnd('\0');
-            var resid = reader.ReadUInt32();
-            var restype = reader.ReadUInt16();
+            string resref = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(16)).TrimEnd('\0');
+            uint resid = reader.ReadUInt32();
+            ushort restype = reader.ReadUInt16();
             reader.ReadUInt16(); // unused
             resrefs.Add(resref);
             resids.Add(resid);
@@ -183,10 +189,41 @@ public class Capsule : IEnumerable<CapsuleResource>
         for (int i = 0; i < entryCount; i++)
         {
             reader.BaseStream.Seek(resoffsets[i], SeekOrigin.Begin);
-            var data = reader.ReadBytes((int)ressizes[i]);
+            byte[] data = reader.ReadBytes((int)ressizes[i]);
             var resType = ResourceType.FromId(restypes[i]);
             _resources.Add(new CapsuleResource(resrefs[i], resType, data, (int)ressizes[i], (int)resoffsets[i], _path.ToString()));
         }
+    }
+
+    public void Save()
+    {
+        if (_capsuleType == CapsuleType.RIM)
+        {
+            var rim = new RIM.RIM();
+            foreach (var res in _resources)
+            {
+                rim.SetData(res.ResName, res.ResType, res.Data);
+            }
+            var writer = new RIM.RIMBinaryWriter(rim);
+            using var fs = File.Create(_path.GetResolvedPath());
+            writer.Write(fs);
+        }
+        else
+        {
+            var erf = new ERF.ERF(_capsuleType == CapsuleType.MOD ? ERF.ERFType.MOD : ERF.ERFType.ERF, true);
+            foreach (var res in _resources)
+            {
+                erf.SetData(res.ResName, res.ResType, res.Data);
+            }
+            var writer = new ERF.ERFBinaryWriter(erf);
+            using var fs = File.Create(_path.GetResolvedPath());
+            writer.Write(fs);
+        }
+    }
+
+    public void Add(string resname, ResourceType restype, byte[] data)
+    {
+        SetResource(resname, restype, data);
     }
 
     public byte[]? GetResource(string resname, ResourceType restype)
@@ -214,6 +251,34 @@ public class Capsule : IEnumerable<CapsuleResource>
     public bool Contains(string resname, ResourceType restype)
     {
         return _resources.Any(r =>
+            string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
+            r.ResType == restype);
+    }
+
+    /// <summary>
+    /// Removes a resource from the capsule.
+    /// </summary>
+    public bool RemoveResource(string resname, ResourceType restype)
+    {
+        var existing = _resources.FirstOrDefault(r =>
+            string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
+            r.ResType == restype);
+
+        if (existing != null)
+        {
+            _resources.Remove(existing);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gets information about a resource without loading the data.
+    /// </summary>
+    public CapsuleResource? GetResourceInfo(string resname, ResourceType restype)
+    {
+        return _resources.FirstOrDefault(r =>
             string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
     }

@@ -79,6 +79,8 @@ public class FieldValueConstant : FieldValue
 {
     private readonly object _stored;
 
+    public object Stored => _stored;
+
     public FieldValueConstant(object value)
     {
         _stored = value;

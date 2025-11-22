@@ -46,7 +46,7 @@ public class ModificationsGFF : PatcherModifications
         {
             foreach (var modifier in Modifiers)
             {
-                modifier.Apply(gff.Root, memory, logger);
+                modifier.Apply(gff.Root, memory, logger, game);
             }
         }
         else

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TSLPatcher.Core.Common;
 
 namespace TSLPatcher.Core.Formats.TLK;
@@ -30,7 +31,9 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
     public void Replace(int stringref, string text, string soundResref = "")
     {
         if (stringref < 0 || stringref >= Entries.Count)
+        {
             throw new IndexOutOfRangeException($"Cannot replace nonexistent stringref in dialog.tlk: '{stringref}'");
+        }
 
         string oldText = Entries[stringref].Text;
         ResRef oldSound = Entries[stringref].Voiceover;
@@ -61,13 +64,19 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
         get
         {
             if (stringref < 0 || stringref >= Entries.Count)
+            {
                 throw new IndexOutOfRangeException($"Stringref {stringref} is out of range");
+            }
+
             return Entries[stringref];
         }
         set
         {
             if (stringref < 0 || stringref >= Entries.Count)
+            {
                 throw new IndexOutOfRangeException($"Stringref {stringref} is out of range");
+            }
+
             Entries[stringref] = value;
         }
     }
@@ -81,5 +90,24 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    /// <summary>
+    /// Gets the text of a stringref entry.
+    /// </summary>
+    public string String(int stringref)
+    {
+        var entry = Get(stringref);
+        return entry?.Text ?? "";
+    }
+
+    /// <summary>
+    /// Saves the TLK to a file.
+    /// </summary>
+    public void Save(string path)
+    {
+        var writer = new TLKBinaryWriter(this);
+        byte[] data = writer.Write();
+        File.WriteAllBytes(path, data);
+    }
 }
 

@@ -61,7 +61,7 @@ public class CaseAwarePath
         }
 
         // On Unix, try case-sensitive resolution
-        var resolved = GetCaseSensitivePath(_path);
+        string resolved = GetCaseSensitivePath(_path);
         return File.Exists(resolved) || Directory.Exists(resolved);
     }
 
@@ -145,7 +145,9 @@ public class CaseAwarePath
         for (int i = 1; i < parts.Length; i++)
         {
             if (string.IsNullOrEmpty(parts[i]))
+            {
                 continue;
+            }
 
             string nextPath = Path.Combine(currentPath, parts[i]);
 
@@ -181,7 +183,9 @@ public class CaseAwarePath
     private static string? FindClosestMatch(string target, string directoryPath, bool isLastPart)
     {
         if (!Directory.Exists(directoryPath))
+        {
             return null;
+        }
 
         IEnumerable<string> candidates;
         try
@@ -286,7 +290,7 @@ public class CaseAwarePath
 
     public CaseAwarePath Combine(params string[] paths)
     {
-        var allPaths = new[] { _path }.Concat(paths).ToArray();
+        string[] allPaths = new[] { _path }.Concat(paths).ToArray();
         return new CaseAwarePath(Path.Combine(allPaths));
     }
 
@@ -375,7 +379,7 @@ public class CaseAwarePath
             return ("", "");
         }
 
-        var parts = filename.Split('.');
+        string[] parts = filename.Split('.');
         if (parts.Length == 1)
         {
             return (filename, "");

@@ -149,7 +149,7 @@ public class RIMResource
         ResRef = resref;
         ResType = restype;
         // Handle bytearray conversion if needed
-        Data = data is byte[] ? data : data.ToArray();
+        Data = data is byte[]? data : data.ToArray();
     }
 
     public ResourceIdentifier Identifier() => new(ResRef.ToString(), ResType);
@@ -177,7 +177,7 @@ public class RIMResource
         hash.Add(ResRef);
         hash.Add(ResType);
         // Hash first 1000 bytes for performance
-        foreach (var b in Data.Take(1000))
+        foreach (byte b in Data.Take(1000))
         {
             hash.Add(b);
         }

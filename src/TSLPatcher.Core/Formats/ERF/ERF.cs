@@ -38,7 +38,7 @@ public class ERF : IEnumerable<ERFResource>
     {
         get
         {
-            var lowerResname = resname.ToLowerInvariant();
+            string lowerResname = resname.ToLowerInvariant();
             var key = _resourceDict.Keys.FirstOrDefault(k =>
                 k.ResName.ToLowerInvariant() == lowerResname);
 
@@ -158,7 +158,7 @@ public class ERFResource
         ResRef = resref;
         ResType = restype;
         // Handle bytearray conversion if needed
-        Data = data is byte[] ? data : data.ToArray();
+        Data = data is byte[]? data : data.ToArray();
     }
 
     public ResourceIdentifier Identifier() => new(ResRef.ToString(), ResType);
@@ -186,7 +186,7 @@ public class ERFResource
         hash.Add(ResRef);
         hash.Add(ResType);
         // Hash first 1000 bytes for performance
-        foreach (var b in Data.Take(1000))
+        foreach (byte b in Data.Take(1000))
         {
             hash.Add(b);
         }

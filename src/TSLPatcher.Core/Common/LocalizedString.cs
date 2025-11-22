@@ -64,8 +64,8 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
 
     public string Get(Language language, Gender gender, string defaultValue = "")
     {
-        var id = SubstringId(language, gender);
-        return _substrings.TryGetValue(id, out var value) ? value : defaultValue;
+        int id = SubstringId(language, gender);
+        return _substrings.TryGetValue(id, out string? value) ? value : defaultValue;
     }
 
     public void SetData(Language language, Gender gender, string text)
@@ -99,15 +99,21 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
     public override string ToString()
     {
         if (StringRef >= 0)
+        {
             return StringRef.ToString();
+        }
 
         // Default to English if available
         if (Exists(Language.English, Gender.Male))
+        {
             return Get(Language.English, Gender.Male);
+        }
 
         // Return first available substring
         foreach (var (_, _, text) in this)
+        {
             return text;
+        }
 
         return "-1";
     }
@@ -122,24 +128,36 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
     public bool Equals(LocalizedString? other)
     {
         if (other is null)
+        {
             return false;
+        }
+
         if (ReferenceEquals(this, other))
+        {
             return true;
+        }
 
         if (StringRef != other.StringRef)
+        {
             return false;
+        }
 
         if (_substrings.Count != other._substrings.Count)
+        {
             return false;
+        }
 
         return _substrings.All(kvp =>
-            other._substrings.TryGetValue(kvp.Key, out var value) && value == kvp.Value);
+            other._substrings.TryGetValue(kvp.Key, out string? value) && value == kvp.Value);
     }
 
     public static bool operator ==(LocalizedString? left, LocalizedString? right)
     {
         if (left is null)
+        {
             return right is null;
+        }
+
         return left.Equals(right);
     }
 
@@ -159,8 +177,8 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
 
     public static LocalizedString FromDictionary(Dictionary<string, object> data)
     {
-        var stringRef = Convert.ToInt32(data["stringref"]);
-        var substrings = data.TryGetValue("substrings", out var subsObj) && subsObj is Dictionary<int, string> subs
+        int stringRef = Convert.ToInt32(data["stringref"]);
+        var substrings = data.TryGetValue("substrings", out object? subsObj) && subsObj is Dictionary<int, string> subs
             ? subs
             : null;
         return new LocalizedString(stringRef, substrings);

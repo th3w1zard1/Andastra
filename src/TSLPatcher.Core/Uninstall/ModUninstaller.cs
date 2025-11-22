@@ -66,7 +66,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         }
 
         var validBackups = new List<CaseAwarePath>();
-        foreach (var subfolder in Directory.GetDirectories(backupFolder))
+        foreach (string subfolder in Directory.GetDirectories(backupFolder))
         {
             var subfolderPath = new CaseAwarePath(subfolder);
             // Check if folder has contents and is a valid backup folder
@@ -102,10 +102,10 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         List<CaseAwarePath> filesInBackup)
     {
         // Remove any existing files not in the backup
-        foreach (var fileStr in existingFiles)
+        foreach (string fileStr in existingFiles)
         {
             var filePath = new CaseAwarePath(fileStr);
-            var relFilePath = Path.GetRelativePath(_gamePath, filePath);
+            string relFilePath = Path.GetRelativePath(_gamePath, filePath);
 
             if (File.Exists(filePath))
             {
@@ -123,11 +123,11 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
                 continue;
             }
 
-            var relativePathFromBackup = Path.GetRelativePath(backupFolder, file);
-            var destinationPath = Path.Combine(_gamePath, relativePathFromBackup);
+            string relativePathFromBackup = Path.GetRelativePath(backupFolder, file);
+            string destinationPath = Path.Combine(_gamePath, relativePathFromBackup);
 
             // Ensure parent directory exists
-            var parentDir = Path.GetDirectoryName(destinationPath);
+            string? parentDir = Path.GetDirectoryName(destinationPath);
             if (!string.IsNullOrEmpty(parentDir))
             {
                 Directory.CreateDirectory(parentDir);
@@ -135,7 +135,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
 
             File.Copy(file, destinationPath, overwrite: true);
 
-            var relativeToGameParent = Path.GetRelativePath(Path.GetDirectoryName(_gamePath) ?? "", destinationPath);
+            string relativeToGameParent = Path.GetRelativePath(Path.GetDirectoryName(_gamePath) ?? "", destinationPath);
             _logger.AddNote($"Restoring backup of '{file.Name}' to '{relativeToGameParent}'...");
         }
     }
@@ -157,13 +157,13 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
             return (null, new HashSet<string>(), new List<CaseAwarePath>(), 0);
         }
 
-        var deleteListFile = Path.Combine(mostRecentBackupFolder, "remove these files.txt");
+        string deleteListFile = Path.Combine(mostRecentBackupFolder, "remove these files.txt");
         var filesToDelete = new HashSet<string>();
         var existingFiles = new HashSet<string>();
 
         if (File.Exists(deleteListFile))
         {
-            var lines = File.ReadAllLines(deleteListFile);
+            string[] lines = File.ReadAllLines(deleteListFile);
             filesToDelete = lines.Where(line => !string.IsNullOrWhiteSpace(line))
                                  .Select(line => line.Trim())
                                  .ToHashSet();
@@ -191,8 +191,8 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
                                     .Select(f => new CaseAwarePath(f))
                                     .ToList();
 
-        var allEntries = Directory.EnumerateFileSystemEntries(mostRecentBackupFolder, "*", SearchOption.AllDirectories).Count();
-        var folderCount = allEntries - filesInBackup.Count;
+        int allEntries = Directory.EnumerateFileSystemEntries(mostRecentBackupFolder, "*", SearchOption.AllDirectories).Count();
+        int folderCount = allEntries - filesInBackup.Count;
 
         return (mostRecentBackupFolder, existingFiles, filesInBackup, folderCount);
     }
@@ -224,7 +224,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         {
             foreach (var item in filesInBackup)
             {
-                var relativePath = Path.GetRelativePath(mostRecentBackupFolder, item);
+                string relativePath = Path.GetRelativePath(mostRecentBackupFolder, item);
                 _logger.AddNote($"Would restore file '{relativePath}'");
             }
         }
@@ -276,7 +276,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
             }
             catch (UnauthorizedAccessException)
             {
-                var result = showYesNoCancelDialog?.Invoke(
+                bool? result = showYesNoCancelDialog?.Invoke(
                     "Permission Error",
                     "Unable to delete the restored backup due to permission issues. Would you like to gain permission and try again?"
                 );

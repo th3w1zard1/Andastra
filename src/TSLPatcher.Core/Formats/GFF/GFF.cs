@@ -58,5 +58,23 @@ public class GFF
             }
         }
     }
+
+    /// <summary>
+    /// Serializes the GFF to a byte array.
+    /// </summary>
+    public byte[] ToBytes()
+    {
+        var writer = new GFFBinaryWriter(this);
+        return writer.Write();
+    }
+
+    /// <summary>
+    /// Deserializes a GFF from a byte array.
+    /// </summary>
+    public static GFF FromBytes(byte[] data)
+    {
+        var reader = new GFFBinaryReader(data);
+        return reader.Load();
+    }
 }
 

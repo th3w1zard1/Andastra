@@ -25,23 +25,31 @@ public class ResRef : IEquatable<ResRef>
 
     public static ResRef FromPath(string filePath)
     {
-        var fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+        string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
         return new ResRef(fileName);
     }
 
     public static bool IsValid(string text)
     {
         if (string.IsNullOrEmpty(text))
+        {
             return false;
+        }
 
         if (text != text.Trim())
+        {
             return false;
+        }
 
         if (text.Length > MaxLength)
+        {
             return false;
+        }
 
         if (!IsAscii(text))
+        {
             return false;
+        }
 
         return !InvalidCharacters.Any(c => text.Contains(c));
     }
@@ -56,18 +64,26 @@ public class ResRef : IEquatable<ResRef>
         text = text?.Trim() ?? string.Empty;
 
         if (!IsAscii(text))
+        {
             throw new InvalidEncodingException($"'{text}' must only contain ASCII characters.");
+        }
 
         if (text.Length > MaxLength)
         {
             if (truncate)
+            {
                 text = text.Substring(0, MaxLength);
+            }
             else
+            {
                 throw new ExceedsMaxLengthException($"Length of '{text}' ({text.Length} characters) exceeds the maximum allowed length ({MaxLength})");
+            }
         }
 
         if (InvalidCharacters.Any(c => text.Contains(c)))
+        {
             throw new InvalidFormatException("ResRefs must conform to Windows filename requirements.");
+        }
 
         _value = text;
     }
@@ -79,7 +95,9 @@ public class ResRef : IEquatable<ResRef>
     public override bool Equals(object? obj)
     {
         if (ReferenceEquals(this, obj))
+        {
             return true;
+        }
 
         return obj switch
         {
@@ -92,9 +110,14 @@ public class ResRef : IEquatable<ResRef>
     public bool Equals(ResRef? other)
     {
         if (other is null)
+        {
             return false;
+        }
+
         if (ReferenceEquals(this, other))
+        {
             return true;
+        }
 
         return _value.Equals(other._value, StringComparison.OrdinalIgnoreCase);
     }
@@ -102,7 +125,10 @@ public class ResRef : IEquatable<ResRef>
     public static bool operator ==(ResRef? left, ResRef? right)
     {
         if (left is null)
+        {
             return right is null;
+        }
+
         return left.Equals(right);
     }
 

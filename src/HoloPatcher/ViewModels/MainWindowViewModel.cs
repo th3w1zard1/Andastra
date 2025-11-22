@@ -12,12 +12,16 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Config;
 using TSLPatcher.Core.Installation;
 using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Namespaces;
 using TSLPatcher.Core.Patcher;
 using TSLPatcher.Core.Reader;
+using TSLPatcher.Core.Uninstall;
 
 namespace HoloPatcher.ViewModels;
 
@@ -88,7 +92,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task BrowseMod()
     {
         var window = GetMainWindow();
-        if (window == null) return;
+        if (window == null)
+        {
+            return;
+        }
 
         var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
@@ -98,7 +105,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (folders.Count > 0)
         {
-            var path = folders[0].Path.LocalPath;
+            string path = folders[0].Path.LocalPath;
             await LoadModFromPath(path);
         }
     }
@@ -107,7 +114,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task BrowseGamePath()
     {
         var window = GetMainWindow();
-        if (window == null) return;
+        if (window == null)
+        {
+            return;
+        }
 
         var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
@@ -117,7 +127,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (folders.Count > 0)
         {
-            var path = folders[0].Path.LocalPath;
+            string path = folders[0].Path.LocalPath;
             if (!GamePaths.Contains(path))
             {
                 GamePaths.Add(path);
@@ -129,9 +139,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task Install()
     {
-        if (string.IsNullOrEmpty(SelectedGamePath) || string.IsNullOrEmpty(SelectedNamespace))
+        if (!ValidateGamePathAndNamespace())
         {
-            AddLogEntry("[ERROR] Please select both a mod and game directory.");
             return;
         }
 
@@ -151,8 +160,8 @@ public partial class MainWindowViewModel : ViewModelBase
                     throw new InvalidOperationException("Selected namespace not found.");
                 }
 
-                var tslPatchDataPath = Path.Combine(ModPath, "tslpatchdata");
-                var iniFilePath = Path.Combine(tslPatchDataPath, selectedNs.ChangesFilePath());
+                string tslPatchDataPath = Path.Combine(ModPath, "tslpatchdata");
+                string iniFilePath = Path.Combine(tslPatchDataPath, selectedNs.ChangesFilePath());
 
                 if (!File.Exists(iniFilePath))
                 {
@@ -209,10 +218,90 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void UninstallMod()
+    private async Task UninstallMod()
     {
-        AddLogEntry("Uninstall functionality not yet implemented.");
-        // TODO: Implement uninstall
+        if (!ValidateModPathAndGamePath())
+        {
+            return;
+        }
+
+        IsTaskRunning = true;
+
+        try
+        {
+            string backupRoot = ModPath;
+            while (!Directory.Exists(Path.Combine(backupRoot, "tslpatchdata")) && !string.IsNullOrEmpty(Path.GetDirectoryName(backupRoot)))
+            {
+                backupRoot = Path.GetDirectoryName(backupRoot) ?? backupRoot;
+            }
+
+            string backupsLocation = Path.Combine(backupRoot, "backup");
+
+            if (!Directory.Exists(backupsLocation))
+            {
+                AddLogEntry($"[ERROR] No backup directory found at {backupsLocation}");
+                return;
+            }
+
+            var uninstaller = new ModUninstaller(new CaseAwarePath(backupsLocation), new CaseAwarePath(SelectedGamePath), _logger);
+
+            await Task.Run(() =>
+            {
+                uninstaller.UninstallSelectedMod(
+                    showErrorDialog: (title, msg) =>
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            var box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.Ok, Icon.Error);
+                            await box.ShowAsync();
+                        }).Wait();
+                    },
+                    showYesNoDialog: (title, msg) =>
+                    {
+                        bool result = false;
+                        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            var box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNo, Icon.Question);
+                            var res = await box.ShowAsync();
+                            result = res == ButtonResult.Yes;
+                        }).Wait();
+                        return result;
+                    },
+                    showYesNoCancelDialog: (title, msg) =>
+                    {
+                        bool? result = null;
+                        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            var box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNoCancel, Icon.Question);
+                            var res = await box.ShowAsync();
+                            if (res == ButtonResult.Yes)
+                            {
+                                result = true;
+                            }
+                            else if (res == ButtonResult.No)
+                            {
+                                result = false;
+                            }
+                            else
+                            {
+                                result = null;
+                            }
+                        }).Wait();
+                        return result;
+                    }
+                );
+            });
+
+            AddLogEntry("Uninstall process finished.");
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry($"[ERROR] Uninstall failed: {ex.Message}");
+        }
+        finally
+        {
+            IsTaskRunning = false;
+        }
     }
 
     [RelayCommand]
@@ -274,7 +363,7 @@ public partial class MainWindowViewModel : ViewModelBase
             try
             {
                 // Check for tslpatchdata folder
-                var tslPatchDataPath = Path.Combine(path, "tslpatchdata");
+                string tslPatchDataPath = Path.Combine(path, "tslpatchdata");
                 if (!Directory.Exists(tslPatchDataPath))
                 {
                     // Try the path itself
@@ -287,7 +376,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
 
                 // Try to load namespaces.ini
-                var namespacesIniPath = Path.Combine(tslPatchDataPath, "namespaces.ini");
+                string namespacesIniPath = Path.Combine(tslPatchDataPath, "namespaces.ini");
                 if (File.Exists(namespacesIniPath))
                 {
                     _loadedNamespaces = NamespaceReader.FromFilePath(namespacesIniPath);
@@ -296,7 +385,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 else
                 {
                     // Fall back to changes.ini
-                    var changesIniPath = Path.Combine(tslPatchDataPath, "changes.ini");
+                    string changesIniPath = Path.Combine(tslPatchDataPath, "changes.ini");
                     if (File.Exists(changesIniPath))
                     {
                         _loadedNamespaces = new List<PatcherNamespace>
@@ -322,7 +411,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     Namespaces.Clear();
                     foreach (var ns in _loadedNamespaces)
                     {
-                        var displayName = !string.IsNullOrWhiteSpace(ns.Name) ? ns.Name : ns.ChangesFilePath();
+                        string displayName = !string.IsNullOrWhiteSpace(ns.Name) ? ns.Name : ns.ChangesFilePath();
                         Namespaces.Add(displayName);
                     }
 
@@ -342,7 +431,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void DetectGamePaths()
     {
         // Common installation paths for KOTOR
-        var commonPaths = new[]
+        string[] commonPaths = new[]
         {
             @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II",
             @"C:\Program Files (x86)\Steam\steamapps\common\swkotor",
@@ -352,9 +441,9 @@ public partial class MainWindowViewModel : ViewModelBase
             @"C:\GOG Games\Star Wars - KotOR2",
         };
 
-        foreach (var path in commonPaths)
+        foreach (string? path in commonPaths)
         {
-            if (Directory.Exists(path) && Installation.IsValidInstallation(path))
+            if (Directory.Exists(path) && Installation.DetermineGame(path) != null)
             {
                 if (!GamePaths.Contains(path))
                 {
@@ -391,5 +480,24 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(CanInstall));
     }
-}
 
+    private bool ValidateGamePathAndNamespace()
+    {
+        if (string.IsNullOrEmpty(SelectedGamePath) || string.IsNullOrEmpty(SelectedNamespace))
+        {
+            AddLogEntry("[ERROR] Please select both a mod and game directory.");
+            return false;
+        }
+        return true;
+    }
+
+    private bool ValidateModPathAndGamePath()
+    {
+        if (string.IsNullOrEmpty(ModPath) || string.IsNullOrEmpty(SelectedGamePath))
+        {
+            AddLogEntry("[ERROR] Please select both a mod and game directory.");
+            return false;
+        }
+        return true;
+    }
+}

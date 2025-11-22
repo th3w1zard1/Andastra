@@ -1,10 +1,11 @@
+using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.TwoDA;
-using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Logger;
+using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
-using FluentAssertions;
+using TwoDAFile = TSLPatcher.Core.Formats.TwoDA.TwoDA;
 
 namespace TSLPatcher.Tests.Mods;
 
@@ -22,7 +23,7 @@ public class TwoDaModsTests
         // Python test: test_change_existing_rowindex
         // Modifies row at index 1, changes Col1 from "d" to "X"
 
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -43,7 +44,7 @@ public class TwoDaModsTests
     public void ChangeRow_ExistingRowByLabel()
     {
         // Python test: test_change_existing_rowlabel
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -64,7 +65,7 @@ public class TwoDaModsTests
     public void ChangeRow_ExistingRowByLabelColumn()
     {
         // Python test: test_change_existing_labelindex
-        var twoda = new TwoDA(["label", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["label", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "label", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "label", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -85,7 +86,7 @@ public class TwoDaModsTests
     public void ChangeRow_AssignFromTLKMemory()
     {
         // Python test: test_change_assign_tlkmemory
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -98,8 +99,8 @@ public class TwoDaModsTests
             new Dictionary<string, RowValue> { { "Col1", new RowValueTLKMemory(1) } }));
 
         var writer = new TwoDABinaryWriter(twoda);
-        var twodaBytes = writer.Write();
-        var patchedBytes = (byte[])config.PatchResource(twodaBytes, memory, logger, Game.K2);
+        byte[] twodaBytes = writer.Write();
+        byte[] patchedBytes = (byte[])config.PatchResource(twodaBytes, memory, logger, Game.K2);
         var patchedTwoda = new TwoDABinaryReader(patchedBytes).Load();
 
         patchedTwoda.GetColumn("Col1").Should().BeEquivalentTo("0", "1");
@@ -111,7 +112,7 @@ public class TwoDaModsTests
     public void ChangeRow_AssignFrom2DAMemory()
     {
         // Python test: test_change_assign_2damemory
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -134,7 +135,7 @@ public class TwoDaModsTests
     public void ChangeRow_AssignHigh()
     {
         // Python test: test_change_assign_high
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", " " }, { "Col2", "3" }, { "Col3", "5" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "2" }, { "Col2", "4" }, { "Col3", "6" } });
 
@@ -157,7 +158,7 @@ public class TwoDaModsTests
     public void ChangeRow_Store2DAMemoryRowIndex()
     {
         // Python test: test_set_2damemory_rowindex
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -177,7 +178,7 @@ public class TwoDaModsTests
     public void ChangeRow_Store2DAMemoryRowLabel()
     {
         // Python test: test_set_2damemory_rowlabel
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("r1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -197,7 +198,7 @@ public class TwoDaModsTests
     public void ChangeRow_Store2DAMemoryColumnCell()
     {
         // Python test: test_set_2damemory_columnlabel
-        var twoda = new TwoDA(new List<string> { "label", "Col2", "Col3" });
+        var twoda = new TwoDAFile(new List<string> { "label", "Col2", "Col3" });
         twoda.AddRow("0", new Dictionary<string, object> { { "label", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "label", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -221,7 +222,7 @@ public class TwoDaModsTests
     public void AddRow_UseMaxRowLabel()
     {
         // Python test: test_add_rowlabel_use_maxrowlabel
-        var twoda = new TwoDA(["Col1"]);
+        var twoda = new TwoDAFile(["Col1"]);
         twoda.AddRow("0", new Dictionary<string, object>());
 
         var memory = new PatcherMemory();
@@ -242,7 +243,7 @@ public class TwoDaModsTests
     public void AddRow_UseConstantLabel()
     {
         // Python test: test_add_rowlabel_use_constant
-        var twoda = new TwoDA(["Col1"]);
+        var twoda = new TwoDAFile(["Col1"]);
 
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
@@ -259,7 +260,7 @@ public class TwoDaModsTests
     public void AddRow_ExclusiveColumnNotExists()
     {
         // Python test: test_add_exclusive_notexists
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -287,7 +288,7 @@ public class TwoDaModsTests
     public void AddRow_ExclusiveColumnExists()
     {
         // Python test: test_add_exclusive_exists
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
         twoda.AddRow("2", new Dictionary<string, object> { { "Col1", "g" }, { "Col2", "h" }, { "Col3", "i" } });
@@ -315,7 +316,7 @@ public class TwoDaModsTests
     public void AddRow_ExclusiveColumnNone()
     {
         // Python test: test_add_exclusive_none
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -349,7 +350,7 @@ public class TwoDaModsTests
     public void AddRow_AssignHigh()
     {
         // Python test: test_add_assign_high
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "1" }, { "Col2", "b" }, { "Col3", "c" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "2" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -368,7 +369,7 @@ public class TwoDaModsTests
     public void AddRow_AssignFromTLKMemory()
     {
         // Python test: test_add_assign_tlkmemory
-        var twoda = new TwoDA(["Col1"]);
+        var twoda = new TwoDAFile(["Col1"]);
 
         var memory = new PatcherMemory();
         memory.MemoryStr[0] = 5;
@@ -389,7 +390,7 @@ public class TwoDaModsTests
     public void AddRow_AssignFrom2DAMemory()
     {
         // Python test: test_add_assign_2damemory
-        var twoda = new TwoDA(["Col1"]);
+        var twoda = new TwoDAFile(["Col1"]);
 
         var memory = new PatcherMemory();
         memory.Memory2DA[0] = "5";
@@ -410,7 +411,7 @@ public class TwoDaModsTests
     public void AddRow_Store2DAMemoryRowIndex()
     {
         // Python test: test_add_2damemory_rowindex
-        var twoda = new TwoDA(["Col1"]);
+        var twoda = new TwoDAFile(["Col1"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "X" } });
 
         var memory = new PatcherMemory();
@@ -439,7 +440,7 @@ public class TwoDaModsTests
     public void CopyRow_ByRowIndex()
     {
         // Python test: test_copy_existing_rowindex
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -450,8 +451,8 @@ public class TwoDaModsTests
             new Dictionary<string, RowValue> { { "Col2", new RowValueConstant("X") } }));
 
         var writer = new TwoDABinaryWriter(twoda);
-        var twodaBytes = writer.Write();
-        var patchedBytes = (byte[])config.PatchResource(twodaBytes, memory, logger, Game.K2);
+        byte[] twodaBytes = writer.Write();
+        byte[] patchedBytes = (byte[])config.PatchResource(twodaBytes, memory, logger, Game.K2);
         var patchedTwoda = new TwoDABinaryReader(patchedBytes).Load();
 
         patchedTwoda.GetHeight().Should().Be(3);
@@ -463,7 +464,7 @@ public class TwoDaModsTests
     public void CopyRow_ByRowLabel()
     {
         // Python test: test_copy_existing_rowlabel
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -484,7 +485,7 @@ public class TwoDaModsTests
     public void CopyRow_ExclusiveColumnNotExists()
     {
         // Python test: test_copy_exclusive_notexists
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
 
         var memory = new PatcherMemory();
@@ -509,7 +510,7 @@ public class TwoDaModsTests
     public void CopyRow_ExclusiveColumnExists()
     {
         // Python test: test_copy_exclusive_exists
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
 
         var memory = new PatcherMemory();
@@ -534,7 +535,7 @@ public class TwoDaModsTests
     public void CopyRow_ExclusiveColumnNone()
     {
         // Python test: test_copy_exclusive_none
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
 
         var memory = new PatcherMemory();
@@ -566,7 +567,7 @@ public class TwoDaModsTests
     public void CopyRow_SetNewRowLabel()
     {
         // Python test: test_copy_set_newrowlabel
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -587,7 +588,7 @@ public class TwoDaModsTests
     public void CopyRow_AssignHigh()
     {
         // Python test: test_copy_assign_high
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } });
 
@@ -608,7 +609,7 @@ public class TwoDaModsTests
     public void CopyRow_AssignFromTLKMemory()
     {
         // Python test: test_copy_assign_tlkmemory
-        var twoda = new TwoDA(["Col1", "Col2", "Col3"]);
+        var twoda = new TwoDAFile(["Col1", "Col2", "Col3"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } });
 
@@ -628,7 +629,7 @@ public class TwoDaModsTests
     public void CopyRow_AssignFrom2DAMemory()
     {
         // Python test: test_copy_assign_2damemory
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } });
 
@@ -648,7 +649,7 @@ public class TwoDaModsTests
     public void CopyRow_Store2DAMemoryRowIndex()
     {
         // Python test: test_copy_2damemory_rowindex
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -674,7 +675,7 @@ public class TwoDaModsTests
     public void AddColumn_Empty()
     {
         // Python test: test_addcolumn_empty
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -695,7 +696,7 @@ public class TwoDaModsTests
     public void AddColumn_WithDefault()
     {
         // Python test: test_addcolumn_default
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -716,7 +717,7 @@ public class TwoDaModsTests
     public void AddColumn_RowIndexConstant()
     {
         // Python test: test_addcolumn_rowindex_constant
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -738,7 +739,7 @@ public class TwoDaModsTests
     public void AddColumn_RowLabel2DAMemory()
     {
         // Python test: test_addcolumn_rowlabel_2damemory
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -760,7 +761,7 @@ public class TwoDaModsTests
     public void AddColumn_RowLabelTLKMemory()
     {
         // Python test: test_addcolumn_rowlabel_tlkmemory
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -782,7 +783,7 @@ public class TwoDaModsTests
     public void AddColumn_Store2DAMemoryIndex()
     {
         // Python test: test_addcolumn_2damemory_index
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 
@@ -810,7 +811,7 @@ public class TwoDaModsTests
     public void AddColumn_Store2DAMemoryLine()
     {
         // Python test: test_addcolumn_2damemory_line
-        var twoda = new TwoDA(["Col1", "Col2"]);
+        var twoda = new TwoDAFile(["Col1", "Col2"]);
         twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
         twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } });
 

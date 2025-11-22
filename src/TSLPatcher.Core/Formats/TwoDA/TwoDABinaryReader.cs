@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using TSLPatcher.Core.Formats;
 
 namespace TSLPatcher.Core.Formats.TwoDA;
 
@@ -9,30 +10,20 @@ namespace TSLPatcher.Core.Formats.TwoDA;
 /// Reads TwoDA binary data.
 /// 1:1 port of Python TwoDABinaryReader from pykotor/resource/formats/twoda/io_twoda.py
 /// </summary>
-public class TwoDABinaryReader
+public class TwoDABinaryReader : BinaryFormatReaderBase
 {
-    private readonly byte[] _data;
-    private readonly BinaryReader _reader;
     private TwoDA? _twoda;
 
-    public TwoDABinaryReader(byte[] data)
+    public TwoDABinaryReader(byte[] data) : base(data)
     {
-        _data = data;
-        _reader = new BinaryReader(new MemoryStream(data));
     }
 
-    public TwoDABinaryReader(string filepath)
+    public TwoDABinaryReader(string filepath) : base(filepath)
     {
-        _data = File.ReadAllBytes(filepath);
-        _reader = new BinaryReader(new MemoryStream(_data));
     }
 
-    public TwoDABinaryReader(Stream source)
+    public TwoDABinaryReader(Stream source) : base(source)
     {
-        using var ms = new MemoryStream();
-        source.CopyTo(ms);
-        _data = ms.ToArray();
-        _reader = new BinaryReader(new MemoryStream(_data));
     }
 
     public TwoDA Load()
@@ -41,11 +32,11 @@ public class TwoDABinaryReader
         {
             _twoda = new TwoDA();
 
-            _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+            Reader.BaseStream.Seek(0, SeekOrigin.Begin);
 
             // Read header
-            string fileType = Encoding.ASCII.GetString(_reader.ReadBytes(4));
-            string fileVersion = Encoding.ASCII.GetString(_reader.ReadBytes(4));
+            string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));
+            string fileVersion = Encoding.ASCII.GetString(Reader.ReadBytes(4));
 
             if (fileType != "2DA ")
             {
@@ -57,7 +48,7 @@ public class TwoDABinaryReader
                 throw new InvalidDataException("The 2DA version that was loaded is not supported.");
             }
 
-            _reader.ReadByte(); // \n
+            Reader.ReadByte(); // \n
 
             // Read column headers
             var columns = new List<string>();
@@ -68,10 +59,10 @@ public class TwoDABinaryReader
                 columns.Add(columnHeader);
             }
 
-            _reader.ReadByte(); // \0
+            Reader.ReadByte(); // \0
 
             // Read row count and row labels
-            uint rowCount = _reader.ReadUInt32();
+            uint rowCount = Reader.ReadUInt32();
             int columnCount = _twoda.GetWidth();
             int cellCount = (int)(rowCount * columnCount);
 
@@ -85,11 +76,11 @@ public class TwoDABinaryReader
             var cellOffsets = new List<int>();
             for (int i = 0; i < cellCount; i++)
             {
-                cellOffsets.Add(_reader.ReadUInt16());
+                cellOffsets.Add(Reader.ReadUInt16());
             }
 
-            _reader.ReadUInt16(); // data size (not used during reading)
-            long cellDataOffset = _reader.BaseStream.Position;
+            Reader.ReadUInt16(); // data size (not used during reading)
+            long cellDataOffset = Reader.BaseStream.Position;
 
             // Read cell values
             for (int i = 0; i < cellCount; i++)
@@ -98,7 +89,7 @@ public class TwoDABinaryReader
                 int rowId = i / columnCount;
                 string columnHeader = columns[columnId];
 
-                _reader.BaseStream.Seek(cellDataOffset + cellOffsets[i], SeekOrigin.Begin);
+                Reader.BaseStream.Seek(cellDataOffset + cellOffsets[i], SeekOrigin.Begin);
                 string cellValue = ReadTerminatedString('\0');
                 _twoda.SetCellString(rowId, columnHeader, cellValue);
             }
@@ -113,9 +104,9 @@ public class TwoDABinaryReader
 
     private byte Peek()
     {
-        long pos = _reader.BaseStream.Position;
-        byte b = _reader.ReadByte();
-        _reader.BaseStream.Seek(pos, SeekOrigin.Begin);
+        long pos = Reader.BaseStream.Position;
+        byte b = Reader.ReadByte();
+        Reader.BaseStream.Seek(pos, SeekOrigin.Begin);
         return b;
     }
 
@@ -124,9 +115,12 @@ public class TwoDABinaryReader
         var sb = new StringBuilder();
         while (true)
         {
-            byte b = _reader.ReadByte();
+            byte b = Reader.ReadByte();
             if (b == terminator)
+            {
                 break;
+            }
+
             sb.Append((char)b);
         }
         return sb.ToString();

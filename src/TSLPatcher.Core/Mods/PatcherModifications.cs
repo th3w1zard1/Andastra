@@ -81,26 +81,26 @@ public abstract class PatcherModifications
     {
         // Note: The second argument passed to the 'pop' function is the default.
 
-        if (fileSectionDict.TryGetValue("!SourceFile", out var sourceFile))
+        if (fileSectionDict.TryGetValue("!SourceFile", out string? sourceFile))
         {
             SourceFile = sourceFile;
             fileSectionDict.Remove("!SourceFile");
         }
 
         // !SaveAs and !Filename are the same
-        if (fileSectionDict.TryGetValue("!Filename", out var filename))
+        if (fileSectionDict.TryGetValue("!Filename", out string? filename))
         {
             SaveAs = filename;
             fileSectionDict.Remove("!Filename");
         }
-        else if (fileSectionDict.TryGetValue("!SaveAs", out var saveAs))
+        else if (fileSectionDict.TryGetValue("!SaveAs", out string? saveAs))
         {
             SaveAs = saveAs;
             fileSectionDict.Remove("!SaveAs");
         }
 
-        var destinationFallback = defaultDestination ?? DEFAULT_DESTINATION;
-        if (fileSectionDict.TryGetValue("!Destination", out var destination))
+        string destinationFallback = defaultDestination ?? DEFAULT_DESTINATION;
+        if (fileSectionDict.TryGetValue("!Destination", out string? destination))
         {
             Destination = destination;
             fileSectionDict.Remove("!Destination");
@@ -111,7 +111,7 @@ public abstract class PatcherModifications
         }
 
         // !ReplaceFile=1 is prioritized, see Stoffe's HLFP mod v2.1 for reference
-        if (fileSectionDict.TryGetValue("!ReplaceFile", out var replaceFile))
+        if (fileSectionDict.TryGetValue("!ReplaceFile", out string? replaceFile))
         {
             ReplaceFile = ConvertToBool(replaceFile);
             fileSectionDict.Remove("!ReplaceFile");
@@ -119,13 +119,13 @@ public abstract class PatcherModifications
 
         // TSLPatcher defaults to "ignore". However realistically, Override file shadowing is
         // a major problem, so HoloPatcher defaults to "warn"
-        if (fileSectionDict.TryGetValue("!OverrideType", out var overrideType))
+        if (fileSectionDict.TryGetValue("!OverrideType", out string? overrideType))
         {
             OverrideTypeValue = overrideType.ToLowerInvariant();
             fileSectionDict.Remove("!OverrideType");
         }
 
-        if (fileSectionDict.TryGetValue("!SourceFolder", out var sourceFolder))
+        if (fileSectionDict.TryGetValue("!SourceFolder", out string? sourceFolder))
         {
             SourceFolder = sourceFolder;
             fileSectionDict.Remove("!SourceFolder");
@@ -140,19 +140,34 @@ public abstract class PatcherModifications
     {
         if (value is string str)
         {
-            if (str == "1") return true;
-            if (str == "0") return false;
+            if (str == "1")
+            {
+                return true;
+            }
+
+            if (str == "0")
+            {
+                return false;
+            }
 
             // Also try parsing as boolean or integer
-            if (bool.TryParse(str, out var boolResult))
+            if (bool.TryParse(str, out bool boolResult))
+            {
                 return boolResult;
+            }
 
-            if (int.TryParse(str, out var intValue))
+            if (int.TryParse(str, out int intValue))
+            {
                 return intValue != 0;
+            }
 
             return str.Trim().ToLower() == "true";
         }
-        if (value is bool b) return b;
+        if (value is bool b)
+        {
+            return b;
+        }
+
         return false;
     }
 }

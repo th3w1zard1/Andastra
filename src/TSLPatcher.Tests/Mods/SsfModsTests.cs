@@ -1,10 +1,10 @@
+using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.SSF;
 using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.SSF;
 using Xunit;
-using FluentAssertions;
 
 namespace TSLPatcher.Tests.Mods;
 
@@ -30,8 +30,8 @@ public class SsfModsTests
         // Python does: ssf = read_ssf(config.patch_resource(bytes_ssf(ssf), memory, PatchLogger(), Game.K1))
         // Full round-trip through bytes
         var writer = new SSFBinaryWriter(ssf);
-        var data = writer.Write();
-        var patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
+        byte[] data = writer.Write();
+        byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
         var reader = new SSFBinaryReader(patchedData);
         ssf = reader.Load();
 
@@ -53,8 +53,8 @@ public class SsfModsTests
 
         // Full round-trip through bytes
         var writer = new SSFBinaryWriter(ssf);
-        var data = writer.Write();
-        var patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
+        byte[] data = writer.Write();
+        byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
         var reader = new SSFBinaryReader(patchedData);
         ssf = reader.Load();
 
@@ -76,8 +76,8 @@ public class SsfModsTests
 
         // Full round-trip through bytes
         var writer = new SSFBinaryWriter(ssf);
-        var data = writer.Write();
-        var patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
+        byte[] data = writer.Write();
+        byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
         var reader = new SSFBinaryReader(patchedData);
         ssf = reader.Load();
 

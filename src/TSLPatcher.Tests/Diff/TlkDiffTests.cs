@@ -1,3 +1,6 @@
+using FluentAssertions;
+using TSLPatcher.Core.Diff;
+using TSLPatcher.Core.Formats.TLK;
 using Xunit;
 
 namespace TSLPatcher.Tests.Diff;
@@ -8,12 +11,52 @@ namespace TSLPatcher.Tests.Diff;
 /// </summary>
 public class TlkDiffTests
 {
-    [Fact(Skip = "TLK diff functionality not yet implemented")]
-    public void Placeholder_TlkDiffNotImplemented()
+    [Fact]
+    public void Compare_ShouldDetectAddedEntries()
     {
-        // Note: TLK diff functionality is not yet implemented in the tslpatcher.diff module.
-        // These tests serve as placeholders for when the functionality is added.
-        Assert.True(true);
+        var original = new TLK();
+        original.Add("Text1");
+
+        var modified = new TLK();
+        modified.Add("Text1");
+        modified.Add("Text2");
+
+        TlkCompareResult result = TlkDiff.Compare(original, modified);
+
+        result.AddedEntries.Should().HaveCount(1);
+        result.AddedEntries.Should().Contain(1);
+        result.AddedEntries[1].Text.Should().Be("Text2");
+    }
+
+    [Fact]
+    public void Compare_ShouldDetectChangedText()
+    {
+        var original = new TLK();
+        original.Add("OldText");
+
+        var modified = new TLK();
+        modified.Add("NewText");
+
+        TlkCompareResult result = TlkDiff.Compare(original, modified);
+
+        result.ChangedEntries.Should().Contain(0);
+        result.ChangedEntries[0].Text.Should().Be("NewText");
+        result.ChangedEntries[0].Sound.Should().BeNull();
+    }
+
+    [Fact]
+    public void Compare_ShouldDetectChangedSound()
+    {
+        var original = new TLK();
+        original.Add("Text", "Sound1");
+
+        var modified = new TLK();
+        modified.Add("Text", "Sound2");
+
+        TlkCompareResult result = TlkDiff.Compare(original, modified);
+
+        result.ChangedEntries.Should().Contain(0);
+        result.ChangedEntries[0].Text.Should().BeNull();
+        result.ChangedEntries[0].Sound.Should().Be("Sound2");
     }
 }
-

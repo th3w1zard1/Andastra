@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Formats;
 
 namespace TSLPatcher.Core.Formats.GFF;
 
@@ -10,11 +11,8 @@ namespace TSLPatcher.Core.Formats.GFF;
 /// Reads GFF (General File Format) binary data.
 /// 1:1 port of Python GFFBinaryReader from pykotor/resource/formats/gff/io_gff.py
 /// </summary>
-public class GFFBinaryReader
+public class GFFBinaryReader : BinaryFormatReaderBase
 {
-    private readonly byte[] _data;
-    private readonly BinaryReader _reader;
-
     private GFF? _gff;
     private List<string> _labels = new();
     private int _fieldDataOffset;
@@ -37,24 +35,16 @@ public class GFFBinaryReader
         GFFFieldType.Vector4
     };
 
-    public GFFBinaryReader(byte[] data)
+    public GFFBinaryReader(byte[] data) : base(data)
     {
-        _data = data;
-        _reader = new BinaryReader(new MemoryStream(data));
     }
 
-    public GFFBinaryReader(string filepath)
+    public GFFBinaryReader(string filepath) : base(filepath)
     {
-        _data = File.ReadAllBytes(filepath);
-        _reader = new BinaryReader(new MemoryStream(_data));
     }
 
-    public GFFBinaryReader(Stream source)
+    public GFFBinaryReader(Stream source) : base(source)
     {
-        using var ms = new MemoryStream();
-        source.CopyTo(ms);
-        _data = ms.ToArray();
-        _reader = new BinaryReader(new MemoryStream(_data));
     }
 
     public GFF Load()
@@ -63,11 +53,11 @@ public class GFFBinaryReader
         {
             _gff = new GFF();
 
-            _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+            Reader.BaseStream.Seek(0, SeekOrigin.Begin);
 
             // Read header
-            string fileType = Encoding.ASCII.GetString(_reader.ReadBytes(4));
-            string fileVersion = Encoding.ASCII.GetString(_reader.ReadBytes(4));
+            string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));
+            string fileVersion = Encoding.ASCII.GetString(Reader.ReadBytes(4));
 
             // Validate content type
             if (!IsValidGFFContent(fileType))
@@ -82,25 +72,25 @@ public class GFFBinaryReader
 
             _gff.Content = GFFContentExtensions.FromFourCC(fileType);
 
-            _structOffset = (int)_reader.ReadUInt32();
-            _reader.ReadUInt32(); // struct count (unused during reading)
-            _fieldOffset = (int)_reader.ReadUInt32();
-            _reader.ReadUInt32(); // field count (unused)
-            int labelOffset = (int)_reader.ReadUInt32();
-            int labelCount = (int)_reader.ReadUInt32();
-            _fieldDataOffset = (int)_reader.ReadUInt32();
-            _reader.ReadUInt32(); // field data count (unused)
-            _fieldIndicesOffset = (int)_reader.ReadUInt32();
-            _reader.ReadUInt32(); // field indices count (unused)
-            _listIndicesOffset = (int)_reader.ReadUInt32();
-            _reader.ReadUInt32(); // list indices count (unused)
+            _structOffset = (int)Reader.ReadUInt32();
+            Reader.ReadUInt32(); // struct count (unused during reading)
+            _fieldOffset = (int)Reader.ReadUInt32();
+            Reader.ReadUInt32(); // field count (unused)
+            int labelOffset = (int)Reader.ReadUInt32();
+            int labelCount = (int)Reader.ReadUInt32();
+            _fieldDataOffset = (int)Reader.ReadUInt32();
+            Reader.ReadUInt32(); // field data count (unused)
+            _fieldIndicesOffset = (int)Reader.ReadUInt32();
+            Reader.ReadUInt32(); // field indices count (unused)
+            _listIndicesOffset = (int)Reader.ReadUInt32();
+            Reader.ReadUInt32(); // list indices count (unused)
 
             // Read labels
             _labels = new List<string>();
-            _reader.BaseStream.Seek(labelOffset, SeekOrigin.Begin);
+            Reader.BaseStream.Seek(labelOffset, SeekOrigin.Begin);
             for (int i = 0; i < labelCount; i++)
             {
-                string label = Encoding.ASCII.GetString(_reader.ReadBytes(16)).TrimEnd('\0');
+                string label = Encoding.ASCII.GetString(Reader.ReadBytes(16)).TrimEnd('\0');
                 _labels.Add(label);
             }
 
@@ -124,11 +114,11 @@ public class GFFBinaryReader
 
     private void LoadStruct(GFFStruct gffStruct, int structIndex)
     {
-        _reader.BaseStream.Seek(_structOffset + structIndex * 12, SeekOrigin.Begin);
+        Reader.BaseStream.Seek(_structOffset + structIndex * 12, SeekOrigin.Begin);
 
-        int structId = _reader.ReadInt32();
-        uint data = _reader.ReadUInt32();
-        uint fieldCount = _reader.ReadUInt32();
+        int structId = Reader.ReadInt32();
+        uint data = Reader.ReadUInt32();
+        uint fieldCount = Reader.ReadUInt32();
 
         gffStruct.StructId = structId;
 
@@ -138,11 +128,11 @@ public class GFFBinaryReader
         }
         else if (fieldCount > 1)
         {
-            _reader.BaseStream.Seek(_fieldIndicesOffset + data, SeekOrigin.Begin);
+            Reader.BaseStream.Seek(_fieldIndicesOffset + data, SeekOrigin.Begin);
             var indices = new List<int>();
             for (int i = 0; i < fieldCount; i++)
             {
-                indices.Add((int)_reader.ReadUInt32());
+                indices.Add((int)Reader.ReadUInt32());
             }
 
             foreach (int index in indices)
@@ -154,58 +144,58 @@ public class GFFBinaryReader
 
     private void LoadField(GFFStruct gffStruct, int fieldIndex)
     {
-        _reader.BaseStream.Seek(_fieldOffset + fieldIndex * 12, SeekOrigin.Begin);
+        Reader.BaseStream.Seek(_fieldOffset + fieldIndex * 12, SeekOrigin.Begin);
 
-        uint fieldTypeId = _reader.ReadUInt32();
-        uint labelId = _reader.ReadUInt32();
+        uint fieldTypeId = Reader.ReadUInt32();
+        uint labelId = Reader.ReadUInt32();
 
         var fieldType = (GFFFieldType)fieldTypeId;
         string label = _labels[(int)labelId];
 
         if (_complexFields.Contains(fieldType))
         {
-            uint offset = _reader.ReadUInt32(); // Relative to field data
-            _reader.BaseStream.Seek(_fieldDataOffset + offset, SeekOrigin.Begin);
+            uint offset = Reader.ReadUInt32(); // Relative to field data
+            Reader.BaseStream.Seek(_fieldDataOffset + offset, SeekOrigin.Begin);
 
             switch (fieldType)
             {
                 case GFFFieldType.UInt64:
-                    gffStruct.SetUInt64(label, _reader.ReadUInt64());
+                    gffStruct.SetUInt64(label, Reader.ReadUInt64());
                     break;
                 case GFFFieldType.Int64:
-                    gffStruct.SetInt64(label, _reader.ReadInt64());
+                    gffStruct.SetInt64(label, Reader.ReadInt64());
                     break;
                 case GFFFieldType.Double:
-                    gffStruct.SetDouble(label, _reader.ReadDouble());
+                    gffStruct.SetDouble(label, Reader.ReadDouble());
                     break;
                 case GFFFieldType.String:
-                    uint stringLength = _reader.ReadUInt32();
-                    string str = Encoding.ASCII.GetString(_reader.ReadBytes((int)stringLength)).TrimEnd('\0');
+                    uint stringLength = Reader.ReadUInt32();
+                    string str = Encoding.ASCII.GetString(Reader.ReadBytes((int)stringLength)).TrimEnd('\0');
                     gffStruct.SetString(label, str);
                     break;
                 case GFFFieldType.ResRef:
-                    byte resrefLength = _reader.ReadByte();
-                    string resrefStr = Encoding.ASCII.GetString(_reader.ReadBytes(resrefLength)).Trim();
+                    byte resrefLength = Reader.ReadByte();
+                    string resrefStr = Encoding.ASCII.GetString(Reader.ReadBytes(resrefLength)).Trim();
                     gffStruct.SetResRef(label, new ResRef(resrefStr));
                     break;
                 case GFFFieldType.LocalizedString:
-                    gffStruct.SetLocString(label, _reader.ReadLocalizedString());
+                    gffStruct.SetLocString(label, Reader.ReadLocalizedString());
                     break;
                 case GFFFieldType.Binary:
-                    uint binaryLength = _reader.ReadUInt32();
-                    gffStruct.SetBinary(label, _reader.ReadBytes((int)binaryLength));
+                    uint binaryLength = Reader.ReadUInt32();
+                    gffStruct.SetBinary(label, Reader.ReadBytes((int)binaryLength));
                     break;
                 case GFFFieldType.Vector3:
-                    gffStruct.SetVector3(label, _reader.ReadVector3());
+                    gffStruct.SetVector3(label, Reader.ReadVector3());
                     break;
                 case GFFFieldType.Vector4:
-                    gffStruct.SetVector4(label, _reader.ReadVector4());
+                    gffStruct.SetVector4(label, Reader.ReadVector4());
                     break;
             }
         }
         else if (fieldType == GFFFieldType.Struct)
         {
-            uint structIndex = _reader.ReadUInt32();
+            uint structIndex = Reader.ReadUInt32();
             var newStruct = new GFFStruct();
             LoadStruct(newStruct, (int)structIndex);
             gffStruct.SetStruct(label, newStruct);
@@ -220,25 +210,25 @@ public class GFFBinaryReader
             switch (fieldType)
             {
                 case GFFFieldType.UInt8:
-                    gffStruct.SetUInt8(label, _reader.ReadByte());
+                    gffStruct.SetUInt8(label, Reader.ReadByte());
                     break;
                 case GFFFieldType.Int8:
-                    gffStruct.SetInt8(label, _reader.ReadSByte());
+                    gffStruct.SetInt8(label, Reader.ReadSByte());
                     break;
                 case GFFFieldType.UInt16:
-                    gffStruct.SetUInt16(label, _reader.ReadUInt16());
+                    gffStruct.SetUInt16(label, Reader.ReadUInt16());
                     break;
                 case GFFFieldType.Int16:
-                    gffStruct.SetInt16(label, _reader.ReadInt16());
+                    gffStruct.SetInt16(label, Reader.ReadInt16());
                     break;
                 case GFFFieldType.UInt32:
-                    gffStruct.SetUInt32(label, _reader.ReadUInt32());
+                    gffStruct.SetUInt32(label, Reader.ReadUInt32());
                     break;
                 case GFFFieldType.Int32:
-                    gffStruct.SetInt32(label, _reader.ReadInt32());
+                    gffStruct.SetInt32(label, Reader.ReadInt32());
                     break;
                 case GFFFieldType.Single:
-                    gffStruct.SetSingle(label, _reader.ReadSingle());
+                    gffStruct.SetSingle(label, Reader.ReadSingle());
                     break;
             }
         }
@@ -246,16 +236,16 @@ public class GFFBinaryReader
 
     private void LoadList(GFFStruct gffStruct, string label)
     {
-        uint offset = _reader.ReadUInt32(); // Relative to list indices
-        _reader.BaseStream.Seek(_listIndicesOffset + offset, SeekOrigin.Begin);
+        uint offset = Reader.ReadUInt32(); // Relative to list indices
+        Reader.BaseStream.Seek(_listIndicesOffset + offset, SeekOrigin.Begin);
 
         var value = new GFFList();
-        uint count = _reader.ReadUInt32();
+        uint count = Reader.ReadUInt32();
         var listIndices = new List<int>();
 
         for (int i = 0; i < count; i++)
         {
-            listIndices.Add((int)_reader.ReadUInt32());
+            listIndices.Add((int)Reader.ReadUInt32());
         }
 
         foreach (int structIndex in listIndices)

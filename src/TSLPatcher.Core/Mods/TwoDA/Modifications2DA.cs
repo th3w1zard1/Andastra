@@ -55,12 +55,12 @@ public class Modifications2DA : PatcherModifications
             }
             catch (WarningError e)
             {
-                var msg = $"{e.Message} when patching the file '{SaveAs}'";
+                string msg = $"{e.Message} when patching the file '{SaveAs}'";
                 logger.AddWarning(msg);
             }
             catch (Exception e)
             {
-                var msg = $"{e.Message} when patching the file '{SaveAs}'";
+                string msg = $"{e.Message} when patching the file '{SaveAs}'";
                 logger.AddError(msg);
                 break;
             }

@@ -1,6 +1,8 @@
+using System.Collections.Generic;
+using FluentAssertions;
+using TSLPatcher.Core.Diff;
 using TSLPatcher.Core.Formats.GFF;
 using Xunit;
-using FluentAssertions;
 
 namespace TSLPatcher.Tests.Diff;
 
@@ -13,153 +15,203 @@ public class GffDiffTests
     [Fact]
     public void FlattenDifferences_ShouldHandleSimpleChanges()
     {
-        // Arrange - Test flattening simple value changes
-        // TODO: Implement GFFCompareResult and flatten_differences functionality
+        var compareResult = new GffCompareResult();
+        compareResult.AddDifference("Field1", "old_value", "new_value");
+        compareResult.AddDifference("Field2", 10, 20);
 
-        // This test documents the expected behavior:
-        // compare_result.add_difference("Field1", "old_value", "new_value")
-        // compare_result.add_difference("Field2", 10, 20)
-        // flat_changes = flatten_differences(compare_result)
-        // Expected: flat_changes["Field1"] == "new_value", flat_changes["Field2"] == 20
+        Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
-        // Act
-        // var flatChanges = FlattenDifferences(compareResult);
-
-        // Assert
-        // flatChanges.Should().HaveCount(2);
-        // flatChanges["Field1"].Should().Be("new_value");
-        // flatChanges["Field2"].Should().Be(20);
-
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        flatChanges.Should().HaveCount(2);
+        flatChanges["Field1"].Should().Be("new_value");
+        flatChanges["Field2"].Should().Be(20);
     }
 
     [Fact]
     public void FlattenDifferences_ShouldHandleNestedPaths()
     {
-        // Test flattening nested path changes
-        // compare_result.add_difference("Root\\Child\\Field", "old", "new")
-        // compare_result.add_difference("Root\\Other", 1, 2)
-        // Expected: paths converted from backslash to forward slash
+        var compareResult = new GffCompareResult();
+        compareResult.AddDifference("Root\\Child\\Field", "old", "new");
+        compareResult.AddDifference("Root\\Other", 1, 2);
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+
+        flatChanges.Should().Contain("Root/Child/Field");
+        flatChanges["Root/Child/Field"].Should().Be("new");
+        flatChanges["Root/Other"].Should().Be(2);
     }
 
     [Fact]
     public void FlattenDifferences_ShouldHandleRemovals()
     {
-        // Test flattening removed values
-        // compare_result.add_difference("RemovedField", "old_value", null)
-        // Expected: flat_changes["RemovedField"] == null
+        var compareResult = new GffCompareResult();
+        compareResult.AddDifference("RemovedField", "old_value", null);
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+
+        flatChanges.Should().Contain("RemovedField");
+        flatChanges["RemovedField"].Should().BeNull();
     }
 
     [Fact]
     public void FlattenDifferences_ShouldHandleEmptyResult()
     {
-        // Test flattening empty comparison result
-        // Expected: empty dictionary
+        var compareResult = new GffCompareResult();
+        Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        flatChanges.Should().BeEmpty();
     }
 
     [Fact]
     public void BuildHierarchy_ShouldBuildSimpleHierarchy()
     {
-        // Test building hierarchy from flat changes
-        // flat_changes = {"Field1": "value1", "Field2": "value2"}
-        // Expected: {"Field1": "value1", "Field2": "value2"}
+        var flatChanges = new Dictionary<string, object?>
+        {
+            { "Field1", "value1" },
+            { "Field2", "value2" }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+        hierarchy.Should().Contain("Field1");
+        hierarchy["Field1"].Should().Be("value1");
+        hierarchy["Field2"].Should().Be("value2");
     }
 
     [Fact]
     public void BuildHierarchy_ShouldBuildNestedHierarchy()
     {
-        // Test building nested hierarchy
-        // flat_changes = {"Root/Child/Field": "value", "Root/Other": "other"}
-        // Expected: {"Root": {"Child": {"Field": "value"}, "Other": "other"}}
+        var flatChanges = new Dictionary<string, object?>
+        {
+            { "Root/Child/Field", "value" },
+            { "Root/Other", "other" }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+        hierarchy.Should().Contain("Root");
+        var root = hierarchy["Root"] as Dictionary<string, object?>;
+        root.Should().NotBeNull();
+
+        root!.Should().Contain("Child");
+        var child = root["Child"] as Dictionary<string, object?>;
+        child.Should().NotBeNull();
+        child!["Field"].Should().Be("value");
+
+        root.Should().Contain("Other");
+        root["Other"].Should().Be("other");
     }
 
     [Fact]
     public void BuildHierarchy_ShouldBuildDeepNesting()
     {
-        // Test building deeply nested hierarchy
-        // flat_changes = {"Level1/Level2/Level3/Level4": "deep_value"}
-        // Expected: nested dict 4 levels deep
+        var flatChanges = new Dictionary<string, object?>
+        {
+            { "Level1/Level2/Level3/Level4", "deep_value" }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+        var level1 = hierarchy["Level1"] as Dictionary<string, object?>;
+        var level2 = level1!["Level2"] as Dictionary<string, object?>;
+        var level3 = level2!["Level3"] as Dictionary<string, object?>;
+        level3!["Level4"].Should().Be("deep_value");
     }
 
     [Fact]
     public void BuildHierarchy_ShouldBuildMultipleBranches()
     {
-        // Test building hierarchy with multiple branches
-        // flat_changes = {
-        //     "Root/Branch1/Leaf1": "value1",
-        //     "Root/Branch1/Leaf2": "value2",
-        //     "Root/Branch2/Leaf1": "value3"
-        // }
+        var flatChanges = new Dictionary<string, object?>
+        {
+            { "Root/Branch1/Leaf1", "value1" },
+            { "Root/Branch1/Leaf2", "value2" },
+            { "Root/Branch2/Leaf1", "value3" }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        var hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+        var root = hierarchy["Root"] as Dictionary<string, object?>;
+        var branch1 = root!["Branch1"] as Dictionary<string, object?>;
+        var branch2 = root!["Branch2"] as Dictionary<string, object?>;
+
+        branch1!["Leaf1"].Should().Be("value1");
+        branch1!["Leaf2"].Should().Be("value2");
+        branch2!["Leaf1"].Should().Be("value3");
     }
 
     [Fact]
     public void SerializeToIni_ShouldSerializeSimpleHierarchy()
     {
-        // Test serializing simple hierarchy to INI format
-        // hierarchy = {"Section1": {"Field1": "value1", "Field2": "value2"}}
-        // Expected INI content:
-        // [Section1]
-        // Field1=value1
-        // Field2=value2
+        var hierarchy = new Dictionary<string, object?>
+        {
+            { "Section1", new Dictionary<string, object?> { { "Field1", "value1" }, { "Field2", "value2" } } }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        string ini = GffDiff.SerializeToIni(hierarchy);
+
+        ini.Should().Contain("[Section1]");
+        ini.Should().Contain("Field1=value1");
+        ini.Should().Contain("Field2=value2");
     }
 
     [Fact]
     public void SerializeToIni_ShouldQuoteValuesWithSpaces()
     {
-        // Test serializing values with spaces (should be quoted)
-        // hierarchy = {"Section1": {"Field1": "value with spaces"}}
-        // Expected: Field1="value with spaces"
+        var hierarchy = new Dictionary<string, object?>
+        {
+            { "Section1", new Dictionary<string, object?> { { "Field1", "value with spaces" } } }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        string ini = GffDiff.SerializeToIni(hierarchy);
+
+        ini.Should().Contain("Field1=\"value with spaces\"");
     }
 
     [Fact]
     public void SerializeToIni_ShouldHandleNullValues()
     {
-        // Test serializing None/null values
-        // hierarchy = {"Section1": {"Field1": null}}
-        // Expected: Field1=null
+        var hierarchy = new Dictionary<string, object?>
+        {
+            { "Section1", new Dictionary<string, object?> { { "Field1", null } } }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        string ini = GffDiff.SerializeToIni(hierarchy);
+
+        ini.Should().Contain("Field1=null");
     }
 
     [Fact]
     public void SerializeToIni_ShouldHandleNestedSections()
     {
-        // Test serializing nested sections
-        // hierarchy = {"Root": {"Child": {"Field": "value"}}}
-        // Note: Implementation may vary for nested sections
+        var hierarchy = new Dictionary<string, object?>
+        {
+            { "Root", new Dictionary<string, object?> { { "Child", new Dictionary<string, object?> { { "Field", "value" } } } } }
+        };
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        string ini = GffDiff.SerializeToIni(hierarchy);
+
+        // Depending on implementation, this might check for [Root.Child] or recursive structure
+        // Based on GffDiff implementation:
+        ini.Should().Contain("[Root.Child]");
+        ini.Should().Contain("Field=value");
     }
 
     [Fact]
     public void DiffWorkflow_ShouldHandleFullWorkflow()
     {
-        // Integration test for the complete diff workflow from comparison to INI
-        // 1. Create comparison result
-        // 2. Flatten differences
-        // 3. Build hierarchy
-        // 4. Serialize to INI
-        // Expected: complete INI output with all changes
+        // 1. Create comparison result (simulating output from Compare)
+        var compareResult = new GffCompareResult();
+        compareResult.AddDifference("Section/Field", "old", "new");
 
-        Assert.True(true, "Test placeholder - GFF diff functionality not yet implemented");
+        // 2. Flatten differences
+        Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+
+        // 3. Build hierarchy
+        Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+        // 4. Serialize to INI
+        string ini = GffDiff.SerializeToIni(hierarchy);
+
+        ini.Should().Contain("[Section]");
+        ini.Should().Contain("Field=new");
     }
 }
-

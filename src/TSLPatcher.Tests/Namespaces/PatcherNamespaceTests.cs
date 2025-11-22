@@ -1,6 +1,6 @@
+using FluentAssertions;
 using TSLPatcher.Core.Namespaces;
 using Xunit;
-using FluentAssertions;
 
 namespace TSLPatcher.Tests.Namespaces;
 
@@ -87,7 +87,7 @@ public class PatcherNamespaceTests
         };
 
         // Act
-        var path = ns.ChangesFilePath();
+        string path = ns.ChangesFilePath();
 
         // Assert
         path.Should().Be("C:\\mods\\test\\changes.ini");
@@ -104,7 +104,7 @@ public class PatcherNamespaceTests
         };
 
         // Act
-        var path = ns.RtfFilePath();
+        string path = ns.RtfFilePath();
 
         // Assert
         path.Should().Be("C:\\mods\\test\\info.rtf");
@@ -147,7 +147,7 @@ public class PatcherNamespaceTests
         };
 
         // Act
-        var result = ns.ToString();
+        string result = ns.ToString();
 
         // Assert
         result.Should().Contain("mod1");

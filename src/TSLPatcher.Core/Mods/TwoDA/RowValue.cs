@@ -146,7 +146,11 @@ public class RowValueRowIndex : RowValue
 {
     public override string Value(PatcherMemory memory, Core.Formats.TwoDA.TwoDA twoda, TwoDARow? row)
     {
-        if (row == null) return "";
+        if (row == null)
+        {
+            return "";
+        }
+
         return twoda.RowIndex(row)?.ToString() ?? "";
     }
 }

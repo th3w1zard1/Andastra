@@ -18,6 +18,63 @@ public struct Vector3 : IEquatable<Vector3>
         Z = z;
     }
 
+    public static Vector3 Zero => new(0f, 0f, 0f);
+    public static Vector3 FromNull() => Zero;
+
+    public static Vector3 FromVector2(Vector2 v)
+    {
+        return new Vector3(v.X, v.Y, 0f);
+    }
+
+    public void SetVectorCoords(float x, float y, float z)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+    }
+
+    public float Magnitude()
+    {
+        return MathF.Sqrt(X * X + Y * Y + Z * Z);
+    }
+
+    public Vector3 Normalize()
+    {
+        float magnitude = Magnitude();
+        if (magnitude == 0)
+        {
+            X = 0;
+            Y = 0;
+            Z = 0;
+        }
+        else
+        {
+            X /= magnitude;
+            Y /= magnitude;
+            Z /= magnitude;
+        }
+        return this;
+    }
+
+    public Vector3 Normal()
+    {
+        Vector3 result = new(X, Y, Z);
+        return result.Normalize();
+    }
+
+    public float Dot(Vector3 other)
+    {
+        return X * other.X + Y * other.Y + Z * other.Z;
+    }
+
+    public float Distance(Vector3 other)
+    {
+        float dx = X - other.X;
+        float dy = Y - other.Y;
+        float dz = Z - other.Z;
+        return MathF.Sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
     public override string ToString() => $"{X} {Y} {Z}";
 
     public override int GetHashCode() => HashCode.Combine(X, Y, Z);

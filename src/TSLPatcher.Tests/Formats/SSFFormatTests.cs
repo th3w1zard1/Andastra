@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using FluentAssertions;
-using Xunit;
 using TSLPatcher.Core.Formats.SSF;
+using Xunit;
 
 namespace TSLPatcher.Tests.Formats;
 

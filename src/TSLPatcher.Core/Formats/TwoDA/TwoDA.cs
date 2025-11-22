@@ -31,21 +31,41 @@ public class TwoDA : IEnumerable<TwoDARow>
     public string GetLabel(int rowIndex)
     {
         if (rowIndex < 0 || rowIndex >= _labels.Count)
+        {
             throw new IndexOutOfRangeException($"Row index {rowIndex} is out of range");
+        }
+
         return _labels[rowIndex];
+    }
+
+    public int GetRowIndex(string rowLabel)
+    {
+        for (int i = 0; i < _labels.Count; i++)
+        {
+            if (_labels[i].Equals(rowLabel, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+        throw new KeyNotFoundException($"Row label '{rowLabel}' not found");
     }
 
     public void SetLabel(int rowIndex, string value)
     {
         if (rowIndex < 0 || rowIndex >= _labels.Count)
+        {
             throw new IndexOutOfRangeException($"Row index {rowIndex} is out of range");
+        }
+
         _labels[rowIndex] = value;
     }
 
     public List<string> GetColumn(string header)
     {
         if (!_headers.Contains(header))
+        {
             throw new KeyNotFoundException($"The header '{header}' does not exist.");
+        }
 
         var result = new List<string>();
         for (int i = 0; i < GetHeight(); i++)
@@ -58,7 +78,9 @@ public class TwoDA : IEnumerable<TwoDARow>
     public void AddColumn(string header)
     {
         if (_headers.Contains(header))
+        {
             throw new InvalidOperationException($"The header '{header}' already exists.");
+        }
 
         _headers.Add(header);
         foreach (var row in _rows)
@@ -105,7 +127,10 @@ public class TwoDA : IEnumerable<TwoDARow>
         foreach (var searching in this)
         {
             if (searching.Equals(row))
+            {
                 return index;
+            }
+
             index++;
         }
         return null;
@@ -127,7 +152,7 @@ public class TwoDA : IEnumerable<TwoDARow>
             cells = convertedCells.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
         }
 
-        foreach (var header in _headers)
+        foreach (string header in _headers)
         {
             newRow[header] = cells?.ContainsKey(header) == true
                 ? cells[header]?.ToString() ?? ""
@@ -172,7 +197,7 @@ public class TwoDA : IEnumerable<TwoDARow>
             convertedCells[key] = value?.ToString() ?? "";
         }
 
-        foreach (var header in _headers)
+        foreach (string header in _headers)
         {
             newRow[header] = convertedCells.ContainsKey(header)
                 ? convertedCells[header]
@@ -196,26 +221,40 @@ public class TwoDA : IEnumerable<TwoDARow>
         }
     }
 
+    public string GetCellString(string rowLabel, string header, string? context = null)
+    {
+        int rowIndex = GetRowIndex(rowLabel);
+        return GetCellString(rowIndex, header, context);
+    }
+
     public int? GetCellInt(int rowIndex, string header, int? defaultValue = null)
     {
-        var cellValue = GetCellString(rowIndex, header);
+        string cellValue = GetCellString(rowIndex, header);
         if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
+        {
             return defaultValue;
+        }
 
         if (int.TryParse(cellValue, out int result))
+        {
             return result;
+        }
 
         return defaultValue;
     }
 
     public float? GetCellFloat(int rowIndex, string header, float? defaultValue = null)
     {
-        var cellValue = GetCellString(rowIndex, header);
+        string cellValue = GetCellString(rowIndex, header);
         if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
+        {
             return defaultValue;
+        }
 
         if (float.TryParse(cellValue, out float result))
+        {
             return result;
+        }
 
         return defaultValue;
     }
@@ -223,7 +262,9 @@ public class TwoDA : IEnumerable<TwoDARow>
     public void SetCellString(int rowIndex, string header, string value)
     {
         if (!_headers.Contains(header))
+        {
             throw new KeyNotFoundException($"The header '{header}' does not exist.");
+        }
 
         _rows[rowIndex][header] = value;
     }
@@ -247,5 +288,33 @@ public class TwoDA : IEnumerable<TwoDARow>
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    /// <summary>
+    /// Serializes the 2DA to a byte array.
+    /// </summary>
+    public byte[] ToBytes()
+    {
+        var writer = new TwoDABinaryWriter(this);
+        return writer.Write();
+    }
+
+    /// <summary>
+    /// Deserializes a 2DA from a byte array.
+    /// </summary>
+    public static TwoDA FromBytes(byte[] data)
+    {
+        var reader = new TwoDABinaryReader(data);
+        return reader.Load();
+    }
+
+    /// <summary>
+    /// Saves the 2DA to a file.
+    /// </summary>
+    public void Save(string path)
+    {
+        var writer = new TwoDABinaryWriter(this);
+        byte[] data = writer.Write();
+        System.IO.File.WriteAllBytes(path, data);
+    }
 }
 

@@ -50,11 +50,11 @@ public class ModUninstallerTests : IDisposable
     public void IsValidBackupFolder_ValidFormat_ReturnsTrue()
     {
         // Arrange
-        var validFolderName = "2024-01-15_14.30.45";
+        string validFolderName = "2024-01-15_14.30.45";
         var folderPath = new CaseAwarePath(Path.Combine(_backupDir, validFolderName));
 
         // Act
-        var result = ModUninstaller.IsValidBackupFolder(folderPath);
+        bool result = ModUninstaller.IsValidBackupFolder(folderPath);
 
         // Assert
         result.Should().BeTrue();
@@ -64,11 +64,11 @@ public class ModUninstallerTests : IDisposable
     public void IsValidBackupFolder_InvalidFormat_ReturnsFalse()
     {
         // Arrange
-        var invalidFolderName = "not_a_valid_date";
+        string invalidFolderName = "not_a_valid_date";
         var folderPath = new CaseAwarePath(Path.Combine(_backupDir, invalidFolderName));
 
         // Act
-        var result = ModUninstaller.IsValidBackupFolder(folderPath);
+        bool result = ModUninstaller.IsValidBackupFolder(folderPath);
 
         // Assert
         result.Should().BeFalse();
@@ -96,9 +96,9 @@ public class ModUninstallerTests : IDisposable
     public void GetMostRecentBackup_MultipleBackups_ReturnsNewest()
     {
         // Arrange
-        var backup1 = Path.Combine(_backupDir, "2024-01-15_14.30.45");
-        var backup2 = Path.Combine(_backupDir, "2024-01-16_10.20.30");
-        var backup3 = Path.Combine(_backupDir, "2024-01-14_08.15.00");
+        string backup1 = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+        string backup2 = Path.Combine(_backupDir, "2024-01-16_10.20.30");
+        string backup3 = Path.Combine(_backupDir, "2024-01-14_08.15.00");
 
         Directory.CreateDirectory(backup1);
         Directory.CreateDirectory(backup2);
@@ -123,7 +123,7 @@ public class ModUninstallerTests : IDisposable
     public void GetMostRecentBackup_EmptyFolders_ReturnsNull()
     {
         // Arrange
-        var backup1 = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+        string backup1 = Path.Combine(_backupDir, "2024-01-15_14.30.45");
         Directory.CreateDirectory(backup1); // Empty folder
 
         var backupPath = new CaseAwarePath(_backupDir);
@@ -144,16 +144,16 @@ public class ModUninstallerTests : IDisposable
     public void RestoreBackup_RestoresFilesCorrectly()
     {
         // Arrange
-        var backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+        string backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
         Directory.CreateDirectory(backupFolder);
 
-        var testFile = Path.Combine(backupFolder, "test_file.txt");
+        string testFile = Path.Combine(backupFolder, "test_file.txt");
         File.WriteAllText(testFile, "test content");
 
-        var gameSubDir = Path.Combine(_gameDir, "Override");
+        string gameSubDir = Path.Combine(_gameDir, "Override");
         Directory.CreateDirectory(gameSubDir);
 
-        var existingFile = Path.Combine(gameSubDir, "existing.txt");
+        string existingFile = Path.Combine(gameSubDir, "existing.txt");
         File.WriteAllText(existingFile, "existing content");
 
         var logger = new PatchLogger();
@@ -182,14 +182,14 @@ public class ModUninstallerTests : IDisposable
     public void GetBackupInfo_ValidBackup_ReturnsCorrectInfo()
     {
         // Arrange
-        var backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+        string backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
         Directory.CreateDirectory(backupFolder);
 
-        var testFile = Path.Combine(backupFolder, "test_file.txt");
+        string testFile = Path.Combine(backupFolder, "test_file.txt");
         File.WriteAllText(testFile, "test content");
 
-        var deleteListFile = Path.Combine(backupFolder, "remove these files.txt");
-        var fileToDelete = Path.Combine(_gameDir, "file_to_delete.txt");
+        string deleteListFile = Path.Combine(backupFolder, "remove these files.txt");
+        string fileToDelete = Path.Combine(_gameDir, "file_to_delete.txt");
         File.WriteAllText(fileToDelete, "content");
         File.WriteAllText(deleteListFile, fileToDelete);
 
@@ -213,14 +213,14 @@ public class ModUninstallerTests : IDisposable
     public void UninstallSelectedMod_WithUserConfirmation_CompletesSuccessfully()
     {
         // Arrange
-        var backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+        string backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
         Directory.CreateDirectory(backupFolder);
 
-        var testFile = Path.Combine(backupFolder, "test_file.txt");
+        string testFile = Path.Combine(backupFolder, "test_file.txt");
         File.WriteAllText(testFile, "test content");
 
-        var deleteListFile = Path.Combine(backupFolder, "remove these files.txt");
-        var fileToDelete = Path.Combine(_gameDir, "file_to_delete.txt");
+        string deleteListFile = Path.Combine(backupFolder, "remove these files.txt");
+        string fileToDelete = Path.Combine(_gameDir, "file_to_delete.txt");
         File.WriteAllText(fileToDelete, "content");
         File.WriteAllText(deleteListFile, fileToDelete);
 
@@ -232,7 +232,7 @@ public class ModUninstallerTests : IDisposable
         );
 
         // Act
-        var result = uninstaller.UninstallSelectedMod(
+        bool result = uninstaller.UninstallSelectedMod(
             showErrorDialog: null,
             showYesNoDialog: (title, msg) => true, // Confirm
             showYesNoCancelDialog: (title, msg) => false // Don't delete backup
@@ -248,7 +248,7 @@ public class ModUninstallerTests : IDisposable
     public void UninstallSelectedMod_WithoutUserConfirmation_ReturnsFalse()
     {
         // Arrange
-        var backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+        string backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
         Directory.CreateDirectory(backupFolder);
         File.WriteAllText(Path.Combine(backupFolder, "test.txt"), "test");
 
@@ -260,7 +260,7 @@ public class ModUninstallerTests : IDisposable
         );
 
         // Act
-        var result = uninstaller.UninstallSelectedMod(
+        bool result = uninstaller.UninstallSelectedMod(
             showErrorDialog: null,
             showYesNoDialog: (title, msg) => false, // Cancel
             showYesNoCancelDialog: null

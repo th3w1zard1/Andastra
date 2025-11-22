@@ -30,7 +30,10 @@ public class TwoDARow(string rowLabel, Dictionary<string, string> rowData)
         {
             string msg = $"The header '{header}' does not exist.";
             if (context != null)
+            {
                 msg += $" Context: {context}";
+            }
+
             throw new KeyNotFoundException(msg);
         }
         return _data[header];
@@ -38,40 +41,54 @@ public class TwoDARow(string rowLabel, Dictionary<string, string> rowData)
 
     public int? GetInteger(string header, int? defaultValue = null)
     {
-        var cellValue = GetString(header);
+        string cellValue = GetString(header);
         if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
+        {
             return defaultValue;
+        }
 
         if (int.TryParse(cellValue, out int result))
+        {
             return result;
+        }
 
         return defaultValue;
     }
 
     public float? GetFloat(string header, float? defaultValue = null)
     {
-        var cellValue = GetString(header);
+        string cellValue = GetString(header);
         if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
+        {
             return defaultValue;
+        }
 
         if (float.TryParse(cellValue, out float result))
+        {
             return result;
+        }
 
         return defaultValue;
     }
 
     public bool? GetBoolean(string header, bool? defaultValue = null)
     {
-        var intValue = GetInteger(header);
+        int? intValue = GetInteger(header);
         if (intValue == null)
+        {
             return defaultValue;
+        }
+
         return intValue != 0;
     }
 
     public void SetString(string header, string value)
     {
         if (!_data.ContainsKey(header))
+        {
             throw new KeyNotFoundException($"The header '{header}' does not exist.");
+        }
+
         _data[header] = value;
     }
 
@@ -96,7 +113,7 @@ public class TwoDARow(string rowLabel, Dictionary<string, string> rowData)
         {
             return _rowLabel == other._rowLabel &&
                    _data.Count == other._data.Count &&
-                   _data.All(kvp => other._data.TryGetValue(kvp.Key, out var value) && value == kvp.Value);
+                   _data.All(kvp => other._data.TryGetValue(kvp.Key, out string? value) && value == kvp.Value);
         }
         return false;
     }

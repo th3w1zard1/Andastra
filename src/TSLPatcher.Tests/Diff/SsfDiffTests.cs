@@ -1,3 +1,6 @@
+using FluentAssertions;
+using TSLPatcher.Core.Diff;
+using TSLPatcher.Core.Formats.SSF;
 using Xunit;
 
 namespace TSLPatcher.Tests.Diff;
@@ -8,12 +11,18 @@ namespace TSLPatcher.Tests.Diff;
 /// </summary>
 public class SsfDiffTests
 {
-    [Fact(Skip = "SSF diff functionality not yet implemented")]
-    public void Placeholder_SsfDiffNotImplemented()
+    [Fact]
+    public void Compare_ShouldDetectChangedSounds()
     {
-        // Note: SSF diff functionality is not yet implemented in the tslpatcher.diff module.
-        // These tests serve as placeholders for when the functionality is added.
-        Assert.True(true);
+        var original = new SSF();
+        original.SetData(SSFSound.BATTLE_CRY_1, 1);
+
+        var modified = new SSF();
+        modified.SetData(SSFSound.BATTLE_CRY_1, 2);
+
+        SsfCompareResult result = SsfDiff.Compare(original, modified);
+
+        result.ChangedSounds.Should().Contain(SSFSound.BATTLE_CRY_1);
+        result.ChangedSounds[SSFSound.BATTLE_CRY_1].Should().Be(2);
     }
 }
-

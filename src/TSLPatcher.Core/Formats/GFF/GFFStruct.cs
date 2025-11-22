@@ -48,7 +48,9 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
     public T? Acquire<T>(string label, T? defaultValue = default)
     {
         if (!_fields.TryGetValue(label, out var field))
+        {
             return defaultValue;
+        }
 
         return field.Value is T value ? value : defaultValue;
     }
@@ -126,7 +128,7 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
     public void SetStruct(string label, GFFStruct value) => SetField(label, GFFFieldType.Struct, value);
     public void SetList(string label, GFFList value) => SetField(label, GFFFieldType.List, value);
 
-    private void SetField(string label, GFFFieldType fieldType, object value)
+    public void SetField(string label, GFFFieldType fieldType, object value)
     {
         _fields[label] = new GFFField(fieldType, value);
     }

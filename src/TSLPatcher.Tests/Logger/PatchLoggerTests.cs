@@ -1,6 +1,6 @@
+using FluentAssertions;
 using TSLPatcher.Core.Logger;
 using Xunit;
-using FluentAssertions;
 
 namespace TSLPatcher.Tests.Logger;
 

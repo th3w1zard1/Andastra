@@ -1,9 +1,9 @@
+using FluentAssertions;
+using Moq;
 using TSLPatcher.Core.Config;
 using TSLPatcher.Core.Formats.Capsule;
 using TSLPatcher.Core.Memory;
 using Xunit;
-using FluentAssertions;
-using Moq;
 
 namespace TSLPatcher.Tests.Config;
 
@@ -94,7 +94,7 @@ public class ConfigTests
         // Arrange
         var memory = new PatcherMemory();
         // var patcher = new ModInstaller();
-        // var patch = CreatePatchMock(destination: ".", replaceFile: true,
+        // var patch = CreatePatchMock(destination: ".", replace: true,
         //                             saveas: "file1", sourcefile: "file1", action: "Patch ");
 
         // Act

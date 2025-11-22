@@ -41,7 +41,7 @@ public class GFFFormatTests
         gff.Root.GetSingle("single").Should().BeApproximately(12.34567f, 0.00001f);
         gff.Root.GetDouble("double").Should().BeApproximately(12.345678901234, 0.00000000001);
 
-        gff.Root.GetString("string").Should().Be("abcdefghij123456789");
+        gff.Root.GetValue("string").Should().Be("abcdefghij123456789");
         gff.Root.GetResRef("resref").Should().Be(new ResRef("resref01"));
         gff.Root.GetBinary("binary").Should().Equal(System.Text.Encoding.ASCII.GetBytes("binarydata"));
 

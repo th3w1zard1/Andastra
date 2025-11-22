@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Formats;
 
 namespace TSLPatcher.Core.Formats.TLK;
 
@@ -10,13 +11,11 @@ namespace TSLPatcher.Core.Formats.TLK;
 /// Reads TLK (Talk Table) binary data.
 /// 1:1 port of Python TLKBinaryReader from pykotor/resource/formats/tlk/io_tlk.py
 /// </summary>
-public class TLKBinaryReader
+public class TLKBinaryReader : BinaryFormatReaderBase
 {
     private const int FileHeaderSize = 20;
     private const int EntrySize = 40;
 
-    private readonly byte[] _data;
-    private readonly BinaryReader _reader;
     private readonly Language? _language;
 
     private TLK? _tlk;
@@ -29,29 +28,19 @@ public class TLKBinaryReader
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
-    public TLKBinaryReader(byte[] data, Language? language = null)
+    public TLKBinaryReader(byte[] data, Language? language = null) : base(data)
     {
-        _data = data;
         _language = language;
-        _reader = new BinaryReader(new MemoryStream(data));
     }
 
-    public TLKBinaryReader(string filepath, Language? language = null)
+    public TLKBinaryReader(string filepath, Language? language = null) : base(filepath)
     {
-        _data = File.ReadAllBytes(filepath);
         _language = language;
-        _reader = new BinaryReader(new MemoryStream(_data));
     }
 
-    public TLKBinaryReader(Stream source, Language? language = null)
+    public TLKBinaryReader(Stream source, Language? language = null) : base(source)
     {
-        using (var ms = new MemoryStream())
-        {
-            source.CopyTo(ms);
-            _data = ms.ToArray();
-        }
         _language = language;
-        _reader = new BinaryReader(new MemoryStream(_data));
     }
 
     public TLK Load()
@@ -62,7 +51,7 @@ public class TLKBinaryReader
             _textsOffset = 0;
             _textHeaders.Clear();
 
-            _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+            Reader.BaseStream.Seek(0, SeekOrigin.Begin);
 
             LoadFileHeader();
 
@@ -88,11 +77,11 @@ public class TLKBinaryReader
 
     private void LoadFileHeader()
     {
-        string fileType = Encoding.ASCII.GetString(_reader.ReadBytes(4));
-        string fileVersion = Encoding.ASCII.GetString(_reader.ReadBytes(4));
-        uint languageId = _reader.ReadUInt32();
-        uint stringCount = _reader.ReadUInt32();
-        uint entriesOffset = _reader.ReadUInt32();
+        string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));
+        string fileVersion = Encoding.ASCII.GetString(Reader.ReadBytes(4));
+        uint languageId = Reader.ReadUInt32();
+        uint stringCount = Reader.ReadUInt32();
+        uint entriesOffset = Reader.ReadUInt32();
 
         if (fileType != "TLK ")
         {
@@ -114,13 +103,13 @@ public class TLKBinaryReader
     {
         var entry = _tlk!.Entries[stringref];
 
-        uint entryFlags = _reader.ReadUInt32();
-        string soundResref = Encoding.ASCII.GetString(_reader.ReadBytes(16)).TrimEnd('\0');
-        uint volumeVariance = _reader.ReadUInt32();  // unused
-        uint pitchVariance = _reader.ReadUInt32();   // unused
-        uint textOffset = _reader.ReadUInt32();
-        uint textLength = _reader.ReadUInt32();
-        float soundLength = _reader.ReadSingle();
+        uint entryFlags = Reader.ReadUInt32();
+        string soundResref = Encoding.ASCII.GetString(Reader.ReadBytes(16)).TrimEnd('\0');
+        uint volumeVariance = Reader.ReadUInt32();  // unused
+        uint pitchVariance = Reader.ReadUInt32();   // unused
+        uint textOffset = Reader.ReadUInt32();
+        uint textLength = Reader.ReadUInt32();
+        float soundLength = Reader.ReadSingle();
 
         entry.TextPresent = (entryFlags & 0x0001) != 0;
         entry.SoundPresent = (entryFlags & 0x0002) != 0;
@@ -136,11 +125,11 @@ public class TLKBinaryReader
         var textHeader = _textHeaders[stringref];
         var entry = _tlk!.Entries[stringref];
 
-        _reader.BaseStream.Seek(textHeader.offset + _textsOffset, SeekOrigin.Begin);
+        Reader.BaseStream.Seek(textHeader.offset + _textsOffset, SeekOrigin.Begin);
 
         // Get encoding for the language
         Encoding encoding = GetEncodingForLanguage(_tlk.Language);
-        byte[] textBytes = _reader.ReadBytes(textHeader.length);
+        byte[] textBytes = Reader.ReadBytes(textHeader.length);
         string text = encoding.GetString(textBytes);
 
         entry.Text = text;

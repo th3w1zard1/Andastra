@@ -80,11 +80,19 @@ public class TLKBinaryWriter
         // Calculate entry flags
         uint entryFlags = 0;
         if (entry.TextPresent)
+        {
             entryFlags |= 0x0001;  // TEXT_PRESENT
+        }
+
         if (entry.SoundPresent)
+        {
             entryFlags |= 0x0002;  // SND_PRESENT
+        }
+
         if (entry.SoundLengthPresent)
+        {
             entryFlags |= 0x0004;  // SND_LENGTH
+        }
 
         writer.Write(entryFlags);
 

@@ -36,17 +36,17 @@ public static class UninstallHelpers
             throw new ArgumentException($"Unable to determine game type at path: {gamePath}");
         }
 
-        var overridePath = Core.Installation.Installation.GetOverridePath(gamePath);
-        var modulesPath = Core.Installation.Installation.GetModulesPath(gamePath);
+        string overridePath = Core.Installation.Installation.GetOverridePath(gamePath);
+        string modulesPath = Core.Installation.Installation.GetModulesPath(gamePath);
 
         // Remove any TLK changes
-        var dialogTlkPath = Path.Combine(gamePath, "dialog.tlk");
+        string dialogTlkPath = Path.Combine(gamePath, "dialog.tlk");
         if (File.Exists(dialogTlkPath))
         {
             var dialogTlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
 
             // Trim TLK entries based on game type
-            var maxEntries = game == Game.K1 ? 49265 : 136329;
+            int maxEntries = game == Game.K1 ? 49265 : 136329;
             if (dialogTlk.Entries.Count > maxEntries)
             {
                 dialogTlk.Entries = dialogTlk.Entries.Take(maxEntries).ToList();
@@ -59,7 +59,7 @@ public static class UninstallHelpers
         // Remove all override files
         if (Directory.Exists(overridePath))
         {
-            foreach (var filePath in Directory.GetFiles(overridePath))
+            foreach (string filePath in Directory.GetFiles(overridePath))
             {
                 try
                 {
@@ -75,7 +75,7 @@ public static class UninstallHelpers
         // Remove any .MOD files
         if (Directory.Exists(modulesPath))
         {
-            foreach (var filePath in Directory.GetFiles(modulesPath))
+            foreach (string filePath in Directory.GetFiles(modulesPath))
             {
                 if (IsModFile(Path.GetFileName(filePath)))
                 {

@@ -38,7 +38,7 @@ public class NamespaceReader
         parser.Configuration.AllowDuplicateSections = true;
         parser.Configuration.CaseInsensitive = true;
 
-        var iniText = File.ReadAllText(path);
+        string iniText = File.ReadAllText(path);
         var ini = parser.Parse(iniText);
 
         return new NamespaceReader(ini).Load();
@@ -62,7 +62,7 @@ public class NamespaceReader
 
         foreach (var keyData in namespacesSection.Keys)
         {
-            var namespaceId = keyData.Value;
+            string namespaceId = keyData.Value;
 
             // Find the section for this namespace (case-insensitive)
             var namespaceSection = _ini.Sections.FirstOrDefault(s =>
@@ -76,9 +76,9 @@ public class NamespaceReader
             }
 
             // Required fields
-            var iniFilename = GetValue(namespaceSection, "IniName")
+            string iniFilename = GetValue(namespaceSection, "IniName")
                 ?? throw new KeyNotFoundException($"IniName not found in [{namespaceSection.SectionName}]");
-            var infoFilename = GetValue(namespaceSection, "InfoName")
+            string infoFilename = GetValue(namespaceSection, "InfoName")
                 ?? throw new KeyNotFoundException($"InfoName not found in [{namespaceSection.SectionName}]");
 
             var ns = new PatcherNamespace(iniFilename, infoFilename)

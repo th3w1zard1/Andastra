@@ -70,11 +70,11 @@ public class ModificationsNCS : PatcherModifications
             writer.Seek(offset, System.IO.SeekOrigin.Begin);
 
             int value;
-            var lowerTokenType = tokenType.ToLower();
+            string lowerTokenType = tokenType.ToLower();
 
             if (lowerTokenType == "strref")
             {
-                if (!memory.MemoryStr.TryGetValue(tokenIdOrValue, out var memoryStrVal))
+                if (!memory.MemoryStr.TryGetValue(tokenIdOrValue, out int memoryStrVal))
                 {
                     throw new KeyNotFoundException($"StrRef{tokenIdOrValue} was not defined before use");
                 }
@@ -84,7 +84,7 @@ public class ModificationsNCS : PatcherModifications
             }
             else if (lowerTokenType == "2damemory")
             {
-                if (!memory.Memory2DA.TryGetValue(tokenIdOrValue, out var memoryVal))
+                if (!memory.Memory2DA.TryGetValue(tokenIdOrValue, out string? memoryVal))
                 {
                     throw new KeyNotFoundException($"2DAMEMORY{tokenIdOrValue} was not defined before use");
                 }

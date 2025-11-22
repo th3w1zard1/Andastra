@@ -110,8 +110,17 @@ public class ModifyTLK
             return;
         }
 
-        // TODO: Implement TalkTable lookup if TlkFilePath is specified
-        // This would require implementing the TalkTable class
-        // For now, just use the text and sound as-is
+        var lookupTlk = new TalkTable(TlkFilePath);
+        var result = lookupTlk.GetStringResult(ModIndex);
+
+        if (string.IsNullOrEmpty(Text))
+        {
+            Text = result.Text;
+        }
+
+        if (string.IsNullOrEmpty(Sound))
+        {
+            Sound = result.Sound.ToString();
+        }
     }
 }

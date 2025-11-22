@@ -51,11 +51,29 @@ namespace TSLPatcher.Core.Formats.SSF
         public override int GetHashCode()
         {
             HashCode hash = new();
-            foreach (var sound in _sounds)
+            foreach (int sound in _sounds)
             {
                 hash.Add(sound);
             }
             return hash.ToHashCode();
+        }
+
+        /// <summary>
+        /// Serializes the SSF to a byte array.
+        /// </summary>
+        public byte[] ToBytes()
+        {
+            var writer = new SSFBinaryWriter(this);
+            return writer.Write();
+        }
+
+        /// <summary>
+        /// Deserializes an SSF from a byte array.
+        /// </summary>
+        public static SSF FromBytes(byte[] data)
+        {
+            var reader = new SSFBinaryReader(data);
+            return reader.Load();
         }
     }
 

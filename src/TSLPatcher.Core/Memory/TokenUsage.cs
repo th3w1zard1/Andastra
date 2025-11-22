@@ -49,7 +49,7 @@ public class TokenUsage2DA : TokenUsage
 
     public override string Value(PatcherMemory memory)
     {
-        if (!memory.Memory2DA.TryGetValue(TokenId, out var value))
+        if (!memory.Memory2DA.TryGetValue(TokenId, out string? value))
         {
             throw new KeyNotFoundException($"2DAMEMORY{TokenId} was not defined before use");
         }
@@ -72,7 +72,7 @@ public class TokenUsageTLK : TokenUsage
 
     public override string Value(PatcherMemory memory)
     {
-        if (!memory.MemoryStr.TryGetValue(TokenId, out var value))
+        if (!memory.MemoryStr.TryGetValue(TokenId, out int value))
         {
             throw new KeyNotFoundException($"StrRef{TokenId} was not defined before use");
         }

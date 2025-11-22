@@ -1,0 +1,332 @@
+using System.Collections.Generic;
+using FluentAssertions;
+using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Formats.TwoDA;
+using TSLPatcher.Core.Logger;
+using TSLPatcher.Core.Memory;
+using TSLPatcher.Core.Mods.TwoDA;
+using Xunit;
+using TwoDAFile = TSLPatcher.Core.Formats.TwoDA.TwoDA;
+
+namespace TSLPatcher.Tests.Mods;
+
+/// <summary>
+/// Unit tests for CopyRow2DA modifications without using ConfigReader.
+/// </summary>
+public class TwoDAModsCopyRowUnitTests
+{
+    private TwoDAFile CreateTestTwoDA(List<string> columns, params (string label, Dictionary<string, object> data)[] rows)
+    {
+        var twoda = new TwoDAFile(columns);
+        foreach (var (label, data) in rows)
+        {
+            twoda.AddRow(label, data);
+        }
+        return twoda;
+    }
+
+    [Fact]
+    public void CopyRow_ByRowIndex_ShouldCopyAndModify()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new Dictionary<string, RowValue> { { "Col2", new RowValueConstant("X") } }
+        ));
+
+        var bytes = config.PatchResource(twoda.ToBytes(), memory, logger, Game.K1);
+        var patchedTwoda = TwoDAFile.FromBytes((byte[])bytes);
+
+        patchedTwoda.GetHeight().Should().Be(3);
+        patchedTwoda.GetColumn("Col1").Should().Equal("a", "c", "a");
+        patchedTwoda.GetColumn("Col2").Should().Equal("b", "d", "X");
+    }
+
+    [Fact]
+    public void CopyRow_ByRowLabel_ShouldCopyAndModify()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_LABEL, "1"),
+            null,
+            null,
+            new Dictionary<string, RowValue> { { "Col2", new RowValueConstant("X") } }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetHeight().Should().Be(3);
+        twoda.GetColumn("Col1").Should().Equal("a", "c", "c");
+        twoda.GetColumn("Col2").Should().Equal("b", "d", "X");
+    }
+
+    [Fact]
+    public void CopyRow_ExclusiveNotExists_ShouldAddRow()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            "Col1",
+            null,
+            new Dictionary<string, RowValue>
+            {
+                { "Col1", new RowValueConstant("c") },
+                { "Col2", new RowValueConstant("d") }
+            }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetHeight().Should().Be(2);
+        twoda.GetLabel(1).Should().Be("1");
+        twoda.GetColumn("Col1").Should().Equal("a", "c");
+        twoda.GetColumn("Col2").Should().Equal("b", "d");
+    }
+
+    [Fact]
+    public void CopyRow_ExclusiveExists_ShouldUpdateExisting()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            "Col1",
+            null,
+            new Dictionary<string, RowValue>
+            {
+                { "Col1", new RowValueConstant("a") },
+                { "Col2", new RowValueConstant("X") }
+            }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetHeight().Should().Be(1);
+        twoda.GetLabel(0).Should().Be("0");
+        twoda.GetColumn("Col1").Should().Equal("a");
+        twoda.GetColumn("Col2").Should().Equal("X");
+    }
+
+    [Fact]
+    public void CopyRow_NoExclusive_ShouldAlwaysAdd()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new Dictionary<string, RowValue>
+            {
+                { "Col1", new RowValueConstant("c") },
+                { "Col2", new RowValueConstant("d") }
+            }
+        ));
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            "",
+            "r2",
+            new Dictionary<string, RowValue>
+            {
+                { "Col1", new RowValueConstant("e") },
+                { "Col2", new RowValueConstant("f") }
+            }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetHeight().Should().Be(3);
+        twoda.GetLabel(1).Should().Be("1");
+        twoda.GetLabel(2).Should().Be("r2");
+        twoda.GetColumn("Col1").Should().Equal("a", "c", "e");
+        twoda.GetColumn("Col2").Should().Equal("b", "d", "f");
+    }
+
+    [Fact]
+    public void CopyRow_WithNewRowLabel_ShouldUseProvidedLabel()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2", "Col3" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            "r2",
+            new Dictionary<string, RowValue>()
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetLabel(2).Should().Be("r2");
+        twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
+        twoda.GetColumn("Col2").Should().Equal("b", "d", "b");
+    }
+
+    [Fact]
+    public void CopyRow_WithHigh_ShouldCalculateHighest()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2", "Col3" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new Dictionary<string, RowValue> { { "Col2", new RowValueHigh("Col2") } }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetHeight().Should().Be(3);
+        twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
+        twoda.GetColumn("Col2").Should().Equal("1", "2", "3");
+    }
+
+    [Fact]
+    public void CopyRow_WithTLKMemory_ShouldUseMemoryValue()
+    {
+        var twoda = CreateTestTwoDA(
+            new List<string> { "Col1", "Col2", "Col3" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
+        );
+
+        var memory = new PatcherMemory();
+        memory.MemoryStr[0] = 5;
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new Dictionary<string, RowValue> { { "Col2", new RowValueTLKMemory(0) } }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
+        twoda.GetColumn("Col2").Should().Equal("1", "2", "5");
+    }
+
+    [Fact]
+    public void CopyRow_With2DAMemory_ShouldUseMemoryValue()
+    {
+        var twoda = CreateTestTwoDA(new List<string> { "Col1", "Col2" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
+        );
+
+        var memory = new PatcherMemory();
+        memory.Memory2DA[0] = "999";
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new Dictionary<string, RowValue> { { "Col2", new RowValue2DAMemory(0) } }
+        ));
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
+        twoda.GetColumn("Col2").Should().Equal("1", "2", "999");
+    }
+
+    [Fact]
+    public void CopyRow_Store2DAMemoryRowIndex_ShouldStoreNewRowIndex()
+    {
+        var twoda = CreateTestTwoDA(new List<string> { "Col1" },
+            ("0", new Dictionary<string, object> { { "Col1", "a" } }),
+            ("1", new Dictionary<string, object> { { "Col1", "b" } })
+        );
+
+        var memory = new PatcherMemory();
+        var logger = new PatchLogger();
+
+        var config = new Modifications2DA("");
+        var copy = new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new Dictionary<string, RowValue>(),
+            store2da: new Dictionary<int, RowValue> { { 5, new RowValueRowIndex() } }
+        );
+        config.Modifiers.Add(copy);
+
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        twoda.GetHeight().Should().Be(3);
+        memory.Memory2DA[5].Should().Be("2");
+    }
+}
+

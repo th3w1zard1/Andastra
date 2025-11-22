@@ -42,13 +42,16 @@ public class ResourceType
     public override bool Equals(object? obj)
     {
         if (obj is ResourceType other)
+        {
             return TypeId == other.TypeId;
+        }
+
         return false;
     }
 
     public static ResourceType FromExtension(string extension)
     {
-        var ext = extension.TrimStart('.').ToLower();
+        string ext = extension.TrimStart('.').ToLower();
         return _byExtension.TryGetValue(ext, out var type)
             ? type
             : new ResourceType(-1, ext, "Unknown", "binary", isInvalid: true);

@@ -32,7 +32,7 @@ public class ModifySSF
 /// Container for SSF (sound set file) modifications.
 /// Matches Python ModificationsSSF class.
 /// </summary>
-public class ModificationsSSF(string filename, bool replaceFile, bool noReplacefileCheck = false, List<ModifySSF>? modifiers = null) : PatcherModifications(filename, replaceFile)
+public class ModificationsSSF(string filename, bool replaceFile, bool _noReplacefileCheck = false, List<ModifySSF>? modifiers = null) : PatcherModifications(filename, replaceFile)
 {
     public const string DEFAULTDESTINATION = "Override";
     public static string DefaultDestination => DEFAULTDESTINATION;

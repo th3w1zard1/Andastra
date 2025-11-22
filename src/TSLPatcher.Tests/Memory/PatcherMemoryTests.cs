@@ -1,8 +1,8 @@
-using TSLPatcher.Core.Memory;
+using FluentAssertions;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.GFF;
 using Xunit;
-using FluentAssertions;
 
 namespace TSLPatcher.Tests.Memory;
 
@@ -45,7 +45,7 @@ public class PatcherMemoryTests
         memory.Memory2DA[1] = "test";
         memory.MemoryStr[2] = 42;
 
-        var result = memory.ToString();
+        string result = memory.ToString();
 
         result.Should().Contain("memory_2da=1 items");
         result.Should().Contain("memory_str=1 items");

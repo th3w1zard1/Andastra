@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Compiler;
 using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Memory;
 
@@ -37,6 +38,7 @@ public class ModificationsNSS : PatcherModifications
     public new string Action { get; set; } = "Compile";
     public new bool SkipIfNotReplace { get; set; } = true;
     public string? NwnnsscompPath { get; set; }
+    public string? TempScriptFolder { get; set; }
 
     public ModificationsNSS(string filename, bool replaceFile = false)
         : base(filename, replaceFile)
@@ -61,9 +63,22 @@ public class ModificationsNSS : PatcherModifications
         var mutableSource = new MutableString(sourceText);
         Apply(mutableSource, memory, logger, game);
 
-        // NOTE: In Python, this would compile the script. For now, we just return the modified source
-        // TODO: Implement NCS compilation if needed
-        logger.AddNote($"NSS compilation not yet implemented. Returning modified source for '{SourceFile}'");
+        // Compile the modified NSS source to NCS bytecode
+        if (Action.Equals("Compile", StringComparison.OrdinalIgnoreCase))
+        {
+            string tempFolder = TempScriptFolder ?? Path.GetTempPath();
+            var compiler = new NCSCompiler(NwnnsscompPath, tempFolder, logger);
+
+            // Validate compiler if path is provided
+            if (!string.IsNullOrEmpty(NwnnsscompPath))
+            {
+                compiler.ValidateCompiler();
+            }
+
+            return compiler.Compile(mutableSource.Value, SourceFile, game);
+        }
+
+        // If not compiling, just return the modified source
         return Encoding.GetEncoding("windows-1252").GetBytes(mutableSource.Value);
     }
 
@@ -86,7 +101,7 @@ public class ModificationsNSS : PatcherModifications
 
     private void IterateAndReplaceTokens2DA(string tokenName, Dictionary<int, string> memoryDict, MutableString nssSource, PatchLogger logger)
     {
-        var searchPattern = $@"#{tokenName}\d+#";
+        string searchPattern = $@"#{tokenName}\d+#";
         var match = Regex.Match(nssSource.Value, searchPattern);
 
         while (match.Success)
@@ -113,7 +128,7 @@ public class ModificationsNSS : PatcherModifications
 
     private void IterateAndReplaceTokensStr(string tokenName, Dictionary<int, int> memoryDict, MutableString nssSource, PatchLogger logger)
     {
-        var searchPattern = $@"#{tokenName}\d+#";
+        string searchPattern = $@"#{tokenName}\d+#";
         var match = Regex.Match(nssSource.Value, searchPattern);
 
         while (match.Success)
