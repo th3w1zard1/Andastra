@@ -121,15 +121,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("Override");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file1");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Patch ");
+        var patch = CreatePatch("file1", true, "Override", "file1", "Patch ");
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: true);
+        bool result = _installer.ShouldPatch(patch, exists: true);
 
         // Assert
         Assert.True(result);
@@ -142,15 +137,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("Override");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file2");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Compile");
+        var patch = CreatePatch("file1", true, "Override", "file2", "Compile");
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: true);
+        bool result = _installer.ShouldPatch(patch, exists: true);
 
         // Assert
         Assert.True(result);
@@ -163,15 +153,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("Override");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file2");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Copy ");
+        var patch = CreatePatch("file1", true, "Override", "file2", "Copy ");
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: false);
+        bool result = _installer.ShouldPatch(patch, exists: false);
 
         // Assert
         Assert.True(result);
@@ -184,15 +169,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("Override");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file1");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Copy ");
+        var patch = CreatePatch("file1", true, "Override", "file1", "Copy ");
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: false);
+        bool result = _installer.ShouldPatch(patch, exists: false);
 
         // Assert
         Assert.True(result);
@@ -205,15 +185,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("capsule.mod");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file1");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Patch ");
+        var patch = CreatePatch("file1", true, "capsule.mod", "file1", "Patch ");
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: true, capsule: null);
+        bool result = _installer.ShouldPatch(patch, exists: true, capsule: null);
 
         // Assert
         Assert.True(result);
@@ -226,15 +201,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("capsule.mod");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file2");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Patch ");
+        var patch = CreatePatch("file1", true, "capsule.mod", "file2", "Patch ");
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: true, capsule: null);
+        bool result = _installer.ShouldPatch(patch, exists: true, capsule: null);
 
         // Assert
         Assert.True(result);
@@ -247,16 +217,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1", false);
-        patch.Setup(p => p.Destination).Returns("other");
-        patch.Setup(p => p.ReplaceFile).Returns(false);
-        patch.Setup(p => p.SaveAs).Returns("file3");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Patching");
-        patch.Setup(p => p.SkipIfNotReplace).Returns(false);
+        var patch = CreatePatch("file1", false, "other", "file3", "Patching", false);
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: true);
+        bool result = _installer.ShouldPatch(patch, exists: true);
 
         // Assert
         Assert.True(result);
@@ -269,16 +233,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1", false);
-        patch.Setup(p => p.Destination).Returns("other");
-        patch.Setup(p => p.ReplaceFile).Returns(false);
-        patch.Setup(p => p.SaveAs).Returns("file3");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Patching");
-        patch.Setup(p => p.SkipIfNotReplace).Returns(true);
+        var patch = CreatePatch("file1", false, "other", "file3", "Patching", true);
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: true);
+        bool result = _installer.ShouldPatch(patch, exists: true);
 
         // Assert
         Assert.False(result);
@@ -291,18 +249,12 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("capsule.mod");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file2");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Copy ");
+        var patch = CreatePatch("file1", true, "capsule.mod", "file2", "Copy ");
 
-        var mockCapsule = new Mock<Capsule>(MockBehavior.Strict, Path.Combine(_tempDirectory, "capsule.mod"));
-        mockCapsule.Setup(c => c.Path.ToString()).Returns(Path.Combine(_tempDirectory, "capsule.mod"));
+        var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "capsule.mod"), createIfNotExist: true);
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: false, capsule: mockCapsule.Object);
+        bool result = _installer.ShouldPatch(patch, exists: false, capsule: mockCapsule);
 
         // Assert
         Assert.True(result);
@@ -315,18 +267,12 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("capsule.mod");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SaveAs).Returns("file1");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Copy ");
+        var patch = CreatePatch("file1", true, "capsule.mod", "file1", "Copy ");
 
-        var mockCapsule = new Mock<Capsule>(MockBehavior.Strict, Path.Combine(_tempDirectory, "capsule.mod"));
-        mockCapsule.Setup(c => c.Path.ToString()).Returns(Path.Combine(_tempDirectory, "capsule.mod"));
+        var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "capsule.mod"), createIfNotExist: true);
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: false, capsule: mockCapsule.Object);
+        bool result = _installer.ShouldPatch(patch, exists: false, capsule: mockCapsule);
 
         // Assert
         Assert.True(result);
@@ -339,16 +285,12 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("capsule");
-        patch.Setup(p => p.Action).Returns("Patching");
-        patch.Setup(p => p.SourceFile).Returns("file1");
+        var patch = CreatePatch("file1", null, "capsule", null, "Patching");
 
-        var mockCapsule = new Mock<Capsule>(MockBehavior.Strict, Path.Combine(_tempDirectory, "capsule.mod"));
-        mockCapsule.Setup(c => c.Path.ToString()).Returns(Path.Combine(_tempDirectory, "nonexistent.mod"));
+        var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "nonexistent.mod"), createIfNotExist: true);
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: false, capsule: mockCapsule.Object);
+        bool result = _installer.ShouldPatch(patch, exists: false, capsule: mockCapsule);
 
         // Assert
         Assert.False(result);
@@ -361,16 +303,10 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.Destination).Returns("other");
-        patch.Setup(p => p.SaveAs).Returns("file3");
-        patch.Setup(p => p.SourceFile).Returns("file1");
-        patch.Setup(p => p.Action).Returns("Patching");
-        patch.Setup(p => p.SkipIfNotReplace).Returns(false);
-        patch.Setup(p => p.ReplaceFile).Returns(false);
+        var patch = CreatePatch("file1", false, "other", "file3", "Patching", false);
 
         // Act
-        bool result = _installer.ShouldPatch(patch.Object, exists: false);
+        bool result = _installer.ShouldPatch(patch, exists: false);
 
         // Assert
         Assert.True(result);
@@ -382,13 +318,12 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.ReplaceFile).Returns(false);
+        var patch = CreatePatch("file1", false);
 
-        var mockCapsule = new Mock<Capsule>();
+        var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "test.mod"), createIfNotExist: true);
 
         // Act
-        byte[]? result = _installer.LookupResource(patch.Object, _tempDirectory, existsAtOutput: true, capsule: mockCapsule.Object);
+        byte[]? result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: true, capsule: mockCapsule);
 
         // Assert
         Assert.Null(result);
@@ -400,13 +335,11 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.ReplaceFile).Returns(true);
-        patch.Setup(p => p.SourceFile).Returns("nonexistent.txt");
-        patch.Setup(p => p.SourceFolder).Returns(".");
+        var patch = CreatePatch("nonexistent.txt", true);
+        patch.SourceFolder = ".";
 
         // Act
-        byte[] result = _installer.LookupResource(patch.Object, _tempDirectory, existsAtOutput: false, capsule: null);
+        byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: false, capsule: null);
 
         // Assert
         Assert.Null(result);
@@ -418,14 +351,12 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.ReplaceFile).Returns(false);
+        var patch = CreatePatch("file1", false);
 
-        var mockCapsule = new Mock<Capsule>();
-        mockCapsule.Setup(c => c.GetResource(It.IsAny<string>(), It.IsAny<ResourceType>())).Returns((byte[]?)null);
+        var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "test.mod"), createIfNotExist: true);
 
         // Act
-        byte[] result = _installer.LookupResource(patch.Object, _tempDirectory, existsAtOutput: true, capsule: mockCapsule.Object);
+        byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: true, capsule: mockCapsule);
 
         // Assert
         Assert.Null(result);
@@ -437,12 +368,10 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.ReplaceFile).Returns(false);
-        patch.Setup(p => p.SourceFile).Returns("nonexistent.txt");
+        var patch = CreatePatch("nonexistent.txt", false);
 
         // Act
-        byte[] result = _installer.LookupResource(patch.Object, _tempDirectory, existsAtOutput: true, capsule: null);
+        byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: true, capsule: null);
 
         // Assert
         Assert.Null(result);
@@ -454,12 +383,10 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = new Mock<TestPatcherModifications>("file1");
-        patch.Setup(p => p.ReplaceFile).Returns(false);
-        patch.Setup(p => p.SourceFile).Returns("nonexistent.txt");
+        var patch = CreatePatch("nonexistent.txt", false);
 
         // Act
-        byte[] result = _installer.LookupResource(patch.Object, _tempDirectory, existsAtOutput: false, capsule: null);
+        byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: false, capsule: null);
 
         // Assert
         Assert.Null(result);
