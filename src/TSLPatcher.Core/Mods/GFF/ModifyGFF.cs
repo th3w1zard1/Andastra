@@ -698,7 +698,7 @@ public class Memory2DAModifierGFF : ModifyGFF
         else
         {
             // Python: memory.memory_2da[self.dest_token_id] = ptr_to_dest
-            memory.Memory2DA[DestTokenId] = ptrToSrc?.ToString() ?? "";
+            memory.Memory2DA[DestTokenId] = ptrToDest?.ToString() ?? "";
         }
     }
 }
