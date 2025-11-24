@@ -24,13 +24,13 @@ public class AssignmentExpression : Expression
     {
         // Compile the value expression first
         DynamicDataType valueType = Value.Compile(ncs, root, block);
-        
+
         // Get the field information
         (bool isGlobal, DynamicDataType fieldType, int stackIndex) = FieldAccess.GetScoped(block, root);
-        
+
         // Determine the copy instruction based on scope
-        var instructionType = isGlobal ? NCSInstructionType.CPDOWNBP : NCSInstructionType.CPDOWNSP;
-        
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPDOWNBP : NCSInstructionType.CPDOWNSP;
+
         // Adjust offset for local variables
         if (!isGlobal)
         {

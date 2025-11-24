@@ -15,7 +15,7 @@ namespace TSLPatcher.Tests.Mods;
 /// </summary>
 public class TwoDAModsUnitTests
 {
-    private TwoDAFile CreateTestTwoDA(string[] columns, params (string label, string[] values)[] rows)
+    private static TwoDAFile CreateTestTwoDA(string[] columns, params (string label, string[] values)[] rows)
     {
         var twoda = new TwoDAFile(columns.ToList());
         foreach ((string label, string[] values) in rows)

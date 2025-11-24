@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using TSLPatcher.Core.Common;
+using BinaryWriter = System.IO.BinaryWriter;
 
 namespace TSLPatcher.Core.Formats.TLK;
 
@@ -37,13 +39,19 @@ public class TLKBinaryWriter
         int textOffset = 0;
         Encoding encoding = GetEncodingForLanguage(_tlk.Language);
 
-        // Write all entry headers
+        // First pass: write entry headers with text offsets
+        // Python's _write_entry writes text_offset starting at 0 (relative to text data start)
+        // The file header's entries_offset points to the TEXT DATA section, not the entry headers
+        // So text_offset in each entry header is relative to the start of text data (0, len1, len1+len2, etc.)
         foreach (TLKEntry entry in _tlk.Entries)
         {
-            WriteEntry(writer, entry, ref textOffset, encoding);
+            byte[] textBytes = encoding.GetBytes(entry.Text);
+            // text_offset stored in entry header is relative to text data start (starts at 0)
+            WriteEntry(writer, entry, textOffset, textBytes.Length);
+            textOffset += textBytes.Length;
         }
 
-        // Write all entry texts
+        // Second pass: write text data
         foreach (TLKEntry entry in _tlk.Entries)
         {
             byte[] textBytes = encoding.GetBytes(entry.Text);
@@ -71,32 +79,32 @@ public class TLKBinaryWriter
         return FileHeaderSize + _tlk.Count * EntrySize;
     }
 
-    private void WriteEntry(BinaryWriter writer, TLKEntry entry, ref int textOffset, Encoding encoding)
+    private static void WriteEntry(BinaryWriter writer, TLKEntry entry, int textOffset, int textByteLength)
     {
         string soundResref = entry.Voiceover.ToString();
         uint currentTextOffset = (uint)textOffset;
-        uint textLength = (uint)encoding.GetByteCount(entry.Text);
+        // Python uses len(entry.text) for text_length (character count)
+        // For cp1252, character count == byte count, so this works
+        uint textLength = (uint)textByteLength;
 
-        // Calculate entry flags
         uint entryFlags = 0;
         if (entry.TextPresent)
         {
-            entryFlags |= 0x0001;  // TEXT_PRESENT
+            entryFlags |= 0x0001;
         }
 
         if (entry.SoundPresent)
         {
-            entryFlags |= 0x0002;  // SND_PRESENT
+            entryFlags |= 0x0002;
         }
 
         if (entry.SoundLengthPresent)
         {
-            entryFlags |= 0x0004;  // SND_LENGTH
+            entryFlags |= 0x0004;
         }
 
         writer.Write(entryFlags);
 
-        // Write sound resref (16 bytes, null-padded)
         byte[] resrefBytes = new byte[16];
         byte[] sourceBytes = Encoding.ASCII.GetBytes(soundResref);
         Array.Copy(sourceBytes, resrefBytes, Math.Min(sourceBytes.Length, 16));
@@ -106,9 +114,7 @@ public class TLKBinaryWriter
         writer.Write((uint)0);  // pitch variance (unused)
         writer.Write(currentTextOffset);
         writer.Write(textLength);
-        writer.Write((uint)0);  // sound length (unused - note: Python writes uint32 here, not float)
-
-        textOffset += (int)textLength;
+        writer.Write((uint)0);  // sound length
     }
 
     private static Encoding GetEncodingForLanguage(Language language)

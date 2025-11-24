@@ -55,7 +55,7 @@ label=new_row
 col_constant=100
 col_tlk=StrRef5
 col_2da=2DAMEMORY3
-col_high=RowLabel
+        col_high=high()
 col_rowindex=RowIndex
 col_rowlabel=RowLabel
 col_rowcell=other_column
@@ -194,7 +194,11 @@ col1=value
 Table0=test.2da
 
 [test.2da]
-AddColumn0=NewCol(default_value)
+AddColumn0=NewCol
+
+[NewCol]
+ColumnLabel=NewCol
+DefaultValue=default_value
 RowIndex0=specific_value_0
 RowIndex1=specific_value_1
 RowLabel(label_test)=labeled_value

@@ -17,9 +17,13 @@ public class ModificationsGFF : PatcherModifications
 
     public List<ModifyGFF> Modifiers { get; set; } = new();
 
-    public ModificationsGFF(string filename, bool replace = false, List<ModifyGFF>? modifiers = null)
+    public ModificationsGFF(
+        string filename,
+        bool replace = false,
+        List<ModifyGFF>? modifiers = null)
         : base(filename, replace)
     {
+        // Python: self.modifiers: list[ModifyGFF] = [] if modifiers is None else modifiers
         Modifiers = modifiers ?? new List<ModifyGFF>();
     }
 
@@ -42,11 +46,12 @@ public class ModificationsGFF : PatcherModifications
         PatchLogger logger,
         Game game)
     {
+        // Python: for change_field in self.modifiers: change_field.apply(mutable_data.root, memory, logger)
         if (mutableData is Formats.GFF.GFF gff)
         {
-            foreach (ModifyGFF modifier in Modifiers)
+            foreach (ModifyGFF changeField in Modifiers)
             {
-                modifier.Apply(gff.Root, memory, logger, game);
+                changeField.Apply(gff.Root, memory, logger);
             }
         }
         else
@@ -55,4 +60,3 @@ public class ModificationsGFF : PatcherModifications
         }
     }
 }
-

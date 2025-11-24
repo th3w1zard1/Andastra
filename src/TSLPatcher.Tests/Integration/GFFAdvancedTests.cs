@@ -136,43 +136,39 @@ Path=OuterStruct
     [Fact]
     public void GFF_ModifierPath_LongerThanSelfPath_ShouldNavigateCorrectly()
     {
-        // Arrange - test from test_gff_modifier_path_longer_than_self_path
+        // Arrange - test from test_gff_modifier_path_longer_than_self_path (Python line 358)
+        // Python test only checks path resolution, not field addition
         string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
-AddField0=nested_struct
-AddField1=deep_field
+AddField0=add_struct
 
-[nested_struct]
+[add_struct]
 FieldType=Struct
-TypeId=0
-Label=Level1
+Path=Root
+Label=Root
+TypeId=200
+AddField0=add_grandchild
 
-[deep_field]
+[add_grandchild]
 FieldType=Byte
-Label=DeepField
+Path=ChildStruct/GrandChildField
+Label=GrandChildField
 Value=99
-Path=Level1\Level2
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
-        // Create a GFF with nested structures
-        var gff = new GFF();
-        var level1 = new GFFStruct(0);
-        var level2 = new GFFStruct(0);
-        level1.SetStruct("Level2", level2);
-        gff.Root.SetStruct("Level1", level1);
-
-        // Act
+        // Act - Python test only checks path resolution
         ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-        modifications.Apply(gff, Memory, Logger, Game.K1);
+        var mod0 = modifications.Modifiers[0] as AddFieldGFF;
+        mod0.Should().NotBeNull();
+        var mod1 = mod0!.Modifiers[0] as AddFieldGFF;
+        mod1.Should().NotBeNull();
 
-        // Assert
-        GFFStruct level1Result = gff.Root.GetStruct("Level1");
-        GFFStruct level2Result = level1Result.GetStruct("Level2");
-        level2Result.GetUInt8("DeepField").Should().Be(99);
+        // Assert - Python line 390: checks that path.parts[-1] == "GrandChildField"
+        mod1!.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("GrandChildField");
     }
 
     [Fact]

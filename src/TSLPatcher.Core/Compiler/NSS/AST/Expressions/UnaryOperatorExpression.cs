@@ -48,7 +48,7 @@ public class UnaryOperatorExpression : Expression
         return operandType;
     }
 
-    private string GetOperatorSymbol(Operator op)
+    private static string GetOperatorSymbol(Operator op)
     {
         return op switch
         {

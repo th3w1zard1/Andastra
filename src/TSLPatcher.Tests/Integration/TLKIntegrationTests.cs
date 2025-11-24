@@ -164,7 +164,6 @@ public class TLKIntegrationTests : IntegrationTestBase
         });
 
         var modify = new ModifyTLK(0, true);
-        modify.ModIndex = 1;
         modify.Text = null;
         modify.Sound = null;
 
@@ -174,7 +173,10 @@ public class TLKIntegrationTests : IntegrationTestBase
         modifications.Apply(tlk, Memory, Logger, Game.K1);
 
         // Assert
-        tlk.String(1).Should().BeNullOrEmpty();
+        // Replace operation uses TokenId (0), not ModIndex
+        // Python line 176: text or old_text - if text is null/empty, preserve old text
+        // In Python: None or "Entry 0" = "Entry 0", "" or "Entry 0" = "Entry 0"
+        tlk.String(0).Should().Be("Entry 0"); // Python preserves old text when text is null/empty
     }
 
     [Fact]
@@ -205,10 +207,11 @@ public class TLKIntegrationTests : IntegrationTestBase
 
         // Assert
         tlk.Count.Should().Be(4);
-        tlk.String(1).Should().Be("Replaced");
+        tlk.String(0).Should().Be("Replaced"); // Replace modifies entry 0, not 1
         tlk.String(3).Should().Be("Appended");
-        Memory.MemoryStr[0].Should().Be(1);
-        Memory.MemoryStr[1].Should().Be(3);
+        // Replace operations do NOT store memory (Python line 154-155)
+        Memory.MemoryStr.Should().NotContainKey(0);
+        Memory.MemoryStr[1].Should().Be(3); // Only append stores memory
     }
 
     [Fact]
@@ -223,13 +226,15 @@ StrRef1=1
 0=0
 1=1
 ";
-        // Create append.tlk file
+        // Create append.tlk file - Python test saves to mod_path root, not tslpatchdata (line 2594)
         TLK appendTlk = CreateTestTLK(new[]
         {
             ("Append2", ""),
             ("Append1", "")
         });
-        SaveTestTLK("append.tlk", appendTlk);
+        // Save to mod root (TempDir) to match Python test behavior
+        string appendTlkPath = Path.Combine(TempDir, "append.tlk");
+        appendTlk.Save(appendTlkPath);
 
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var dialogTlk = new TLK();
@@ -257,13 +262,15 @@ ReplaceFile0=replace.tlk
 1=0
 2=1
 ";
-        // Create replace.tlk file
+        // Create replace.tlk file - Python test saves to mod_path root, not tslpatchdata (line 2633)
         TLK replaceTlk = CreateTestTLK(new[]
         {
             ("Replace2", ""),
             ("Replace3", "")
         });
-        SaveTestTLK("replace.tlk", replaceTlk);
+        // Save to mod root (TempDir) to match Python test behavior
+        string replaceTlkPath = Path.Combine(TempDir, "replace.tlk");
+        replaceTlk.Save(replaceTlkPath);
 
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var dialogTlk = new TLK();

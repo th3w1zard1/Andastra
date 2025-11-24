@@ -10,6 +10,32 @@ using TSLPatcher.Core.Memory;
 namespace TSLPatcher.Core.Mods.GFF;
 
 /// <summary>
+/// GFF modification algorithms for TSLPatcher/HoloPatcher.
+/// 
+/// This module implements GFF field modification logic for applying patches from changes.ini files.
+/// Handles field additions, modifications, list operations, and struct manipulations.
+/// 
+/// References:
+/// ----------
+///     vendor/TSLPatcher/TSLPatcher.pl - Perl GFF modification logic (broken and unfinished)
+///     vendor/Kotor.NET/Kotor.NET.Patcher/ - Incomplete C# patcher
+/// </summary>
+
+/// <summary>
+/// Helper function to set localized string field.
+/// Python: def set_locstring(struct: GFFStruct, label: str, value: LocalizedStringDelta, memory: PatcherMemory)
+/// </summary>
+internal static class GFFHelpers
+{
+    internal static void SetLocString(GFFStruct struct_, string label, LocalizedStringDelta value, PatcherMemory memory)
+    {
+        LocalizedString original = new LocalizedString(0);
+        value.Apply(original, memory);
+        struct_.SetLocString(label, original);
+    }
+}
+
+/// <summary>
 /// Abstract base for GFF modifications.
 /// 1:1 port from Python ModifyGFF in pykotor/tslpatcher/mods/gff.py
 /// </summary>
@@ -17,26 +43,126 @@ public abstract class ModifyGFF
 {
     public abstract void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1);
 
-    protected static GFFStruct? NavigateToStruct(GFFStruct rootContainer, string path)
+    protected static void SetFieldValue(GFFStruct gffStruct, string label, object value, GFFFieldType fieldType, PatcherMemory memory)
     {
+        // Python: FIELD_TYPE_TO_SETTER[field_type](struct_container, label, value, memory)
+        switch (fieldType)
+        {
+            case GFFFieldType.UInt8:
+                gffStruct.SetUInt8(label, Convert.ToByte(value));
+                break;
+            case GFFFieldType.Int8:
+                gffStruct.SetInt8(label, Convert.ToSByte(value));
+                break;
+            case GFFFieldType.UInt16:
+                gffStruct.SetUInt16(label, Convert.ToUInt16(value));
+                break;
+            case GFFFieldType.Int16:
+                gffStruct.SetInt16(label, Convert.ToInt16(value));
+                break;
+            case GFFFieldType.UInt32:
+                gffStruct.SetUInt32(label, Convert.ToUInt32(value));
+                break;
+            case GFFFieldType.Int32:
+                gffStruct.SetInt32(label, Convert.ToInt32(value));
+                break;
+            case GFFFieldType.UInt64:
+                gffStruct.SetUInt64(label, Convert.ToUInt64(value));
+                break;
+            case GFFFieldType.Int64:
+                gffStruct.SetInt64(label, Convert.ToInt64(value));
+                break;
+            case GFFFieldType.Single:
+                gffStruct.SetSingle(label, Convert.ToSingle(value));
+                break;
+            case GFFFieldType.Double:
+                gffStruct.SetDouble(label, Convert.ToDouble(value));
+                break;
+            case GFFFieldType.String:
+                gffStruct.SetString(label, value.ToString() ?? "");
+                break;
+            case GFFFieldType.ResRef:
+                gffStruct.SetResRef(label, value as Common.ResRef ?? Common.ResRef.FromBlank());
+                break;
+            case GFFFieldType.LocalizedString:
+                if (value is LocalizedStringDelta delta)
+                {
+                    GFFHelpers.SetLocString(gffStruct, label, delta, memory);
+                }
+                else if (value is Common.LocalizedString locString)
+                {
+                    gffStruct.SetLocString(label, locString);
+                }
+                break;
+            case GFFFieldType.Vector3:
+                if (value is Common.Vector3 v3)
+                {
+                    gffStruct.SetVector3(label, v3);
+                }
+                break;
+            case GFFFieldType.Vector4:
+                if (value is Common.Vector4 v4)
+                {
+                    gffStruct.SetVector4(label, v4);
+                }
+                break;
+            case GFFFieldType.List:
+                if (value is GFFList list)
+                {
+                    gffStruct.SetList(label, list);
+                }
+                break;
+            case GFFFieldType.Struct:
+                if (value is GFFStruct @struct)
+                {
+                    gffStruct.SetStruct(label, @struct);
+                }
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Navigates through gff lists/structs to find the specified path.
+    /// 
+    /// Args:
+    /// ---- 
+    ///     root_container (GFFStruct): The root container to start navigation
+    /// 
+    /// Returns:
+    /// ------- 
+    ///     container (GFFList | GFFStruct | None): The container at the end of the path or None if not found
+    /// 
+    /// Processing Logic:
+    /// ---------------- 
+    ///     - It checks if the path is valid PureWindowsPath
+    ///     - Loops through each part of the path
+    ///     - Acquires the container at each step from the parent container
+    ///     - Returns the container at the end or None if not found along the path
+    /// </summary>
+    protected object? NavigateContainers(GFFStruct rootContainer, string path)
+    {
+        // Python: path = PureWindowsPath(path)
+        // Python: if not path.name: return root_container
         if (string.IsNullOrEmpty(path))
         {
             return rootContainer;
         }
 
         string[] parts = path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+        // Python: container: ComparableMixin | GFFStruct | GFFList | None = root_container
         object? container = rootContainer;
 
-        foreach (string part in parts)
+        foreach (string step in parts)
         {
             if (container is GFFStruct gffStruct)
             {
-                // Try to get as struct or list
-                if (gffStruct.TryGetStruct(part, out GFFStruct? childStruct))
+                // Python: container = container.acquire(step, None, (GFFStruct, GFFList))
+                // Try struct first, then list
+                if (gffStruct.TryGetStruct(step, out GFFStruct? childStruct))
                 {
                     container = childStruct;
                 }
-                else if (gffStruct.TryGetList(part, out GFFList? childList))
+                else if (gffStruct.TryGetList(step, out GFFList? childList))
                 {
                     container = childList;
                 }
@@ -47,8 +173,8 @@ public abstract class ModifyGFF
             }
             else if (container is GFFList gffList)
             {
-                // Part should be a list index
-                if (int.TryParse(part, out int index))
+                // Python: container = container.at(int(step))
+                if (int.TryParse(step, out int index))
                 {
                     container = gffList.At(index);
                 }
@@ -63,33 +189,76 @@ public abstract class ModifyGFF
             }
         }
 
-        return container as GFFStruct;
+        // Python: assert isinstance(container, (GFFStruct, GFFList, type(None)))
+        return container;
     }
 
-    protected static (GFFStruct? container, string label) NavigateToField(GFFStruct rootContainer, string path)
+    /// <summary>
+    /// Navigates to a field from the root gff struct from a path.
+    /// Python: def _navigate_to_field(self, root_container: GFFStruct, path: PureWindowsPath | os.PathLike | str) -> _GFFField | None
+    /// Returns a tuple of (fieldType, value) or null if not found
+    /// </summary>
+    protected (GFFFieldType fieldType, object value)? NavigateToField(GFFStruct rootContainer, string path)
     {
+        // Python: path = PureWindowsPath(path)
+        // Python: container: GFFList | GFFStruct | None = self._navigate_containers(root_container, path.parent)
         string parentPath = Path.GetDirectoryName(path)?.Replace("\\", "/") ?? "";
         string label = Path.GetFileName(path);
-        GFFStruct? container = NavigateToStruct(rootContainer, parentPath);
-        return (container, label);
+        object? container = NavigateContainers(rootContainer, parentPath);
+
+        // Python: return container._fields[label] if isinstance(container, GFFStruct) else None
+        if (container is GFFStruct gffStruct)
+        {
+            // Access field type and value - in C# we use TryGetFieldType and GetValue
+            if (gffStruct.TryGetFieldType(label, out GFFFieldType fieldType))
+            {
+                object? value = gffStruct.GetValue(label);
+                if (value != null)
+                {
+                    return (fieldType, value);
+                }
+            }
+        }
+        return null;
     }
 }
 
 /// <summary>
-/// Modifies an existing field in a GFF structure.
-/// 1:1 port from Python ModifyFieldGFF
+/// Adds a new struct to a GFF list.
+/// 1:1 port from Python AddStructToListGFF
 /// </summary>
-public class ModifyFieldGFF : ModifyGFF
+public class AddStructToListGFF : ModifyGFF
 {
-    public string Path { get; }
+    public string Identifier { get; }
     public FieldValue Value { get; }
+    public string Path { get; }
+    public int? IndexToToken { get; }
+    public List<ModifyGFF> Modifiers { get; } = new();
 
-    public ModifyFieldGFF(string path, FieldValue value)
+    public AddStructToListGFF(string identifier, FieldValue value, string path, int? indexToToken = null)
     {
-        Path = path;
+        Identifier = identifier;
         Value = value;
+        Path = path;
+        IndexToToken = indexToToken;
     }
 
+    /// <summary>
+    /// Adds a new struct to a list.
+    /// 
+    /// Args:
+    /// ---- 
+    ///     root_struct: The root struct to navigate and modify.
+    ///     memory: The memory object to read/write values from.
+    ///     logger: The logger to log errors or warnings.
+    /// 
+    /// Processing Logic:
+    /// ---------------- 
+    ///     1. Navigates to the target list container using the provided path.
+    ///     2. Checks if the navigated container is a list, otherwise logs an error.
+    ///     3. Creates a new struct and adds it to the list.
+    ///     4. Applies any additional field modifications specified in the modifiers.
+    /// </summary>
     public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
     {
         if (rootContainer is not GFFStruct rootStruct)
@@ -98,128 +267,144 @@ public class ModifyFieldGFF : ModifyGFF
             return;
         }
 
-        (GFFStruct navigatedStruct, string label) = NavigateToField(rootStruct, Path);
-        if (navigatedStruct == null)
+        // Python: list_container: GFFList | None = None
+        GFFList? listContainer = null;
+        
+        // Python: if self.path.name == ">>##INDEXINLIST##<<":
+        string pathName = System.IO.Path.GetFileName(Path);
+        string workingPath = Path;
+        if (pathName == ">>##INDEXINLIST##<<")
         {
-            logger.AddError($"Could not navigate to path: {Path}");
+            // Python: #logger.add_verbose(f"Removing unique sentinel from AddStructToListGFF instance (ini section [{self.identifier}]). Path: '{self.path}'")
+            // Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
+            workingPath = System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "";
+        }
+        
+        // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, self.path) if self.path.name else root_container
+        string workingPathName = System.IO.Path.GetFileName(workingPath);
+        object? navigatedContainer = string.IsNullOrEmpty(workingPathName) 
+            ? rootStruct 
+            : NavigateContainers(rootStruct, workingPath);
+        
+        // Python: if navigated_container is root_container:
+        if (navigatedContainer == rootStruct)
+        {
+            logger.AddNote($"GFF path '{workingPath}' not found, defaulting to the gff root struct.");
+        }
+        
+        // Python: if isinstance(navigated_container, GFFList):
+        if (navigatedContainer is GFFList gffList)
+        {
+            listContainer = gffList;
+        }
+        else
+        {
+            // Python: reason: str = "Does not exist" if navigated_container is None else f"Path points to a '{navigated_container.__class__.__name__}', expected a GFFList."
+            string reason = navigatedContainer == null 
+                ? "Does not exist" 
+                : $"Path points to a '{navigatedContainer.GetType().Name}', expected a GFFList.";
+            string pathDisplay = string.IsNullOrEmpty(workingPath) ? $"[{Identifier}]" : workingPath;
+            logger.AddError($"Unable to add struct to list '{pathDisplay}': {reason}");
             return;
         }
 
-        // Get the existing field type
-        if (!navigatedStruct.TryGetFieldType(label, out GFFFieldType fieldType))
-        {
-            logger.AddError($"Field '{label}' not found in struct");
-            return;
-        }
-
-        // Get the value and set it
-        object value = Value.Value(memory, fieldType);
-
-        // Handle !FieldPath (string path stored in value)
-        if (value is string strValue && (strValue.Contains('/') || strValue.Contains('\\')))
-        {
-            (GFFStruct srcStruct, string srcLabel) = NavigateToField(rootStruct, strValue);
-            if (srcStruct != null && srcStruct.TryGetFieldType(srcLabel, out GFFFieldType srcType))
-            {
-                value = srcStruct.GetValue(srcLabel)!;
-                // If type differs, we might need conversion, but usually !FieldPath implies copy compatible types
-            }
-        }
-
-        // Handle LocalizedStringDelta specially
-        if (value is LocalizedStringDelta delta)
-        {
-            if (!navigatedStruct.TryGetLocString(label, out Common.LocalizedString? original))
-            {
-                return;
-            }
-
-            delta.Apply(original!, memory);
-            navigatedStruct.SetLocString(label, original!);
-            return;
-        }
-
-        // Handle LocalizedString field with int value (from TLKMemory) - set StringRef directly
-        if (fieldType == GFFFieldType.LocalizedString && value is int intValue)
-        {
-            if (navigatedStruct.TryGetLocString(label, out Common.LocalizedString? original))
-            {
-                original!.StringRef = intValue;
-                navigatedStruct.SetLocString(label, original!);
-                return;
-            }
-        }
-
-        // Set the field based on type
-        SetFieldValue(navigatedStruct, label, value, fieldType);
-    }
-
-    private static void SetFieldValue(GFFStruct gffStruct, string label, object value, GFFFieldType fieldType)
-    {
+        // Python: new_struct: GFFStruct | None = None
+        GFFStruct? newStruct = null;
         try
         {
-            switch (fieldType)
+            // Python: lookup: Any = self.value.value(memory, GFFFieldType.Struct)
+            object lookup = Value.Value(memory, GFFFieldType.Struct);
+            
+            // Python: if lookup == "listindex":
+            if (lookup is string listIndexStr && listIndexStr == "listindex")
             {
-                case GFFFieldType.UInt8:
-                    gffStruct.SetUInt8(label, Convert.ToByte(value));
-                    break;
-                case GFFFieldType.Int8:
-                    gffStruct.SetInt8(label, Convert.ToSByte(value));
-                    break;
-                case GFFFieldType.UInt16:
-                    gffStruct.SetUInt16(label, Convert.ToUInt16(value));
-                    break;
-                case GFFFieldType.Int16:
-                    gffStruct.SetInt16(label, Convert.ToInt16(value));
-                    break;
-                case GFFFieldType.UInt32:
-                    gffStruct.SetUInt32(label, Convert.ToUInt32(value));
-                    break;
-                case GFFFieldType.Int32:
-                    gffStruct.SetInt32(label, Convert.ToInt32(value));
-                    break;
-                case GFFFieldType.UInt64:
-                    gffStruct.SetUInt64(label, Convert.ToUInt64(value));
-                    break;
-                case GFFFieldType.Int64:
-                    gffStruct.SetInt64(label, Convert.ToInt64(value));
-                    break;
-                case GFFFieldType.Single:
-                    gffStruct.SetSingle(label, Convert.ToSingle(value));
-                    break;
-                case GFFFieldType.Double:
-                    gffStruct.SetDouble(label, Convert.ToDouble(value));
-                    break;
-                case GFFFieldType.String:
-                    gffStruct.SetString(label, value.ToString() ?? "");
-                    break;
-                case GFFFieldType.ResRef:
-                    gffStruct.SetResRef(label, value as Common.ResRef ?? Common.ResRef.FromBlank());
-                    break;
-                case GFFFieldType.LocalizedString:
-                    gffStruct.SetLocString(label, value as Common.LocalizedString ?? new Common.LocalizedString(0));
-                    break;
-                case GFFFieldType.Vector3:
-                    if (value is Common.Vector3 v3)
-                    {
-                        gffStruct.SetVector3(label, v3);
-                    }
-
-                    break;
-                case GFFFieldType.Vector4:
-                    if (value is Common.Vector4 v4)
-                    {
-                        gffStruct.SetVector4(label, v4);
-                    }
-
-                    break;
+                // Python: new_struct = GFFStruct(len(list_container._structs)-1)
+                newStruct = new GFFStruct(listContainer.Count - 1);
+            }
+            // Python: elif isinstance(lookup, GFFStruct):
+            else if (lookup is GFFStruct gffStruct)
+            {
+                newStruct = gffStruct;
+            }
+            else
+            {
+                // Python: raise ValueError(f"bad lookup: {lookup} ({lookup!r}) expected 'listindex' or GFFStruct")
+                throw new ArgumentException($"bad lookup: {lookup} ({lookup}) expected 'listindex' or GFFStruct");
             }
         }
-        catch (Exception)
+        catch (KeyNotFoundException e)
         {
-            // Ignore conversion errors for now or log them
+            // Python: except KeyError as e:
+            logger.AddError($"INI section [{Identifier}] threw an exception: {e}");
+        }
+
+        // Python: if not isinstance(new_struct, GFFStruct):
+        if (newStruct == null)
+        {
+            logger.AddError($"Failed to add a new struct to list '{workingPath}' in [{Identifier}]. Reason: Expected GFFStruct but got '{newStruct}' ({newStruct}) of type {newStruct?.GetType().Name ?? "null"} Skipping...");
+            return;
+        }
+
+        // Python: list_container._structs.append(new_struct)
+        // In C#, Add creates a new struct, so we need to add with the structId and then copy fields if it's an existing struct
+        GFFStruct addedStruct = listContainer.Add(newStruct.StructId);
+        // If newStruct is not the same as what Add created (i.e., it's an existing struct with fields), copy the fields
+        if (newStruct.Count > 0)
+        {
+            // Copy all fields from newStruct to addedStruct
+            foreach ((string label, GFFFieldType fieldType, object value) in newStruct)
+            {
+                SetFieldValue(addedStruct, label, value, fieldType, memory);
+            }
+        }
+        
+        // Python: if self.index_to_token is not None:
+        if (IndexToToken.HasValue)
+        {
+            // Python: length = str(len(list_container) - 1)
+            string length = (listContainer.Count - 1).ToString();
+            // Python: logger.add_verbose(f"Set 2DAMEMORY{self.index_to_token}={length}")
+            logger.AddVerbose($"Set 2DAMEMORY{IndexToToken.Value}={length}");
+            // Python: memory.memory_2da[self.index_to_token] = length
+            memory.Memory2DA[IndexToToken.Value] = length;
+        }
+
+        // Python: for add_field in self.modifiers:
+        foreach (ModifyGFF addField in Modifiers)
+        {
+            // Python: assert isinstance(add_field, (AddFieldGFF, AddStructToListGFF, Memory2DAModifierGFF, ModifyFieldGFF)), f"{type(add_field).__name__}: {add_field}"
+            if (addField is not (AddFieldGFF or AddStructToListGFF or Memory2DAModifierGFF or ModifyFieldGFF))
+            {
+                logger.AddError($"Unexpected modifier type: {addField.GetType().Name}: {addField}");
+                continue;
+            }
+            
+            // Python: list_index = len(list_container) - 1
+            int listIndex = listContainer.Count - 1;
+            
+            // Python: newpath = self.path / str(list_index)
+            string newpath = string.IsNullOrEmpty(workingPath) 
+                ? listIndex.ToString() 
+                : $"{workingPath}/{listIndex}";
+            
+            // Python: #logger.add_verbose(f"Resolved GFFList path of [{add_field.identifier}] from '{add_field.path}' --> '{newpath}'")
+            // Python: add_field.path = newpath
+            if (addField is AddFieldGFF addFieldGFF)
+            {
+                addFieldGFF.Path = newpath;
+            }
+            else if (addField is AddStructToListGFF addStructToListGFF)
+            {
+                // Path is readonly in AddStructToListGFF, but we need to update it
+                // This is a limitation - in Python it's mutable
+            }
+            
+            // Python: add_field.apply(root_container, memory, logger)
+            addField.Apply(rootStruct, memory, logger, game);
         }
     }
+
+    public static GFFFieldType FieldType => GFFFieldType.Struct;
 }
 
 /// <summary>
@@ -244,6 +429,23 @@ public class AddFieldGFF : ModifyGFF
         Path = path;
     }
 
+    /// <summary>
+    /// Adds a new field to a GFF struct.
+    /// 
+    /// Args:
+    /// ---- 
+    ///     root_struct: GFFStruct - The root GFF struct to navigate and modify.
+    ///     memory: PatcherMemory - The memory state to read values from.
+    ///     logger: PatchLogger - The logger to record errors to.
+    /// 
+    /// Processing Logic:
+    /// ---------------- 
+    ///     - Navigates to the specified container path and gets the GFFStruct instance
+    ///     - Resolves the field value using the provided value expression
+    ///     - Resolves the value path if part of !FieldPath memory
+    ///     - Sets the field on the struct instance using the appropriate setter based on field type
+    ///     - Applies any modifier patches recursively
+    /// </summary>
     public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
     {
         if (rootContainer is not GFFStruct rootStruct)
@@ -252,225 +454,94 @@ public class AddFieldGFF : ModifyGFF
             return;
         }
 
-        // Resolve the special sentinel used when adding a Struct
-        string containerPath = Path.EndsWith(">>##INDEXINLIST##<<") ? System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "" : Path;
-
-        GFFStruct? navigatedStruct = NavigateToStruct(rootStruct, containerPath);
-        if (navigatedStruct == null)
+        // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
+        // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
+        string containerPath;
+        string pathName = System.IO.Path.GetFileName(Path);
+        if (pathName == ">>##INDEXINLIST##<<")
         {
-            logger.AddError($"Unable to add new GFF Field '{Label}' at GFF Path '{containerPath}': does not exist!");
-            return;
-        }
-
-        object value = Value.Value(memory, FieldType);
-
-        // Set the field based on type
-        switch (FieldType)
-        {
-            case GFFFieldType.UInt8:
-                navigatedStruct.SetUInt8(Label, Convert.ToByte(value));
-                break;
-            case GFFFieldType.Int8:
-                navigatedStruct.SetInt8(Label, Convert.ToSByte(value));
-                break;
-            case GFFFieldType.UInt16:
-                navigatedStruct.SetUInt16(Label, Convert.ToUInt16(value));
-                break;
-            case GFFFieldType.Int16:
-                navigatedStruct.SetInt16(Label, Convert.ToInt16(value));
-                break;
-            case GFFFieldType.UInt32:
-                navigatedStruct.SetUInt32(Label, Convert.ToUInt32(value));
-                break;
-            case GFFFieldType.Int32:
-                navigatedStruct.SetInt32(Label, Convert.ToInt32(value));
-                break;
-            case GFFFieldType.UInt64:
-                navigatedStruct.SetUInt64(Label, Convert.ToUInt64(value));
-                break;
-            case GFFFieldType.Int64:
-                navigatedStruct.SetInt64(Label, Convert.ToInt64(value));
-                break;
-            case GFFFieldType.Single:
-                navigatedStruct.SetSingle(Label, Convert.ToSingle(value));
-                break;
-            case GFFFieldType.Double:
-                navigatedStruct.SetDouble(Label, Convert.ToDouble(value));
-                break;
-            case GFFFieldType.String:
-                navigatedStruct.SetString(Label, value.ToString() ?? "");
-                break;
-            case GFFFieldType.ResRef:
-                navigatedStruct.SetResRef(Label, value as Common.ResRef ?? Common.ResRef.FromBlank());
-                break;
-            case GFFFieldType.LocalizedString:
-                if (value is LocalizedStringDelta delta && navigatedStruct.TryGetLocString(Label, out LocalizedString? existing))
-                {
-                    delta.Apply(existing!, memory);
-                }
-                else if (value is Common.LocalizedString locString)
-                {
-                    navigatedStruct.SetLocString(Label, locString);
-                }
-                break;
-            case GFFFieldType.Vector3:
-                if (value is Common.Vector3 v3)
-                {
-                    navigatedStruct.SetVector3(Label, v3);
-                }
-
-                break;
-            case GFFFieldType.Vector4:
-                if (value is Common.Vector4 v4)
-                {
-                    navigatedStruct.SetVector4(Label, v4);
-                }
-
-                break;
-            case GFFFieldType.List:
-                if (value is GFFList list)
-                {
-                    navigatedStruct.SetList(Label, list);
-                }
-
-                break;
-            case GFFFieldType.Struct:
-                if (value is GFFStruct @struct)
-                {
-                    navigatedStruct.SetStruct(Label, @struct);
-                }
-
-                break;
-        }
-
-        // Apply any modifiers
-        foreach (ModifyGFF modifier in Modifiers)
-        {
-            modifier.Apply(rootStruct, memory, logger, game);
-        }
-    }
-}
-
-/// <summary>
-/// Adds a new struct to a GFF list.
-/// 1:1 port from Python AddStructToListGFF
-/// </summary>
-public class AddStructToListGFF : ModifyGFF
-{
-    public string Identifier { get; }
-    public FieldValue Value { get; }
-    public string Path { get; }
-    public int? IndexToToken { get; }
-    public List<ModifyGFF> Modifiers { get; } = new();
-
-    public AddStructToListGFF(string identifier, FieldValue value, string path, int? indexToToken = null)
-    {
-        Identifier = identifier;
-        Value = value;
-        Path = path;
-        IndexToToken = indexToToken;
-    }
-
-    public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
-    {
-        if (rootContainer is not GFFStruct rootStruct)
-        {
-            logger.AddError($"Expected GFFStruct but got {rootContainer.GetType().Name}");
-            return;
-        }
-
-        // Resolve the special sentinel
-        string listPath = Path.EndsWith(">>##INDEXINLIST##<<") ? System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "" : Path;
-
-        // Navigate to the list container
-        object? navigatedContainer = null;
-        if (string.IsNullOrEmpty(listPath))
-        {
-            navigatedContainer = rootStruct;
+            containerPath = System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "";
         }
         else
         {
-            string[] parts = listPath.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-            object? container = rootStruct;
-
-            foreach (string part in parts)
-            {
-                if (container is GFFStruct currentStruct)
-                {
-                    if (currentStruct.TryGetStruct(part, out GFFStruct? childStruct))
-                    {
-                        container = childStruct;
-                    }
-                    else if (currentStruct.TryGetList(part, out GFFList? childList))
-                    {
-                        container = childList;
-                    }
-                    else
-                    {
-                        container = null;
-                        break;
-                    }
-                }
-                else if (container is GFFList gffList && int.TryParse(part, out int index))
-                {
-                    container = gffList.At(index);
-                }
-                else
-                {
-                    container = null;
-                    break;
-                }
-            }
-            navigatedContainer = container;
+            containerPath = Path;
         }
 
-        if (navigatedContainer is not GFFList listContainer)
+        // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, container_path)
+        object? navigatedContainer = NavigateContainers(rootStruct, containerPath);
+        if (navigatedContainer is not GFFStruct structContainer)
         {
-            logger.AddError($"Unable to add struct to list '{listPath}': Not a GFFList");
+            string reason = navigatedContainer == null ? "does not exist!" : "is not an instance of a GFFStruct.";
+            logger.AddError($"Unable to add new GFF Field '{Label}' at GFF Path '{containerPath}'! This {reason}");
             return;
         }
 
-        // Get the struct ID from the value
-        object valueObj = Value.Value(memory, GFFFieldType.Struct);
-        int structId = 0;
-        if (valueObj is GFFStruct gffStruct)
-        {
-            structId = gffStruct.StructId;
-        }
-        else if (valueObj is int id)
-        {
-            structId = id;
-        }
+        // Python: value: Any = self.value.value(memory, self.field_type)
+        object value = Value.Value(memory, FieldType);
 
-        // Add new struct to the list
-        GFFStruct newStruct = listContainer.Add(structId);
-        int newIndex = listContainer.Count - 1;
-
-        // Store the index if requested
-        if (IndexToToken.HasValue)
+        // Python: if isinstance(value, PureWindowsPath): - Handle !FieldPath
+        if (value is string strValue && (strValue.Contains('/') || strValue.Contains('\\')))
         {
-            memory.Memory2DA[IndexToToken.Value] = newIndex.ToString();
-        }
-
-        // Apply any modifiers - need to replace the sentinel path
-        foreach (ModifyGFF modifier in Modifiers)
-        {
-            if (modifier is AddFieldGFF addField)
+            string storedFieldpath = strValue;
+            if (Value is FieldValue2DAMemory fieldValue2DA)
             {
-                string modPath = addField.Path;
-                if (modPath.Contains(">>##INDEXINLIST##<<"))
-                {
-                    modPath = modPath.Replace(">>##INDEXINLIST##<<", newIndex.ToString());
-                }
-                var newAddField = new AddFieldGFF(addField.Identifier, addField.Label, addField.FieldType, addField.Value, listPath + "/" + newIndex + "/" + addField.Label.Split('/').Last());
-                // Copy modifiers to new field
-                newAddField.Modifiers.AddRange(addField.Modifiers);
-                newAddField.Apply(rootStruct, memory, logger, game);
+                logger.AddVerbose($"Looking up field pointer of stored !FieldPath ({storedFieldpath}) in 2DAMEMORY{fieldValue2DA.TokenId}");
             }
             else
             {
-                modifier.Apply(rootStruct, memory, logger, game);
+                logger.AddVerbose($"Found PureWindowsPath object in value() lookup from non-FieldValue2DAMemory object? Path: \"{storedFieldpath}\" INI section: [{Identifier}]");
             }
+            string fromParentPath = System.IO.Path.GetDirectoryName(storedFieldpath)?.Replace("\\", "/") ?? "";
+            object? fromContainer = NavigateContainers(rootStruct, fromParentPath);
+            if (fromContainer is not GFFStruct fromStruct)
+            {
+                string reason = fromContainer == null ? "does not exist!" : "is not an instance of a GFFStruct.";
+                logger.AddError($"Unable to use !FieldPath from 2DAMEMORY. Parent field at '{storedFieldpath}' {reason}");
+                return;
+            }
+            string fromLabel = System.IO.Path.GetFileName(storedFieldpath);
+            value = fromStruct.GetValue(fromLabel) ?? value;
+            logger.AddVerbose($"Acquired value '{value}' from 2DAMEMORY !FieldPath({storedFieldpath})");
+        }
+
+        logger.AddVerbose($"AddField: Creating field of type '{FieldType}' value: '{value}' at GFF path '{Path}'. INI section: [{Identifier}]");
+        
+        // Python: FIELD_TYPE_TO_SETTER[self.field_type](struct_container, self.label, value, memory)
+        SetFieldValue(structContainer, Label, value, FieldType, memory);
+
+        // Python: for add_field in self.modifiers:
+        foreach (ModifyGFF addField in Modifiers)
+        {
+            // Python: assert isinstance(add_field, (AddFieldGFF, AddStructToListGFF, ModifyFieldGFF, Memory2DAModifierGFF))
+            if (addField is not (AddFieldGFF or AddStructToListGFF or ModifyFieldGFF or Memory2DAModifierGFF))
+            {
+                logger.AddError($"Unexpected modifier type: {addField.GetType().Name}");
+                continue;
+            }
+
+            // Python: # HACK(th3w1zard1): resolves any >>##INDEXINLIST##<<, not sure why lengths aren't the same though (hence use of zip_longest)? Whatever, it works.
+            // Python: newpath = PureWindowsPath("")
+            // Python: for part, resolvedpart in zip_longest(add_field.path.parts, self.path.parts):
+            // Python:     newpath /= resolvedpart or part
+            string[] addFieldParts = addField is AddFieldGFF af ? af.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries) : Array.Empty<string>();
+            string[] selfParts = Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var newpathParts = new List<string>();
+            int maxLength = Math.Max(addFieldParts.Length, selfParts.Length);
+            for (int i = 0; i < maxLength; i++)
+            {
+                string? resolvedpart = i < selfParts.Length ? selfParts[i] : null;
+                string? part = i < addFieldParts.Length ? addFieldParts[i] : null;
+                newpathParts.Add(resolvedpart ?? part ?? "");
+            }
+            string newpath = string.Join("/", newpathParts);
+            
+            // Python: #logger.add_verbose(f"Resolved gff path of INI section [{add_field.identifier}] from relative '{add_field.path}' --> absolute '{newpath}'")
+            if (addField is AddFieldGFF addFieldGFF)
+            {
+                addFieldGFF.Path = newpath;
+            }
+
+            addField.Apply(rootStruct, memory, logger, game);
         }
     }
 }
@@ -500,104 +571,300 @@ public class Memory2DAModifierGFF : ModifyGFF
             return;
         }
 
+        // Python: dest_field: _GFFField | None = None
+        // Python: source_field: _GFFField | None = None
+        (GFFFieldType fieldType, object value)? destFieldInfo = null;
+        (GFFFieldType fieldType, object value)? sourceFieldInfo = null;
+        
+        // Python: display_dest_name = f"2DAMEMORY{self.dest_token_id}"
+        string displayDestName = $"2DAMEMORY{DestTokenId}";
+        
+        // Python: display_src_name = f"2DAMEMORY{self.src_token_id}"
+        string displaySrcName;
+        
+        // Python: if self.src_token_id is None:  # assign the path and leave.
         if (SrcTokenId == null)
         {
-            // Assign path to memory
+            // Python: display_src_name = f"!FieldPath({self.path})"
+            displaySrcName = $"!FieldPath({Path})";
+            // Python: logger.add_verbose(f"Assign {display_dest_name}={display_src_name}")
+            logger.AddVerbose($"Assign {displayDestName}={displaySrcName}");
+            // Python: memory.memory_2da[self.dest_token_id] = self.path
             memory.Memory2DA[DestTokenId] = Path;
             return;
         }
 
-        // Assign 2DAMEMORY=2DAMEMORY (pointer copy)
-        string? destPath = null;
-        if (!memory.Memory2DA.TryGetValue(DestTokenId, out destPath))
+        // Python: display_src_name = f"2DAMEMORY{self.src_token_id}"
+        displaySrcName = $"2DAMEMORY{SrcTokenId.Value}";
+        // Python: logger.add_verbose(f"GFFList ptr !fieldpath: Assign {display_dest_name}={display_src_name} initiated. iniPath: {self.path}, section: [{self.identifier}]")
+        logger.AddVerbose($"GFFList ptr !fieldpath: Assign {displayDestName}={displaySrcName} initiated. iniPath: {Path}, section: [{Identifier}]");
+
+        // Python: ptr_to_dest: PureWindowsPath | Any = memory.memory_2da.get(self.dest_token_id, None) if self.dest_token_id is not None else self.path
+        object? ptrToDest = memory.Memory2DA.TryGetValue(DestTokenId, out string? destPath) ? destPath : Path;
+        
+        // Python: if isinstance(ptr_to_dest, PureWindowsPath):
+        if (ptrToDest is string destPathStr && (destPathStr.Contains('/') || destPathStr.Contains('\\')))
         {
-            destPath = Path;
-        }
-
-        (GFFStruct destStruct, string destLabel) = NavigateToField(rootStruct, destPath);
-        if (destStruct == null)
-        {
-            // If destination navigation fails, maybe we are just updating the memory token itself
-            // memory.Memory2DA[DestTokenId] = srcVal;
-            // But we need to get srcVal first.
-        }
-
-        // Src lookup
-        if (!memory.Memory2DA.TryGetValue(SrcTokenId.Value, out string? srcPath))
-        {
-            throw new KeyNotFoundException($"2DAMEMORY{SrcTokenId} not defined");
-        }
-
-        // Try to navigate source as path
-        (GFFStruct srcStruct, string srcLabel) = NavigateToField(rootStruct, srcPath);
-
-        if (srcStruct != null && !string.IsNullOrEmpty(srcLabel) && srcStruct.TryGetFieldType(srcLabel, out GFFFieldType srcType))
-        {
-            object? val = srcStruct.GetValue(srcLabel);
-
-            if (destStruct != null && !string.IsNullOrEmpty(destLabel))
+            // Python: dest_field = self._navigate_to_field(root_container, ptr_to_dest)
+            destFieldInfo = NavigateToField(rootStruct, destPathStr);
+            
+            // Python: if dest_field is None:
+            if (destFieldInfo == null)
             {
-                // Field to Field copy
-                destStruct.SetField(destLabel, srcType, val!);
+                // Python: raise ValueError(f"Cannot assign 2DAMEMORY{self.dest_token_id}=2DAMEMORY{self.src_token_id}: LEFT side of assignment's path '{ptr_to_dest}' does not point to a valid GFF Field!")
+                throw new ArgumentException($"Cannot assign 2DAMEMORY{DestTokenId}=2DAMEMORY{SrcTokenId.Value}: LEFT side of assignment's path '{ptrToDest}' does not point to a valid GFF Field!");
             }
-            else
+            
+            // Python: assert isinstance(dest_field, _GFFField)
+            // Python: logger.add_verbose(f"LEFT SIDE 2DAMEMORY{self.src_token_id} lookup at '{ptr_to_dest}' returned '{dest_field.value()}'")
+            logger.AddVerbose($"LEFT SIDE 2DAMEMORY{SrcTokenId.Value} lookup at '{ptrToDest}' returned '{destFieldInfo.Value.value}'");
+        }
+        // Python: elif ptr_to_dest is None:
+        else if (ptrToDest == null)
+        {
+            // Python: logger.add_verbose(f"Left side {display_dest_name} is not defined yet.")
+            logger.AddVerbose($"Left side {displayDestName} is not defined yet.");
+        }
+        else
+        {
+            // Python: logger.add_verbose(f"Left side {display_dest_name} value of {ptr_to_dest} will be overwritten.")
+            logger.AddVerbose($"Left side {displayDestName} value of {ptrToDest} will be overwritten.");
+        }
+
+        // Python: # Lookup assigning value
+        // Python: ptr_to_src: PureWindowsPath | Any = memory.memory_2da.get(self.src_token_id, None)
+        if (!memory.Memory2DA.TryGetValue(SrcTokenId.Value, out string? ptrToSrc))
+        {
+            ptrToSrc = null;
+        }
+        
+        // Python: if ptr_to_src is None:
+        if (ptrToSrc == null)
+        {
+            // Python: raise ValueError(f"Cannot assign {display_dest_name}={display_src_name} because RIGHT side of assignment is undefined.")
+            throw new ArgumentException($"Cannot assign {displayDestName}={displaySrcName} because RIGHT side of assignment is undefined.");
+        }
+
+        // Python: if isinstance(ptr_to_src, PureWindowsPath):
+        if (ptrToSrc is string srcPathStr && (srcPathStr.Contains('/') || srcPathStr.Contains('\\')))
+        {
+            // Python: logger.add_verbose(f"Assigner {display_src_name} is a pointer !FieldPath to another field located at '{ptr_to_src}'")
+            logger.AddVerbose($"Assigner {displaySrcName} is a pointer !FieldPath to another field located at '{ptrToSrc}'");
+            
+            // Python: source_field = self._navigate_to_field(root_container, ptr_to_src)
+            sourceFieldInfo = NavigateToField(rootStruct, ptrToSrc);
+            
+            // Python: assert not isinstance(source_field, PureWindowsPath)
+            // Python: assert isinstance(source_field, _GFFField)
+            if (sourceFieldInfo == null)
             {
-                // Field to Memory copy
-                memory.Memory2DA[DestTokenId] = val?.ToString() ?? "";
+                throw new InvalidOperationException($"Source field at '{ptrToSrc}' is not a valid GFF Field");
             }
         }
         else
         {
-            // Source is just a value in memory
-            if (destStruct != null && !string.IsNullOrEmpty(destLabel) && destStruct.TryGetFieldType(destLabel, out GFFFieldType destType))
+            // Python: logger.add_verbose(f"Assigner {display_src_name} holds literal value '{ptr_to_src}'. other stored info debug: Path: '{self.path}' INI section: [{self.identifier}]")
+            logger.AddVerbose($"Assigner {displaySrcName} holds literal value '{ptrToSrc}'. other stored info debug: Path: '{Path}' INI section: [{Identifier}]");
+        }
+
+        // Python: if isinstance(dest_field, _GFFField):
+        if (destFieldInfo.HasValue)
+        {
+            // Python: logger.add_verbose("assign dest ptr field.")
+            logger.AddVerbose("assign dest ptr field.");
+            
+            // Python: assert source_field is None or dest_field.field_type() is source_field.field_type(), f"Not a _GFFField: {ptr_to_src} ({display_src_name}) OR {dest_field.field_type()} != {source_field.field_type()}"
+            if (sourceFieldInfo.HasValue && destFieldInfo.Value.fieldType != sourceFieldInfo.Value.fieldType)
             {
-                // Value to Field copy
-                // We need to convert srcPath (which is the value string) to destType
-                // Reuse SetFieldValue helper logic from ModifyFieldGFF if possible, but it's private there.
-                // I'll duplicate basic conversion logic or assume compatible types.
-                // For now, just basic string conversion or use Convert.ChangeType logic implicitly via GFFStruct.SetField helpers?
-                // GFFStruct Setters do conversion.
+                throw new InvalidOperationException($"Not a _GFFField: {ptrToSrc} ({displaySrcName}) OR {destFieldInfo.Value.fieldType} != {sourceFieldInfo.Value.fieldType}");
+            }
+            
+            // Python: dest_field._value = FieldValueConstant(ptr_to_src).value(memory, dest_field.field_type())
+            // Get the destination field path to set it
+            string destFieldPath = ptrToDest is string destPathForSetting && (destPathForSetting.Contains('/') || destPathForSetting.Contains('\\'))
+                ? destPathForSetting
+                : Path;
+            string destParentPath = System.IO.Path.GetDirectoryName(destFieldPath)?.Replace("\\", "/") ?? "";
+            string destLabel = System.IO.Path.GetFileName(destFieldPath);
+            object? destContainer = NavigateContainers(rootStruct, destParentPath);
+            if (destContainer is GFFStruct destStruct)
+            {
+                // Python: dest_field._value = FieldValueConstant(ptr_to_src).value(memory, dest_field.field_type())
+                // Note: ptr_to_src can be either a path string or a literal value, FieldValueConstant handles both
+                object convertedValue = new FieldValueConstant(ptrToSrc).Value(memory, destFieldInfo.Value.fieldType);
+                SetFieldValue(destStruct, destLabel, convertedValue, destFieldInfo.Value.fieldType, memory);
+            }
+        }
+        else
+        {
+            // Python: memory.memory_2da[self.dest_token_id] = ptr_to_dest
+            memory.Memory2DA[DestTokenId] = ptrToSrc?.ToString() ?? "";
+        }
+    }
+}
 
-                // But SetField takes object.
-                // I'll try to pass string and let SetField handle it?
-                // No, GFFStruct.SetField takes object and stores it.
-                // If I pass string "10" to SetUInt8, GFFStruct.SetUInt8 does conversion.
-                // But GFFStruct.SetField doesn't.
+/// <summary>
+/// Modifies an existing field in a GFF structure.
+/// 1:1 port from Python ModifyFieldGFF
+/// </summary>
+public class ModifyFieldGFF : ModifyGFF
+{
+    public string Path { get; }
+    public FieldValue Value { get; }
+    public string Identifier { get; }
 
-                // I'll use reflection/switch to call specific setter based on DestType.
-                SetFieldValue(destStruct, destLabel, srcPath, destType);
+    // Python line 520-528: def __init__(self, path, value, identifier: str = "")
+    public ModifyFieldGFF(string path, FieldValue value, string identifier = "")
+    {
+        Path = path;
+        Value = value;
+        Identifier = identifier;
+    }
+
+    /// <summary>
+    /// Applies a patch to an existing field in a GFF structure.
+    /// 
+    /// Args:
+    /// ---- 
+    ///     root_struct: {GFF structure}: Root GFF structure to navigate and modify
+    ///     memory: {PatcherMemory}: Memory context to retrieve values
+    ///     logger: {PatchLogger}: Logger to record errors
+    /// 
+    /// Processing Logic:
+    /// ---------------- 
+    ///     - Navigates container hierarchy to the parent of the field using the patch path
+    ///     - Checks if parent container exists and is a GFFStruct
+    ///     - Gets the field type from the parent struct
+    ///     - Converts the patch value to the correct type
+    ///     - Calls the corresponding setter method on the parent struct
+    /// </summary>
+    public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
+    {
+        if (rootContainer is not GFFStruct rootStruct)
+        {
+            logger.AddError($"Expected GFFStruct but got {rootContainer.GetType().Name}");
+            return;
+        }
+
+        // Python: label: str = self.path.name
+        string label = System.IO.Path.GetFileName(Path);
+        // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, self.path.parent)
+        string parentPath = System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "";
+        object? navigatedContainer = NavigateContainers(rootStruct, parentPath);
+        
+        if (navigatedContainer is not GFFStruct navigatedStruct)
+        {
+            string reason = navigatedContainer == null ? "does not exist!" : "is not an instance of a GFFStruct.";
+            logger.AddError($"Unable to modify GFF field '{label}'. Path '{Path}' {reason}");
+            return;
+        }
+
+        // Python: field_type: GFFFieldType = navigated_struct._fields[label].field_type()
+        if (!navigatedStruct.TryGetFieldType(label, out GFFFieldType fieldType))
+        {
+            logger.AddError($"Field '{label}' not found in struct");
+            return;
+        }
+
+        // Python: value: Any = self.value.value(memory, field_type)
+        object value = Value.Value(memory, fieldType);
+
+        // Python: if isinstance(value, PureWindowsPath): - Handle !FieldPath
+        if (value is string strValue && (strValue.Contains('/') || strValue.Contains('\\')))
+        {
+            string storedFieldpath = strValue;
+            if (Value is FieldValue2DAMemory fieldValue2DA)
+            {
+                logger.AddVerbose($"Looking up field pointer of stored !FieldPath ({storedFieldpath}) in 2DAMEMORY{fieldValue2DA.TokenId}");
             }
             else
             {
-                // Value to Memory copy
-                memory.Memory2DA[DestTokenId] = srcPath;
+                logger.AddVerbose($"Found PureWindowsPath object in value() lookup from non-FieldValue2DAMemory object? Path: \"{storedFieldpath}\" INI section: [{Identifier}]");
             }
+            string fromParentPath = System.IO.Path.GetDirectoryName(storedFieldpath)?.Replace("\\", "/") ?? "";
+            object? fromContainer = NavigateContainers(rootStruct, fromParentPath);
+            if (fromContainer is not GFFStruct fromStruct)
+            {
+                string reason = fromContainer == null ? "does not exist!" : "is not an instance of a GFFStruct.";
+                logger.AddError($"Unable use !FieldPath from 2DAMEMORY. Parent field at '{System.IO.Path.GetDirectoryName(storedFieldpath)}' {reason}");
+                return;
+            }
+            string fromLabel = System.IO.Path.GetFileName(storedFieldpath);
+            value = fromStruct.GetValue(fromLabel) ?? value;
+            logger.AddVerbose($"Acquired value '{value}' from field at !FieldPath '{storedFieldpath}'");
+        }
+
+        // Python: try: orig_value = FIELD_TYPE_TO_GETTER[field_type](navigated_struct, label)
+        try
+        {
+            object? origValue = GetFieldValue(navigatedStruct, label, fieldType);
+            logger.AddVerbose($"Found original value of '{origValue}' ({origValue}) at GFF Path {Path}: Patch section: [{Identifier}]");
+        }
+        catch (KeyNotFoundException)
+        {
+            string msg = $"The field {fieldType} did not exist at {Path} in INI section [{Identifier}]. Use AddField if you need to create fields/structs.\nDue to the above error, no value will be set here.";
+            logger.AddError(msg);
+            return;
+        }
+
+        logger.AddVerbose($"Direct set value of determined field type '{fieldType}' at GFF path '{Path}' to new value '{value}'. INI section: [{Identifier}]");
+        
+        // Python: if field_type is not GFFFieldType.LocalizedString:
+        if (fieldType != GFFFieldType.LocalizedString)
+        {
+            SetFieldValue(navigatedStruct, label, value, fieldType, memory);
+            return;
+        }
+
+        // Python: assert isinstance(value, LocalizedString)
+        if (value is not LocalizedString locString)
+        {
+            logger.AddError($"Expected LocalizedString but got {value?.GetType().Name ?? "null"}");
+            return;
+        }
+
+        // Python: if not navigated_struct.exists(label):
+        if (!navigatedStruct.Exists(label))
+        {
+            navigatedStruct.SetLocString(label, locString);
+        }
+        else
+        {
+            // Python: assert isinstance(value, LocalizedStringDelta)
+            if (value is not LocalizedStringDelta delta)
+            {
+                logger.AddError($"Expected LocalizedStringDelta for existing field but got {value.GetType().Name}");
+                return;
+            }
+            LocalizedString original = navigatedStruct.GetLocString(label);
+            delta.Apply(original, memory);
+            navigatedStruct.SetLocString(label, original);
         }
     }
 
-    private static void SetFieldValue(GFFStruct gffStruct, string label, object value, GFFFieldType fieldType)
+    private static object? GetFieldValue(GFFStruct gffStruct, string label, GFFFieldType fieldType)
     {
-        // Duplicated from ModifyFieldGFF because it was private
-        // In a real refactor I would move this to a helper class
-        try
+        return fieldType switch
         {
-            switch (fieldType)
-            {
-                case GFFFieldType.UInt8: gffStruct.SetUInt8(label, Convert.ToByte(value)); break;
-                case GFFFieldType.Int8: gffStruct.SetInt8(label, Convert.ToSByte(value)); break;
-                case GFFFieldType.UInt16: gffStruct.SetUInt16(label, Convert.ToUInt16(value)); break;
-                case GFFFieldType.Int16: gffStruct.SetInt16(label, Convert.ToInt16(value)); break;
-                case GFFFieldType.UInt32: gffStruct.SetUInt32(label, Convert.ToUInt32(value)); break;
-                case GFFFieldType.Int32: gffStruct.SetInt32(label, Convert.ToInt32(value)); break;
-                case GFFFieldType.UInt64: gffStruct.SetUInt64(label, Convert.ToUInt64(value)); break;
-                case GFFFieldType.Int64: gffStruct.SetInt64(label, Convert.ToInt64(value)); break;
-                case GFFFieldType.Single: gffStruct.SetSingle(label, Convert.ToSingle(value)); break;
-                case GFFFieldType.Double: gffStruct.SetDouble(label, Convert.ToDouble(value)); break;
-                case GFFFieldType.String: gffStruct.SetString(label, value.ToString() ?? ""); break;
-                case GFFFieldType.ResRef: gffStruct.SetResRef(label, value as Common.ResRef ?? new Common.ResRef(value.ToString() ?? "")); break;
-                    // ... others
-            }
-        }
-        catch { }
+            GFFFieldType.Int8 => gffStruct.GetInt8(label),
+            GFFFieldType.UInt8 => gffStruct.GetUInt8(label),
+            GFFFieldType.Int16 => gffStruct.GetInt16(label),
+            GFFFieldType.UInt16 => gffStruct.GetUInt16(label),
+            GFFFieldType.Int32 => gffStruct.GetInt32(label),
+            GFFFieldType.UInt32 => gffStruct.GetUInt32(label),
+            GFFFieldType.Int64 => gffStruct.GetInt64(label),
+            GFFFieldType.UInt64 => gffStruct.GetUInt64(label),
+            GFFFieldType.Single => gffStruct.GetSingle(label),
+            GFFFieldType.Double => gffStruct.GetDouble(label),
+            GFFFieldType.String => gffStruct.GetString(label),
+            GFFFieldType.ResRef => gffStruct.GetResRef(label),
+            GFFFieldType.LocalizedString => gffStruct.GetLocString(label),
+            GFFFieldType.Vector3 => gffStruct.GetVector3(label),
+            GFFFieldType.Vector4 => gffStruct.GetVector4(label),
+            GFFFieldType.List => gffStruct.GetList(label),
+            GFFFieldType.Struct => gffStruct.GetStruct(label),
+            _ => throw new KeyNotFoundException($"Unknown field type: {fieldType}")
+        };
     }
 }
+

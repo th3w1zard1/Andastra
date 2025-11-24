@@ -74,7 +74,7 @@ public abstract class IntegrationTestBase : IDisposable
     /// <summary>
     /// Creates a simple test 2DA file with specified columns and rows.
     /// </summary>
-    protected TwoDA CreateTest2DA(string[] columns, (string label, string[] values)[] rows)
+    protected static TwoDA CreateTest2DA(string[] columns, (string label, string[] values)[] rows)
     {
         var twoda = new TwoDA(columns.ToList());
 
@@ -94,7 +94,7 @@ public abstract class IntegrationTestBase : IDisposable
     /// <summary>
     /// Creates a test TLK file with specified entries.
     /// </summary>
-    protected TLK CreateTestTLK((string text, string sound)[] entries)
+    protected static TLK CreateTestTLK((string text, string sound)[] entries)
     {
         var tlk = new TLK(Language.English);
         foreach ((string text, string sound) in entries)
@@ -125,7 +125,7 @@ public abstract class IntegrationTestBase : IDisposable
     /// <summary>
     /// Asserts that a 2DA cell contains the expected value.
     /// </summary>
-    protected void AssertCellValue(TwoDA twoda, string rowLabel, string columnLabel, string expectedValue)
+    protected static void AssertCellValue(TwoDA twoda, string rowLabel, string columnLabel, string expectedValue)
     {
         int rowIndex = twoda.GetRowIndex(rowLabel);
         string actualValue = twoda.GetCellString(rowIndex, columnLabel) ?? string.Empty;
@@ -138,7 +138,7 @@ public abstract class IntegrationTestBase : IDisposable
     /// <summary>
     /// Asserts that a 2DA cell contains the expected value (by row index).
     /// </summary>
-    protected void AssertCellValue(TwoDA twoda, int rowIndex, string columnLabel, string expectedValue)
+    protected static void AssertCellValue(TwoDA twoda, int rowIndex, string columnLabel, string expectedValue)
     {
         string actualValue = twoda.GetCellString(rowIndex, columnLabel) ?? string.Empty;
         if (!actualValue.Equals(expectedValue, StringComparison.Ordinal))

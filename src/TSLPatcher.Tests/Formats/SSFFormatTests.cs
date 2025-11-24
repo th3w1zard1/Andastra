@@ -58,7 +58,7 @@ public class SSFFormatTests
             .WithMessage("*version*not supported*");
     }
 
-    private void ValidateIO(SSF ssf)
+    private static void ValidateIO(SSF ssf)
     {
         ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(123075);
         ssf.Get(SSFSound.BATTLE_CRY_2).Should().Be(123074);

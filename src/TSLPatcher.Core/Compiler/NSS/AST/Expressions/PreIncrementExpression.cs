@@ -26,11 +26,11 @@ public class PreIncrementExpression : Expression
                 $"Increment operator requires int or float type, got {variableType.Builtin.ToScriptString()}");
         }
 
-        var instructionType = isGlobal ? NCSInstructionType.INCxBP : NCSInstructionType.INCxSP;
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.INCxBP : NCSInstructionType.INCxSP;
         ncs.Add(instructionType, new List<object> { stackIndex });
 
         // Push incremented value onto stack
-        var copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+        NCSInstructionType copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
         ncs.Add(copyInst, new List<object> { stackIndex, variableType.Size(root) });
         block.TempStack += variableType.Size(root);
 

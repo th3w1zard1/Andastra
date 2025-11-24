@@ -109,7 +109,7 @@ public class RowValueHigh : RowValue
         return ColumnMax(twoda, Column).ToString();
     }
 
-    private int LabelMax(Core.Formats.TwoDA.TwoDA twoda)
+    private static int LabelMax(Core.Formats.TwoDA.TwoDA twoda)
     {
         int maxFound = -1;
         foreach (string label in twoda.GetLabels())
@@ -122,7 +122,7 @@ public class RowValueHigh : RowValue
         return maxFound + 1;
     }
 
-    private int ColumnMax(Core.Formats.TwoDA.TwoDA twoda, string header)
+    private static int ColumnMax(Core.Formats.TwoDA.TwoDA twoda, string header)
     {
         int maxFound = -1;
         foreach (string cell in twoda.GetColumn(header))

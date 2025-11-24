@@ -37,7 +37,7 @@ public class FunctionCallExpression : Expression
         return returnType;
     }
 
-    private DynamicDataType CompileJsr(NCS ncs, CodeRoot root, CodeBlock block, Identifier functionName, List<Expression> args)
+    private static DynamicDataType CompileJsr(NCS ncs, CodeRoot root, CodeBlock block, Identifier functionName, List<Expression> args)
     {
         if (!root.FunctionMap.TryGetValue(functionName, out FunctionDefinition? funcDef))
         {

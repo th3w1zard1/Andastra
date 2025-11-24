@@ -98,7 +98,7 @@ FirstName=TestName
         modify!.Path.Should().Be("FirstName");
 
         var value = modify.Value as FieldValueConstant;
-        value!.Value(null, GFFFieldType.Int32).Should().Be("TestName");
+        value!.Value(null, GFFFieldType.String).Should().Be("TestName");
     }
 
     [Fact]
@@ -124,7 +124,7 @@ ChallengeRating=5.5
         modify!.Path.Should().Be("ChallengeRating");
 
         var value = modify.Value as FieldValueConstant;
-        value!.Value(null, GFFFieldType.Int32).Should().Be(5.5f);
+        value!.Value(null, GFFFieldType.Single).Should().Be(5.5f);
     }
 
     [Fact]
@@ -204,7 +204,7 @@ ScriptEndRound\1\ScriptEndRound=k_ai_master
         modify!.Path.Should().Be("ScriptEndRound\\1\\ScriptEndRound");
 
         var value = modify.Value as FieldValueConstant;
-        value!.Value(null, GFFFieldType.Int32).Should().Be("k_ai_master");
+        value!.Value(null, GFFFieldType.String).Should().Be("k_ai_master");
     }
 
     [Fact]
@@ -288,7 +288,7 @@ AddField0=NewField
 [NewField]
 FieldType=Vector
 Label=Position
-Value=1.0 2.0 3.0
+Value=1.0|2.0|3.0
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -353,9 +353,11 @@ File0=test.utc
 [test.utc]
 AddStruct0=NewStruct
 
-[NewStruct]
-TypeId=0
-Path=ItemList
+        [NewStruct]
+        FieldType=Struct
+        Label=
+        TypeId=0
+        Path=ItemList
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -367,7 +369,8 @@ Path=ItemList
         // Assert
         var addStruct = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddStructToListGFF;
         addStruct.Should().NotBeNull();
-        addStruct!.Path.Should().Be("ItemList");
+        // Python line 905: always appends >>##INDEXINLIST##<< for Struct fields
+        addStruct!.Path.Should().Be("ItemList/>>##INDEXINLIST##<<");
 
         var value = addStruct.Value as FieldValueConstant;
         value.Should().NotBeNull();

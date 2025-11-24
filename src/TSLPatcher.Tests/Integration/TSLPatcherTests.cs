@@ -22,7 +22,7 @@ namespace TSLPatcher.Tests.Integration;
 /// </summary>
 public class TSLPatcherTests
 {
-    private PatcherConfig SetupIniAndConfig(string iniText, string modPath = "")
+    private static PatcherConfig SetupIniAndConfig(string iniText, string modPath = "")
     {
         var parser = new IniParser.Parser.IniDataParser();
         parser.Configuration.AllowDuplicateKeys = true;

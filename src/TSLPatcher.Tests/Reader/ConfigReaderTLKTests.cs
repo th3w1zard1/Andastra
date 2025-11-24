@@ -28,6 +28,7 @@ public class ConfigReaderTLKTests : IDisposable
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         _modPath = Path.Combine(_tempDir, "tslpatchdata");
+        Directory.CreateDirectory(_tempDir); // Create mod root directory
         Directory.CreateDirectory(_modPath);
 
         _parser = new IniDataParser();
@@ -35,8 +36,8 @@ public class ConfigReaderTLKTests : IDisposable
         _parser.Configuration.AllowDuplicateSections = true;
         _parser.Configuration.CaseInsensitive = false;
 
-        // Create test TLK files
-        CreateTestTLKFile("test.tlk", new[]
+        // Create test TLK files in mod root (where ConfigReader looks for them)
+        CreateTestTLKFileInModRoot("test.tlk", new[]
         {
             ("Entry 0", "vo_0"),
             ("Entry 1", "vo_1"),
@@ -45,14 +46,14 @@ public class ConfigReaderTLKTests : IDisposable
             ("Entry 4", "vo_4"),
         });
 
-        CreateTestTLKFile("append.tlk", new[]
+        CreateTestTLKFileInModRoot("append.tlk", new[]
         {
             ("Append 0", "append_0"),
             ("Append 1", "append_1"),
             ("Append 2", "append_2"),
         });
 
-        CreateTestTLKFile("modifications.tlk", new[]
+        CreateTestTLKFileInModRoot("modifications.tlk", new[]
         {
             ("Modified 0", "mod_0"),
             ("Modified 1", "mod_1"),
@@ -77,6 +78,18 @@ public class ConfigReaderTLKTests : IDisposable
         }
 
         string path = Path.Combine(_modPath, filename);
+        tlk.Save(path);
+    }
+
+    private void CreateTestTLKFileInModRoot(string filename, (string text, string sound)[] entries)
+    {
+        var tlk = new TLK(Core.Common.Language.English);
+        foreach ((string text, string sound) in entries)
+        {
+            tlk.Add(text, sound);
+        }
+
+        string path = Path.Combine(_tempDir, filename);
         tlk.Save(path);
     }
 
@@ -183,8 +196,8 @@ StrRef2=2
         // Arrange
         string iniText = @"
 [TLKList]
-StrRef0=Direct text entry
-StrRef1=Another entry
+0\text=Direct text entry
+1\text=Another entry
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -207,8 +220,8 @@ StrRef1=Another entry
         // Arrange
         string iniText = @"
 [TLKList]
-StrRef0=Test text
-StrRef0Sound=test_sound
+0\text=Test text
+0\sound=test_sound
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -218,11 +231,16 @@ StrRef0Sound=test_sound
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        result.PatchesTLK.Modifiers.Should().HaveCount(1);
+        // Python creates separate ModifyTLK objects for text and sound (lines 415-421)
+        result.PatchesTLK.Modifiers.Should().HaveCount(2);
 
-        ModifyTLK mod0 = result.PatchesTLK.Modifiers.First();
-        mod0.Text.Should().Be("Test text");
-        mod0.Sound?.ToString().Should().Be("test_sound");
+        ModifyTLK textMod = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0 && m.Text == "Test text");
+        textMod.Should().NotBeNull();
+        textMod.IsReplacement.Should().BeTrue();
+
+        ModifyTLK soundMod = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0 && m.Sound?.ToString() == "test_sound");
+        soundMod.Should().NotBeNull();
+        soundMod.IsReplacement.Should().BeTrue();
     }
 
     [Fact]

@@ -429,6 +429,12 @@ public class ModInstaller
             return false;
         }
 
+        // If file doesn't exist in capsule and we're not replacing, we can't patch it
+        if (capsule != null && !exists && !patch.ReplaceFile)
+        {
+            return false;
+        }
+
         string saveType = (capsule != null && patch.SaveAs == patch.SourceFile) ? "adding" : "saving";
         string savingAsStr = patch.SaveAs != patch.SourceFile ? $"as '{patch.SaveAs}' in" : "to";
         log.AddNote($"{patch.Action.TrimEnd()}ing '{patch.SourceFile}' and {saveType} {savingAsStr} the '{localFolder}' {containerType}");

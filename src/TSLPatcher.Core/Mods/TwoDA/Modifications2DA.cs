@@ -8,20 +8,39 @@ using TSLPatcher.Core.Memory;
 namespace TSLPatcher.Core.Mods.TwoDA;
 
 /// <summary>
+/// 2DA modification algorithms for TSLPatcher/HoloPatcher.
+/// 
+/// This module implements 2DA modification logic for applying patches from changes.ini files.
+/// Handles row/column additions, cell modifications, and memory token resolution.
+/// 
+/// References:
+/// ----------
+///     vendor/TSLPatcher/TSLPatcher.pl - Perl 2DA modification logic (likely unfinished)
+///     vendor/Kotor.NET/Kotor.NET.Patcher/ - Incomplete C# patcher
+/// </summary>
+
+/// <summary>
 /// Container for 2DA file modifications.
 /// 1:1 port from Python Modifications2DA in pykotor/tslpatcher/mods/twoda.py
 /// </summary>
 public class Modifications2DA : PatcherModifications
 {
-    public const string DEFAULTDESTINATION = "Override";
-    public static string DefaultDestination => DEFAULTDESTINATION;
+    public new const string DEFAULT_DESTINATION = PatcherModifications.DEFAULT_DESTINATION;
+    public static string DefaultDestination => DEFAULT_DESTINATION;
+
+    public static readonly Dictionary<string, int> HardcappedRowLimits = new()
+    {
+        { "placeables.2da", 256 },
+        { "upcrystals.2da", 256 },
+        { "upgrade.2da", 32 }
+    };
 
     public List<Modify2DA> Modifiers { get; set; } = new();
 
-    public Modifications2DA(string filename, List<Modify2DA>? modifiers = null)
-        : base(filename, false)
+    public Modifications2DA(string filename)
+        : base(filename)
     {
-        Modifiers = modifiers ?? new List<Modify2DA>();
+        Modifiers = new List<Modify2DA>();
     }
 
     public override object PatchResource(
@@ -47,22 +66,39 @@ public class Modifications2DA : PatcherModifications
             return;
         }
 
-        foreach (Modify2DA modifier in Modifiers)
+        foreach (Modify2DA row in Modifiers)
         {
             try
             {
-                modifier.Apply(twoda, memory);
-            }
-            catch (WarningError e)
-            {
-                string msg = $"{e.Message} when patching the file '{SaveAs}'";
-                logger.AddWarning(msg);
+                row.Apply(twoda, memory);
             }
             catch (Exception e)
             {
                 string msg = $"{e.Message} when patching the file '{SaveAs}'";
-                logger.AddError(msg);
-                break;
+                if (e is WarningError)
+                {
+                    logger.AddWarning(msg);
+                }
+                else
+                {
+                    logger.AddError(msg);
+                    break;
+                }
+            }
+        }
+        if (game.IsK2())
+        {
+            return;
+        }
+
+        // Exceeding row count maximums will break the game.
+        if (HardcappedRowLimits.TryGetValue(SaveAs.ToLowerInvariant(), out int twodaRowLimit))
+        {
+            int curRowCount = twoda.GetHeight();
+            int rowsAdded = curRowCount - twodaRowLimit;
+            if (curRowCount > twodaRowLimit)
+            {
+                throw new InvalidOperationException($"{SaveAs} has a max row count of {twodaRowLimit}. Adding more will break the game. This mod attempted to add {rowsAdded} rows and have not been applied.");
             }
         }
     }

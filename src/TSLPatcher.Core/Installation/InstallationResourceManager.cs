@@ -242,7 +242,7 @@ public class InstallationResourceManager
         _chitinLoaded = true;
     }
 
-    private Dictionary<string, List<FileResource>> LoadResourcesFromDirectory(string path, bool recursive)
+    private static Dictionary<string, List<FileResource>> LoadResourcesFromDirectory(string path, bool recursive)
     {
         var resources = new Dictionary<string, List<FileResource>>(StringComparer.OrdinalIgnoreCase);
 
@@ -288,7 +288,7 @@ public class InstallationResourceManager
         return resources;
     }
 
-    private Dictionary<string, List<FileResource>> LoadModulesFromDirectory(string path)
+    private static Dictionary<string, List<FileResource>> LoadModulesFromDirectory(string path)
     {
         var modules = new Dictionary<string, List<FileResource>>(StringComparer.OrdinalIgnoreCase);
 

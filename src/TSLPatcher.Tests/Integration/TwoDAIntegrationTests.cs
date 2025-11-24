@@ -339,8 +339,9 @@ public class TwoDAIntegrationTests : IntegrationTestBase
         add.Apply(twoda, Memory);
 
         // Assert
+        // Python line 447-449: When exclusive value exists, UPDATE the existing row (not skip)
         twoda.GetHeight().Should().Be(1);
-        AssertCellValue(twoda, 0, "value", "100");
+        AssertCellValue(twoda, 0, "value", "200");
     }
 
     [Fact]

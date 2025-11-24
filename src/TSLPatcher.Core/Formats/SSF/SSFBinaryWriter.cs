@@ -69,7 +69,7 @@ public class SSFBinaryWriter
     /// <summary>
     /// Writes an int32, converting -1 to 0xFFFFFFFF (matches Python max_neg1 behavior).
     /// </summary>
-    private void WriteInt32MaxNeg1(BinaryWriter writer, int? value)
+    private static void WriteInt32MaxNeg1(BinaryWriter writer, int? value)
     {
         uint toWrite = value.HasValue && value.Value == -1 ? 0xFFFFFFFF : (uint)(value ?? -1);
         if (toWrite == uint.MaxValue && (!value.HasValue || value.Value != -1))

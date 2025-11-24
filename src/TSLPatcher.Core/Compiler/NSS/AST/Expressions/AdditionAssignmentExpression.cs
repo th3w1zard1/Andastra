@@ -24,7 +24,7 @@ public class AdditionAssignmentExpression : Expression
     {
         // Copy the variable to the top of the stack
         (bool isGlobal, DynamicDataType variableType, int stackIndex) = FieldAccess.GetScoped(block, root);
-        var instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
         ncs.Add(instructionType, new List<object> { stackIndex, variableType.Size(root) });
         block.TempStack += variableType.Size(root);
 
@@ -72,7 +72,7 @@ public class AdditionAssignmentExpression : Expression
         ncs.Add(arithmeticInstruction, new List<object>());
 
         // Copy the result to the original variable in the stack
-        var insCpDown = isGlobal ? NCSInstructionType.CPDOWNBP : NCSInstructionType.CPDOWNSP;
+        NCSInstructionType insCpDown = isGlobal ? NCSInstructionType.CPDOWNBP : NCSInstructionType.CPDOWNSP;
         int offsetCpDown = isGlobal ? stackIndex : stackIndex - expressionType.Size(root);
         ncs.Add(insCpDown, new List<object> { offsetCpDown, variableType.Size(root) });
 

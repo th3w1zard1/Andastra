@@ -19,7 +19,7 @@ public class SsfModificationTests
         var ssf = new SSF();
         var memory = new PatcherMemory();
 
-        var config = new ModificationsSSF("", replaceFile: false, modifiers: new());
+        var config = new ModificationsSSF("", false, new());
         config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(5)));
 
         // Act
@@ -38,7 +38,7 @@ public class SsfModificationTests
         var memory = new PatcherMemory();
         memory.Memory2DA[5] = "123";
 
-        var config = new ModificationsSSF("", replaceFile: false, modifiers: new());
+        var config = new ModificationsSSF("", false, new());
         config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(5)));
 
         // Act
@@ -57,7 +57,7 @@ public class SsfModificationTests
         var memory = new PatcherMemory();
         memory.MemoryStr[5] = 321;
 
-        var config = new ModificationsSSF("", replaceFile: false, modifiers: new());
+        var config = new ModificationsSSF("", false, new());
         config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(5)));
 
         // Act
@@ -77,7 +77,7 @@ public class SsfModificationTests
         memory.Memory2DA[1] = "100";
         memory.MemoryStr[2] = 200;
 
-        var config = new ModificationsSSF("", replaceFile: false, modifiers: new());
+        var config = new ModificationsSSF("", false, new());
         config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(50)));
         config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(1)));
         config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(2)));

@@ -2,6 +2,7 @@ using System;
 using FluentAssertions;
 using TSLPatcher.Core.Formats.TwoDA;
 using Xunit;
+using TSLPatcher.Tests.Common;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -11,7 +12,8 @@ namespace TSLPatcher.Tests.Formats;
 /// </summary>
 public class TwoDAFormatTests
 {
-    private const string TestTwoDAFile = "../../../../../../../tests/files/test.2da";
+    private static readonly string TestTwoDAFile = TestFileHelper.GetPath("test.2da");
+    private static readonly string CorruptTwoDAFile = TestFileHelper.GetPath("test_corrupted.2da");
 
     [Fact]
     public void TestBinaryIO()
@@ -26,7 +28,7 @@ public class TwoDAFormatTests
         ValidateIO(twoda);
     }
 
-    private void ValidateIO(TwoDA twoda)
+    private static void ValidateIO(TwoDA twoda)
     {
         twoda.GetCellString(0, "col1").Should().Be("abc");
         twoda.GetCellString(0, "col2").Should().Be("def");
@@ -45,7 +47,7 @@ public class TwoDAFormatTests
     public void TestReadRaises()
     {
         // Invalid file
-        Action act = () => new TwoDABinaryReader("../../../../../../../tests/files/test_corrupted.2da").Load();
+        Action act = () => new TwoDABinaryReader(CorruptTwoDAFile).Load();
         act.Should().Throw<System.IO.InvalidDataException>();
     }
 }

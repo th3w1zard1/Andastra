@@ -4,6 +4,7 @@ using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.GFF;
 using Xunit;
+using TSLPatcher.Tests.Common;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -13,7 +14,8 @@ namespace TSLPatcher.Tests.Formats;
 /// </summary>
 public class GFFFormatTests
 {
-    private const string TestGffFile = "../../../../../../../tests/files/test.gff";
+    private static readonly string TestGffFile = TestFileHelper.GetPath("test.gff");
+    private static readonly string CorruptGffFile = TestFileHelper.GetPath("test_corrupted.gff");
 
     [Fact]
     public void TestBinaryIO()
@@ -28,7 +30,7 @@ public class GFFFormatTests
         ValidateIO(gff);
     }
 
-    private void ValidateIO(GFF gff)
+    private static void ValidateIO(GFF gff)
     {
         gff.Root.GetUInt8("uint8").Should().Be(255);
         gff.Root.GetInt8("int8").Should().Be(-127);
@@ -63,7 +65,7 @@ public class GFFFormatTests
     public void TestReadRaises()
     {
         // Invalid file
-        Action act = () => new GFFBinaryReader("../../../../../../../tests/files/test_corrupted.gff").Load();
+        Action act = () => new GFFBinaryReader(CorruptGffFile).Load();
         act.Should().Throw<InvalidDataException>();
     }
 }

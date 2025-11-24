@@ -95,7 +95,15 @@ public class RawBinaryReader : IDisposable
     /// </summary>
     public void Seek(int position)
     {
-        ExceedCheck(position - _position);
+        // Check if the absolute position is valid
+        if (position < 0)
+        {
+            throw new IOException($"Cannot seek to a negative position: {position}");
+        }
+        if (position > _size)
+        {
+            throw new IOException($"Cannot seek to position {position}, file size is {_size}");
+        }
         _stream.Seek(position + _offset, SeekOrigin.Begin);
         _position = position;
     }
@@ -169,7 +177,11 @@ public class RawBinaryReader : IDisposable
     {
         ExceedCheck(1);
         int value = _stream.ReadByte();
-        if (value == -1) throw new EndOfStreamException();
+        if (value == -1)
+        {
+            throw new EndOfStreamException();
+        }
+
         _position++;
         return (byte)value;
     }
@@ -178,7 +190,11 @@ public class RawBinaryReader : IDisposable
     {
         ExceedCheck(1);
         int value = _stream.ReadByte();
-        if (value == -1) throw new EndOfStreamException();
+        if (value == -1)
+        {
+            throw new EndOfStreamException();
+        }
+
         _position++;
         return (sbyte)value;
     }
@@ -190,7 +206,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 2);
         _position += 2;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -205,7 +221,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 2);
         _position += 2;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -220,7 +236,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 4);
         _position += 4;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -242,7 +258,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 4);
         _position += 4;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -257,7 +273,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 8);
         _position += 8;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -272,7 +288,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 8);
         _position += 8;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -287,7 +303,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 4);
         _position += 4;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -302,7 +318,7 @@ public class RawBinaryReader : IDisposable
         _stream.Read(bytes, 0, 8);
         _position += 8;
 
-        if (bigEndian != BitConverter.IsLittleEndian)
+        if (bigEndian == BitConverter.IsLittleEndian)
         {
             Array.Reverse(bytes);
         }
@@ -367,13 +383,17 @@ public class RawBinaryReader : IDisposable
     public string ReadTerminatedString(char terminator = '\0', int length = -1, string encoding = "ascii", bool strict = true)
     {
         var sb = new StringBuilder();
-        char ch = '\0';
         int bytesRead = 0;
 
-        Encoding enc = Encoding.GetEncoding(encoding);
+        var enc = Encoding.GetEncoding(encoding);
 
-        while (ch != terminator && (length == -1 || bytesRead < length))
+        while (length == -1 || bytesRead < length)
         {
+            if (_position >= _size)
+            {
+                break;
+            }
+
             ExceedCheck(1);
             byte[] charBytes = new byte[1];
             _stream.Read(charBytes, 0, 1);
@@ -385,11 +405,12 @@ public class RawBinaryReader : IDisposable
                 string decoded = enc.GetString(charBytes);
                 if (!string.IsNullOrEmpty(decoded))
                 {
-                    ch = decoded[0];
-                    if (ch != terminator)
+                    char ch = decoded[0];
+                    if (ch == terminator)
                     {
-                        sb.Append(ch);
+                        break;
                     }
+                    sb.Append(ch);
                 }
             }
             catch
@@ -422,7 +443,9 @@ public class RawBinaryReader : IDisposable
         while (true)
         {
             if (_position >= _size)
+            {
                 break;
+            }
 
             byte b = ReadUInt8();
             bytes.Add(b);

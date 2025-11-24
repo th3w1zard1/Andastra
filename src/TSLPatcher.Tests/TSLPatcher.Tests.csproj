@@ -26,6 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="test_files\**\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Diff\**" />
     <Content Remove="Diff\**" />
     <EmbeddedResource Remove="Diff\**" />

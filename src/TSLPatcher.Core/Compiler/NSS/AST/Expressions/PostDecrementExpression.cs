@@ -27,12 +27,12 @@ public class PostDecrementExpression : Expression
         }
 
         // Push current value onto stack first (before decrement)
-        var copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+        NCSInstructionType copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
         ncs.Add(copyInst, new List<object> { stackIndex, variableType.Size(root) });
         block.TempStack += variableType.Size(root);
 
         // Then decrement the variable
-        var instructionType = isGlobal ? NCSInstructionType.DECxBP : NCSInstructionType.DECxSP;
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.DECxBP : NCSInstructionType.DECxSP;
         ncs.Add(instructionType, new List<object> { stackIndex });
 
         return variableType;

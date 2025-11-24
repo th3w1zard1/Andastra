@@ -40,7 +40,7 @@ public class ModInstallerTests : IDisposable
     /// <summary>
     /// Helper to create TestPatcherModifications instances for tests.
     /// </summary>
-    private static TestPatcherModifications CreatePatch(string sourceFile = "file1", bool? replace = null, 
+    private static TestPatcherModifications CreatePatch(string sourceFile = "file1", bool? replace = null,
         string? destination = null, string? saveAs = null, string? action = null, bool? skipIfNotReplace = null)
     {
         var patch = new TestPatcherModifications(sourceFile, replace);
@@ -105,7 +105,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, ".", "file2", "Patch ");
+        TestPatcherModifications patch = CreatePatch("file1", true, ".", "file2", "Patch ");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true);
@@ -121,7 +121,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "Override", "file1", "Patch ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "Override", "file1", "Patch ");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true);
@@ -137,7 +137,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "Override", "file2", "Compile");
+        TestPatcherModifications patch = CreatePatch("file1", true, "Override", "file2", "Compile");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true);
@@ -153,7 +153,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "Override", "file2", "Copy ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "Override", "file2", "Copy ");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: false);
@@ -169,7 +169,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "Override", "file1", "Copy ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "Override", "file1", "Copy ");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: false);
@@ -185,7 +185,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "capsule.mod", "file1", "Patch ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "capsule.mod", "file1", "Patch ");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true, capsule: null);
@@ -201,7 +201,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "capsule.mod", "file2", "Patch ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "capsule.mod", "file2", "Patch ");
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true, capsule: null);
@@ -217,7 +217,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", false, "other", "file3", "Patching", false);
+        TestPatcherModifications patch = CreatePatch("file1", false, "other", "file3", "Patching", false);
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true);
@@ -233,7 +233,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", false, "other", "file3", "Patching", true);
+        TestPatcherModifications patch = CreatePatch("file1", false, "other", "file3", "Patching", true);
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: true);
@@ -249,7 +249,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "capsule.mod", "file2", "Copy ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "capsule.mod", "file2", "Copy ");
 
         var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "capsule.mod"), createIfNotExist: true);
 
@@ -267,7 +267,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", true, "capsule.mod", "file1", "Copy ");
+        TestPatcherModifications patch = CreatePatch("file1", true, "capsule.mod", "file1", "Copy ");
 
         var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "capsule.mod"), createIfNotExist: true);
 
@@ -285,7 +285,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", null, "capsule", null, "Patching");
+        TestPatcherModifications patch = CreatePatch("file1", null, "capsule", null, "Patching");
 
         var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "nonexistent.mod"), createIfNotExist: true);
 
@@ -303,7 +303,7 @@ public class ModInstallerTests : IDisposable
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
 
-        var patch = CreatePatch("file1", false, "other", "file3", "Patching", false);
+        TestPatcherModifications patch = CreatePatch("file1", false, "other", "file3", "Patching", false);
 
         // Act
         bool result = _installer.ShouldPatch(patch, exists: false);
@@ -318,7 +318,7 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = CreatePatch("file1", false);
+        TestPatcherModifications patch = CreatePatch("file1", false);
 
         var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "test.mod"), createIfNotExist: true);
 
@@ -335,7 +335,7 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = CreatePatch("nonexistent.txt", true);
+        TestPatcherModifications patch = CreatePatch("nonexistent.txt", true);
         patch.SourceFolder = ".";
 
         // Act
@@ -351,7 +351,7 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = CreatePatch("file1", false);
+        TestPatcherModifications patch = CreatePatch("file1", false);
 
         var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "test.mod"), createIfNotExist: true);
 
@@ -368,7 +368,7 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = CreatePatch("nonexistent.txt", false);
+        TestPatcherModifications patch = CreatePatch("nonexistent.txt", false);
 
         // Act
         byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: true, capsule: null);
@@ -383,7 +383,7 @@ public class ModInstallerTests : IDisposable
         // Arrange
         _installer = new ModInstaller(_tempDirectory, _tempDirectory, _tempChangesIni);
 
-        var patch = CreatePatch("nonexistent.txt", false);
+        TestPatcherModifications patch = CreatePatch("nonexistent.txt", false);
 
         // Act
         byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: false, capsule: null);

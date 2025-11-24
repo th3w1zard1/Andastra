@@ -12,7 +12,7 @@ namespace TSLPatcher.Core.Mods.TwoDA;
 /// </summary>
 public abstract class Modify2DA
 {
-    protected Dictionary<string, string> Unpack(
+    protected static Dictionary<string, string> Unpack(
         Dictionary<string, RowValue> cells,
         PatcherMemory memory,
         Core.Formats.TwoDA.TwoDA twoda,
@@ -142,6 +142,7 @@ public class AddRow2DA : Modify2DA
         }
         else
         {
+            // Exclusive column match found - update existing row instead of adding new one
             Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
             targetRow.UpdateValues(cells);
         }

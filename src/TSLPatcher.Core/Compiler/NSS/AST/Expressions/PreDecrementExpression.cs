@@ -26,11 +26,11 @@ public class PreDecrementExpression : Expression
                 $"Decrement operator requires int or float type, got {variableType.Builtin.ToScriptString()}");
         }
 
-        var instructionType = isGlobal ? NCSInstructionType.DECxBP : NCSInstructionType.DECxSP;
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.DECxBP : NCSInstructionType.DECxSP;
         ncs.Add(instructionType, new List<object> { stackIndex });
 
         // Push decremented value onto stack
-        var copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+        NCSInstructionType copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
         ncs.Add(copyInst, new List<object> { stackIndex, variableType.Size(root) });
         block.TempStack += variableType.Size(root);
 

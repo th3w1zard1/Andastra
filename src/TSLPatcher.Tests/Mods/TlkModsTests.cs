@@ -97,13 +97,14 @@ public class TlkModsTests
         dialogTlk[2].Text.Should().Be("Replace3");
         dialogTlk[3].Text.Should().Be("Old4");
 
-        memory.MemoryStr[1].Should().Be(1);
-        memory.MemoryStr[2].Should().Be(2);
+        // Replace operations do NOT store memory (Python line 146: dialog.replace only, no memory assignment)
+        memory.MemoryStr.Should().NotContainKey(1);
+        memory.MemoryStr.Should().NotContainKey(2);
 
         // [Dialog] [Replace] [Token] [Text]
         // 0        -          -       Old1
-        // 1        1          1       Replace2
-        // 2        1          2       Replace3
+        // 1        1          -       Replace2 (no memory stored)
+        // 2        1          -       Replace3 (no memory stored)
         // 3        -          -       Old4
     }
 

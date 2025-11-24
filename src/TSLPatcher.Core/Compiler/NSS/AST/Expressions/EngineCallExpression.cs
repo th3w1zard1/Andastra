@@ -104,7 +104,7 @@ public class EngineCallExpression : Expression
         return new DynamicDataType(Function.ReturnType);
     }
 
-    private Expression CreateConstantExpression(ScriptConstant constant)
+    private static Expression CreateConstantExpression(ScriptConstant constant)
     {
         return constant.DataType switch
         {

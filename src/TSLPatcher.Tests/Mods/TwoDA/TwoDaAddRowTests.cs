@@ -169,7 +169,7 @@ public class TwoDaAddRowTests
         Assert.Equal(4, twoda.GetHeight());
         Assert.Equal(new[] { "a", "d", "g", "j" }, twoda.GetColumn("Col1"));
         Assert.Equal(new[] { "b", "e", "h", "k" }, twoda.GetColumn("Col2"));
-        Assert.Equal(new[] { "c", "f", "l" }, twoda.GetColumn("Col3"));
+        Assert.Equal(new[] { "c", "f", "i", "l" }, twoda.GetColumn("Col3"));
     }
 
     [Fact]

@@ -545,6 +545,10 @@ Table0=appearance.2da
 
 [appearance.2da]
 AddColumn0=newcolumn
+
+[newcolumn]
+ColumnLabel=newcolumn
+DefaultValue=
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -568,7 +572,11 @@ AddColumn0=newcolumn
 Table0=appearance.2da
 
 [appearance.2da]
-AddColumn0=newcolumn(123)
+AddColumn0=newcolumn
+
+[newcolumn]
+ColumnLabel=newcolumn
+DefaultValue=123
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();

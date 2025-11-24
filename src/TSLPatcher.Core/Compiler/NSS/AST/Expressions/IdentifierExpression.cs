@@ -45,8 +45,8 @@ public class IdentifierExpression : Expression
 
         // Otherwise, it's a variable - look up in scope
         (bool isGlobal, DynamicDataType dataType, int offset) = root.GetScoped(Identifier, block);
-        var instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
-        
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+
         ncs.Add(instructionType, new List<object> { offset, dataType.Size(root) });
         block.TempStack += dataType.Size(root);
 

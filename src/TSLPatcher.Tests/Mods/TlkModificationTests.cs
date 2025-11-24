@@ -100,7 +100,7 @@ public class TlkModificationTests
         Assert.Equal("Replace2", entry1.Text);
         Assert.Equal("Replace3", entry2.Text);
 
-        // Replace operations no longer store memory
+        // Replace operations do NOT store memory (Python line 146: dialog.replace only, no memory assignment)
         Assert.False(memory.MemoryStr.ContainsKey(1));
         Assert.False(memory.MemoryStr.ContainsKey(2));
     }

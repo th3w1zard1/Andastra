@@ -143,7 +143,7 @@ public class NCSBinaryWriter
         }
     }
 
-    private int DetermineSize(NCSInstruction instruction)
+    private static int DetermineSize(NCSInstruction instruction)
     {
         int size = 2;
 

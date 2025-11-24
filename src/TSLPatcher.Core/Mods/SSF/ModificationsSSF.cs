@@ -9,7 +9,7 @@ namespace TSLPatcher.Core.Mods.SSF;
 
 /// <summary>
 /// Represents a single SSF sound modification.
-/// Matches Python ModifySSF class.
+/// 1:1 port from Python ModifySSF in pykotor/tslpatcher/mods/ssf.py
 /// </summary>
 public class ModifySSF
 {
@@ -24,28 +24,39 @@ public class ModifySSF
 
     public void Apply(Formats.SSF.SSF ssf, PatcherMemory memory)
     {
-        try
-        {
-            ssf.SetData(Sound, int.Parse(Stringref.Value(memory)));
-        }
-        catch (System.Collections.Generic.KeyNotFoundException)
-        {
-            // Missing token defaults to 0
-            ssf.SetData(Sound, 0);
-        }
+        ssf.SetData(Sound, int.Parse(Stringref.Value(memory)));
     }
 }
 
 /// <summary>
-/// Container for SSF (sound set file) modifications.
-/// Matches Python ModificationsSSF class.
+/// SSF modification algorithms for TSLPatcher/HoloPatcher.
+/// 
+/// This module implements SSF modification logic for applying patches from changes.ini files.
+/// Handles sound set entry modifications and memory token resolution.
+/// 
+/// References:
+/// ----------
+///     vendor/TSLPatcher/TSLPatcher.pl - Perl SSF modification logic (likely unfinished)
+///     vendor/Kotor.NET/Kotor.NET.Patcher/ - Incomplete C# patcher
 /// </summary>
-public class ModificationsSSF(string filename, bool replaceFile, bool _noReplacefileCheck = false, List<ModifySSF>? modifiers = null) : PatcherModifications(filename, replaceFile)
-{
-    public const string DEFAULTDESTINATION = "Override";
-    public static string DefaultDestination => DEFAULTDESTINATION;
 
-    public List<ModifySSF> Modifiers { get; set; } = modifiers ?? new List<ModifySSF>();
+/// <summary>
+/// Container for SSF (sound set file) modifications.
+/// 1:1 port from Python ModificationsSSF in pykotor/tslpatcher/mods/ssf.py
+/// </summary>
+public class ModificationsSSF : PatcherModifications
+{
+    public new const string DEFAULT_DESTINATION = PatcherModifications.DEFAULT_DESTINATION;
+    public static string DefaultDestination => DEFAULT_DESTINATION;
+
+    public List<ModifySSF> Modifiers { get; set; }
+
+    public ModificationsSSF(string filename, bool replace, List<ModifySSF>? modifiers = null)
+        : base(filename, replace)
+    {
+        ReplaceFile = replace;
+        Modifiers = modifiers ?? new List<ModifySSF>();
+    }
 
     public override object PatchResource(
         byte[] source,
@@ -67,14 +78,16 @@ public class ModificationsSSF(string filename, bool replaceFile, bool _noReplace
         PatchLogger logger,
         Game game)
     {
-        if (mutableData is not Formats.SSF.SSF ssf)
+        if (mutableData is Formats.SSF.SSF ssf)
         {
-            throw new ArgumentException($"Expected SSF object, got {mutableData.GetType().Name}");
+            foreach (ModifySSF modifier in Modifiers)
+            {
+                modifier.Apply(ssf, memory);
+            }
         }
-
-        foreach (ModifySSF modifier in Modifiers)
+        else
         {
-            modifier.Apply(ssf, memory);
+            logger.AddError($"Expected SSF object for ModificationsSSF, but got {mutableData.GetType().Name}");
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using TSLPatcher.Core.Common;
 
 namespace TSLPatcher.Core.Formats.TLK;
@@ -42,16 +43,34 @@ public class TalkTable
         using var reader = RawBinaryReader.FromFile(_path);
         reader.Seek(12);
         uint entriesCount = reader.ReadUInt32();
-        uint textsOffset = reader.ReadUInt32();
+        uint textsOffset = reader.ReadUInt32(); // Offset to TEXT DATA section (not entry headers!)
 
         if (stringref >= entriesCount)
         {
             return "";
         }
 
+        // Python's talktable.py: texts_offset points to TEXT DATA, text_offset is relative to it
         TLKData tlkData = ExtractCommonTlkData(reader, stringref);
-        reader.Seek((int)(textsOffset + tlkData.TextOffset));
-        return reader.ReadString(tlkData.TextLength);
+        // Calculate absolute position, ensuring no overflow
+        long absolutePosition = (long)textsOffset + (long)tlkData.TextOffset;
+        if (absolutePosition > int.MaxValue)
+        {
+            throw new IOException($"Text offset too large: {absolutePosition}");
+        }
+        reader.Seek((int)absolutePosition);
+        // ReadString reads bytes, TextLength is character count (for cp1252, they're equal)
+        // Get encoding for the language
+        Encoding encoding = GetEncodingForLanguage(GetLanguage());
+        byte[] textBytes = reader.ReadBytes(tlkData.TextLength);
+        string text = encoding.GetString(textBytes);
+        // Trim at first null byte (Python's read_string does this)
+        int nullIndex = text.IndexOf('\0');
+        if (nullIndex >= 0)
+        {
+            text = text.Substring(0, nullIndex);
+        }
+        return text.Replace("\0", "");
     }
 
     /// <summary>
@@ -101,7 +120,7 @@ public class TalkTable
         using var reader = RawBinaryReader.FromFile(_path);
         reader.Seek(12);
         uint entriesCount = reader.ReadUInt32();
-        uint textsOffset = reader.ReadUInt32();
+        uint textsOffset = reader.ReadUInt32(); // Offset to TEXT DATA section
 
         if (stringref >= entriesCount)
         {
@@ -109,7 +128,12 @@ public class TalkTable
         }
 
         TLKData tlkData = ExtractCommonTlkData(reader, stringref);
-        reader.Seek((int)(textsOffset + tlkData.TextOffset));
+        long absolutePosition = (long)textsOffset + (long)tlkData.TextOffset;
+        if (absolutePosition > int.MaxValue)
+        {
+            throw new IOException($"Text offset too large: {absolutePosition}");
+        }
+        reader.Seek((int)absolutePosition);
         string text = reader.ReadString(tlkData.TextLength);
         ResRef sound = new(tlkData.Voiceover);
 
@@ -138,7 +162,7 @@ public class TalkTable
         uint languageId = reader.ReadUInt32();
         var language = (Language)languageId;
         uint entriesCount = reader.ReadUInt32();
-        uint textsOffset = reader.ReadUInt32();
+        uint textsOffset = reader.ReadUInt32(); // Offset to TEXT DATA section
 
         foreach (int stringref in stringrefs)
         {
@@ -149,7 +173,12 @@ public class TalkTable
             }
 
             TLKData tlkData = ExtractCommonTlkData(reader, stringref);
-            reader.Seek((int)(textsOffset + tlkData.TextOffset));
+            long absolutePosition = (long)textsOffset + (long)tlkData.TextOffset;
+            if (absolutePosition > int.MaxValue)
+            {
+                throw new IOException($"Text offset too large: {absolutePosition}");
+            }
+            reader.Seek((int)absolutePosition);
             string text = reader.ReadString(tlkData.TextLength);
             ResRef sound = new(tlkData.Voiceover);
 
@@ -190,7 +219,7 @@ public class TalkTable
         return (Language)languageId;
     }
 
-    private TLKData ExtractCommonTlkData(RawBinaryReader reader, int stringref)
+    private static TLKData ExtractCommonTlkData(RawBinaryReader reader, int stringref)
     {
         // Entry offset calculation: header (20 bytes) + entry_size (40 bytes) * stringref
         reader.Seek(20 + 40 * stringref);
@@ -201,7 +230,7 @@ public class TalkTable
             VolumeVariance: reader.ReadUInt32(),
             PitchVariance: reader.ReadUInt32(),
             TextOffset: reader.ReadUInt32(),
-            TextLength: reader.ReadInt32(),
+            TextLength: (int)reader.ReadUInt32(),
             SoundLength: reader.ReadSingle()
         );
     }
@@ -215,6 +244,21 @@ public class TalkTable
         int TextLength,
         float SoundLength
     );
+
+    private static Encoding GetEncodingForLanguage(Language language)
+    {
+        // Match Python's Language.get_encoding() method
+        return language switch
+        {
+            Language.English or Language.French or Language.German or Language.Italian or Language.Spanish => Encoding.GetEncoding("windows-1252"), // cp1252
+            Language.Polish => Encoding.GetEncoding("windows-1250"), // cp1250
+            Language.Korean => Encoding.GetEncoding("euc-kr"),
+            Language.Chinese_Traditional => Encoding.GetEncoding("big5"),
+            Language.Chinese_Simplified => Encoding.GetEncoding("gb2312"),
+            Language.Japanese => Encoding.GetEncoding("shift_jis"),
+            _ => Encoding.GetEncoding("windows-1252"), // default to cp1252
+        };
+    }
 }
 
 /// <summary>

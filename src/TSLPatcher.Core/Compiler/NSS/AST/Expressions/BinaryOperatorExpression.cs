@@ -57,7 +57,7 @@ public class BinaryOperatorExpression : Expression
         return new DynamicDataType(mapping.Result);
     }
 
-    private string GetOperatorSymbol(Operator op)
+    private static string GetOperatorSymbol(Operator op)
     {
         return op switch
         {

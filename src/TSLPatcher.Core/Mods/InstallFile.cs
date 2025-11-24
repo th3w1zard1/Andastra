@@ -7,14 +7,26 @@ namespace TSLPatcher.Core.Mods;
 
 /// <summary>
 /// Represents a file to be installed/copied during patching.
+/// 1:1 port from Python InstallFile in pykotor/tslpatcher/mods/install.py
 /// </summary>
 public class InstallFile : PatcherModifications
 {
-    public InstallFile(string filename, bool replaceExisting = false)
-        : base(filename, replaceExisting)
+    public InstallFile(
+        string filename,
+        bool? replaceExisting = null,
+        string? destination = null)
+        : base(filename, replaceExisting, destination)
     {
         Action = "Copy ";
         SkipIfNotReplace = true;
+    }
+
+    /// <summary>
+    /// HACK(th3w1zard1): organize this into PatcherModifications class later, this is only used for nwscript.nss currently.
+    /// </summary>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Destination, SaveAs, ReplaceFile);
     }
 
     public override object PatchResource(
@@ -24,6 +36,7 @@ public class InstallFile : PatcherModifications
         Game game)
     {
         Apply(source, memory, logger, game);
+        // Python: with BinaryReader.from_auto(source) as reader: return reader.read_all()
         return source;
     }
 
@@ -35,15 +48,4 @@ public class InstallFile : PatcherModifications
     {
         // InstallFile doesn't modify the file, just copies it
     }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Destination, SaveAs, ReplaceFile);
-    }
-
-    public override string ToString()
-    {
-        return $"{Action}{SourceFile} -> {Destination}/{SaveAs}";
-    }
 }
-

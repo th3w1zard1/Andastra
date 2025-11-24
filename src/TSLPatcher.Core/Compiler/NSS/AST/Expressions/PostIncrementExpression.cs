@@ -27,12 +27,12 @@ public class PostIncrementExpression : Expression
         }
 
         // Push current value onto stack first (before increment)
-        var copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+        NCSInstructionType copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
         ncs.Add(copyInst, new List<object> { stackIndex, variableType.Size(root) });
         block.TempStack += variableType.Size(root);
 
         // Then increment the variable
-        var instructionType = isGlobal ? NCSInstructionType.INCxBP : NCSInstructionType.INCxSP;
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.INCxBP : NCSInstructionType.INCxSP;
         ncs.Add(instructionType, new List<object> { stackIndex });
 
         return variableType;

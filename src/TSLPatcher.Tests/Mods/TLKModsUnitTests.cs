@@ -61,7 +61,7 @@ public class TLKModsUnitTests
         dialogTlk.Get(1)!.Text.Should().Be("Replace2");
         dialogTlk.Get(2)!.Text.Should().Be("Replace3");
 
-        // Replace operations no longer store memory
+        // Replace operations do NOT store memory (Python line 146: dialog.replace only, no memory assignment)
         memory.MemoryStr.Should().NotContainKey(1);
         memory.MemoryStr.Should().NotContainKey(2);
     }

@@ -105,7 +105,7 @@ public class GFFBinaryReader : BinaryFormatReaderBase
         }
     }
 
-    private bool IsValidGFFContent(string fourCC)
+    private static bool IsValidGFFContent(string fourCC)
     {
         // Check if fourCC matches any GFFContent enum value
         string trimmedFourCC = fourCC.Trim();

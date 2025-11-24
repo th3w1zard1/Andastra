@@ -459,7 +459,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private Window? GetMainWindow()
+    private static Window? GetMainWindow()
     {
         return App.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
             ? desktop.MainWindow

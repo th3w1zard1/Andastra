@@ -16,7 +16,7 @@ public class FieldAccess : Expression
     public FieldAccess(List<Identifier> identifiers)
     {
         Identifiers = identifiers ?? throw new ArgumentNullException(nameof(identifiers));
-        
+
         if (!Identifiers.Any())
         {
             throw new ArgumentException("FieldAccess must have at least one identifier", nameof(identifiers));
@@ -42,7 +42,7 @@ public class FieldAccess : Expression
             if (dataType.Builtin == DataType.Vector)
             {
                 dataType = new DynamicDataType(DataType.Float);
-                
+
                 if (nextIdent.Label == "x")
                 {
                     offset += 0;
@@ -91,11 +91,11 @@ public class FieldAccess : Expression
     public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
     {
         (bool isGlobal, DynamicDataType variableType, int stackIndex) = GetScoped(block, root);
-        var instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
-        
+        NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
+
         ncs.Add(instructionType, new List<object> { stackIndex, variableType.Size(root) });
         block.TempStack += variableType.Size(root);
-        
+
         return variableType;
     }
 

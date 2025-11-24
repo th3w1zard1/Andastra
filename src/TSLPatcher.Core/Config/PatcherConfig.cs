@@ -57,7 +57,7 @@ public class PatcherConfig
     /// <summary>
     /// Gets nested GFF patches recursively from a modifier that supports nested modifiers.
     /// </summary>
-    public List<ModifyGFF> GetNestedGffPatches(ModifyGFF argGffModifier)
+    public static List<ModifyGFF> GetNestedGffPatches(ModifyGFF argGffModifier)
     {
         // Create a copy of modifiers (shallow copy)
         var nestedModifiers = new List<ModifyGFF>();

@@ -38,9 +38,9 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
         string oldText = Entries[stringref].Text;
         ResRef oldSound = Entries[stringref].Voiceover;
 
-        // If text is null, use empty string (clears the text)
-        // If text is empty, preserve old text (Python behavior)
-        string newText = text == null ? "" : (string.IsNullOrEmpty(text) ? oldText : text);
+        // Python line 176: text or old_text - if text is falsy (None, "", etc.), use old_text
+        // Python line 176: ResRef(sound_resref) if sound_resref else old_sound
+        string newText = string.IsNullOrEmpty(text) ? oldText : text;
         ResRef newSound = string.IsNullOrEmpty(soundResref) ? oldSound : new ResRef(soundResref);
 
         Entries[stringref] = new TLKEntry(newText, newSound);

@@ -20,7 +20,7 @@ public class SSFModsUnitTests
         var ssf = new SSF();
         var memory = new PatcherMemory();
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(5))
         });
@@ -38,7 +38,7 @@ public class SSFModsUnitTests
         var memory = new PatcherMemory();
         memory.Memory2DA[5] = "123";
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(5))
         });
@@ -56,7 +56,7 @@ public class SSFModsUnitTests
         var memory = new PatcherMemory();
         memory.MemoryStr[5] = 321;
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(5))
         });
@@ -73,7 +73,7 @@ public class SSFModsUnitTests
         var ssf = new SSF();
         var memory = new PatcherMemory();
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(10)),
             new ModifySSF(SSFSound.BATTLE_CRY_2, new NoTokenUsage(20)),
@@ -102,7 +102,7 @@ public class SSFModsUnitTests
         memory.MemoryStr[3] = 300;
         memory.MemoryStr[4] = 400;
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_1, new TokenUsage2DA(1)),
             new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(2)),
@@ -125,7 +125,7 @@ public class SSFModsUnitTests
         var ssf = new SSF();
         var memory = new PatcherMemory();
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.CRITICAL_HIT, new NoTokenUsage(999))
         });
@@ -145,7 +145,7 @@ public class SSFModsUnitTests
 
         var memory = new PatcherMemory();
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(100)),
             new ModifySSF(SSFSound.BATTLE_CRY_2, new NoTokenUsage(200))
@@ -165,7 +165,7 @@ public class SSFModsUnitTests
         var memory = new PatcherMemory();
         // No token stored at index 99
 
-        var config = new ModificationsSSF("", false, false, new List<ModifySSF>
+        var config = new ModificationsSSF("", false, new List<ModifySSF>
         {
             new ModifySSF(SSFSound.BATTLE_CRY_1, new TokenUsage2DA(99))
         });
@@ -191,7 +191,7 @@ public class SSFModsUnitTests
             modifiers.Add(new ModifySSF(sound, new NoTokenUsage(value++)));
         }
 
-        var config = new ModificationsSSF("", false, false, modifiers);
+        var config = new ModificationsSSF("", false, modifiers);
         object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
