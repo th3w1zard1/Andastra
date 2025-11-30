@@ -94,7 +94,7 @@ namespace TSLPatcher.Tests.Formats
             }
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripPrimitivesAndStructuralTypes()
         {
             string source = Dedent(@"
@@ -134,7 +134,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripArithmeticOperations()
         {
             string source = Dedent(@"
@@ -174,7 +174,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripBitwiseAndShiftOperations()
         {
             string source = Dedent(@"
@@ -210,7 +210,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripLogicalAndRelationalOperations()
         {
             string source = Dedent(@"
@@ -249,7 +249,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripCompoundAssignments()
         {
             string source = Dedent(@"
@@ -293,7 +293,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripIncrementAndDecrement()
         {
             string source = Dedent(@"
@@ -324,7 +324,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripIfElseNesting()
         {
             string source = Dedent(@"
@@ -379,7 +379,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripWhileForDoLoops()
         {
             string source = Dedent(@"
@@ -421,7 +421,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripSwitchCase()
         {
             string source = Dedent(@"
@@ -458,7 +458,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripStructUsage()
         {
             string source = Dedent(@"
@@ -507,7 +507,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripFunctionDefinitionsAndReturns()
         {
             string source = Dedent(@"
@@ -549,7 +549,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripActionQueueAndDelays()
         {
             string source = Dedent(@"
@@ -580,7 +580,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripIncludeResolution()
         {
             // Python uses tmp_path fixture, we'll use a temporary directory
@@ -626,7 +626,7 @@ namespace TSLPatcher.Tests.Formats
             }
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRoundtripTslSpecificFunctionality()
         {
             string source = Dedent(@"
@@ -669,7 +669,7 @@ namespace TSLPatcher.Tests.Formats
             return NCSAuto.BytesNcs(ncs);
         }
 
-        [Theory(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Theory]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
@@ -700,4 +700,5 @@ namespace TSLPatcher.Tests.Formats
         }
     }
 }
+
 

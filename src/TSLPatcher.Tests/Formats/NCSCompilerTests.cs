@@ -33,7 +33,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Engine Call
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecall()
         {
             NCS ncs = Compile(@"
@@ -51,7 +51,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues.Should().BeEmpty();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallReturnValue()
         {
             NCS ncs = Compile(@"
@@ -68,7 +68,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(10);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallWithParams()
         {
             NCS ncs = Compile(@"
@@ -88,7 +88,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues.Select(a => a.Value).Should().Equal(new object[] { "something", 15 });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallWithDefaultParams()
         {
             NCS ncs = Compile(@"
@@ -103,7 +103,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallWithMissingParams()
         {
             string script = @"
@@ -117,7 +117,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallWithTooManyParams()
         {
             string script = @"
@@ -131,7 +131,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallDelayCommand1()
         {
             NCS ncs = Compile(@"
@@ -143,7 +143,7 @@ namespace TSLPatcher.Tests.Formats
             ");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallGetFirstObjectInShapeDefaults()
         {
             NCS ncs = Compile(@"
@@ -157,7 +157,7 @@ namespace TSLPatcher.Tests.Formats
             ");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestEnginecallGetFactionEqual()
         {
             NCS ncs = Compile(@"
@@ -173,7 +173,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Operators
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAddopIntInt()
         {
             NCS ncs = Compile(@"
@@ -189,7 +189,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(15);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAddopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -205,7 +205,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(15.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAddopStringString()
         {
             NCS ncs = Compile(@"
@@ -221,7 +221,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be("abcdef");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSubopIntInt()
         {
             NCS ncs = Compile(@"
@@ -237,7 +237,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(5);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSubopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -253,7 +253,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(5.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestMulopIntInt()
         {
             NCS ncs = Compile(@"
@@ -269,7 +269,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(50);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestMulopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -285,7 +285,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(50.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDivopIntInt()
         {
             NCS ncs = Compile(@"
@@ -301,7 +301,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDivopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -317,7 +317,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(2.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestModopIntInt()
         {
             NCS ncs = Compile(@"
@@ -333,7 +333,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestNegopInt()
         {
             NCS ncs = Compile(@"
@@ -351,7 +351,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(-10);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestNegopFloat()
         {
             NCS ncs = Compile(@"
@@ -367,7 +367,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(-10.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBidmas()
         {
             NCS ncs = Compile(@"
@@ -385,7 +385,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(17);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestOpWithVariables()
         {
             NCS ncs = Compile(@"
@@ -409,7 +409,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Logical Operator
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestNotOp()
         {
             NCS ncs = Compile(@"
@@ -426,7 +426,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestLogicalAndOp()
         {
             NCS ncs = Compile(@"
@@ -446,7 +446,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestLogicalOrOp()
         {
             NCS ncs = Compile(@"
@@ -466,7 +466,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestLogicalEquals()
         {
             NCS ncs = Compile(@"
@@ -484,7 +484,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestLogicalNotequalsOp()
         {
             NCS ncs = Compile(@"
@@ -506,7 +506,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Relational Operator
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCompareGreaterthanOp()
         {
             NCS ncs = Compile(@"
@@ -530,7 +530,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCompareGreaterthanorequalOp()
         {
             NCS ncs = Compile(@"
@@ -554,7 +554,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCompareLessthanOp()
         {
             NCS ncs = Compile(@"
@@ -578,7 +578,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCompareLessthanorequalOp()
         {
             NCS ncs = Compile(@"
@@ -606,7 +606,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Bitwise Operator
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBitwiseOrOp()
         {
             NCS ncs = Compile(@"
@@ -622,7 +622,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(7);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBitwiseXorOp()
         {
             NCS ncs = Compile(@"
@@ -638,7 +638,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(5);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBitwiseNotInt()
         {
             NCS ncs = Compile(@"
@@ -654,7 +654,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(-2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBitwiseAndOp()
         {
             NCS ncs = Compile(@"
@@ -670,7 +670,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBitwiseShiftleftOp()
         {
             NCS ncs = Compile(@"
@@ -686,7 +686,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(28);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestBitwiseShiftrightOp()
         {
             NCS ncs = Compile(@"
@@ -706,7 +706,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Assignment
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAssignment()
         {
             NCS ncs = Compile(@"
@@ -726,7 +726,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(4);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAssignmentComplex()
         {
             NCS ncs = Compile(@"
@@ -746,7 +746,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(10);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAssignmentStringConstant()
         {
             NCS ncs = Compile(@"
@@ -765,7 +765,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be("A");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAssignmentStringEnginecall()
         {
             NCS ncs = Compile(@"
@@ -784,7 +784,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be("A");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAdditionAssignmentIntInt()
         {
             NCS ncs = Compile(@"
@@ -805,7 +805,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAdditionAssignmentIntFloat()
         {
             NCS ncs = Compile(@"
@@ -826,7 +826,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAdditionAssignmentFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -845,7 +845,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(3.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAdditionAssignmentFloatInt()
         {
             NCS ncs = Compile(@"
@@ -866,7 +866,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues[0].Value.Should().Be(3.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAdditionAssignmentStringString()
         {
             NCS ncs = Compile(@"
@@ -887,7 +887,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues[0].Value.Should().Be("ab");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSubtractionAssignmentIntInt()
         {
             NCS ncs = Compile(@"
@@ -908,7 +908,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues.Select(a => a.Value).Should().Equal(new object[] { 6 });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSubtractionAssignmentIntFloat()
         {
             NCS ncs = Compile(@"
@@ -929,7 +929,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues[0].Value.Should().Be(8.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSubtractionAssignmentFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -950,7 +950,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues[0].Value.Should().Be(8.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSubtractionAssignmentFloatInt()
         {
             NCS ncs = Compile(@"
@@ -969,7 +969,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(8.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestMultiplicationAssignment()
         {
             NCS ncs = Compile(@"
@@ -990,7 +990,7 @@ namespace TSLPatcher.Tests.Formats
             snap.ArgValues.Select(a => a.Value).Should().Equal(new object[] { 40 });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDivisionAssignment()
         {
             NCS ncs = Compile(@"
@@ -1015,7 +1015,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Switch Statements
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchNoBreaks()
         {
             NCS ncs = Compile(@"
@@ -1041,7 +1041,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[1].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchJumpOver()
         {
             NCS ncs = Compile(@"
@@ -1065,7 +1065,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots.Count.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchWithBreaks()
         {
             NCS ncs = Compile(@"
@@ -1096,7 +1096,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchWithDefault()
         {
             NCS ncs = Compile(@"
@@ -1127,7 +1127,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(4);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchScopedBlocks()
         {
             NCS ncs = Compile(@"
@@ -1161,7 +1161,7 @@ namespace TSLPatcher.Tests.Formats
 
         #endregion
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestScope()
         {
             NCS ncs = Compile(@"
@@ -1180,7 +1180,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestScopedBlock()
         {
             NCS ncs = Compile(@"
@@ -1205,7 +1205,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region If/Else Conditions
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIf()
         {
             NCS ncs = Compile(@"
@@ -1230,7 +1230,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIfMultipleConditions()
         {
             NCS ncs = Compile(@"
@@ -1247,7 +1247,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIfElse()
         {
             NCS ncs = Compile(@"
@@ -1269,7 +1269,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIfElseIf()
         {
             NCS ncs = Compile(@"
@@ -1298,7 +1298,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(7);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIfElseIfElse()
         {
             NCS ncs = Compile(@"
@@ -1332,7 +1332,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[3].ArgValues[0].Value.Should().Be(10);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSingleStatementIf()
         {
             NCS ncs = Compile(@"
@@ -1348,7 +1348,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(222);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSingleStatementElseIfElse()
         {
             NCS ncs = Compile(@"
@@ -1370,7 +1370,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region While
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestWhileLoop()
         {
             NCS ncs = Compile(@"
@@ -1394,7 +1394,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestWhileLoopWithBreak()
         {
             NCS ncs = Compile(@"
@@ -1417,7 +1417,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestWhileLoopWithContinue()
         {
             NCS ncs = Compile(@"
@@ -1443,7 +1443,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestWhileLoopScope()
         {
             NCS ncs = Compile(@"
@@ -1476,7 +1476,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Do While
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDoWhileLoop()
         {
             NCS ncs = Compile(@"
@@ -1500,7 +1500,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDoWhileLoopWithBreak()
         {
             NCS ncs = Compile(@"
@@ -1523,7 +1523,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDoWhileLoopWithContinue()
         {
             NCS ncs = Compile(@"
@@ -1549,7 +1549,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDoWhileLoopScope()
         {
             NCS ncs = Compile(@"
@@ -1580,7 +1580,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region For Loop
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestForLoop()
         {
             NCS ncs = Compile(@"
@@ -1603,7 +1603,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestForLoopWithBreak()
         {
             NCS ncs = Compile(@"
@@ -1625,7 +1625,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestForLoopWithContinue()
         {
             NCS ncs = Compile(@"
@@ -1650,7 +1650,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestForLoopScope()
         {
             NCS ncs = Compile(@"
@@ -1677,7 +1677,7 @@ namespace TSLPatcher.Tests.Formats
 
         #endregion
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestFloatNotations()
         {
             NCS ncs = Compile(@"
@@ -1697,7 +1697,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(3.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestMultiDeclarations()
         {
             NCS ncs = Compile(@"
@@ -1719,7 +1719,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestLocalDeclarations()
         {
             NCS ncs = Compile(@"
@@ -1740,7 +1740,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalDeclarations()
         {
             NCS ncs = Compile(@"
@@ -1765,7 +1765,7 @@ namespace TSLPatcher.Tests.Formats
             ncs.Instructions.Any(inst => inst.InsType == NCSInstructionType.SAVEBP).Should().BeTrue();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalInitializations()
         {
             NCS ncs = Compile(@"
@@ -1791,7 +1791,7 @@ namespace TSLPatcher.Tests.Formats
             ncs.Instructions.Any(inst => inst.InsType == NCSInstructionType.SAVEBP).Should().BeTrue();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalInitializationWithUnary()
         {
             NCS ncs = Compile(@"
@@ -1809,7 +1809,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(-1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestComment()
         {
             NCS ncs = Compile(@"
@@ -1824,7 +1824,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestMultilineComment()
         {
             NCS ncs = Compile(@"
@@ -1843,7 +1843,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestReturn()
         {
             NCS ncs = Compile(@"
@@ -1869,7 +1869,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestReturnParenthesis()
         {
             NCS ncs = Compile(@"
@@ -1891,7 +1891,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(321);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestReturnParenthesisConstant()
         {
             NCS ncs = Compile(@"
@@ -1913,7 +1913,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIntParenthesisDeclaration()
         {
             NCS ncs = Compile(@"
@@ -1930,7 +1930,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(123);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIncludeBuiltin()
         {
             byte[] otherscript = Encoding.GetEncoding(1252).GetBytes(@"
@@ -1954,7 +1954,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestIncludeLookup()
         {
             // Note: This test requires a test file to exist
@@ -1980,7 +1980,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestNestedInclude()
         {
             byte[] firstScript = Encoding.GetEncoding(1252).GetBytes(@"
@@ -2018,7 +2018,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(13);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestMissingInclude()
         {
             string source = @"
@@ -2033,7 +2033,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalIntAdditionAssignment()
         {
             NCS ncs = Compile(@"
@@ -2061,7 +2061,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(8);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalIntSubtractionAssignment()
         {
             NCS ncs = Compile(@"
@@ -2089,7 +2089,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1099);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalIntMultiplicationAssignment()
         {
             NCS ncs = Compile(@"
@@ -2117,7 +2117,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(100000);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestGlobalIntDivisionAssignment()
         {
             NCS ncs = Compile(@"
@@ -2145,7 +2145,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(100);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestImportedGlobalVariable()
         {
             byte[] otherscript = Encoding.GetEncoding(1252).GetBytes(@"
@@ -2170,7 +2170,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[1].ArgValues[1].Value.Should().Be(55);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDeclarationInt()
         {
             NCS ncs = Compile(@"
@@ -2187,7 +2187,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDeclarationFloat()
         {
             NCS ncs = Compile(@"
@@ -2204,7 +2204,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDeclarationString()
         {
             NCS ncs = Compile(@"
@@ -2221,7 +2221,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be("");
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestVector()
         {
             NCS ncs = Compile(@"
@@ -2248,7 +2248,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(6.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestVectorNotation()
         {
             NCS ncs = Compile(@"
@@ -2269,7 +2269,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(3.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestVectorGetComponents()
         {
             NCS ncs = Compile(@"
@@ -2291,7 +2291,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(6.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestVectorSetComponents()
         {
             NCS ncs = Compile(@"
@@ -2316,7 +2316,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(6.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestStructGetMembers()
         {
             NCS ncs = Compile(@"
@@ -2344,7 +2344,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0.0f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestStructGetInvalidMember()
         {
             string source = @"
@@ -2365,7 +2365,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestStructSetMembers()
         {
             NCS ncs = Compile(@"
@@ -2397,7 +2397,7 @@ namespace TSLPatcher.Tests.Formats
             ((float)interpreter.ActionSnapshots[^1].ArgValues[0].Value).Should().BeApproximately(3.14f, 0.01f);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrefixIncrementSpInt()
         {
             NCS ncs = Compile(@"
@@ -2418,7 +2418,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrefixIncrementBpInt()
         {
             NCS ncs = Compile(@"
@@ -2440,7 +2440,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPostfixIncrementSpInt()
         {
             NCS ncs = Compile(@"
@@ -2461,7 +2461,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPostfixIncrementBpInt()
         {
             NCS ncs = Compile(@"
@@ -2483,7 +2483,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrefixDecrementSpInt()
         {
             NCS ncs = Compile(@"
@@ -2504,7 +2504,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrefixDecrementBpInt()
         {
             NCS ncs = Compile(@"
@@ -2526,7 +2526,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPostfixDecrementSpInt()
         {
             NCS ncs = Compile(@"
@@ -2547,7 +2547,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPostfixDecrementBpInt()
         {
             NCS ncs = Compile(@"
@@ -2569,7 +2569,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestAssignmentlessExpression()
         {
             NCS ncs = Compile(@"
@@ -2593,7 +2593,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Script Subroutines
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeNoArgs()
         {
             NCS ncs = Compile(@"
@@ -2617,7 +2617,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(56);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeWithArg()
         {
             NCS ncs = Compile(@"
@@ -2641,7 +2641,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(57);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeWithThreeArgs()
         {
             NCS ncs = Compile(@"
@@ -2667,7 +2667,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeWithManyArgs()
         {
             NCS ncs = Compile(@"
@@ -2697,7 +2697,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(4);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeWithDefaultArg()
         {
             NCS ncs = Compile(@"
@@ -2721,7 +2721,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(57);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeWithDefaultConstantArg()
         {
             NCS ncs = Compile(@"
@@ -2745,7 +2745,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(32);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeMissingArg()
         {
             string source = @"
@@ -2765,7 +2765,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeMissingArgAndDefault()
         {
             string source = @"
@@ -2785,7 +2785,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeDefaultBeforeRequired()
         {
             string source = @"
@@ -2805,7 +2805,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestRedefineFunction()
         {
             string script = @"
@@ -2822,7 +2822,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestDoublePrototype()
         {
             string script = @"
@@ -2832,7 +2832,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeAfterDefinition()
         {
             string script = @"
@@ -2846,7 +2846,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeAndDefinitionParamMismatch()
         {
             string script = @"
@@ -2860,7 +2860,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestPrototypeAndDefinitionReturnMismatch()
         {
             string script = @"
@@ -2874,7 +2874,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallUndefined()
         {
             string script = @"
@@ -2887,7 +2887,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(script));
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallVoidWithNoArgs()
         {
             NCS ncs = Compile(@"
@@ -2909,7 +2909,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(123);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallVoidWithOneArg()
         {
             NCS ncs = Compile(@"
@@ -2931,7 +2931,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(123);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallVoidWithTwoArgs()
         {
             NCS ncs = Compile(@"
@@ -2955,7 +2955,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallIntWithNoArgs()
         {
             NCS ncs = Compile(@"
@@ -2978,7 +2978,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(5);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallIntWithNoArgsAndForwardDeclared()
         {
             NCS ncs = Compile(@"
@@ -3003,7 +3003,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(5);
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestCallParamMismatch()
         {
             string source = @"
@@ -3023,7 +3023,7 @@ namespace TSLPatcher.Tests.Formats
 
         #endregion
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchScopeA()
         {
             NCS ncs = Compile(@"
@@ -3062,7 +3062,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues.Select(a => a.Value).Should().Equal(new object[] { 8, 0 });
         }
 
-        [Fact(Skip = "Temporarily skipping NCS tests due to stack offset issues")]
+        [Fact]
         public void TestSwitchScopeB()
         {
             NCS ncs = Compile(@"
@@ -3082,4 +3082,5 @@ namespace TSLPatcher.Tests.Formats
         }
     }
 }
+
 

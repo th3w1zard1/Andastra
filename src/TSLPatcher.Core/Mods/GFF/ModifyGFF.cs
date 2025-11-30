@@ -206,6 +206,33 @@ namespace TSLPatcher.Core.Mods.GFF
         }
 
         /// <summary>
+        /// Helper method to split a path into parent path and label (filename).
+        /// Handles both backslashes and forward slashes correctly on all platforms.
+        /// </summary>
+        private static (string parentPath, string label) SplitPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return ("", "");
+            }
+
+            string[] parts = path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                return ("", "");
+            }
+
+            if (parts.Length == 1)
+            {
+                return ("", parts[0]);
+            }
+
+            string label = parts[parts.Length - 1];
+            string parentPath = string.Join("\\", parts, 0, parts.Length - 1);
+            return (parentPath, label);
+        }
+
+        /// <summary>
         /// Navigates to a field from the root gff struct from a path.
         /// Python: def _navigate_to_field(self, root_container: GFFStruct, path: PureWindowsPath | os.PathLike | str) -> _GFFField | None
         /// Returns a tuple of (fieldType, value) or null if not found
@@ -215,8 +242,7 @@ namespace TSLPatcher.Core.Mods.GFF
         {
             // Python: path = PureWindowsPath(path)
             // Python: container: GFFList | GFFStruct | None = self._navigate_containers(root_container, path.parent)
-            string parentPath = Path.GetDirectoryName(path)?.Replace("\\", "/") ?? "";
-            string label = Path.GetFileName(path);
+            (string parentPath, string label) = SplitPath(path);
             // Can be null if not found
             object container = NavigateContainers(rootContainer, parentPath);
 
@@ -286,17 +312,17 @@ namespace TSLPatcher.Core.Mods.GFF
             GFFList listContainer = null;
 
             // Python: if self.path.name == ">>##INDEXINLIST##<<":
-            string pathName = System.IO.Path.GetFileName(Path);
+            (_, string pathName) = SplitPath(Path);
             string workingPath = Path;
             if (pathName == ">>##INDEXINLIST##<<")
             {
                 // Python: #logger.add_verbose(f"Removing unique sentinel from AddStructToListGFF instance (ini section [{self.identifier}]). Path: '{self.path}'")
                 // Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
-                workingPath = System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "";
+                (workingPath, _) = SplitPath(Path);
             }
 
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, self.path) if self.path.name else root_container
-            string workingPathName = System.IO.Path.GetFileName(workingPath);
+            (_, string workingPathName) = SplitPath(workingPath);
             // Can be null if not found
             object navigatedContainer = string.IsNullOrEmpty(workingPathName)
                 ? rootStruct
@@ -477,10 +503,10 @@ namespace TSLPatcher.Core.Mods.GFF
             // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
             string containerPath;
-            string pathName = System.IO.Path.GetFileName(Path);
+            (_, string pathName) = SplitPath(Path);
             if (pathName == ">>##INDEXINLIST##<<")
             {
-                containerPath = System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "";
+                (containerPath, _) = SplitPath(Path);
             }
             else
             {
@@ -512,16 +538,15 @@ namespace TSLPatcher.Core.Mods.GFF
                 {
                     logger.AddVerbose($"Found PureWindowsPath object in value() lookup from non-FieldValue2DAMemory object? Path: \"{storedFieldpath}\" INI section: [{Identifier}]");
                 }
-                string fromParentPath = System.IO.Path.GetDirectoryName(storedFieldpath)?.Replace("\\", "/") ?? "";
+                (string fromParentPath, string fromLabel) = SplitPath(storedFieldpath);
                 // Can be null if not found
                 object fromContainer = NavigateContainers(rootStruct, fromParentPath);
                 if (!(fromContainer is GFFStruct fromStruct))
                 {
                     string reason = fromContainer == null ? "does not exist!" : "is not an instance of a GFFStruct.";
-                    logger.AddError($"Unable to use !FieldPath from 2DAMEMORY. Parent field at '{storedFieldpath}' {reason}");
+                    logger.AddError($"Unable to use !FieldPath from 2DAMEMORY. Parent field at '{fromParentPath}' {reason}");
                     return;
                 }
-                string fromLabel = System.IO.Path.GetFileName(storedFieldpath);
                 value = fromStruct.GetValue(fromLabel) ?? value;
                 logger.AddVerbose($"Acquired value '{value}' from 2DAMEMORY !FieldPath({storedFieldpath})");
             }
@@ -718,8 +743,7 @@ namespace TSLPatcher.Core.Mods.GFF
                 string destFieldPath = ptrToDest is string destPathForSetting && (destPathForSetting.Contains('/') || destPathForSetting.Contains('\\'))
                     ? destPathForSetting
                     : Path;
-                string destParentPath = System.IO.Path.GetDirectoryName(destFieldPath)?.Replace("\\", "/") ?? "";
-                string destLabel = System.IO.Path.GetFileName(destFieldPath);
+                (string destParentPath, string destLabel) = SplitPath(destFieldPath);
                 // Can be null if not found
                 object destContainer = NavigateContainers(rootStruct, destParentPath);
                 if (destContainer is GFFStruct destStruct)
@@ -782,9 +806,8 @@ namespace TSLPatcher.Core.Mods.GFF
             }
 
             // Python: label: str = self.path.name
-            string label = System.IO.Path.GetFileName(Path);
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, self.path.parent)
-            string parentPath = System.IO.Path.GetDirectoryName(Path)?.Replace("\\", "/") ?? "";
+            (string parentPath, string label) = SplitPath(Path);
             // Can be null if not found
             object navigatedContainer = NavigateContainers(rootStruct, parentPath);
 
@@ -817,16 +840,15 @@ namespace TSLPatcher.Core.Mods.GFF
                 {
                     logger.AddVerbose($"Found PureWindowsPath object in value() lookup from non-FieldValue2DAMemory object? Path: \"{storedFieldpath}\" INI section: [{Identifier}]");
                 }
-                string fromParentPath = System.IO.Path.GetDirectoryName(storedFieldpath)?.Replace("\\", "/") ?? "";
+                (string fromParentPath, string fromLabel) = SplitPath(storedFieldpath);
                 // Can be null if not found
                 object fromContainer = NavigateContainers(rootStruct, fromParentPath);
                 if (!(fromContainer is GFFStruct fromStruct))
                 {
                     string reason = fromContainer == null ? "does not exist!" : "is not an instance of a GFFStruct.";
-                    logger.AddError($"Unable use !FieldPath from 2DAMEMORY. Parent field at '{System.IO.Path.GetDirectoryName(storedFieldpath)}' {reason}");
+                    logger.AddError($"Unable use !FieldPath from 2DAMEMORY. Parent field at '{fromParentPath}' {reason}");
                     return;
                 }
-                string fromLabel = System.IO.Path.GetFileName(storedFieldpath);
                 value = fromStruct.GetValue(fromLabel) ?? value;
                 logger.AddVerbose($"Acquired value '{value}' from field at !FieldPath '{storedFieldpath}'");
             }
