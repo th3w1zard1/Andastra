@@ -18,7 +18,7 @@ namespace HoloPatcher
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
-            
+
             // Register process exit handler early to catch forced terminations
             // This provides a fallback if ShutdownRequested doesn't fire
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
