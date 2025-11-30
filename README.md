@@ -159,6 +159,10 @@ When contributing to this port:
 
 This ensures that bug fixes, feature requests, and behavioral changes can be synchronized between the Python and C# implementations.
 
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and automated releases. See [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md) for details.
+
 ## License
 
 Same license as the original PyKotor project.
