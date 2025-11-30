@@ -1,0 +1,246 @@
+namespace TSLPatcher.Core.Formats.NCS.DeNCS.Node
+{
+    public sealed class AActionCommand : PActionCommand
+    {
+        private TAction _action;
+        private TIntegerConstant _pos;
+        private TIntegerConstant _type;
+        private TIntegerConstant _id;
+        private TIntegerConstant _argCount;
+        private TSemi _semi;
+
+        public AActionCommand()
+        {
+        }
+
+        public AActionCommand(TAction action, TIntegerConstant pos, TIntegerConstant type, TIntegerConstant id, TIntegerConstant argCount, TSemi semi)
+        {
+            SetAction(action);
+            SetPos(pos);
+            SetType(type);
+            SetId(id);
+            SetArgCount(argCount);
+            SetSemi(semi);
+        }
+
+        public override object Clone()
+        {
+            return new AActionCommand(
+                (TAction)CloneNode(_action),
+                (TIntegerConstant)CloneNode(_pos),
+                (TIntegerConstant)CloneNode(_type),
+                (TIntegerConstant)CloneNode(_id),
+                (TIntegerConstant)CloneNode(_argCount),
+                (TSemi)CloneNode(_semi));
+        }
+
+        public override void Apply(Analysis.AnalysisAdapter sw)
+        {
+            sw.DefaultIn(this);
+        }
+
+        public TAction GetAction()
+        {
+            return _action;
+        }
+
+        public void SetAction(TAction node)
+        {
+            if (_action != null)
+            {
+                _action.SetParent(null);
+            }
+            if (node != null)
+            {
+                if (node.Parent() != null)
+                {
+                    node.Parent().RemoveChild(node);
+                }
+                node.SetParent(this);
+            }
+            _action = node;
+        }
+
+        public TIntegerConstant GetPos()
+        {
+            return _pos;
+        }
+
+        public void SetPos(TIntegerConstant node)
+        {
+            if (_pos != null)
+            {
+                _pos.SetParent(null);
+            }
+            if (node != null)
+            {
+                if (node.Parent() != null)
+                {
+                    node.Parent().RemoveChild(node);
+                }
+                node.SetParent(this);
+            }
+            _pos = node;
+        }
+
+        public TIntegerConstant GetType()
+        {
+            return _type;
+        }
+
+        public void SetType(TIntegerConstant node)
+        {
+            if (_type != null)
+            {
+                _type.SetParent(null);
+            }
+            if (node != null)
+            {
+                if (node.Parent() != null)
+                {
+                    node.Parent().RemoveChild(node);
+                }
+                node.SetParent(this);
+            }
+            _type = node;
+        }
+
+        public TIntegerConstant GetId()
+        {
+            return _id;
+        }
+
+        public void SetId(TIntegerConstant node)
+        {
+            if (_id != null)
+            {
+                _id.SetParent(null);
+            }
+            if (node != null)
+            {
+                if (node.Parent() != null)
+                {
+                    node.Parent().RemoveChild(node);
+                }
+                node.SetParent(this);
+            }
+            _id = node;
+        }
+
+        public TIntegerConstant GetArgCount()
+        {
+            return _argCount;
+        }
+
+        public void SetArgCount(TIntegerConstant node)
+        {
+            if (_argCount != null)
+            {
+                _argCount.SetParent(null);
+            }
+            if (node != null)
+            {
+                if (node.Parent() != null)
+                {
+                    node.Parent().RemoveChild(node);
+                }
+                node.SetParent(this);
+            }
+            _argCount = node;
+        }
+
+        public TSemi GetSemi()
+        {
+            return _semi;
+        }
+
+        public void SetSemi(TSemi node)
+        {
+            if (_semi != null)
+            {
+                _semi.SetParent(null);
+            }
+            if (node != null)
+            {
+                if (node.Parent() != null)
+                {
+                    node.Parent().RemoveChild(node);
+                }
+                node.SetParent(this);
+            }
+            _semi = node;
+        }
+
+        public override void RemoveChild(Node child)
+        {
+            if (_action == child)
+            {
+                _action = null;
+                return;
+            }
+            if (_pos == child)
+            {
+                _pos = null;
+                return;
+            }
+            if (_type == child)
+            {
+                _type = null;
+                return;
+            }
+            if (_id == child)
+            {
+                _id = null;
+                return;
+            }
+            if (_argCount == child)
+            {
+                _argCount = null;
+                return;
+            }
+            if (_semi == child)
+            {
+                _semi = null;
+            }
+        }
+
+        public override void ReplaceChild(Node oldChild, Node newChild)
+        {
+            if (_action == oldChild)
+            {
+                SetAction((TAction)newChild);
+                return;
+            }
+            if (_pos == oldChild)
+            {
+                SetPos((TIntegerConstant)newChild);
+                return;
+            }
+            if (_type == oldChild)
+            {
+                SetType((TIntegerConstant)newChild);
+                return;
+            }
+            if (_id == oldChild)
+            {
+                SetId((TIntegerConstant)newChild);
+                return;
+            }
+            if (_argCount == oldChild)
+            {
+                SetArgCount((TIntegerConstant)newChild);
+                return;
+            }
+            if (_semi == oldChild)
+            {
+                SetSemi((TSemi)newChild);
+            }
+        }
+
+        public override string ToString()
+        {
+            return ToString(_action) + ToString(_pos) + ToString(_type) + ToString(_id) + ToString(_argCount) + ToString(_semi);
+        }
+    }
+}
+

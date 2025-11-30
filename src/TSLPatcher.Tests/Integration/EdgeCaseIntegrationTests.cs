@@ -112,7 +112,7 @@ Col1=second
 
             // Depending on implementation, might add both or overwrite
             // This tests the actual behavior
-            twoda.GetHeight().Should().BeGreaterOrEqualTo(1);
+            twoda.GetHeight().Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact]
@@ -191,7 +191,7 @@ Col1=high()
             twoda.GetHeight().Should().Be(1);
             // High of empty should be 1 or 0+1
             int value = int.Parse(twoda.GetCellString(0, "Col1"));
-            value.Should().BeGreaterOrEqualTo(0);
+            value.Should().BeGreaterThanOrEqualTo(0);
         }
 
         [Fact]

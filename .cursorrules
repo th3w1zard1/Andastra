@@ -1,0 +1,43 @@
+# Cursor Rules for HoloPatcher.NET
+
+## 1:1 Porting Requirements
+
+When porting code from Python (vendor/PyKotor) to C#:
+
+1. **Exact Code Matching**: All code must match the Python source 1:1, including:
+   - Logic and control flow
+   - Variable names (converted to C# naming conventions where necessary)
+   - Comments (exact text, no additional comments)
+   - Whitespace structure (where applicable)
+
+2. **Comments**:
+   - DO NOT add explanatory comments about how Python works
+   - DO NOT add comments explaining the conversion
+   - DO NOT add "1:1 port" comments
+   - DO NOT add "TODO" comments unless they exist in Python
+   - ONLY include comments that exist in the Python source
+   - Match comment text exactly, including docstrings
+
+3. **No Additional Code**:
+   - DO NOT add helper methods unless they exist in Python
+   - DO NOT add validation unless it exists in Python
+   - DO NOT add error handling unless it exists in Python
+   - DO NOT add optimizations unless they exist in Python
+
+4. **Assumptions**:
+   - If Python tests pass, the Python implementation is correct
+   - If C# tests fail, the C# code does not match Python
+   - Fix failures by matching Python exactly, not by "improving" the code
+
+5. **File Structure**:
+   - Match Python file organization where possible
+   - Match class/method organization where possible
+
+6. **Error Messages**:
+   - Match Python error messages exactly (converted to C# string formatting)
+
+## Testing
+
+- All ported tests must pass
+- Failing tests indicate the C# code does not match Python
+- Fix by matching Python exactly, not by changing test expectations

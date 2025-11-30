@@ -11,17 +11,15 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// Reads NCS (NWScript Compiled Script) files.
-    /// 
+    ///
     /// NCS files contain compiled bytecode for NWScript, the scripting language used in KotOR.
     /// Instructions include operations, constants, function calls, jumps, and control flow.
-    /// 
+    ///
     /// References:
     ///     vendor/reone/src/libs/script/format/ncsreader.cpp:28-40 (NCS header reading)
     ///     vendor/reone/src/libs/script/format/ncsreader.cpp:42-195 (instruction reading)
     ///     vendor/xoreos-tools/src/nwscript/decompiler.cpp (NCS decompilation)
     ///     vendor/xoreos-docs/specs/torlack/ncs.html (NCS format specification)
-    /// 
-    /// 1:1 port from pykotor.resource.formats.ncs.io_ncs.NCSBinaryReader
     /// </summary>
     public class NCSBinaryReader : IDisposable
     {

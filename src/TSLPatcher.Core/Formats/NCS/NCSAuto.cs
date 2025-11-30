@@ -12,7 +12,6 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// Auto-loading functions for NCS files.
-    /// 1:1 port from pykotor.resource.formats.ncs.ncs_auto
     /// </summary>
     public static class NCSAuto
     {
@@ -117,7 +116,6 @@ namespace TSLPatcher.Core.Formats.NCS
 
         /// <summary>
         /// Compile NSS source code to NCS bytecode.
-        /// 1:1 port from Python compile_nss in pykotor/resource/formats/ncs/ncs_auto.py
         /// </summary>
         public static NCS CompileNss(
             string source,
@@ -138,7 +136,6 @@ namespace TSLPatcher.Core.Formats.NCS
 
         /// <summary>
         /// Decompile NCS bytecode to NSS source code.
-        /// 1:1 port from Python decompile_ncs in pykotor/resource/formats/ncs/ncs_auto.py
         /// </summary>
         public static string DecompileNcs(
             [CanBeNull] NCS ncs,
@@ -146,20 +143,13 @@ namespace TSLPatcher.Core.Formats.NCS
             List<ScriptFunction> functions = null,
             [CanBeNull] List<ScriptConstant> constants = null)
         {
-            // TODO: Implement full NCS decompiler
-            // This requires:
-            // 1. Instruction-to-NSS conversion logic
-            // 2. Control flow reconstruction (if/else, loops, switch)
-            // 3. Function call resolution
-            // 4. Variable name reconstruction
-            // 5. Struct handling
-            // 6. All NWScript language features
+            if (ncs == null)
+            {
+                throw new ArgumentNullException(nameof(ncs));
+            }
 
-            // For now, this is a placeholder that will need the full decompiler implementation
-            throw new NotImplementedException(
-                "NCS decompilation requires full decompiler implementation. " +
-                "This is a large undertaking and needs to be ported from Python. " +
-                "The Python implementation in pykotor/resource/formats/ncs/decompiler.py needs to be ported 1:1.");
+            var decompiler = new NCSDecompiler(ncs, game, functions, constants);
+            return decompiler.Decompile();
         }
     }
 }

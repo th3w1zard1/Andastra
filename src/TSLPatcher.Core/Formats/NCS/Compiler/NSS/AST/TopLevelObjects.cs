@@ -1,12 +1,16 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using TSLPatcher.Core.Common.Script;
 using TSLPatcher.Core.Formats.NCS;
+using TSLPatcher.Core.Formats.NCS.Compiler.NSS;
+using MissingIncludeError = TSLPatcher.Core.Formats.NCS.Compiler.NSS.MissingIncludeError;
+using ScriptDataType = TSLPatcher.Core.Common.Script.DataType;
 
 namespace TSLPatcher.Core.Formats.NCS.Compiler
 {
-    /// <summary>
-    /// Represents a global variable declaration.
-    /// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.GlobalVariableDeclaration
-    /// </summary>
     public class GlobalVariableDeclaration : TopLevelObject
     {
         public Identifier Identifier { get; set; }
@@ -20,14 +24,74 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
         public override void Compile(NCS ncs, CodeRoot root)
         {
+            if (DataType.Builtin == ScriptDataType.Int)
+            {
+                ncs.Add(NCSInstructionType.RSADDI, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Float)
+            {
+                ncs.Add(NCSInstructionType.RSADDF, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.String)
+            {
+                ncs.Add(NCSInstructionType.RSADDS, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Object)
+            {
+                ncs.Add(NCSInstructionType.RSADDO, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Event)
+            {
+                ncs.Add(NCSInstructionType.RSADDEVT, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Location)
+            {
+                ncs.Add(NCSInstructionType.RSADDLOC, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Talent)
+            {
+                ncs.Add(NCSInstructionType.RSADDTAL, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Effect)
+            {
+                ncs.Add(NCSInstructionType.RSADDEFF, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Vector)
+            {
+                ncs.Add(NCSInstructionType.RSADDF, new List<object>());
+                ncs.Add(NCSInstructionType.RSADDF, new List<object>());
+                ncs.Add(NCSInstructionType.RSADDF, new List<object>());
+            }
+            else if (DataType.Builtin == ScriptDataType.Struct)
+            {
+                string structName = DataType.Struct;
+                if (structName != null && root.StructMap.ContainsKey(structName))
+                {
+                    root.StructMap[structName].Initialize(ncs, root);
+                }
+                else
+                {
+                    string msg = $"Unknown struct type for variable '{Identifier}'";
+                    throw new CompileError(msg);
+                }
+            }
+            else if (DataType.Builtin == ScriptDataType.Void)
+            {
+                string msg = $"Cannot declare variable '{Identifier}' with void type\n" +
+                            "  void can only be used as a function return type";
+                throw new CompileError(msg);
+            }
+            else
+            {
+                string msg = $"Unsupported type '{DataType.Builtin}' for global variable '{Identifier}'\n" +
+                            "  This may indicate a compiler bug or unsupported type";
+                throw new CompileError(msg);
+            }
+
             root.AddScoped(Identifier, DataType);
         }
     }
 
-    /// <summary>
-    /// Represents a global variable initialization.
-    /// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.GlobalVariableInitialization
-    /// </summary>
     public class GlobalVariableInitialization : TopLevelObject
     {
         public Identifier Identifier { get; set; }
@@ -68,10 +132,6 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
         }
     }
 
-    /// <summary>
-    /// Represents a struct definition.
-    /// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.StructDefinition
-    /// </summary>
     public class StructDefinition : TopLevelObject
     {
         public Identifier Identifier { get; set; }
@@ -95,10 +155,6 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
         }
     }
 
-    /// <summary>
-    /// Represents an include script statement.
-    /// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.IncludeScript
-    /// </summary>
     public class IncludeScript : TopLevelObject
     {
         public StringExpression File { get; set; }
@@ -112,10 +168,88 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
         public override void Compile(NCS ncs, CodeRoot root)
         {
-            // TODO: Implement include script compilation
-            // This requires the NssParser which may not be available yet
-            // For now, this is a stub to match the Python structure
-            throw new System.NotImplementedException("IncludeScript compilation not yet implemented");
+            // FIXED: Only merge symbol tables (function_map, struct_map), not all objects.
+            // This ensures only symbols are available for resolution, but they're only
+            // compiled if actually referenced. This matches nwnnsscomp behavior.
+
+            List<string> lookupPaths = root.LibraryLookup != null
+                ? new List<string>(root.LibraryLookup)
+                : null;
+
+            var nssParser = new NssParser(
+                root.Functions,
+                root.Constants,
+                root.Library,
+                lookupPaths);
+            nssParser.Library = Library;
+            nssParser.Constants = root.Constants;
+            string source = GetScript(root);
+            CodeRoot t = nssParser.Parse(source);
+
+            // FIXED: Only merge symbol tables, NOT all objects.
+            // The bug was: root.objects = t.objects + root.objects
+            // This dumped all include objects into compilation, causing incorrect string offsets.
+            foreach (var kvp in t.FunctionMap)
+            {
+                root.FunctionMap[kvp.Key] = kvp.Value;
+            }
+            foreach (var kvp in t.StructMap)
+            {
+                root.StructMap[kvp.Key] = kvp.Value;
+            }
+            // Note: Constants are already shared via root.constants, so no need to merge
+        }
+
+        private string GetScript(CodeRoot root)
+        {
+            // Try to find in filesystem first
+            string source = null;
+            foreach (string folder in root.LibraryLookup)
+            {
+                string filepath = Path.Combine(folder, $"{File.Value}.nss");
+                if (System.IO.File.Exists(filepath))
+                {
+                    try
+                    {
+                        byte[] sourceBytes = System.IO.File.ReadAllBytes(filepath);
+                        source = Encoding.GetEncoding("windows-1252").GetString(sourceBytes);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        string msg = $"Failed to read include file '{filepath}': {e.Message}";
+                        throw new NSS.MissingIncludeError(msg, File.Value);
+                    }
+                }
+            }
+
+            if (source == null)
+            {
+                // Not found in filesystem, try library
+                bool caseSensitive = root.LibraryLookup == null || root.LibraryLookup.Count == 0 ||
+                    root.LibraryLookup.All(lookupPath => Path.IsPathRooted(lookupPath));
+                string includeFilename = caseSensitive ? File.Value : File.Value.ToLowerInvariant();
+
+                if (Library.ContainsKey(includeFilename))
+                {
+                    source = Encoding.GetEncoding("windows-1252").GetString(Library[includeFilename]);
+                }
+                else
+                {
+                    // Build helpful error message with search paths
+                    List<string> searchPaths = root.LibraryLookup != null
+                        ? new List<string>(root.LibraryLookup)
+                        : new List<string>();
+                    string pathsText = searchPaths.Count > 0
+                        ? string.Join(", ", searchPaths.Take(3)) + (searchPaths.Count > 3 ? "..." : "")
+                        : "none";
+                    string msg = $"Could not find included script '{includeFilename}.nss'\n" +
+                                $"  Searched in {searchPaths.Count} path(s): {pathsText}\n" +
+                                $"  Also checked {Library.Count} library file(s)";
+                    throw new NSS.MissingIncludeError(msg, includeFilename);
+                }
+            }
+            return source;
         }
     }
 }

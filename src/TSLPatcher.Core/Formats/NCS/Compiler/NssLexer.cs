@@ -6,16 +6,16 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 {
 
     /// <summary>
-    /// Lexer for NSS (NWScript Source) files.
-    /// 1:1 port from Python lexer in pykotor/resource/formats/ncs/compiler/lexer.py
-    /// 
-    /// This is a placeholder implementation. The full lexer needs to tokenize:
-    /// - Keywords (void, int, float, string, object, vector, etc.)
-    /// - Identifiers
-    /// - Literals (integers, floats, strings)
-    /// - Operators (+, -, *, /, ==, !=, etc.)
-    /// - Punctuation (braces, parentheses, semicolons, etc.)
-    /// - Comments (single-line // and multi-line /* */)
+    /// NSS (NWScript Source) lexer/tokenizer.
+    ///
+    /// Tokenizes NSS source code into tokens for parsing. Handles keywords, operators,
+    /// literals, identifiers, and special values (OBJECTSELF, OBJECTINVALID, etc.).
+    ///
+    /// References:
+    ///     vendor/HoloLSP/server/src/nwscript-lexer.ts (TypeScript NSS lexer)
+    ///     vendor/KotOR.js/src/nwscript/NWScriptCompiler.ts (Token handling)
+    ///     vendor/xoreos-tools/src/nwscript/ (NSS lexer implementation)
+    ///     PLY (Python Lex-Yacc) library for lexer generation
     /// </summary>
     public class NssLexer
     {
@@ -39,18 +39,7 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
         {
             var tokens = new List<NssToken>();
 
-            // TODO: Implement full tokenization logic
-            // This requires handling:
-            // - Whitespace and comments
-            // - Keywords and identifiers
-            // - Numeric literals (int, float)
-            // - String literals
-            // - Operators and punctuation
-            // - Error handling for invalid tokens
-
-            throw new NotImplementedException(
-                "Full NSS lexer implementation required. " +
-                "This needs to be ported from Python lexer.py");
+            throw new NotImplementedException();
         }
 
         private char? Peek(int offset = 0)

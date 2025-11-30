@@ -1,0 +1,92 @@
+name: Generate NetSparkle Appcast
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  generate-appcast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install NetSparkle Tools
+        run: dotnet tool install -g NetSparkleUpdater.Tools.AppCastGenerator
+
+      - name: Setup GitHub CLI
+        run: |
+          type -p curl >/dev/null || (apt update && apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt update
+          apt install gh -y
+
+      - name: Download release assets
+        run: |
+          mkdir -p release-assets
+          gh release download "${{ github.event.release.tag_name }}" -p "*.zip" -D release-assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Check if NetSparkle key is configured
+        id: check_key
+        run: |
+          if [ -n "${{ secrets.NETSPARKLE_PRIVATE_KEY }}" ]; then
+            echo "key_configured=true" >> $GITHUB_OUTPUT
+          else
+            echo "key_configured=false" >> $GITHUB_OUTPUT
+            echo "Warning: NETSPARKLE_PRIVATE_KEY not configured, skipping appcast generation"
+          fi
+
+      - name: Generate appcast
+        if: steps.check_key.outputs.key_configured == 'true'
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          
+          # Create release notes directory if it doesn't exist
+          mkdir -p .github/release-notes
+          
+          # Generate appcast
+          netsparkle-generate-appcast \
+            -b release-assets \
+            -p .github/release-notes \
+            -k "${{ secrets.NETSPARKLE_PRIVATE_KEY }}" \
+            -o appcast.xml \
+            --human-readable true
+        env:
+          NETSPARKLE_PRIVATE_KEY: ${{ secrets.NETSPARKLE_PRIVATE_KEY }}
+
+      - name: Upload appcast to release
+        if: steps.check_key.outputs.key_configured == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: appcast.xml
+          tag_name: ${{ github.event.release.tag_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload appcast artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appcast
+          path: appcast.xml
+          retention-days: 90
+

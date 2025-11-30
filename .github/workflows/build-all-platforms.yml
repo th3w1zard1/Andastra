@@ -1,0 +1,182 @@
+name: Build All Platforms
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        type: string
+      tag_name:
+        description: 'Git tag name'
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}-${{ matrix.arch }} (${{ matrix.framework }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows 7 - .NET Framework 4.8
+          - os: windows-latest
+            framework: net48
+            platform: win7
+            arch: x64
+            rid: win7-x64
+            selfcontained: false
+          - os: windows-latest
+            framework: net48
+            platform: win7
+            arch: x86
+            rid: win7-x86
+            selfcontained: false
+          
+          # Windows 10/11 - .NET 9
+          - os: windows-latest
+            framework: net9.0
+            platform: win
+            arch: x64
+            rid: win-x64
+            selfcontained: true
+          - os: windows-latest
+            framework: net9.0
+            platform: win
+            arch: x86
+            rid: win-x86
+            selfcontained: true
+          - os: windows-latest
+            framework: net9.0
+            platform: win
+            arch: arm64
+            rid: win-arm64
+            selfcontained: true
+          
+          # Linux - .NET 9
+          - os: ubuntu-latest
+            framework: net9.0
+            platform: linux
+            arch: x64
+            rid: linux-x64
+            selfcontained: true
+          - os: ubuntu-latest
+            framework: net9.0
+            platform: linux
+            arch: arm64
+            rid: linux-arm64
+            selfcontained: true
+          
+          # macOS - .NET 9
+          - os: macos-latest
+            framework: net9.0
+            platform: osx
+            arch: x64
+            rid: osx-x64
+            selfcontained: true
+          - os: macos-latest
+            framework: net9.0
+            platform: osx
+            arch: arm64
+            rid: osx-arm64
+            selfcontained: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag_name || github.ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup .NET Framework (Windows only)
+        if: matrix.framework == 'net48'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Update version in csproj
+        run: |
+          $version = "${{ inputs.version }}"
+          $csprojPath = "src/HoloPatcher/HoloPatcher.csproj"
+          
+          # Update Version tag
+          (Get-Content $csprojPath) -replace '<Version>.*</Version>', "<Version>$version</Version>" | Set-Content $csprojPath
+          
+          # Extract major.minor.patch for AssemblyVersion
+          if ($version -match '^(\d+)\.(\d+)\.(\d+)') {
+            $assemblyVersion = "$($matches[1]).$($matches[2]).$($matches[3]).0"
+            (Get-Content $csprojPath) -replace '<AssemblyVersion>.*</AssemblyVersion>', "<AssemblyVersion>$assemblyVersion</AssemblyVersion>" | Set-Content $csprojPath
+            (Get-Content $csprojPath) -replace '<FileVersion>.*</FileVersion>', "<FileVersion>$assemblyVersion</FileVersion>" | Set-Content $csprojPath
+          }
+        shell: pwsh
+
+      - name: Restore dependencies
+        run: dotnet restore src/HoloPatcher/HoloPatcher.csproj
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.framework }}" == "net48" ]; then
+            msbuild src/HoloPatcher/HoloPatcher.csproj `
+              /p:Configuration=Release `
+              /p:TargetFramework=${{ matrix.framework }} `
+              /p:RuntimeIdentifier=${{ matrix.rid }} `
+              /p:SelfContained=${{ matrix.selfcontained }} `
+              /p:PublishDir=dist\build\${{ matrix.framework }}\${{ matrix.rid }}\
+          else
+            dotnet publish src/HoloPatcher/HoloPatcher.csproj `
+              -c Release `
+              -f ${{ matrix.framework }} `
+              -r ${{ matrix.rid }} `
+              --self-contained ${{ matrix.selfcontained }} `
+              -p:PublishSingleFile=true `
+              -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:PublishReadyToRun=true `
+              -o dist/build/${{ matrix.framework }}/${{ matrix.rid }}
+        shell: pwsh
+
+      - name: Create archive
+        run: |
+          $version = "${{ inputs.version }}"
+          $platform = "${{ matrix.platform }}"
+          $arch = "${{ matrix.arch }}"
+          $rid = "${{ matrix.rid }}"
+          $framework = "${{ matrix.framework }}"
+          
+          $sourceDir = "dist/build/$framework/$rid"
+          $archiveName = "HoloPatcher-$version-$platform-$arch.zip"
+          $archivePath = "dist/$archiveName"
+          
+          # Create dist directory if it doesn't exist
+          if (-not (Test-Path "dist")) {
+            New-Item -ItemType Directory -Path "dist" | Out-Null
+          }
+          
+          # Create archive
+          if (Test-Path $sourceDir) {
+            # Get all files in source directory
+            $files = Get-ChildItem -Path $sourceDir -Recurse -File
+            if ($files.Count -eq 0) {
+              Write-Error "No files found in source directory: $sourceDir"
+              exit 1
+            }
+            
+            Compress-Archive -Path "$sourceDir/*" -DestinationPath $archivePath -Force
+            Write-Host "Created archive: $archivePath ($((Get-Item $archivePath).Length) bytes)"
+          } else {
+            Write-Error "Source directory not found: $sourceDir"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HoloPatcher-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/HoloPatcher-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.zip
+          retention-days: 30
+          if-no-files-found: error
+

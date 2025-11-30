@@ -95,3 +95,30 @@ nunit-*.xml
 *.vssscc
 
 .history/
+dist/osx-x64.zip
+.gitignore
+*.dylib
+*.dll
+*.zip
+dist/
+
+# NetSparkle keys (NEVER commit these!)
+keys/
+*.key
+*.pem
+*_key.txt
+*_private_key.txt
+
+# Build outputs
+dist/
+build/
+*.zip
+*.7z
+
+# Logs
+*.log
+publish_release_*.log
+
+# Appcast files (generated)
+appcast.xml
+appcast-beta.xml

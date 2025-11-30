@@ -30,18 +30,8 @@ namespace TSLPatcher.Core.Reader
         /// </summary>
         public static List<PatcherNamespace> FromFilePath(string path)
         {
-            if (!File.Exists(path))
-            {
-                throw new FileNotFoundException($"Namespaces file not found: {path}", path);
-            }
-
-            var parser = new IniParser.Parser.IniDataParser();
-            parser.Configuration.AllowDuplicateKeys = true;
-            parser.Configuration.AllowDuplicateSections = true;
-            parser.Configuration.CaseInsensitive = true;
-
-            string iniText = File.ReadAllText(path);
-            IniData ini = parser.Parse(iniText);
+            // Use unified INI loader (case-insensitive for namespaces.ini)
+            IniData ini = ConfigReader.LoadAndParseIni(path, caseInsensitive: true);
 
             return new NamespaceReader(ini).Load();
         }

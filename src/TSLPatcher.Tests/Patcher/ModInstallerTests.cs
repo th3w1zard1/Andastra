@@ -10,6 +10,8 @@ using TSLPatcher.Core.Patcher;
 using TSLPatcher.Core.Resources;
 using Xunit;
 
+#nullable enable
+
 namespace TSLPatcher.Tests.Patcher
 {
 

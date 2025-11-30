@@ -1,6 +1,24 @@
 # HoloPatcher.NET
 
-A complete rewrite of HoloPatcher in C#/.NET with Avalonia UI framework.
+A direct 1:1 port of HoloPatcher from Python to C#/.NET with Avalonia UI framework.
+
+## Port Philosophy
+
+This project is a **faithful, line-by-line translation** of the original Python implementation. The codebase maintains strict functional equivalence with the source material, with **no creative changes, architectural modifications, or feature additions** beyond what is necessary for language and framework translation.
+
+### Porting Standards
+
+- **1:1 Functional Equivalence**: Every function, class, and method maintains identical behavior to the Python source
+- **Preserved Logic**: All business logic, algorithms, and data structures are translated directly without modification
+- **Comment Preservation**: Original Python comments and documentation are preserved where applicable
+- **No Feature Creep**: No additional features or "improvements" beyond the original specification
+- **Framework Translation Only**: Changes are limited to:
+  - Python → C# syntax translation
+  - Tkinter → Avalonia UI framework adaptation
+  - Python standard library → .NET equivalent APIs
+  - Threading model adaptation (Python threading → C# async/await)
+
+The only exception to strict 1:1 parity is RTF rendering: the C# version attempts to render RTF content natively using Avalonia's RichTextBox control before falling back to stripped plain text (matching Python's behavior), whereas the Python version strips RTF immediately due to Tkinter limitations.
 
 ## Project Structure
 
@@ -108,25 +126,38 @@ The Avalonia UI application follows MVVM pattern:
 - **ViewModels/** - View models with business logic
 - **Services/** - Application services
 
-## Migration Notes
+## Port Implementation Details
 
-This is a port from the original Python/Tkinter implementation. Key differences:
+This codebase is a direct translation from the original Python/Tkinter implementation located in `vendor/PyKotor/Tools/HoloPatcher/src/holopatcher/`. The following technical adaptations were made solely for language and framework compatibility:
 
-1. **UI Framework**: Tkinter → Avalonia (cross-platform, modern)
-2. **Language**: Python → C# (.NET)
-3. **Architecture**: Event-driven → MVVM pattern
-4. **Threading**: Python threading → C# Tasks/async-await
-5. **Logging**: Custom observable → Event-based logger
+1. **UI Framework**: Tkinter → Avalonia (required for cross-platform .NET UI)
+2. **Language**: Python → C# (.NET) (syntax translation only, no logic changes)
+3. **Architecture**: Maintains original structure; MVVM pattern used only where Avalonia requires it
+4. **Threading**: Python threading → C# Tasks/async-await (equivalent functionality)
+5. **Logging**: Original observable pattern preserved in C# implementation
+
+**Important**: All functional behavior, error handling, edge cases, and business logic remain identical to the Python source. This is not a rewrite or reimplementation—it is a faithful translation.
 
 ## Contributing
 
-When contributing to the migration:
+When contributing to this port:
 
-1. Reference the original Python code in `Libraries/PyKotor/src/pykotor/tslpatcher/`
-2. Maintain functional equivalence
-3. Follow C# coding conventions
-4. Use async/await for I/O operations
-5. Add XML documentation comments
+1. **Reference the original Python code** in `vendor/PyKotor/Tools/HoloPatcher/src/holopatcher/`
+2. **Maintain strict 1:1 functional equivalence**—no creative changes or feature additions
+3. **Preserve original logic**—translate, don't reimplement
+4. **Follow C# coding conventions** for syntax and style
+5. **Use async/await** for I/O operations (equivalent to Python's async patterns)
+6. **Add XML documentation comments** that reference the original Python implementation
+7. **Document any deviations** from the source material (should be minimal to none)
+
+### Porting Guidelines
+
+- If the Python code has a bug, port the bug (then file a separate issue to fix it in both versions)
+- If the Python code uses an inefficient algorithm, port the inefficient algorithm
+- If the Python code has a TODO comment, preserve the TODO in the C# version
+- The goal is **functional parity**, not improvement
+
+This ensures that bug fixes, feature requests, and behavioral changes can be synchronized between the Python and C# implementations.
 
 ## License
 

@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>7.3</LangVersion>
+    <Version>2.0.0-alpha1</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <Platforms>x86;x64;arm64</Platforms>
@@ -8,6 +11,52 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- NuGet Package Configuration -->
+    <IsPackable>true</IsPackable>
+    <PackageId>HoloPatcher</PackageId>
+    <Authors>th3w1zard1</Authors>
+    <Company>HoloPatcher.NET</Company>
+    <Product>HoloPatcher</Product>
+    <Description>Avalonia UI application for TSLPatcher/HoloPatcher mod installation. Provides a graphical interface for installing and managing KOTOR mods. Can be used as a library for programmatic access to patching functionality.</Description>
+    <PackageTags>kotor;tsl;patcher;mod;gui;avalonia;holopatcher</PackageTags>
+    <PackageProjectUrl>https://github.com/th3w1zard1/HoloPatcher.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/th3w1zard1/HoloPatcher.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <TargetFrameworks></TargetFrameworks>
+    <!-- Helper to append without duplicate semicolons -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
+      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
+    </TargetFrameworks>
+    <!-- Add each TFM conditionally -->
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+      $(TargetFrameworks);net10.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+      $(TargetFrameworks);net9.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+      $(TargetFrameworks);net8.0
+    </TargetFrameworks>
+    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+      $(TargetFrameworks);net7.0;net6.0
+    </TargetFrameworks>
+    <!-- === .NET 6 SDK: include (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+      $(TargetFrameworks);net6.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+      $(TargetFrameworks);net48
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+      $(TargetFrameworks);net462
+    </TargetFrameworks>
+    <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
@@ -19,12 +68,12 @@
   </PropertyGroup>
 
   <!-- RuntimeIdentifiers: Forward-compatible dynamic assignment based on .NET version -->
-  <!-- .NET 6-7: Legacy Windows RIDs + cross-platform -->
-  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0' OR '$(TargetFramework)'=='net7.0'">
-    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  <!-- .NET Framework: Legacy Windows RIDs + cross-platform -->
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <!-- .NET 8+: Modern Windows RIDs + cross-platform (forward-compatible with net10.0, net11.0, etc.) -->
-  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4')) AND '$(TargetFramework)'!='net6.0' AND '$(TargetFramework)'!='net7.0'">
+  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
@@ -32,8 +81,6 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <!-- Use latest .NET (9) - Avalonia requires .NET 6+, so net48 is not supported for GUI app -->
-    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
     <Optimize>true</Optimize>
     <AllowOptimize>true</AllowOptimize>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
@@ -45,23 +92,10 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
-  <!-- Debug Configuration: No error handling/optimizations -->
+  <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <Optimize>false</Optimize>
-    <AllowOptimize>false</AllowOptimize>
-    <RemoveIntegerChecks>true</RemoveIntegerChecks>
-    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AllowEditAndContinue>true</AllowEditAndContinue>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <HotReloadEnabled>false</HotReloadEnabled>
-    <!-- Build only latest .NET (net8.0) for Debug to speed up builds (unless TargetFramework is explicitly set) -->
-    <TargetFrameworks Condition="'$(TargetFramework)' == ''">net8.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TargetFramework)' != ''">$(TargetFramework)</TargetFrameworks>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
   </PropertyGroup>
@@ -74,28 +108,35 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectCapability Include="Avalonia" />
-    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
     <!-- Avalonia packages - use versions compatible with .NET 6+ and net48 -->
-    <PackageReference Include="Avalonia" Version="11.3.4" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.4" />
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.4" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.9" />
+    <PackageReference Include="RtfDomParser" Version="7.0.0" />
+    <ProjectCapability Include="Avalonia" />
     <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.4" />
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.9" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
+    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Simplecto.Avalonia.RichTextBox" Version="1.3.9" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
     <PackageReference Include="MessageBox.Avalonia" Version="3.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="NetSparkle" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TSLPatcher.Core\TSLPatcher.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Include RtfDomParserAv.dll (required for RTF loading) - obtained from AvRichTextBox repository -->
+  <ItemGroup>
+    <None Include="RtfDomParserAv.dll" Condition="Exists('RtfDomParserAv.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

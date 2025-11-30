@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>HoloPatcher Updates</title>
+    <link>https://github.com/th3w1zard1/HoloPatcher.NET</link>
+    <description>HoloPatcher automatic update feed</description>
+    <language>en</language>
+    
+    <!-- Latest stable release -->
+    <item>
+      <title>HoloPatcher 2.0.0</title>
+      <pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
+      <sparkle:version>2.0.0</sparkle:version>
+      <sparkle:shortVersionString>2.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>Windows 10 / macOS 10.13 / Linux (glibc 2.17+)</sparkle:minimumSystemVersion>
+      
+      <!-- Windows x64 -->
+      <enclosure 
+        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-win-x64.zip"
+        sparkle:version="2.0.0"
+        sparkle:shortVersionString="2.0.0"
+        sparkle:os="windows"
+        sparkle:edSignature="YOUR_ED25519_SIGNATURE_HERE"
+        length="12345678"
+        type="application/zip" />
+      
+      <!-- Linux x64 -->
+      <enclosure 
+        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-linux-x64.zip"
+        sparkle:version="2.0.0"
+        sparkle:shortVersionString="2.0.0"
+        sparkle:os="linux"
+        sparkle:edSignature="YOUR_ED25519_SIGNATURE_HERE"
+        length="12345678"
+        type="application/zip" />
+      
+      <!-- macOS x64 -->
+      <enclosure 
+        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-osx-x64.zip"
+        sparkle:version="2.0.0"
+        sparkle:shortVersionString="2.0.0"
+        sparkle:os="macos"
+        sparkle:edSignature="YOUR_ED25519_SIGNATURE_HERE"
+        length="12345678"
+        type="application/zip" />
+      
+      <!-- macOS ARM64 -->
+      <enclosure 
+        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-osx-arm64.zip"
+        sparkle:version="2.0.0"
+        sparkle:shortVersionString="2.0.0"
+        sparkle:os="macos"
+        sparkle:edSignature="YOUR_ED25519_SIGNATURE_HERE"
+        length="12345678"
+        type="application/zip" />
+      
+      <sparkle:releaseNotesLink>https://github.com/th3w1zard1/HoloPatcher.NET/releases/tag/v2.0.0</sparkle:releaseNotesLink>
+    </item>
+    
+    <!-- Previous release (for reference) -->
+    <item>
+      <title>HoloPatcher 1.9.0</title>
+      <pubDate>Mon, 01 Dec 2023 00:00:00 +0000</pubDate>
+      <sparkle:version>1.9.0</sparkle:version>
+      <sparkle:shortVersionString>1.9.0</sparkle:shortVersionString>
+      <enclosure 
+        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v1.9.0/HoloPatcher-1.9.0-win-x64.zip"
+        sparkle:version="1.9.0"
+        sparkle:shortVersionString="1.9.0"
+        sparkle:os="windows"
+        sparkle:edSignature="YOUR_ED25519_SIGNATURE_HERE"
+        length="12345678"
+        type="application/zip" />
+    </item>
+  </channel>
+</rss>
+

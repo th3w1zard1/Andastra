@@ -463,7 +463,14 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
     /// Represents a function definition with implementation.
     /// Contains the function signature (return type, parameters) and the code block
     /// that implements the function body.
-    /// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.FunctionDefinition
+    /// <summary>
+    /// Represents a function definition with implementation.
+    ///
+    /// Contains the function signature (return type, parameters) and the code block
+    /// that implements the function body.
+    ///
+    /// Note: Signature and block are currently coupled in this class. Future refactoring
+    /// could split these into separate FunctionSignature and CodeBlock for better reusability.
     /// </summary>
     public class FunctionDefinition : TopLevelObject
     {
@@ -487,7 +494,6 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
         public override void Compile(NCS ncs, CodeRoot root)
         {
-            // 1:1 port from pykotor.resource.formats.ncs.compiler.classes.FunctionDefinition.compile
             string name = Name.Label;
 
             // Make sure all default parameters appear after the required parameters
@@ -637,7 +643,6 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
     /// <summary>
     /// Represents a function parameter with optional default value.
-    /// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.FunctionDefinitionParam
     /// </summary>
     public class FunctionParameter
     {

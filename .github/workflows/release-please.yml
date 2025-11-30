@@ -1,0 +1,154 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Release Please
+        id: release
+        uses: google-github-actions/release-please-action@v4
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/release-please-manifest.json
+
+  build-and-release:
+    needs: release-please
+    if: needs.release-please.outputs.release_created
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Trigger build workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ needs.release-please.outputs.version }}'.replace(/^v/, '');
+            const tagName = '${{ needs.release-please.outputs.tag_name }}';
+            
+            // Wait a moment for the tag to be available
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            const response = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-all-platforms.yml',
+              ref: tagName,
+              inputs: {
+                version: version,
+                tag_name: tagName
+              }
+            });
+            
+            console.log('Build workflow triggered:', response.status);
+
+      - name: Wait for build completion
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          check-name: 'Build All Platforms'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 60
+          allowed-conclusions: success,failure
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'HoloPatcher-*'
+          merge-multiple: false
+          path: artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          name: Release ${{ needs.release-please.outputs.tag_name }}
+          body_path: .github/RELEASE_TEMPLATE.md
+          files: artifacts/**/*.zip
+          draft: false
+          prerelease: ${{ contains(needs.release-please.outputs.tag_name, 'alpha') || contains(needs.release-please.outputs.tag_name, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if NetSparkle key is configured
+        id: check_key
+        run: |
+          if [ -n "${{ secrets.NETSPARKLE_PRIVATE_KEY }}" ]; then
+            echo "key_configured=true" >> $GITHUB_OUTPUT
+          else
+            echo "key_configured=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract artifacts for appcast
+        if: steps.check_key.outputs.key_configured == 'true'
+        run: |
+          mkdir -p appcast-binaries
+          
+          # Extract all zip files to appcast-binaries
+          for zip in artifacts/*.zip; do
+            if [ -f "$zip" ]; then
+              echo "Extracting $zip..."
+              unzip -q "$zip" -d "appcast-binaries/$(basename "$zip" .zip)" || true
+            fi
+          done
+          
+          echo "Extracted binaries:"
+          ls -la appcast-binaries/ || echo "No binaries extracted"
+
+      - name: Generate Appcast
+        if: steps.check_key.outputs.key_configured == 'true'
+        run: |
+          dotnet tool install -g NetSparkleUpdater.Tools.AppCastGenerator
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          
+          # Create appcast directory
+          mkdir -p appcast
+          mkdir -p .github/release-notes
+          
+          # Extract version from tag
+          VERSION="${{ needs.release-please.outputs.version }}"
+          VERSION=${VERSION#v}  # Remove 'v' prefix if present
+          
+          # Generate appcast from extracted binaries
+          if [ -d "appcast-binaries" ] && [ "$(ls -A appcast-binaries)" ]; then
+            netsparkle-generate-appcast \
+              -b appcast-binaries \
+              -p .github/release-notes \
+              -k "${{ secrets.NETSPARKLE_PRIVATE_KEY }}" \
+              -o appcast/appcast.xml \
+              --human-readable true || echo "Appcast generation failed, continuing..."
+          else
+            echo "No binaries found, skipping appcast generation"
+          fi
+        env:
+          NETSPARKLE_PRIVATE_KEY: ${{ secrets.NETSPARKLE_PRIVATE_KEY }}
+
+      - name: Upload appcast to release
+        if: always() && steps.check_key.outputs.key_configured == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: appcast/appcast.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

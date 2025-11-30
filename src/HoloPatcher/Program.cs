@@ -12,6 +12,146 @@ namespace HoloPatcher
 
     class Program
     {
+        // Register assembly resolve handler for RtfDomParserAv dependency
+        static Program()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+        }
+
+        private static System.Reflection.Assembly OnAssemblyResolve(object sender, System.ResolveEventArgs args)
+        {
+            // Handle RtfDomParserAv dependency for Simplecto.Avalonia.RichTextBox
+            if (args.Name.StartsWith("RtfDomParserAv", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    // Try to find the DLL in multiple locations
+                    var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    var dllPath = Path.Combine(baseDir, "RtfDomParserAv.dll");
+
+                    if (File.Exists(dllPath))
+                    {
+                        return System.Reflection.Assembly.LoadFrom(dllPath);
+                    }
+
+                    // Try to find it next to AvRichTextBox.dll (same directory)
+                    var avRichTextBoxPath = Path.Combine(baseDir, "AvRichTextBox.dll");
+                    if (File.Exists(avRichTextBoxPath))
+                    {
+                        var candidateNextToAvRich = Path.Combine(Path.GetDirectoryName(avRichTextBoxPath), "RtfDomParserAv.dll");
+                        if (File.Exists(candidateNextToAvRich))
+                        {
+                            return System.Reflection.Assembly.LoadFrom(candidateNextToAvRich);
+                        }
+                    }
+
+                    // Try to find it in the cloned repository (if available)
+                    // Search multiple possible repository locations
+                    var possibleRepoPaths = new[]
+                    {
+                        Path.Combine(baseDir, "..", "..", "..", "temp_avrichtextbox", "AvRichTextBox", "RtfDomParserAv.dll"),
+                        Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? baseDir, "..", "..", "..", "temp_avrichtextbox", "AvRichTextBox", "RtfDomParserAv.dll"),
+                    };
+
+                    foreach (var repoPath in possibleRepoPaths)
+                    {
+                        if (File.Exists(repoPath))
+                        {
+                            try
+                            {
+                                File.Copy(repoPath, dllPath, true);
+                                Console.WriteLine($"[AssemblyResolve] Copied RtfDomParserAv.dll from repository to output directory");
+                            }
+                            catch (Exception copyEx)
+                            {
+                                Console.WriteLine($"[AssemblyResolve] Warning: Could not copy from repo: {copyEx.Message}");
+                            }
+                            if (File.Exists(dllPath))
+                            {
+                                Console.WriteLine($"[AssemblyResolve] Loading RtfDomParserAv.dll from: {dllPath}");
+                                return System.Reflection.Assembly.LoadFrom(dllPath);
+                            }
+                            break;
+                        }
+                    }
+
+                    // Try to find it in NuGet package cache
+                    var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    var nugetPackages = Path.Combine(userProfile, ".nuget", "packages");
+
+                    if (Directory.Exists(nugetPackages))
+                    {
+                        // Search in Simplecto package folder
+                        var simplectoFolders = Directory.GetDirectories(nugetPackages, "simplecto.avalon*", SearchOption.TopDirectoryOnly);
+                        foreach (var folder in simplectoFolders)
+                        {
+                            // Search in lib folders
+                            var libDirs = Directory.GetDirectories(folder, "lib", SearchOption.AllDirectories);
+                            foreach (var libDir in libDirs)
+                            {
+                                var candidatePath = Path.Combine(libDir, "RtfDomParserAv.dll");
+                                if (File.Exists(candidatePath))
+                                {
+                                    // Copy to output directory for future use
+                                    try
+                                    {
+                                        File.Copy(candidatePath, dllPath, true);
+                                        Console.WriteLine($"[AssemblyResolve] Copied RtfDomParserAv.dll from NuGet cache to output directory");
+                                    }
+                                    catch (Exception copyEx)
+                                    {
+                                        Console.WriteLine($"[AssemblyResolve] Warning: Could not copy DLL: {copyEx.Message}");
+                                    }
+                                    Console.WriteLine($"[AssemblyResolve] Loading RtfDomParserAv.dll from: {candidatePath}");
+                                    return System.Reflection.Assembly.LoadFrom(candidatePath);
+                                }
+                            }
+
+                            // Also search directly in the package folder (sometimes DLLs are at the root)
+                            var allDlls = Directory.GetFiles(folder, "RtfDomParserAv.dll", SearchOption.AllDirectories);
+                            foreach (var dllFile in allDlls)
+                            {
+                                if (File.Exists(dllFile))
+                                {
+                                    try
+                                    {
+                                        File.Copy(dllFile, dllPath, true);
+                                        Console.WriteLine($"[AssemblyResolve] Copied RtfDomParserAv.dll from NuGet package to output directory");
+                                    }
+                                    catch { }
+                                    Console.WriteLine($"[AssemblyResolve] Loading RtfDomParserAv.dll from: {dllFile}");
+                                    return System.Reflection.Assembly.LoadFrom(dllFile);
+                                }
+                            }
+                        }
+                    }
+
+                    // Last resort: Try using RtfDomParser.dll as fallback (not ideal but might work)
+                    var fallbackPath = Path.Combine(baseDir, "RtfDomParser.dll");
+                    if (File.Exists(fallbackPath))
+                    {
+                        Console.WriteLine($"[AssemblyResolve] Attempting to use RtfDomParser.dll as fallback for RtfDomParserAv");
+                        try
+                        {
+                            return System.Reflection.Assembly.LoadFrom(fallbackPath);
+                        }
+                        catch (Exception fallbackEx)
+                        {
+                            Console.WriteLine($"[AssemblyResolve] Fallback failed: {fallbackEx.Message}");
+                        }
+                    }
+
+                    Console.WriteLine($"[AssemblyResolve] RtfDomParserAv.dll not found in any expected location");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AssemblyResolve] Error loading RtfDomParserAv: {ex.Message}");
+                }
+            }
+
+            return null;
+        }
+
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
@@ -253,6 +393,7 @@ namespace HoloPatcher
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
+                //.WithInterFont()
                 .LogToTrace();
     }
 }

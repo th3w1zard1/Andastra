@@ -1,0 +1,127 @@
+name: Test Builds
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  test-builds:
+    name: Test Build - ${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Test a subset of builds for PRs
+          - os: windows-latest
+            framework: net48
+            platform: win7
+            arch: x64
+            rid: win7-x64
+            selfcontained: false
+          - os: windows-latest
+            framework: net9.0
+            platform: win
+            arch: x64
+            rid: win-x64
+            selfcontained: true
+          - os: ubuntu-latest
+            framework: net9.0
+            platform: linux
+            arch: x64
+            rid: linux-x64
+            selfcontained: true
+          - os: macos-latest
+            framework: net9.0
+            platform: osx
+            arch: arm64
+            rid: osx-arm64
+            selfcontained: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup .NET Framework (Windows only)
+        if: matrix.framework == 'net48'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore dependencies
+        run: dotnet restore src/HoloPatcher/HoloPatcher.csproj
+
+      - name: Run tests
+        run: dotnet test --no-restore --verbosity normal
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.framework }}" == "net48" ]; then
+            msbuild src/HoloPatcher/HoloPatcher.csproj /p:Configuration=Release /p:TargetFramework=${{ matrix.framework }} /p:RuntimeIdentifier=${{ matrix.rid }} /p:SelfContained=${{ matrix.selfcontained }}
+          else
+            dotnet publish src/HoloPatcher/HoloPatcher.csproj `
+              -c Release `
+              -f ${{ matrix.framework }} `
+              -r ${{ matrix.rid }} `
+              --self-contained ${{ matrix.selfcontained }} `
+              -p:PublishSingleFile=true `
+              -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:PublishReadyToRun=true `
+              -o dist/test-build/${{ matrix.framework }}/${{ matrix.rid }}
+        shell: pwsh
+
+      - name: Verify build output
+        run: |
+          $outputDir = "dist/test-build/${{ matrix.framework }}/${{ matrix.rid }}"
+          
+          if (-not (Test-Path $outputDir)) {
+            Write-Error "Build output directory not found: $outputDir"
+            exit 1
+          }
+          
+          $exeName = if (${{ matrix.platform }} -eq "win7" -or ${{ matrix.platform }} -eq "win") {
+            "HoloPatcher.exe"
+          } elseif (${{ matrix.platform }} -eq "linux") {
+            "HoloPatcher"
+          } else {
+            "HoloPatcher"
+          }
+          
+          $exePath = Join-Path $outputDir $exeName
+          
+          if (-not (Test-Path $exePath)) {
+            Write-Error "Executable not found: $exePath"
+            exit 1
+          }
+          
+          Write-Host "✓ Build successful: $exePath"
+          
+          # Check file size (should be > 0)
+          $fileInfo = Get-Item $exePath
+          if ($fileInfo.Length -eq 0) {
+            Write-Error "Executable is empty: $exePath"
+            exit 1
+          }
+          
+          Write-Host "✓ Executable size: $($fileInfo.Length) bytes"
+        shell: pwsh
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-${{ matrix.platform }}-${{ matrix.arch }}-logs
+          path: |
+            dist/test-build/**/*
+            **/*.log
+          retention-days: 7
+

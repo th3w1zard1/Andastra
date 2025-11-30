@@ -16,7 +16,7 @@ namespace HoloPatcher
     {
         private static readonly Dictionary<string, object> LocalProgramInfo = new Dictionary<string, object>()
         {
-            ["currentVersion"] = "1.80",
+            ["currentVersion"] = "2.0.0a1",
             ["holopatcherLatestVersion"] = "1.5.2",
             ["holopatcherLatestBetaVersion"] = "1.7.0b1",
             ["updateInfoLink"] = "https://api.github.com/repos/th3w1zard1/HoloPatcher.NET/contents/src/HoloPatcher/Config.cs",

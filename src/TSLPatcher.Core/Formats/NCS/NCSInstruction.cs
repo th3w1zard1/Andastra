@@ -8,11 +8,11 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// Represents a single NCS bytecode instruction.
-    /// 
+    ///
     /// Each instruction consists of a bytecode opcode, a qualifier specifying operand types,
     /// optional arguments (offsets, constants, etc.), and an optional jump target for
     /// control flow instructions.
-    /// 
+    ///
     /// References:
     ///     vendor/reone/include/reone/script/program.h - Instruction struct
     ///     vendor/reone/src/libs/script/format/ncsreader.cpp:48-190 (instruction reading)
@@ -153,6 +153,71 @@ namespace TSLPatcher.Core.Formats.NCS
         public bool IsFunctionCall()
         {
             return InsType == NCSInstructionType.ACTION;
+        }
+
+        /// <summary>
+        /// Get the number of operands this instruction consumes from stack.
+        /// </summary>
+        public int GetOperandCount()
+        {
+            // Binary operations consume 2 operands
+            if (IsArithmetic() || IsComparison() || IsLogical())
+            {
+                if (InsType == NCSInstructionType.NEGI || InsType == NCSInstructionType.NEGF ||
+                    InsType == NCSInstructionType.NOTI || InsType == NCSInstructionType.COMPI)
+                {
+                    return 1;
+                }
+                return 2;
+            }
+            // Unary operations consume 1 operand
+            if (InsType == NCSInstructionType.NEGI || InsType == NCSInstructionType.NEGF ||
+                InsType == NCSInstructionType.NOTI || InsType == NCSInstructionType.COMPI)
+            {
+                return 1;
+            }
+            // Constants produce 1 operand
+            if (IsConstant())
+            {
+                return 0; // Produces, doesn't consume
+            }
+            // Function calls consume arguments (count in args)
+            if (IsFunctionCall())
+            {
+                return Args.Count >= 2 ? (int)Args[1] : 0;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Get the number of results this instruction produces on stack.
+        /// </summary>
+        public int GetResultCount()
+        {
+            // Most operations produce 1 result
+            if (IsArithmetic() || IsComparison() || IsLogical())
+            {
+                return 1;
+            }
+            if (IsConstant())
+            {
+                return 1;
+            }
+            if (IsFunctionCall())
+            {
+                return 1; // Functions return a value (void functions return 0)
+            }
+            // Control flow doesn't produce results
+            if (IsControlFlow())
+            {
+                return 0;
+            }
+            // Stack operations may produce results depending on context
+            if (IsStackOperation())
+            {
+                return 0; // Stack operations modify stack but don't produce values
+            }
+            return 0;
         }
 
         public bool Equals([CanBeNull] NCSInstruction other)

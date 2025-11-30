@@ -6,9 +6,9 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler.NSS
 
     /// <summary>
     /// Base exception for NSS compilation errors.
-    /// 
+    ///
     /// Provides detailed error messages to help debug script issues.
-    /// 
+    ///
     /// References:
     ///     vendor/HoloLSP/server/src/nwscript-parser.ts (NSS parser error handling)
     ///     vendor/xoreos-tools/src/nwscript/compiler.cpp (NSS compiler error handling)

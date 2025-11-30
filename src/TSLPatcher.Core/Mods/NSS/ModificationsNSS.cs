@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Formats.NCS;
 using TSLPatcher.Core.Formats.NCS.Compiler;
 using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Memory;
@@ -71,15 +73,96 @@ namespace TSLPatcher.Core.Mods.NSS
             if (Action.Equals("Compile", StringComparison.OrdinalIgnoreCase))
             {
                 string tempFolder = TempScriptFolder is null ? Path.GetTempPath() : TempScriptFolder;
-                var compiler = new NCSCompiler(NwnnsscompPath, tempFolder, logger);
+                Directory.CreateDirectory(tempFolder);
+                string tempScriptFile = Path.Combine(tempFolder, SourceFile);
+                File.WriteAllText(tempScriptFile, mutableSource.Value, Encoding.GetEncoding("windows-1252"));
 
-                // Validate compiler if path is provided
-                if (!string.IsNullOrEmpty(NwnnsscompPath))
+                // Try built-in compiler first
+                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                bool builtInSucceeded = false;
+                byte[] compiledBytes = null;
+
+                try
                 {
-                    compiler.ValidateCompiler();
+                    NCS ncs = NCSAuto.CompileNss(
+                        mutableSource.Value,
+                        game,
+                        null,
+                        new List<string> { tempFolder });
+                    compiledBytes = NCSAuto.BytesNcs(ncs);
+                    return compiledBytes;
+                }
+                catch (EntryPointError e)
+                {
+                    logger.AddNote(e.Message);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    logger.AddError($"Built-in compilation failed for '{SourceFile}': {e.Message}");
                 }
 
-                return compiler.Compile(mutableSource.Value, SourceFile, game);
+                // If built-in failed and on Windows, try external compiler
+                if (!builtInSucceeded && isWindows)
+                {
+                    bool nwnnsscompExists = !string.IsNullOrEmpty(NwnnsscompPath) && File.Exists(NwnnsscompPath);
+                    if (!nwnnsscompExists)
+                    {
+                        logger.AddNote("nwnnsscomp.exe was not found in the 'tslpatchdata' folder, using the built-in compilers...");
+                    }
+                    else
+                    {
+                        logger.AddError($"An error occurred while compiling '{SourceFile}' with the built-in compiler, trying external compiler...");
+                    }
+
+                    if (nwnnsscompExists)
+                    {
+                        try
+                        {
+                            var externalCompiler = new ExternalNCSCompiler(NwnnsscompPath);
+                            KnownExternalCompilers detectedCompiler;
+                            try
+                            {
+                                detectedCompiler = externalCompiler.GetInfo();
+                            }
+                            catch (ArgumentException)
+                            {
+                                detectedCompiler = KnownExternalCompilers.TSLPATCHER;
+                            }
+
+                            if (detectedCompiler != KnownExternalCompilers.TSLPATCHER)
+                            {
+                                logger.AddWarning(
+                                    "The nwnnsscomp.exe in the tslpatchdata folder is not the expected TSLPatcher version.\n" +
+                                    $"PyKotor has detected that the provided nwnnsscomp.exe is the '{detectedCompiler}' version.\n" +
+                                    "PyKotor will compile regardless, but this may not yield the expected result.");
+                            }
+
+                            compiledBytes = CompileWithExternal(tempScriptFile, externalCompiler, logger, game);
+                            if (compiledBytes != null)
+                            {
+                                return compiledBytes;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            logger.AddError(e.Message);
+                        }
+                    }
+                }
+                else if (!isWindows)
+                {
+                    logger.AddNote($"Patching from a unix operating system, compiling '{SourceFile}' using the built-in compilers...");
+                }
+
+                // Return compiled bytes if built-in succeeded, otherwise return source
+                if (compiledBytes != null)
+                {
+                    return compiledBytes;
+                }
+
+                logger.AddWarning($"Could not compile '{SourceFile}'. Returning uncompiled NSS source.");
+                return Encoding.GetEncoding("windows-1252").GetBytes(mutableSource.Value);
             }
 
             // If not compiling, just return the modified source
@@ -154,6 +237,59 @@ namespace TSLPatcher.Core.Mods.NSS
                 nssSource.Value = nssSource.Value.Substring(0, start) + replacementValue.ToString() + nssSource.Value.Substring(end);
 
                 match = Regex.Match(nssSource.Value, searchPattern);
+            }
+        }
+
+        private byte[] CompileWithExternal(
+            string tempScriptFile,
+            ExternalNCSCompiler nwnnsscompiler,
+            PatchLogger logger,
+            Game game)
+        {
+            string tempDir = Path.GetTempPath();
+            string tempCompiledFilepath = Path.Combine(tempDir, "temp_script.ncs");
+
+            try
+            {
+                (string stdout, string stderr) = nwnnsscompiler.CompileScriptWithOutput(tempScriptFile, tempCompiledFilepath, game, 5);
+                bool isIncludeFile = stdout.Contains("File is an include file, ignored");
+                if (isIncludeFile)
+                {
+                    return null;
+                }
+
+                if (stdout.Trim().Length > 0)
+                {
+                    foreach (string line in stdout.Split('\n'))
+                    {
+                        if (line.Trim().Length > 0)
+                        {
+                            logger.AddVerbose(line);
+                        }
+                    }
+                }
+
+                if (stderr.Trim().Length > 0)
+                {
+                    foreach (string line in stderr.Split('\n'))
+                    {
+                        if (line.Trim().Length > 0)
+                        {
+                            logger.AddError($"nwnnsscomp error: {line}");
+                        }
+                    }
+                }
+
+                if (File.Exists(tempCompiledFilepath))
+                {
+                    return File.ReadAllBytes(tempCompiledFilepath);
+                }
+
+                return null;
+            }
+            catch (ExternalNCSCompiler.EntryPointException)
+            {
+                return null;
             }
         }
     }

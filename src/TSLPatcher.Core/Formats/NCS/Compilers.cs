@@ -14,7 +14,6 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// Known external NSS compilers and their configurations.
-    /// 1:1 port from pykotor.resource.formats.ncs.compilers.KnownExternalCompilers
     /// </summary>
     public enum KnownExternalCompilers
     {
@@ -29,7 +28,6 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// Configuration for an external compiler.
-    /// 1:1 port from pykotor.resource.formats.ncs.compilers.ExternalCompilerConfig
     /// </summary>
     public class ExternalCompilerConfig
     {
@@ -144,7 +142,6 @@ namespace TSLPatcher.Core.Formats.NCS
     /// <summary>
     /// Configuration for nwnnsscomp execution.
     /// Unifies arguments passed to different nwnnsscomp.exe versions.
-    /// 1:1 port from pykotor.resource.formats.ncs.compilers.NwnnsscompConfig
     /// </summary>
     public class NwnnsscompConfig
     {
@@ -196,11 +193,28 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// Built-in NSS to NCS compiler using PyKotor's native implementation.
-    /// 1:1 port from pykotor.resource.formats.ncs.compilers.InbuiltNCSCompiler
+    ///
+    /// This compiler provides full NSS compilation without external dependencies,
+    /// using the internal parser and code generator.
     /// </summary>
-    public class InbuiltNCSCompiler
+    public class InbuiltNCSCompiler : NCSCompiler
     {
-        public NCS CompileScript(
+        public override void CompileScript(
+            string sourcePath,
+            string outputPath,
+            Game game,
+            [CanBeNull] List<INCSOptimizer> optimizers = null,
+            bool debug = false)
+        {
+            string nssData = File.ReadAllText(sourcePath, Encoding.GetEncoding("windows-1252"));
+            NCS ncs = NCSAuto.CompileNss(nssData, game, optimizers, new List<string> { Path.GetDirectoryName(sourcePath) ?? "" });
+            NCSAuto.WriteNcs(ncs, outputPath);
+        }
+
+        /// <summary>
+        /// Compiles and returns the NCS object (convenience method).
+        /// </summary>
+        public NCS CompileScriptToNcs(
             string sourcePath,
             string outputPath,
             [CanBeNull] Game game,
@@ -216,9 +230,8 @@ namespace TSLPatcher.Core.Formats.NCS
 
     /// <summary>
     /// External NSS compiler wrapper for nwnnsscomp.exe.
-    /// 1:1 port from pykotor.resource.formats.ncs.compilers.ExternalNCSCompiler
     /// </summary>
-    public class ExternalNCSCompiler
+    public class ExternalNCSCompiler : NCSCompiler
     {
         private string _nwnnsscompPath;
         private string _fileHash;
@@ -244,7 +257,23 @@ namespace TSLPatcher.Core.Formats.NCS
             return new NwnnsscompConfig(_fileHash, sourceFile, outputFile, game);
         }
 
-        public (string stdout, string stderr) CompileScript(
+        public override void CompileScript(
+            string sourcePath,
+            string outputPath,
+            Game game,
+            [CanBeNull] List<INCSOptimizer> optimizers = null,
+            bool debug = false)
+        {
+            // External compilers don't use optimizers (they're applied post-compilation)
+            // Just ignore the optimizers parameter to match the abstract interface
+            CompileScriptWithOutput(sourcePath, outputPath, game, 5);
+        }
+
+        /// <summary>
+        /// Compiles an NSS script file to NCS bytecode and returns stdout/stderr.
+        /// This is the original method signature from the Python version.
+        /// </summary>
+        public (string stdout, string stderr) CompileScriptWithOutput(
             string sourceFile,
             string outputFile,
             Game game,

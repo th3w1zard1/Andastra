@@ -1,169 +1,702 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using FluentAssertions;
 using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Formats.NCS;
 using Xunit;
 
 namespace TSLPatcher.Tests.Formats
 {
-
-/// <summary>
-/// Granular tests for NCS roundtrip compilation/decompilation.
-/// 1:1 port of test_ncs_roundtrip_granular.py from tests/resource/formats/test_ncs_roundtrip_granular.py
-/// 
-/// NOTE: These tests require NSS compilation and NCS decompilation functionality.
-/// They may be skipped if the required functionality is not yet implemented.
-/// </summary>
-public class NCSRoundtripGranularTests
-{
     /// <summary>
-    /// Python: test_roundtrip_primitives_and_structural_types
+    /// Granular tests for NCS roundtrip compilation/decompilation.
+    /// 1:1 port of test_ncs_roundtrip_granular.py from tests/resource/formats/test_ncs_roundtrip_granular.py
     /// </summary>
-    [Fact]
-    public void TestRoundtripPrimitivesAndStructuralTypes()
+    public class NCSRoundtripGranularTests
     {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
+        private static byte[] CanonicalBytes(NCS ncs)
+        {
+            return NCSAuto.BytesNcs(ncs);
+        }
+
+        private static void AssertBidirectionalRoundtrip(
+            string source,
+            Game game,
+            List<string> libraryLookup = null)
+        {
+            NCS compiled = NCSAuto.CompileNss(source, game, null, libraryLookup);
+            string decompiled = NCSAuto.DecompileNcs(compiled, game);
+
+            // NSS -> NCS -> NSS -> NCS
+            NCS recompiled = NCSAuto.CompileNss(decompiled, game, null, libraryLookup);
+            CanonicalBytes(compiled).Should().Equal(
+                CanonicalBytes(recompiled),
+                "Recompiled bytecode diverged from initial compile");
+
+            // NCS -> NSS -> NCS using freshly parsed binary payload
+            byte[] binaryBlob = CanonicalBytes(compiled);
+            NCS reloaded = NCSAuto.ReadNcs(binaryBlob);
+            NCS ncsFromBinary = NCSAuto.CompileNss(
+                NCSAuto.DecompileNcs(reloaded, game),
+                game,
+                null,
+                libraryLookup);
+            CanonicalBytes(reloaded).Should().Equal(
+                CanonicalBytes(ncsFromBinary),
+                "Roundtrip from binary payload not stable");
+        }
+
+        private static string Dedent(string script)
+        {
+            string[] lines = script.Split('\n');
+            if (lines.Length == 0) return script;
+
+            // Find minimum indentation (excluding empty lines)
+            int minIndent = int.MaxValue;
+            foreach (string line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                int indent = 0;
+                foreach (char c in line)
+                {
+                    if (c == ' ' || c == '\t')
+                        indent++;
+                    else
+                        break;
+                }
+                if (indent < minIndent)
+                    minIndent = indent;
+            }
+
+            if (minIndent == int.MaxValue || minIndent == 0)
+                return script.Trim() + "\n";
+
+            // Remove minimum indentation from all lines
+            var dedented = lines.Select(line =>
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    return line;
+                if (line.Length >= minIndent)
+                    return line.Substring(minIndent);
+                return line;
+            });
+
+            return string.Join("\n", dedented).Trim() + "\n";
+        }
+
+        private static void AssertSubstrings(string source, string[] substrings)
+        {
+            foreach (string snippet in substrings)
+            {
+                source.Should().Contain(snippet, $"Expected snippet '{snippet}' to be present in decompiled script:\n{source}");
+            }
+        }
+
+        [Fact]
+        public void TestRoundtripPrimitivesAndStructuralTypes()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    int valueInt = 42;
+                    float valueFloat = 3.5;
+                    string valueString = ""kotor"";
+                    object valueObject = OBJECT_SELF;
+                    vector valueVector = Vector(1.0, 2.0, 3.0);
+                    location valueLocation = Location(valueVector, 180.0);
+                    effect valueEffect = GetFirstEffect(OBJECT_SELF);
+                    event valueEvent = EventUserDefined(12);
+                    talent valueTalent = TalentFeat(FEAT_POWER_ATTACK);
+
+                    if (GetIsEffectValid(valueEffect))
+                    {
+                        RemoveEffect(OBJECT_SELF, valueEffect);
+                    }
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "int valueInt = 42;",
+                "float valueFloat = 3.5;",
+                "string valueString = \"kotor\";",
+                "object valueObject = OBJECT_SELF;",
+                "vector valueVector = Vector(1.0, 2.0, 3.0);",
+                "location valueLocation = Location(valueVector, 180.0);",
+                "event valueEvent = EventUserDefined(12);",
+                "talent valueTalent = TalentFeat(FEAT_POWER_ATTACK);",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripArithmeticOperations()
+        {
+            string source = Dedent(@"
+                float CalculateAverage(int first, int second, float weight)
+                {
+                    float total = IntToFloat(first + second);
+                    float average = total / 2.0;
+                    return (average * weight) - 1.5;
+                }
+
+                void main()
+                {
+                    int a = 10;
+                    int b = 7;
+                    int sum = a + b;
+                    int difference = sum - 5;
+                    int product = difference * 3;
+                    int quotient = product / 4;
+                    int remainder = quotient % 2;
+                    float weighted = CalculateAverage(sum, difference, 4.5);
+                    float negated = -weighted;
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "int sum = a + b;",
+                "int difference = sum - 5;",
+                "int product = difference * 3;",
+                "int quotient = product / 4;",
+                "int remainder = quotient % 2;",
+                "float negated = -weighted;",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripBitwiseAndShiftOperations()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    int mask = 0xFF;
+                    int value = 0x35;
+                    int andResult = mask & value;
+                    int orResult = mask | value;
+                    int xorResult = mask ^ value;
+                    int leftShift = value << 2;
+                    int rightShift = mask >> 3;
+                    int unsignedShift = mask >>> 1;
+                    int inverted = ~value;
+                    int combined = (andResult | xorResult) & ~leftShift;
+                    int logicalMix = (combined != 0) && (xorResult == 0xCA);
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "int andResult = mask & value;",
+                "int orResult = mask | value;",
+                "int xorResult = mask ^ value;",
+                "int leftShift = value << 2;",
+                "int rightShift = mask >> 3;",
+                "int unsignedShift = mask >>> 1;",
+                "int inverted = ~value;",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripLogicalAndRelationalOperations()
+        {
+            string source = Dedent(@"
+                int Evaluate(int a, int b, int c)
+                {
+                    if ((a > b && b >= c) || (a == c))
+                    {
+                        return 1;
+                    }
+                    else if (!(c < a) && (b != 0))
+                    {
+                        return 2;
+                    }
+                    return 0;
+                }
+
+                void main()
+                {
+                    int flag = Evaluate(5, 3, 4);
+                    if (flag == 1 || flag == 2)
+                    {
+                        AssignCommand(OBJECT_SELF, PlayAnimation(ANIMATION_LOOPING_GET_UP, 1.0, 0.5));
+                    }
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "if ((a > b && b >= c) || (a == c))",
+                "else if (!(c < a) && (b != 0))",
+                "if (flag == 1 || flag == 2)",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripCompoundAssignments()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    int counter = 0;
+                    counter += 5;
+                    counter -= 2;
+                    counter *= 3;
+                    counter /= 2;
+                    counter %= 4;
+
+                    float distance = 10.0;
+                    distance += 2.5;
+                    distance -= 1.5;
+                    distance *= 1.25;
+                    distance /= 3.0;
+
+                    vector offset = Vector(1.0, 2.0, 3.0);
+                    offset += Vector(0.5, 0.5, 0.5);
+                    offset -= Vector(0.5, 1.0, 1.5);
+                    offset *= 2.0;
+                    offset /= 4.0;
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "counter += 5;",
+                "counter -= 2;",
+                "counter *= 3;",
+                "counter /= 2;",
+                "counter %= 4;",
+                "distance += 2.5;",
+                "offset += Vector(0.5, 0.5, 0.5);",
+                "offset *= 2.0;",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripIncrementAndDecrement()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    int i = 0;
+                    int first = i++;
+                    int second = ++i;
+                    int third = i--;
+                    int fourth = --i;
+                    if (first < second && third >= fourth)
+                    {
+                        i += 1;
+                    }
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "int first = i++;",
+                "int second = ++i;",
+                "int third = i--;",
+                "int fourth = --i;",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripIfElseNesting()
+        {
+            string source = Dedent(@"
+                int EvaluateState(int state)
+                {
+                    if (state == 0)
+                    {
+                        return 10;
+                    }
+                    else if (state == 1)
+                    {
+                        if (GetIsNight())
+                        {
+                            return 20;
+                        }
+                        else
+                        {
+                            return 30;
+                        }
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+
+                void main()
+                {
+                    int result = EvaluateState(1);
+                    if (result == 20)
+                    {
+                        ActionStartConversation(OBJECT_SELF, ""result_20"");
+                    }
+                    else
+                    {
+                        ActionStartConversation(OBJECT_SELF, ""other_result"");
+                    }
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "if (state == 0)",
+                "else if (state == 1)",
+                "if (GetIsNight())",
+                "else",
+                "ActionStartConversation(OBJECT_SELF, \"result_20\");",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripWhileForDoLoops()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    int total = 0;
+                    int i = 0;
+                    while (i < 5)
+                    {
+                        total += i;
+                        i++;
+                    }
+
+                    for (int j = 0; j < 3; j++)
+                    {
+                        total += j * 2;
+                    }
+
+                    int k = 0;
+                    do
+                    {
+                        total -= k;
+                        k++;
+                    }
+                    while (k < 2);
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "while (i < 5)",
+                "for (int j = 0; j < 3; j++)",
+                "do",
+                "while (k < 2);",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripSwitchCase()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    int value = GetLocalInt(OBJECT_SELF, ""switch"");
+                    switch (value)
+                    {
+                        case 0:
+                            SetLocalInt(OBJECT_SELF, ""switch"", 1);
+                            break;
+                        case 1:
+                        case 2:
+                            SetLocalInt(OBJECT_SELF, ""switch"", 3);
+                            break;
+                        default:
+                            DeleteLocalInt(OBJECT_SELF, ""switch"");
+                            break;
+                    }
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "switch (value)",
+                "case 0:",
+                "case 1:",
+                "case 2:",
+                "default:",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripStructUsage()
+        {
+            string source = Dedent(@"
+                struct CombatStats
+                {
+                    int attack;
+                    int defense;
+                    float multiplier;
+                    string label;
+                };
+
+                CombatStats BuildStats(int base)
+                {
+                    CombatStats result;
+                    result.attack = base + 2;
+                    result.defense = base * 2;
+                    result.multiplier = IntToFloat(result.defense) / 3.0;
+                    result.label = ""stat_"" + IntToString(base);
+                    return result;
+                }
+
+                void main()
+                {
+                    CombatStats stats = BuildStats(5);
+                    if (stats.attack > stats.defense)
+                    {
+                        stats.label = ""attack_bias"";
+                    }
+                    else
+                    {
+                        stats.label = ""defense_bias"";
+                    }
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "struct CombatStats",
+                "result.attack = base + 2;",
+                "result.defense = base * 2;",
+                "stats.label = \"attack_bias\";",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripFunctionDefinitionsAndReturns()
+        {
+            string source = Dedent(@"
+                int CountPartyMembers()
+                {
+                    int count = 0;
+                    object creature = GetFirstFactionMember(OBJECT_SELF, FALSE);
+                    while (GetIsObjectValid(creature))
+                    {
+                        count++;
+                        creature = GetNextFactionMember(OBJECT_SELF, FALSE);
+                    }
+                    return count;
+                }
+
+                void Announce(int members)
+                {
+                    string message = ""members:"" + IntToString(members);
+                    SendMessageToPC(OBJECT_SELF, message);
+                }
+
+                void main()
+                {
+                    int members = CountPartyMembers();
+                    Announce(members);
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "int CountPartyMembers()",
+                "while (GetIsObjectValid(creature))",
+                "void Announce(int members)",
+                "Announce(members);",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripActionQueueAndDelays()
+        {
+            string source = Dedent(@"
+                void ApplyBuff(object target)
+                {
+                    effect buff = EffectAbilityIncrease(ABILITY_STRENGTH, 2);
+                    ApplyEffectToObject(DURATION_TYPE_TEMPORARY, buff, target, 6.0);
+                }
+
+                void main()
+                {
+                    object player = GetFirstPC();
+                    DelayCommand(1.5, AssignCommand(player, ApplyBuff(player)));
+                    ClearAllActions();
+                    ActionDoCommand(AssignCommand(OBJECT_SELF, PlaySound(""pc_action"")));
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K1),
+                Game.K1);
+            AssertBidirectionalRoundtrip(source, Game.K1);
+            AssertSubstrings(decompiled, new[]
+            {
+                "DelayCommand(1.5, AssignCommand(player, ApplyBuff(player)));",
+                "ClearAllActions();",
+                "ActionDoCommand(AssignCommand(OBJECT_SELF, PlaySound(\"pc_action\")));",
+            });
+        }
+
+        [Fact]
+        public void TestRoundtripIncludeResolution()
+        {
+            // Python uses tmp_path fixture, we'll use a temporary directory
+            string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                string includePath = Path.Combine(tempDir, "rt_helper.nss");
+                File.WriteAllText(includePath, Dedent(@"
+                    int HelperFunction(int value)
+                    {
+                        return value * 2;
+                    }
+                "), Encoding.UTF8);
+
+                string source = Dedent(@"
+                    #include ""rt_helper""
+
+                    void main()
+                    {
+                        int result = HelperFunction(5);
+                        SetLocalInt(OBJECT_SELF, ""helper"", result);
+                    }
+                ");
+
+                var libraryLookup = new List<string> { tempDir };
+                string decompiled = NCSAuto.DecompileNcs(
+                    NCSAuto.CompileNss(source, Game.K1, null, libraryLookup),
+                    Game.K1);
+                AssertBidirectionalRoundtrip(source, Game.K1, libraryLookup);
+                AssertSubstrings(decompiled, new[]
+                {
+                    "int HelperFunction(int value)",
+                    "SetLocalInt(OBJECT_SELF, \"helper\", result);",
+                });
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRoundtripTslSpecificFunctionality()
+        {
+            string source = Dedent(@"
+                void main()
+                {
+                    object target = GetFirstPC();
+                    effect penalty = EffectAttackDecrease(2, ATTACK_BONUS_MISC);
+                    ApplyEffectToObject(DURATION_TYPE_TEMPORARY, penalty, target, 5.0);
+                    AssignCommand(target, ClearAllActions());
+                }
+            ");
+
+            string decompiled = NCSAuto.DecompileNcs(
+                NCSAuto.CompileNss(source, Game.K2),
+                Game.K2);
+            AssertBidirectionalRoundtrip(source, Game.K2);
+            AssertSubstrings(decompiled, new[]
+            {
+                "effect penalty = EffectAttackDecrease(2, ATTACK_BONUS_MISC);",
+                "ApplyEffectToObject(DURATION_TYPE_TEMPORARY, penalty, target, 5.0);",
+            });
+        }
     }
 
     /// <summary>
-    /// Python: test_roundtrip_arithmetic_operations
+    /// Binary roundtrip tests for sample NCS files.
+    /// 1:1 port of TestNcsBinaryRoundtripSamples from test_ncs_roundtrip_granular.py
     /// </summary>
-    [Fact]
-    public void TestRoundtripArithmeticOperations()
+    public class NcsBinaryRoundtripSamples
     {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
+        private static readonly (string RelativePath, Game Game)[] SampleFiles = new[]
+        {
+            ("tests/files/test.ncs", Game.K1),
+            ("tests/test_pykotor/test_files/test.ncs", Game.K1),
+            ("tests/test_toolset/test_files/90sk99.ncs", Game.K2),
+        };
 
-    /// <summary>
-    /// Python: test_roundtrip_bitwise_and_shift_operations
-    /// </summary>
-    [Fact]
-    public void TestRoundtripBitwiseAndShiftOperations()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
+        private static byte[] CanonicalBytes(NCS ncs)
+        {
+            return NCSAuto.BytesNcs(ncs);
+        }
 
-    /// <summary>
-    /// Python: test_roundtrip_logical_and_relational_operations
-    /// </summary>
-    [Fact]
-    public void TestRoundtripLogicalAndRelationalOperations()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public void TestBinaryRoundtripSamples(int fileIndex)
+        {
+            var (relativePath, game) = SampleFiles[fileIndex];
+            string ncsPath = Path.Combine("vendor", "PyKotor", relativePath);
 
-    /// <summary>
-    /// Python: test_roundtrip_compound_assignments
-    /// </summary>
-    [Fact]
-    public void TestRoundtripCompoundAssignments()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
+            if (!File.Exists(ncsPath))
+            {
+                // Try alternative path
+                ncsPath = relativePath;
+            }
 
-    /// <summary>
-    /// Python: test_roundtrip_increment_and_decrement
-    /// </summary>
-    [Fact]
-    public void TestRoundtripIncrementAndDecrement()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
+            if (!File.Exists(ncsPath))
+            {
+                return; // Skip if sample file doesn't exist
+            }
 
-    /// <summary>
-    /// Python: test_roundtrip_if_else_nesting
-    /// </summary>
-    [Fact]
-    public void TestRoundtripIfElseNesting()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
+            NCS original = NCSAuto.ReadNcs(ncsPath);
+            string decompiled = NCSAuto.DecompileNcs(original, game);
+            NCS recompilation = NCSAuto.CompileNss(decompiled, game);
 
-    /// <summary>
-    /// Python: test_roundtrip_while_for_do_loops
-    /// </summary>
-    [Fact]
-    public void TestRoundtripWhileForDoLoops()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_roundtrip_switch_case
-    /// </summary>
-    [Fact]
-    public void TestRoundtripSwitchCase()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_roundtrip_struct_usage
-    /// </summary>
-    [Fact]
-    public void TestRoundtripStructUsage()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_roundtrip_function_definitions_and_returns
-    /// </summary>
-    [Fact]
-    public void TestRoundtripFunctionDefinitionsAndReturns()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_roundtrip_action_queue_and_delays
-    /// </summary>
-    [Fact]
-    public void TestRoundtripActionQueueAndDelays()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_roundtrip_include_resolution
-    /// </summary>
-    [Fact]
-    public void TestRoundtripIncludeResolution()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_roundtrip_tsl_specific_functionality
-    /// </summary>
-    [Fact]
-    public void TestRoundtripTslSpecificFunctionality()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
-    }
-
-    /// <summary>
-    /// Python: test_binary_roundtrip_samples (from TestNcsBinaryRoundtripSamples)
-    /// </summary>
-    [Fact]
-    public void TestBinaryRoundtripSamples()
-    {
-        // TODO: Implement when compile/decompile are available
-        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
+            CanonicalBytes(original).Should().Equal(
+                CanonicalBytes(recompilation),
+                $"Roundtrip failed for {relativePath}");
+            decompiled.Trim().Length.Should().BeGreaterThan(0, "Decompiled source should not be empty");
+        }
     }
 }
-}
-

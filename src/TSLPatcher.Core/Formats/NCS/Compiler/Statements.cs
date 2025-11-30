@@ -6,11 +6,6 @@ using TSLPatcher.Core.Common.Script;
 namespace TSLPatcher.Core.Formats.NCS.Compiler
 {
 
-    /// <summary>
-    /// Exact 1:1 port of all Statement classes from Python compiler/classes.py
-    /// Complete control flow, declarations, loops, switch, etc.
-    /// Note: Statement base class is defined in NSS/AST/Statement.cs
-    /// </summary>
 
     // Note: EmptyStatement, NopStatement, ExpressionStatement, DeclarationStatement are defined in NSS/AST/Statements/
 

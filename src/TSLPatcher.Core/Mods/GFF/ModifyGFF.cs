@@ -618,8 +618,9 @@ namespace TSLPatcher.Core.Mods.GFF
 
                 // Python: memory.memory_2da[self.dest_token_id] = self.path
                 // Python stores PureWindowsPath object, which when converted to string uses backslashes on Windows
-                // Match Python's behavior by using backslashes for Windows paths
-                string windowsPath = (Path ?? "").Replace("/", "\\");
+                // Match Python's behavior: PureWindowsPath uses backslashes, so store as-is (Path already has backslashes from ConfigReader)
+                // Python's PureWindowsPath("Nested\Field") converts to string as "Nested\Field" (single backslash)
+                string windowsPath = Path ?? "";
                 memory.Memory2DA[DestTokenId] = windowsPath;
                 return;
             }

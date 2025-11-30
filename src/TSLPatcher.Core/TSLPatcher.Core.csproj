@@ -7,32 +7,85 @@
   </PropertyGroup>
 
   <!-- RuntimeIdentifiers: Forward-compatible dynamic assignment based on .NET version -->
-  <!-- .NET Framework 4.x: Windows-only with legacy RIDs -->
+  <!-- .NET Framework: Legacy Windows RIDs + cross-platform -->
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
   </PropertyGroup>
-  <!-- .NET 6-7: Legacy Windows RIDs + cross-platform -->
-  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0' OR '$(TargetFramework)'=='net7.0'">
-    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
-  </PropertyGroup>
   <!-- .NET 8+: Modern Windows RIDs + cross-platform (forward-compatible with net10.0, net11.0, etc.) -->
-  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4')) AND '$(TargetFramework)'!='net6.0' AND '$(TargetFramework)'!='net7.0'">
+  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TargetFrameworks></TargetFrameworks>
+    <!-- Helper to append without duplicate semicolons -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
+      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
+    </TargetFrameworks>
+    <!-- Add each TFM conditionally -->
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+      $(TargetFrameworks);net10.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+      $(TargetFrameworks);net9.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+      $(TargetFrameworks);net8.0
+    </TargetFrameworks>
+    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+      $(TargetFrameworks);net7.0;net6.0
+    </TargetFrameworks>
+    <!-- === .NET 6 SDK: include (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+      $(TargetFrameworks);net6.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+      $(TargetFrameworks);net48
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+      $(TargetFrameworks);net462
+    </TargetFrameworks>
+    <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8.0</TargetFrameworks>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <!-- Use latest .NET (9) + .NET Framework 4.8 fallback for Windows-only legacy support -->
-    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net48</TargetFrameworks>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Build only latest .NET (net8.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
-    <TargetFrameworks Condition="'$(TargetFramework)' == ''">net8.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TargetFramework)' != ''">$(TargetFramework)</TargetFrameworks>
+    <TargetFrameworks></TargetFrameworks>
+    <!-- Helper to append without duplicate semicolons -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
+      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
+    </TargetFrameworks>
+    <!-- Add each TFM conditionally -->
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+      $(TargetFrameworks);net10.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+      $(TargetFrameworks);net9.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+      $(TargetFrameworks);net8.0
+    </TargetFrameworks>
+    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+      $(TargetFrameworks);net7.0;net6.0
+    </TargetFrameworks>
+    <!-- === .NET 6 SDK: include (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+      $(TargetFrameworks);net6.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+      $(TargetFrameworks);net48
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+      $(TargetFrameworks);net462
+    </TargetFrameworks>
+    <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8.0</TargetFrameworks>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -44,14 +97,33 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
+  <!-- NuGet Package Configuration -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>TSLPatcher.Core</PackageId>
+    <Version>2.0.0-alpha1</Version>
+    <Authors>th3w1zard1</Authors>
+    <Company>HoloPatcher.NET</Company>
+    <Product>TSLPatcher.Core</Product>
+    <Description>Core patching engine and logic for TSLPatcher/HoloPatcher. Provides functionality for installing mods, applying patches to game files (2DA, GFF, TLK, SSF, NSS, NCS), and managing game installations.</Description>
+    <PackageTags>kotor;tsl;patcher;mod;gff;2da;tlk;nss;ncs</PackageTags>
+    <PackageProjectUrl>https://github.com/th3w1zard1/HoloPatcher.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/th3w1zard1/HoloPatcher.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
   <!-- Package References - Use versions compatible with .NET Framework 4.8 -->
   <ItemGroup>
-    <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
-    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-    <PackageReference Include="sly" Version="3.5.0" />
+    <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="sly" Version="3.7.6" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />
     <!-- System.Text.Json: Use version compatible with net48 -->
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
   </ItemGroup>
 </Project>

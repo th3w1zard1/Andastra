@@ -368,7 +368,7 @@ Table0=test.2da
 ChangeRow0=change1
 AddRow0=add1
 CopyRow0=copy1
-AddColumn0=NewCol(default)
+AddColumn0=NewCol
 
 [change1]
 RowIndex=0
@@ -384,6 +384,10 @@ RowIndex=1
 RowLabel=2
 id=3
 name=Copied
+
+[NewCol]
+ColumnLabel=NewCol
+DefaultValue=default
 ";
             Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");

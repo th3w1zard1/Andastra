@@ -1,0 +1,57 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 2.0.0)'
+        required: true
+        type: string
+      tag_name:
+        description: 'Git tag name (optional, e.g., v2.0.0)'
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            TAG="${{ github.event.inputs.tag_name }}"
+            if [ -z "$TAG" ]; then
+              TAG="v$VERSION"
+            fi
+          elif [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#v}"  # Remove 'v' prefix
+          else
+            # Extract from csproj
+            VERSION=$(grep -oP '<Version>\K[^<]+' src/HoloPatcher/HoloPatcher.csproj | head -1)
+            TAG="v$VERSION"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION (tag: $TAG)"
+        shell: bash
+
+  build:
+    needs: determine-version
+    uses: ./.github/workflows/build-all-platforms.yml
+    with:
+      version: ${{ needs.determine-version.outputs.version }}
+      tag_name: ${{ needs.determine-version.outputs.tag_name || format('v{0}', needs.determine-version.outputs.version) }}
+    secrets: inherit

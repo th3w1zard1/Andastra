@@ -39,7 +39,6 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
             NCSInstruction endOfSwitch = new NCSInstruction(NCSInstructionType.NOP, new List<object>());
 
-            // Compile all switch blocks into a temporary NCS
             var tempNcs = new NCS();
             var switchBlockToInstruction = new Dictionary<SwitchBlock, NCSInstruction>();
 

@@ -122,22 +122,8 @@ namespace TSLPatcher.Core.Patcher
             }
 
             // Parse INI with encoding fallback (matches Python decode_bytes_with_fallbacks)
-            var parser = new IniParser.Parser.IniDataParser();
-            parser.Configuration.AllowDuplicateKeys = true;
-            parser.Configuration.AllowDuplicateSections = true;
-            parser.Configuration.CaseInsensitive = false;
-            parser.Configuration.CommentString = ";";
-            parser.Configuration.CommentRegex = new System.Text.RegularExpressions.Regex(@"^[;#]");
-
-            IniData ini;
-            try
-            {
-                ini = parser.Parse(iniText);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error parsing INI file: {changesIniPath}", ex);
-            }
+            // Use unified INI parser (case-sensitive for changes.ini files)
+            IniData ini = ConfigReader.ParseIniText(iniText, caseInsensitive: false, sourcePath: changesIniPath);
 
             ConfigReader reader = new ConfigReader(ini, modPath, log, TslPatchDataPath);
             config = reader.Load(new PatcherConfig());

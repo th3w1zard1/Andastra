@@ -32,7 +32,7 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
             {
                 ncs.Add(NCSInstructionType.MOVSP, new System.Collections.Generic.List<object> { -resultSize });
                 block.TempStack -= resultSize;
-        }
+            }
 
             return DynamicDataType.VOID;
         }

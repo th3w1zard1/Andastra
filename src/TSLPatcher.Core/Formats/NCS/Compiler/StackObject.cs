@@ -7,7 +7,6 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
     /// <summary>
     /// Represents a single value on the NCS execution stack.
-    /// 1:1 port from Python StackObject class in pykotor/resource/formats/ncs/compiler/interpreter.py
     /// </summary>
     public class StackObject
     {

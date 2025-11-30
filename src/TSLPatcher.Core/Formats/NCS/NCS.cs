@@ -94,6 +94,17 @@ namespace TSLPatcher.Core.Formats.NCS
                 }
             }
 
+            // Check for missing required arguments
+            for (int i = 0; i < Instructions.Count; i++)
+            {
+                NCSInstruction inst = Instructions[i];
+                int? expectedArgs = GetExpectedArgCount(inst.InsType);
+                if (expectedArgs.HasValue && inst.Args.Count != expectedArgs.Value)
+                {
+                    issues.Add($"Instruction #{i} ({inst.InsType}) has {inst.Args.Count} args, expected {expectedArgs.Value}");
+                }
+            }
+
             return issues;
         }
 
@@ -158,6 +169,108 @@ namespace TSLPatcher.Core.Formats.NCS
             }
 
             return reachable;
+        }
+
+        /// <summary>
+        /// Partition instructions into basic blocks for decompilation.
+        ///
+        /// A basic block is a sequence of instructions with a single entry point
+        /// and a single exit point (no jumps into the middle, no branches except at end).
+        /// </summary>
+        public List<List<NCSInstruction>> GetBasicBlocks()
+        {
+            var blocks = new List<List<NCSInstruction>>();
+            if (Instructions.Count == 0)
+            {
+                return blocks;
+            }
+
+            var currentBlock = new List<NCSInstruction>();
+            var jumpTargets = new HashSet<NCSInstruction>();
+            foreach (NCSInstruction inst in Instructions)
+            {
+                if (inst.Jump != null)
+                {
+                    jumpTargets.Add(inst.Jump);
+                }
+            }
+
+            for (int i = 0; i < Instructions.Count; i++)
+            {
+                NCSInstruction inst = Instructions[i];
+                // Start new block if this is a jump target
+                if (jumpTargets.Contains(inst) && currentBlock.Count > 0)
+                {
+                    blocks.Add(currentBlock);
+                    currentBlock = new List<NCSInstruction> { inst };
+                }
+                else
+                {
+                    currentBlock.Add(inst);
+                }
+
+                // End block if this instruction branches
+                if (inst.IsControlFlow() && inst.InsType != NCSInstructionType.JSR)
+                {
+                    blocks.Add(currentBlock);
+                    currentBlock = new List<NCSInstruction>();
+                }
+            }
+
+            // Add final block
+            if (currentBlock.Count > 0)
+            {
+                blocks.Add(currentBlock);
+            }
+
+            return blocks;
+        }
+
+        /// <summary>
+        /// Get expected argument count for instruction type, or null if variable/complex.
+        /// </summary>
+        private static int? GetExpectedArgCount(NCSInstructionType insType)
+        {
+            // Instructions with 2 args
+            if (insType == NCSInstructionType.CPDOWNSP ||
+                insType == NCSInstructionType.CPTOPSP ||
+                insType == NCSInstructionType.CPDOWNBP ||
+                insType == NCSInstructionType.CPTOPBP ||
+                insType == NCSInstructionType.ACTION ||
+                insType == NCSInstructionType.STORE_STATE)
+            {
+                return 2;
+            }
+            // Instructions with 1 arg
+            if (insType == NCSInstructionType.CONSTI ||
+                insType == NCSInstructionType.CONSTF ||
+                insType == NCSInstructionType.CONSTS ||
+                insType == NCSInstructionType.CONSTO ||
+                insType == NCSInstructionType.MOVSP ||
+                insType == NCSInstructionType.DECxSP ||
+                insType == NCSInstructionType.INCxSP ||
+                insType == NCSInstructionType.DECxBP ||
+                insType == NCSInstructionType.INCxBP)
+            {
+                return 1;
+            }
+            // Instructions with 3 args
+            if (insType == NCSInstructionType.DESTRUCT)
+            {
+                return 3;
+            }
+            // Most other instructions have 0 args
+            if (insType == NCSInstructionType.RETN ||
+                insType == NCSInstructionType.NOP ||
+                insType == NCSInstructionType.SAVEBP ||
+                insType == NCSInstructionType.RESTOREBP ||
+                insType == NCSInstructionType.NOTI ||
+                insType == NCSInstructionType.COMPI)
+            {
+                return 0;
+            }
+            // Complex/variable - return null
+            return null;
         }
 
         public bool Equals([CanBeNull] NCS other)

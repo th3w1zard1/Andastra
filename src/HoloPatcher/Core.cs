@@ -24,7 +24,42 @@ namespace HoloPatcher
     /// </summary>
     public static class Core
     {
-        public const string VersionLabel = "v1.80";
+        public const string VersionLabel = "v2.0.0a1";
+
+        /// <summary>
+        /// Checks if the version string indicates an alpha/pre-release version.
+        /// Matches .NET versioning schema: checks for 'a' followed by digits or 'alpha' (case-insensitive).
+        /// Examples: "2.0.0a1", "2.0.0-alpha1", "2.0.0-alpha.1", "v2.0.0a1"
+        /// </summary>
+        public static bool IsAlphaVersion(string version)
+        {
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                return false;
+            }
+
+            // Remove 'v' prefix if present
+            string normalizedVersion = version.TrimStart('v', 'V');
+
+            // Check for 'alpha' (case-insensitive)
+            if (normalizedVersion.IndexOf("alpha", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            // Check for 'a' followed by a digit (e.g., "a1", "a2", "a10")
+            // This matches patterns like "2.0.0a1" or "2.0.0-a1"
+            for (int i = 0; i < normalizedVersion.Length - 1; i++)
+            {
+                if ((normalizedVersion[i] == 'a' || normalizedVersion[i] == 'A') &&
+                    char.IsDigit(normalizedVersion[i + 1]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Exit codes for the application.
@@ -65,6 +100,10 @@ namespace HoloPatcher
             public List<string> GamePaths { get; set; } = new List<string>();
             [CanBeNull]
             public string InfoContent { get; set; }
+            /// <summary>
+            /// Whether InfoContent is RTF format (true) or plain text/RTE JSON (false)
+            /// </summary>
+            public bool IsRtf { get; set; }
         }
 
         /// <summary>
@@ -83,13 +122,21 @@ namespace HoloPatcher
         /// </summary>
         public static ModInfo LoadMod(string directoryPath)
         {
+            // Python: tslpatchdata_path = CaseAwarePath(directory_path, "tslpatchdata")
             var tslPatchDataPath = new CaseAwarePath(directoryPath, "tslpatchdata");
-            if (!tslPatchDataPath.IsDirectory() &&
-                Path.GetFileName(Path.GetDirectoryName(directoryPath) ?? "")?.ToLowerInvariant() == "tslpatchdata")
+            // Python: if not tslpatchdata_path.is_dir() and tslpatchdata_path.parent.name.lower() == "tslpatchdata":
+            //         tslpatchdata_path = tslpatchdata_path.parent
+            if (!tslPatchDataPath.IsDirectory())
             {
-                tslPatchDataPath = new CaseAwarePath(Path.GetDirectoryName(directoryPath) ?? "");
+                string parentPath = Path.GetDirectoryName(tslPatchDataPath.GetResolvedPath()) ?? "";
+                string parentName = Path.GetFileName(parentPath) ?? "";
+                if (parentName.ToLowerInvariant() == "tslpatchdata")
+                {
+                    tslPatchDataPath = new CaseAwarePath(parentPath);
+                }
             }
 
+            // Python: mod_path = str(tslpatchdata_path.parent)
             string modPath = tslPatchDataPath.DirectoryName;
             CaseAwarePath namespacePath = tslPatchDataPath.Combine("namespaces.ini");
             CaseAwarePath changesPath = tslPatchDataPath.Combine("changes.ini");
@@ -173,22 +220,30 @@ namespace HoloPatcher
                 }
             }
 
-            // Load info.rtf or info.rte
+            // Load info.rtf or info.rte - matches Python's on_namespace_option_chosen
             var infoRtfPath = new CaseAwarePath(modPath, "tslpatchdata", namespaceOption.RtfFilePath());
-            var infoRtePath = new CaseAwarePath(infoRtfPath.GetResolvedPath().Replace(".rtf", ".rte"));
+            string rtfPathStr = infoRtfPath.GetResolvedPath();
+            string rtePathStr = Path.ChangeExtension(rtfPathStr, ".rte");
+            var infoRtePath = new CaseAwarePath(rtePathStr);
 
             // Can be null if info file not found
             string infoContent = null;
+            bool isRtf = false;
             if (infoRtePath.IsFile())
             {
+                // RTE files are JSON formatted - return raw content for parsing
                 byte[] data = File.ReadAllBytes(infoRtePath.GetResolvedPath());
                 infoContent = DecodeBytesWithFallbacks(data);
+                isRtf = false; // RTE is JSON, not RTF
             }
             else if (infoRtfPath.IsFile())
             {
+                // RTF files - return RAW RTF content for RichTextBox to render!
+                // Unlike Python which strips it because tkinter doesn't support RTF,
+                // Avalonia can render RTF directly with RichTextBox
                 byte[] data = File.ReadAllBytes(infoRtfPath.GetResolvedPath());
-                string rtfText = DecodeBytesWithFallbacks(data);
-                infoContent = StripRtf(rtfText);
+                infoContent = DecodeBytesWithFallbacks(data);
+                isRtf = true; // Mark as RTF so ViewModel knows to use RichTextBox
             }
 
             return new NamespaceInfo
@@ -197,7 +252,8 @@ namespace HoloPatcher
                 LogLevel = reader.Config.LogLevel,
                 GameNumber = gameNumber,
                 GamePaths = gamePaths,
-                InfoContent = infoContent
+                InfoContent = infoContent,
+                IsRtf = isRtf
             };
         }
 
@@ -459,74 +515,11 @@ namespace HoloPatcher
 
         /// <summary>
         /// Strips RTF formatting from text.
+        /// Uses RtfStripper class which matches Python's striprtf implementation.
         /// </summary>
         private static string StripRtf(string rtfText)
         {
-            if (string.IsNullOrEmpty(rtfText))
-            {
-                return "";
-            }
-
-            // Simple RTF stripping - remove control words and groups
-            var sb = new StringBuilder();
-            bool inControl = false;
-            bool inGroup = false;
-            int braceDepth = 0;
-
-            for (int i = 0; i < rtfText.Length; i++)
-            {
-                char c = rtfText[i];
-
-                if (c == '{')
-                {
-                    braceDepth++;
-                    inGroup = true;
-                    continue;
-                }
-
-                if (c == '}')
-                {
-                    braceDepth--;
-                    if (braceDepth == 0)
-                    {
-                        inGroup = false;
-                    }
-                    continue;
-                }
-
-                if (inGroup && c == '\\')
-                {
-                    inControl = true;
-                    continue;
-                }
-
-                if (inControl)
-                {
-                    if (char.IsLetter(c))
-                    {
-                        // Skip control word
-                        continue;
-                    }
-                    if (c == ' ')
-                    {
-                        inControl = false;
-                        continue;
-                    }
-                    if (char.IsDigit(c) || c == '-')
-                    {
-                        // Skip numeric parameter
-                        continue;
-                    }
-                    inControl = false;
-                }
-
-                if (!inGroup && !inControl)
-                {
-                    sb.Append(c);
-                }
-            }
-
-            return sb.ToString().Trim();
+            return RtfStripper.StripRtf(rtfText);
         }
     }
 }

@@ -13,6 +13,8 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+// using Simplecto.Avalonia.Controls; // Will add once we verify the namespace
+using HoloPatcher;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -31,7 +33,14 @@ namespace HoloPatcher.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private readonly PatchLogger _logger = new PatchLogger();
+        private readonly RobustLogger _pykotorLogger;
         private readonly StringBuilder _logTextBuilder = new StringBuilder();
+        private readonly List<FormattedLogEntry> _logEntries = new List<FormattedLogEntry>();
+
+        /// <summary>
+        /// Gets all log entries for formatting. Used by View to format log display.
+        /// </summary>
+        public IReadOnlyList<FormattedLogEntry> GetLogEntries() => _logEntries.AsReadOnly();
 
         private string _logText = string.Empty;
         private bool _isTaskRunning;
@@ -42,11 +51,93 @@ namespace HoloPatcher.ViewModels
         [CanBeNull]
         private string _selectedGamePath;
         private string _modPath = string.Empty;
+        private Avalonia.Media.IBrush _logTextColor = Avalonia.Media.Brushes.White;
+        private bool _isRtfContent = false;
+        private string _rtfContent = string.Empty;
+        private bool _isModSelectionVisible = true;
+
+        /// <summary>
+        /// Whether the mod selection UI (combobox, Browse button, ? button) should be visible.
+        /// Set to false when a mod is auto-opened from a tslpatchdata folder next to the executable.
+        /// </summary>
+        public bool IsModSelectionVisible
+        {
+            get => _isModSelectionVisible;
+            set => SetProperty(ref _isModSelectionVisible, value);
+        }
+
+        /// <summary>
+        /// Whether the current version is an alpha/pre-release version.
+        /// Used to conditionally show alpha warnings and disclaimers.
+        /// </summary>
+        public bool IsAlphaVersion => Core.IsAlphaVersion(Core.VersionLabel);
+
+        /// <summary>
+        /// Window title matching Python's format: "HoloPatcher {VERSION_LABEL}"
+        /// Includes alpha disclaimer only if version is alpha.
+        /// </summary>
+        public string WindowTitle
+        {
+            get
+            {
+                string title = $"HoloPatcher {Core.VersionLabel}";
+                if (IsAlphaVersion)
+                {
+                    title += " [ALPHA - NOT FOR PRODUCTION USE]";
+                }
+                return title;
+            }
+        }
 
         public string LogText
         {
             get => _logText;
             set => SetProperty(ref _logText, value);
+        }
+
+        /// <summary>
+        /// Color for the log text - changes based on log type for consistency with Python
+        /// </summary>
+        public Avalonia.Media.IBrush LogTextColor
+        {
+            get => _logTextColor;
+            set => SetProperty(ref _logTextColor, value);
+        }
+
+        /// <summary>
+        /// Whether we're displaying RTF content (true) or plain text logs (false)
+        /// </summary>
+        public bool IsRtfContent
+        {
+            get => _isRtfContent;
+            set
+            {
+                if (SetProperty(ref _isRtfContent, value))
+                {
+                    OnPropertyChanged(nameof(IsNotRtfContent));
+                    Console.WriteLine($"[RTF] IsRtfContent set to: {value}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Inverse of IsRtfContent for XAML binding
+        /// </summary>
+        public bool IsNotRtfContent => !_isRtfContent;
+
+        /// <summary>
+        /// RTF content to display in RichTextBox
+        /// </summary>
+        public string RtfContent
+        {
+            get => _rtfContent;
+            set
+            {
+                if (SetProperty(ref _rtfContent, value))
+                {
+                    Console.WriteLine($"[RTF] RtfContent set, length: {value?.Length ?? 0}");
+                }
+            }
         }
 
         public bool IsTaskRunning
@@ -102,7 +193,18 @@ namespace HoloPatcher.ViewModels
         public string ModPath
         {
             get => _modPath;
-            set => SetProperty(ref _modPath, value);
+            set
+            {
+                if (SetProperty(ref _modPath, value))
+                {
+                    // Update RobustLogger to write to installlog.txt when ModPath is set
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        string logFilePath = Core.GetLogFilePath(value);
+                        _pykotorLogger.SetLogFilePath(logFilePath);
+                    }
+                }
+            }
         }
 
         private List<PatcherNamespace> _loadedNamespaces = new List<PatcherNamespace>();
@@ -131,9 +233,14 @@ namespace HoloPatcher.ViewModels
         public ICommand OpenUrlCommand { get; }
         public ICommand CheckUpdatesCommand { get; }
         public ICommand ShowNamespaceInfoCommand { get; }
+        public ICommand CreateRteCommand { get; }
 
         public MainWindowViewModel()
         {
+            // Initialize RobustLogger for pykotor errors/exceptions/warnings/info
+            // Will set log file path when mod is loaded
+            _pykotorLogger = new RobustLogger();
+
             // Initialize commands
             BrowseModCommand = new AsyncRelayCommand(BrowseMod);
             BrowseGamePathCommand = new AsyncRelayCommand(BrowseGamePath);
@@ -146,6 +253,7 @@ namespace HoloPatcher.ViewModels
             OpenUrlCommand = new RelayCommand<string>(OpenUrl);
             CheckUpdatesCommand = new AsyncRelayCommand(CheckUpdates);
             ShowNamespaceInfoCommand = new AsyncRelayCommand(ShowNamespaceInfo);
+            CreateRteCommand = new AsyncRelayCommand(CreateRte);
 
             // Subscribe to logger events
             _logger.VerboseLogged += OnLogEntry;
@@ -154,11 +262,14 @@ namespace HoloPatcher.ViewModels
             _logger.ErrorLogged += OnLogEntry;
 
             // Initialize with welcome message
-            AddLogEntry("Welcome to HoloPatcher!");
-            AddLogEntry("Select a mod and your KOTOR directory to begin.");
+            AddLogEntry("Welcome to HoloPatcher!", LogType.Note);
+            AddLogEntry("Select a mod and your KOTOR directory to begin.", LogType.Note);
 
             // Try to detect KOTOR installations
             DetectGamePaths();
+
+            // Try to auto-open mod from tslpatchdata folder next to executable
+            _ = TryAutoOpenMod();
         }
 
         private void OnLogEntry([CanBeNull] object sender, PatchLog log)
@@ -168,28 +279,37 @@ namespace HoloPatcher.ViewModels
 
         private void WriteLogEntry(PatchLog log)
         {
-            // Write to log file
+            // Write ALL logs to file regardless of log level - matches Python behavior
+            // Python: log_file.write(f"{log.formatted_message}\n") happens BEFORE filtering
             try
             {
                 string logFilePath = Core.GetLogFilePath(ModPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(logFilePath) ?? "");
-                File.AppendAllText(logFilePath, log.FormattedMessage + Environment.NewLine, Encoding.UTF8);
+                if (!string.IsNullOrEmpty(logFilePath))
+                {
+                    string directory = Path.GetDirectoryName(logFilePath);
+                    if (!string.IsNullOrEmpty(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+                    File.AppendAllText(logFilePath, log.FormattedMessage + Environment.NewLine, Encoding.UTF8);
+                }
             }
             catch (Exception ex)
             {
                 // Log error but don't fail
+                _pykotorLogger.Error($"Failed to write log file: {ex.Message}");
                 Debug.WriteLine($"Failed to write log file: {ex.Message}");
             }
 
-            // Filter by log level
+            // Filter by log level for UI display only
             LogType minLevel = GetLogTypeForLevel(_logLevel);
             if ((int)log.LogType < (int)minLevel)
             {
                 return;
             }
 
-            // Add to UI
-            AddLogEntry(log.FormattedMessage);
+            // Add to UI with formatting
+            AddLogEntry(log.FormattedMessage, log.LogType);
         }
 
         private LogType GetLogTypeForLevel(LogLevel level)
@@ -211,13 +331,75 @@ namespace HoloPatcher.ViewModels
             }
         }
 
-        private void AddLogEntry(string message)
+        /// <summary>
+        /// Adds a log entry with formatting. Matches Python's write_log behavior.
+        /// </summary>
+        public void AddLogEntry(string message, LogType logType = LogType.Note)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
+                // Store formatted log entry
+                var entry = new FormattedLogEntry(message, logType);
+                _logEntries.Add(entry);
+
+                // Build plain text version for SelectableTextBlock (temporary, will replace with formatted)
                 _logTextBuilder.AppendLine(message);
                 LogText = _logTextBuilder.ToString();
             });
+        }
+
+        /// <summary>
+        /// Helper method to parse log type from message prefix like [ERROR], [WARNING], etc.
+        /// </summary>
+        private LogType ParseLogTypeFromMessage(string message)
+        {
+            if (message.StartsWith("[ERROR]", StringComparison.OrdinalIgnoreCase) ||
+                message.StartsWith("[CRITICAL]", StringComparison.OrdinalIgnoreCase))
+            {
+                return LogType.Error;
+            }
+            if (message.StartsWith("[WARNING]", StringComparison.OrdinalIgnoreCase))
+            {
+                return LogType.Warning;
+            }
+            if (message.StartsWith("[DEBUG]", StringComparison.OrdinalIgnoreCase) ||
+                message.StartsWith("[VERBOSE]", StringComparison.OrdinalIgnoreCase))
+            {
+                return LogType.Verbose;
+            }
+            return LogType.Note; // Default to INFO/NOTE
+        }
+
+        private void LogExceptionToDebugConsole(Exception ex, string context = "")
+        {
+            string contextPrefix = string.IsNullOrEmpty(context) ? "" : $"[{context}] ";
+            string message = $"{contextPrefix}EXCEPTION: {ex.GetType().Name}: {ex.Message}";
+
+            // Write using RobustLogger (which writes to installlog.txt)
+            _pykotorLogger.Exception(message, ex);
+
+            Debug.WriteLine(message);
+            Debug.WriteLine($"{contextPrefix}STACK TRACE:");
+            Debug.WriteLine(ex.StackTrace);
+
+            if (ex.InnerException != null)
+            {
+                Debug.WriteLine($"{contextPrefix}INNER EXCEPTION: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+                Debug.WriteLine($"{contextPrefix}INNER STACK TRACE:");
+                Debug.WriteLine(ex.InnerException.StackTrace);
+            }
+
+            // Also write to console for good measure
+            Console.Error.WriteLine(message);
+            Console.Error.WriteLine($"{contextPrefix}STACK TRACE:");
+            Console.Error.WriteLine(ex.StackTrace);
+
+            if (ex.InnerException != null)
+            {
+                Console.Error.WriteLine($"{contextPrefix}INNER EXCEPTION: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+                Console.Error.WriteLine($"{contextPrefix}INNER STACK TRACE:");
+                Console.Error.WriteLine(ex.InnerException.StackTrace);
+            }
         }
 
         private async Task BrowseMod()
@@ -288,6 +470,9 @@ namespace HoloPatcher.ViewModels
                     throw new InvalidOperationException("Selected namespace not found.");
                 }
 
+                // Use Core.InstallMod which handles path resolution correctly (matches Python)
+                // Python: installer = ModInstaller(namespace_mod_path, game_path, ini_file_path, logger)
+                // where namespace_mod_path = ini_file_path.parent (parent of the ini file)
                 string tslPatchDataPath = Path.Combine(ModPath, "tslpatchdata");
                 string iniFilePath = Path.Combine(tslPatchDataPath, selectedNs.ChangesFilePath());
 
@@ -296,7 +481,11 @@ namespace HoloPatcher.ViewModels
                     throw new FileNotFoundException($"Changes INI file not found: {iniFilePath}");
                 }
 
-                var installer = new ModInstaller(ModPath, SelectedGamePath, iniFilePath, _logger)
+                // Python: namespace_mod_path: CaseAwarePath = ini_file_path.parent
+                // The modPath for ModInstaller should be the parent of the ini file, not the mod root
+                string namespaceModPath = Path.GetDirectoryName(iniFilePath) ?? tslPatchDataPath;
+
+                var installer = new ModInstaller(namespaceModPath, SelectedGamePath, iniFilePath, _logger)
                 {
                     TslPatchDataPath = tslPatchDataPath
                 };
@@ -319,7 +508,7 @@ namespace HoloPatcher.ViewModels
                     }
                 }
 
-                AddLogEntry("Starting installation...");
+                AddLogEntry("Starting installation...", LogType.Note);
 
                 // Calculate total patches for progress
                 int totalPatches = Core.CalculateTotalPatches(installer);
@@ -382,12 +571,14 @@ namespace HoloPatcher.ViewModels
                     await infoBox.ShowAsync();
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+                LogExceptionToDebugConsole(ex, "Install (Cancelled)");
                 AddLogEntry("[WARNING] Installation was cancelled.");
             }
             catch (Exception ex)
             {
+                LogExceptionToDebugConsole(ex, "Install");
                 AddLogEntry($"[ERROR] Installation failed: {ex.Message}");
                 MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
                     ex.GetType().Name,
@@ -404,12 +595,15 @@ namespace HoloPatcher.ViewModels
             }
         }
 
-        private void ClearLogText()
+        public void ClearLogText()
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 _logTextBuilder.Clear();
+                _logEntries.Clear(); // Clear formatted log entries too
                 LogText = string.Empty;
+                RtfContent = string.Empty;
+                IsRtfContent = false;
             });
         }
 
@@ -444,6 +638,7 @@ namespace HoloPatcher.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    LogExceptionToDebugConsole(ex, "ValidateIni");
                     AddLogEntry($"[ERROR] Validation failed: {ex.Message}");
                 }
                 finally
@@ -532,6 +727,7 @@ namespace HoloPatcher.ViewModels
             }
             catch (Exception ex)
             {
+                LogExceptionToDebugConsole(ex, "UninstallMod");
                 AddLogEntry($"[ERROR] Uninstall failed: {ex.Message}");
             }
             finally
@@ -605,6 +801,7 @@ namespace HoloPatcher.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    LogExceptionToDebugConsole(ex, "FixPermissions");
                     AddLogEntry($"[ERROR] Failed to fix permissions: {ex.Message}");
                     Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
                     {
@@ -668,6 +865,7 @@ namespace HoloPatcher.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    LogExceptionToDebugConsole(ex, "FixCaseSensitivity");
                     AddLogEntry($"[ERROR] Failed to fix case sensitivity: {ex.Message}");
                 }
                 finally
@@ -689,6 +887,7 @@ namespace HoloPatcher.ViewModels
             }
             catch (Exception ex)
             {
+                LogExceptionToDebugConsole(ex, "OpenUrl");
                 AddLogEntry($"[ERROR] Failed to open URL: {ex.Message}");
             }
         }
@@ -697,9 +896,9 @@ namespace HoloPatcher.ViewModels
         {
             try
             {
-                // Can be null if update info fetch failed
+                // Returns empty dictionary if update info fetch failed (non-nullable return type)
                 Dictionary<string, object> updateInfo = await Config.GetRemoteHolopatcherUpdateInfoAsync();
-                if (updateInfo == null)
+                if (updateInfo.Count == 0 || !updateInfo.ContainsKey("holopatcherLatestVersion"))
                 {
                     MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
                         "Error occurred fetching update information.",
@@ -750,6 +949,7 @@ namespace HoloPatcher.ViewModels
             }
             catch (Exception ex)
             {
+                LogExceptionToDebugConsole(ex, "CheckUpdates");
                 MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
                     "Unable to fetch latest version",
                     $"An error occurred: {ex.Message}",
@@ -779,6 +979,56 @@ namespace HoloPatcher.ViewModels
                 ButtonEnum.Ok,
                 Icon.Info);
             await descBox.ShowAsync();
+        }
+
+        /// <summary>
+        /// Opens RTE editor dialog - matches Python's create_rte_content functionality.
+        /// </summary>
+        private async Task CreateRte()
+        {
+            // TODO: Implement full RTE editor like Python's utility/tkinter/rte_editor.py
+            // For now, show info message about this feature
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                "Create RTE",
+                "RTE (Rich Text Editor) file creation allows you to create styled info files for your mod.\n\n" +
+                "This feature will open an editor to create info.rte files that preserve formatting better than RTF.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            await infoBox.ShowAsync();
+        }
+
+        /// <summary>
+        /// Loads and displays RTE (Rich Text Editor) content from JSON format.
+        /// Matches Python's load_rte_content function.
+        /// </summary>
+        /// <param name="rteContent">JSON-formatted RTE content string</param>
+        private void LoadRteContent(string rteContent)
+        {
+            try
+            {
+                // Parse RTE JSON format
+                var document = JsonSerializer.Deserialize<RteDocument>(rteContent);
+                if (document != null && !string.IsNullOrEmpty(document.Content))
+                {
+                    ClearLogText();
+                    AddLogEntry(document.Content);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogExceptionToDebugConsole(ex, "LoadRteContent");
+                AddLogEntry($"[ERROR] Failed to load RTE content: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// RTE document structure matching Python's JSON format.
+        /// </summary>
+        private class RteDocument
+        {
+            public string Content { get; set; } = string.Empty;
+            public Dictionary<string, Dictionary<string, string>> TagConfigs { get; set; } = new Dictionary<string, Dictionary<string, string>>();
+            public Dictionary<string, List<string[]>> Tags { get; set; } = new Dictionary<string, List<string[]>>();
         }
 
         private async Task LoadModFromPath(string path)
@@ -811,6 +1061,7 @@ namespace HoloPatcher.ViewModels
             }
             catch (Exception ex)
             {
+                LogExceptionToDebugConsole(ex, "LoadModFromPath");
                 AddLogEntry($"[ERROR] Failed to load mod: {ex.Message}");
                 MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
                     "Error",
@@ -856,12 +1107,44 @@ namespace HoloPatcher.ViewModels
                 // Load and display info.rtf/rte content
                 if (!string.IsNullOrEmpty(namespaceInfo.InfoContent))
                 {
+                    Console.WriteLine($"[RTF] OnNamespaceSelected: InfoContent length={namespaceInfo.InfoContent.Length}, IsRtf={namespaceInfo.IsRtf}");
                     ClearLogText();
-                    AddLogEntry(namespaceInfo.InfoContent);
+
+                    if (namespaceInfo.IsRtf)
+                    {
+                        // RTF content - render directly using AvRichTextBox!
+                        Console.WriteLine("[RTF] Setting IsRtfContent=true and RtfContent on UI thread");
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            IsRtfContent = true;
+                            RtfContent = namespaceInfo.InfoContent;
+                            Console.WriteLine($"[RTF] Properties set: IsRtfContent={IsRtfContent}, RtfContent length={RtfContent?.Length ?? 0}");
+                        }, Avalonia.Threading.DispatcherPriority.Normal);
+                    }
+                    else if (namespaceInfo.InfoContent.TrimStart().StartsWith("{"))
+                    {
+                        // RTE (JSON) content
+                        Console.WriteLine("[RTF] Detected RTE (JSON) content");
+                        IsRtfContent = false;
+                        LoadRteContent(namespaceInfo.InfoContent);
+                    }
+                    else
+                    {
+                        // Plain text content
+                        Console.WriteLine("[RTF] Detected plain text content");
+                        IsRtfContent = false;
+                        AddLogEntry(namespaceInfo.InfoContent);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[RTF] InfoContent is empty");
+                    IsRtfContent = false;
                 }
             }
             catch (Exception ex)
             {
+                LogExceptionToDebugConsole(ex, "OnNamespaceSelected");
                 AddLogEntry($"[ERROR] Failed to load namespace config: {ex.Message}");
             }
         }
@@ -988,6 +1271,95 @@ namespace HoloPatcher.ViewModels
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Attempts to auto-open a mod if a tslpatchdata folder exists next to the executable
+        /// that contains changes.ini and/or namespaces.ini.
+        /// </summary>
+        private async Task TryAutoOpenMod()
+        {
+            try
+            {
+                // Get the directory where the executable is located
+                string exeDirectory = AppContext.BaseDirectory;
+                if (string.IsNullOrEmpty(exeDirectory))
+                {
+                    // Fallback to current directory
+                    exeDirectory = Directory.GetCurrentDirectory();
+                }
+
+                // Check for tslpatchdata folder next to executable
+                string tslPatchDataPath = Path.Combine(exeDirectory, "tslpatchdata");
+
+                // Check if tslpatchdata folder exists and contains the required files
+                if (Directory.Exists(tslPatchDataPath))
+                {
+                    string changesIniPath = Path.Combine(tslPatchDataPath, "changes.ini");
+                    string namespacesIniPath = Path.Combine(tslPatchDataPath, "namespaces.ini");
+
+                    // Check if at least one of the required files exists
+                    if (File.Exists(changesIniPath) || File.Exists(namespacesIniPath))
+                    {
+                        // Auto-open the mod using the parent directory (the mod root)
+                        string modPath = exeDirectory;
+                        AddLogEntry($"Auto-opening mod from: {modPath}");
+
+                        // Hide the mod selection UI since we're auto-opening
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            IsModSelectionVisible = false;
+                        });
+
+                        // Load the mod
+                        await LoadModFromPath(modPath);
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail - just continue normally
+                LogExceptionToDebugConsole(ex, "TryAutoOpenMod");
+                Debug.WriteLine($"Failed to auto-open mod: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Represents a formatted log entry with its log type for color/styling.
+    /// Matches Python's log tag system.
+    /// </summary>
+    public class FormattedLogEntry
+    {
+        public string Message { get; }
+        public LogType LogType { get; }
+        public string TagName { get; }
+
+        public FormattedLogEntry(string message, LogType logType)
+        {
+            Message = message;
+            LogType = logType;
+
+            // Map LogType to tag name matching Python's log_to_tag function
+            switch (logType)
+            {
+                case LogType.Note:
+                    TagName = "INFO";
+                    break;
+                case LogType.Verbose:
+                    TagName = "DEBUG";
+                    break;
+                case LogType.Warning:
+                    TagName = "WARNING";
+                    break;
+                case LogType.Error:
+                    TagName = "ERROR";
+                    break;
+                default:
+                    TagName = "INFO";
+                    break;
+            }
         }
     }
 }

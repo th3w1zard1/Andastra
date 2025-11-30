@@ -33,14 +33,13 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
         public int Size(CodeRoot root)
         {
-            if (Builtin == DataType.Struct && Struct != null)
+            if (Builtin == DataType.Struct)
             {
-                // Can be null if struct not found
-                if (root.StructMap.TryGetValue(Struct, out Struct structDef))
+                if (Struct == null)
                 {
-                    return structDef.Size(root);
+                    throw new CompileError("Struct type has no name");
                 }
-                throw new CompileError($"Unknown struct type: {Struct}");
+                return root.StructMap[Struct].Size(root);
             }
             return Builtin.GetSize();
         }
@@ -96,11 +95,7 @@ namespace TSLPatcher.Core.Formats.NCS.Compiler
 
         public override string ToString()
         {
-            if (Builtin == DataType.Struct && Struct != null)
-            {
-                return $"struct {Struct}";
-            }
-            return Builtin.ToScriptString();
+            return $"DynamicDataType(builtin={Builtin}({Builtin.ToString().ToLowerInvariant()}), struct={Struct})";
         }
 
         public static bool operator ==([CanBeNull] DynamicDataType left, [CanBeNull] DynamicDataType right)
