@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -10,10 +11,17 @@ namespace HoloPatcher
     public partial class App : Application
     {
         private UpdateManager _updateManager;
+        private bool _cleanupRegistered = false;
+        private bool _cleanupExecuted = false;
+        private readonly object _cleanupLock = new object();
 
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
+            
+            // Register process exit handler early to catch forced terminations
+            // This provides a fallback if ShutdownRequested doesn't fire
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
         public override void OnFrameworkInitializationCompleted()
@@ -34,14 +42,28 @@ namespace HoloPatcher
                 // Initialize and start update manager on UI thread
                 InitializeUpdateManager();
 
-                // Handle cleanup on shutdown
-                desktop.ShutdownRequested += (sender, e) =>
+                // Register cleanup handler for normal shutdown
+                // This is the primary cleanup path for graceful shutdown
+                if (!_cleanupRegistered)
                 {
-                    _updateManager?.Dispose();
-                };
+                    desktop.ShutdownRequested += OnShutdownRequested;
+                    _cleanupRegistered = true;
+                }
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private void OnShutdownRequested(object sender, ShutdownRequestedEventArgs e)
+        {
+            CleanupUpdateManager();
+        }
+
+        private void OnProcessExit(object sender, EventArgs e)
+        {
+            // Fallback cleanup for forced termination or crashes
+            // This ensures cleanup even if ShutdownRequested doesn't fire
+            CleanupUpdateManager();
         }
 
         private void InitializeUpdateManager()
@@ -65,6 +87,43 @@ namespace HoloPatcher
             }
         }
 
+        /// <summary>
+        /// Safely disposes the update manager. This method is idempotent and thread-safe.
+        /// Called from multiple cleanup paths to ensure reliable resource disposal.
+        /// Uses double-checked locking pattern to prevent race conditions.
+        /// </summary>
+        private void CleanupUpdateManager()
+        {
+            // Early exit if already cleaned up (fast path)
+            if (_cleanupExecuted)
+            {
+                return;
+            }
+
+            lock (_cleanupLock)
+            {
+                // Double-check after acquiring lock
+                if (_cleanupExecuted || _updateManager == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    _updateManager.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't throw - cleanup should never crash the app
+                    System.Diagnostics.Debug.WriteLine($"Error disposing update manager: {ex.Message}");
+                }
+                finally
+                {
+                    _updateManager = null;
+                    _cleanupExecuted = true;
+                }
+            }
+        }
     }
 }
 
