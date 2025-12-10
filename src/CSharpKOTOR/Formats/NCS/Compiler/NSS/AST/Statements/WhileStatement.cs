@@ -51,19 +51,22 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // JZ consumes the condition value from stack
-            NCSInstruction jumpToEnd = ncs.Add(NCSInstructionType.JZ, new List<object>());
+            // Matching PyKotor classes.py line 2623: ncs.add(NCSInstructionType.JZ, jump=loopend)
+            ncs.Add(NCSInstructionType.JZ, jump: loopEnd);
             // Restore temp_stack since JZ consumed the condition
             block.TempStack = initialTempStack;
 
             // Compile loop body
+            // Matching PyKotor classes.py line 2627: self.block.compile(ncs, root, block, return_instruction, loopend, loopstart)
             Body.Compile(ncs, root, block, returnInstruction, loopEnd, loopStart);
 
             // Jump back to loop start
+            // Matching PyKotor classes.py line 2628: ncs.add(NCSInstructionType.JMP, jump=loopstart)
             ncs.Add(NCSInstructionType.JMP, jump: loopStart);
 
             // Loop end marker
+            // Matching PyKotor classes.py line 2630: ncs.instructions.append(loopend)
             ncs.Instructions.Add(loopEnd);
-            jumpToEnd.Jump = loopEnd;
 
             return DynamicDataType.VOID;
         }
