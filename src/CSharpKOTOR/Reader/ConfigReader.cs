@@ -1139,7 +1139,9 @@ namespace CSharpKOTOR.Reader
             else if (lowerKey.Contains("(lang"))
             {
                 int substringId = ParseIntValue(key.Substring(lowerKey.IndexOf("(lang") + 5, key.Length - lowerKey.IndexOf("(lang") - 6));
-                (Language language, Gender gender) = CSharpKOTOR.Common.LocalizedString.SubstringPair(substringId);
+                Language language;
+                Gender gender;
+                CSharpKOTOR.Common.LocalizedString.SubstringPair(substringId, out language, out gender);
                 var locstring = new LocalizedStringDelta();
                 locstring.SetData(language, gender, strValue);
                 value = new FieldValueConstant(locstring);
@@ -1445,7 +1447,9 @@ namespace CSharpKOTOR.Reader
                 }
 
                 int substringId = ParseIntValue(langKey.Substring(4));
-                (Language language, Gender gender) = LocalizedString.SubstringPair(substringId);
+                Language language;
+                Gender gender;
+                LocalizedString.SubstringPair(substringId, out language, out gender);
                 string formattedText = NormalizeTslPatcherCRLF(text);
                 lStringDelta.SetData(language, gender, formattedText);
             }

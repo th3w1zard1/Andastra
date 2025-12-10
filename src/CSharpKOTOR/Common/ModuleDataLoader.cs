@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Common
 
         private TwoDA Load2da(string name)
         {
-            ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, ModuleDataSearch.SearchOrder2DA);
+            Installation.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, ModuleDataSearch.SearchOrder2DA);
             if (res == null)
             {
                 return new TwoDA();

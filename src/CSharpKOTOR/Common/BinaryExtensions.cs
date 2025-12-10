@@ -62,7 +62,9 @@ namespace CSharpKOTOR.Common
             for (int i = 0; i < stringCount; i++)
             {
                 uint stringId = reader.ReadUInt32();
-                (Language language, Gender gender) = LocalizedString.SubstringPair((int)stringId);
+                Language language;
+                Gender gender;
+                LocalizedString.SubstringPair((int)stringId, out language, out gender);
                 uint length = reader.ReadUInt32();
 
                 // Get encoding for the language

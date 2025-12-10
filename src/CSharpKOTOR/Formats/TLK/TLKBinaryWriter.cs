@@ -134,9 +134,9 @@ namespace CSharpKOTOR.Formats.TLK
                     return Encoding.GetEncoding("windows-1250"); // cp1250
                 case Language.Korean:
                     return Encoding.GetEncoding("euc-kr");
-                case Language.Chinese_Traditional:
+                case Language.ChineseTraditional:
                     return Encoding.GetEncoding("big5");
-                case Language.Chinese_Simplified:
+                case Language.ChineseSimplified:
                     return Encoding.GetEncoding("gb2312");
                 case Language.Japanese:
                     return Encoding.GetEncoding("shift_jis");

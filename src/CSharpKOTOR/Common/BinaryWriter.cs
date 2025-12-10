@@ -63,7 +63,11 @@ namespace CSharpKOTOR.Common
 
             if (source is RawBinaryWriterFile fileWriter)
             {
-                return new RawBinaryWriterFile(fileWriter.GetStream(), offset);
+                // Get the underlying stream from the file writer
+                // Note: RawBinaryWriterFile doesn't expose stream directly, so we need to get it from Data()
+                byte[] data = fileWriter.Data();
+                MemoryStream memStream = new MemoryStream(data);
+                return new RawBinaryWriterFile(memStream, offset);
             }
 
             if (source is RawBinaryWriterMemory memoryWriter)
