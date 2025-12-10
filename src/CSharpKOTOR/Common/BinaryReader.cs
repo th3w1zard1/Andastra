@@ -353,67 +353,85 @@ namespace CSharpKOTOR.Common
         }
 
         /// <summary>
-        /// Reads a string of specified length with encoding support.
-        /// Trims null bytes and characters after first null.
+        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/stream.py:726-759
+        // Original: def read_string(self, length: int, encoding: str | None = "windows-1252", errors: Literal["ignore", "strict", "replace"] = "ignore") -> str:
+        /// <summary>
+        /// Reads a string of specified length with encoding support and null trimming.
         /// </summary>
-        public string ReadString(int length, [CanBeNull] string encoding = "windows-1252", bool strict = true)
+        public string ReadString(int length, [CanBeNull] string encoding = "windows-1252", string errors = "ignore")
         {
             ExceedCheck(length);
             byte[] bytes = new byte[length];
-            _stream.Read(bytes, 0, length);
-            _position += length;
+            int read = _stream.Read(bytes, 0, length);
+            _position += read;
 
-            Encoding enc = encoding != null
-                ? Encoding.GetEncoding(encoding)
-                : Encoding.UTF8;
+            Encoding enc;
+            if (encoding == null)
+            {
+                enc = Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+            }
+            else
+            {
+                DecoderFallback decoderFallback = DecoderFallback.ReplacementFallback;
+                if (errors == "strict")
+                {
+                    decoderFallback = DecoderFallback.ExceptionFallback;
+                }
+                else if (errors == "replace")
+                {
+                    decoderFallback = DecoderFallback.ReplacementFallback;
+                }
 
-            string text = enc.GetString(bytes);
+                enc = Encoding.GetEncoding(encoding, EncoderFallback.ReplacementFallback, decoderFallback);
+            }
 
-            // Trim at first null byte
+            string text;
+            try
+            {
+                text = enc.GetString(bytes, 0, read);
+            }
+            catch (DecoderFallbackException)
+            {
+                if (errors == "strict")
+                {
+                    throw;
+                }
+                text = enc.GetString(bytes, 0, read);
+            }
+
             int nullIndex = text.IndexOf('\0');
             if (nullIndex >= 0)
             {
-                text = text.Substring(0, nullIndex);
+                text = text.Substring(0, nullIndex).TrimEnd('\0');
+                text = text.Replace("\0", string.Empty);
             }
 
-            return text.Replace("\0", "");
+            return text;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/stream.py:761-799
+        // Original: def read_terminated_string(self, terminator: str = "\0", length: int = -1, encoding: str = "ascii", *, strict: bool = True) -> str:
         /// <summary>
-        /// Reads a null-terminated string from the stream.
+        /// Reads a string until a terminator or length limit is reached.
         /// </summary>
         public string ReadTerminatedString(char terminator = '\0', int length = -1, string encoding = "ascii", bool strict = true)
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             int bytesRead = 0;
 
-            var enc = Encoding.GetEncoding(encoding);
+            Encoding enc = Encoding.GetEncoding(encoding, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+            string lastChar = string.Empty;
 
-            while (length == -1 || bytesRead < length)
+            while (lastChar != terminator.ToString() && (length == -1 || bytesRead < length))
             {
-                if (_position >= _size)
-                {
-                    break;
-                }
-
+                sb.Append(lastChar);
                 ExceedCheck(1);
-                byte[] charBytes = new byte[1];
-                _stream.Read(charBytes, 0, 1);
+                byte[] charBytes = ReadBytes(1);
                 bytesRead++;
-                _position++;
 
                 try
                 {
-                    string decoded = enc.GetString(charBytes);
-                    if (!string.IsNullOrEmpty(decoded))
-                    {
-                        char ch = decoded[0];
-                        if (ch == terminator)
-                        {
-                            break;
-                        }
-                        sb.Append(ch);
-                    }
+                    lastChar = enc.GetString(charBytes);
                 }
                 catch
                 {
@@ -421,11 +439,15 @@ namespace CSharpKOTOR.Common
                     {
                         break;
                     }
+                    lastChar = string.Empty;
+                }
 
+                if (string.IsNullOrEmpty(lastChar) && strict)
+                {
+                    break;
                 }
             }
 
-            // Skip remaining bytes if length specified
             if (length != -1)
             {
                 int remaining = length - bytesRead;
@@ -435,7 +457,13 @@ namespace CSharpKOTOR.Common
                 }
             }
 
-            return sb.ToString();
+            string result = sb.ToString();
+            if (result.Length > 0)
+            {
+                result = result.Substring(1);
+            }
+
+            return result;
         }
 
         /// <summary>
