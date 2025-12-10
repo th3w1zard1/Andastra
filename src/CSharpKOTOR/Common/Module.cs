@@ -207,4 +207,247 @@ namespace CSharpKOTOR.Common
             return ResourceType.FromExtension(ModType.GetExtension());
         }
     }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:215-258
+    // Original: class ModulePieceResource(Capsule):
+    /// <summary>
+    /// Base class for module piece resources (archive files that make up a module).
+    /// </summary>
+    public abstract class ModulePieceResource : Capsule
+    {
+        public ModulePieceInfo PieceInfo { get; }
+        public List<FileResource> MissingResources { get; } = new List<FileResource>();
+
+        protected ModulePieceResource(string path, bool createIfNotExist = false)
+            : base(path, createIfNotExist)
+        {
+            CaseAwarePath pathObj = new CaseAwarePath(path);
+            PieceInfo = ModulePieceInfo.FromFilename(pathObj.Name);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:216-234
+        // Original: def __new__(cls, path: os.PathLike | str, *args, **kwargs):
+        // Factory method to create the appropriate ModulePieceResource subclass based on file extension
+        public static ModulePieceResource Create(string path, bool createIfNotExist = false)
+        {
+            if (path == null)
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+
+            CaseAwarePath pathObj = new CaseAwarePath(path);
+            ModulePieceInfo pieceInfo = ModulePieceInfo.FromFilename(pathObj.Name);
+
+            return pieceInfo.ModType switch
+            {
+                KModuleType.DATA => new ModuleDataPiece(path, createIfNotExist),
+                KModuleType.MAIN => new ModuleLinkPiece(path, createIfNotExist),
+                KModuleType.K2_DLG => new ModuleDLGPiece(path, createIfNotExist),
+                KModuleType.MOD => new ModuleFullOverridePiece(path, createIfNotExist),
+                _ => throw new ArgumentException($"Unknown module type: {pieceInfo.ModType}")
+            };
+        }
+
+        public string Filename()
+        {
+            return PieceInfo.Filename();
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:260-312
+    // Original: class ModuleLinkPiece(ModulePieceResource):
+    /// <summary>
+    /// Represents the main module archive (.rim) containing IFO, ARE, and GIT files.
+    /// </summary>
+    public class ModuleLinkPiece : ModulePieceResource
+    {
+        public ModuleLinkPiece(string path, bool createIfNotExist = false)
+            : base(path, createIfNotExist)
+        {
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:261-267
+        // Original: def ifo(self) -> GFF:
+        public GFF Ifo()
+        {
+            byte[] lookup = GetResource("module", ResourceType.IFO);
+            if (lookup == null)
+            {
+                string moduleIfoPath = Path.Combine(Path.GetDirectoryName(Path.GetResolvedPath()), "module.ifo");
+                throw new FileNotFoundException($"Module IFO not found", moduleIfoPath);
+            }
+
+            var reader = new Formats.GFF.GFFBinaryReader(lookup);
+            return reader.Load();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:269-295
+        // Original: def module_id(self) -> ResRef | None:
+        public ResRef ModuleId()
+        {
+            // Get link resources (non-IFO resources that MAIN contains)
+            var linkResources = new List<CapsuleResource>();
+            foreach (CapsuleResource resource in this)
+            {
+                if (resource.ResType != ResourceType.IFO && KModuleType.MAIN.Contains(resource.ResType, null))
+                {
+                    linkResources.Add(resource);
+                }
+            }
+
+            if (linkResources.Count > 0)
+            {
+                string checkResname = linkResources[0].Identifier.LowerResName;
+                if (linkResources.All(res => res.Identifier.LowerResName == checkResname))
+                {
+                    Console.WriteLine($"Module ID, Check 1: All link resources have the same resref of '{checkResname}'");
+                    return new ResRef(checkResname);
+                }
+            }
+
+            GFF gffIfo = Ifo();
+            if (gffIfo.Root.Exists("Mod_Area_list"))
+            {
+                GFFFieldType? actualFtype = gffIfo.Root.GetFieldType("Mod_Area_list");
+                if (actualFtype != GFFFieldType.List)
+                {
+                    new Logger.RobustLogger().Warning($"{Filename()} has IFO with incorrect field 'Mod_Area_list' type '{actualFtype}', expected 'List'");
+                }
+                else
+                {
+                    GFFList areaList = gffIfo.Root.GetList("Mod_Area_list");
+                    if (areaList == null)
+                    {
+                        new Logger.RobustLogger().Error($"{Filename()}: Module.IFO has a Mod_Area_list field, but it is not a valid list.");
+                        return null;
+                    }
+
+                    foreach (GFFStruct gffStruct in areaList)
+                    {
+                        if (gffStruct.Exists("Area_Name"))
+                        {
+                            ResRef areaLocalizedName = gffStruct.GetResRef("Area_Name");
+                            if (areaLocalizedName != null && areaLocalizedName.ToString().Trim().Length > 0)
+                            {
+                                Console.WriteLine($"Module ID, Check 2: Found in Mod_Area_list: '{areaLocalizedName}'");
+                                return areaLocalizedName;
+                            }
+                        }
+                    }
+
+                    Console.WriteLine($"{Filename()}: Module.IFO does not contain a valid Mod_Area_list. Could not get the module id!");
+                }
+            }
+            else
+            {
+                new Logger.RobustLogger().Error($"{Filename()}: Module.IFO does not have an existing Mod_Area_list.");
+            }
+
+            return null;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:297-312
+        // Original: def area_name(self) -> LocalizedString | ResRef:
+        public LocalizedString AreaName()
+        {
+            CapsuleResource areaFileRes = null;
+            foreach (CapsuleResource resource in this)
+            {
+                if (resource.ResType == ResourceType.ARE)
+                {
+                    areaFileRes = resource;
+                    break;
+                }
+            }
+
+            if (areaFileRes != null)
+            {
+                byte[] areData = areaFileRes.Data;
+                var reader = new Formats.GFF.GFFBinaryReader(areData);
+                GFF gffAre = reader.Load();
+
+                if (gffAre.Root.Exists("Name"))
+                {
+                    GFFFieldType? actualFtype = gffAre.Root.GetFieldType("Name");
+                    if (actualFtype != GFFFieldType.LocalizedString)
+                    {
+                        throw new ArgumentException($"{Filename()} has IFO with incorrect field 'Name' type '{actualFtype}', expected 'LocalizedString'");
+                    }
+
+                    LocalizedString result = gffAre.Root.GetLocString("Name");
+                    if (result == null)
+                    {
+                        new Logger.RobustLogger().Error($"{Filename()}: ARE has a Name field, but it is not a valid LocalizedString.");
+                        return LocalizedString.FromInvalid();
+                    }
+
+                    Console.WriteLine($"Check 1 result: '{result}'");
+                    return result;
+                }
+            }
+
+            throw new ArgumentException($"Failed to find an ARE for module '{PieceInfo.Filename()}'");
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:315
+    // Original: class ModuleDataPiece(ModulePieceResource): ...
+    /// <summary>
+    /// Represents the data module archive (_s.rim) containing module resources.
+    /// </summary>
+    public class ModuleDataPiece : ModulePieceResource
+    {
+        public ModuleDataPiece(string path, bool createIfNotExist = false)
+            : base(path, createIfNotExist)
+        {
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:318
+    // Original: class ModuleDLGPiece(ModulePieceResource): ...
+    /// <summary>
+    /// Represents the KotOR 2 dialog archive (_dlg.erf) containing dialog files.
+    /// </summary>
+    public class ModuleDLGPiece : ModulePieceResource
+    {
+        public ModuleDLGPiece(string path, bool createIfNotExist = false)
+            : base(path, createIfNotExist)
+        {
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:321
+    // Original: class ModuleFullOverridePiece(ModuleDLGPiece, ModuleDataPiece, ModuleLinkPiece): ...
+    /// <summary>
+    /// Represents the community override module archive (.mod) that replaces all other module files.
+    /// This class combines functionality from ModuleDLGPiece, ModuleDataPiece, and ModuleLinkPiece.
+    /// </summary>
+    public class ModuleFullOverridePiece : ModulePieceResource
+    {
+        private ModuleLinkPiece _linkPiece;
+
+        public ModuleFullOverridePiece(string path, bool createIfNotExist = false)
+            : base(path, createIfNotExist)
+        {
+            // Create a ModuleLinkPiece view of this same file to access link piece methods
+            _linkPiece = new ModuleLinkPiece(path, createIfNotExist);
+        }
+
+        // This class combines functionality from ModuleDLGPiece, ModuleDataPiece, and ModuleLinkPiece
+        // In C#, we implement the methods directly rather than using multiple inheritance
+        public GFF Ifo()
+        {
+            return _linkPiece.Ifo();
+        }
+
+        public ResRef ModuleId()
+        {
+            return _linkPiece.ModuleId();
+        }
+
+        public LocalizedString AreaName()
+        {
+            return _linkPiece.AreaName();
+        }
+    }
 }
