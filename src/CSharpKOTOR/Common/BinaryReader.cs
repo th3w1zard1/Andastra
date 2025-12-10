@@ -89,6 +89,38 @@ namespace CSharpKOTOR.Common
             return new RawBinaryReader(stream, offset, size);
         }
 
+        public static RawBinaryReader FromAuto(object source, int offset = 0, int? size = null)
+        {
+            if (source is string path)
+            {
+                return FromFile(path, offset, size);
+            }
+
+            if (source is byte[] bytes)
+            {
+                return FromBytes(bytes, offset, size);
+            }
+
+            if (source is MemoryStream ms)
+            {
+                return FromStream(ms, offset, size);
+            }
+
+            if (source is Stream stream && stream.CanSeek)
+            {
+                return FromStream(stream, offset, size);
+            }
+
+            var existing = source as RawBinaryReader;
+            if (existing != null)
+            {
+                // share the same underlying stream by creating from stream at current offset
+                return FromStream(existing._stream, existing._offset, existing._size);
+            }
+
+            throw new ArgumentException("Unsupported source type for FromAuto");
+        }
+
         public static byte[] LoadFile(string path, int offset = 0, int size = -1)
         {
             using (FileStream reader = File.OpenRead(path))
