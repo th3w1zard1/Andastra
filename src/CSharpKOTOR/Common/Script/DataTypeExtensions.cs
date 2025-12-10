@@ -3,6 +3,8 @@ using System;
 namespace CSharpKOTOR.Common.Script
 {
 
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:120-129
+    // Original: def size(self) -> int:
     /// <summary>
     /// Extension methods for DataType enum.
     /// 1:1 port from Python DataType methods in pykotor/common/script.py

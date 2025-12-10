@@ -3,6 +3,8 @@ using System;
 namespace CSharpKOTOR.Common.Script
 {
 
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:19-49
+    // Original: class ScriptConstant:
     /// <summary>
     /// Represents a NWScript constant definition.
     /// 

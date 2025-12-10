@@ -4,6 +4,8 @@ using JetBrains.Annotations;
 namespace CSharpKOTOR.Common.Script
 {
 
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:51-73
+    // Original: class ScriptParam:
     /// <summary>
     /// Represents a parameter in a NWScript function signature.
     /// 

@@ -5,6 +5,8 @@ using System.Linq;
 namespace CSharpKOTOR.Common.Script
 {
 
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:75-104
+    // Original: class ScriptFunction:
     /// <summary>
     /// Represents a NWScript function signature.
     /// 
