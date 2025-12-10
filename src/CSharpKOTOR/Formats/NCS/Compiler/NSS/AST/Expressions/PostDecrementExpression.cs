@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
 
@@ -19,22 +20,41 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
         public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
         {
-            (bool isGlobal, DynamicDataType variableType, int stackIndex) = FieldAccess.GetScoped(block, root);
+            // Matching PyKotor classes.py lines 2942-2965
+            // First compile the field access to push value to stack
+            DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
+            block.TempStack += 4; // Matching PyKotor line 2944
 
             if (variableType.Builtin != DataType.Int && variableType.Builtin != DataType.Float)
             {
+                string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
                 throw new CompileError(
-                    $"Decrement operator requires int or float type, got {variableType.Builtin.ToScriptString()}");
+                    $"Decrement operator (--) requires integer variable, got {variableType.Builtin.ToScriptString().ToLower()}\n" +
+                    $"  Variable: {varName}");
             }
 
-            // Push current value onto stack first (before decrement)
-            NCSInstructionType copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
-            ncs.Add(copyInst, new List<object> { stackIndex, variableType.Size(root) });
-            block.TempStack += variableType.Size(root);
+            GetScopedResult scoped = FieldAccess.GetScoped(block, root);
+            bool isGlobal = scoped.IsGlobal;
+            int stackIndex = scoped.Offset;
+            if (scoped.IsConst)
+            {
+                string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
+                throw new CompileError($"Cannot decrement const variable '{varName}'");
+            }
 
-            // Then decrement the variable
-            NCSInstructionType instructionType = isGlobal ? NCSInstructionType.DECxBP : NCSInstructionType.DECxSP;
-            ncs.Add(instructionType, new List<object> { stackIndex });
+            // Decrement the variable (value is already on stack from FieldAccess.Compile)
+            // Matching PyKotor lines 2959-2962
+            if (isGlobal)
+            {
+                ncs.Add(NCSInstructionType.DECxBP, new List<object> { stackIndex });
+            }
+            else
+            {
+                ncs.Add(NCSInstructionType.DECxSP, new List<object> { stackIndex });
+            }
+
+            // Matching PyKotor line 2964
+            block.TempStack -= 4;
 
             return variableType;
         }
