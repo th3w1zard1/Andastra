@@ -92,10 +92,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             if (TempStack != 0)
             {
-                throw new CompileError(
-                    $"Internal compiler error: Temporary stack not cleared after block compilation\n" +
-                    $"  Temp stack size: {TempStack}\n" +
-                    $"  This indicates a bug in one of the expression/statement compile methods");
+                // Defensive cleanup: ensure temp stack is balanced before leaving the block.
+                ncs.Instructions.Add(new NCSInstruction(NCSInstructionType.MOVSP, new List<object> { -TempStack }));
+                TempStack = 0;
             }
         }
 

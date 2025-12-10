@@ -25,6 +25,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             [CanBeNull] NCSInstruction breakInstruction,
             [CanBeNull] NCSInstruction continueInstruction)
         {
+            int tempStackBefore = block.TempStack;
             DynamicDataType returnType = DynamicDataType.VOID;
 
             if (Expression != null)
@@ -33,10 +34,12 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 int scopeSize = block.FullScopeSize(root);
                 ncs.Add(NCSInstructionType.CPDOWNSP, new List<object> { -scopeSize - returnType.Size(root) * 2, returnType.Size(root) });
                 ncs.Add(NCSInstructionType.MOVSP, new List<object> { -returnType.Size(root) });
+                block.TempStack = tempStackBefore;
             }
 
             ncs.Add(NCSInstructionType.MOVSP, new List<object> { -block.FullScopeSize(root) });
             ncs.Add(NCSInstructionType.JMP, jump: returnInstruction);
+            block.TempStack = tempStackBefore;
             return returnType;
         }
 

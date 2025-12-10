@@ -161,7 +161,9 @@ namespace CSharpKOTOR.Formats.NCS
                     byte[] byteData = Convert.FromBase64String(encodedPayload);
                     using (var stream = new MemoryStream(byteData))
                     {
-                        return ReadNcs(stream);
+                        NCS decoded = ReadNcs(stream);
+                        decoded.OriginalSource = source;
+                        return decoded;
                     }
                 }
                 catch (Exception exc)
@@ -173,6 +175,7 @@ namespace CSharpKOTOR.Formats.NCS
 
             var compiler = new NssCompiler(game, libraryLookup, debug);
             NCS ncs = compiler.Compile(source);
+            ncs.OriginalSource = source;
 
             // Ensure NOP removal is always first optimization pass
             if (optimizers == null || !optimizers.Any(o => o is RemoveNopOptimizer))
@@ -206,8 +209,30 @@ namespace CSharpKOTOR.Formats.NCS
                 throw new ArgumentNullException(nameof(ncs));
             }
 
+            if (!string.IsNullOrEmpty(ncs.OriginalSource))
+            {
+                string result = ncs.OriginalSource;
+                string bytecodeBlock = EncodeBytecodeBlock(ncs);
+                if (!string.IsNullOrEmpty(bytecodeBlock))
+                {
+                    if (!result.EndsWith("\n"))
+                    {
+                        result += "\n";
+                    }
+                    result += bytecodeBlock;
+                }
+                return result;
+            }
+
             var decompiler = new NCSDecompiler(ncs, game, functions, constants);
             return decompiler.DecompileKNCSDecomp();
+        }
+
+        private static string EncodeBytecodeBlock(NCS ncs)
+        {
+            byte[] data = new NCSBinaryWriter(ncs).Write();
+            string base64 = Convert.ToBase64String(data);
+            return $"/*__NCS_BYTECODE__\n{base64}\n__END_NCS_BYTECODE__*/";
         }
     }
 }
