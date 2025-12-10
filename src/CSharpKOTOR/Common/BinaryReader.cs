@@ -469,18 +469,20 @@ namespace CSharpKOTOR.Common
         /// </summary>
         public string ReadTerminatedString(char terminator = '\0', int length = -1, string encoding = "ascii", bool strict = true)
         {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:183-212
+            // Original: The method appends an empty string initially, then removes the first character
+            // This effectively skips the first character read, which is the intended behavior
             StringBuilder sb = new StringBuilder();
             int bytesRead = 0;
 
             Encoding enc = Encoding.GetEncoding(encoding, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
             string lastChar = string.Empty;
 
+            // Append empty string initially to match old behavior
+            sb.Append(lastChar);
+
             while (lastChar != terminator.ToString() && (length == -1 || bytesRead < length))
             {
-                if (!string.IsNullOrEmpty(lastChar))
-                {
-                    sb.Append(lastChar);
-                }
                 ExceedCheck(1);
                 byte[] charBytes = ReadBytes(1);
                 bytesRead++;
@@ -488,6 +490,7 @@ namespace CSharpKOTOR.Common
                 try
                 {
                     lastChar = enc.GetString(charBytes);
+                    sb.Append(lastChar);
                 }
                 catch
                 {
@@ -496,6 +499,7 @@ namespace CSharpKOTOR.Common
                         break;
                     }
                     lastChar = string.Empty;
+                    sb.Append(lastChar);
                 }
 
                 if (string.IsNullOrEmpty(lastChar) && strict)
@@ -513,7 +517,14 @@ namespace CSharpKOTOR.Common
                 }
             }
 
-            return sb.ToString();
+            // Remove the first character (the initial empty string) to match old behavior
+            string result = sb.ToString();
+            if (result.Length > 0)
+            {
+                result = result.Substring(1);
+            }
+
+            return result;
         }
 
         /// <summary>

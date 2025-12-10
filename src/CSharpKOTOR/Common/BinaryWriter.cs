@@ -63,11 +63,12 @@ namespace CSharpKOTOR.Common
 
             if (source is RawBinaryWriterFile fileWriter)
             {
-                // Get the underlying stream from the file writer
-                // Note: RawBinaryWriterFile doesn't expose stream directly, so we need to get it from Data()
-                byte[] data = fileWriter.Data();
-                MemoryStream memStream = new MemoryStream(data);
-                return new RawBinaryWriterFile(memStream, offset);
+                // Preserve the original stream connection and apply the new offset
+                // Matching PyKotor implementation: preserve stream connection when creating from existing file writer
+                Stream originalStream = fileWriter.GetStream();
+                int originalOffset = fileWriter.GetOffset();
+                // The new offset is relative to the original stream position
+                return new RawBinaryWriterFile(originalStream, originalOffset + offset);
             }
 
             if (source is RawBinaryWriterMemory memoryWriter)
@@ -126,6 +127,22 @@ namespace CSharpKOTOR.Common
     {
         private readonly Stream _stream;
         private readonly int _offset;
+
+        /// <summary>
+        /// Gets the underlying stream. Used by ToAuto to preserve stream connection.
+        /// </summary>
+        internal Stream GetStream()
+        {
+            return _stream;
+        }
+
+        /// <summary>
+        /// Gets the offset. Used by ToAuto to preserve offset.
+        /// </summary>
+        internal int GetOffset()
+        {
+            return _offset;
+        }
 
         public RawBinaryWriterFile(Stream stream, int offset = 0)
         {
