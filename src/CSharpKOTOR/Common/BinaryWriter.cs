@@ -46,6 +46,47 @@ namespace CSharpKOTOR.Common
             return new RawBinaryWriterMemory(data ?? Array.Empty<byte>());
         }
 
+        /// <summary>
+        /// Creates a writer from a path, stream, byte array, or existing writer (auto-detect).
+        /// </summary>
+        public static RawBinaryWriter ToAuto(object source, int offset = 0)
+        {
+            if (source is string path)
+            {
+                return ToFile(path);
+            }
+
+            if (source is byte[] bytes)
+            {
+                return ToByteArray(bytes);
+            }
+
+            if (source is RawBinaryWriterFile fileWriter)
+            {
+                return new RawBinaryWriterFile(fileWriter.GetStream(), offset);
+            }
+
+            if (source is RawBinaryWriterMemory memoryWriter)
+            {
+                return new RawBinaryWriterMemory(memoryWriter.Data(), offset);
+            }
+
+            if (source is Stream stream && stream.CanWrite)
+            {
+                return ToStream(stream, offset);
+            }
+
+            throw new ArgumentException("Unsupported source type for ToAuto");
+        }
+
+        /// <summary>
+        /// Convenience method to write raw data to a file.
+        /// </summary>
+        public static void Dump(string path, byte[] data)
+        {
+            File.WriteAllBytes(path, data);
+        }
+
         public abstract void Close();
         public abstract int Size();
         public abstract byte[] Data();
