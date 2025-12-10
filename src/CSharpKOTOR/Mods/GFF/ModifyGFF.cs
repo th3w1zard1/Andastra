@@ -517,25 +517,20 @@ namespace CSharpKOTOR.Mods.GFF
 
             // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
-            (string containerPath, string pathName) = SplitPath(Path);
+            (string parentPath, string pathName) = SplitPath(Path);
+            string containerPath = string.IsNullOrEmpty(parentPath) ? (Path ?? "") : parentPath;
             if (pathName == ">>##INDEXINLIST##<<")
             {
-                (containerPath, _) = SplitPath(Path);
-            }
-
-            string navigatePath = Path;
-            if (FieldType == GFFFieldType.Struct && pathName == Label)
-            {
-                navigatePath = containerPath;
+                containerPath = parentPath;
             }
 
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, container_path)
             // Can be null if not found
-            object navigatedContainer = NavigateContainers(rootStruct, navigatePath);
+            object navigatedContainer = NavigateContainers(rootStruct, containerPath);
             if (!(navigatedContainer is GFFStruct structContainer))
             {
                 string reason = navigatedContainer is null ? "does not exist!" : "is not an instance of a GFFStruct.";
-                logger.AddError($"Unable to add new GFF Field '{Label}' at GFF Path '{navigatePath}'! This {reason}");
+                logger.AddError($"Unable to add new GFF Field '{Label}' at GFF Path '{containerPath}'! This {reason}");
                 return;
             }
 
