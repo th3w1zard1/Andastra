@@ -49,7 +49,7 @@ namespace GenerateScriptDefs
         {
             while (idx < tokens.Count)
             {
-                if (tokens[idx] is NssSeparator sep &&
+                if (tokens[idx] is NssSeparator sep && 
                     (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.NewLine || sep.Separator == NssSeparators.Tab))
                 {
                     idx++;
@@ -71,12 +71,6 @@ namespace GenerateScriptDefs
         {
             // Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py:78-220
             // Original: def parse_constant_from_tokens(tokens: list, start_idx: int, lines: list[str]) -> tuple[dict, int] | None:
-            if (startIdx >= tokens.Count)
-            {
-                return null;
-            }
-
-            // Skip whitespace and comments
             int idx = SkipWhitespace(tokens, startIdx);
             if (idx >= tokens.Count)
             {
@@ -84,8 +78,14 @@ namespace GenerateScriptDefs
             }
 
             // Pattern: TYPE [whitespace] IDENTIFIER [whitespace] = [whitespace] VALUE [whitespace] ;
-            if (!(tokens[idx] is NssKeyword typeToken &&
+            if (!(tokens[idx] is NssKeyword typeToken && 
                   (typeToken.Keyword == NssKeywords.Int || typeToken.Keyword == NssKeywords.Float || typeToken.Keyword == NssKeywords.String)))
+            {
+                return null;
+            }
+
+            string datatype = TokenTypeToDataType(tokens[idx]);
+            if (datatype == null)
             {
                 return null;
             }
@@ -97,113 +97,103 @@ namespace GenerateScriptDefs
             }
 
             NssTokenBase nameToken = tokens[idx];
-            bool isValidName = nameToken is NssIdentifier ||
-                               (nameToken is NssKeyword kw && (kw.Keyword == NssKeywords.ObjectSelf || kw.Keyword == NssKeywords.ObjectInvalid));
-
-            // Check for negative number pattern first (TYPE IDENTIFIER = MINUS VALUE ;)
-            if (startIdx + 5 < tokens.Count &&
-                tokens[startIdx] is NssKeyword typeKw &&
-                (typeKw.Keyword == NssKeywords.Int || typeKw.Keyword == NssKeywords.Float) &&
-                isValidName &&
-                tokens[startIdx + 2] is NssOperator op1 && op1.Operator == NssOperators.Assignment &&
-                tokens[startIdx + 3] is NssOperator op2 && op2.Operator == NssOperators.Subtraction &&
-                tokens[startIdx + 5] is NssSeparator sep && sep.Separator == NssSeparators.Semicolon)
+            if (!(nameToken is NssIdentifier || 
+                  (nameToken is NssKeyword kw && (kw.Keyword == NssKeywords.ObjectSelf || kw.Keyword == NssKeywords.ObjectInvalid))))
             {
-                string datatype = TokenTypeToDataType(tokens[startIdx]);
-                if (datatype == null)
+                return null;
+            }
+
+            string name = ExtractNameFromToken(nameToken);
+            idx = SkipWhitespace(tokens, idx + 1);
+            if (idx >= tokens.Count)
+            {
+                return null;
+            }
+
+            // Check for assignment operator
+            if (!(tokens[idx] is NssOperator assignOp && assignOp.Operator == NssOperators.Assignment))
+            {
+                return null;
+            }
+
+            idx = SkipWhitespace(tokens, idx + 1);
+            if (idx >= tokens.Count)
+            {
+                return null;
+            }
+
+            // Check for negative number pattern: MINUS VALUE
+            bool isNegative = false;
+            if (tokens[idx] is NssOperator minusOp && minusOp.Operator == NssOperators.Subtraction)
+            {
+                isNegative = true;
+                idx = SkipWhitespace(tokens, idx + 1);
+                if (idx >= tokens.Count)
                 {
                     return null;
                 }
-
-                string name = ExtractNameFromToken(nameToken);
-                NssTokenBase valueToken = tokens[startIdx + 4];
-
-                string value = null;
-                if (datatype == "int" && valueToken is NssLiteral lit1 && lit1.LiteralType == NssLiteralType.Int)
-                {
-                    if (int.TryParse(lit1.Literal, out int intVal))
-                    {
-                        value = $"-{intVal}";
-                    }
-                }
-                else if (datatype == "float" && valueToken is NssLiteral lit2 && lit2.LiteralType == NssLiteralType.Float)
-                {
-                    string floatStr = lit2.Literal.TrimEnd('f', 'F');
-                    if (float.TryParse(floatStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
-                    {
-                        value = $"-{floatVal}";
-                    }
-                }
-
-                if (value != null)
-                {
-                    return (new ConstantInfo { DataType = datatype, Name = name, Value = value }, startIdx + 6);
-                }
             }
 
-            // Standard pattern: TYPE IDENTIFIER = VALUE ;
-            if (tokens[startIdx] is NssKeyword typeToken &&
-                (typeToken.Keyword == NssKeywords.Int || typeToken.Keyword == NssKeywords.Float || typeToken.Keyword == NssKeywords.String) &&
-                isValidName &&
-                tokens[startIdx + 2] is NssOperator assignOp && assignOp.Operator == NssOperators.Assignment &&
-                tokens[startIdx + 4] is NssSeparator semicolon && semicolon.Separator == NssSeparators.Semicolon)
+            NssTokenBase valueToken = tokens[idx];
+            string value = null;
+
+            if (datatype == "string" && valueToken is NssLiteral strLit && strLit.LiteralType == NssLiteralType.String)
             {
-                string datatype = TokenTypeToDataType(tokens[startIdx]);
-                if (datatype == null)
+                value = strLit.Literal; // Raw string without quotes
+            }
+            else if (datatype == "int" && valueToken is NssLiteral intLit && intLit.LiteralType == NssLiteralType.Int)
+            {
+                if (int.TryParse(intLit.Literal, out int intVal))
                 {
-                    return null;
+                    value = (isNegative ? "-" : "") + intVal.ToString();
                 }
-
-                string name = ExtractNameFromToken(nameToken);
-                NssTokenBase valueToken = tokens[startIdx + 3];
-
-                string value = null;
-                if (datatype == "string" && valueToken is NssLiteral strLit && strLit.LiteralType == NssLiteralType.String)
+                else if (intLit.Literal.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
                 {
-                    value = strLit.Literal; // Raw string without quotes
-                }
-                else if (datatype == "int" && valueToken is NssLiteral intLit && intLit.LiteralType == NssLiteralType.Int)
-                {
-                    if (int.TryParse(intLit.Literal, out int intVal))
+                    string hexText = intLit.Literal.Substring(2);
+                    if (int.TryParse(hexText, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hexVal))
                     {
-                        value = intVal.ToString();
-                    }
-                    else if (intLit.Literal.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string hexText = intLit.Literal.Substring(2);
-                        if (int.TryParse(hexText, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hexVal))
-                        {
-                            value = hexVal.ToString();
-                        }
+                        value = (isNegative ? "-" : "") + hexVal.ToString();
                     }
                 }
-                else if (datatype == "int" && valueToken is NssKeyword boolKw)
+            }
+            else if (datatype == "int" && valueToken is NssKeyword boolKw)
+            {
+                if (boolKw.Keyword == NssKeywords.ObjectSelf)
                 {
-                    if (boolKw.Keyword == NssKeywords.ObjectSelf)
-                    {
-                        value = "1"; // TRUE
-                    }
-                    else if (boolKw.Keyword == NssKeywords.ObjectInvalid)
-                    {
-                        value = "0"; // FALSE
-                    }
+                    value = "1"; // TRUE
                 }
-                else if (datatype == "float" && valueToken is NssLiteral floatLit && floatLit.LiteralType == NssLiteralType.Float)
+                else if (boolKw.Keyword == NssKeywords.ObjectInvalid)
                 {
-                    string floatStr = floatLit.Literal.TrimEnd('f', 'F');
-                    if (float.TryParse(floatStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
-                    {
-                        value = floatVal.ToString(CultureInfo.InvariantCulture);
-                    }
+                    value = "0"; // FALSE
                 }
-
-                if (value != null)
+            }
+            else if (datatype == "float" && valueToken is NssLiteral floatLit && floatLit.LiteralType == NssLiteralType.Float)
+            {
+                string floatStr = floatLit.Literal.TrimEnd('f', 'F');
+                if (float.TryParse(floatStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                 {
-                    return (new ConstantInfo { DataType = datatype, Name = name, Value = value }, startIdx + 5);
+                    value = (isNegative ? "-" : "") + floatVal.ToString(CultureInfo.InvariantCulture);
                 }
             }
 
-            return null;
+            if (value == null)
+            {
+                return null;
+            }
+
+            idx = SkipWhitespace(tokens, idx + 1);
+            if (idx >= tokens.Count)
+            {
+                return null;
+            }
+
+            // Check for semicolon
+            if (!(tokens[idx] is NssSeparator semicolon && semicolon.Separator == NssSeparators.Semicolon))
+            {
+                return null;
+            }
+
+            return (new ConstantInfo { DataType = datatype, Name = name, Value = value }, idx + 1);
         }
 
         private static string ExtractNameFromToken(NssTokenBase token)
@@ -233,77 +223,99 @@ namespace GenerateScriptDefs
         {
             // Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py:223-287
             // Original: def parse_function_from_tokens(tokens: list, start_idx: int, lines: list[str], line_numbers: dict) -> tuple[dict, int] | None:
-            if (startIdx + 5 >= tokens.Count)
+            int idx = SkipWhitespace(tokens, startIdx);
+            if (idx >= tokens.Count)
             {
                 return null;
             }
 
-            // Check if this looks like a function declaration
-            if ((tokens[startIdx] is NssKeyword typeKw && TokenTypeToDataType(tokens[startIdx]) != null) &&
-                tokens[startIdx + 1] is NssIdentifier &&
-                tokens[startIdx + 2] is NssSeparator openParen && openParen.Separator == NssSeparators.OpenParen)
+            // Check if this looks like a function declaration: TYPE IDENTIFIER ( ...
+            if (!(tokens[idx] is NssKeyword typeKw && TokenTypeToDataType(tokens[idx]) != null))
             {
-                string returnType = TokenTypeToDataType(tokens[startIdx]) ?? "void";
-                string name = ((NssIdentifier)tokens[startIdx + 1]).Identifier;
-
-                // Find matching closing paren and semicolon
-                int parenCount = 1;
-                int i = startIdx + 3;
-                var paramTokens = new List<NssTokenBase>();
-
-                while (i < tokens.Count && parenCount > 0)
-                {
-                    if (tokens[i] is NssSeparator sep)
-                    {
-                        if (sep.Separator == NssSeparators.OpenParen)
-                        {
-                            parenCount++;
-                        }
-                        else if (sep.Separator == NssSeparators.CloseParen)
-                        {
-                            parenCount--;
-                            if (parenCount == 0)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                    if (parenCount > 0)
-                    {
-                        paramTokens.Add(tokens[i]);
-                    }
-                    i++;
-                }
-
-                if (parenCount != 0)
+                // Also check for void
+                if (!(tokens[idx] is NssKeyword voidKw && voidKw.Keyword == NssKeywords.Void))
                 {
                     return null;
                 }
-
-                // Check for semicolon after closing paren
-                if (i + 1 >= tokens.Count || !(tokens[i + 1] is NssSeparator semicolon && semicolon.Separator == NssSeparators.Semicolon))
-                {
-                    return null;
-                }
-
-                // Parse parameters
-                var @params = ParseFunctionParams(paramTokens);
-
-                // Get function documentation from original lines
-                int funcLineNum = lineNumbers.ContainsKey(tokens[startIdx]) ? lineNumbers[tokens[startIdx]] : 0;
-                var funcDoc = ExtractFunctionDocumentationFromLine(lines, funcLineNum, name);
-
-                return (new FunctionInfo
-                {
-                    ReturnType = returnType,
-                    Name = name,
-                    Params = @params,
-                    Description = funcDoc.description,
-                    Raw = funcDoc.raw
-                }, i + 2);
             }
 
-            return null;
+            string returnType = TokenTypeToDataType(tokens[idx]) ?? "void";
+            idx = SkipWhitespace(tokens, idx + 1);
+            if (idx >= tokens.Count || !(tokens[idx] is NssIdentifier))
+            {
+                return null;
+            }
+
+            string name = ((NssIdentifier)tokens[idx]).Identifier;
+            idx = SkipWhitespace(tokens, idx + 1);
+            if (idx >= tokens.Count || !(tokens[idx] is NssSeparator openParen && openParen.Separator == NssSeparators.OpenParen))
+            {
+                return null;
+            }
+
+            // Find matching closing paren and semicolon
+            int parenCount = 1;
+            int paramStartIdx = idx + 1;
+            idx++;
+            var paramTokens = new List<NssTokenBase>();
+
+            while (idx < tokens.Count && parenCount > 0)
+            {
+                if (tokens[idx] is NssSeparator sep)
+                {
+                    if (sep.Separator == NssSeparators.OpenParen)
+                    {
+                        parenCount++;
+                        paramTokens.Add(tokens[idx]);
+                    }
+                    else if (sep.Separator == NssSeparators.CloseParen)
+                    {
+                        parenCount--;
+                        if (parenCount == 0)
+                        {
+                            break;
+                        }
+                        paramTokens.Add(tokens[idx]);
+                    }
+                    else
+                    {
+                        paramTokens.Add(tokens[idx]);
+                    }
+                }
+                else
+                {
+                    paramTokens.Add(tokens[idx]);
+                }
+                idx++;
+            }
+
+            if (parenCount != 0)
+            {
+                return null;
+            }
+
+            // Check for semicolon after closing paren
+            idx = SkipWhitespace(tokens, idx + 1);
+            if (idx >= tokens.Count || !(tokens[idx] is NssSeparator semicolon && semicolon.Separator == NssSeparators.Semicolon))
+            {
+                return null;
+            }
+
+            // Parse parameters
+            var @params = ParseFunctionParams(paramTokens);
+
+            // Get function documentation from original lines
+            int funcLineNum = lineNumbers.ContainsKey(tokens[startIdx]) ? lineNumbers[tokens[startIdx]] : 0;
+            var funcDoc = ExtractFunctionDocumentationFromLine(lines, funcLineNum, name);
+
+            return (new FunctionInfo
+            {
+                ReturnType = returnType,
+                Name = name,
+                Params = @params,
+                Description = funcDoc.description,
+                Raw = funcDoc.raw
+            }, idx + 1);
         }
 
         private static List<ParamInfo> ParseFunctionParams(List<NssTokenBase> paramTokens)
@@ -355,7 +367,7 @@ namespace GenerateScriptDefs
                         }
                         currentGroup = new List<NssTokenBase>();
                     }
-                    else
+                    else if (sep.Separator != NssSeparators.Space && sep.Separator != NssSeparators.NewLine && sep.Separator != NssSeparators.Tab)
                     {
                         currentGroup.Add(token);
                     }
@@ -374,28 +386,32 @@ namespace GenerateScriptDefs
             // Parse each parameter group
             foreach (var group in paramGroups)
             {
-                if (group.Count < 2)
+                // Remove whitespace from group
+                var cleanGroup = group.Where(t => !(t is NssSeparator s && 
+                    (s.Separator == NssSeparators.Space || s.Separator == NssSeparators.NewLine || s.Separator == NssSeparators.Tab))).ToList();
+
+                if (cleanGroup.Count < 2)
                 {
                     continue;
                 }
 
                 // Pattern: TYPE IDENTIFIER [= VALUE]
-                if (group[0] is NssKeyword typeKw && TokenTypeToDataType(group[0]) != null &&
-                    group[1] is NssIdentifier)
+                if (cleanGroup[0] is NssKeyword typeKw && TokenTypeToDataType(cleanGroup[0]) != null &&
+                    cleanGroup[1] is NssIdentifier)
                 {
-                    string paramType = TokenTypeToDataType(group[0]) ?? "int";
-                    string paramName = ((NssIdentifier)group[1]).Identifier;
+                    string paramType = TokenTypeToDataType(cleanGroup[0]) ?? "int";
+                    string paramName = ((NssIdentifier)cleanGroup[1]).Identifier;
                     string defaultValue = null;
 
                     // Check for default value
-                    if (group.Count >= 4 && group[2] is NssOperator assignOp && assignOp.Operator == NssOperators.Assignment)
+                    if (cleanGroup.Count >= 4 && cleanGroup[2] is NssOperator assignOp && assignOp.Operator == NssOperators.Assignment)
                     {
-                        NssTokenBase defaultToken = group[3];
+                        NssTokenBase defaultToken = cleanGroup[3];
 
                         // Special handling: negative number defaults
-                        if (group.Count >= 5 &&
+                        if (cleanGroup.Count >= 5 &&
                             defaultToken is NssOperator minusOp && minusOp.Operator == NssOperators.Subtraction &&
-                            group[4] is NssLiteral lit)
+                            cleanGroup[4] is NssLiteral lit)
                         {
                             if (lit.LiteralType == NssLiteralType.Int && int.TryParse(lit.Literal, out int intVal))
                             {
@@ -414,14 +430,14 @@ namespace GenerateScriptDefs
                         else if (paramType == "vector" && defaultToken is NssSeparator bracket && bracket.Separator == NssSeparators.OpenSquareBracket)
                         {
                             // Try to parse vector literal: [ FLOAT_VALUE , FLOAT_VALUE , FLOAT_VALUE ]
-                            if (group.Count >= 10 &&
-                                group[3] is NssSeparator openBracket && openBracket.Separator == NssSeparators.OpenSquareBracket &&
-                                group[4] is NssLiteral xLit && xLit.LiteralType == NssLiteralType.Float &&
-                                group[5] is NssSeparator comma1 && comma1.Separator == NssSeparators.Comma &&
-                                group[6] is NssLiteral yLit && yLit.LiteralType == NssLiteralType.Float &&
-                                group[7] is NssSeparator comma2 && comma2.Separator == NssSeparators.Comma &&
-                                group[8] is NssLiteral zLit && zLit.LiteralType == NssLiteralType.Float &&
-                                group[9] is NssSeparator closeBracket && closeBracket.Separator == NssSeparators.CloseSquareBracket)
+                            if (cleanGroup.Count >= 10 &&
+                                cleanGroup[3] is NssSeparator openBracket && openBracket.Separator == NssSeparators.OpenSquareBracket &&
+                                cleanGroup[4] is NssLiteral xLit && xLit.LiteralType == NssLiteralType.Float &&
+                                cleanGroup[5] is NssSeparator comma1 && comma1.Separator == NssSeparators.Comma &&
+                                cleanGroup[6] is NssLiteral yLit && yLit.LiteralType == NssLiteralType.Float &&
+                                cleanGroup[7] is NssSeparator comma2 && comma2.Separator == NssSeparators.Comma &&
+                                cleanGroup[8] is NssLiteral zLit && zLit.LiteralType == NssLiteralType.Float &&
+                                cleanGroup[9] is NssSeparator closeBracket && closeBracket.Separator == NssSeparators.CloseSquareBracket)
                             {
                                 string xStr = xLit.Literal.TrimEnd('f', 'F');
                                 string yStr = yLit.Literal.TrimEnd('f', 'F');
@@ -805,7 +821,7 @@ namespace GenerateScriptDefs
             string k1Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "k1_nwscript.nss");
             string k2Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "tsl_nwscript.nss");
             string outputFile = Path.Combine(repoRoot, "src", "CSharpKOTOR", "Common", "Script", "ScriptDefs.cs");
-
+            
             // Verify files exist
             if (!File.Exists(k1Nss))
             {
@@ -857,4 +873,3 @@ namespace GenerateScriptDefs
         }
     }
 }
-
