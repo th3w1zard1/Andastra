@@ -703,6 +703,73 @@ namespace CSharpKOTOR.Common
             return foundId;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:892-909
+        // Original: def resource(self, resname: str, restype: ResourceType) -> ModuleResource | None:
+        /// <summary>
+        /// Returns the resource with the given name and type from the module.
+        /// </summary>
+        [CanBeNull]
+        public object Resource(string resname, ResourceType restype)
+        {
+            var ident = new ResourceIdentifier(resname, restype);
+            _resources.TryGetValue(ident, out object resource);
+            return resource;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:852-887
+        // Original: def add_locations(self, resname: str, restype: ResourceType, locations: Iterable[Path]) -> ModuleResource:
+        /// <summary>
+        /// Creates or extends a ModuleResource keyed by the resname/restype with additional locations.
+        /// This is how Module.resources dict gets filled.
+        /// </summary>
+        /// <remarks>
+        /// NOTE: This is a simplified implementation. The full implementation requires proper generic type handling
+        /// for ModuleResource&lt;T&gt;. Currently returns object due to C# generic type limitations.
+        /// </remarks>
+        public object AddLocations(string resname, ResourceType restype, IEnumerable<string> locations)
+        {
+            if (locations == null)
+            {
+                locations = new List<string>();
+            }
+            var locationsList = locations.ToList();
+            if (locationsList.Count == 0 && !(resname == "dirt" && restype == ResourceType.TPC))
+            {
+                RobustLogger.Instance.Warning("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root);
+            }
+
+            object moduleResource = Resource(resname, restype);
+            if (moduleResource == null)
+            {
+                // TODO: Create appropriate ModuleResource&lt;T&gt; instance based on restype
+                // This requires a factory method or type mapping to determine the correct generic type
+                var ident = new ResourceIdentifier(resname, restype);
+                // For now, we cannot create a generic ModuleResource without knowing T at compile time
+                // This will need to be addressed when implementing the full ReloadResources() method
+                return null;
+            }
+
+            // TODO: Call AddLocations on the moduleResource using reflection or a non-generic interface
+            // For now, this is a placeholder
+            return moduleResource;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1470-1488
+        // Original: def models(self) -> list[ModuleResource[MDL]]:
+        /// <summary>
+        /// Returns a list of MDL model resources.
+        /// </summary>
+        /// <remarks>
+        /// NOTE: This is a placeholder implementation. The full implementation requires filtering by ResourceType.MDL
+        /// and proper type casting to ModuleResource&lt;MDL&gt;.
+        /// </remarks>
+        public List<object> Models()
+        {
+            // TODO: Filter resources by ResourceType.MDL and return as List&lt;ModuleResource&lt;MDL&gt;&gt;
+            // This requires proper type handling for the generic ModuleResource&lt;T&gt;
+            return new List<object>();
+        }
+
         // Placeholder for ReloadResources - will be implemented in next iteration
         private void ReloadResources()
         {
