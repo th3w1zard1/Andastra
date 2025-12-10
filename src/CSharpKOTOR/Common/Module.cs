@@ -778,6 +778,32 @@ namespace CSharpKOTOR.Common
         }
     }
 
+    /// <summary>
+    /// Base class for module resources with multiple possible locations.
+    /// </summary>
+    public abstract class ModuleResource
+    {
+        public string ResName { get; protected set; }
+        public ResourceType ResType { get; protected set; }
+        public ResourceIdentifier Identifier { get; protected set; }
+        public string ModuleRoot { get; protected set; }
+
+        protected ModuleResource(string resname, ResourceType restype, string moduleRoot)
+        {
+            ResName = resname;
+            ResType = restype;
+            Identifier = new ResourceIdentifier(resname, restype);
+            ModuleRoot = moduleRoot;
+        }
+
+        public abstract void AddLocations(IEnumerable<string> filepaths);
+        public abstract List<string> Locations();
+        public abstract string Activate(string filepath = null);
+        public abstract object Resource();
+        public abstract string Filename();
+        public abstract ResourceIdentifier GetIdentifier();
+    }
+
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1709-2131
     // Original: class ModuleResource(Generic[T]):
     /// <summary>
@@ -786,13 +812,14 @@ namespace CSharpKOTOR.Common
     /// module archives, chitin). It tracks all locations and allows activation of a
     /// specific location, with lazy loading of the actual resource object.
     /// </summary>
-    public class ModuleResource<T>
+    public sealed class ModuleResource<T> : ModuleResource
     {
         private readonly string _resname;
         private readonly Installation.Installation _installation;
         private readonly ResourceType _restype;
         private string _active;
         private T _resourceObj;
+        private bool _resourceLoadAttempted; // Track if we've attempted to load (for caching when conversion not implemented)
         private readonly List<string> _locations = new List<string>();
         private readonly ResourceIdentifier _identifier;
         private readonly string _moduleRoot;
@@ -824,6 +851,7 @@ namespace CSharpKOTOR.Common
             _restype = restype;
             _active = null;
             _resourceObj = default(T);
+            _resourceLoadAttempted = false;
             _identifier = new ResourceIdentifier(resname, restype);
             _moduleRoot = moduleRoot;
         }
@@ -973,6 +1001,7 @@ namespace CSharpKOTOR.Common
         public void Unload()
         {
             _resourceObj = default(T);
+            _resourceLoadAttempted = false;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2020-2023
@@ -980,6 +1009,7 @@ namespace CSharpKOTOR.Common
         public void Reload()
         {
             _resourceObj = default(T);
+            _resourceLoadAttempted = false;
             Resource(); // Trigger reload
         }
 
@@ -1024,11 +1054,14 @@ namespace CSharpKOTOR.Common
         {
             // TODO: Implement full resource() method once all format readers are ported
             // This requires read_are, read_dlg, read_git, etc. functions
-            if (_resourceObj == null)
+            if (!_resourceLoadAttempted)
             {
+                _resourceLoadAttempted = true; // Mark as attempted to prevent repeated loading
                 byte[] data = Data();
                 if (data == null)
                 {
+                    // Data() returned null, set to default to cache the "not found" result
+                    _resourceObj = default(T);
                     return default(T);
                 }
 
@@ -1036,9 +1069,9 @@ namespace CSharpKOTOR.Common
                 // conversions: dict[ResourceType, Callable[[SOURCE_TYPES], Any]] = { ... }
                 // In Python: self._resource_obj = conversions.get(self._restype, lambda _: None)(data)
                 // When format readers are implemented, set _resourceObj to the converted resource object here
-                // For now, do not set _resourceObj = default(T) as it breaks caching for reference types
-                // (default(T) is null for reference types, making _resourceObj == null true on next call,
-                // causing Data() to be called repeatedly instead of using cached results)
+                // For now, set to default(T) to cache the "conversion not implemented" state
+                // This prevents repeated calls to Data() while format readers are being ported
+                _resourceObj = default(T);
             }
 
             return _resourceObj;
