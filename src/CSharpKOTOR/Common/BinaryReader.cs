@@ -24,6 +24,15 @@ namespace CSharpKOTOR.Common
         public int Position => _position;
         public int Size => _size;
         public int Offset => _offset;
+
+        public int TrueSize()
+        {
+            long current = _stream.Position;
+            _stream.Seek(0, SeekOrigin.End);
+            long size = _stream.Position;
+            _stream.Seek(current, SeekOrigin.Begin);
+            return (int)size;
+        }
         public int Remaining => _size - _position;
 
         private RawBinaryReader(Stream stream, int offset = 0, int? size = null)
@@ -78,6 +87,30 @@ namespace CSharpKOTOR.Common
         {
             var stream = new MemoryStream(data);
             return new RawBinaryReader(stream, offset, size);
+        }
+
+        public static byte[] LoadFile(string path, int offset = 0, int size = -1)
+        {
+            using (FileStream reader = File.OpenRead(path))
+            {
+                reader.Seek(offset, SeekOrigin.Begin);
+                if (size == -1)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        reader.CopyTo(ms);
+                        return ms.ToArray();
+                    }
+                }
+
+                byte[] buffer = new byte[size];
+                int read = reader.Read(buffer, 0, size);
+                if (read < size)
+                {
+                    Array.Resize(ref buffer, read);
+                }
+                return buffer;
+            }
         }
 
         /// <summary>
