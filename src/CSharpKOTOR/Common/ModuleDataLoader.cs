@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Common
             // Original: def get_creature_model_data(self, git_creature, module: Module) -> dict[str, str | None]:
 
             // Get creature resource from module
-            var creatureResRef = ""; // TODO: Extract resref from gitCreature
+            var creatureResRef = ""; // TODO: Extract resref from gitCreature (GITCreature.ResRef)
             var creatureResource = module.Creature(creatureResRef);
 
             if (creatureResource == null)
@@ -111,7 +111,7 @@ namespace CSharpKOTOR.Common
                 };
             }
 
-            var utc = creatureResource.Resource();
+            var utc = creatureResource.Resource() as UTC;
             if (utc == null)
             {
                 return new Dictionary<string, object>
@@ -127,7 +127,8 @@ namespace CSharpKOTOR.Common
             }
 
             // TODO: Implement creature.get_body_model, get_head_model, get_weapon_models, get_mask_model
-            // These require porting the creature utility functions
+            // These require porting the creature utility functions from tools/creature.py
+            // For now, return placeholder values
             var bodyModel = (string)null; // creature.get_body_model(utc, _installation, appearance: TableCreatures, baseitems: TableBaseItems);
             var bodyTexture = (string)null; // creature.get_body_model(utc, _installation, appearance: TableCreatures, baseitems: TableBaseItems);
             var headModel = (string)null; // creature.get_head_model(utc, _installation, appearance: TableCreatures, heads: TableHeads);
@@ -154,7 +155,7 @@ namespace CSharpKOTOR.Common
             // Original: def get_door_model_name(self, door, module: Module) -> str | None:
 
             // Get door resource from module
-            var doorResRef = ""; // TODO: Extract resref from door
+            var doorResRef = ""; // TODO: Extract resref from door (GITDoor.ResRef)
             var doorResource = module.Door(doorResRef);
 
             if (doorResource == null)
@@ -162,14 +163,14 @@ namespace CSharpKOTOR.Common
                 return null;
             }
 
-            var utd = doorResource.Resource();
+            var utd = doorResource.Resource() as UTD;
             if (utd == null)
             {
                 return null;
             }
 
-            // TODO: Get appearance_id from UTD and lookup in TableDoors
-            var appearanceId = 0; // utd.appearance_id
+            // Get appearance_id from UTD and lookup in TableDoors
+            var appearanceId = utd.AppearanceId;
             var row = TableDoors.GetRow(appearanceId);
 
             if (row == null)
@@ -186,7 +187,7 @@ namespace CSharpKOTOR.Common
             // Original: def get_placeable_model_name(self, placeable, module: Module) -> str | None:
 
             // Get placeable resource from module
-            var placeableResRef = ""; // TODO: Extract resref from placeable
+            var placeableResRef = ""; // TODO: Extract resref from placeable (GITPlaceable.ResRef)
             var placeableResource = module.Placeable(placeableResRef);
 
             if (placeableResource == null)
@@ -194,14 +195,14 @@ namespace CSharpKOTOR.Common
                 return null;
             }
 
-            var utp = placeableResource.Resource();
+            var utp = placeableResource.Resource() as UTP;
             if (utp == null)
             {
                 return null;
             }
 
-            // TODO: Get appearance_id from UTP and lookup in TablePlaceables
-            var appearanceId = 0; // utp.appearance_id
+            // Get appearance_id from UTP and lookup in TablePlaceables
+            var appearanceId = utp.AppearanceId;
             var row = TablePlaceables.GetRow(appearanceId);
 
             if (row == null)
