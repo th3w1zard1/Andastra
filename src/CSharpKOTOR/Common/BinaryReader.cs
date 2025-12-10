@@ -483,28 +483,41 @@ namespace CSharpKOTOR.Common
             return line.TrimEnd('\r', '\n');
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:19-44
+        // Original: def read_locstring(self) -> LocalizedString:
         /// <summary>
         /// Reads a LocalizedString following the GFF format specification.
         /// </summary>
         public LocalizedString ReadLocalizedString()
         {
-            var locString = LocalizedString.FromInvalid();
+            LocalizedString locString = LocalizedString.FromInvalid();
 
-            ReadUInt32(); // Total length (not used during reading)
-            uint stringref = ReadUInt32();
-            locString.StringRef = stringref == 0xFFFFFFFF ? -1 : (int)stringref;
+            ReadUInt32(); // total length (unused)
+            uint stringref = ReadUInt32(false, true);
+            locString.StringRef = (int)stringref;
             uint stringCount = ReadUInt32();
 
             for (int i = 0; i < stringCount; i++)
             {
                 uint stringId = ReadUInt32();
-                (Language language, Gender gender) = LocalizedString.SubstringPair((int)stringId);
+                Language language;
+                Gender gender;
+                LocalizedString.SubstringPair((int)stringId, out language, out gender);
                 uint length = ReadUInt32();
 
-                // Get encoding for the language
-                Encoding encoding = Encoding.GetEncoding(LanguageExtensions.GetEncoding(language));
+                string encodingName = LanguageExtensions.GetEncoding(language);
+                Encoding encoding = encodingName != null
+                    ? Encoding.GetEncoding(encodingName, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback)
+                    : Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+
                 byte[] textBytes = ReadBytes((int)length);
-                string text = encoding.GetString(textBytes).TrimEnd('\0');
+                string text = encoding.GetString(textBytes);
+
+                int nullIndex = text.IndexOf('\0');
+                if (nullIndex >= 0)
+                {
+                    text = text.Substring(0, nullIndex).TrimEnd('\0');
+                }
 
                 locString.SetData(language, gender, text);
             }

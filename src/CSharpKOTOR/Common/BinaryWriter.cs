@@ -303,26 +303,27 @@ namespace CSharpKOTOR.Common
             _stream.Write(bytes, 0, bytes.Length);
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:85-143
+        // Original: def write_locstring(self, value: LocalizedString, *, big: bool = False):
         public override void WriteLocalizedString(LocalizedString value, bool bigEndian = false)
         {
-            // Build the locstring data first to calculate total length
             using (var ms = new MemoryStream())
             using (var tempWriter = new RawBinaryWriterFile(ms))
             {
-                // Write StringRef
                 uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
                 tempWriter.WriteUInt32(stringref, bigEndian);
-
-                // Write string count
                 tempWriter.WriteUInt32((uint)value.Count, bigEndian);
 
-                // Write all substrings
                 foreach ((Language language, Gender gender, string text) in value)
                 {
                     int stringId = LocalizedString.SubstringId(language, gender);
                     tempWriter.WriteUInt32((uint)stringId, bigEndian);
 
-                    Encoding encoding = Encoding.GetEncoding(LanguageExtensions.GetEncoding(language));
+                    string encodingName = LanguageExtensions.GetEncoding(language);
+                    Encoding encoding = encodingName != null
+                        ? Encoding.GetEncoding(encodingName, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback)
+                        : Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+
                     byte[] textBytes = encoding.GetBytes(text);
                     tempWriter.WriteUInt32((uint)textBytes.Length, bigEndian);
                     tempWriter.WriteBytes(textBytes);
