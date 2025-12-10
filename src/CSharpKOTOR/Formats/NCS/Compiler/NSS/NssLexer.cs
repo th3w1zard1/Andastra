@@ -525,15 +525,13 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NssLiteral literal = null;
 
-                bool seenDecimalPlace = false;
                 int chScanningIndex = chBaseIndex;
-                while (++chScanningIndex < data.Length)
-                {
-                    char chScanning = data[chScanningIndex];
 
-                    if (isString)
+                if (isString)
+                {
+                    while (++chScanningIndex < data.Length)
                     {
-                        // If we're a string, we just scan to the next ", except for escaped ones.
+                        char chScanning = data[chScanningIndex];
                         char chScanningLast = data[chScanningIndex - 1];
                         if (chScanning == '"' && chScanningLast != '\\')
                         {
@@ -560,29 +558,80 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                             break;
                         }
                     }
-                    else
+                }
+                else
+                {
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/lexer.py:322-335
+                    // Original: def t_FLOAT_VALUE(self, t): r"[0-9]+\.[0-9]+f?|[0-9]f" / def t_INT_HEX_VALUE(self, t): "0x[0-9a-fA-F]+" / def t_INT_VALUE(self, t): "[0-9]+"
+                    if (ch == '0' && chBaseIndex + 1 < data.Length && (data[chBaseIndex + 1] == 'x' || data[chBaseIndex + 1] == 'X'))
                     {
-                        // If we're a number, we need to keep track of whether we've seen a decimal place,
-                        // and scan until we're no longer a number or a decimal place.
-                        if (chScanning == '.')
+                        int hexStart = chBaseIndex + 2;
+                        int hexIndex = hexStart;
+                        while (hexIndex < data.Length)
                         {
-                            seenDecimalPlace = true;
+                            char hexChar = data[hexIndex];
+                            bool isHexDigit = char.IsDigit(hexChar) ||
+                                              (hexChar >= 'a' && hexChar <= 'f') ||
+                                              (hexChar >= 'A' && hexChar <= 'F');
+                            if (!isHexDigit)
+                            {
+                                break;
+                            }
+                            hexIndex++;
                         }
-                        else if (!char.IsNumber(chScanning) && (!seenDecimalPlace || (seenDecimalPlace && chScanning != 'f')))
+
+                        if (hexIndex > hexStart)
                         {
                             literal = new NssLiteral();
-                            literal.LiteralType = seenDecimalPlace ? NssLiteralType.Float : NssLiteralType.Int;
-
-                            int chStartIndex = chBaseIndex;
-                            int chEndIndex = chScanningIndex;
-                            literal.Literal = data.Substring(chStartIndex, chEndIndex - chStartIndex);
-
-                            int chNewBaseIndex = chScanningIndex;
-                            AttachDebugData(literal, DebugRanges, chBaseIndex, chNewBaseIndex - 1);
-
+                            literal.LiteralType = NssLiteralType.Int;
+                            literal.Literal = data.Substring(chBaseIndex, hexIndex - chBaseIndex);
                             Tokens.Add(literal);
-                            chBaseIndex = chNewBaseIndex;
+                            AttachDebugData(literal, DebugRanges, chBaseIndex, hexIndex - 1);
+                            chBaseIndex = hexIndex;
+                        }
+                    }
+                    else
+                    {
+                        bool seenDecimalPlace = false;
+                        bool seenFloatSuffix = false;
+                        int chEndIndex = chBaseIndex;
+
+                        while (chEndIndex < data.Length)
+                        {
+                            char chScanning = data[chEndIndex];
+
+                            if (char.IsNumber(chScanning))
+                            {
+                                chEndIndex++;
+                                continue;
+                            }
+
+                            if (chScanning == '.' && !seenDecimalPlace)
+                            {
+                                seenDecimalPlace = true;
+                                chEndIndex++;
+                                continue;
+                            }
+
+                            if ((chScanning == 'f' || chScanning == 'F') && !seenFloatSuffix)
+                            {
+                                seenFloatSuffix = true;
+                                chEndIndex++;
+                                break;
+                            }
+
                             break;
+                        }
+
+                        if (chEndIndex > chBaseIndex)
+                        {
+                            literal = new NssLiteral();
+                            literal.LiteralType = (seenDecimalPlace || seenFloatSuffix) ? NssLiteralType.Float : NssLiteralType.Int;
+                            literal.Literal = data.Substring(chBaseIndex, chEndIndex - chBaseIndex);
+
+                            AttachDebugData(literal, DebugRanges, chBaseIndex, chEndIndex - 1);
+                            Tokens.Add(literal);
+                            chBaseIndex = chEndIndex;
                         }
                     }
                 }
@@ -605,7 +654,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 }
 
                 string strFromData = data.Substring(chBaseIndex, kvp.Key.Length);
-                if (strFromData.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                if (strFromData.Equals(kvp.Key, StringComparison.Ordinal))
                 {
                     // Matching PyKotor lexer.py line 277: r"location\b" - word boundary matches whitespace, end of string, or non-word characters
                     int chNextAlongIndex = chBaseIndex + kvp.Key.Length;
@@ -619,7 +668,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                     {
                         char chNextAlong = data[chNextAlongIndex];
                         // Word boundary: separator, operator, or whitespace (matching PyKotor's \b regex)
-                        accept = NssSeparator.SeparatorMap.ContainsKey(chNextAlong) || 
+                        accept = NssSeparator.SeparatorMap.ContainsKey(chNextAlong) ||
                                  NssOperator.OperatorMap.ContainsKey(chNextAlong) ||
                                  char.IsWhiteSpace(chNextAlong);
                     }

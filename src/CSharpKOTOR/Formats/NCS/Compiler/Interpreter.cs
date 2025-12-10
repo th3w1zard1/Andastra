@@ -666,10 +666,22 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // We need to reverse to match function.Params order (first parameter at index 0).
             argsSnap.Reverse();
 
-            // Validate argument types
+            // Validate argument types (match PyKotor coercion rules: ints can satisfy floats, floats can satisfy ints)
             for (int i = 0; i < paramCount; i++)
             {
-                if (function.Params[i].DataType != argsSnap[i].DataType)
+                DataType expected = function.Params[i].DataType;
+                StackObject arg = argsSnap[i];
+                if (expected == DataType.Float && arg.DataType == DataType.Int)
+                {
+                    argsSnap[i] = new StackObject(DataType.Float, Convert.ToSingle(arg.Value));
+                    continue;
+                }
+                if (expected == DataType.Int && arg.DataType == DataType.Float)
+                {
+                    argsSnap[i] = new StackObject(DataType.Int, Convert.ToInt32(arg.Value));
+                    continue;
+                }
+                if (expected != arg.DataType)
                 {
                     throw new InvalidOperationException(
                         $"Action '{function.Name}' parameter '{function.Params[i].Name}' " +

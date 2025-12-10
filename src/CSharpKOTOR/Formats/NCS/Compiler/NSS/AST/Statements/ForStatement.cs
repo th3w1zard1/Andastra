@@ -55,11 +55,14 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
             else if (Initializer != null)
             {
-                DynamicDataType initialType = Initializer.Compile(ncs, root, block);
-                if (initialType.Size(root) > 0)
+                int tempStackBefore = block.TempStack;
+                DynamicDataType initType = Initializer.Compile(ncs, root, block);
+                if (block.TempStack == tempStackBefore)
                 {
-                    ncs.Add(NCSInstructionType.MOVSP, new List<object> { -initialType.Size(root) });
+                    block.TempStack += initType.Size(root);
                 }
+                ncs.Add(NCSInstructionType.MOVSP, new List<object> { -initType.Size(root) });
+                block.TempStack -= initType.Size(root);
             }
 
             block.MarkBreakScope();
@@ -69,21 +72,17 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             var updateStart = new NCSInstruction(NCSInstructionType.NOP);
             var loopEnd = new NCSInstruction(NCSInstructionType.NOP);
 
-            // Compile condition
+            // Compile condition (value consumed by JZ)
+            int initialTempStack = block.TempStack;
             DynamicDataType conditionType = Condition.Compile(ncs, root, block);
-
             if (conditionType.Builtin != DataType.Int)
             {
                 throw new CompileError(
                     $"for loop condition must be int type, got {conditionType.Builtin.ToScriptString()}\n" +
                     "  Note: Conditions must evaluate to int (0=false, non-zero=true)");
             }
-
-            block.TempStack += 4;
-
-            // If condition is false, jump to end
             NCSInstruction jumpToEnd = ncs.Add(NCSInstructionType.JZ, new List<object>());
-            block.TempStack -= 4;
+            block.TempStack = initialTempStack;
 
             block.MarkBreakScope();
 
@@ -94,13 +93,15 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             ncs.Instructions.Add(updateStart);
 
             // Compile iterator
+            int tempStackBeforeIteration = block.TempStack;
             DynamicDataType iteratorType = Iterator.Compile(ncs, root, block);
-
-            // Pop iterator result off stack
-            if (iteratorType.Size(root) > 0)
+            int tempStackAfterIteration = block.TempStack;
+            if (tempStackAfterIteration == tempStackBeforeIteration)
             {
-                ncs.Add(NCSInstructionType.MOVSP, new List<object> { -iteratorType.Size(root) });
+                block.TempStack += iteratorType.Size(root);
             }
+            ncs.Add(NCSInstructionType.MOVSP, new List<object> { -iteratorType.Size(root) });
+            block.TempStack -= iteratorType.Size(root);
 
             // Jump back to loop start (condition re-evaluation)
             ncs.Add(NCSInstructionType.JMP, jump: loopStart);

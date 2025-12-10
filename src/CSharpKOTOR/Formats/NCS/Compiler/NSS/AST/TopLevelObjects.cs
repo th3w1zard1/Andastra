@@ -184,14 +184,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             string source = GetScript(root);
             CodeRoot t = nssParser.Parse(source);
 
-            foreach (var kvp in t.FunctionMap)
-            {
-                root.FunctionMap[kvp.Key] = kvp.Value;
-            }
-            foreach (var kvp in t.StructMap)
-            {
-                root.StructMap[kvp.Key] = kvp.Value;
-            }
             // Merge include objects (excluding further IncludeScript nodes) so they are compiled.
             var includeObjects = t.Objects.Where(o => !(o is IncludeScript)).ToList();
             root.Objects = includeObjects.Concat(root.Objects).ToList();

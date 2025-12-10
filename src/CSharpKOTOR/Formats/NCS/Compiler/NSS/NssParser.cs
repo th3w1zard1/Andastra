@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using CSharpKOTOR.Common.Script;
 using JetBrains.Annotations;
@@ -294,6 +295,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 }
                 Advance(); // Now consume the struct keyword
 
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/parser.py:162-183
+                // Original: struct_definition : STRUCT IDENTIFIER '{' struct_members '}' ';'
+                SkipWhitespaceAndComments();
                 // Parse struct name
                 NssIdentifier structName = ConsumeToken<NssIdentifier>("Expected struct name after 'struct'");
 
@@ -303,10 +307,19 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 var members = new List<StructMember>();
 
                 // Parse members
-                while (!CheckSeparator(NssSeparators.CloseCurlyBrace))
+                while (true)
                 {
                     SkipWhitespaceAndComments();
+                    if (CheckSeparator(NssSeparators.CloseCurlyBrace))
+                    {
+                        break;
+                    }
+
                     DynamicDataType memberType = ParseDataType();
+                    if (memberType == null)
+                    {
+                        throw new CompileError("Expected struct member type");
+                    }
                     NssIdentifier memberName = ConsumeToken<NssIdentifier>("Expected member name");
                     ConsumeSeparator(NssSeparators.Semicolon, "Expected ';' after struct member");
                     members.Add(new StructMember(memberType, new Identifier(memberName.Identifier)));
@@ -376,6 +389,16 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
 
                 // Global variables cannot be void type - let function definition handle it
                 if (type.Builtin == DataType.Void)
+                {
+                    _tokenIndex = savedIndex;
+                    return null;
+                }
+
+                // Check if next token is an identifier before consuming
+                // This allows graceful failure for cases like "void main()" where ParseDataType
+                // might have parsed an identifier as a struct type
+                SkipWhitespaceAndComments();
+                if (!CheckToken<NssIdentifier>())
                 {
                     _tokenIndex = savedIndex;
                     return null;
@@ -620,6 +643,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                     break;
                 case NssKeywords.Struct:
                     Advance(); // consume 'struct' keyword
+                    SkipWhitespaceAndComments();
                     NssIdentifier structName = ConsumeToken<NssIdentifier>("Expected struct type name");
                     type = new DynamicDataType(DataType.Struct, structName.Identifier);
                     break;
@@ -2277,14 +2301,32 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
             switch (lit.LiteralType)
             {
                 case NssLiteralType.Int:
-                    if (int.TryParse(lit.Literal, out int intVal))
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/lexer.py:327-335
+                    // Original: def t_INT_HEX_VALUE(self, t): "0x[0-9a-fA-F]+" / def t_INT_VALUE(self, t): "[0-9]+"
+                    string literalText = lit.Literal;
+                    if (!string.IsNullOrEmpty(literalText) &&
+                        literalText.Length > 2 &&
+                        literalText.StartsWith("0x", System.StringComparison.OrdinalIgnoreCase))
                     {
-                        return new IntExpression(intVal);
+                        string hexText = literalText.Substring(2);
+                        int hexVal;
+                        if (int.TryParse(hexText, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out hexVal))
+                        {
+                            return new IntExpression(hexVal);
+                        }
+                    }
+                    else
+                    {
+                        int intVal;
+                        if (int.TryParse(lit.Literal, out intVal))
+                        {
+                            return new IntExpression(intVal);
+                        }
                     }
                     break;
                 case NssLiteralType.Float:
                     string floatStr = lit.Literal.TrimEnd('f', 'F');
-                    if (float.TryParse(floatStr, out float floatVal))
+                    if (float.TryParse(floatStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                     {
                         return new FloatExpression(floatVal);
                     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 
 namespace CSharpKOTOR.Formats.NCS.Compiler
 {
