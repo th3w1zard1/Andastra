@@ -55,7 +55,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 NCSInstruction inst = ncs.Instructions[idx];
                 _instructionIndices[inst] = idx;
             }
-            
+
             // Validate all jump targets are in the instruction list (matching PyKotor validation)
             // This helps catch issues early during interpreter construction
             for (int idx = 0; idx < ncs.Instructions.Count; idx++)

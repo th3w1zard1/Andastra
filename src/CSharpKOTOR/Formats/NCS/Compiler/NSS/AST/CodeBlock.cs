@@ -124,8 +124,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
             visited.Add(this);
 
-            // Python: offset = -self.temp_stack if offset is None else offset - self.temp_stack
-            int currentOffset = offset == null ? -TempStack : offset.Value - TempStack;
+            // If caller provides explicit offset, use it as-is (don't subtract temp_stack).
+            // Otherwise, follow Python: offset = -temp_stack.
+            int currentOffset = offset == null ? -TempStack : offset.Value;
 
             // Python implementation uses for...else: loop through scope, break if found, else check parent
             ScopedValue found = null;

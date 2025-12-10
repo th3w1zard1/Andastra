@@ -46,10 +46,12 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Otherwise, it's a variable - look up in scope
             // Python: IdentifierExpression.compile does NOT add to temp_stack for variables
             // The caller (BinaryOperatorExpression, ExpressionStatement, etc.) will track it
+            // Let GetScoped handle temp_stack; do not override offset here.
             GetScopedResult scoped = block.GetScoped(Identifier, root);
             bool isGlobal = scoped.IsGlobal;
             DynamicDataType dataType = scoped.Datatype;
             int offset = scoped.Offset;
+            // Always use SP-relative offsets; the temp stack handling is controlled by GetScoped.
             NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
 
             ncs.Add(instructionType, new List<object> { offset, dataType.Size(root) });
