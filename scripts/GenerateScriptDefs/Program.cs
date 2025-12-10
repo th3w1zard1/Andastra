@@ -49,7 +49,7 @@ namespace GenerateScriptDefs
         {
             while (idx < tokens.Count)
             {
-                if (tokens[idx] is NssSeparator sep && 
+                if (tokens[idx] is NssSeparator sep &&
                     (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.NewLine || sep.Separator == NssSeparators.Tab))
                 {
                     idx++;
@@ -78,7 +78,7 @@ namespace GenerateScriptDefs
             }
 
             // Pattern: TYPE [whitespace] IDENTIFIER [whitespace] = [whitespace] VALUE [whitespace] ;
-            if (!(tokens[idx] is NssKeyword typeToken && 
+            if (!(tokens[idx] is NssKeyword typeToken &&
                   (typeToken.Keyword == NssKeywords.Int || typeToken.Keyword == NssKeywords.Float || typeToken.Keyword == NssKeywords.String)))
             {
                 return null;
@@ -97,7 +97,7 @@ namespace GenerateScriptDefs
             }
 
             NssTokenBase nameToken = tokens[idx];
-            if (!(nameToken is NssIdentifier || 
+            if (!(nameToken is NssIdentifier ||
                   (nameToken is NssKeyword kw && (kw.Keyword == NssKeywords.ObjectSelf || kw.Keyword == NssKeywords.ObjectInvalid))))
             {
                 return null;
@@ -387,7 +387,7 @@ namespace GenerateScriptDefs
             foreach (var group in paramGroups)
             {
                 // Remove whitespace from group
-                var cleanGroup = group.Where(t => !(t is NssSeparator s && 
+                var cleanGroup = group.Where(t => !(t is NssSeparator s &&
                     (s.Separator == NssSeparators.Space || s.Separator == NssSeparators.NewLine || s.Separator == NssSeparators.Tab))).ToList();
 
                 if (cleanGroup.Count < 2)
@@ -725,16 +725,20 @@ namespace GenerateScriptDefs
 
             string paramsStr = paramsCs.Count > 0 ? "new List<ScriptParam> { " + string.Join(", ", paramsCs) + " }" : "new List<ScriptParam>()";
 
-            string description = func.Description.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r");
-            string raw = func.Raw.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r");
+            // Escape string for C#: The string contains literal \r\n (backslash-r-backslash-n) characters
+            // In a verbatim string (@""), we only need to escape quotes by doubling them
+            // The \r\n will be interpreted literally in a verbatim string
+            string description = func.Description.Replace("\"", "\"\"");
+            string raw = func.Raw.Replace("\"", "\"\"");
 
-            return $@"        new ScriptFunction(
-            {returnTypeCs},
-            ""{name}"",
-            {paramsStr},
-            ""{description}"",
-            ""{raw}"",
-        ),";
+            // Use verbatim string literals for description and raw to handle \r\n properly
+            return $"        new ScriptFunction(\n" +
+                   $"            {returnTypeCs},\n" +
+                   $"            \"{name}\",\n" +
+                   $"            {paramsStr},\n" +
+                   $"            @\"{description}\",\n" +
+                   $"            @\"{raw}\",\n" +
+                   $"        ),";
         }
 
         private static string GenerateScriptDefs(
@@ -821,7 +825,7 @@ namespace GenerateScriptDefs
             string k1Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "k1_nwscript.nss");
             string k2Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "tsl_nwscript.nss");
             string outputFile = Path.Combine(repoRoot, "src", "CSharpKOTOR", "Common", "Script", "ScriptDefs.cs");
-            
+
             // Verify files exist
             if (!File.Exists(k1Nss))
             {
