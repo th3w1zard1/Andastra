@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Tests.Diff
 
             TwoDaCompareResult result = TwoDaDiff.Compare(original, modified);
 
-            result.ChangedRows.Should().Contain(0);
+            result.ChangedRows.Should().ContainKey(0);
             result.ChangedRows[0]["col1"].Should().Be("new");
         }
 
@@ -59,7 +59,7 @@ namespace CSharpKOTOR.Tests.Diff
 
             result.AddedColumns.Should().Contain("col2");
             // Also check if the value in the new column is detected as a change for the existing row
-            result.ChangedRows.Should().Contain(0);
+            result.ChangedRows.Should().ContainKey(0);
             result.ChangedRows[0]["col2"].Should().Be("new_col_val");
         }
 

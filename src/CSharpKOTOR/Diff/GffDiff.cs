@@ -242,18 +242,7 @@ namespace CSharpKOTOR.Diff
                 // [Section1]
                 // Field1=value1
 
-                SerializeDict(sb, kvp.Value, kvp.Key); // Note: Test implies simple section names, not nested dot notation?
-                                                       // Test: SerializeToIni_ShouldHandleNestedSections
-                                                       // hierarchy = {"Root": {"Child": {"Field": "value"}}}
-                                                       // Expected:
-                                                       // [Root]
-                                                       // (empty)
-                                                       // [Root.Child] ? Or [Child] inside Root context?
-                                                       // TSLPatcher changes.ini is flat list of sections. References are by name.
-
-                // But the test description says "Implementation may vary".
-                // I'll implement flat section generation with unique names if possible, or just recursively output sections.
-                // For simple tests, recursive output with unique section names is standard.
+                SerializeDict(sb, kvp.Value, nextSection);
             }
         }
 

@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Tests.Diff
             compareResult.AddDifference("Field1", "old_value", "new_value");
             compareResult.AddDifference("Field2", 10, 20);
 
-            Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+            Dictionary<string, object> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
             flatChanges.Should().HaveCount(2);
             flatChanges["Field1"].Should().Be("new_value");
@@ -34,9 +34,9 @@ namespace CSharpKOTOR.Tests.Diff
             compareResult.AddDifference("Root\\Child\\Field", "old", "new");
             compareResult.AddDifference("Root\\Other", 1, 2);
 
-            Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+            Dictionary<string, object> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
-            flatChanges.Should().Contain("Root/Child/Field");
+            flatChanges.Should().ContainKey("Root/Child/Field");
             flatChanges["Root/Child/Field"].Should().Be("new");
             flatChanges["Root/Other"].Should().Be(2);
         }
@@ -47,9 +47,9 @@ namespace CSharpKOTOR.Tests.Diff
             var compareResult = new GffCompareResult();
             compareResult.AddDifference("RemovedField", "old_value", null);
 
-            Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+            Dictionary<string, object> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
-            flatChanges.Should().Contain("RemovedField");
+            flatChanges.Should().ContainKey("RemovedField");
             flatChanges["RemovedField"].Should().BeNull();
         }
 
@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Tests.Diff
         public void FlattenDifferences_ShouldHandleEmptyResult()
         {
             var compareResult = new GffCompareResult();
-            Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+            Dictionary<string, object> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
             flatChanges.Should().BeEmpty();
         }
@@ -65,15 +65,15 @@ namespace CSharpKOTOR.Tests.Diff
         [Fact]
         public void BuildHierarchy_ShouldBuildSimpleHierarchy()
         {
-            var flatChanges = new Dictionary<string, object?>
+            var flatChanges = new Dictionary<string, object>
         {
             { "Field1", "value1" },
             { "Field2", "value2" }
         };
 
-            Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+            Dictionary<string, object> hierarchy = GffDiff.BuildHierarchy(flatChanges);
 
-            hierarchy.Should().Contain("Field1");
+            hierarchy.Should().ContainKey("Field1");
             hierarchy["Field1"].Should().Be("value1");
             hierarchy["Field2"].Should().Be("value2");
         }
@@ -81,47 +81,50 @@ namespace CSharpKOTOR.Tests.Diff
         [Fact]
         public void BuildHierarchy_ShouldBuildNestedHierarchy()
         {
-            var flatChanges = new Dictionary<string, object?>
+            var flatChanges = new Dictionary<string, object>
         {
             { "Root/Child/Field", "value" },
             { "Root/Other", "other" }
         };
 
-            Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+            Dictionary<string, object> hierarchy = GffDiff.BuildHierarchy(flatChanges);
 
-            hierarchy.Should().Contain("Root");
-            var root = hierarchy["Root"] as Dictionary<string, object?>;
-            root.Should().NotBeNull();
+            hierarchy.Should().ContainKey("Root");
+            var root = hierarchy["Root"] as Dictionary<string, object>;
+            Assert.NotNull(root);
 
-            root!.Should().Contain("Child");
-            var child = root["Child"] as Dictionary<string, object?>;
-            child.Should().NotBeNull();
-            child!["Field"].Should().Be("value");
+            root.Should().ContainKey("Child");
+            var child = root["Child"] as Dictionary<string, object>;
+            Assert.NotNull(child);
+            child["Field"].Should().Be("value");
 
-            root.Should().Contain("Other");
+            root.Should().ContainKey("Other");
             root["Other"].Should().Be("other");
         }
 
         [Fact]
         public void BuildHierarchy_ShouldBuildDeepNesting()
         {
-            var flatChanges = new Dictionary<string, object?>
+            var flatChanges = new Dictionary<string, object>
         {
             { "Level1/Level2/Level3/Level4", "deep_value" }
         };
 
-            Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+            Dictionary<string, object> hierarchy = GffDiff.BuildHierarchy(flatChanges);
 
-            var level1 = hierarchy["Level1"] as Dictionary<string, object?>;
-            var level2 = level1!["Level2"] as Dictionary<string, object?>;
-            var level3 = level2!["Level3"] as Dictionary<string, object?>;
-            level3!["Level4"].Should().Be("deep_value");
+            var level1 = hierarchy["Level1"] as Dictionary<string, object>;
+            Assert.NotNull(level1);
+            var level2 = level1["Level2"] as Dictionary<string, object>;
+            Assert.NotNull(level2);
+            var level3 = level2["Level3"] as Dictionary<string, object>;
+            Assert.NotNull(level3);
+            level3["Level4"].Should().Be("deep_value");
         }
 
         [Fact]
         public void BuildHierarchy_ShouldBuildMultipleBranches()
         {
-            var flatChanges = new Dictionary<string, object?>
+            var flatChanges = new Dictionary<string, object>
         {
             { "Root/Branch1/Leaf1", "value1" },
             { "Root/Branch1/Leaf2", "value2" },
@@ -130,21 +133,24 @@ namespace CSharpKOTOR.Tests.Diff
 
             var hierarchy = GffDiff.BuildHierarchy(flatChanges);
 
-            var root = hierarchy["Root"] as Dictionary<string, object?>;
-            var branch1 = root!["Branch1"] as Dictionary<string, object?>;
-            var branch2 = root!["Branch2"] as Dictionary<string, object?>;
+            var root = hierarchy["Root"] as Dictionary<string, object>;
+            Assert.NotNull(root);
+            var branch1 = root["Branch1"] as Dictionary<string, object>;
+            Assert.NotNull(branch1);
+            var branch2 = root["Branch2"] as Dictionary<string, object>;
+            Assert.NotNull(branch2);
 
-            branch1!["Leaf1"].Should().Be("value1");
-            branch1!["Leaf2"].Should().Be("value2");
-            branch2!["Leaf1"].Should().Be("value3");
+            branch1["Leaf1"].Should().Be("value1");
+            branch1["Leaf2"].Should().Be("value2");
+            branch2["Leaf1"].Should().Be("value3");
         }
 
         [Fact]
         public void SerializeToIni_ShouldSerializeSimpleHierarchy()
         {
-            var hierarchy = new Dictionary<string, object?>
+            var hierarchy = new Dictionary<string, object>
         {
-            { "Section1", new Dictionary<string, object?> { { "Field1", "value1" }, { "Field2", "value2" } } }
+            { "Section1", new Dictionary<string, object> { { "Field1", "value1" }, { "Field2", "value2" } } }
         };
 
             string ini = GffDiff.SerializeToIni(hierarchy);
@@ -157,9 +163,9 @@ namespace CSharpKOTOR.Tests.Diff
         [Fact]
         public void SerializeToIni_ShouldQuoteValuesWithSpaces()
         {
-            var hierarchy = new Dictionary<string, object?>
+            var hierarchy = new Dictionary<string, object>
         {
-            { "Section1", new Dictionary<string, object?> { { "Field1", "value with spaces" } } }
+            { "Section1", new Dictionary<string, object> { { "Field1", "value with spaces" } } }
         };
 
             string ini = GffDiff.SerializeToIni(hierarchy);
@@ -170,9 +176,9 @@ namespace CSharpKOTOR.Tests.Diff
         [Fact]
         public void SerializeToIni_ShouldHandleNullValues()
         {
-            var hierarchy = new Dictionary<string, object?>
+            var hierarchy = new Dictionary<string, object>
         {
-            { "Section1", new Dictionary<string, object?> { { "Field1", null } } }
+            { "Section1", new Dictionary<string, object> { { "Field1", null } } }
         };
 
             string ini = GffDiff.SerializeToIni(hierarchy);
@@ -183,9 +189,9 @@ namespace CSharpKOTOR.Tests.Diff
         [Fact]
         public void SerializeToIni_ShouldHandleNestedSections()
         {
-            var hierarchy = new Dictionary<string, object?>
+            var hierarchy = new Dictionary<string, object>
         {
-            { "Root", new Dictionary<string, object?> { { "Child", new Dictionary<string, object?> { { "Field", "value" } } } } }
+            { "Root", new Dictionary<string, object> { { "Child", new Dictionary<string, object> { { "Field", "value" } } } } }
         };
 
             string ini = GffDiff.SerializeToIni(hierarchy);
@@ -204,10 +210,10 @@ namespace CSharpKOTOR.Tests.Diff
             compareResult.AddDifference("Section/Field", "old", "new");
 
             // 2. Flatten differences
-            Dictionary<string, object?> flatChanges = GffDiff.FlattenDifferences(compareResult);
+            Dictionary<string, object> flatChanges = GffDiff.FlattenDifferences(compareResult);
 
             // 3. Build hierarchy
-            Dictionary<string, object?> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+            Dictionary<string, object> hierarchy = GffDiff.BuildHierarchy(flatChanges);
 
             // 4. Serialize to INI
             string ini = GffDiff.SerializeToIni(hierarchy);

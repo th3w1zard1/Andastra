@@ -23,7 +23,7 @@ namespace CSharpKOTOR.Tests.Diff
 
             SsfCompareResult result = SsfDiff.Compare(original, modified);
 
-            result.ChangedSounds.Should().Contain(SSFSound.BATTLE_CRY_1);
+            result.ChangedSounds.Should().ContainKey(SSFSound.BATTLE_CRY_1);
             result.ChangedSounds[SSFSound.BATTLE_CRY_1].Should().Be(2);
         }
 

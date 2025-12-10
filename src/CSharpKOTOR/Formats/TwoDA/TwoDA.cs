@@ -299,6 +299,95 @@ namespace CSharpKOTOR.Formats.TwoDA
             SetCellString(rowIndex, header, value.ToString());
         }
 
+        /// <summary>
+        /// Compares this TwoDA with another TwoDA instance.
+        /// Ported from vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/twoda/twoda_data.py:854.
+        /// </summary>
+        public bool Compare(TwoDA other, Action<string> logFunc = null)
+        {
+            Action<string> logger = logFunc ?? (message => Console.WriteLine(message));
+
+            var oldHeaders = new HashSet<string>(_headers);
+            var newHeaders = new HashSet<string>(other.GetHeaders());
+            bool ret = true;
+
+            var missingHeaders = new HashSet<string>(oldHeaders);
+            missingHeaders.ExceptWith(newHeaders);
+            if (missingHeaders.Count > 0)
+            {
+                logger($"Missing headers in new TwoDA: {string.Join(", ", missingHeaders)}");
+                ret = false;
+            }
+
+            var extraHeaders = new HashSet<string>(newHeaders);
+            extraHeaders.ExceptWith(oldHeaders);
+            if (extraHeaders.Count > 0)
+            {
+                logger($"Extra headers in new TwoDA: {string.Join(", ", extraHeaders)}");
+                ret = false;
+            }
+
+            if (!ret)
+            {
+                return false;
+            }
+
+            var commonHeaders = new HashSet<string>(oldHeaders);
+            commonHeaders.IntersectWith(newHeaders);
+
+            var oldIndices = new HashSet<int?>();
+            foreach (TwoDARow row in this)
+            {
+                oldIndices.Add(RowIndex(row));
+            }
+
+            var newIndices = new HashSet<int?>();
+            foreach (TwoDARow row in other)
+            {
+                newIndices.Add(other.RowIndex(row));
+            }
+
+            var missingRows = new HashSet<int?>(oldIndices);
+            missingRows.ExceptWith(newIndices);
+            if (missingRows.Count > 0)
+            {
+                logger($"Missing rows in new TwoDA: {string.Join(", ", missingRows)}");
+                ret = false;
+            }
+
+            var extraRows = new HashSet<int?>(newIndices);
+            extraRows.ExceptWith(oldIndices);
+            if (extraRows.Count > 0)
+            {
+                logger($"Extra rows in new TwoDA: {string.Join(", ", extraRows)}");
+                ret = false;
+            }
+
+            foreach (int? index in oldIndices.Intersect(newIndices))
+            {
+                if (!index.HasValue)
+                {
+                    logger("Row mismatch");
+                    return false;
+                }
+
+                TwoDARow oldRow = GetRow(index.Value);
+                TwoDARow newRow = other.GetRow(index.Value);
+                foreach (string header in commonHeaders)
+                {
+                    string oldValue = oldRow.GetString(header);
+                    string newValue = newRow.GetString(header);
+                    if (oldValue != newValue)
+                    {
+                        logger($"Cell mismatch at RowIndex '{index.Value}' Header '{header}': '{oldValue}' --> '{newValue}'");
+                        ret = false;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
         public IEnumerator<TwoDARow> GetEnumerator()
         {
             for (int i = 0; i < _rows.Count; i++)

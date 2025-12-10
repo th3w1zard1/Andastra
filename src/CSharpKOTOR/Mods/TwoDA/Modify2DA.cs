@@ -189,7 +189,8 @@ namespace CSharpKOTOR.Mods.TwoDA
 
             if (targetRow is null)
             {
-                string rowLabel = RowLabel ?? twoda.LabelMax().ToString();
+                int defaultLabel = Math.Max(twoda.GetHeight(), twoda.LabelMax());
+                string rowLabel = RowLabel ?? defaultLabel.ToString();
                 int index = twoda.AddRow(rowLabel, new Dictionary<string, object>());
                 targetRow = twoda.GetRow(index);
                 targetRow.UpdateValues(Unpack(Cells, memory, twoda, targetRow));
@@ -253,7 +254,8 @@ namespace CSharpKOTOR.Mods.TwoDA
         public override void Apply(Formats.TwoDA.TwoDA twoda, PatcherMemory memory)
         {
             TwoDARow sourceRow = Target.Search(twoda, memory);
-            string rowLabel = RowLabel ?? twoda.LabelMax().ToString();
+            int defaultLabel = Math.Max(twoda.GetHeight(), twoda.LabelMax());
+            string rowLabel = RowLabel ?? defaultLabel.ToString();
 
             if (sourceRow is null)
             {
@@ -282,7 +284,12 @@ namespace CSharpKOTOR.Mods.TwoDA
 
             if (!(targetRow is null))
             {
-                // If the row already exists (based on exclusive_column) then we update the cells
+                foreach (string header in twoda.GetHeaders())
+                {
+                    string sourceValue = sourceRow.GetString(header);
+                    targetRow.SetString(header, sourceValue);
+                }
+
                 Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
                 targetRow.UpdateValues(cells);
             }

@@ -25,7 +25,7 @@ namespace CSharpKOTOR.Tests.Diff
             TlkCompareResult result = TlkDiff.Compare(original, modified);
 
             result.AddedEntries.Should().HaveCount(1);
-            result.AddedEntries.Should().Contain(1);
+            result.AddedEntries.Should().ContainKey(1);
             result.AddedEntries[1].Text.Should().Be("Text2");
         }
 
@@ -40,7 +40,7 @@ namespace CSharpKOTOR.Tests.Diff
 
             TlkCompareResult result = TlkDiff.Compare(original, modified);
 
-            result.ChangedEntries.Should().Contain(0);
+            result.ChangedEntries.Should().ContainKey(0);
             result.ChangedEntries[0].Text.Should().Be("NewText");
             result.ChangedEntries[0].Sound.Should().BeNull();
         }
@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Tests.Diff
 
             TlkCompareResult result = TlkDiff.Compare(original, modified);
 
-            result.ChangedEntries.Should().Contain(0);
+            result.ChangedEntries.Should().ContainKey(0);
             result.ChangedEntries[0].Text.Should().BeNull();
             result.ChangedEntries[0].Sound.Should().Be("Sound2");
         }
