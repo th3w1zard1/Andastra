@@ -26,11 +26,11 @@ namespace CSharpKOTOR.Tests.Formats
             Game game,
             List<string> libraryLookup = null)
         {
-            NCS compiled = NCSAuto.CompileNss(source, game, null, libraryLookup);
+            NCS compiled = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
             string decompiled = NCSAuto.DecompileNcs(compiled, game);
 
             // NSS -> NCS -> NSS -> NCS
-            NCS recompiled = NCSAuto.CompileNss(decompiled, game, null, libraryLookup);
+            NCS recompiled = NCSAuto.CompileNss(decompiled, game, null, null, libraryLookup);
             CanonicalBytes(compiled).Should().Equal(
                 CanonicalBytes(recompiled),
                 "Recompiled bytecode diverged from initial compile");
@@ -41,6 +41,7 @@ namespace CSharpKOTOR.Tests.Formats
             NCS ncsFromBinary = NCSAuto.CompileNss(
                 NCSAuto.DecompileNcs(reloaded, game),
                 game,
+                null,
                 null,
                 libraryLookup);
             CanonicalBytes(reloaded).Should().Equal(
@@ -608,7 +609,7 @@ namespace CSharpKOTOR.Tests.Formats
 
                 var libraryLookup = new List<string> { tempDir };
                 string decompiled = NCSAuto.DecompileNcs(
-                    NCSAuto.CompileNss(source, Game.K1, null, libraryLookup),
+                    NCSAuto.CompileNss(source, Game.K1, null, null, libraryLookup),
                     Game.K1);
                 AssertBidirectionalRoundtrip(source, Game.K1, libraryLookup);
                 AssertSubstrings(decompiled, new[]

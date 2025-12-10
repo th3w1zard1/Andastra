@@ -170,10 +170,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
         public override void Compile(NCS ncs, CodeRoot root)
         {
-            // FIXED: Only merge symbol tables (function_map, struct_map), not all objects.
-            // This ensures only symbols are available for resolution, but they're only
-            // compiled if actually referenced. This matches nwnnsscomp behavior.
-
             List<string> lookupPaths = root.LibraryLookup != null
                 ? new List<string>(root.LibraryLookup)
                 : null;
@@ -188,9 +184,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             string source = GetScript(root);
             CodeRoot t = nssParser.Parse(source);
 
-            // FIXED: Only merge symbol tables, NOT all objects.
-            // The bug was: `root.Objects = t.Objects.Concat(root.Objects).ToList();`
-            // This dumped all include objects into compilation, causing incorrect string offsets.
             foreach (var kvp in t.FunctionMap)
             {
                 root.FunctionMap[kvp.Key] = kvp.Value;
@@ -199,7 +192,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 root.StructMap[kvp.Key] = kvp.Value;
             }
-            // Note: Constants are already shared via root.constants, so no need to merge
+            // Merge include objects (excluding further IncludeScript nodes) so they are compiled.
+            var includeObjects = t.Objects.Where(o => !(o is IncludeScript)).ToList();
+            root.Objects = includeObjects.Concat(root.Objects).ToList();
+            // Constants are already shared via root.constants, so no need to merge
         }
 
         private string GetScript(CodeRoot root)

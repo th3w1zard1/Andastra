@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 // Provide helpful error with similar function names
                 IEnumerable<string> availableFuncs = root.FunctionMap.Keys.Take(10);
-                throw new CompileError(
+                throw new NSS.CompileError(
                     $"Undefined function '{FunctionName}'\n" +
                     $"  Available functions: {string.Join(", ", availableFuncs)}" +
                     $"{(root.FunctionMap.Count > 10 ? "..." : "")}");

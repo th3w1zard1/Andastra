@@ -88,6 +88,7 @@ namespace CSharpKOTOR.Mods.NSS
                         mutableSource.Value,
                         game,
                         null,
+                        null,
                         new List<string> { tempFolder });
                     compiledBytes = NCSAuto.BytesNcs(ncs);
                     return compiledBytes;

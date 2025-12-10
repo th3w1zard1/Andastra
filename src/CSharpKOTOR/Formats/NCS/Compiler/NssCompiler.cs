@@ -31,7 +31,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         /// <summary>
         /// Compile NSS source code to NCS bytecode.
         /// </summary>
-        public NCS Compile(string source)
+        public NCS Compile(string source, Dictionary<string, byte[]> library = null)
         {
             if (string.IsNullOrWhiteSpace(source))
             {
@@ -60,9 +60,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             List<ScriptFunction> functions = _game.IsK1() ? ScriptDefs.KOTOR_FUNCTIONS : ScriptDefs.TSL_FUNCTIONS;
             List<ScriptConstant> constants = _game.IsK1() ? ScriptDefs.KOTOR_CONSTANTS : ScriptDefs.TSL_CONSTANTS;
-            var library = new Dictionary<string, byte[]>();
+            var lib = library ?? new Dictionary<string, byte[]>();
 
-            var parser = new NssParser(functions, constants, library, _libraryLookup);
+            var parser = new NssParser(functions, constants, lib, _libraryLookup);
             CodeRoot root = parser.Parse(source);
 
             var ncs = new NCS();

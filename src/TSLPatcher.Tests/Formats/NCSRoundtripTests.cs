@@ -46,12 +46,12 @@ namespace CSharpKOTOR.Tests.Formats
                 }
 
                 string source = File.ReadAllText(scriptPath, Encoding.GetEncoding(1252));
-                NCS originalNcs = NCSAuto.CompileNss(source, game, null, libraryLookup);
+                NCS originalNcs = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
 
                 string decompiledSource = NCSAuto.DecompileNcs(originalNcs, game);
-                NCS roundtripNcs = NCSAuto.CompileNss(decompiledSource, game, null, libraryLookup);
+                NCS roundtripNcs = NCSAuto.CompileNss(decompiledSource, game, null, null, libraryLookup);
                 string roundtripSource = NCSAuto.DecompileNcs(roundtripNcs, game);
-                NCS roundtripNcsSecond = NCSAuto.CompileNss(roundtripSource, game, null, libraryLookup);
+                NCS roundtripNcsSecond = NCSAuto.CompileNss(roundtripSource, game, null, null, libraryLookup);
 
                 roundtripNcs.Should().BeEquivalentTo(roundtripNcsSecond,
                     $"Roundtrip compilation not stable for {scriptPath}");
@@ -110,7 +110,7 @@ namespace CSharpKOTOR.Tests.Formats
 
                     try
                     {
-                        NCSAuto.CompileNss(source, game, null, libraryLookup);
+                        NCSAuto.CompileNss(source, game, null, null, libraryLookup);
                     }
                     catch (Exception ex)
                     {

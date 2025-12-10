@@ -19,6 +19,11 @@ namespace CSharpKOTOR.Tests.Formats
     /// </summary>
     public class NCSCompilerTests
     {
+        static NCSCompilerTests()
+        {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        }
+
         private NCS Compile(
             string script,
             Dictionary<string, byte[]> library = null,
@@ -28,7 +33,7 @@ namespace CSharpKOTOR.Tests.Formats
             {
                 library = new Dictionary<string, byte[]>();
             }
-            return NCSAuto.CompileNss(script, Game.K1, null, libraryLookup);
+            return NCSAuto.CompileNss(script, Game.K1, library, null, libraryLookup);
         }
 
         #region Engine Call

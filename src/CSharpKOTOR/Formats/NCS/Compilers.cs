@@ -246,7 +246,7 @@ namespace CSharpKOTOR.Formats.NCS
             string nssContents = CompilerUtils.DecodeBytesWithFallbacks(nssData);
             string parentDir = Path.GetDirectoryName(sourcePath);
             List<string> libraryLookup = parentDir != null ? new List<string> { parentDir } : new List<string>();
-            NCS ncs = NCSAuto.CompileNss(nssContents, game, optimizers, libraryLookup, null, debug);
+            NCS ncs = NCSAuto.CompileNss(nssContents, game, null, optimizers, libraryLookup, null, debug);
             NCSAuto.WriteNcs(ncs, outputPath);
         }
 
@@ -264,7 +264,7 @@ namespace CSharpKOTOR.Formats.NCS
             string nssContents = CompilerUtils.DecodeBytesWithFallbacks(nssData);
             string parentDir = Path.GetDirectoryName(sourcePath);
             List<string> libraryLookup = parentDir != null ? new List<string> { parentDir } : new List<string>();
-            NCS ncs = NCSAuto.CompileNss(nssContents, game, optimizers, libraryLookup, null, debug);
+            NCS ncs = NCSAuto.CompileNss(nssContents, game, null, optimizers, libraryLookup, null, debug);
             NCSAuto.WriteNcs(ncs, outputPath);
             return ncs;
         }

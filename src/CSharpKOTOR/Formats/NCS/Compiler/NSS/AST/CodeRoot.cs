@@ -138,9 +138,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction mainStart = FirstNonNop(FunctionMap["main"].Instruction, ncs);
                 FunctionMap["main"] = new FunctionReference(mainStart, FunctionMap["main"].Definition);
-                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, 0);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart);
                 entryJsr.Jump = mainStart;
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 1);
+                ncs.Add(NCSInstructionType.RETN, new List<object>());
 
                 if (debug)
                 {
@@ -158,10 +158,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction scStart = FirstNonNop(FunctionMap["StartingConditional"].Instruction, ncs);
                 FunctionMap["StartingConditional"] = new FunctionReference(scStart, FunctionMap["StartingConditional"].Definition);
-                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, 0);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart);
                 entryJsr.Jump = scStart;
-                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, 1);
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 2);
+                ncs.Add(NCSInstructionType.RSADDI, new List<object>());
+                ncs.Add(NCSInstructionType.RETN, new List<object>());
 
                 if (debug)
                 {

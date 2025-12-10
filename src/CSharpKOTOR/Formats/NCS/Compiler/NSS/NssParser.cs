@@ -95,16 +95,16 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                     continue;
                 }
 
-                // Try function (before global variable, since void can only be a function return type)
-                obj = TryParseFunctionDefinition();
+                // Try global variable before function definitions to allow globals preceding functions
+                obj = TryParseGlobalVariable();
                 if (obj != null)
                 {
                     root.Objects.Add(obj);
                     continue;
                 }
 
-                // Try global variable
-                obj = TryParseGlobalVariable();
+                // Try function definition
+                obj = TryParseFunctionDefinition();
                 if (obj != null)
                 {
                     root.Objects.Add(obj);

@@ -147,6 +147,7 @@ namespace CSharpKOTOR.Formats.NCS
         public static NCS CompileNss(
             string source,
             Game game,
+            Dictionary<string, byte[]> library = null,
             List<NCSOptimizer> optimizers = null,
             [CanBeNull] List<string> libraryLookup = null,
             [CanBeNull] object errorlog = null,
@@ -174,7 +175,7 @@ namespace CSharpKOTOR.Formats.NCS
             }
 
             var compiler = new NssCompiler(game, libraryLookup, debug);
-            NCS ncs = compiler.Compile(source);
+            NCS ncs = compiler.Compile(source, library);
             ncs.OriginalSource = source;
 
             // Ensure NOP removal is always first optimization pass
