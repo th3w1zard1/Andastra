@@ -345,5 +345,228 @@ namespace CSharpKOTOR.Installation
         {
             _resourceManager.ReloadModule(moduleName);
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:723-730
+        // Original: def module_path(self) -> Path:
+        /// <summary>
+        /// Returns the path to modules folder of the Installation. This method maintains the case of the foldername.
+        /// </summary>
+        public string ModulePath()
+        {
+            return GetModulesPath(_path);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:732-739
+        // Original: def override_path(self) -> Path:
+        /// <summary>
+        /// Returns the path to override folder of the Installation. This method maintains the case of the foldername.
+        /// </summary>
+        public string OverridePath()
+        {
+            return GetOverridePath(_path);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:935-942
+        // Original: def chitin_resources(self) -> list[FileResource]:
+        /// <summary>
+        /// Returns a shallow copy of the list of FileResources stored in the Chitin linked to the Installation.
+        /// </summary>
+        public List<FileResource> ChitinResources()
+        {
+            return _resourceManager.GetChitinResources();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:944-946
+        // Original: def core_resources(self) -> list[FileResource]:
+        /// <summary>
+        /// Similar to chitin_resources, but also return the resources in patch.erf if exists and the installation is Game.K1.
+        /// </summary>
+        public List<FileResource> CoreResources()
+        {
+            var results = new List<FileResource>();
+            results.AddRange(ChitinResources());
+            results.AddRange(_resourceManager.GetPatchErfResources(_game));
+            return results;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1030-1039
+        // Original: def override_list(self) -> list[str]:
+        /// <summary>
+        /// Returns the list of subdirectories located in override folder linked to the Installation.
+        /// </summary>
+        public List<string> OverrideList()
+        {
+            string overridePath = GetOverridePath(_path);
+            if (!Directory.Exists(overridePath))
+            {
+                return new List<string>();
+            }
+
+            var subdirs = new List<string>();
+            foreach (string dir in Directory.GetDirectories(overridePath))
+            {
+                subdirs.Add(Path.GetFileName(dir));
+            }
+
+            return subdirs;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1041-1059
+        // Original: def override_resources(self, directory: str | None = None) -> list[FileResource]:
+        /// <summary>
+        /// Returns a list of FileResources stored in the specified subdirectory located in the 'override' folder linked to the Installation.
+        /// </summary>
+        public List<FileResource> OverrideResources(string directory = null)
+        {
+            string overridePath = GetOverridePath(_path);
+            if (!Directory.Exists(overridePath))
+            {
+                return new List<FileResource>();
+            }
+
+            var results = new List<FileResource>();
+            string searchPath = string.IsNullOrEmpty(directory) ? overridePath : Path.Combine(overridePath, directory);
+
+            if (!Directory.Exists(searchPath))
+            {
+                return results;
+            }
+
+            // Recursively search for all resource files
+            foreach (string file in Directory.GetFiles(searchPath, "*.*", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    ResourceIdentifier identifier = ResourceIdentifier.FromPath(file);
+                    if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                    {
+                        var fileInfo = new FileInfo(file);
+                        results.Add(new FileResource(
+                            identifier.ResName,
+                            identifier.ResType,
+                            (int)fileInfo.Length,
+                            0,
+                            file
+                        ));
+                    }
+                }
+                catch
+                {
+                    // Skip files that can't be parsed as resources
+                }
+            }
+
+            return results;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1366-1560
+        // Original: def locations(self, queries: list[ResourceIdentifier], order: list[SearchLocation] | None = None, *, capsules: Sequence[LazyCapsule] | None = None, folders: list[Path] | None = None, module_root: str | None = None, logger: Callable[[str], None] | None = None) -> dict[ResourceIdentifier, list[LocationResult]]:
+        /// <summary>
+        /// Returns a dictionary mapping the items provided in the queries argument to a list of locations for that respective resource.
+        /// </summary>
+        public Dictionary<ResourceIdentifier, List<LocationResult>> Locations(
+            List<ResourceIdentifier> queries,
+            SearchLocation[] order = null,
+            List<Capsule.LazyCapsule> capsules = null,
+            List<string> folders = null,
+            string moduleRoot = null)
+        {
+            if (queries == null || queries.Count == 0)
+            {
+                return new Dictionary<ResourceIdentifier, List<LocationResult>>();
+            }
+
+            if (order == null || order.Length == 0)
+            {
+                order = new[]
+                {
+                    SearchLocation.CUSTOM_FOLDERS,
+                    SearchLocation.OVERRIDE,
+                    SearchLocation.CUSTOM_MODULES,
+                    SearchLocation.MODULES,
+                    SearchLocation.CHITIN,
+                };
+            }
+
+            capsules = capsules ?? new List<Capsule.LazyCapsule>();
+            folders = folders ?? new List<string>();
+
+            var locations = new Dictionary<ResourceIdentifier, List<LocationResult>>();
+            foreach (ResourceIdentifier query in queries)
+            {
+                locations[query] = new List<LocationResult>();
+            }
+
+            // Search each location in order
+            foreach (SearchLocation location in order)
+            {
+                foreach (ResourceIdentifier query in queries)
+                {
+                    List<LocationResult> found = Locate(query.ResName, query.ResType, new[] { location }, moduleRoot);
+                    if (found.Count > 0)
+                    {
+                        locations[query].AddRange(found);
+                    }
+                }
+            }
+
+            // Search custom capsules
+            if (capsules.Count > 0)
+            {
+                foreach (Capsule.LazyCapsule capsule in capsules)
+                {
+                    foreach (ResourceIdentifier query in queries)
+                    {
+                        FileResource resource = capsule.GetResourceInfo(query.ResName, query.ResType);
+                        if (resource != null)
+                        {
+                            var locationResult = new LocationResult(resource.FilePath, resource.Offset, resource.Size);
+                            locationResult.SetFileResource(resource);
+                            locations[query].Add(locationResult);
+                        }
+                    }
+                }
+            }
+
+            // Search custom folders
+            if (folders.Count > 0)
+            {
+                foreach (string folder in folders)
+                {
+                    if (!Directory.Exists(folder))
+                    {
+                        continue;
+                    }
+
+                    foreach (string file in Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories))
+                    {
+                        try
+                        {
+                            ResourceIdentifier identifier = ResourceIdentifier.FromPath(file);
+                            if (queries.Contains(identifier))
+                            {
+                                var fileInfo = new FileInfo(file);
+                                var fileResource = new FileResource(
+                                    identifier.ResName,
+                                    identifier.ResType,
+                                    (int)fileInfo.Length,
+                                    0,
+                                    file
+                                );
+                                var locationResult = new LocationResult(file, 0, (int)fileInfo.Length);
+                                locationResult.SetFileResource(fileResource);
+                                locations[identifier].Add(locationResult);
+                            }
+                        }
+                        catch
+                        {
+                            // Skip files that can't be parsed
+                        }
+                    }
+                }
+            }
+
+            return locations;
+        }
     }
 }

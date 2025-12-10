@@ -478,6 +478,50 @@ namespace CSharpKOTOR.Installation
                 return null;
             }
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:935-942
+        // Original: def chitin_resources(self) -> list[FileResource]:
+        /// <summary>
+        /// Returns a shallow copy of the list of FileResources stored in the Chitin linked to the Installation.
+        /// </summary>
+        public List<FileResource> GetChitinResources()
+        {
+            string chitinPath = Installation.GetChitinPath(_installPath);
+            Chitin chitin = GetChitin(chitinPath);
+            if (chitin == null)
+            {
+                return new List<FileResource>();
+            }
+            return chitin.GetResources();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:699-709
+        // Original: def _load_patch_erf(self):
+        /// <summary>
+        /// Returns the list of FileResources stored in patch.erf (K1 only).
+        /// </summary>
+        public List<FileResource> GetPatchErfResources(Game game)
+        {
+            var results = new List<FileResource>();
+            if (!game.IsK1())
+            {
+                return results;
+            }
+
+            string patchErfPath = Path.Combine(_installPath, "patch.erf");
+            if (!File.Exists(patchErfPath))
+            {
+                return results;
+            }
+
+            LazyCapsule capsule = GetCapsule(patchErfPath);
+            if (capsule != null)
+            {
+                results.AddRange(capsule.GetResources());
+            }
+
+            return results;
+        }
     }
 }
 
