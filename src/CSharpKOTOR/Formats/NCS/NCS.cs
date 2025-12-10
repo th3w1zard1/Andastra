@@ -119,7 +119,18 @@ namespace CSharpKOTOR.Formats.NCS
 
         public int GetInstructionIndex(NCSInstruction instruction)
         {
-            return Instructions.IndexOf(instruction);
+            if (instruction == null)
+            {
+                return -1;
+            }
+            for (int i = 0; i < Instructions.Count; i++)
+            {
+                if (ReferenceEquals(Instructions[i], instruction))
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         public HashSet<NCSInstruction> GetReachableInstructions()
@@ -398,7 +409,7 @@ namespace CSharpKOTOR.Formats.NCS
                 object jumpIdx = null;
                 if (inst.Jump != null)
                 {
-                    int idx = Instructions.IndexOf(inst.Jump);
+                    int idx = GetInstructionIndex(inst.Jump);
                     if (idx >= 0)
                     {
                         jumpIdx = idx;
@@ -426,7 +437,7 @@ namespace CSharpKOTOR.Formats.NCS
                 NCSInstruction instruction = Instructions[i];
                 if (instruction.Jump != null)
                 {
-                    int jumpIndex = Instructions.IndexOf(instruction.Jump);
+                    int jumpIndex = GetInstructionIndex(instruction.Jump);
                     if (jumpIndex < 0)
                     {
                         throw new ArgumentException($"{instruction.Jump} is not in list");

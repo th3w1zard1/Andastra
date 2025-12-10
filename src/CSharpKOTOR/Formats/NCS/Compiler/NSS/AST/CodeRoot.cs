@@ -85,6 +85,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // nwnnsscomp processes the includes and global variable declarations before functions regardless if they are
             // placed before or after function definitions. We will replicate this behavior.
 
+            bool debug = System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true";
+
             List<IncludeScript> included = new List<IncludeScript>();
             while (Objects.Any(obj => obj is IncludeScript))
             {
@@ -115,6 +117,23 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 obj.Compile(ncs, this);
             }
 
+            if (debug)
+            {
+                System.Console.WriteLine("=== Function map ===");
+                foreach (var kvp in FunctionMap)
+                {
+                    int idx = ncs.GetInstructionIndex(kvp.Value.Instruction);
+                    System.Console.WriteLine($"{kvp.Key} -> idx {idx} ins {kvp.Value.Instruction?.InsType}");
+                }
+                System.Console.WriteLine("=== Instruction listing ===");
+                for (int i = 0; i < ncs.Instructions.Count; i++)
+                {
+                    NCSInstruction inst = ncs.Instructions[i];
+                    int jumpIdx = inst.Jump != null ? ncs.GetInstructionIndex(inst.Jump) : -1;
+                    System.Console.WriteLine($"{i}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}] jumpIdx={jumpIdx}");
+                }
+            }
+
             if (FunctionMap.ContainsKey("main"))
             {
                 NCSInstruction mainStart = FirstNonNop(FunctionMap["main"].Instruction, ncs);
@@ -122,6 +141,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, 0);
                 entryJsr.Jump = mainStart;
                 ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 1);
+
+                if (debug)
+                {
+                    System.Console.WriteLine($"Entry JSR targets main at idx {ncs.GetInstructionIndex(mainStart)}");
+                }
             }
             else if (FunctionMap.ContainsKey("StartingConditional"))
             {
@@ -131,6 +155,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 entryJsr.Jump = scStart;
                 ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, 1);
                 ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 2);
+
+                if (debug)
+                {
+                    System.Console.WriteLine($"Entry JSR targets StartingConditional at idx {ncs.GetInstructionIndex(scStart)}");
+                }
             }
             else
             {
@@ -547,6 +576,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         public override void Compile(NCS ncs, CodeRoot root)
         {
             string name = Name.Label;
+            bool debug = System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true";
 
             // Make sure all default parameters appear after the required parameters
             bool previousIsDefault = false;
@@ -594,6 +624,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 ncs.Instructions.Add(retn);
 
                 root.FunctionMap[name] = new FunctionReference(functionStart, this);
+
+                if (debug)
+                {
+                    System.Console.WriteLine($"Compiled function {name} start idx {ncs.GetInstructionIndex(functionStart)} count {ncs.Instructions.Count}");
+                }
             }
         }
 
@@ -642,7 +677,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             temp.Instructions.Add(retn);
 
             NCSInstruction stubInstruction = root.FunctionMap[name].Instruction;
-            int stubIndex = ncs.Instructions.IndexOf(stubInstruction);
+            int stubIndex = ncs.GetInstructionIndex(stubInstruction);
             NCSInstruction newStart;
             if (stubIndex >= 0)
             {
