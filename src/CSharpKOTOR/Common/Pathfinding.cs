@@ -50,6 +50,7 @@ namespace CSharpKOTOR.Common
     }
 
     // Minimal interface mirroring the PTH usage in PyKotor (outgoing edges and point iteration).
+    // Minimal contracts mirroring PTH usage in PyKotor pathfinding.
     public interface IPth
     {
         IEnumerable<PthPoint> Points();
