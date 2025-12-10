@@ -154,6 +154,23 @@ namespace CSharpKOTOR.Extract.SaveData
             }
         }
 
+        // Convenience helpers for inventory/repute replacement
+        public void SetInventory(byte[] inventoryRes)
+        {
+            var ident = new ResourceIdentifier("inventory", ResourceType.RES);
+            InventoryIdentifier = ident;
+            InventoryGff = GFF.FromBytes(inventoryRes);
+            SetResource(ident, inventoryRes);
+        }
+
+        public void SetRepute(byte[] reputeFac)
+        {
+            var ident = new ResourceIdentifier("repute", ResourceType.FAC);
+            ReputeIdentifier = ident;
+            ReputeGff = GFF.FromBytes(reputeFac);
+            SetResource(ident, reputeFac);
+        }
+
         private static int? ExtractCompanionIndex(string resname)
         {
             string lower = resname.ToLowerInvariant();
