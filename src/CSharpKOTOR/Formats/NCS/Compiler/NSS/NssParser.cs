@@ -393,7 +393,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 }
 
                 // Check if it's an initialization or just declaration
-                if (MatchOperator(NssOperators.Equals))
+                if (MatchOperator(NssOperators.Assignment))
                 {
                     // It's an initialization
                     Expression initExpr = ParseExpression();
@@ -451,7 +451,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                         Expression defaultValue = null;
 
                         SkipWhitespaceAndComments();
-                        if (MatchOperator(NssOperators.Equals))
+                        if (MatchOperator(NssOperators.Assignment))
                         {
                             defaultValue = ParseExpression();
                         }
@@ -529,7 +529,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                         Expression defaultValue = null;
 
                         SkipWhitespaceAndComments();
-                        if (MatchOperator(NssOperators.Equals))
+                        if (MatchOperator(NssOperators.Assignment))
                         {
                             SkipWhitespaceAndComments();
                             defaultValue = ParseExpression();
@@ -821,7 +821,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                     SkipWhitespaceAndComments(); // Skip whitespace before checking for '='
 
                     Expression initializer = null;
-                    if (MatchOperator(NssOperators.Equals))
+                    if (MatchOperator(NssOperators.Assignment))
                     {
                         SkipWhitespaceAndComments();
                         initializer = ParseExpression();
@@ -1448,67 +1448,67 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
             int savedIndex = _tokenIndex;
 
             // Compound assignments
-            if (MatchOperator(NssOperators.ModuloAssignment) || MatchCompoundOperator(NssOperators.Modulo, NssOperators.Equals))
+            if (MatchOperator(NssOperators.ModuloAssignment) || MatchCompoundOperator(NssOperators.Modulo, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new ModuloAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.BitwiseAndAssignment) || MatchCompoundOperator(NssOperators.And, NssOperators.Equals))
+            if (MatchOperator(NssOperators.BitwiseAndAssignment) || MatchCompoundOperator(NssOperators.And, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new BitwiseAndAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.BitwiseOrAssignment) || MatchCompoundOperator(NssOperators.Or, NssOperators.Equals))
+            if (MatchOperator(NssOperators.BitwiseOrAssignment) || MatchCompoundOperator(NssOperators.Or, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new BitwiseOrAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.BitwiseXorAssignment) || MatchCompoundOperator(NssOperators.Xor, NssOperators.Equals))
+            if (MatchOperator(NssOperators.BitwiseXorAssignment) || MatchCompoundOperator(NssOperators.Xor, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new BitwiseXorAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.BitwiseLeftAssignment) || MatchCompoundOperator(NssOperators.LessThan, NssOperators.LessThan, NssOperators.Equals))
+            if (MatchOperator(NssOperators.BitwiseLeftAssignment) || MatchCompoundOperator(NssOperators.LessThan, NssOperators.LessThan, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new BitwiseLeftAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.BitwiseRightAssignment) || MatchCompoundOperator(NssOperators.GreaterThan, NssOperators.GreaterThan, NssOperators.Equals))
+            if (MatchOperator(NssOperators.BitwiseRightAssignment) || MatchCompoundOperator(NssOperators.GreaterThan, NssOperators.GreaterThan, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new BitwiseRightAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.BitwiseUnsignedRightAssignment) || MatchCompoundOperator(NssOperators.GreaterThan, NssOperators.GreaterThan, NssOperators.GreaterThan, NssOperators.Equals))
+            if (MatchOperator(NssOperators.BitwiseUnsignedRightAssignment) || MatchCompoundOperator(NssOperators.GreaterThan, NssOperators.GreaterThan, NssOperators.GreaterThan, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new BitwiseUnsignedRightAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.AdditionAssignment) || MatchCompoundOperator(NssOperators.Addition, NssOperators.Equals))
+            if (MatchOperator(NssOperators.AdditionAssignment) || MatchCompoundOperator(NssOperators.Addition, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new AdditionAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.SubtractionAssignment) || MatchCompoundOperator(NssOperators.Subtraction, NssOperators.Equals))
+            if (MatchOperator(NssOperators.SubtractionAssignment) || MatchCompoundOperator(NssOperators.Subtraction, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new SubtractionAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.MultiplicationAssignment) || MatchCompoundOperator(NssOperators.Multiplication, NssOperators.Equals))
+            if (MatchOperator(NssOperators.MultiplicationAssignment) || MatchCompoundOperator(NssOperators.Multiplication, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
                 return new MultiplicationAssignmentExpression(fa, right);
             }
-            if (MatchOperator(NssOperators.DivisionAssignment) || MatchCompoundOperator(NssOperators.Division, NssOperators.Equals))
+            if (MatchOperator(NssOperators.DivisionAssignment) || MatchCompoundOperator(NssOperators.Division, NssOperators.Assignment))
             {
                 Expression right = ParseTernaryExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);
@@ -1516,7 +1516,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
             }
 
             // Simple assignment = (right-associative)
-            if (MatchOperator(NssOperators.Equals))
+            if (MatchOperator(NssOperators.Assignment))
             {
                 Expression right = ParseAssignmentExpression();
                 FieldAccess fa = ConvertToFieldAccess(left);

@@ -13,10 +13,10 @@ namespace CSharpKOTOR.Mods.GFF
 
     /// <summary>
     /// GFF modification algorithms for TSLPatcher/HoloPatcher.
-    /// 
+    ///
     /// This module implements GFF field modification logic for applying patches from changes.ini files.
     /// Handles field additions, modifications, list operations, and struct manipulations.
-    /// 
+    ///
     /// References:
     /// ----------
     ///     vendor/TSLPatcher/TSLPatcher.pl - Perl GFF modification logic (broken and unfinished)
@@ -125,17 +125,17 @@ namespace CSharpKOTOR.Mods.GFF
 
         /// <summary>
         /// Navigates through gff lists/structs to find the specified path.
-        /// 
+        ///
         /// Args:
-        /// ---- 
+        /// ----
         ///     root_container (GFFStruct): The root container to start navigation
-        /// 
+        ///
         /// Returns:
-        /// ------- 
+        /// -------
         ///     container (GFFList | GFFStruct | None): The container at the end of the path or None if not found
-        /// 
+        ///
         /// Processing Logic:
-        /// ---------------- 
+        /// ----------------
         ///     - It checks if the path is valid PureWindowsPath
         ///     - Loops through each part of the path
         ///     - Acquires the container at each step from the parent container
@@ -301,15 +301,15 @@ namespace CSharpKOTOR.Mods.GFF
 
         /// <summary>
         /// Adds a new struct to a list.
-        /// 
+        ///
         /// Args:
-        /// ---- 
+        /// ----
         ///     root_struct: The root struct to navigate and modify.
         ///     memory: The memory object to read/write values from.
         ///     logger: The logger to log errors or warnings.
-        /// 
+        ///
         /// Processing Logic:
-        /// ---------------- 
+        /// ----------------
         ///     1. Navigates to the target list container using the provided path.
         ///     2. Checks if the navigated container is a list, otherwise logs an error.
         ///     3. Creates a new struct and adds it to the list.
@@ -492,15 +492,15 @@ namespace CSharpKOTOR.Mods.GFF
 
         /// <summary>
         /// Adds a new field to a GFF struct.
-        /// 
+        ///
         /// Args:
-        /// ---- 
+        /// ----
         ///     root_struct: GFFStruct - The root GFF struct to navigate and modify.
         ///     memory: PatcherMemory - The memory state to read values from.
         ///     logger: PatchLogger - The logger to record errors to.
-        /// 
+        ///
         /// Processing Logic:
-        /// ---------------- 
+        /// ----------------
         ///     - Navigates to the specified container path and gets the GFFStruct instance
         ///     - Resolves the field value using the provided value expression
         ///     - Resolves the value path if part of !FieldPath memory
@@ -518,7 +518,7 @@ namespace CSharpKOTOR.Mods.GFF
             // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
             (string parentPath, string pathName) = SplitPath(Path);
-            string containerPath = string.IsNullOrEmpty(parentPath) ? (Path ?? "") : parentPath;
+            string containerPath = Path ?? "";
             if (pathName == ">>##INDEXINLIST##<<")
             {
                 containerPath = parentPath;
@@ -586,30 +586,30 @@ namespace CSharpKOTOR.Mods.GFF
                 // Python: for part, resolvedpart in zip_longest(add_field.path.parts, self.path.parts):
                 // Python:     newpath /= resolvedpart or part
                 string childPath = addField is AddFieldGFF af ? af.Path : (addField is AddStructToListGFF asl ? asl.Path : string.Empty);
-                string[] parentParts = string.IsNullOrEmpty(Path)
-                    ? Array.Empty<string>()
-                    : Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-                string[] childParts = string.IsNullOrEmpty(childPath)
-                    ? Array.Empty<string>()
-                    : childPath.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-                int maxLen = Math.Max(parentParts.Length, childParts.Length);
-                var combinedParts = new System.Collections.Generic.List<string>();
-                for (int i = 0; i < maxLen; i++)
+                // Child modifiers should point to the newly added field; combine parent container with the new field label.
+                string basePathForChildren = CombinePath(containerPath, Label);
+                string newpath;
+                if (string.IsNullOrEmpty(childPath))
                 {
-                    string resolvedPart = i < parentParts.Length ? parentParts[i] : null;
-                    string part = i < childParts.Length ? childParts[i] : null;
-                    string chosen = !string.IsNullOrEmpty(resolvedPart) ? resolvedPart : part;
-                    if (!string.IsNullOrEmpty(chosen))
-                    {
-                        combinedParts.Add(chosen);
-                    }
+                    newpath = basePathForChildren;
                 }
-                string newpath = string.Join("/", combinedParts);
+                else if (childPath.StartsWith(basePathForChildren, StringComparison.OrdinalIgnoreCase))
+                {
+                    newpath = childPath;
+                }
+                else
+                {
+                    newpath = CombinePath(basePathForChildren, childPath);
+                }
 
                 // Python: #logger.add_verbose(f"Resolved gff path of INI section [{add_field.identifier}] from relative '{add_field.path}' --> absolute '{newpath}'")
                 if (addField is AddFieldGFF addFieldGFF)
                 {
                     addFieldGFF.Path = newpath;
+                }
+                else if (addField is AddStructToListGFF addStructToListGFF)
+                {
+                    addStructToListGFF.Path = newpath;
                 }
 
                 addField.Apply(rootStruct, memory, logger, game);
@@ -802,15 +802,15 @@ namespace CSharpKOTOR.Mods.GFF
 
         /// <summary>
         /// Applies a patch to an existing field in a GFF structure.
-        /// 
+        ///
         /// Args:
-        /// ---- 
+        /// ----
         ///     root_struct: {GFF structure}: Root GFF structure to navigate and modify
         ///     memory: {PatcherMemory}: Memory context to retrieve values
         ///     logger: {PatchLogger}: Logger to record errors
-        /// 
+        ///
         /// Processing Logic:
-        /// ---------------- 
+        /// ----------------
         ///     - Navigates container hierarchy to the parent of the field using the patch path
         ///     - Checks if parent container exists and is a GFFStruct
         ///     - Gets the field type from the parent struct

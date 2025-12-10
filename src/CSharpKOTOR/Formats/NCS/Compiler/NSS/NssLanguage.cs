@@ -164,7 +164,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         Inversion,
         GreaterThan,
         LessThan,
-        Equals,
+        Assignment, // single '='
+        Equals,     // '=='
         TernaryQuestionMark,
         TernaryColon,
         NotEqual,
@@ -213,7 +214,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             { '~', NssOperators.Inversion },
             { '>', NssOperators.GreaterThan },
             { '<', NssOperators.LessThan },
-            { '=', NssOperators.Equals },
+            { '=', NssOperators.Assignment },
             { '?', NssOperators.TernaryQuestionMark },
             { ':', NssOperators.TernaryColon },
             { '^', NssOperators.Xor }
