@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using CSharpKOTOR.Formats.ERF;
+using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 
 namespace CSharpKOTOR.Extract.SaveData
@@ -11,6 +12,13 @@ namespace CSharpKOTOR.Extract.SaveData
     {
         public List<ResourceIdentifier> ResourceOrder { get; } = new List<ResourceIdentifier>();
         public Dictionary<ResourceIdentifier, byte[]> ResourceData { get; } = new Dictionary<ResourceIdentifier, byte[]>();
+        public Dictionary<ResourceIdentifier, ERF> CachedModules { get; } = new Dictionary<ResourceIdentifier, ERF>();
+        public Dictionary<ResourceIdentifier, byte[]> CachedCharacters { get; } = new Dictionary<ResourceIdentifier, byte[]>();
+        public Dictionary<int, ResourceIdentifier> CachedCharacterIndices { get; } = new Dictionary<int, ResourceIdentifier>();
+        public GFF InventoryGff { get; private set; }
+        public ResourceIdentifier InventoryIdentifier { get; private set; }
+        public GFF ReputeGff { get; private set; }
+        public ResourceIdentifier ReputeIdentifier { get; private set; }
 
         private readonly string _path;
 
@@ -23,6 +31,13 @@ namespace CSharpKOTOR.Extract.SaveData
         {
             ResourceOrder.Clear();
             ResourceData.Clear();
+            CachedModules.Clear();
+            CachedCharacters.Clear();
+            CachedCharacterIndices.Clear();
+            InventoryGff = null;
+            InventoryIdentifier = null;
+            ReputeGff = null;
+            ReputeIdentifier = null;
 
             if (!File.Exists(_path))
             {
@@ -36,6 +51,30 @@ namespace CSharpKOTOR.Extract.SaveData
                 var ident = new ResourceIdentifier(res.ResRef.ToString(), res.ResType);
                 ResourceOrder.Add(ident);
                 ResourceData[ident] = res.Data;
+
+                if (ident.ResType == ResourceType.SAV)
+                {
+                    CachedModules[ident] = ERFAuto.ReadErf(res.Data);
+                }
+                else if (ident.ResType == ResourceType.UTC)
+                {
+                    CachedCharacters[ident] = res.Data;
+                    int? idx = ExtractCompanionIndex(ident.ResName);
+                    if (idx.HasValue)
+                    {
+                        CachedCharacterIndices[idx.Value] = ident;
+                    }
+                }
+                else if (ident.ResType == ResourceType.RES && ident.ResName.ToLowerInvariant() == "inventory")
+                {
+                    InventoryGff = GFF.FromBytes(res.Data);
+                    InventoryIdentifier = ident;
+                }
+                else if (ident.ResType == ResourceType.FAC && ident.ResName.ToLowerInvariant() == "repute")
+                {
+                    ReputeGff = GFF.FromBytes(res.Data);
+                    ReputeIdentifier = ident;
+                }
             }
         }
 
@@ -64,6 +103,22 @@ namespace CSharpKOTOR.Extract.SaveData
             byte[] bytes = ERFAuto.BytesErf(erf, ResourceType.SAV);
             File.WriteAllBytes(_path, bytes);
         }
+
+        private static int? ExtractCompanionIndex(string resname)
+        {
+            string lower = resname.ToLowerInvariant();
+            if (!lower.StartsWith("availnpc"))
+            {
+                return null;
+            }
+            string suffix = lower.Substring("availnpc".Length);
+            if (int.TryParse(suffix, out int idx))
+            {
+                return idx;
+            }
+            return null;
+        }
+    }
     }
 }
 
