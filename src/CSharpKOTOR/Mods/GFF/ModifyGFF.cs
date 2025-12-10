@@ -517,8 +517,14 @@ namespace CSharpKOTOR.Mods.GFF
 
             // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
+            // Default to the full path; only collapse to the parent when the sentinel is present
+            // or when adding a struct whose path already ends with the struct label.
             (string parentPath, string pathName) = SplitPath(Path);
-            string containerPath = Path ?? "";
+            string containerPath = Path ?? string.Empty;
+            if (FieldType == GFFFieldType.Struct && pathName == Label)
+            {
+                containerPath = parentPath;
+            }
             if (pathName == ">>##INDEXINLIST##<<")
             {
                 containerPath = parentPath;
