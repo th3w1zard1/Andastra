@@ -102,6 +102,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 .Concat(Objects.OfType<StructDefinition>())
                 .ToList();
             List<TopLevelObject> others = Objects.Where(obj => !included.Contains(obj) && !scriptGlobals.Contains(obj)).ToList();
+            int stubInsertIndex = 0;
 
             if (scriptGlobals.Any())
             {
@@ -110,6 +111,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                     globalDef.Compile(ncs, this);
                 }
                 ncs.Add(NCSInstructionType.SAVEBP, new List<object>());
+                stubInsertIndex = ncs.Instructions.Count;
+            }
+            else
+            {
+                stubInsertIndex = ncs.Instructions.Count;
             }
 
             foreach (TopLevelObject obj in others)
@@ -138,9 +144,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction mainStart = FirstNonNop(FunctionMap["main"].Instruction, ncs);
                 FunctionMap["main"] = new FunctionReference(mainStart, FunctionMap["main"].Definition);
-                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, stubInsertIndex);
                 entryJsr.Jump = mainStart;
-                ncs.Add(NCSInstructionType.RETN, new List<object>());
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex + 1);
 
                 if (debug)
                 {
@@ -158,10 +164,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction scStart = FirstNonNop(FunctionMap["StartingConditional"].Instruction, ncs);
                 FunctionMap["StartingConditional"] = new FunctionReference(scStart, FunctionMap["StartingConditional"].Definition);
-                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, stubInsertIndex);
                 entryJsr.Jump = scStart;
-                ncs.Add(NCSInstructionType.RSADDI, new List<object>());
-                ncs.Add(NCSInstructionType.RETN, new List<object>());
+                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, stubInsertIndex + 1);
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex + 2);
 
                 if (debug)
                 {
@@ -573,7 +579,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             Parameters = parameters;
             Body = body;
 
-            for (int i = parameters.Count - 1; i >= 0; i--)
+            for (int i = 0; i < parameters.Count; i++)
             {
                 FunctionParameter param = parameters[i];
                 body.AddScoped(param.Name, param.DataType);

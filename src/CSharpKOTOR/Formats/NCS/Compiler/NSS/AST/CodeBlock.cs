@@ -101,8 +101,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:632-633
         public void AddScoped(Identifier identifier, DynamicDataType dataType, bool isConst = false)
         {
-            // Append to preserve declaration order for offset calculations
-            Scope.Add(new ScopedValue(identifier, dataType, isConst));
+            // Insert at beginning to match Python's list.insert(0, ...)
+            Scope.Insert(0, new ScopedValue(identifier, dataType, isConst));
         }
 
         public void MarkBreakScope()

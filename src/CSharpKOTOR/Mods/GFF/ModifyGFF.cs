@@ -376,6 +376,7 @@ namespace CSharpKOTOR.Mods.GFF
                 logger.AddVerbose($"Removing unique sentinel from AddStructToListGFF instance (ini section [{Identifier}]). Path: '{Path}'");
                 // Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
                 (workingPath, _) = SplitPath(Path);
+                Path = workingPath;
             }
 
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, self.path) if self.path.name else root_container
@@ -561,18 +562,8 @@ namespace CSharpKOTOR.Mods.GFF
 
             logger.AddVerbose($"Apply patch from INI section [{Identifier}] FieldType: {FieldType} GFF Path: '{Path}'");
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
-            // Default to the full path; only collapse to the parent when the sentinel is present
-            // or when adding a struct whose path already ends with the struct label.
             (string parentPath, string pathName) = SplitPath(Path);
-            string containerPath = Path ?? string.Empty;
-            if (FieldType == GFFFieldType.Struct && pathName == Label)
-            {
-                containerPath = parentPath;
-            }
-            if (pathName == ">>##INDEXINLIST##<<")
-            {
-                containerPath = parentPath;
-            }
+            string containerPath = pathName == ">>##INDEXINLIST##<<" ? parentPath : Path ?? string.Empty;
 
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, container_path)
             // Can be null if not found
@@ -636,21 +627,18 @@ namespace CSharpKOTOR.Mods.GFF
                 // Python: for part, resolvedpart in zip_longest(add_field.path.parts, self.path.parts):
                 // Python:     newpath /= resolvedpart or part
                 string childPath = addField is AddFieldGFF af ? af.Path : (addField is AddStructToListGFF asl ? asl.Path : string.Empty);
-                // Child modifiers should point to the newly added field; combine parent container with the new field label.
-                string basePathForChildren = CombinePath(containerPath, Label);
-                string newpath;
-                if (string.IsNullOrEmpty(childPath))
+                // Python zip_longest logic: newpath parts are resolvedpart or part
+                List<string> newpathParts = new List<string>();
+                string[] childParts = string.IsNullOrEmpty(childPath) ? Array.Empty<string>() : childPath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] selfParts = string.IsNullOrEmpty(Path) ? Array.Empty<string>() : Path.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                int maxParts = Math.Max(childParts.Length, selfParts.Length);
+                for (int i = 0; i < maxParts; i++)
                 {
-                    newpath = basePathForChildren;
+                    string part = i < childParts.Length ? childParts[i] : null;
+                    string resolved = i < selfParts.Length ? selfParts[i] : null;
+                    newpathParts.Add(!string.IsNullOrEmpty(resolved) ? resolved : part);
                 }
-                else if (childPath.StartsWith(basePathForChildren, StringComparison.OrdinalIgnoreCase))
-                {
-                    newpath = childPath;
-                }
-                else
-                {
-                    newpath = CombinePath(basePathForChildren, childPath);
-                }
+                string newpath = string.Join("/", newpathParts.Where(p => !string.IsNullOrEmpty(p)));
 
                 string childIdentifier = GetIdentifierForLogging(addField);
                 logger.AddVerbose($"Resolved gff path of INI section [{childIdentifier}] from relative '{childPath}' --> absolute '{newpath}'");
