@@ -232,6 +232,21 @@ namespace CSharpKOTOR.Mods.GFF
             return (parentPath, label);
         }
 
+        protected static string CombinePath(string basePath, string childPath)
+        {
+            string trimmedBase = string.IsNullOrEmpty(basePath) ? "" : basePath.TrimEnd('\\', '/');
+            string trimmedChild = string.IsNullOrEmpty(childPath) ? "" : childPath.Trim('\\', '/');
+            if (string.IsNullOrEmpty(trimmedBase))
+            {
+                return trimmedChild;
+            }
+            if (string.IsNullOrEmpty(trimmedChild))
+            {
+                return trimmedBase;
+            }
+            return $"{trimmedBase}/{trimmedChild}";
+        }
+
         /// <summary>
         /// Navigates to a field from the root gff struct from a path.
         /// Python: def _navigate_to_field(self, root_container: GFFStruct, path: PureWindowsPath | os.PathLike | str) -> _GFFField | None
@@ -502,15 +517,10 @@ namespace CSharpKOTOR.Mods.GFF
 
             // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
-            string containerPath;
-            (_, string pathName) = SplitPath(Path);
+            (string containerPath, string pathName) = SplitPath(Path);
             if (pathName == ">>##INDEXINLIST##<<")
             {
                 (containerPath, _) = SplitPath(Path);
-            }
-            else
-            {
-                containerPath = Path;
             }
 
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, container_path)
@@ -557,6 +567,10 @@ namespace CSharpKOTOR.Mods.GFF
             SetFieldValue(structContainer, Label, value, FieldType, memory);
 
             // Python: for add_field in self.modifiers:
+            string fieldActualPath = string.Equals(Path, Label, StringComparison.OrdinalIgnoreCase)
+                ? Path
+                : CombinePath(Path, Label);
+            string childBasePath = string.IsNullOrEmpty(fieldActualPath) ? Label : fieldActualPath;
             foreach (ModifyGFF addField in Modifiers)
             {
                 // Python: assert isinstance(add_field, (AddFieldGFF, AddStructToListGFF, ModifyFieldGFF, Memory2DAModifierGFF))
@@ -574,17 +588,7 @@ namespace CSharpKOTOR.Mods.GFF
                 // Python: newpath = PureWindowsPath("")
                 // Python: for part, resolvedpart in zip_longest(add_field.path.parts, self.path.parts):
                 // Python:     newpath /= resolvedpart or part
-                string[] addFieldParts = addField is AddFieldGFF af ? af.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries) : Array.Empty<string>();
-                string[] selfParts = Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-                var newpathParts = new List<string>();
-                int maxLength = Math.Max(addFieldParts.Length, selfParts.Length);
-                for (int i = 0; i < maxLength; i++)
-                {
-                    string resolvedpart = i < selfParts.Length ? selfParts[i] : "";
-                    string part = i < addFieldParts.Length ? addFieldParts[i] : "";
-                    newpathParts.Add(resolvedpart ?? part ?? "");
-                }
-                string newpath = string.Join("/", newpathParts);
+                string newpath = CombinePath(childBasePath, addField is AddFieldGFF af ? af.Path : (addField is AddStructToListGFF asl ? asl.Path : string.Empty));
 
                 // Python: #logger.add_verbose(f"Resolved gff path of INI section [{add_field.identifier}] from relative '{add_field.path}' --> absolute '{newpath}'")
                 if (addField is AddFieldGFF addFieldGFF)

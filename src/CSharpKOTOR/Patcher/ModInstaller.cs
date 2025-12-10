@@ -823,6 +823,11 @@ namespace CSharpKOTOR.Patcher
                 log.AddError($"The capsule '{patch.Destination}' did not exist when attempting to {patch.Action.ToLower().TrimEnd()} '{patch.SourceFile}'. Skipping file...");
                 return false;
             }
+            if (capsule != null && !capsule.ExistedOnDisk && !patch.ReplaceFile)
+            {
+                log.AddError($"The capsule '{patch.Destination}' did not exist when attempting to {patch.Action.ToLower().TrimEnd()} '{patch.SourceFile}'. Skipping file...");
+                return false;
+            }
 
             string saveType = (capsule != null && patch.SaveAs == patch.SourceFile) ? "adding" : "saving";
             string savingAsStr = patch.SaveAs != patch.SourceFile ? $"as '{patch.SaveAs}' in" : "to";

@@ -21,15 +21,19 @@ namespace CSharpKOTOR.Formats.Capsule
         private readonly List<CapsuleResource> _resources = new List<CapsuleResource>();
         private readonly CaseAwarePath _path;
         private readonly CapsuleType _capsuleType;
+        private readonly bool _existedOnDisk;
 
         public CaseAwarePath Path => _path;
         public CapsuleType Type => _capsuleType;
         public int Count => _resources.Count;
 
+        public bool ExistedOnDisk => _existedOnDisk;
+
         public Capsule(string path, bool createIfNotExist = false)
         {
             _path = new CaseAwarePath(path);
             _capsuleType = DetermineCapsuleType(_path.Extension);
+            _existedOnDisk = _path.IsFile();
 
             if (createIfNotExist && !_path.IsFile())
             {

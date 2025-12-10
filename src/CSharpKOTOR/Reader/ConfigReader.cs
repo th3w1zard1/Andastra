@@ -1941,10 +1941,6 @@ namespace CSharpKOTOR.Reader
                 {
                     rowValue = new RowValueRowLabel();
                 }
-                else if (isStore2da || isStoreTlk)
-                {
-                    rowValue = new RowValueRowCell(value);
-                }
                 else if (value == "****")
                 {
                     rowValue = new RowValueConstant("");
@@ -1957,12 +1953,47 @@ namespace CSharpKOTOR.Reader
                 if (isStore2da)
                 {
                     int tokenId = ParseIntValue(modifier.Substring(9));
-                    store2da[tokenId] = rowValue;
+                    // Store tokens support RowIndex, RowLabel, specific column via RowValueRowCell, or memory references
+                    if (lowerValue == "rowindex")
+                    {
+                        store2da[tokenId] = new RowValueRowIndex();
+                    }
+                    else if (lowerValue == "rowlabel")
+                    {
+                        store2da[tokenId] = new RowValueRowLabel();
+                    }
+                    else if (lowerValue.StartsWith("2damemory"))
+                    {
+                        int token = ParseIntValue(value.Substring(9));
+                        store2da[tokenId] = new RowValue2DAMemory(token);
+                    }
+                    else if (lowerValue.StartsWith("strref"))
+                    {
+                        int token = ParseIntValue(value.Substring(6));
+                        store2da[tokenId] = new RowValueTLKMemory(token);
+                    }
+                    else
+                    {
+                        store2da[tokenId] = new RowValueRowCell(value);
+                    }
                 }
                 else if (isStoreTlk)
                 {
                     int tokenId = ParseIntValue(modifier.Substring(6));
-                    storeTlk[tokenId] = rowValue;
+                    if (lowerValue.StartsWith("2damemory"))
+                    {
+                        int token = ParseIntValue(value.Substring(9));
+                        storeTlk[tokenId] = new RowValue2DAMemory(token);
+                    }
+                    else if (lowerValue.StartsWith("strref"))
+                    {
+                        int token = ParseIntValue(value.Substring(6));
+                        storeTlk[tokenId] = new RowValueTLKMemory(token);
+                    }
+                    else
+                    {
+                        storeTlk[tokenId] = new RowValueRowCell(value);
+                    }
                 }
                 else if (!isRowLabel)
                 {

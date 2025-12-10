@@ -82,24 +82,37 @@ namespace CSharpKOTOR.Mods.TwoDA
 
                 case TargetType.LABEL_COLUMN:
                     System.Collections.Generic.List<string> headers = twoda.GetHeaders();
-                    if (!headers.Contains("label"))
-                    {
-                        throw new WarningError($"'label' could not be found in the twoda's headers: ({TargetType}, {value})");
-                    }
-
-                    System.Collections.Generic.List<string> columnValues = twoda.GetColumn("label");
                     string valueStr = value.ToString() ?? "";
-                    if (!columnValues.Contains(valueStr))
+                    if (headers.Contains("label"))
                     {
-                        throw new WarningError($"The value '{value}' could not be found in the twoda's columns");
-                    }
-
-                    foreach (TwoDARow row in twoda)
-                    {
-                        if (row.GetString("label") == value.ToString())
+                        System.Collections.Generic.List<string> columnValues = twoda.GetColumn("label");
+                        if (!columnValues.Contains(valueStr))
                         {
-                            sourceRow = row;
-                            break;
+                            throw new WarningError($"The value '{value}' could not be found in the twoda's columns");
+                        }
+
+                        foreach (TwoDARow row in twoda)
+                        {
+                            if (row.GetString("label") == valueStr)
+                            {
+                                sourceRow = row;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (TwoDARow row in twoda)
+                        {
+                            if (row.Label() == valueStr)
+                            {
+                                sourceRow = row;
+                                break;
+                            }
+                        }
+                        if (sourceRow is null)
+                        {
+                            throw new WarningError($"Could not find row {value} by label");
                         }
                     }
                     break;

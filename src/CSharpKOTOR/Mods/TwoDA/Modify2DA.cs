@@ -14,6 +14,27 @@ namespace CSharpKOTOR.Mods.TwoDA
     /// </summary>
     public abstract class Modify2DA
     {
+        protected static int DefaultLabel(Formats.TwoDA.TwoDA twoda)
+        {
+            int labelMax = twoda.LabelMax();
+            bool hasNumericLabel = false;
+            foreach (string label in twoda.GetLabels())
+            {
+                if (int.TryParse(label, out _))
+                {
+                    hasNumericLabel = true;
+                    break;
+                }
+            }
+
+            if (!hasNumericLabel)
+            {
+                return twoda.GetHeight();
+            }
+
+            return labelMax;
+        }
+
         protected static Dictionary<string, string> Unpack(
             Dictionary<string, RowValue> cells,
             PatcherMemory memory,
@@ -189,8 +210,7 @@ namespace CSharpKOTOR.Mods.TwoDA
 
             if (targetRow is null)
             {
-                int defaultLabel = Math.Max(twoda.GetHeight(), twoda.LabelMax());
-                string rowLabel = RowLabel ?? defaultLabel.ToString();
+                string rowLabel = RowLabel ?? DefaultLabel(twoda).ToString();
                 int index = twoda.AddRow(rowLabel, new Dictionary<string, object>());
                 targetRow = twoda.GetRow(index);
                 targetRow.UpdateValues(Unpack(Cells, memory, twoda, targetRow));
@@ -254,8 +274,7 @@ namespace CSharpKOTOR.Mods.TwoDA
         public override void Apply(Formats.TwoDA.TwoDA twoda, PatcherMemory memory)
         {
             TwoDARow sourceRow = Target.Search(twoda, memory);
-            int defaultLabel = Math.Max(twoda.GetHeight(), twoda.LabelMax());
-            string rowLabel = RowLabel ?? defaultLabel.ToString();
+            string rowLabel = RowLabel ?? DefaultLabel(twoda).ToString();
 
             if (sourceRow is null)
             {

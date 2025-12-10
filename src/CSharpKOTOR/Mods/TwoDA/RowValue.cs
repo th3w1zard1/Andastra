@@ -55,10 +55,9 @@ namespace CSharpKOTOR.Mods.TwoDA
         {
             if (!memory.Memory2DA.ContainsKey(TokenId))
             {
-                throw new KeyError($"2DAMEMORY{TokenId} was not defined before use.");
+                return "";
             }
-            string memoryVal = memory.Memory2DA[TokenId];
-            return memoryVal;
+            return memory.Memory2DA[TokenId];
         }
 
         public override string ToString() => $"RowValue2DAMemory(token_id={TokenId})";
