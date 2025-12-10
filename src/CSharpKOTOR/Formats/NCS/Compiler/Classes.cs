@@ -159,7 +159,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             if (root.FunctionMap.ContainsKey(functionName))
             {
-                throw new CompileError($"Function '{functionName}' already has a prototype or been defined.");
+                throw new NSS.CompileError($"Function '{functionName}' already has a prototype or been defined.");
             }
 
             root.FunctionMap[functionName] = new FunctionReference(

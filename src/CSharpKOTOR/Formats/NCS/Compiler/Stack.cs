@@ -434,24 +434,28 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
             StackObject value1 = _stack[_stack.Count - 1];
             StackObject value2 = _stack[_stack.Count - 2];
-            if (value1.Value is int || value1.Value is float || value2.Value is int || value2.Value is float)
+            if (value1.Value is int || value1.Value is float || value1.Value is double
+                || value2.Value is int || value2.Value is float || value2.Value is double)
             {
-                double result = Convert.ToDouble(value2.Value) + Convert.ToDouble(value1.Value);
                 _stack.RemoveAt(_stack.Count - 1);
                 _stack.RemoveAt(_stack.Count - 1);
+                // Matching PyKotor interpreter.py lines 1460-1468
+                // Result type is determined by the data type of the second operand (value2)
                 if (value2.DataType == DataType.Int)
                 {
+                    double result = Convert.ToDouble(value2.Value) + Convert.ToDouble(value1.Value);
                     Add(DataType.Int, (int)result);
                 }
                 else if (value2.DataType == DataType.Float)
                 {
+                    double result = Convert.ToDouble(value2.Value) + Convert.ToDouble(value1.Value);
                     Add(DataType.Float, (float)result);
                 }
                 else
                 {
-                    // Check if result is a whole number (integer)
-                    bool isWholeNumber = Math.Abs(result % 1) < double.Epsilon;
-                    Add(isWholeNumber ? DataType.Int : DataType.Float, result);
+                    // Fallback: determine type from result value
+                    double result = Convert.ToDouble(value2.Value) + Convert.ToDouble(value1.Value);
+                    Add(result % 1.0 < double.Epsilon ? DataType.Int : DataType.Float, result);
                 }
                 return;
             }
@@ -485,10 +489,24 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 throw new InvalidOperationException("Subtraction requires numeric operands");
             }
+            // Matching PyKotor interpreter.py line 1517
+            // Result type is determined by the data type of the second operand (value2)
             double result = Convert.ToDouble(value2.Value) - Convert.ToDouble(value1.Value);
             _stack.RemoveAt(_stack.Count - 1);
             _stack.RemoveAt(_stack.Count - 1);
-            Add(value2.DataType, result);
+            if (value2.DataType == DataType.Int)
+            {
+                Add(DataType.Int, (int)result);
+            }
+            else if (value2.DataType == DataType.Float)
+            {
+                Add(DataType.Float, (float)result);
+            }
+            else
+            {
+                // Fallback: determine type from result value
+                Add(Math.Abs(result % 1) < double.Epsilon ? DataType.Int : DataType.Float, result);
+            }
         }
 
         /// <summary>
@@ -509,10 +527,24 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 throw new InvalidOperationException("Multiplication requires numeric operands");
             }
+            // Matching PyKotor interpreter.py line 1568
+            // Result type is determined by the data type of the second operand (value2)
             double result = Convert.ToDouble(value2.Value) * Convert.ToDouble(value1.Value);
             _stack.RemoveAt(_stack.Count - 1);
             _stack.RemoveAt(_stack.Count - 1);
-            Add(value2.DataType, result);
+            if (value2.DataType == DataType.Int)
+            {
+                Add(DataType.Int, (int)result);
+            }
+            else if (value2.DataType == DataType.Float)
+            {
+                Add(DataType.Float, (float)result);
+            }
+            else
+            {
+                // Fallback: determine type from result value
+                Add(Math.Abs(result % 1) < double.Epsilon ? DataType.Int : DataType.Float, result);
+            }
         }
 
         /// <summary>
@@ -541,10 +573,29 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 throw new DivideByZeroException("Division by zero in NCS interpreter");
             }
-            double result = Convert.ToDouble(value2.Value) / divisor;
+            // Matching PyKotor interpreter.py lines 1607-1613
+            // Result type is determined by the data type of the second operand (value2)
+            double result = Convert.ToDouble(value2.Value) / Convert.ToDouble(value1.Value);
+            // For integer division, truncate toward zero
+            if (value1.DataType == DataType.Int && value2.DataType == DataType.Int)
+            {
+                result = result >= 0 ? Math.Floor(result) : Math.Ceiling(result);
+            }
             _stack.RemoveAt(_stack.Count - 1);
             _stack.RemoveAt(_stack.Count - 1);
-            Add(value2.DataType, (float)result);
+            if (value2.DataType == DataType.Int)
+            {
+                Add(DataType.Int, (int)result);
+            }
+            else if (value2.DataType == DataType.Float)
+            {
+                Add(DataType.Float, (float)result);
+            }
+            else
+            {
+                // Fallback: determine type from result value
+                Add(Math.Abs(result % 1) < double.Epsilon ? DataType.Int : DataType.Float, result);
+            }
         }
 
         /// <summary>
@@ -558,22 +609,13 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
             StackObject value1 = _stack[_stack.Count - 1];
             StackObject value2 = _stack[_stack.Count - 2];
-            // Accept int, float, and double as numeric types
-            bool value1IsNumeric = value1.Value is int || value1.Value is float || value1.Value is double;
-            bool value2IsNumeric = value2.Value is int || value2.Value is float || value2.Value is double;
-            if (!value1IsNumeric || !value2IsNumeric)
+            if (!(value1.Value is int i1) || !(value2.Value is int i2))
             {
-                throw new InvalidOperationException("Modulus requires numeric operands");
+                throw new InvalidOperationException("Modulus operation requires integer operands");
             }
-            double divisor = Convert.ToDouble(value1.Value);
-            if (Math.Abs(divisor) < double.Epsilon)
-            {
-                throw new DivideByZeroException("Modulus by zero in NCS interpreter");
-            }
-            double result = Convert.ToDouble(value2.Value) % divisor;
             _stack.RemoveAt(_stack.Count - 1);
             _stack.RemoveAt(_stack.Count - 1);
-            Add(value2.DataType, result);
+            Add(DataType.Int, i2 % i1);
         }
 
         /// <summary>
