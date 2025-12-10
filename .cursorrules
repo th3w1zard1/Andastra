@@ -1,4 +1,45 @@
-# Cursor Rules for HoloPatcher.NET
+# HoloPatcher.NET Rules and Conventions for AI LLM agents
+
+## ⚠️ CRITICAL: Git Commit Requirement ⚠️
+
+**MANDATORY FOR ALL AI AGENTS**: After making ANY changes to files in this repository, you MUST:
+
+1. **Stage all modified files**: `git add <file1> <file2> ...` (or `git add .` for all changes)
+2. **Commit with a descriptive message**: `git commit -m "type: descriptive message"`
+3. **Verify the commit succeeded**: Check that `git commit` returns successfully with no errors
+
+**This is NOT optional.** Do NOT summarize changes without committing them. Do NOT skip this step. Every code change, file modification, or configuration update MUST be committed before you consider the task complete.
+
+**NEVER use `git add .` or `git add -A` to stage changes.** Always stage files individually. This is because we may have multiple agents working on multiple files simultaneously.
+
+**Commit message format**: Use conventional commits format:
+
+- `fix:` for bug fixes
+- `feat:` for new features
+- `refactor:` for code refactoring
+- `docs:` for documentation changes
+- `chore:` for maintenance tasks
+- `test:` for test changes
+
+Example: `git commit -m "fix: correct finalize job condition in workflow"`
+
+---
+
+## Documentation
+
+When creating ANY new `.md` files, always follow these guidelines:
+
+- Always place within `docs`
+- Never report on progression (changes and what still remains to be done).
+- Exclusively provide public-facing documentation, something an end user will need to read if they want to either develop for PyKotor or work with it.
+
+Please do not create .md documentation unless it delivers public-facing information or authoritative gameplay/platform references that an end user or developer genuinely needs for PyKotor or the games themselves.
+
+## Helper Scripts
+
+- Always place within `scripts`
+- Should be idempotent and flexible enough to be used for a plethora of scenarios, not just whatever the task you're working on involves.
+- Do not delete helper .py/.ps1/.sh scripts when you are finished with them; keep them in scripts folder
 
 ## C# Language Version Requirements
 
