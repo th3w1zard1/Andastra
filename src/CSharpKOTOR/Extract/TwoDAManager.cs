@@ -45,7 +45,9 @@ namespace CSharpKOTOR.Extract
                 return default;
             }
 
-            var targets = TwoDARegistry.ColumnsFor(dataType);
+            // Prefer K2 metadata if installation is TSL; otherwise default to K1
+            bool isK2 = installation.Game == Common.Game.TSL;
+            var targets = TwoDARegistry.ColumnsFor(dataType, isK2);
             foreach (var kvp in targets)
             {
                 string fileKey = kvp.Key;

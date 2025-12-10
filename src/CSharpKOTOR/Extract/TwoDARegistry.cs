@@ -154,16 +154,193 @@ namespace CSharpKOTOR.Extract
             ["spells.2da-script"] = new HashSet<string> { "impactscript" },
         };
 
-        public static Dictionary<string, HashSet<string>> ColumnsFor(string dataType)
+        // K2 StrRef columns
+        private static readonly Dictionary<string, HashSet<string>> StrRefColumnsK2 = new Dictionary<string, HashSet<string>>
         {
-            return dataType == "strref" ? StrRefColumns : ResRefColumns;
+            ["aiscripts.2da"] = new HashSet<string> { "name_strref" },
+            ["ambientsound.2da"] = new HashSet<string> { "description" },
+            ["appearance.2da"] = new HashSet<string> { "string_ref" },
+            ["bindablekeys.2da"] = new HashSet<string> { "keynamestrref" },
+            ["classes.2da"] = new HashSet<string> { "name", "description" },
+            ["credits.2da"] = new HashSet<string> { "name" },
+            ["crtemplates.2da"] = new HashSet<string> { "strref" },
+            ["creaturesize.2da"] = new HashSet<string> { "strref" },
+            ["difficultyo p.2da"] = new HashSet<string> { "name" },
+            ["disease.2da"] = new HashSet<string> { "name" },
+            ["doortypes.2da"] = new HashSet<string> { "stringrefgame" },
+            ["effecticons.2da"] = new HashSet<string> { "strref" },
+            ["encdifficulty.2da"] = new HashSet<string> { "strref" },
+            ["environment.2da"] = new HashSet<string> { "strref" },
+            ["feat.2da"] = new HashSet<string> { "name", "description" },
+            ["feedbacktext.2da"] = new HashSet<string> { "strref" },
+            ["fractionalcr.2da"] = new HashSet<string> { "displaystrref" },
+            ["gamespyrooms.2da"] = new HashSet<string> { "str_ref" },
+            ["genericdoors.2da"] = new HashSet<string> { "strref" },
+            ["hen_companion.2da"] = new HashSet<string> { "strref" },
+            ["iprp_abilities.2da"] = new HashSet<string> { "name" },
+            ["iprp_acmodtype.2da"] = new HashSet<string> { "name" },
+            ["iprp_aligngrp.2da"] = new HashSet<string> { "name" },
+            ["iprp_alignment.2da"] = new HashSet<string> { "name" },
+            ["iprp_ammocost.2da"] = new HashSet<string> { "name" },
+            ["iprp_ammotype.2da"] = new HashSet<string> { "name" },
+            ["iprp_amount.2da"] = new HashSet<string> { "name" },
+            ["iprp_bonuscost.2da"] = new HashSet<string> { "name" },
+            ["iprp_chargecost.2da"] = new HashSet<string> { "name" },
+            ["iprp_color.2da"] = new HashSet<string> { "name" },
+            ["iprp_combatdam.2da"] = new HashSet<string> { "name" },
+            ["iprp_damagecost.2da"] = new HashSet<string> { "name" },
+            ["iprp_damagetype.2da"] = new HashSet<string> { "name" },
+            ["iprp_damvulcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_feats.2da"] = new HashSet<string> { "name" },
+            ["iprp_immuncost.2da"] = new HashSet<string> { "name" },
+            ["iprp_immunity.2da"] = new HashSet<string> { "name" },
+            ["iprp_lightcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_meleecost.2da"] = new HashSet<string> { "name" },
+            ["iprp_monstcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_monsterhit.2da"] = new HashSet<string> { "name" },
+            ["iprp_neg10cost.2da"] = new HashSet<string> { "name" },
+            ["iprp_neg5cost.2da"] = new HashSet<string> { "name" },
+            ["iprp_onhit.2da"] = new HashSet<string> { "name" },
+            ["iprp_onhitcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_onhitdc.2da"] = new HashSet<string> { "name" },
+            ["iprp_onhitdur.2da"] = new HashSet<string> { "name" },
+            ["iprp_paramtable.2da"] = new HashSet<string> { "name" },
+            ["iprp_poison.2da"] = new HashSet<string> { "name" },
+            ["iprp_protection.2da"] = new HashSet<string> { "name" },
+            ["iprp_redcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_resistcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_saveelement.2da"] = new HashSet<string> { "name" },
+            ["iprp_savingthrow.2da"] = new HashSet<string> { "name" },
+            ["iprp_soakcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_spellcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_spellvcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_spellvlimm.2da"] = new HashSet<string> { "name" },
+            ["iprp_spells.2da"] = new HashSet<string> { "name" },
+            ["iprp_spellshl.2da"] = new HashSet<string> { "name" },
+            ["iprp_srcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_trapcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_traps.2da"] = new HashSet<string> { "name" },
+            ["iprp_walk.2da"] = new HashSet<string> { "name" },
+            ["iprp_weightcost.2da"] = new HashSet<string> { "name" },
+            ["iprp_weightinc.2da"] = new HashSet<string> { "name" },
+            ["itempropdef.2da"] = new HashSet<string> { "name" },
+            ["itemprops.2da"] = new HashSet<string> { "stringref" },
+            ["keymap.2da"] = new HashSet<string> { "actionstrref" },
+            ["loadscreenhints.2da"] = new HashSet<string> { "gameplayhint", "storyhint" },
+            ["masterfeats.2da"] = new HashSet<string> { "strref" },
+            ["modulesave.2da"] = new HashSet<string> { "areaname" },
+            ["movies.2da"] = new HashSet<string> { "strrefname", "strrefdesc" },
+            ["placeables.2da"] = new HashSet<string> { "strref" },
+            ["planetary.2da"] = new HashSet<string> { "name", "description" },
+            ["soundset.2da"] = new HashSet<string> { "strref" },
+            ["stringtokens.2da"] = new HashSet<string> { "strref1", "strref2", "strref3", "strref4" },
+            ["texpacks.2da"] = new HashSet<string> { "strrefname" },
+            ["tutorial.2da"] = new HashSet<string> { "message0", "message1", "message2" },
+            ["tutorial_old.2da"] = new HashSet<string> { "message0", "message1", "message2" },
+            ["skills.2da"] = new HashSet<string> { "name", "description" },
+            ["spells.2da"] = new HashSet<string> { "name", "spelldesc" },
+            ["traps.2da"] = new HashSet<string> { "trapname", "name" },
+        };
+
+        // K2 ResRef columns
+        private static readonly Dictionary<string, HashSet<string>> ResRefColumnsK2 = new Dictionary<string, HashSet<string>>
+        {
+            ["ammunitiontypes.2da"] = new HashSet<string> { "muzzleflash" },
+            ["appearance.2da"] = new HashSet<string> { "race" },
+            ["droiddischarge.2da"] = new HashSet<string> { ">>##HEADER##<<" },
+            ["hen_companion.2da"] = new HashSet<string> { "baseresref" },
+            ["hen_familiar.2da"] = new HashSet<string> { "baseresref" },
+            ["iprp_paramtable.2da"] = new HashSet<string> { "tableresref" },
+            ["itempropdef.2da"] = new HashSet<string> { "subtyperesref", "param1resref", "gamestrref", "description" },
+            ["minglobalrim.2da"] = new HashSet<string> { "moduleresref" },
+            ["modulesave.2da"] = new HashSet<string> { "modulename" },
+            // Models
+            ["ammunitiontypes.2da-model"] = new HashSet<string> { "model", "model0", "model1" },
+            ["appearance.2da-model"] = new HashSet<string> { "modela", "modelb", "modelc", "modeld", "modele", "modelf", "modelg", "modelh", "modeli", "modelj" },
+            ["baseitems.2da"] = new HashSet<string> { "defaultmodel" },
+            ["placeables.2da"] = new HashSet<string> { "modelname" },
+            ["planetary.2da-model"] = new HashSet<string> { "model" },
+            ["upcrystals.2da"] = new HashSet<string> { "shortmdlvar", "longmdlvar", "doublemdlvar" },
+            ["doortypes.2da"] = new HashSet<string> { "model" },
+            ["genericdoors.2da"] = new HashSet<string> { "modelname" },
+            // Sounds
+            ["aliensound.2da"] = new HashSet<string> { "filename" },
+            ["alienvo.2da"] = new HashSet<string>
+            {
+                "angry_long", "angry_medium", "angry_short",
+                "comment_generic_long", "comment_generic_medium", "comment_generic_short",
+                "greeting_medium", "greeting_short",
+                "happy_thankful_long", "happy_thankful_medium", "happy_thankful_short",
+                "laughter_normal", "laughter_mocking_medium", "laughter_mocking_short", "laughter_long", "laughter_short",
+                "pleading_medium", "pleading_short",
+                "question_long", "question_medium", "question_short",
+                "sad_long", "sad_medium", "sad_short",
+                "scared_long", "scared_medium", "scared_short",
+                "seductive_long", "seductive_medium", "seductive_short",
+                "silence",
+                "wounded_medium", "wounded_small",
+                "screaming_medium", "screaming_small"
+            },
+            ["ambientsound.2da"] = new HashSet<string> { "resource" },
+            ["ammunitiontypes.2da-snd"] = new HashSet<string> { "shotsound0", "shotsound1", "impactsound0", "impactsound1" },
+            ["appearancesndset.2da"] = new HashSet<string> { "falldirt", "fallhard", "fallmetal", "fallwater" },
+            ["baseitems.2da-snd"] = new HashSet<string> { "powerupsnd", "powerdownsnd", "poweredsnd" },
+            ["footstepsounds.2da"] = new HashSet<string>
+            {
+                "rolling",
+                "dirt0", "dirt1", "dirt2",
+                "grass0", "grass1", "grass2",
+                "stone0", "stone1", "stone2",
+                "wood0", "wood1", "wood2",
+                "water0", "water1", "water2",
+                "carpet0", "carpet1", "carpet2",
+                "metal0", "metal1", "metal2",
+                "puddles0", "puddles1", "puddles2",
+                "leaves0", "leaves1", "leaves2",
+                "force1", "force2", "force3"
+            },
+            ["grenadesnd.2da"] = new HashSet<string> { "sound" },
+            ["guisounds.2da"] = new HashSet<string> { "soundresref" },
+            ["inventorysnds.2da"] = new HashSet<string> { "inventorysound" },
+            ["ambientmusic.2da"] = new HashSet<string> { "resource", "stinger1", "stinger2", "stinger3" },
+            ["loadscreens.2da-music"] = new HashSet<string> { "musicresref" },
+            // Textures
+            ["actions.2da"] = new HashSet<string> { "iconresref" },
+            ["appearance.2da-tex"] = new HashSet<string> { "racetex", "texa", "texb", "texc", "texd", "texe", "texf", "texg", "texh", "texi", "texj", "headtexve", "headtexe", "headtexvg", "headtexg" },
+            ["cursors.2da"] = new HashSet<string> { "resref" },
+            ["baseitems.2da-tex"] = new HashSet<string> { "defaulticon" },
+            ["effecticon.2da"] = new HashSet<string> { "iconresref" },
+            ["heads.2da"] = new HashSet<string> { "head", "headtexvvve", "headtexvve", "headtexve", "headtexe", "headtexg", "headtexvg" },
+            ["iprp_spells.2da"] = new HashSet<string> { "icon" },
+            ["loadscreens.2da"] = new HashSet<string> { "bmpresref" },
+            ["planetary.2da-tex"] = new HashSet<string> { "icon" },
+            // Items / GUIs / Scripts
+            ["baseitems.2da-item"] = new HashSet<string> { "itemclass", "baseitemstatref" },
+            ["chargenclothes.2da"] = new HashSet<string> { "itemresref" },
+            ["feat.2da-icon"] = new HashSet<string> { "icon" },
+            ["cursors.2da-gui"] = new HashSet<string> { "resref" },
+            ["areaeffects.2da"] = new HashSet<string> { "onenter", "heartbeat", "onexit" },
+            ["disease.2da-script"] = new HashSet<string> { "end_incu_script", "24_hour_script" },
+            ["spells.2da-script"] = new HashSet<string> { "impactscript" },
+        };
+
+        public static Dictionary<string, HashSet<string>> ColumnsFor(string dataType, bool useK2 = false)
+        {
+            if (dataType == "strref")
+            {
+                return useK2 ? StrRefColumnsK2 : StrRefColumns;
+            }
+
+            return useK2 ? ResRefColumnsK2 : ResRefColumns;
         }
 
-        public static HashSet<string> Files()
+        public static HashSet<string> Files(bool useK2 = false)
         {
             var files = new HashSet<string>();
-            foreach (var k in StrRefColumns.Keys) files.Add(k);
-            foreach (var k in ResRefColumns.Keys) files.Add(k);
+            var strref = useK2 ? StrRefColumnsK2 : StrRefColumns;
+            var resref = useK2 ? ResRefColumnsK2 : ResRefColumns;
+            foreach (var k in strref.Keys) files.Add(k);
+            foreach (var k in resref.Keys) files.Add(k);
             return files;
         }
     }
