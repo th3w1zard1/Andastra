@@ -814,24 +814,16 @@ namespace CSharpKOTOR.Common
     /// </summary>
     public sealed class ModuleResource<T> : ModuleResource
     {
-        private readonly string _resname;
         private readonly Installation.Installation _installation;
-        private readonly ResourceType _restype;
         private string _active;
         private T _resourceObj;
         private bool _resourceLoadAttempted; // Track if we've attempted to load (for caching when conversion not implemented)
         private readonly List<string> _locations = new List<string>();
-        private readonly ResourceIdentifier _identifier;
-        private readonly string _moduleRoot;
-
-        public string ResName => _resname;
-        public ResourceType ResType => _restype;
-        public ResourceIdentifier Identifier => _identifier;
-        public string ModuleRoot => _moduleRoot;
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1756-1770
         // Original: def __init__(self, resname: str, restype: ResourceType, installation: Installation, module_root: str | None = None):
         public ModuleResource(string resname, ResourceType restype, Installation.Installation installation, string moduleRoot = null)
+            : base(resname, restype, moduleRoot)
         {
             if (resname == null)
             {
@@ -846,14 +838,10 @@ namespace CSharpKOTOR.Common
                 throw new ArgumentNullException(nameof(installation));
             }
 
-            _resname = resname;
             _installation = installation;
-            _restype = restype;
             _active = null;
             _resourceObj = default(T);
             _resourceLoadAttempted = false;
-            _identifier = new ResourceIdentifier(resname, restype);
-            _moduleRoot = moduleRoot;
         }
 
         public override string ToString()
@@ -902,21 +890,21 @@ namespace CSharpKOTOR.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1805-1806
         // Original: def filename(self) -> str:
-        public string Filename()
+        public override string Filename()
         {
-            return _identifier.ToString();
+            return base.Identifier.ToString();
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1808-1809
         // Original: def identifier(self) -> ResourceIdentifier:
-        public ResourceIdentifier GetIdentifier()
+        public override ResourceIdentifier GetIdentifier()
         {
-            return _identifier;
+            return base.Identifier;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1968-1977
         // Original: def add_locations(self, filepaths: Iterable[Path]):
-        public void AddLocations(IEnumerable<string> filepaths)
+        public override void AddLocations(IEnumerable<string> filepaths)
         {
             if (filepaths == null)
             {
@@ -934,14 +922,14 @@ namespace CSharpKOTOR.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1979-1980
         // Original: def locations(self) -> list[Path]:
-        public List<string> Locations()
+        public override List<string> Locations()
         {
             return new List<string>(_locations);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1982-2014
         // Original: def activate(self, filepath: os.PathLike | str | None = None) -> Path | None:
-        public string Activate(string filepath = null)
+        public override string Activate(string filepath = null)
         {
             _resourceObj = default(T);
             if (filepath == null)
@@ -1050,7 +1038,7 @@ namespace CSharpKOTOR.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1876-1937
         // Original: def resource(self) -> T | None:
-        public T Resource()
+        public override object Resource()
         {
             // TODO: Implement full resource() method once all format readers are ported
             // This requires read_are, read_dlg, read_git, etc. functions
