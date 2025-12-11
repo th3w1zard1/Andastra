@@ -2030,7 +2030,9 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: assert interpreter.action_snapshots[-1].arg_values[0] == ""Hello""
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            System.Math.Abs((double)secondLastSnapshot.ArgValues[0].Value - 3.141592).Should().BeLessThan(0.000001);
+            // Convert to double for comparison - matching Python's float comparison
+            double piValue = secondLastSnapshot.ArgValues[0].Value is float f ? (double)f : Convert.ToDouble(secondLastSnapshot.ArgValues[0].Value);
+            System.Math.Abs(piValue - 3.141592).Should().BeLessThan(0.000001);
             lastSnapshot.ArgValues[0].Value.Should().Be("Hello");
         }
 
