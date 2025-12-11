@@ -321,7 +321,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:312
             // Original: assert interpreter.stack_snapshots[-4].stack[-1].value == 15.0
             var snapshot = interpreter.StackSnapshots[interpreter.StackSnapshots.Count - 4];
-            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(15.0);
+            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(15.0f);
         }
 
         /// <summary>
@@ -405,7 +405,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:360
             // Original: assert interpreter.stack_snapshots[-4].stack[-1].value == 5.0
             var snapshot = interpreter.StackSnapshots[interpreter.StackSnapshots.Count - 4];
-            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(5.0);
+            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(5.0f);
         }
 
         /// <summary>
@@ -461,7 +461,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:392
             // Original: assert interpreter.stack_snapshots[-4].stack[-1].value == 50.0
             var snapshot = interpreter.StackSnapshots[interpreter.StackSnapshots.Count - 4];
-            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(50.0);
+            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(50.0f);
         }
 
         /// <summary>
@@ -517,7 +517,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:424
             // Original: assert interpreter.stack_snapshots[-4].stack[-1].value == 2.0
             var snapshot = interpreter.StackSnapshots[interpreter.StackSnapshots.Count - 4];
-            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(2.0);
+            snapshot.Stack[snapshot.Stack.Count - 1].Value.Should().Be(2.0f);
         }
 
         /// <summary>
@@ -1373,7 +1373,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:948
             // Original: assert interpreter.action_snapshots[-1].arg_values[0] == 3.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            lastSnapshot.ArgValues[0].Value.Should().Be(3.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(3.0f);
         }
 
         /// <summary>
@@ -1406,7 +1406,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: assert snap.arg_values[0] == 3.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
             lastSnapshot.FunctionName.Should().Be("PrintFloat");
-            lastSnapshot.ArgValues[0].Value.Should().Be(3.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(3.0f);
         }
 
         /// <summary>
@@ -1505,7 +1505,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: assert snap.arg_values[0] == 8.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
             lastSnapshot.FunctionName.Should().Be("PrintInteger");
-            lastSnapshot.ArgValues[0].Value.Should().Be(8.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(8.0f);
         }
 
         /// <summary>
@@ -1538,7 +1538,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: assert snap.arg_values[0] == 8.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
             lastSnapshot.FunctionName.Should().Be("PrintFloat");
-            lastSnapshot.ArgValues[0].Value.Should().Be(8.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(8.0f);
         }
 
         /// <summary>
@@ -1568,7 +1568,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1072
             // Original: assert interpreter.action_snapshots[-1].arg_values[0] == 8.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            lastSnapshot.ArgValues[0].Value.Should().Be(8.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(8.0f);
         }
 
         /// <summary>
@@ -2422,7 +2422,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1592
             // Original: assert interpreter.action_snapshots[-1].arg_values[0] == 3.14
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            lastSnapshot.ArgValues[0].Value.Should().Be(3.14);
+            lastSnapshot.ArgValues[0].Value.Should().Be(3.14f);
         }
 
         /// <summary>
@@ -3602,7 +3602,7 @@ namespace CSharpKOTOR.Tests.Formats
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
             thirdLastSnapshot.ArgValues[0].Value.Should().Be(0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(0.0);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(0.0f);
             lastSnapshot.ArgValues[0].Value.Should().Be("");
 
             bool hasSaveBp = false;
@@ -3745,7 +3745,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2634
             // Original: assert interpreter.action_snapshots[-1].arg_values[0] == 0.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            lastSnapshot.ArgValues[0].Value.Should().Be(0.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(0.0f);
         }
 
         #endregion
@@ -3821,7 +3821,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2694
             // Original: assert interpreter.action_snapshots[-1].arg_values[0] == 6.0
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            lastSnapshot.ArgValues[0].Value.Should().Be(6.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(6.0f);
         }
 
         /// <summary>
@@ -3856,9 +3856,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(1.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(2.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(3.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(1.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(2.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(3.0f);
         }
 
         /// <summary>
@@ -3897,9 +3897,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(2.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(6.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(2.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(6.0f);
         }
 
         /// <summary>
@@ -3987,7 +3987,7 @@ namespace CSharpKOTOR.Tests.Formats
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
             thirdLastSnapshot.ArgValues[0].Value.Should().Be(0);
             secondLastSnapshot.ArgValues[0].Value.Should().Be("");
-            lastSnapshot.ArgValues[0].Value.Should().Be(0.0);
+            lastSnapshot.ArgValues[0].Value.Should().Be(0.0f);
         }
 
         /// <summary>
@@ -5472,9 +5472,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(5.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(7.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(9.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(5.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(7.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(9.0f);
         }
 
         /// <summary>
@@ -5515,9 +5515,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(5.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(6.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(5.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(6.0f);
         }
 
         /// <summary>
@@ -5557,9 +5557,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(6.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(8.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(6.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(8.0f);
         }
 
         /// <summary>
@@ -5599,9 +5599,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(3.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(2.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(3.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(2.0f);
         }
 
         /// <summary>
@@ -5641,9 +5641,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(1.5);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(2.5);
-            lastSnapshot.ArgValues[0].Value.Should().Be(3.5);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(1.5f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(2.5f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(3.5f);
         }
 
         /// <summary>
@@ -5683,9 +5683,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(3.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(2.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(3.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(2.0f);
         }
 
         /// <summary>
@@ -5725,9 +5725,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(6.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(8.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(6.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(8.0f);
         }
 
         /// <summary>
@@ -5767,9 +5767,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(3.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(2.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(3.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(2.0f);
         }
 
         #endregion
