@@ -778,6 +778,11 @@ namespace GenerateScriptDefs
             sb.AppendLine("        /// </summary>");
             sb.AppendLine("        public static readonly List<ScriptConstant> KOTOR_CONSTANTS = new List<ScriptConstant>()");
             sb.AppendLine("        {");
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/scriptdefs.py:14-15
+            // Original: ScriptConstant(DataType.INT, "TRUE", 1), ScriptConstant(DataType.INT, "FALSE", 0),
+            // Add built-in TRUE and FALSE constants (not in NSS files but used in scripts)
+            sb.AppendLine("        new ScriptConstant(DataType.Int, \"TRUE\", 1),");
+            sb.AppendLine("        new ScriptConstant(DataType.Int, \"FALSE\", 0),");
             foreach (var constant in k1Constants)
             {
                 sb.AppendLine(GenerateConstantCSharp(constant));
@@ -789,6 +794,11 @@ namespace GenerateScriptDefs
             sb.AppendLine("        /// </summary>");
             sb.AppendLine("        public static readonly List<ScriptConstant> TSL_CONSTANTS = new List<ScriptConstant>()");
             sb.AppendLine("        {");
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/scriptdefs.py:1507-1508
+            // Original: ScriptConstant(DataType.INT, "TRUE", 1), ScriptConstant(DataType.INT, "FALSE", 0),
+            // Add built-in TRUE and FALSE constants (not in NSS files but used in scripts)
+            sb.AppendLine("        new ScriptConstant(DataType.Int, \"TRUE\", 1),");
+            sb.AppendLine("        new ScriptConstant(DataType.Int, \"FALSE\", 0),");
             foreach (var constant in k2Constants)
             {
                 sb.AppendLine(GenerateConstantCSharp(constant));
