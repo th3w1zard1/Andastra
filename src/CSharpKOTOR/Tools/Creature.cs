@@ -48,7 +48,7 @@ namespace CSharpKOTOR.Tools
             }
 
             // Prepare context for logging and error messages
-            string firstName = installation.Resources.GetString(utc.FirstName);
+            string firstName = utc.FirstName?.ToString() ?? "";
             string contextBase = $" for UTC '{firstName}'";
 
             log.Debug($"Lookup appearance row {utc.AppearanceId} for get_body_model call.");
@@ -71,7 +71,7 @@ namespace CSharpKOTOR.Tools
                 log.Debug("appearance.2da: utc 'modeltype' is 'B'");
 
                 // Handle armor or default model/texture
-                if (!utc.Equipment.ContainsKey(EquipmentSlot.ARMOR) || utc.Equipment[EquipmentSlot.ARMOR].ResRef == null || utc.Equipment[EquipmentSlot.ARMOR].ResRef.IsBlank())
+                if (!utc.Equipment.ContainsKey(EquipmentSlot.ARMOR) || utc.Equipment[EquipmentSlot.ARMOR].ResRef == null || string.IsNullOrEmpty(utc.Equipment[EquipmentSlot.ARMOR].ResRef.ToString()))
                 {
                     modelColumn = "modela";
                     bodyModel = utcAppearanceRow.GetString(modelColumn);
@@ -196,13 +196,13 @@ namespace CSharpKOTOR.Tools
             }
 
             string rightHandModel = null;
-            if (utc.Equipment.ContainsKey(EquipmentSlot.RIGHT_HAND) && utc.Equipment[EquipmentSlot.RIGHT_HAND].ResRef != null && !utc.Equipment[EquipmentSlot.RIGHT_HAND].ResRef.IsBlank())
+            if (utc.Equipment.ContainsKey(EquipmentSlot.RIGHT_HAND) && utc.Equipment[EquipmentSlot.RIGHT_HAND].ResRef != null && !string.IsNullOrEmpty(utc.Equipment[EquipmentSlot.RIGHT_HAND].ResRef.ToString()))
             {
                 rightHandModel = LoadHandUti(installation, utc.Equipment[EquipmentSlot.RIGHT_HAND].ResRef.ToString(), baseitems);
             }
 
             string leftHandModel = null;
-            if (utc.Equipment.ContainsKey(EquipmentSlot.LEFT_HAND) && utc.Equipment[EquipmentSlot.LEFT_HAND].ResRef != null && !utc.Equipment[EquipmentSlot.LEFT_HAND].ResRef.IsBlank())
+            if (utc.Equipment.ContainsKey(EquipmentSlot.LEFT_HAND) && utc.Equipment[EquipmentSlot.LEFT_HAND].ResRef != null && !string.IsNullOrEmpty(utc.Equipment[EquipmentSlot.LEFT_HAND].ResRef.ToString()))
             {
                 leftHandModel = LoadHandUti(installation, utc.Equipment[EquipmentSlot.LEFT_HAND].ResRef.ToString(), baseitems);
             }
@@ -333,7 +333,7 @@ namespace CSharpKOTOR.Tools
             {
                 var headEquip = utc.Equipment[EquipmentSlot.HEAD];
                 var resref = headEquip.ResRef;
-                if (resref != null && !resref.IsBlank())
+                if (resref != null && !string.IsNullOrEmpty(resref.ToString()))
                 {
                     var resource = installation.Resources.LookupResource(resref.ToString(), ResourceType.UTI);
                     if (resource != null)
