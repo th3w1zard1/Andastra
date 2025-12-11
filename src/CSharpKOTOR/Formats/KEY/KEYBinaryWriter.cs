@@ -50,8 +50,8 @@ namespace CSharpKOTOR.Formats.KEY
 
         private void WriteHeader()
         {
-            _writer.WriteString(_key.FileType, Encoding.ASCII);
-            _writer.WriteString(_key.FileVersion, Encoding.ASCII);
+            _writer.WriteString(_key.FileType, Encoding.ASCII.WebName);
+            _writer.WriteString(_key.FileVersion, Encoding.ASCII.WebName);
 
             _writer.WriteUInt32((uint)_key.BifEntries.Count);
             _writer.WriteUInt32((uint)_key.KeyEntries.Count);
@@ -77,7 +77,7 @@ namespace CSharpKOTOR.Formats.KEY
 
             foreach (var bif in _key.BifEntries)
             {
-                _writer.WriteString(bif.Filename, Encoding.ASCII);
+                _writer.WriteString(bif.Filename, Encoding.ASCII.WebName);
                 _writer.WriteUInt8(0);
             }
         }

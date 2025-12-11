@@ -23,17 +23,20 @@ namespace CSharpKOTOR.Formats.LYT
 
         public LYTAsciiReader(byte[] data, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromBytes(data, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromBytes(data, offset, sizeNullable);
         }
 
         public LYTAsciiReader(string filepath, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromFile(filepath, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromFile(filepath, offset, sizeNullable);
         }
 
         public LYTAsciiReader(Stream source, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromStream(source, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromStream(source, offset, sizeNullable);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:42-61

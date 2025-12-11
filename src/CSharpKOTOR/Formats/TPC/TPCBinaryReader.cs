@@ -107,7 +107,7 @@ namespace CSharpKOTOR.Formats.TPC
                 int txiSize = _reader.Size - _reader.Position;
                 if (txiSize > 0)
                 {
-                    _tpc.Txi = _reader.ReadString(txiSize, System.Text.Encoding.ASCII);
+                    _tpc.Txi = _reader.ReadString(txiSize, System.Text.Encoding.ASCII.WebName);
                     _tpc.TxiObject = new TXI.TXI(_tpc.Txi);
                 }
 

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.VIS;
 
@@ -42,10 +43,10 @@ namespace CSharpKOTOR.Formats.VIS
                 {
                     string observer = pair.Item1;
                     HashSet<string> observed = pair.Item2;
-                    _writer.WriteString($"{observer} {observed.Count}{newline}", Encoding.ASCII);
+                    _writer.WriteString($"{observer} {observed.Count}{newline}", Encoding.ASCII.WebName);
                     foreach (string room in observed)
                     {
-                        _writer.WriteString($"  {room}{newline}", Encoding.ASCII);
+                        _writer.WriteString($"  {room}{newline}", Encoding.ASCII.WebName);
                     }
                 }
             }

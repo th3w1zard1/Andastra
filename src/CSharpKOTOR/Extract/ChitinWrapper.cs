@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CSharpKOTOR.Formats.Chitin;
 using CSharpKOTOR.Resources;
 
@@ -14,7 +15,7 @@ namespace CSharpKOTOR.Extract
             _chitin = new Chitin(keyPath, basePath);
         }
 
-        public List<FileResource> Resources => _chitin.Resources;
+        public List<FileResource> Resources => _chitin.ToList();
     }
 }
 

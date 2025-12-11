@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CSharpKOTOR.Installation;
-using ResourceResult = CSharpKOTOR.Resources.ResourceResult;
 using ResourceType = CSharpKOTOR.Resources.ResourceType;
 using LocationResult = CSharpKOTOR.Resources.LocationResult;
 
@@ -16,7 +15,7 @@ namespace CSharpKOTOR.Extract
             _installation = new Installation.Installation(installPath);
         }
 
-        public ResourceResult Resource(string resref, ResourceType restype)
+        public CSharpKOTOR.Installation.ResourceResult Resource(string resref, ResourceType restype)
         {
             return _installation.Resources.LookupResource(resref, restype);
         }

@@ -14,17 +14,20 @@ namespace CSharpKOTOR.Formats.LIP
 
         public LIPBinaryReader(byte[] data, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromBytes(data, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromBytes(data, offset, sizeNullable);
         }
 
         public LIPBinaryReader(string filepath, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromFile(filepath, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromFile(filepath, offset, sizeNullable);
         }
 
         public LIPBinaryReader(Stream source, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromStream(source, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromStream(source, offset, sizeNullable);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/io_lip.py:32-56

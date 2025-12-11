@@ -620,15 +620,8 @@ namespace CSharpKOTOR.Formats.BWM
 
             Vector3 edge1 = v1 - v0;
             Vector3 edge2 = v2 - v0;
-            Vector3 Cross(Vector3 a, Vector3 b)
-            {
-                return new Vector3(
-                    a.Y * b.Z - a.Z * b.Y,
-                    a.Z * b.X - a.X * b.Z,
-                    a.X * b.Y - a.Y * b.X);
-            }
 
-            Vector3 h = Cross(direction, edge2);
+            Vector3 h = Vector3.Cross(direction, edge2);
             float a = edge1.Dot(h);
 
             // Ray is parallel to triangle
@@ -646,7 +639,7 @@ namespace CSharpKOTOR.Formats.BWM
                 return null;
             }
 
-            Vector3 q = Cross(s, edge1);
+            Vector3 q = Vector3.Cross(s, edge1);
             float v = f * direction.Dot(q);
 
             if (v < 0.0f || u + v > 1.0f)

@@ -16,12 +16,24 @@ namespace CSharpKOTOR.Extract
 
         public byte[] Resource(string resref, ResourceType restype)
         {
-            return _capsule.Resource(resref, restype);
+            return _capsule.GetResource(resref, restype);
         }
 
         public Dictionary<ResourceIdentifier, ResourceResult> Batch(List<ResourceIdentifier> queries)
         {
-            return _capsule.Batch(queries);
+            Dictionary<ResourceIdentifier, ResourceResult> results = new Dictionary<ResourceIdentifier, ResourceResult>();
+            foreach (var query in queries)
+            {
+                byte[] data = _capsule.GetResource(query.ResName, query.ResType);
+                if (data == null)
+                {
+                    results[query] = null;
+                    continue;
+                }
+                var result = new ResourceResult(query.ResName, query.ResType, _capsule.FilePath, data);
+                results[query] = result;
+            }
+            return results;
         }
     }
 }

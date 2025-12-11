@@ -49,33 +49,33 @@ namespace CSharpKOTOR.Formats.LYT
                 int obstaclecount = _lyt.Obstacles.Count;
                 int doorhookcount = _lyt.Doorhooks.Count;
 
-                _writer.WriteString($"beginlayout{LytLineSep}", Encoding.ASCII);
+                _writer.WriteString($"beginlayout{LytLineSep}", Encoding.ASCII.WebName);
 
-                _writer.WriteString($"{LytIndent}{RoomCountKey} {roomcount}{LytLineSep}", Encoding.ASCII);
+                _writer.WriteString($"{LytIndent}{RoomCountKey} {roomcount}{LytLineSep}", Encoding.ASCII.WebName);
                 foreach (var room in _lyt.Rooms)
                 {
-                    _writer.WriteString($"{LytIndent}{LytIndent}{room.Model} {room.Position.X} {room.Position.Y} {room.Position.Z}{LytLineSep}", Encoding.ASCII);
+                    _writer.WriteString($"{LytIndent}{LytIndent}{room.Model} {room.Position.X} {room.Position.Y} {room.Position.Z}{LytLineSep}", Encoding.ASCII.WebName);
                 }
 
-                _writer.WriteString($"{LytIndent}{TrackCountKey} {trackcount}{LytLineSep}", Encoding.ASCII);
+                _writer.WriteString($"{LytIndent}{TrackCountKey} {trackcount}{LytLineSep}", Encoding.ASCII.WebName);
                 foreach (var track in _lyt.Tracks)
                 {
-                    _writer.WriteString($"{LytIndent}{LytIndent}{track.Model} {track.Position.X} {track.Position.Y} {track.Position.Z}{LytLineSep}", Encoding.ASCII);
+                    _writer.WriteString($"{LytIndent}{LytIndent}{track.Model} {track.Position.X} {track.Position.Y} {track.Position.Z}{LytLineSep}", Encoding.ASCII.WebName);
                 }
 
-                _writer.WriteString($"{LytIndent}{ObstacleCountKey} {obstaclecount}{LytLineSep}", Encoding.ASCII);
+                _writer.WriteString($"{LytIndent}{ObstacleCountKey} {obstaclecount}{LytLineSep}", Encoding.ASCII.WebName);
                 foreach (var obstacle in _lyt.Obstacles)
                 {
-                    _writer.WriteString($"{LytIndent}{LytIndent}{obstacle.Model} {obstacle.Position.X} {obstacle.Position.Y} {obstacle.Position.Z}{LytLineSep}", Encoding.ASCII);
+                    _writer.WriteString($"{LytIndent}{LytIndent}{obstacle.Model} {obstacle.Position.X} {obstacle.Position.Y} {obstacle.Position.Z}{LytLineSep}", Encoding.ASCII.WebName);
                 }
 
-                _writer.WriteString($"{LytIndent}{DoorhookCountKey} {doorhookcount}{LytLineSep}", Encoding.ASCII);
+                _writer.WriteString($"{LytIndent}{DoorhookCountKey} {doorhookcount}{LytLineSep}", Encoding.ASCII.WebName);
                 foreach (var doorhook in _lyt.Doorhooks)
                 {
-                    _writer.WriteString($"{LytIndent}{LytIndent}{doorhook.Room} {doorhook.Door} 0 {doorhook.Position.X} {doorhook.Position.Y} {doorhook.Position.Z} {doorhook.Orientation.X} {doorhook.Orientation.Y} {doorhook.Orientation.Z} {doorhook.Orientation.W}{LytLineSep}", Encoding.ASCII);
+                    _writer.WriteString($"{LytIndent}{LytIndent}{doorhook.Room} {doorhook.Door} 0 {doorhook.Position.X} {doorhook.Position.Y} {doorhook.Position.Z} {doorhook.Orientation.X} {doorhook.Orientation.Y} {doorhook.Orientation.Z} {doorhook.Orientation.W}{LytLineSep}", Encoding.ASCII.WebName);
                 }
 
-                _writer.WriteString("donelayout", Encoding.ASCII);
+                _writer.WriteString("donelayout", Encoding.ASCII.WebName);
             }
             finally
             {
