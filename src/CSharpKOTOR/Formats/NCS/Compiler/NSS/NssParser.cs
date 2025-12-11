@@ -781,6 +781,13 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 return continueStmt;
             }
 
+            // NOP statement - matching PyKotor parser.py line 327
+            Statement nopStmt = TryParseNopStatement();
+            if (nopStmt != null)
+            {
+                return nopStmt;
+            }
+
             // Scoped block - eleventh in PyKotor grammar
             Statement scopedBlock = TryParseScopedBlock();
             if (scopedBlock != null)
@@ -972,6 +979,55 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 Advance();
                 ConsumeSeparator(NssSeparators.Semicolon, "Expected ';' after continue");
                 return new ContinueStatement();
+            }
+            catch (CompileError)
+            {
+                // Re-throw CompileError so we can see what went wrong
+                throw;
+            }
+            catch (Exception)
+            {
+                // For other exceptions, restore state and return null
+                _tokenIndex = savedIndex;
+                return null;
+            }
+        }
+
+        // Matching PyKotor parser.py line 327: p_nop_statement
+        // Original: statement : NOP STRING_VALUE ';'
+        private Statement TryParseNopStatement()
+        {
+            int savedIndex = _tokenIndex;
+            try
+            {
+                SkipWhitespaceAndComments();
+                // Check for NOP keyword
+                if (!CheckToken<NssIdentifier>() || (CurrentToken() as NssIdentifier)?.Identifier != "NOP")
+                {
+                    _tokenIndex = savedIndex;
+                    return null;
+                }
+
+                Advance(); // Consume NOP
+                SkipWhitespaceAndComments();
+
+                // Consume string value - matching PyKotor parser.py line 332: string_expr = p[2]
+                NssLiteral stringLiteral = ConsumeToken<NssLiteral>("Expected string value after NOP");
+                if (stringLiteral.LiteralType != NssLiteralType.String)
+                {
+                    throw new CompileError("Expected string literal after NOP");
+                }
+                // Remove quotes - matching ParsePrimaryExpression string handling
+                string strVal = stringLiteral.Literal;
+                if (strVal.Length >= 2 && strVal[0] == '"' && strVal[strVal.Length - 1] == '"')
+                {
+                    strVal = strVal.Substring(1, strVal.Length - 2);
+                }
+                SkipWhitespaceAndComments();
+
+                // Consume semicolon
+                ConsumeSeparator(NssSeparators.Semicolon, "Expected ';' after NOP statement");
+                return new NopStatement(strVal);
             }
             catch (CompileError)
             {
