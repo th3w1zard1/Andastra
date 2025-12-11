@@ -30,9 +30,10 @@ namespace CSharpKOTOR.Formats.VIS
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/vis_auto.py:43-66
         // Original: def write_vis(vis: VIS, target: TARGET_TYPES, file_format: ResourceType = ResourceType.VIS)
-        public static void WriteVis(VIS vis, object target, ResourceType fileFormat = ResourceType.VIS)
+        public static void WriteVis(VIS vis, object target, ResourceType fileFormat = null)
         {
-            if (fileFormat != ResourceType.VIS)
+            ResourceType format = fileFormat ?? ResourceType.VIS;
+            if (format != ResourceType.VIS)
             {
                 throw new ArgumentException("Unsupported format specified; use VIS.");
             }
@@ -53,11 +54,12 @@ namespace CSharpKOTOR.Formats.VIS
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/vis_auto.py:69-92
         // Original: def bytes_vis(vis: VIS, file_format: ResourceType = ResourceType.VIS) -> bytes
-        public static byte[] BytesVis(VIS vis, ResourceType fileFormat = ResourceType.VIS)
+        public static byte[] BytesVis(VIS vis, ResourceType fileFormat = null)
         {
+            ResourceType format = fileFormat ?? ResourceType.VIS;
             using (var ms = new MemoryStream())
             {
-                WriteVis(vis, ms, fileFormat);
+                WriteVis(vis, ms, format);
                 return ms.ToArray();
             }
         }

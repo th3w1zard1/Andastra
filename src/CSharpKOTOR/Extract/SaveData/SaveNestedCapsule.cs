@@ -186,6 +186,5 @@ namespace CSharpKOTOR.Extract.SaveData
             return null;
         }
     }
-    }
 }
 

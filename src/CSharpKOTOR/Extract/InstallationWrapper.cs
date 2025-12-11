@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using ResourceResult = CSharpKOTOR.Resources.ResourceResult;
+using ResourceType = CSharpKOTOR.Resources.ResourceType;
+using LocationResult = CSharpKOTOR.Installation.LocationResult;
 
 namespace CSharpKOTOR.Extract
 {

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Language;
 using CSharpKOTOR.Resources;
 
 namespace CSharpKOTOR.Extract

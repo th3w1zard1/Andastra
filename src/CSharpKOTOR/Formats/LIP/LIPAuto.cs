@@ -94,9 +94,10 @@ namespace CSharpKOTOR.Formats.LIP
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_auto.py:102-129
         // Original: def write_lip(lip: LIP, target: TARGET_TYPES, file_format: ResourceType = ResourceType.LIP)
-        public static void WriteLip(LIP lip, object target, ResourceType fileFormat = ResourceType.LIP)
+        public static void WriteLip(LIP lip, object target, ResourceType fileFormat = null)
         {
-            if (fileFormat == ResourceType.LIP)
+            ResourceType format = fileFormat ?? ResourceType.LIP;
+            if (format == ResourceType.LIP)
             {
                 if (target is string filepath)
                 {
@@ -111,11 +112,11 @@ namespace CSharpKOTOR.Formats.LIP
                     throw new ArgumentException("Target must be string or Stream for binary LIP");
                 }
             }
-            else if (fileFormat == ResourceType.LIP_XML)
+            else if (format == ResourceType.LIP_XML)
             {
                 throw new NotImplementedException("LIP XML format not yet implemented");
             }
-            else if (fileFormat == ResourceType.LIP_JSON)
+            else if (format == ResourceType.LIP_JSON)
             {
                 throw new NotImplementedException("LIP JSON format not yet implemented");
             }

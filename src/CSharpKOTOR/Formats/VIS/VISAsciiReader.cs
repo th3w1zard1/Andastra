@@ -70,7 +70,7 @@ namespace CSharpKOTOR.Formats.VIS
                         // Try to parse the count
                         if (tokens.Length < 2 || !int.TryParse(tokens[1], out int count))
                         {
-                            throw new ArgumentException($"Invalid VIS format: expected room count, got '{tokens.Length > 1 ? tokens[1] : "(missing)"}' for room '{whenInside}'");
+                            throw new ArgumentException($"Invalid VIS format: expected room count, got '{(tokens.Length > 1 ? tokens[1] : "(missing)")}' for room '{whenInside}'");
                         }
 
                         for (int i = 0; i < count; i++)

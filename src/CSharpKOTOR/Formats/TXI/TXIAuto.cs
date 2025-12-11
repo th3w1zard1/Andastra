@@ -30,9 +30,10 @@ namespace CSharpKOTOR.Formats.TXI
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/txi_auto.py:22-32
         // Original: def write_txi(txi: TXI, target: TARGET_TYPES, file_format: ResourceType = ResourceType.TXI)
-        public static void WriteTxi(TXI txi, object target, ResourceType fileFormat = ResourceType.TXI)
+        public static void WriteTxi(TXI txi, object target, ResourceType fileFormat = null)
         {
-            if (fileFormat != ResourceType.TXI)
+            ResourceType format = fileFormat ?? ResourceType.TXI;
+            if (format != ResourceType.TXI)
             {
                 throw new ArgumentException("Unsupported format specified; use TXI.");
             }
@@ -53,7 +54,7 @@ namespace CSharpKOTOR.Formats.TXI
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/txi_auto.py:35-42
         // Original: def bytes_txi(txi: TXI, file_format: ResourceType = ResourceType.TXI) -> bytes
-        public static byte[] BytesTxi(TXI txi, ResourceType fileFormat = ResourceType.TXI)
+        public static byte[] BytesTxi(TXI txi, ResourceType fileFormat = null)
         {
             using (var ms = new MemoryStream())
             {

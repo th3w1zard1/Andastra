@@ -41,9 +41,10 @@ namespace CSharpKOTOR.Formats.LTR
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_auto.py:41-62
         // Original: def write_ltr(ltr: LTR, target: TARGET_TYPES, file_format: ResourceType = ResourceType.LTR)
-        public static void WriteLtr(LTR ltr, object target, ResourceType fileFormat = ResourceType.LTR)
+        public static void WriteLtr(LTR ltr, object target, ResourceType fileFormat = null)
         {
-            if (fileFormat != ResourceType.LTR)
+            ResourceType format = fileFormat ?? ResourceType.LTR;
+            if (format != ResourceType.LTR)
             {
                 throw new ArgumentException("Unsupported format specified; use LTR.");
             }
@@ -64,11 +65,12 @@ namespace CSharpKOTOR.Formats.LTR
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_auto.py:65-88
         // Original: def bytes_ltr(ltr: LTR, file_format: ResourceType = ResourceType.LTR) -> bytes
-        public static byte[] BytesLtr(LTR ltr, ResourceType fileFormat = ResourceType.LTR)
+        public static byte[] BytesLtr(LTR ltr, ResourceType fileFormat = null)
         {
+            ResourceType format = fileFormat ?? ResourceType.LTR;
             using (var ms = new MemoryStream())
             {
-                WriteLtr(ltr, ms, fileFormat);
+                WriteLtr(ltr, ms, format);
                 return ms.ToArray();
             }
         }
