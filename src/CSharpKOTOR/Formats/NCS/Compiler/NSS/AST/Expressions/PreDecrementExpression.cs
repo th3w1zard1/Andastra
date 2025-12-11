@@ -23,13 +23,13 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         {
             // Matching PyKotor classes.py lines 2906-2935 exactly
             // First compile the field access to push value to stack
+            // Note: FieldAccess.Compile does NOT add to temp_stack, so we don't either
             DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
-            block.TempStack += variableType.Size(root);
 
             if (variableType.Builtin != DataType.Int && variableType.Builtin != DataType.Float)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
-                throw new CompileError(
+                throw new NSS.CompileError(
                     $"Decrement operator (--) requires integer variable, got {variableType.Builtin.ToScriptString().ToLower()}\n" +
                     $"  Variable: {varName}");
             }
@@ -46,6 +46,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             // Decrement the value on the stack (the value that was just pushed by FieldAccess.Compile)
             // Matching PyKotor line 2922: ncs.add(NCSInstructionType.DECxSP, args=[-4])
+            // DECxSP with negative offset decrements the value at the top of the stack
             ncs.Add(NCSInstructionType.DECxSP, new List<object> { -variableType.Size(root) });
 
             // Copy the decremented value back to the variable location
@@ -59,7 +60,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 ncs.Add(NCSInstructionType.CPDOWNSP, new List<object> { stackIndex - variableType.Size(root), variableType.Size(root) });
             }
 
-            block.TempStack -= variableType.Size(root);
+            // Matching PyKotor line 2935: return variable_type
+            // The decremented value is still on the stack (for assignment), so temp_stack is correct
             return variableType;
         }
 
