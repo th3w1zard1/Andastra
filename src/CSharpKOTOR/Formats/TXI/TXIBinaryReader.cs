@@ -17,19 +17,22 @@ namespace CSharpKOTOR.Formats.TXI
 
         public TXIBinaryReader(byte[] data, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromBytes(data, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromBytes(data, offset, sizeNullable);
             _txi = new TXI();
         }
 
         public TXIBinaryReader(string filepath, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromFile(filepath, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromFile(filepath, offset, sizeNullable);
             _txi = new TXI();
         }
 
         public TXIBinaryReader(Stream source, int offset = 0, int size = 0)
         {
-            _reader = RawBinaryReader.FromStream(source, offset, size > 0 ? size : null);
+            int? sizeNullable = size > 0 ? (int?)size : null;
+            _reader = RawBinaryReader.FromStream(source, offset, sizeNullable);
             _txi = new TXI();
         }
 

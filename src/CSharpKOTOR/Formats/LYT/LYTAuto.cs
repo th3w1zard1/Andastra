@@ -30,9 +30,10 @@ namespace CSharpKOTOR.Formats.LYT
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py:42-65
         // Original: def write_lyt(lyt: LYT, target: TARGET_TYPES, file_format: ResourceType = ResourceType.LYT)
-        public static void WriteLyt(LYT lyt, object target, ResourceType fileFormat = ResourceType.LYT)
+        public static void WriteLyt(LYT lyt, object target, ResourceType fileFormat = null)
         {
-            if (fileFormat != ResourceType.LYT)
+            ResourceType format = fileFormat ?? ResourceType.LYT;
+            if (format != ResourceType.LYT)
             {
                 throw new ArgumentException("Unsupported format specified; use LYT.");
             }
@@ -53,11 +54,12 @@ namespace CSharpKOTOR.Formats.LYT
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py:68-91
         // Original: def bytes_lyt(lyt: LYT, file_format: ResourceType = ResourceType.LYT) -> bytes
-        public static byte[] BytesLyt(LYT lyt, ResourceType fileFormat = ResourceType.LYT)
+        public static byte[] BytesLyt(LYT lyt, ResourceType fileFormat = null)
         {
+            ResourceType format = fileFormat ?? ResourceType.LYT;
             using (var ms = new MemoryStream())
             {
-                WriteLyt(lyt, ms, fileFormat);
+                WriteLyt(lyt, ms, format);
                 return ms.ToArray();
             }
         }

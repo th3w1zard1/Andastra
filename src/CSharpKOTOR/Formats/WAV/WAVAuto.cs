@@ -30,9 +30,10 @@ namespace CSharpKOTOR.Formats.WAV
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_auto.py:72-97
         // Original: def write_wav(wav: WAV, target: TARGET_TYPES, file_format: ResourceType = ResourceType.WAV)
-        public static void WriteWav(WAV wav, object target, ResourceType fileFormat = ResourceType.WAV)
+        public static void WriteWav(WAV wav, object target, ResourceType fileFormat = null)
         {
-            if (fileFormat == ResourceType.WAV)
+            ResourceType format = fileFormat ?? ResourceType.WAV;
+            if (format == ResourceType.WAV)
             {
                 if (target is string filepath)
                 {
@@ -67,11 +68,12 @@ namespace CSharpKOTOR.Formats.WAV
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_auto.py:100-118
         // Original: def bytes_wav(wav: WAV, file_format: ResourceType = ResourceType.WAV) -> bytes
-        public static byte[] BytesWav(WAV wav, ResourceType fileFormat = ResourceType.WAV)
+        public static byte[] BytesWav(WAV wav, ResourceType fileFormat = null)
         {
+            ResourceType format = fileFormat ?? ResourceType.WAV;
             using (var ms = new MemoryStream())
             {
-                WriteWav(wav, ms, fileFormat);
+                WriteWav(wav, ms, format);
                 return ms.ToArray();
             }
         }

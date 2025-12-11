@@ -128,11 +128,12 @@ namespace CSharpKOTOR.Formats.LIP
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_auto.py:132-155
         // Original: def bytes_lip(lip: LIP, file_format: ResourceType = ResourceType.LIP) -> bytes
-        public static byte[] BytesLip(LIP lip, ResourceType fileFormat = ResourceType.LIP)
+        public static byte[] BytesLip(LIP lip, ResourceType fileFormat = null)
         {
+            ResourceType format = fileFormat ?? ResourceType.LIP;
             using (var ms = new MemoryStream())
             {
-                WriteLip(lip, ms, fileFormat);
+                WriteLip(lip, ms, format);
                 return ms.ToArray();
             }
         }
