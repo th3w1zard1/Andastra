@@ -5165,7 +5165,8 @@ namespace CSharpKOTOR.Tests.Formats
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3535
             // Original: otherscript = """void TestFunc() { PrintInteger(123); }""".encode(encoding=""windows-1252"")
-            byte[] otherscript = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(@"
+            // Note: Using UTF-8 instead of windows-1252 for .NET Core compatibility
+            byte[] otherscript = System.Text.Encoding.UTF8.GetBytes(@"
             void TestFunc()
             {
                 PrintInteger(123);
@@ -5201,7 +5202,8 @@ namespace CSharpKOTOR.Tests.Formats
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3580
             // Original: first_script: bytes = """int SOME_COST = 13; void TestFunc(int value) { PrintInteger(value); }""".encode(encoding=""windows-1252"")
-            byte[] firstScript = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(@"
+            // Note: Using UTF-8 instead of windows-1252 for .NET Core compatibility
+            byte[] firstScript = System.Text.Encoding.UTF8.GetBytes(@"
             int SOME_COST = 13;
 
             void TestFunc(int value)
@@ -5212,7 +5214,8 @@ namespace CSharpKOTOR.Tests.Formats
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3589
             // Original: second_script: bytes = """#include ""first_script""""".encode(encoding=""windows-1252"")
-            byte[] secondScript = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(@"
+            // Note: Using UTF-8 instead of windows-1252 for .NET Core compatibility
+            byte[] secondScript = System.Text.Encoding.UTF8.GetBytes(@"
             #include ""first_script""
         ");
 
@@ -5277,7 +5280,8 @@ namespace CSharpKOTOR.Tests.Formats
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3626
             // Original: otherscript = """int iExperience = 55;""".encode(encoding=""windows-1252"")
-            byte[] otherscript = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(@"
+            // Note: Using UTF-8 instead of windows-1252 for .NET Core compatibility
+            byte[] otherscript = System.Text.Encoding.UTF8.GetBytes(@"
             int iExperience = 55;
         ");
 

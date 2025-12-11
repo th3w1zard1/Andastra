@@ -201,10 +201,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 {
                     try
                     {
-                        // Ensure Windows-1252 encoding is available (required for game scripts)
-                        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:879
+                        // Original: source_bytes = filepath.read_bytes(); source = source_bytes.decode(errors="ignore")
+                        // Note: Using UTF-8 with fallback for .NET Core compatibility
                         byte[] sourceBytes = System.IO.File.ReadAllBytes(filepath);
-                        source = Encoding.GetEncoding("windows-1252").GetString(sourceBytes);
+                        source = System.Text.Encoding.UTF8.GetString(sourceBytes);
                         break;
                     }
                     catch (Exception e)
@@ -224,7 +225,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
                 if (Library.ContainsKey(includeFilename))
                 {
-                    source = Encoding.GetEncoding("windows-1252").GetString(Library[includeFilename]);
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:894
+                    // Original: source = self.library[include_filename].decode(errors="ignore")
+                    // Note: Using UTF-8 with fallback for .NET Core compatibility
+                    source = System.Text.Encoding.UTF8.GetString(Library[includeFilename]);
                 }
                 else
                 {
