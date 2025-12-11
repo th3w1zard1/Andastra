@@ -418,16 +418,18 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 // Check if it's an initialization or just declaration
                 if (MatchOperator(NssOperators.Assignment))
                 {
+                    // Matching PyKotor parser.py line 201: GlobalVariableInitialization with is_const
                     // It's an initialization
                     Expression initExpr = ParseExpression();
                     ConsumeSeparator(NssSeparators.Semicolon, "Expected ';' after variable initialization");
-                    return new GlobalVariableInitialization(new Identifier(varName.Identifier), type, initExpr);
+                    return new GlobalVariableInitialization(new Identifier(varName.Identifier), type, initExpr, isConst);
                 }
                 else
                 {
-                    // Just a declaration (const not supported in GlobalVariableDeclaration constructor)
+                    // Matching PyKotor parser.py line 213: GlobalVariableDeclaration with is_const
+                    // Just a declaration
                     ConsumeSeparator(NssSeparators.Semicolon, "Expected ';' after variable declaration");
-                    return new GlobalVariableDeclaration(new Identifier(varName.Identifier), type);
+                    return new GlobalVariableDeclaration(new Identifier(varName.Identifier), type, isConst);
                 }
             }
             catch (CompileError)

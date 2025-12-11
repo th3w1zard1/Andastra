@@ -15,11 +15,15 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
     {
         public Identifier Identifier { get; set; }
         public DynamicDataType DataType { get; set; }
+        public bool IsConst { get; set; }
 
-        public GlobalVariableDeclaration(Identifier identifier, DynamicDataType dataType)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:107
+        // Original: def __init__(self, identifier: Identifier, data_type: DynamicDataType, is_const: bool = False):
+        public GlobalVariableDeclaration(Identifier identifier, DynamicDataType dataType, bool isConst = false)
         {
             Identifier = identifier;
             DataType = dataType;
+            IsConst = isConst;
         }
 
         public override void Compile(NCS ncs, CodeRoot root)
@@ -88,7 +92,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 throw new CompileError(msg);
             }
 
-            root.AddScoped(Identifier, DataType);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:155
+            // Original: root.add_scoped(self.identifier, self.data_type, is_const=self.is_const)
+            root.AddScoped(Identifier, DataType, IsConst);
         }
     }
 
@@ -97,18 +103,26 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         public Identifier Identifier { get; set; }
         public DynamicDataType DataType { get; set; }
         public Expression Expression { get; set; }
+        public bool IsConst { get; set; }
 
-        public GlobalVariableInitialization(Identifier identifier, DynamicDataType dataType, Expression expression)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:65
+        // Original: def __init__(self, identifier: Identifier, data_type: DynamicDataType, value: Expression, is_const: bool = False):
+        public GlobalVariableInitialization(Identifier identifier, DynamicDataType dataType, Expression expression, bool isConst = false)
         {
             Identifier = identifier;
             DataType = dataType;
             Expression = expression;
+            IsConst = isConst;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:79
+        // Original: def compile(self, ncs: NCS, root: CodeRoot):
         public override void Compile(NCS ncs, CodeRoot root)
         {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:81
+            // Original: declaration = GlobalVariableDeclaration(self.identifier, self.data_type, self.is_const)
             // Allocate storage for the global variable (this also registers it in the global scope)
-            GlobalVariableDeclaration declaration = new GlobalVariableDeclaration(Identifier, DataType);
+            GlobalVariableDeclaration declaration = new GlobalVariableDeclaration(Identifier, DataType, IsConst);
             declaration.Compile(ncs, root);
 
             CodeBlock block = new CodeBlock();
