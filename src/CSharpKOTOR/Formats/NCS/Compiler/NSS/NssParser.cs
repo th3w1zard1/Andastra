@@ -378,6 +378,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 if (isConst)
                 {
                     Advance(); // Only advance if it's actually const
+                    SkipWhitespaceAndComments(); // Skip whitespace after const
                 }
 
                 DynamicDataType type = ParseDataType();
