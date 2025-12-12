@@ -33,7 +33,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.actions = actions;
             state.InitStack(this.stack);
             this.skipdeadcode = false;
-            this.state = new SubScriptState(nodedata, subdata, this.stack, state, actions);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:72
+            // Original: this.state = new SubScriptState(nodedata, subdata, this.stack, state, actions, FileDecompiler.preferSwitches);
+            this.state = new SubScriptState(nodedata, subdata, this.stack, state, actions, FileDecompiler.preferSwitches);
             this.globals = false;
             this.backupstack = null;
             this.type = state.Type();
@@ -45,7 +47,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.nodedata = nodedata;
             this.subdata = subdata;
             this.skipdeadcode = false;
-            this.state = new SubScriptState(nodedata, subdata, this.stack);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:80
+            // Original: this.state = new SubScriptState(nodedata, subdata, this.stack, FileDecompiler.preferSwitches);
+            this.state = new SubScriptState(nodedata, subdata, this.stack, FileDecompiler.preferSwitches);
             this.globals = true;
             this.backupstack = null;
             this.type = new UtilsType((byte)255); // -1 as unsigned byte

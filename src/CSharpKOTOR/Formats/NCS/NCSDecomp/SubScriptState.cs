@@ -35,7 +35,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private HashMap vardecs;
         private HashMap varcounts;
         private HashMap varnames;
-        public SubScriptState(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, LocalVarStack stack, SubroutineState protostate, ActionsData actions)
+        private bool preferSwitches;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:107-122
+        // Original: public SubScriptState(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, LocalVarStack stack, SubroutineState protostate, ActionsData actions, boolean preferSwitches)
+        public SubScriptState(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, LocalVarStack stack, SubroutineState protostate, ActionsData actions, bool preferSwitches)
         {
             this.nodedata = nodedata;
             this.subdata = subdata;
@@ -50,9 +53,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.current = this.root;
             this.varnames = new HashMap();
             this.actions = actions;
+            this.preferSwitches = preferSwitches;
         }
 
-        public SubScriptState(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, LocalVarStack stack)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:124-136
+        // Original: public SubScriptState(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, LocalVarStack stack, boolean preferSwitches)
+        public SubScriptState(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, LocalVarStack stack, bool preferSwitches)
         {
             this.nodedata = nodedata;
             this.subdata = subdata;
@@ -64,6 +70,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.varcounts = new HashMap();
             this.varprefix = "";
             this.varnames = new HashMap();
+            this.preferSwitches = preferSwitches;
         }
 
         public virtual void SetVarPrefix(string prefix)
@@ -437,49 +444,82 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else if (!NodeUtils.IsJz(node))
             {
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:551-620
+                // Original: Equality comparison - prefer switch when preferSwitches is enabled
                 if (this.state != 4)
                 {
                     AConditionalExp cond = (AConditionalExp)this.RemoveLastExp(true);
-                    Scriptnode.ASwitch aswitch = null;
-                    ASwitchCase acase = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
-                    if (this.current.HasChildren())
+                    // When preferSwitches is enabled, be more aggressive about creating switches
+                    // Check if we can add to an existing switch or create a new one
+                    bool canCreateSwitch = typeof(AConst).IsInstanceOfType(cond.Right());
+                    Scriptnode.ASwitch existingSwitch = null;
+
+                    // Check if we can continue an existing switch when preferSwitches is enabled
+                    if (this.preferSwitches && this.current.HasChildren())
                     {
                         Scriptnode.ScriptNode last = this.current.GetLastChild();
-                        AExpression leftExp = cond.Left();
-                        CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef leftVarRef = leftExp as CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-                        CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef lastVarRef = null;
-                        if (last is AExpression lastExpCheck)
+                        if (typeof(Scriptnode.ASwitch).IsInstanceOfType(last))
                         {
-                            lastVarRef = lastExpCheck as CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-                        }
-                        if (lastVarRef != null && leftVarRef != null && lastVarRef.Var().Equals(leftVarRef.Var()))
-                        {
-                            AExpression lastExp = this.RemoveLastExp(false);
-                            CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef varref = lastExp as CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-                            if (varref != null)
+                            existingSwitch = (Scriptnode.ASwitch)last;
+                            // Verify the switch expression matches
+                            if (typeof(ScriptNode.AVarRef).IsInstanceOfType(cond.Left()) && typeof(ScriptNode.AVarRef).IsInstanceOfType(existingSwitch.GetSwitchExp())
+                                && ((ScriptNode.AVarRef)cond.Left()).Var().Equals(((ScriptNode.AVarRef)existingSwitch.GetSwitchExp()).Var()))
                             {
-                                aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), varref);
+                                // Can continue existing switch
+                                ASwitchCase aprevcase = existingSwitch.GetLastCase();
+                                if (aprevcase != null)
+                                {
+                                    aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
+                                }
+                                ASwitchCase acasex = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
+                                existingSwitch.AddCase(acasex);
+                                this.state = 4;
+                                this.CheckEnd(node);
+                                return;
                             }
                         }
                     }
 
-                    if (aswitch == null)
+                    if (canCreateSwitch)
                     {
-                        aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), cond.Left());
-                    }
+                        Scriptnode.ASwitch aswitch = null;
+                        ASwitchCase acase = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
+                        if (this.current.HasChildren())
+                        {
+                            Scriptnode.ScriptNode last = this.current.GetLastChild();
+                            if (typeof(ScriptNode.AVarRef).IsInstanceOfType(last) && typeof(ScriptNode.AVarRef).IsInstanceOfType(cond.Left())
+                                && ((ScriptNode.AVarRef)last).Var().Equals(((ScriptNode.AVarRef)cond.Left()).Var()))
+                            {
+                                ScriptNode.AVarRef varref = (ScriptNode.AVarRef)this.RemoveLastExp(false);
+                                aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), varref);
+                            }
+                        }
 
-                    this.current.AddChild(aswitch);
-                    aswitch.AddCase(acase);
-                    this.state = 4;
+                        if (aswitch == null)
+                        {
+                            aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), cond.Left());
+                        }
+
+                        this.current.AddChild(aswitch);
+                        aswitch.AddCase(acase);
+                        this.state = 4;
+                    }
+                    else
+                    {
+                        // Fall back to if statement if we can't create a switch
+                        AIf aif = new AIf(this.nodedata.GetPos(node), this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6, cond);
+                        this.current.AddChild(aif);
+                        this.current = aif;
+                    }
                 }
                 else
                 {
-                    AConditionalExp cond = (AConditionalExp)this.RemoveLastExp(true);
-                    ASwitch aswitch = (ASwitch)this.current.GetLastChild();
-                    ASwitchCase aprevcase = aswitch.GetLastCase();
+                    AConditionalExp condx = (AConditionalExp)this.RemoveLastExp(true);
+                    Scriptnode.ASwitch aswitchx = (Scriptnode.ASwitch)this.current.GetLastChild();
+                    ASwitchCase aprevcase = aswitchx.GetLastCase();
                     aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
-                    ASwitchCase acase2 = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
-                    aswitch.AddCase(acase2);
+                    ASwitchCase acasex = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)condx.Right());
+                    aswitchx.AddCase(acasex);
                 }
             }
             else if (typeof(AIf).IsInstanceOfType(this.current) && this.IsModifyConditional())
