@@ -502,10 +502,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         pos = this.nodedata.GetPos(firstCmd);
                     }
                 }
-                // If still no position, use 0 as fallback (shouldn't happen in normal cases)
-                if (pos < 0)
+                // Matching DeNCS implementation: position 0 is the main, so subroutines must have pos > 0
+                // If still no position or position is 0, skip this subroutine (shouldn't happen in normal cases)
+                if (pos <= 0)
                 {
-                    pos = 0;
+                    continue;
                 }
                 ASubroutine node2 = node;
                 byte id2 = id;

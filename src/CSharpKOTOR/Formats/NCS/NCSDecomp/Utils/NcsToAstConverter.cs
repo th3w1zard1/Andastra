@@ -53,7 +53,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     try
                     {
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
-                        if (jumpIdx >= 0)
+                        // Matching DeNCS implementation: exclude position 0 (main) from subroutine starts
+                        if (jumpIdx > 0)
                         {
                             subroutineStarts.Add(jumpIdx);
                         }
