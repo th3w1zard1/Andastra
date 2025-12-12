@@ -53,10 +53,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.RemoveChildren(0, this.children.Count - 1);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:58-60
+        // Original: public ScriptNode removeLastChild() { return this.children.removeLast(); }
         public virtual ScriptNode RemoveLastChild()
         {
+            // Java's LinkedList.removeLast() throws NoSuchElementException if empty
+            // C# List doesn't have removeLast, so we manually remove the last element
             if (this.children.Count == 0)
-                return null;
+            {
+                throw new InvalidOperationException("Cannot remove last child from empty list");
+            }
             var lastNode = this.children[this.children.Count - 1];
             this.children.RemoveAt(this.children.Count - 1);
             return (ScriptNode)lastNode;
@@ -150,14 +156,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.children.Count;
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:123-133
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             foreach (object child in this.children)
             {
-                if (child is IDisposable disposable)
+                if (child is ScriptNode scriptNode)
                 {
-                    disposable.Dispose();
+                    scriptNode.Close();
                 }
             }
 

@@ -1,50 +1,44 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:8-27
+// Original: public abstract class ScriptNode
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ScriptNode
     {
-        private ScriptNode _parent;
-        private string _tabs = "";
-        private readonly string _newline = System.Environment.NewLine;
+        private ScriptNode parent;
+        protected string tabs;
+        protected string newline = System.Environment.NewLine;
 
         public ScriptNode()
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:13-15
+        // Original: public ScriptNode parent()
         public ScriptNode Parent()
         {
-            return _parent;
+            return this.parent;
         }
 
-        public void SetParent(ScriptNode parent)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:17-22
+        // Original: public void parent(ScriptNode parent)
+        public void Parent(ScriptNode parent)
         {
-            _parent = parent;
+            this.parent = parent;
             if (parent != null)
             {
-                _tabs = parent._tabs + "\t";
+                this.tabs = parent.tabs + "\t";
             }
         }
 
-        public string GetTabs()
-        {
-            return _tabs;
-        }
-
-        public void SetTabs(string tabs)
-        {
-            _tabs = tabs;
-        }
-
-        public string GetNewline()
-        {
-            return _newline;
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:24-26
+        // Original: public void close()
         public virtual void Close()
         {
-            _parent = null;
+            this.parent = null;
         }
     }
 }
+
 
 
 
