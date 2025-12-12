@@ -21,24 +21,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             subs = new List<Scriptutils.SubScriptState>();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2884-2900
+        // Original: public void close()
         public void Close()
         {
             if (subs != null)
             {
                 foreach (var sub in subs)
                 {
-                    sub.Dispose();
+                    sub.Close();
                 }
                 subs = null;
             }
             if (globals != null)
             {
-                globals.Dispose();
+                globals.Close();
                 globals = null;
             }
-            if (subdata != null && subdata is IDisposable disposable)
+            if (subdata != null)
             {
-                disposable.Dispose();
+                subdata.Close();
             }
             subdata = null;
             code = null;

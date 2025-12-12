@@ -34,7 +34,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 using (SHA256 sha256 = SHA256.Create())
                 {
-                    using (FileStream fs = new FileStream(file.FullName(), FileMode.Open, FileAccess.Read))
+                    using (FileStream fs = new FileStream(file.GetAbsolutePath(), FileMode.Open, FileAccess.Read))
                     {
                         byte[] hashBytes = sha256.ComputeHash(fs);
                         return BytesToHex(hashBytes).ToUpperInvariant();
