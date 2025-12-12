@@ -50,44 +50,56 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.globalstate = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:62-105
+        // Original: public void close()
         public void Close()
         {
             if (this.nodedata != null)
             {
-                this.nodedata.Dispose();
+                this.nodedata.Close();
                 this.nodedata = null;
             }
+
             if (this.substates != null)
             {
                 foreach (object sub in this.substates.Values)
                 {
-                    ((SubroutineState)sub).Dispose();
+                    ((SubroutineState)sub).Close();
                 }
+
                 this.substates = null;
             }
+
             if (this.subroutines != null)
             {
                 this.subroutines.Clear();
                 this.subroutines = null;
             }
+
             this.mainsub = null;
             this.globalsub = null;
             if (this.globalstack != null)
             {
-                this.globalstack.Dispose();
+                this.globalstack.Close();
                 this.globalstack = null;
             }
+
             if (this.globalstructs != null)
             {
                 foreach (object item in this.globalstructs)
                 {
-                    ((IDisposable)item)?.Dispose();
+                    if (item is StructType structType)
+                    {
+                        structType.Close();
+                    }
                 }
+
                 this.globalstructs = null;
             }
+
             if (this.globalstate != null)
             {
-                this.globalstate.Dispose();
+                this.globalstate.Close();
                 this.globalstate = null;
             }
         }
