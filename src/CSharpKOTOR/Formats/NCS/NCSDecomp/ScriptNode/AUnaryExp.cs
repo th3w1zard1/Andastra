@@ -80,9 +80,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 }
                 _exp = null;
             }
-            if (_stackEntry != null && _stackEntry is IDisposable disposableStackEntry)
+            if (_stackEntry != null)
             {
-                disposableStackEntry.Close();
+                _stackEntry.Close();
             }
             _stackEntry = null;
         }
