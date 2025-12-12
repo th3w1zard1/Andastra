@@ -685,6 +685,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 subdata.SplitOffSubroutines(ast);
                 ast = null;
                 mainsub = subdata.GetMainSub();
+                if (mainsub == null)
+                {
+                    JavaSystem.@out.Println("No main subroutine found in NCS - cannot decompile.");
+                    return null;
+                }
                 flatten = new FlattenSub(mainsub, nodedata);
                 mainsub.Apply(flatten);
                 subs = subdata.GetSubroutines();
@@ -712,37 +717,56 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 bool alldone = false;
                 bool onedone = true;
-                for (int pass = 1; !alldone && (onedone || pass < 5); ++pass)
+                // If there are no subroutines, we're already done with prototyping
+                if (subdata.NumSubs() == 0)
                 {
-                    subs = subdata.GetSubroutines();
                     alldone = true;
-                    onedone = false;
-                    while (subs.HasNext())
+                }
+                else
+                {
+                    for (int pass = 1; !alldone && (onedone || pass < 5); ++pass)
                     {
-                        sub = (ASubroutine)subs.Next();
-                        if (!subdata.IsPrototyped(nodedata.GetPos(sub), true))
+                        subs = subdata.GetSubroutines();
+                        alldone = true;
+                        onedone = false;
+                        while (subs.HasNext())
                         {
-                            sub.Apply(new SubroutinePathFinder(subdata.GetState(sub), nodedata, subdata, pass));
-                            if (subdata.IsBeingPrototyped(nodedata.GetPos(sub)))
+                            sub = (ASubroutine)subs.Next();
+                            int subPos = nodedata.GetPos(sub);
+                            if (!subdata.IsPrototyped(subPos, true))
                             {
-                                dotypes = new DoTypes(subdata.GetState(sub), nodedata, subdata, this.actions, true);
-                                sub.Apply(dotypes);
-                                dotypes.Done();
-                                onedone = true;
-                            }
-                            else
-                            {
-                                alldone = false;
+                                SubroutineState subState = subdata.GetState(sub);
+                                if (subState == null)
+                                {
+                                    JavaSystem.@out.Println($"ERROR: Subroutine at position {subPos} has no state!");
+                                    alldone = false;
+                                    continue;
+                                }
+                                sub.Apply(new SubroutinePathFinder(subState, nodedata, subdata, pass));
+                                if (subdata.IsBeingPrototyped(subPos))
+                                {
+                                    dotypes = new DoTypes(subState, nodedata, subdata, this.actions, true);
+                                    sub.Apply(dotypes);
+                                    dotypes.Done();
+                                    onedone = true;
+                                }
+                                else
+                                {
+                                    JavaSystem.@out.Println($"WARNING: Subroutine at position {subPos} could not be prototyped in pass {pass}");
+                                    alldone = false;
+                                }
                             }
                         }
                     }
-                }
 
-                if (!alldone)
-                {
-                    JavaSystem.@out.Println("Unable to do initial prototype of all subroutines after 5 passes.");
-                    // Don't call PrintStates() here as it can cause infinite output spam in loops
-                    return null;
+                    if (!alldone)
+                    {
+                        JavaSystem.@out.Println("Unable to do initial prototype of all subroutines after 5 passes.");
+                        JavaSystem.@out.Println($"  Total subroutines: {subdata.NumSubs()}");
+                        JavaSystem.@out.Println($"  Prototyped: {subdata.CountSubsDone()}");
+                        // Don't call PrintStates() here as it can cause infinite output spam in loops
+                        return null;
+                    }
                 }
 
                 dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);

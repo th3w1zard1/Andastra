@@ -181,7 +181,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public bool IsPrototyped(int pos, bool nullok)
         {
-            Node sub = (Node)this.subroutines[pos];
+            object subObj;
+            if (!this.subroutines.TryGetValue(pos, out subObj))
+            {
+                if (nullok)
+                {
+                    return false;
+                }
+                throw new Exception("Checking prototype on a subroutine not in the hash");
+            }
+            Node sub = (Node)subObj;
             if (sub != null)
             {
                 SubroutineState state = (SubroutineState)this.substates[sub];
@@ -196,7 +205,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public bool IsBeingPrototyped(int pos)
         {
-            Node sub = (Node)this.subroutines[pos];
+            object subObj;
+            if (!this.subroutines.TryGetValue(pos, out subObj))
+            {
+                throw new Exception("Checking prototype on a subroutine not in the hash");
+            }
+            Node sub = (Node)subObj;
             if (sub == null)
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
@@ -207,7 +221,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public bool IsFullyPrototyped(int pos)
         {
-            Node sub = (Node)this.subroutines[pos];
+            object subObj;
+            if (!this.subroutines.TryGetValue(pos, out subObj))
+            {
+                throw new Exception("Checking prototype on a subroutine not in the hash");
+            }
+            Node sub = (Node)subObj;
             if (sub == null)
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
@@ -281,6 +300,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private void AddSubroutine(int pos, Node node, byte id)
         {
             this.subroutines[pos] = node;
+            // Ensure the position is set in nodedata for the subroutine node
+            if (pos >= 0)
+            {
+                this.nodedata.SetPos(node, pos);
+            }
             this.AddSubState(node, id);
         }
 
@@ -469,6 +493,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 node = (ASubroutine)subroutines.RemoveFirst();
                 int pos = this.nodedata.GetPos(node);
+                // If the subroutine doesn't have a position set, get it from the first command
+                if (pos < 0)
+                {
+                    Node firstCmd = NodeUtils.GetCommandChild(node);
+                    if (firstCmd != null)
+                    {
+                        pos = this.nodedata.GetPos(firstCmd);
+                    }
+                }
+                // If still no position, use 0 as fallback (shouldn't happen in normal cases)
+                if (pos < 0)
+                {
+                    pos = 0;
+                }
                 ASubroutine node2 = node;
                 byte id2 = id;
                 id = (byte)(id2 + 1);
