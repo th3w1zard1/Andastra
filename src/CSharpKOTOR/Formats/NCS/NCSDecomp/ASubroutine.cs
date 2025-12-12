@@ -9,49 +9,39 @@ using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:9-26
+    // Original: public final class ASubroutine extends PSubroutine { ... }
     public sealed class ASubroutine : PSubroutine
     {
         private PCommandBlock _commandBlock_;
         private PReturn _return_;
-        private int _id;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:13-14
+        // Original: public ASubroutine() { }
         public ASubroutine()
         {
-            this._id = 0;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:16-19
+        // Original: public ASubroutine(PCommandBlock _commandBlock_, PReturn _return_) { ... }
         public ASubroutine(PCommandBlock _commandBlock_, PReturn _return_)
         {
             this.SetCommandBlock(_commandBlock_);
             this.SetReturn(_return_);
-            this._id = 0;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:21-26
+        // Original: @Override public ASubroutine clone() { ... }
         public override object Clone()
         {
-            return new ASubroutine((PCommandBlock)this.CloneNode(this._commandBlock_), (PReturn)this.CloneNode(this._return_));
+            PCommandBlock clonedCommandBlock = this._commandBlock_ != null ? (PCommandBlock)this._commandBlock_.Clone() : null;
+            PReturn clonedReturn = this._return_ != null ? (PReturn)this._return_.Clone() : null;
+            return new ASubroutine(clonedCommandBlock, clonedReturn);
         }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:28-31
+        // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseASubroutine(this); }
         public override void Apply(Switch sw)
         {
-            JavaSystem.@out.Println($"DEBUG ASubroutine(root).Apply: sw type={sw.GetType().Name}, sw is IAnalysis={sw is IAnalysis}");
-            if (sw is IAnalysis ia)
-            {
-                JavaSystem.@out.Println($"DEBUG ASubroutine(root).Apply: calling ia.CaseASubroutine");
-                ia.CaseASubroutine(this);
-            }
-            else
-            {
-                JavaSystem.@out.Println($"DEBUG ASubroutine(root).Apply: sw is not IAnalysis, skipping");
-            }
-        }
-
-        public int GetId()
-        {
-            return this._id;
-        }
-
-        public void SetId(int subId)
-        {
-            this._id = subId;
+            ((Analysis)sw).CaseASubroutine(this);
         }
 
         public PCommandBlock GetCommandBlock()
@@ -109,29 +99,29 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return this.ToString(this._commandBlock_) + this.ToString(this._return_);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:78-85
+        // Original: @Override void removeChild(Node child) { ... }
         public override void RemoveChild(Node child)
         {
             if (this._commandBlock_ == child)
             {
                 this._commandBlock_ = null;
-                return;
             }
-
-            if (this._return_ == child)
+            else if (this._return_ == child)
             {
                 this._return_ = null;
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:87-94
+        // Original: @Override void replaceChild(Node oldChild, Node newChild) { ... }
         public override void ReplaceChild(Node oldChild, Node newChild)
         {
             if (this._commandBlock_ == oldChild)
             {
                 this.SetCommandBlock((PCommandBlock)newChild);
-                return;
             }
-
-            if (this._return_ == oldChild)
+            else if (this._return_ == oldChild)
             {
                 this.SetReturn((PReturn)newChild);
             }
