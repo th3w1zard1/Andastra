@@ -92,9 +92,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.AddDestination(node, this.destination);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:100-108
+        // Original: private void addDestination(Node origin, Node destination)
         private void AddDestination(Node origin, Node destination)
         {
-            object originsListObj = this.origins[destination];
+            object originsListObj = this.origins.ContainsKey(destination) ? this.origins[destination] : null;
             List<object> originsList = originsListObj as List<object>;
             if (originsList == null)
             {
@@ -103,7 +105,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             originsList.Add(origin);
-            originsList = null;
         }
 
         private int GetPos(Node node)
@@ -137,6 +138,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:127-159
+            // Original: @Override public void caseAProgram(AProgram node)
             public override void CaseAProgram(AProgram node)
             {
                 this.InAProgram(node);
@@ -149,6 +152,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 int cur = temp.Length / 2;
                 int min = 0;
                 int max = temp.Length - 1;
+                // Matching Java for loop: for (boolean done = ...; !done; done = done || ...)
                 bool done = this.parent.destination != null || cur >= temp.Length;
                 while (!done)
                 {
@@ -173,15 +177,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         min = cur;
                         cur = (cur + max) / 2;
                     }
-                    if (!done)
-                    {
-                        done = (done || this.parent.destination != null || cur > max);
-                    }
+                    // Update expression from Java for loop: done = done || SetDestinations.this.destination != null || cur > max
+                    done = done || this.parent.destination != null || cur > max;
                 }
 
                 this.OutAProgram(node);
             }
 
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:162-188
+            // Original: @Override public void caseACommandBlock(ACommandBlock node)
             public override void CaseACommandBlock(ACommandBlock node)
             {
                 this.InACommandBlock(node);
@@ -189,6 +193,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 int cur = temp.Length / 2;
                 int min = 0;
                 int max = temp.Length - 1;
+                // Matching Java for loop: for (boolean done = ...; !done; done = done || ...)
                 bool done = this.parent.destination != null || cur >= temp.Length;
                 while (!done)
                 {
@@ -213,10 +218,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         min = cur;
                         cur = (cur + max) / 2;
                     }
-                    if (!done)
-                    {
-                        done = (done || this.parent.destination != null || cur > max);
-                    }
+                    // Update expression from Java for loop: done = done || SetDestinations.this.destination != null || cur > max
+                    done = done || this.parent.destination != null || cur > max;
                 }
             }
         }
