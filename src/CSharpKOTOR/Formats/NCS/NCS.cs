@@ -23,12 +23,10 @@ namespace CSharpKOTOR.Formats.NCS
     public class NCS : IEquatable<NCS>
     {
         public List<NCSInstruction> Instructions { get; set; }
-        public string OriginalSource { get; set; }
 
         public NCS()
         {
             Instructions = new List<NCSInstruction>();
-            OriginalSource = null;
         }
 
         public NCSInstruction Add(

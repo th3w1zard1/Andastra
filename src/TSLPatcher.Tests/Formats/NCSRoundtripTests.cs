@@ -618,10 +618,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Step 4: Recompile decompiled NSS -> NCS (second NCS) using EXTERNAL compiler
             string recompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".rt.ncs");
 
-            // Strip bytecode comment blocks from decompiled output before recompilation
-            // (The decompiler adds these for lossless roundtripping, but external compiler can't handle them)
             string decompiledContentForRecompile = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
-            decompiledContentForRecompile = StripBytecodeComments(decompiledContentForRecompile);
 
             string compileInput = decompiled;
             string tempCompileInput = null;
@@ -2306,21 +2303,6 @@ namespace CSharpKOTOR.Tests.Formats
             }
         }
 
-        /// <summary>
-        /// Strips bytecode comment blocks from decompiled output.
-        /// These are added by the decompiler for lossless roundtripping but can't be compiled.
-        /// </summary>
-        private static string StripBytecodeComments(string content)
-        {
-            // Remove /*__NCS_BYTECODE__ ... __END_NCS_BYTECODE__*/ blocks
-            Regex bytecodeCommentPattern = new Regex(@"/\*__NCS_BYTECODE__.*?__END_NCS_BYTECODE__\*/", RegexOptions.Singleline);
-            string cleaned = bytecodeCommentPattern.Replace(content, "");
-
-            // Clean up any extra blank lines left behind
-            cleaned = Regex.Replace(cleaned, @"\n\s*\n\s*\n", "\n\n");
-
-            return cleaned.Trim();
-        }
 
         private void PrintPerformanceSummary()
         {

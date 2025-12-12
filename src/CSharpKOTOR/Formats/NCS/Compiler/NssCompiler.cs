@@ -38,26 +38,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 throw new ArgumentException("Source cannot be null or empty", nameof(source));
             }
 
-            // Embedded bytecode block takes priority (lossless roundtrip)
-            Match bytecodeMatch = Constants.BytecodeBlockPattern.Match(source);
-            if (bytecodeMatch.Success)
-            {
-                string encoded = string.Concat(bytecodeMatch.Groups[1].Value.Split());
-                try
-                {
-                    byte[] data = Convert.FromBase64String(encoded);
-                    using (var reader = new NCSBinaryReader(data))
-                    {
-                        return reader.Load();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Fall through to normal compilation
-                    Console.WriteLine($"Warning: Failed to decode embedded NCS bytecode: {ex.Message}");
-                }
-            }
-
             List<ScriptFunction> functions = _game.IsK1() ? ScriptDefs.KOTOR_FUNCTIONS : ScriptDefs.TSL_FUNCTIONS;
             List<ScriptConstant> constants = _game.IsK1() ? ScriptDefs.KOTOR_CONSTANTS : ScriptDefs.TSL_CONSTANTS;
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/ncs_auto.py:184
@@ -75,11 +55,4 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
     }
 
     // NssParser is now in NSS/NssParser.cs
-
-    internal static class Constants
-    {
-        public static readonly Regex BytecodeBlockPattern = new Regex(
-            @"/\*__NCS_BYTECODE__\s*([\s\S]*?)\s*__END_NCS_BYTECODE__\*/",
-            RegexOptions.Multiline);
-    }
 }

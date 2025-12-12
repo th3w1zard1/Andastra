@@ -318,22 +318,6 @@ namespace CSharpKOTOR.Formats.NCS
                 {
                     result = "// Decompiled NCS script\nvoid main() {\n    // Empty script\n}";
                 }
-                string bytecodeBlock = EncodeBytecodeBlock();
-                if (!string.IsNullOrEmpty(bytecodeBlock))
-                {
-                    if (!string.IsNullOrEmpty(result) && !result.EndsWith("\n"))
-                    {
-                        result += "\n";
-                    }
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        result = $"{result}\n{bytecodeBlock}";
-                    }
-                    else
-                    {
-                        result = bytecodeBlock;
-                    }
-                }
                 return result;
             }
             catch (Exception ex)
@@ -615,7 +599,11 @@ namespace CSharpKOTOR.Formats.NCS
                     }
                     else
                     {
-                        _decompiledCode.Add($"{indentStr}return;");
+                        // For void functions, don't emit explicit 'return;' - it's always implicit.
+                        // The simple decompiler outputs the function body directly inside void main() {},
+                        // and explicit returns at the end of void functions are not needed.
+                        // Early returns in the middle of functions would require more sophisticated
+                        // control flow analysis to detect.
                     }
                 }
                 else if (lastInst.IsControlFlow() && lastInst.InsType != NCSInstructionType.RETN)
@@ -1034,31 +1022,6 @@ namespace CSharpKOTOR.Formats.NCS
             return _variables[offset];
         }
 
-        private string EncodeBytecodeBlock()
-        {
-            // Encode the current NCS bytecode into a base64 block for lossless roundtripping
-            try
-            {
-                var writer = new NCSBinaryWriter(_ncs);
-                byte[] data = writer.Write();
-                string encoded = Convert.ToBase64String(data);
-
-                // Wrap encoded string to 76 characters per line (standard base64 encoding format)
-                var lines = new List<string> { "/*__NCS_BYTECODE__" };
-                for (int i = 0; i < encoded.Length; i += 76)
-                {
-                    int length = Math.Min(76, encoded.Length - i);
-                    lines.Add(encoded.Substring(i, length));
-                }
-                lines.Add("__END_NCS_BYTECODE__*/");
-                return string.Join("\n", lines);
-            }
-            catch (Exception)
-            {
-                // Fallback shouldn't crash decompilation
-                return "";
-            }
-        }
     }
 }
 
