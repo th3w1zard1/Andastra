@@ -9,8 +9,14 @@ using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:18-225
+    // Original: public class LocalVarStack extends LocalStack<StackEntry>
     public class LocalVarStack : LocalStack
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:19
+        // Original: private int placeholderCounter = 0;
+        private int placeholderCounter = 0;
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:20-31
         // Original: @Override public void close()
         public override void Close()
@@ -110,16 +116,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             throw new Exception("offset " + offset + " was greater than stack size " + pos);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:100-103
+        // Original: public Type getType(int offset)
         public virtual UtilsType GetType(int offset)
         {
             return this.Get(offset).Type();
         }
 
-        public virtual StackEntry this[int offset]
-        {
-            get { return this.Get(offset); }
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:104-113
+        // Original: public StackEntry remove()
         public virtual StackEntry Remove()
         {
             StackEntry entry = (StackEntry)this.stack.RemoveFirst();

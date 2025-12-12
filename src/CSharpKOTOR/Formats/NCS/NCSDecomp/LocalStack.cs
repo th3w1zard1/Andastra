@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java
+// Original: public class LocalStack<T> implements Cloneable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,13 +7,13 @@ using System.Linq;
 using System.Text;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java:13-31
+    // Original: public class LocalStack<T> implements Cloneable
     public class LocalStack
     {
-        protected LinkedList stack;
-        public LocalStack()
-        {
-            this.stack = new LinkedList();
-        }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java:14
+        // Original: protected LinkedList<T> stack = new LinkedList<>();
+        protected LinkedList stack = new LinkedList();
 
         public virtual int Size()
         {
@@ -37,12 +38,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
         public virtual void Close()
         {
             this.stack = null;
-        }
-
-        // Keep Dispose() for backward compatibility with IDisposable pattern
-        public virtual void Dispose()
-        {
-            this.Close();
         }
     }
 }
