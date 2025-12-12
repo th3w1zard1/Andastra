@@ -83,12 +83,23 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                         ncs.Add(NCSInstructionType.CPDOWNSP, new List<object> { -scopeSize - returnType.Size(root) * 2, returnType.Size(root) });
                         ncs.Add(NCSInstructionType.MOVSP, new List<object> { -returnType.Size(root) });
                     }
-                    ncs.Add(NCSInstructionType.MOVSP, new List<object> { -scopeSize });
+                    // Matching PyKotor implementation: only add MOVSP if scopeSize is non-zero
+                    // External compiler optimizes away MOVSP with offset 0, so we should match that behavior
+                    if (scopeSize != 0)
+                    {
+                        ncs.Add(NCSInstructionType.MOVSP, new List<object> { -scopeSize });
+                    }
                     ncs.Add(NCSInstructionType.JMP, jump: returnInstruction);
                     return;
                 }
             }
-            ncs.Instructions.Add(new NCSInstruction(NCSInstructionType.MOVSP, new List<object> { -ScopeSize(root) }));
+            // Matching PyKotor implementation: only add MOVSP if ScopeSize is non-zero
+            // External compiler optimizes away MOVSP with offset 0, so we should match that behavior
+            int finalScopeSize = ScopeSize(root);
+            if (finalScopeSize != 0)
+            {
+                ncs.Instructions.Add(new NCSInstruction(NCSInstructionType.MOVSP, new List<object> { -finalScopeSize }));
+            }
 
             if (TempStack != 0)
             {
