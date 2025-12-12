@@ -55,7 +55,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.state = new SubScriptState(nodedata, subdata, this.stack, FileDecompiler.preferSwitches);
             this.globals = true;
             this.backupstack = null;
-            this.type = new UtilsType((byte)255); // -1 as unsigned byte
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:85
+            // Original: this.type = new Type((byte)-1);
+            this.type = new UtilsType(unchecked((byte)-1));
         }
 
         public virtual void Done()

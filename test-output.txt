@@ -1,0 +1,275 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CSharpKOTOR -> G:\GitHub\HoloPatcher.NET\src\CSharpKOTOR\bin\Debug\net9\CSharpKOTOR.dll
+  TSLPatcher.Tests -> G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\TSLPatcher.Tests.dll
+Test run for G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\TSLPatcher.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\TSLPatcher.Tests.dll
+[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 9.0.11)
+[xUnit.net 00:00:00.48]   Discovering: TSLPatcher.Tests
+[xUnit.net 00:00:01.35]   Discovered:  TSLPatcher.Tests
+[xUnit.net 00:00:01.41]   Starting:    TSLPatcher.Tests
+=== Preflight Checks ===
+Using existing Vanilla_KOTOR_Script_Source repository at: Vanilla_KOTOR_Script_Source
+∩┐╜ Found compiler: tools/nwnnsscomp_kscript.exe
+∩┐╜ Found K1 nwscript: vendor/PyKotor/vendor/NorthernLights/Scripts/k1_nwscript.nss
+∩┐╜ Found TSL nwscript: include/k2_nwscript.nss
+∩┐╜ Vanilla repo structure verified
+=== Preflight Complete ===
+=== Discovering Test Files ===
+Found 23318 .nss files
+=== Test Discovery Complete ===
+=== Running Round-Trip Tests ===
+Total tests: 23318
+Fast-fail: enabled (will stop on first failure)
+[1/23318] K1/Data/scripts.bif/01_test.nss
+  [1/5] Compiling K1/Data/scripts.bif/01_test.nss to .ncs with inbuilt compiler     Warning:
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.
+     A paid commercial license supports the development and continued increasing support of
+     Fluent Assertions users under both commercial and community licenses. Help us
+     keep Fluent Assertions at the forefront of unit testing.
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/
+ ∩┐╜ (756.427 ms, 23 bytes, 3 instructions)
+  [2/5] Decompiling 01_test.ncs back to .nss (game=k1, output=01_test.dec.nss)read actions.  There were 772
+DEBUG FileDecompiler: doglobs is null, fallback globalState is null
+DEBUG GenerateCode: globals is null
+ ∩┐╜ (467.127 ms, 20 chars)
+  [3/5] Comparing original vs decompiled (text) ∩┐╜ MATCH (2 lines)
+  [4/5] Recompiling decompiled .nss to .ncs with external compiler (external: nwnnsscomp_kscript.exe, variant: TSLPATCHER) ∩┐╜ (885.894 ms, 23 bytes, 3 instructions)
+  [5/5] Comparing bytecode (original vs recompiled) ∩┐╜ MATCH (3 instructions)
+  ∩┐╜ PASSED - Round-trip successful (bytecode matches)
+[2/23318] K1/Data/scripts.bif/asd.nss
+  [1/5] Compiling K1/Data/scripts.bif/asd.nss to .ncs with inbuilt compiler ∩┐╜ (28.739 ms, 465 bytes, 84 instructions)
+  [2/5] Decompiling asd.ncs back to .nss (game=k1, output=asd.dec.nss)read actions.  There were 772
+DEBUG FileDecompiler: setting globals, state is non-null
+DEBUG GenerateCode: globals is non-null, ToStringGlobals() returned length 0
+ ∩┐╜ (271.657 ms, 34 chars)
+  [3/5] Comparing original vs decompiled (text) ∩┐╜ MATCH (2 lines)
+  [4/5] Recompiling decompiled .nss to .ncs with external compiler (external: nwnnsscomp_kscript.exe, variant: TSLPATCHER) ∩┐╜ (263.351 ms, 23 bytes, 3 instructions)
+  [5/5] Comparing bytecode (original vs recompiled) ? MISMATCH
+  ? FAILED
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+FAILURE: K1: K1\Data\scripts.bif\asd.nss
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Exception: InvalidOperationException
+Message:
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+BYTECODE MISMATCH (PRIMARY FAILURE)
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Source: K1/Data/scripts.bif/asd.nss
+Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.ncs
+Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.rt.ncs
+Error: ∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+BYTECODE MISMATCH: K1/Data/scripts.bif/asd.nss
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+LOCATION:
+  Offset: 11 (0xB)
+  Original: 0x01 (1)
+  Round-trip: 0x00 (0)
+FILES:
+  Original NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.ncs
+  Round-trip NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.rt.ncs
+BYTECODE CONTEXT:
+  Original:  20 56 31 2E 30 42 00 00 01* D1 02 03 04 03 00 00 00
+  Round-trip: 20 56 31 2E 30 42 00 00 00* 17 1E 00 00 00 00 08 20
+FILE SIZES:
+  Original: 465 bytes
+  Round-trip: 23 bytes
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+PERFORMANCE SUMMARY
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Total test time: 3.54 seconds
+Tests processed: 2 / 23318
+Operation breakdown (cumulative):
+  compile-original:     0.79 s ( 22.2%)
+  compile     :     1.93 s ( 54.7%)
+  decompile   :     0.74 s ( 20.9%)
+  compare-text:     0.09 s (  2.4%)
+  compare     :     0.10 s (  3.0%)
+  compile-roundtrip:     1.15 s ( 32.5%)
+  compare-bytecode:     0.02 s (  0.5%)
+  total       :     2.22 s ( 62.7%)
+FATAL ERROR: ∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+BYTECODE MISMATCH (PRIMARY FAILURE)
+Profile log: test_profile.txt
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Source: K1/Data/scripts.bif/asd.nss
+Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.ncs
+Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.rt.ncs
+Error: ∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+BYTECODE MISMATCH: K1/Data/scripts.bif/asd.nss
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+LOCATION:
+  Offset: 11 (0xB)
+  Original: 0x01 (1)
+  Round-trip: 0x00 (0)
+FILES:
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+PERFORMANCE SUMMARY
+  Original NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.ncs
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+  Round-trip NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.rt.ncs
+Total test time: 3.55 seconds
+BYTECODE CONTEXT:
+Tests processed: 2 / 23318
+  Original:  20 56 31 2E 30 42 00 00 01* D1 02 03 04 03 00 00 00
+  Round-trip: 20 56 31 2E 30 42 00 00 00* 17 1E 00 00 00 00 08 20
+FILE SIZES:
+Operation breakdown (cumulative):
+  Original: 465 bytes
+  compile-original:     0.79 s ( 22.1%)
+  Round-trip: 23 bytes
+  compile     :     1.93 s ( 54.6%)
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+  decompile   :     0.74 s ( 20.8%)
+  compare-text:     0.09 s (  2.4%)
+  compare     :     0.10 s (  3.0%)
+  compile-roundtrip:     1.15 s ( 32.4%)
+  compare-bytecode:     0.02 s (  0.5%)
+  total       :     2.22 s ( 62.6%)
+Profile log: test_profile.txt
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+[xUnit.net 00:00:05.16]     CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite [FAIL]
+[xUnit.net 00:00:05.16]       System.InvalidOperationException : ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[xUnit.net 00:00:05.16]       BYTECODE MISMATCH (PRIMARY FAILURE)
+[xUnit.net 00:00:05.16]       ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[xUnit.net 00:00:05.16]       Source: K1/Data/scripts.bif/asd.nss
+[xUnit.net 00:00:05.16]       Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.ncs
+[xUnit.net 00:00:05.16]       Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.rt.ncs
+[xUnit.net 00:00:05.16]       Error: ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+BYTECODE MISMATCH: K1/Data/scripts.bif/asd.nss
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+LOCATION:
+  Offset: 11 (0xB)
+  Original: 0x01 (1)
+  Round-trip: 0x00 (0)
+
+FILES:
+  Original NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.ncs
+  Round-trip NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.rt.ncs
+
+BYTECODE CONTEXT:
+  Original:  20 56 31 2E 30 42 00 00 01* D1 02 03 04 03 00 00 00
+  Round-trip: 20 56 31 2E 30 42 00 00 00* 17 1E 00 00 00 00 08 20
+
+FILE SIZES:
+  Original: 465 bytes
+  Round-trip: 23 bytes
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[xUnit.net 00:00:05.16]       ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[xUnit.net 00:00:05.16]       
+[xUnit.net 00:00:05.16]       ---- System.InvalidOperationException : ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+BYTECODE MISMATCH: K1/Data/scripts.bif/asd.nss
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+LOCATION:
+  Offset: 11 (0xB)
+  Original: 0x01 (1)
+  Round-trip: 0x00 (0)
+
+FILES:
+  Original NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.ncs
+  Round-trip NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.rt.ncs
+
+BYTECODE CONTEXT:
+  Original:  20 56 31 2E 30 42 00 00 01* D1 02 03 04 03 00 00 00
+  Round-trip: 20 56 31 2E 30 42 00 00 00* 17 1E 00 00 00 00 08 20
+
+FILE SIZES:
+  Original: 465 bytes
+  Round-trip: 23 bytes
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[xUnit.net 00:00:05.16]       Stack Trace:
+[xUnit.net 00:00:05.16]         G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs(793,0): at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.RoundTripSingle(String nssPath, String gameFlag, String scratchRoot)
+[xUnit.net 00:00:05.16]         G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs(2394,0): at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite()
+[xUnit.net 00:00:05.16]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:05.16]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:05.16]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:05.16]         G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs(2250,0): at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.AssertBytecodeEqual(String originalNcs, String roundTripNcs, String gameFlag, String displayName)
+[xUnit.net 00:00:05.16]         G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs(754,0): at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.RoundTripSingle(String nssPath, String gameFlag, String scratchRoot)
+[xUnit.net 00:00:05.32]   Finished:    TSLPatcher.Tests
+  Failed CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite [3 s]
+  Error Message:
+   System.InvalidOperationException : ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+BYTECODE MISMATCH (PRIMARY FAILURE)
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+Source: K1/Data/scripts.bif/asd.nss
+Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.ncs
+Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/asd.rt.ncs
+Error: ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+BYTECODE MISMATCH: K1/Data/scripts.bif/asd.nss
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+LOCATION:
+  Offset: 11 (0xB)
+  Original: 0x01 (1)
+  Round-trip: 0x00 (0)
+
+FILES:
+  Original NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.ncs
+  Round-trip NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.rt.ncs
+
+BYTECODE CONTEXT:
+  Original:  20 56 31 2E 30 42 00 00 01* D1 02 03 04 03 00 00 00
+  Round-trip: 20 56 31 2E 30 42 00 00 00* 17 1E 00 00 00 00 08 20
+
+FILE SIZES:
+  Original: 465 bytes
+  Round-trip: 23 bytes
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+---- System.InvalidOperationException : ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+BYTECODE MISMATCH: K1/Data/scripts.bif/asd.nss
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+LOCATION:
+  Offset: 11 (0xB)
+  Original: 0x01 (1)
+  Round-trip: 0x00 (0)
+
+FILES:
+  Original NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.ncs
+  Round-trip NCS: G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\test-work\roundtrip-work\k1\K1\Data\scripts.bif\asd.rt.ncs
+
+BYTECODE CONTEXT:
+  Original:  20 56 31 2E 30 42 00 00 01* D1 02 03 04 03 00 00 00
+  Round-trip: 20 56 31 2E 30 42 00 00 00* 17 1E 00 00 00 00 08 20
+
+FILE SIZES:
+  Original: 465 bytes
+  Round-trip: 23 bytes
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  Stack Trace:
+     at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.RoundTripSingle(String nssPath, String gameFlag, String scratchRoot) in G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs:line 793
+   at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite() in G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs:line 2394
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.AssertBytecodeEqual(String originalNcs, String roundTripNcs, String gameFlag, String displayName) in G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs:line 2250
+   at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.RoundTripSingle(String nssPath, String gameFlag, String scratchRoot) in G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\Formats\NCSRoundtripTests.cs:line 754
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 9.1568 Seconds

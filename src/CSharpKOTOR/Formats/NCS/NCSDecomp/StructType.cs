@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.size = 0;
         }
 
-        public override void Dispose()
+        public override void Close()
         {
             if (this.types != null)
             {
