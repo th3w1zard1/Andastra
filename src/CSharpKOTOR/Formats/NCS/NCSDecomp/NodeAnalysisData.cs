@@ -11,24 +11,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class NodeAnalysisData
     {
-        private Dictionary<object, object> nodedatahash;
-        public NodeAnalysisData()
-        {
-            this.nodedatahash = new Dictionary<object, object>();
-        }
-
-        private NodeData GetOrCreateNodeData(Node node)
-        {
-            object existing;
-            if (!this.nodedatahash.TryGetValue(node, out existing))
-            {
-                NodeData created = new NodeData();
-                this.nodedatahash[node] = created;
-                return created;
-            }
-
-            return (NodeData)existing;
-        }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:19
+        // Original: private Hashtable<Node, NodeData> nodedatahash = new Hashtable<>(1);
+        private Dictionary<object, object> nodedatahash = new Dictionary<object, object>();
 
         public virtual void Dispose()
         {
@@ -59,78 +44,127 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:43-50
+        // Original: public int getPos(Node node)
         public virtual int GetPos(Node node)
         {
-            if (node == null)
-            {
-                return -1;
-            }
-
             object existing;
-            if (this.nodedatahash.TryGetValue(node, out existing))
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                throw new Exception("Attempted to read position on a node not in the hashtable.");
+            }
+            else
             {
                 return ((NodeData)existing).pos;
             }
-
-            return -1;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:52-61
+        // Original: public void setDestination(Node jump, Node destination)
         public virtual void SetDestination(Node jump, Node destination)
         {
-            NodeData data = this.GetOrCreateNodeData(jump);
-            data.jumpDestination = destination;
+            object existing;
+            NodeData data;
+            if (!this.nodedatahash.TryGetValue(jump, out existing))
+            {
+                data = new NodeData();
+                data.jumpDestination = destination;
+                this.nodedatahash[jump] = data;
+            }
+            else
+            {
+                data = (NodeData)existing;
+                data.jumpDestination = destination;
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:63-70
+        // Original: public Node getDestination(Node node)
         public virtual Node GetDestination(Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
             {
-                return null;
+                throw new Exception("Attempted to read destination on a node not in the hashtable.");
             }
-
-            return ((NodeData)existing).jumpDestination;
+            else
+            {
+                return ((NodeData)existing).jumpDestination;
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:72-81
+        // Original: public void setCodeState(Node node, byte state)
         public virtual void SetCodeState(Node node, byte state)
         {
-            NodeData data = this.GetOrCreateNodeData(node);
-            data.state = state;
+            object existing;
+            NodeData data;
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                data = new NodeData();
+                data.state = state;
+                this.nodedatahash[node] = data;
+            }
+            else
+            {
+                data = (NodeData)existing;
+                data.state = state;
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:83-94
+        // Original: public void deadCode(Node node, boolean deadcode)
         public virtual void DeadCode(Node node, bool deadcode)
         {
-            NodeData data = this.GetOrCreateNodeData(node);
-            data.state = deadcode ? (byte)1 : (byte)0;
+            object existing;
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                throw new Exception("Attempted to set status on a node not in the hashtable.");
+            }
+            else
+            {
+                NodeData data = (NodeData)existing;
+                if (deadcode)
+                {
+                    data.state = 1;
+                }
+                else
+                {
+                    data.state = 0;
+                }
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:96-103
+        // Original: public boolean deadCode(Node node)
         public virtual bool DeadCode(Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
             {
-                return false;
+                throw new Exception("Attempted to read status on a node not in the hashtable.");
             }
-
-            NodeData data = (NodeData)existing;
-            return data.state == 1 || data.state == 3;
+            else
+            {
+                NodeData data = (NodeData)existing;
+                return data.state == 1 || data.state == 3;
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:105-112
+        // Original: public boolean processCode(Node node)
         public virtual bool ProcessCode(Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
             {
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:105-112
-                // Original: throws RuntimeException if node not in hashtable
-                // However, in C# we need to handle AST nodes that might not be visited by SetPositions
-                // For now, return false (skip as dead code) if node not in hashtable
-                // This allows decompilation to continue even if SetPositions didn't visit all nodes
-                return false;
+                throw new Exception("Attempted to read status on a node not in the hashtable.");
             }
-
-            NodeData data = (NodeData)existing;
-            return data.state != 1;
+            else
+            {
+                NodeData data = (NodeData)existing;
+                return data.state != 1;
+            }
         }
 
         public virtual void LogOrCode(Node node, bool logor)

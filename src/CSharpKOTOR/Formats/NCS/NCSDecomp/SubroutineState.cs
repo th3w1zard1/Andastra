@@ -70,34 +70,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.type = null;
         }
 
-        private static int _printStateCallCount = 0;
-        private static readonly int MAX_PRINT_STATE_CALLS = 10;
-        private bool _hasPrintedState = false;
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:75-88
+        // Original: public void printState()
         public virtual void PrintState()
         {
-            // Prevent infinite spam by limiting total calls and only printing each state once
-            if (_printStateCallCount >= MAX_PRINT_STATE_CALLS || _hasPrintedState)
-            {
-                if (_printStateCallCount == MAX_PRINT_STATE_CALLS)
-                {
-                    JavaSystem.@out.Println("PrintState() call limit reached - suppressing further output to prevent spam");
-                    _printStateCallCount++;
-                }
-                return;
-            }
-
-            _printStateCallCount++;
-            _hasPrintedState = true;
             JavaSystem.@out.Println("Return type is " + this.type);
             JavaSystem.@out.Println("There are " + this.paramsize + " parameters");
             if (this.paramsize > 0)
             {
                 StringBuilder buff = new StringBuilder();
                 buff.Append(" Types: ");
-                for (int i = 0; i < this.@params.Count; ++i)
+
+                foreach (Type paramType in this.@params)
                 {
-                    buff.Append(this.@params[i] + " ");
+                    buff.Append(paramType + " ");
                 }
 
                 JavaSystem.@out.Println(buff);
