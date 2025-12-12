@@ -1,9 +1,11 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:17-134
+// Original: public abstract class ScriptRootNode extends ScriptNode
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public abstract class ScriptRootNode : ScriptNode
@@ -158,7 +160,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:123-133
         // Original: @Override public void close()
-        public override void Close()
+        public new void Close()
         {
             base.Close();
             foreach (object child in this.children)

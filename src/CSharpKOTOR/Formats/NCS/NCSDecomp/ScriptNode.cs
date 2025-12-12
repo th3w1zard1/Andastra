@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:8-27
+// Original: public abstract class ScriptNode
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,39 +12,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
     {
         private ScriptNode parent;
         protected string tabs;
-        protected string newline;
+        protected string newline = System.Environment.NewLine;
+
         public ScriptNode()
         {
-            this.newline = JavaSystem.GetProperty("line.separator");
         }
 
-        public virtual ScriptNode Parent()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:13-15
+        // Original: public ScriptNode parent()
+        public ScriptNode Parent()
         {
             return this.parent;
         }
 
-        public virtual void Parent(ScriptNode parent)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:17-22
+        // Original: public void parent(ScriptNode parent)
+        public void Parent(ScriptNode parent)
         {
             this.parent = parent;
             if (parent != null)
             {
-                this.tabs = parent.tabs.ToString() + "\t";
+                this.tabs = parent.tabs + "\t";
             }
         }
 
-        public virtual void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:24-26
+        // Original: public void close()
+        public virtual void Close()
         {
             this.parent = null;
-        }
-
-        public virtual string GetTabs()
-        {
-            return this.tabs;
-        }
-
-        public virtual string GetNewline()
-        {
-            return this.newline;
         }
     }
 }
