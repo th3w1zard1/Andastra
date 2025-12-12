@@ -560,13 +560,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return cig.GetIsGlobals();
         }
 
-        public virtual void Dispose()
-        {
-            // Clean up resources
-            this.subroutines?.Clear();
-            this.globalstructs?.Clear();
-            this.substates?.Clear();
-        }
     }
 }
 
