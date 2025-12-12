@@ -529,39 +529,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return Integer.ParseInt(((AIntConstant)pconst).GetIntegerConstant().GetText());
         }
 
-        public static object GetConstValue(AConstCommand node)
-        {
-            PConstant pconst = node.GetConstant();
-            Type type = GetType(node);
-            switch (type.ByteValue())
-            {
-                case 3:
-                    {
-                        return GetIntConstValue(node);
-                    }
-
-                case 4:
-                    {
-                        return GetFloatConstValue(node);
-                    }
-
-                case 5:
-                    {
-                        return GetStringConstValue(node);
-                    }
-
-                case 6:
-                    {
-                        return GetObjectConstValue(node);
-                    }
-
-                default:
-                    {
-                        throw new Exception("Invalid const type " + type);
-                    }
-            }
-        }
-
         public static int GetSubEnd(ASubroutine sub)
         {
             return GetCommandPos(sub.GetReturn());
