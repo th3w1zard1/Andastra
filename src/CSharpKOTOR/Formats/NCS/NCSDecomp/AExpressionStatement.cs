@@ -26,7 +26,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.tabs.ToString() + this.exp.ToString() + ";" + this.newline;
         }
 
-        public override void Parent(ScriptNode parent)
+        public new void Parent(ScriptNode parent)
         {
             base.Parent(parent);
             this.exp.Parent(this);
