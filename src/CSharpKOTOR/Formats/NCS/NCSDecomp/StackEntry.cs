@@ -41,10 +41,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 
         public abstract void DoneParse();
         public abstract void DoneWithStack(LocalVarStack p0);
-        public virtual void Close()
-        {
-            Dispose();
-        }
     }
 }
 

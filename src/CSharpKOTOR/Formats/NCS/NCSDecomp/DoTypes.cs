@@ -1,4 +1,4 @@
-// 
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -499,12 +499,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     // Original: if (substate.type().equals((byte)-15) && !substate.type().isTyped()) { for (int i = 0; i < substate.type().size(); i++) { Type type = this.stack.get(substate.type().size() - i, this.state); if (!type.equals((byte)-1)) { ((StructType)substate.type()).updateType(i, type); } } }
                     if (substate.Type().Equals(unchecked((byte)(-15))) && !substate.Type().IsTyped())
                     {
-                        for (int i = 0; i < substate.Type().Count; ++i)
+                        StructType structType = (StructType)substate.Type();
+                        for (int i = 0; i < structType.Count; ++i)
                         {
-                            UtilsType type = this.stack.Get(substate.Type().Count - i, this.state);
+                            UtilsType type = this.stack.Get(structType.Count - i, this.state);
                             if (!type.Equals(unchecked((byte)(-1))))
                             {
-                                ((StructType)substate.Type()).UpdateType(i, type);
+                                structType.UpdateType(i, type);
                             }
                         }
                     }
