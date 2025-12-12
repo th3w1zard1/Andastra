@@ -3063,7 +3063,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 for (int i = 0; i < this.subs.Count; ++i)
                 {
                     SubScriptState state = (SubScriptState)this.subs[i];
-                    if (state.Name.Equals(name))
+                    if (state.GetName().Equals(name))
                     {
                         return state;
                     }
@@ -3107,7 +3107,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 for (int i = 0; i < this.subs.Count; ++i)
                 {
                     SubScriptState state = (SubScriptState)this.subs[i];
-                    vars[state.Name] = state.GetVariables();
+                    vars[state.GetName()] = state.GetVariables();
                 }
 
                 if (this.globals != null)
@@ -3437,7 +3437,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         continue;
                     }
 
-                    string name = state.Name;
+                    string name = state.GetName();
                     if (name == null || !name.ToLower().StartsWith("sub"))
                     {
                         continue; // already has a meaningful name

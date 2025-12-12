@@ -159,14 +159,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return this.root;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:214-216
+        // Original: public String getName() { return this.root.name(); }
         public virtual string GetName()
         {
             return this.root.Name();
-        }
-
-        public string Name
-        {
-            get { return this.GetName(); }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:218-220

@@ -66,7 +66,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         [CanBeNull]
         public Scriptutils.SubScriptState FindSub(string name)
         {
-            return subs.FirstOrDefault(state => state.Name == name);
+            return subs.FirstOrDefault(state => state.GetName() == name);
         }
 
         public bool ReplaceSubName(string oldname, string newname)
@@ -100,7 +100,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             var vars = new Dictionary<string, List<object>>();
             foreach (var state in subs)
             {
-                vars[state.Name] = state.GetVariables();
+                vars[state.GetName()] = state.GetVariables();
             }
             if (globals != null)
             {
