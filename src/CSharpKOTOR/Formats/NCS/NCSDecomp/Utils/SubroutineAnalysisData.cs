@@ -482,18 +482,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
             bool conditional = NodeUtils.IsConditionalProgram(rootStart);
             TypedLinkedList subroutines = ((AProgram)rootStart.GetPProgram()).GetSubroutine();
-            JavaSystem.@out.Println($"DEBUG SplitOffSubroutines: subroutines count = {subroutines.Count}");
             ASubroutine node = (ASubroutine)subroutines.RemoveFirst();
-            JavaSystem.@out.Println($"DEBUG SplitOffSubroutines: first subroutine removed, remaining count = {subroutines.Count}");
             if (subroutines.Count > 0 && this.IsGlobalsSub(node))
             {
-                JavaSystem.@out.Println("DEBUG SplitOffSubroutines: identified globals subroutine");
                 this.AddGlobals(node);
                 node = (ASubroutine)subroutines.RemoveFirst();
-            }
-            else
-            {
-                JavaSystem.@out.Println($"DEBUG SplitOffSubroutines: first subroutine is NOT globals (IsGlobalsSub returned false or subroutines.Count <= 0)");
             }
             this.AddMain(node, conditional);
             byte id = 1;
@@ -527,20 +520,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         private bool IsGlobalsSub(ASubroutine node)
         {
-            // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:310-314
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:310-314
             // Original: CheckIsGlobals cig = new CheckIsGlobals(); node.apply(cig); return cig.getIsGlobals();
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: checking subroutine, node type = {node.GetType().FullName}, command block is {(node.GetCommandBlock() != null ? "non-null" : "null")}");
             CheckIsGlobals cig = new CheckIsGlobals();
             // Directly traverse command block to find ABpCommand, matching CheckIsGlobals pattern
             var cmdBlock = node.GetCommandBlock();
             if (cmdBlock != null)
             {
-                JavaSystem.@out.Println($"DEBUG IsGlobalsSub: command block type = {cmdBlock.GetType().FullName}");
                 // Check if command block is AST.ACommandBlock or root namespace ACommandBlock
                 string cmdBlockTypeName = cmdBlock.GetType().FullName;
                 if (cmdBlockTypeName.Contains(".AST.ACommandBlock"))
                 {
-                    JavaSystem.@out.Println("DEBUG IsGlobalsSub: command block is AST.ACommandBlock, calling CaseACommandBlock via reflection");
                     var method = typeof(CheckIsGlobals).GetMethod("CaseACommandBlock", new[] { typeof(AST.ACommandBlock) });
                     if (method != null)
                     {
@@ -549,7 +539,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 else if (cmdBlockTypeName.Contains(".ACommandBlock") && !cmdBlockTypeName.Contains(".AST."))
                 {
-                    JavaSystem.@out.Println("DEBUG IsGlobalsSub: command block is root namespace ACommandBlock, calling CaseACommandBlock via reflection");
                     var method = typeof(CheckIsGlobals).GetMethod("CaseACommandBlock", new[] { typeof(ACommandBlock) });
                     if (method != null)
                     {
@@ -558,18 +547,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 else
                 {
-                    JavaSystem.@out.Println("DEBUG IsGlobalsSub: command block is unknown type, calling Apply");
                     cmdBlock.Apply(cig);
                 }
             }
             else
             {
-                JavaSystem.@out.Println("DEBUG IsGlobalsSub: command block is null, calling Apply on node");
                 node.Apply(cig);
             }
-            bool isGlobals = cig.GetIsGlobals();
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: result = {isGlobals}");
-            return isGlobals;
+            return cig.GetIsGlobals();
         }
 
         public virtual void Dispose()

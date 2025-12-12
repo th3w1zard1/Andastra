@@ -80,7 +80,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseASubroutine(ASubroutine node)
         {
-            JavaSystem.@out.Println($"DEBUG PrunedReversedDepthFirstAdapter.CaseASubroutine: called, this type = {this.GetType().FullName}, command block is {(node.GetCommandBlock() != null ? "non-null" : "null")}");
             this.InASubroutine(node);
             if (node.GetReturn() != null)
             {
@@ -89,7 +88,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
             if (node.GetCommandBlock() != null)
             {
-                JavaSystem.@out.Println($"DEBUG PrunedReversedDepthFirstAdapter.CaseASubroutine: command block type = {node.GetCommandBlock().GetType().FullName}, calling Apply");
                 node.GetCommandBlock().Apply(this);
             }
 

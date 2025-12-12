@@ -32,20 +32,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
         {
             // Call CaseABpCommand directly if sw is PrunedReversedDepthFirstAdapter or PrunedDepthFirstAdapter
             // This ensures the visitor pattern routes correctly to CaseABpCommand
-            JavaSystem.@out.Println($"DEBUG AST.ABpCommand.Apply: called, sw type = {sw.GetType().FullName}");
             if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
             {
-                JavaSystem.@out.Println("DEBUG AST.ABpCommand.Apply: routing to PrunedReversedDepthFirstAdapter.CaseABpCommand");
                 prdfa.CaseABpCommand(this);
             }
             else if (sw is Analysis.PrunedDepthFirstAdapter pdfa)
             {
-                JavaSystem.@out.Println("DEBUG AST.ABpCommand.Apply: routing to PrunedDepthFirstAdapter.CaseABpCommand");
                 pdfa.CaseABpCommand(this);
             }
             else
             {
-                JavaSystem.@out.Println("DEBUG AST.ABpCommand.Apply: routing to DefaultIn");
                 sw.DefaultIn(this);
             }
         }

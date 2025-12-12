@@ -32,9 +32,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Handle AST.ABpCommand as well (from NcsToAstConverter)
         public override void CaseABpCommand(AST.ABpCommand node)
         {
-            // Matching NCSDecomp implementation: set isGlobals directly
+            // Matching DeNCS implementation: set isGlobals directly
             // This is called when AST.ABpCommand.Apply() routes to CaseABpCommand
-            JavaSystem.@out.Println("DEBUG CheckIsGlobals.CaseABpCommand(AST): found ABpCommand, setting isGlobals = true");
             this.isGlobals = true;
         }
 
@@ -56,27 +55,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public override void CaseABpCmd(AST.ABpCmd node)
         {
             // Traverse into AST.ABpCmd to reach ABpCommand
-            JavaSystem.@out.Println($"DEBUG CheckIsGlobals.CaseABpCmd(AST): called, GetBpCommand() is {(node.GetBpCommand() != null ? "non-null" : "null")}");
             if (node.GetBpCommand() != null)
             {
-                JavaSystem.@out.Println("DEBUG CheckIsGlobals.CaseABpCmd(AST): calling GetBpCommand().Apply(this)");
                 node.GetBpCommand().Apply(this);
             }
         }
 
         public override void CaseACommandBlock(ACommandBlock node)
         {
-            JavaSystem.@out.Println($"DEBUG CheckIsGlobals.CaseACommandBlock: called, command count = {node.GetCmd().Count}");
             this.InACommandBlock(node);
             Object[] temp = node.GetCmd().ToArray();
             for (int i = temp.Length - 1; i >= 0; --i)
             {
-                var cmd = (PCmd)temp[i];
-                JavaSystem.@out.Println($"DEBUG CheckIsGlobals.CaseACommandBlock: command {i} type = {cmd.GetType().FullName}");
-                cmd.Apply(this);
+                ((PCmd)temp[i]).Apply(this);
                 if (this.isGlobals)
                 {
-                    JavaSystem.@out.Println("DEBUG CheckIsGlobals.CaseACommandBlock: isGlobals = true, returning");
                     return;
                 }
             }
@@ -89,15 +82,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         {
             // Traverse into AST.ACommandBlock to find ABpCommand
             Object[] temp = node.GetCmd().ToArray();
-            JavaSystem.@out.Println($"DEBUG CheckIsGlobals.CaseACommandBlock(AST): processing {temp.Length} commands");
             for (int i = temp.Length - 1; i >= 0; --i)
             {
-                var cmd = (PCmd)temp[i];
-                JavaSystem.@out.Println($"DEBUG CheckIsGlobals.CaseACommandBlock(AST): command {i} type = {cmd.GetType().FullName}");
-                cmd.Apply(this);
+                ((PCmd)temp[i]).Apply(this);
                 if (this.isGlobals)
                 {
-                    JavaSystem.@out.Println("DEBUG CheckIsGlobals.CaseACommandBlock(AST): isGlobals = true, returning");
                     return;
                 }
             }
@@ -114,14 +103,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         }
 
         // Handle AST.ASubroutine as well (from NcsToAstConverter)
-        // Override to ensure command block is traversed (Matching NCSDecomp pattern)
+        // Override to ensure command block is traversed (matching DeNCS pattern)
         public override void CaseASubroutine(AST.ASubroutine node)
         {
             // Traverse into AST.ASubroutine to reach command block
-            JavaSystem.@out.Println($"DEBUG CheckIsGlobals.CaseASubroutine(AST): called, GetCommandBlock() is {(node.GetCommandBlock() != null ? "non-null" : "null")}");
             if (node.GetCommandBlock() != null)
             {
-                JavaSystem.@out.Println("DEBUG CheckIsGlobals.CaseASubroutine(AST): calling GetCommandBlock().Apply(this)");
                 node.GetCommandBlock().Apply(this);
             }
         }
