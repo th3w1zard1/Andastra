@@ -43,7 +43,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             this.sourceFile = sourceFile;
             // Convert to absolute path to ensure parent directory is always available
-            File absoluteOutputFile = outputFile.GetAbsoluteFile();
+            File absoluteOutputFile = outputFile.GetAbsolutePath();
             this.outputFile = absoluteOutputFile;
             this.outputDir = absoluteOutputFile.Directory;
             this.outputName = absoluteOutputFile.Name;
