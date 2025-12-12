@@ -1286,9 +1286,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                using (var a = new BufferedStream(new FileStream(original.FullName, FileMode.Open, FileAccess.Read)))
+                using (var a = new BufferedStream(new FileStream(original.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)))
                 {
-                    using (var b = new BufferedStream(new FileStream(generated.FullName, FileMode.Open, FileAccess.Read)))
+                    using (var b = new BufferedStream(new FileStream(generated.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)))
                     {
                         int ba;
                         int bb;
@@ -1583,7 +1583,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     JavaSystem.@out.Println("DEBUG decompileNcs: starting decode for " + file.Name);
-                    using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                    using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (var bufferedStream = new BufferedStream(fileStream))
                     using (var binaryReader = new BinaryReader(bufferedStream))
                     {
