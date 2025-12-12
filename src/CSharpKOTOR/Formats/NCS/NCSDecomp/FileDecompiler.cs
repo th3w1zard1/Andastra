@@ -2982,13 +2982,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1910-1931
-            // Original: public void close()
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2079-2086
+            // Original: public void close() { ... it.next().close(); ... }
             public virtual void Close()
             {
                 IEnumerator<object> it = this.subs.Iterator();
                 while (it.HasNext())
                 {
-                    ((SubScriptState)it.Next()).Dispose();
+                    ((SubScriptState)it.Next()).Close();
                 }
 
                 this.subs = null;

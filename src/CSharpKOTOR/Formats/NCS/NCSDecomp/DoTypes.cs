@@ -47,13 +47,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:73-88
-        // Original: public void done()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:73-88
+        // Original: public void done() { ... this.stack.close(); ... this.backupstack.close(); ... }
         public virtual void Done()
         {
             this.state = null;
             if (this.stack != null)
             {
-                this.stack.Dispose();
+                this.stack.Close();
                 this.stack = null;
             }
 
@@ -61,7 +62,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.subdata = null;
             if (this.backupstack != null)
             {
-                this.backupstack.Dispose();
+                this.backupstack.Close();
                 this.backupstack = null;
             }
 
