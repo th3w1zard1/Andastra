@@ -14,15 +14,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
         private Node destination;
-#pragma warning disable CS0414
-        private readonly int currentPos;
-#pragma warning restore CS0414
+        private int currentPos;
         private Node ast;
-#pragma warning disable CS0414
-        private readonly int actionarg;
-#pragma warning restore CS0414
+        private int actionarg;
         private Dictionary<object, object> origins;
-        //private bool deadcode;
+        private bool deadcode;
         public SetDestinations(Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata)
         {
             this.nodedata = nodedata;
