@@ -44,6 +44,53 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 return currentDirFile;
             }
 
+            // 2.5. Check common repository locations for nwscript files
+            string repoRoot = FindRepositoryRoot();
+            if (!string.IsNullOrEmpty(repoRoot))
+            {
+                // Check vendor/PyKotor/vendor/NorthernLights/Scripts/ (K1)
+                string k1Nwscript = Path.Combine(repoRoot, "vendor", "PyKotor", "vendor", "NorthernLights", "Scripts", "k1_nwscript.nss");
+                if (gameType == GameType.K1)
+                {
+                    File k1File = new File(k1Nwscript);
+                    if (k1File.IsFile())
+                    {
+                        return k1File;
+                    }
+                }
+                
+                // Check include/ (TSL)
+                string k2Nwscript = Path.Combine(repoRoot, "include", "k2_nwscript.nss");
+                if (gameType == GameType.TSL)
+                {
+                    File k2File = new File(k2Nwscript);
+                    if (k2File.IsFile())
+                    {
+                        return k2File;
+                    }
+                }
+                
+                // Also check tools/ directory
+                string toolsK1 = Path.Combine(repoRoot, "tools", "k1_nwscript.nss");
+                string toolsK2 = Path.Combine(repoRoot, "tools", "tsl_nwscript.nss");
+                if (gameType == GameType.K1)
+                {
+                    File toolsK1File = new File(toolsK1);
+                    if (toolsK1File.IsFile())
+                    {
+                        return toolsK1File;
+                    }
+                }
+                else
+                {
+                    File toolsK2File = new File(toolsK2);
+                    if (toolsK2File.IsFile())
+                    {
+                        return toolsK2File;
+                    }
+                }
+            }
+
             // 3. Check vendor directories (relative to project root)
             List<string> candidatePaths = new List<string>();
 
@@ -145,6 +192,29 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         /// <summary>
+        /// Finds the repository root by searching upward for .git directory or .sln file.
+        /// </summary>
+        private static string FindRepositoryRoot()
+        {
+            string currentDir = JavaSystem.GetProperty("user.dir");
+            DirectoryInfo dir = new DirectoryInfo(currentDir);
+
+            while (dir != null)
+            {
+                // Check for .git directory or .sln file
+                if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
+                    Directory.GetFiles(dir.FullName, "*.sln").Length > 0)
+                {
+                    return dir.FullName;
+                }
+                dir = dir.Parent;
+            }
+
+            // Fallback to current directory if not found
+            return currentDir;
+        }
+
+        /// <summary>
         /// Gets all possible candidate paths for nwscript.nss (for error messages).
         /// </summary>
         public static List<string> GetCandidatePaths(GameType gameType)
@@ -153,6 +223,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
             string currentDir = JavaSystem.GetProperty("user.dir");
             paths.Add(Path.Combine(currentDir, "nwscript.nss"));
+
+            // Repository paths
+            string repoRoot = FindRepositoryRoot();
+            if (!string.IsNullOrEmpty(repoRoot))
+            {
+                if (gameType == GameType.K1)
+                {
+                    paths.Add(Path.Combine(repoRoot, "vendor", "PyKotor", "vendor", "NorthernLights", "Scripts", "k1_nwscript.nss"));
+                    paths.Add(Path.Combine(repoRoot, "tools", "k1_nwscript.nss"));
+                }
+                else
+                {
+                    paths.Add(Path.Combine(repoRoot, "include", "k2_nwscript.nss"));
+                    paths.Add(Path.Combine(repoRoot, "tools", "tsl_nwscript.nss"));
+                }
+            }
 
             // Vendor paths
             string searchDir = currentDir;

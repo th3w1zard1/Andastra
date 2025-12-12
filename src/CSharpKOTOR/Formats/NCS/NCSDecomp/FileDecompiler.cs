@@ -821,6 +821,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
             catch (Exception e)
             {
+                JavaSystem.@out.Println("Exception during decompilation: " + e.GetType().Name + ": " + e.Message);
+                if (e.StackTrace != null)
+                {
+                    JavaSystem.@out.Println("Stack trace: " + e.StackTrace);
+                }
                 e.PrintStackTrace(JavaSystem.@out);
                 return null;
             }

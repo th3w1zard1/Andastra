@@ -214,7 +214,10 @@ namespace CSharpKOTOR.Formats.NCS
             FileScriptData data = fileDecompiler.DecompileNcsObject(ncs);
             if (data == null)
             {
-                throw new InvalidOperationException("Decompilation failed - FileDecompiler returned null");
+                throw new InvalidOperationException(
+                    "Decompilation failed - FileDecompiler returned null. " +
+                    "This usually means the decompiler couldn't analyze the NCS bytecode structure. " +
+                    "Check console output for detailed error messages.");
             }
 
             data.GenerateCode();
