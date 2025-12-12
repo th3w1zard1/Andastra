@@ -91,6 +91,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+
         public virtual bool GetIsGlobals()
         {
             return this.isGlobals;
