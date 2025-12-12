@@ -14,7 +14,6 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using File = System.IO.FileInfo;
 using InputStream = System.IO.Stream;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using Process = System.Diagnostics.Process;
@@ -857,7 +856,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     File assemblyFile = new File(assembly.Location);
                     if (assemblyFile.Exists() && assemblyFile.Directory != null)
                     {
-                        return assemblyFile.Directory;
+                        return new File(assemblyFile.Directory);
                     }
                 }
             }
@@ -987,7 +986,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 // Ensure nwscript.nss is in the compiler's directory (like test does)
                 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:960-975
-                File compilerDir = compiler.Directory;
+                File compilerDir = compiler.Directory != null ? new File(compiler.Directory) : null;
                 if (compilerDir != null)
                 {
                     File compilerNwscript = new File(Path.Combine(compilerDir.FullName, "nwscript.nss"));
@@ -1286,9 +1285,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                using (var a = new BufferedStream(new FileStream(original.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)))
+                using (var a = new BufferedStream(new FileStream(original.FullName, FileMode.Open, FileAccess.Read)))
                 {
-                    using (var b = new BufferedStream(new FileStream(generated.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)))
+                    using (var b = new BufferedStream(new FileStream(generated.FullName, FileMode.Open, FileAccess.Read)))
                     {
                         int ba;
                         int bb;
@@ -1583,7 +1582,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     JavaSystem.@out.Println("DEBUG decompileNcs: starting decode for " + file.Name);
-                    using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
                     using (var bufferedStream = new BufferedStream(fileStream))
                     using (var binaryReader = new BinaryReader(bufferedStream))
                     {
@@ -1602,7 +1601,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     {
                         try
                         {
-                            using (var fis = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            using (var fis = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
                             {
                                 byte[] header = new byte[Math.Min(16, (int)fileSize)];
                                 int read = fis.Read(header, 0, header.Length);

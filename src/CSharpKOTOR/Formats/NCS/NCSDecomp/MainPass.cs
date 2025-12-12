@@ -196,7 +196,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             if (!this.skipdeadcode)
             {
-                Type type = NodeUtils.GetType(node);
+                UtilsType type = NodeUtils.GetType(node);
                 Const aconst;
                 switch (type.ByteValue())
                 {

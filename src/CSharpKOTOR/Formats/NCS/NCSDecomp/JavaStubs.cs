@@ -82,12 +82,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
         public override string ToString() { return _fileInfo.FullName; }
         public string Name { get { return _fileInfo.Name; } }
+        public string FullName { get { return _fileInfo.FullName; } }
+        public long Length { get { return _fileInfo.Exists ? _fileInfo.Length : 0; } }
+        public System.DateTime LastWriteTime { get { return _fileInfo.Exists ? _fileInfo.LastWriteTime : System.DateTime.MinValue; } }
         public System.IO.DirectoryInfo Directory { get { return _fileInfo.Directory; } }
         public string DirectoryName { get { return _fileInfo.DirectoryName; } }
         public bool IsFile() { return _fileInfo.Exists && !_fileInfo.Attributes.HasFlag(System.IO.FileAttributes.Directory); }
         public bool IsDirectory() { return _fileInfo.Attributes.HasFlag(System.IO.FileAttributes.Directory); }
         public void Delete() { _fileInfo.Delete(); }
         public bool Exists() { return _fileInfo.Exists; }
+        public File GetAbsoluteFile() { return new File(_fileInfo.FullName); }
+        public File(System.IO.DirectoryInfo dirInfo)
+        {
+            if (dirInfo == null)
+                throw new System.ArgumentNullException(nameof(dirInfo));
+            _fileInfo = new System.IO.FileInfo(dirInfo.FullName);
+        }
     }
 
     public class FileInputStream : System.IO.FileStream

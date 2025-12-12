@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <exception cref="DecompilerException">If decompilation fails</exception>
         public static string DecompileNcsToNss(File ncsFile, string gameFlag)
         {
-            if (ncsFile == null || !ncsFile.Exists)
+            if (ncsFile == null || !ncsFile.Exists())
             {
                 return null;
             }
@@ -62,11 +62,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     decompiler.DecompileToFile(ncsFile, tempNssFile, Encoding.UTF8, true);
 
                     // Read the decompiled code
-                    if (tempNssFile.Exists() && tempNssFile.Length() > 0)
+                    if (tempNssFile.Exists() && tempNssFile.Length > 0)
                     {
                         try
                         {
-                            return System.IO.File.ReadAllText(tempNssFile.FullName(), Encoding.UTF8);
+                            return System.IO.File.ReadAllText(tempNssFile.FullName, Encoding.UTF8);
                         }
                         catch (IOException e)
                         {
@@ -79,7 +79,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     // Clean up temp file
                     try
                     {
-                        if (tempNssFile.Exists)
+                        if (tempNssFile.Exists())
                         {
                             tempNssFile.Delete();
                         }
@@ -110,7 +110,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <exception cref="DecompilerException">If decompilation fails</exception>
         public static void DecompileNcsToNssFile(File ncsFile, File nssOutputFile, string gameFlag, Encoding charset)
         {
-            if (ncsFile == null || !ncsFile.Exists)
+            if (ncsFile == null || !ncsFile.Exists())
             {
                 throw new DecompilerException("NCS file does not exist: " + (ncsFile != null ? ncsFile.FullName : "null"));
             }
@@ -136,7 +136,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 FileDecompiler decompiler = new FileDecompiler();
                 decompiler.DecompileToFile(ncsFile, nssOutputFile, charset, true);
 
-                if (!nssOutputFile.Exists)
+                if (!nssOutputFile.Exists())
                 {
                     throw new DecompilerException("Decompile did not produce output file: " + nssOutputFile.FullName);
                 }
@@ -159,7 +159,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                if (savedNssFile == null || !savedNssFile.Exists)
+                if (savedNssFile == null || !savedNssFile.Exists())
                 {
                     return null;
                 }
@@ -175,7 +175,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
                 File recompiledNcsFile = new File(Path.Combine(savedNssFile.DirectoryName, baseName + ".ncs"));
 
-                if (!recompiledNcsFile.Exists)
+                if (!recompiledNcsFile.Exists())
                 {
                     return null;
                 }
@@ -186,13 +186,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             catch (DecompilerException e)
             {
                 System.Console.Error.WriteLine("Error getting round-trip decompiled code: " + e.Message);
-                e.PrintStackTrace(JavaSystem.@err);
+                e.PrintStackTrace(JavaSystem.@out);
                 return null;
             }
             catch (Exception e)
             {
                 System.Console.Error.WriteLine("Error getting round-trip decompiled code: " + e.Message);
-                e.PrintStackTrace(JavaSystem.@err);
+                e.PrintStackTrace(JavaSystem.@out);
                 return null;
             }
         }

@@ -43,7 +43,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
             catch (Exception e)
             {
-                throw new IOException("SHA-256 calculation failed", e);
+                throw new IOException("SHA-256 calculation failed: " + e.Message);
             }
         }
 

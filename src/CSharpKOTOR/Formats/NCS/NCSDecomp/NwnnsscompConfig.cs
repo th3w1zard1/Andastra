@@ -43,9 +43,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             this.sourceFile = sourceFile;
             // Convert to absolute path to ensure parent directory is always available
-            File absoluteOutputFile = outputFile.GetAbsolutePath();
+            File absoluteOutputFile = new File(outputFile.GetAbsolutePath());
             this.outputFile = absoluteOutputFile;
-            this.outputDir = absoluteOutputFile.Directory;
+            this.outputDir = absoluteOutputFile.Directory != null ? new File(absoluteOutputFile.Directory) : null;
             this.outputName = absoluteOutputFile.Name;
             this.isK2 = isK2;
 
@@ -90,7 +90,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 foreach (File dir in includeDirs)
                 {
-                    if (dir != null && dir.Exists)
+                    if (dir != null && dir.Exists())
                     {
                         includeArgs.Add("-i");
                         includeArgs.Add(dir.GetAbsolutePath());
