@@ -94,9 +94,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 _varRef.Close();
             }
             _varRef = null;
-            if (_stackEntry != null && _stackEntry is IDisposable disposableStackEntry)
+            if (_stackEntry != null)
             {
-                disposableStackEntry.Close();
+                // StackEntry may have Close() method, but we check for it dynamically
+                var entryType = _stackEntry.GetType();
+                var closeMethod = entryType.GetMethod("Close", System.Type.EmptyTypes);
+                if (closeMethod != null)
+                {
+                    closeMethod.Invoke(_stackEntry, null);
+                }
             }
             _stackEntry = null;
         }

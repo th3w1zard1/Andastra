@@ -107,9 +107,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 }
                 _exp = null;
             }
-            if (_var != null && _var is IDisposable disposableVar)
+            if (_var != null)
             {
-                disposableVar.Close();
+                // Variable may have Close() method, but we check for it dynamically
+                var varType = _var.GetType();
+                var closeMethod = varType.GetMethod("Close", System.Type.EmptyTypes);
+                if (closeMethod != null)
+                {
+                    closeMethod.Invoke(_var, null);
+                }
             }
             _var = null;
         }

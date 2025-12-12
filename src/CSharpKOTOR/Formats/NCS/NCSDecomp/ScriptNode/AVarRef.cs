@@ -76,9 +76,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         public override void Close()
         {
             base.Close();
-            if (this.var != null && this.var is IDisposable disposableVar)
+            if (this.var != null)
             {
-                disposableVar.Close();
+                // Variable may have Close() method, but we check for it dynamically
+                var varType = this.var.GetType();
+                var closeMethod = varType.GetMethod("Close", System.Type.EmptyTypes);
+                if (closeMethod != null)
+                {
+                    closeMethod.Invoke(this.var, null);
+                }
             }
             this.var = null;
         }
