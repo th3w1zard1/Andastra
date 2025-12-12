@@ -15,13 +15,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: private Hashtable<Node, NodeData> nodedatahash = new Hashtable<>(1);
         private Dictionary<object, object> nodedatahash = new Dictionary<object, object>();
 
-        public virtual void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:21-31
+        // Original: public void close() { ... data.nextElement().close(); ... }
+        public virtual void Close()
         {
             if (this.nodedatahash != null)
             {
                 foreach (NodeData data in this.nodedatahash.Values)
                 {
-                    data.Dispose();
+                    data.Close();
                 }
 
                 this.nodedatahash = null;
@@ -284,7 +286,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 this.origins.Add(origin);
             }
 
-            public virtual void Dispose()
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:213-217
+            // Original: public void close() { ... }
+            public virtual void Close()
             {
                 this.jumpDestination = null;
                 this.stack = null;
