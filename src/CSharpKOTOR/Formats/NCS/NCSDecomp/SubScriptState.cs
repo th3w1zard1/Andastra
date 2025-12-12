@@ -462,8 +462,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         {
                             existingSwitch = (Scriptnode.ASwitch)last;
                             // Verify the switch expression matches
-                            if (typeof(ScriptNode.AVarRef).IsInstanceOfType(cond.Left()) && typeof(ScriptNode.AVarRef).IsInstanceOfType(existingSwitch.GetSwitchExp())
-                                && ((ScriptNode.AVarRef)cond.Left()).Var().Equals(((ScriptNode.AVarRef)existingSwitch.GetSwitchExp()).Var()))
+                            if (typeof(Scriptnode.AVarRef).IsInstanceOfType(cond.Left()) && typeof(Scriptnode.AVarRef).IsInstanceOfType(existingSwitch.GetSwitchExp())
+                                && ((Scriptnode.AVarRef)cond.Left()).Var().Equals(((Scriptnode.AVarRef)existingSwitch.GetSwitchExp()).Var()))
                             {
                                 // Can continue existing switch
                                 ASwitchCase aprevcase = existingSwitch.GetLastCase();
@@ -487,10 +487,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         if (this.current.HasChildren())
                         {
                             Scriptnode.ScriptNode last = this.current.GetLastChild();
-                            if (typeof(ScriptNode.AVarRef).IsInstanceOfType(last) && typeof(ScriptNode.AVarRef).IsInstanceOfType(cond.Left())
-                                && ((ScriptNode.AVarRef)last).Var().Equals(((ScriptNode.AVarRef)cond.Left()).Var()))
+                            if (typeof(AVarRef).IsInstanceOfType(last) && typeof(AVarRef).IsInstanceOfType(cond.Left())
+                                && ((AVarRef)last).Var().Equals(((AVarRef)cond.Left()).Var()))
                             {
-                                ScriptNode.AVarRef varref = (ScriptNode.AVarRef)this.RemoveLastExp(false);
+                                AVarRef varref = (AVarRef)this.RemoveLastExp(false);
                                 aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), varref);
                             }
                         }
