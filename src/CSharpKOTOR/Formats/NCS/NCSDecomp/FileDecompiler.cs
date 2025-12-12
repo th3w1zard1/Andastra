@@ -731,6 +731,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                                 }
                                 catch (Exception e2)
                                 {
+                                    JavaSystem.@out.Println($"DEBUG FileDecompiler: ignorable error in Done for doglobs: {e2.Message}");
                                 }
                             }
                             doglobs = null;
