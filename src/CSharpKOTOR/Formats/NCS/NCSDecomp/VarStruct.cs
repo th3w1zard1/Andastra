@@ -78,9 +78,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             this.size += var.Size();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:74-76
+        // Original: @Override public void name(String prefix, byte count)
         public override void Name(string prefix, byte count)
         {
-            this.name = prefix.ToString() + "struct" + count.ToString();
+            this.name = prefix + "struct" + count;
         }
 
         public virtual string Name()
