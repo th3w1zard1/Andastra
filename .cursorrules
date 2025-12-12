@@ -184,3 +184,13 @@ cd <workspace_path>/vendor/PyKotor; & "<workspace_path>/vendor/PyKotor/.venv_3.1
 - Running a Python module: Replace `<your_python_command>` with `python -m module.name`
 
 **IMPORTANT**: Always replace `<workspace_path>` with the actual workspace root path (e.g., `G:\GitHub\HoloPatcher.NET`). All commands are chained with semicolons (`;`) to execute as a single PowerShell command.
+
+## NCS File Comparison
+
+When debugging bytecode mismatches, use the `Compare-NcsFiles.ps1` script:
+
+```powershell
+.\scripts\Compare-NcsFiles.ps1 -OriginalFile "path/to/original.ncs" -RoundTripFile "path/to/roundtrip.ncs"
+```
+
+This displays instructions from both files side-by-side with differences highlighted. Use `-ShowOnly "original"` or `-ShowOnly "roundtrip"` to view a single file.
