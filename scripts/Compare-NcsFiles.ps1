@@ -142,9 +142,11 @@ if ($ShowOnly -eq "both") {
                 Write-Host "[$i] ✗ DIFFER: " -ForegroundColor Red -NoNewline
                 Write-Host "Orig=$($origInst.InsType) RT=$($rtInst.InsType)"
             }
-        } else if ($origInst) {
+        }
+        elseif ($origInst) {
             Write-Host "[$i] ✗ MISSING IN ROUND-TRIP: $($origInst.InsType)" -ForegroundColor Red
-        } else if ($rtInst) {
+        }
+        elseif ($rtInst) {
             Write-Host "[$i] ✗ EXTRA IN ROUND-TRIP: $($rtInst.InsType)" -ForegroundColor Red
         }
     }
