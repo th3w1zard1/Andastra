@@ -26,7 +26,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Note: FieldAccess.Compile does NOT add to temp_stack, so we don't either
             DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
 
-            if (variableType.Builtin != DataType.Int && variableType.Builtin != DataType.Float)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2909-2915
+            // Original: if variable_type != DynamicDataType.INT:
+            if (variableType.Builtin != DataType.Int)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
                 throw new NSS.CompileError(

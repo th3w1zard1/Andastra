@@ -36,6 +36,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 throw new CompileError("Internal error: FieldAccess has no identifiers");
             }
 
+            // Matching PyKotor classes.py line 995
+            // Original: scoped: GetScopedResult = block.get_scoped(first_ident, root)
             Identifier first = Identifiers[0];
             GetScopedResult scoped = block.GetScoped(first, root);
             bool isGlobal = scoped.IsGlobal;
