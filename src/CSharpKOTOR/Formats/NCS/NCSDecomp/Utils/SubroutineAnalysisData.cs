@@ -87,7 +87,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             if (this.globalstate != null)
             {
-                this.globalstate.Dispose();
+                this.globalstate.Close();
                 this.globalstate = null;
             }
         }

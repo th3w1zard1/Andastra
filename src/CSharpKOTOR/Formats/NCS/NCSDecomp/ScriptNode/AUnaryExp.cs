@@ -76,13 +76,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp is Scriptnode.ScriptNode expNode)
                 {
-                    expNode.Dispose();
+                    expNode.Close();
                 }
                 _exp = null;
             }
             if (_stackEntry != null && _stackEntry is IDisposable disposableStackEntry)
             {
-                disposableStackEntry.Dispose();
+                disposableStackEntry.Close();
             }
             _stackEntry = null;
         }

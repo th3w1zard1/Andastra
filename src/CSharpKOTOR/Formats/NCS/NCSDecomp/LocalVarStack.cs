@@ -11,7 +11,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
     public class LocalVarStack : LocalStack
     {
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:20-31
+        // Original: @Override public void close()
+        public new void Close()
         {
             if (this.stack != null)
             {
@@ -19,18 +21,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
                 while (it.HasNext())
                 {
                     object next = it.Next();
-                    if (next is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                    }
-                    else if (next is StackEntry entry)
+                    if (next is StackEntry entry)
                     {
                         entry.Close();
                     }
                 }
             }
 
-            base.Dispose();
+            base.Close();
         }
 
         public virtual void DoneParse()
