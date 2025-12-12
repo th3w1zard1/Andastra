@@ -467,12 +467,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 && ((AVarRef)cond.Left()).Var().Equals(((AVarRef)switchExp).Var()))
                             {
                                 // Can continue existing switch
-                                ASwitchCase aprevcase = existingSwitch.GetLastCase();
+                                ScriptNode.ASwitchCase aprevcase = existingSwitch.GetLastCase();
                                 if (aprevcase != null)
                                 {
-                                    aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
+                                    aprevcase.SetEnd(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
                                 }
-                                ASwitchCase acasex = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
+                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (Scriptnode.AConst)cond.Right());
                                 existingSwitch.AddCase(acasex);
                                 this.state = 4;
                                 this.CheckEnd(node);
@@ -484,7 +484,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     if (canCreateSwitch)
                     {
                                 ScriptNode.ASwitch aswitch = null;
-                        ASwitchCase acase = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
+                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (Scriptnode.AConst)cond.Right());
                         if (this.current.HasChildren())
                         {
                             Scriptnode.ScriptNode last = this.current.GetLastChild();
@@ -498,7 +498,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 }
                                 else
                                 {
-                                    aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), cond.Left());
+                                    aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), cond.Left());
                                 }
                             }
                         }
@@ -523,10 +523,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 else
                 {
                     AConditionalExp condx = (AConditionalExp)this.RemoveLastExp(true);
-                    Scriptnode.ASwitch aswitchx = (Scriptnode.ASwitch)this.current.GetLastChild();
-                    ASwitchCase aprevcase = aswitchx.GetLastCase();
-                    aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
-                    ASwitchCase acasex = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)condx.Right());
+                    ScriptNode.ASwitch aswitchx = (ScriptNode.ASwitch)this.current.GetLastChild();
+                    ScriptNode.ASwitchCase aprevcase = aswitchx.GetLastCase();
+                    aprevcase.SetEnd(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
+                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (Scriptnode.AConst)condx.Right());
                     aswitchx.AddCase(acasex);
                 }
             }
@@ -1201,17 +1201,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (typeof(ASwitchCase).IsInstanceOfType(this.current))
             {
                 StackEntry entry = this.stack[1];
-                if (typeof(Variable).IsInstanceOfType(entry) && ((ASwitch)this.current.Parent()).SwitchExp().Stackentry().Equals(entry))
+                if (typeof(Variable).IsInstanceOfType(entry) && ((ScriptNode.ASwitch)this.current.Parent()).GetSwitchExp().Stackentry().Equals(entry))
                 {
-                    ((ASwitch)this.current.Parent()).End(this.nodedata.GetPos(node));
-                    this.UpdateSwitchUnknowns((ASwitch)this.current.Parent());
+                    ((ScriptNode.ASwitch)this.current.Parent()).End(this.nodedata.GetPos(node));
+                    this.UpdateSwitchUnknowns((ScriptNode.ASwitch)this.current.Parent());
                 }
             }
         }
 
-        private void UpdateSwitchUnknowns(Scriptnode.ASwitch aswitch)
+        private void UpdateSwitchUnknowns(ScriptNode.ASwitch aswitch)
         {
-            ASwitchCase acase = null;
+            ScriptNode.ASwitchCase acase = null;
             while ((acase = aswitch.GetNextCase(acase)) != null)
             {
                 List<object> unknowns = acase.GetUnknowns();
