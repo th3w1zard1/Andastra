@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {

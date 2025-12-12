@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using ScriptNodeNS = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
