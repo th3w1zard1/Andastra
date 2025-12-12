@@ -39,6 +39,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Original: this.nodedata.setPos(node, this.currentPos);
             // Always add node to hashtable, even if GetCommandPos returned -1
             // This ensures ProcessCode can find the node later
+            // SetPos will create NodeData if it doesn't exist, so all nodes will be in hashtable
             this.nodedata.SetPos(node, this.currentPos);
         }
     }

@@ -21,6 +21,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.freezeStack = false;
         }
 
+        // Override DefaultIn to ensure skipdeadcode is set correctly for globals
+        // Matching DeNCS implementation: DoGlobalVars inherits MainPass.DefaultIn behavior
+        // which sets skipdeadcode based on ProcessCode, but OutARsaddCommand checks freezeStack instead
+        public override void DefaultIn(Node node)
+        {
+            // Call base to set skipdeadcode (though we check freezeStack in OutARsaddCommand)
+            base.DefaultIn(node);
+        }
+
         public override string GetCode()
         {
             return this.state.ToStringGlobals();
@@ -32,9 +41,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Handle AST.ABpCommand as well (from NcsToAstConverter)
+        // This is called from PrunedDepthFirstAdapter.CaseABpCommand overload
         public void OutABpCommand(AST.ABpCommand node)
         {
             // Treat AST.ABpCommand the same as root namespace ABpCommand
+            // Set freezeStack to true when we encounter SAVEBP/RESTOREBP
+            // This prevents stack mutations after BP ops, but commands before SAVEBP should still be processed
             this.freezeStack = true;
         }
 
@@ -81,6 +93,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             // Use freezeStack check instead of skipdeadcode (matching DoGlobalVars pattern)
+            JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): freezeStack={this.freezeStack}, skipdeadcode={this.skipdeadcode}");
             if (!this.freezeStack)
             {
                 // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
@@ -95,8 +108,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
                 Variable var = new Variable(new UtilsType((byte)typeVal));
                 this.stack.Push(var);
+                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): calling TransformRSAdd, stack size={this.stack.Size()}");
                 this.state.TransformRSAdd(node);
+                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): after TransformRSAdd, root children count={this.state.GetRoot().GetChildren().Count}");
                 var = null;
+            }
+            else
+            {
+                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): skipping because freezeStack=true");
             }
         }
 

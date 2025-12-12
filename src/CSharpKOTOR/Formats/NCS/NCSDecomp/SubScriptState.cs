@@ -906,14 +906,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             // Matching DeNCS implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             this.CheckStart(node);
             Variable var = (Variable)this.stack[1];
+            JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): var={var}, current type={this.current.GetType().Name}, current children={this.current.GetChildren().Count}");
             // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
             AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
             if (existingVardec == null)
             {
                 AVarDecl vardec = new AVarDecl(var);
                 this.UpdateVarCount(var);
+                JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): adding vardec to current, current children before={this.current.GetChildren().Count}");
                 this.current.AddChild(vardec);
+                JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): added vardec, current children after={this.current.GetChildren().Count}, root children={this.root.GetChildren().Count}");
                 this.vardecs.Put(var, vardec);
+            }
+            else
+            {
+                JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): skipping duplicate vardec");
             }
             this.CheckEnd(node);
         }

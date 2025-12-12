@@ -1856,12 +1856,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     sub = subdata.GetGlobalsSub();
+                    JavaSystem.@out.Println($"DEBUG FileDecompiler: GetGlobalsSub() returned {sub?.GetType().Name ?? "null"}");
                     if (sub != null)
                     {
                         try
                         {
                             doglobs = new DoGlobalVars(nodedata, subdata);
+                            JavaSystem.@out.Println($"DEBUG FileDecompiler: calling sub.Apply(doglobs), sub type={sub.GetType().Name}, doglobs type={doglobs.GetType().Name}");
                             sub.Apply(doglobs);
+                            JavaSystem.@out.Println($"DEBUG FileDecompiler: after sub.Apply(doglobs)");
                             cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
                             cleanpass.Apply();
                             subdata.SetGlobalStack(doglobs.GetStack());

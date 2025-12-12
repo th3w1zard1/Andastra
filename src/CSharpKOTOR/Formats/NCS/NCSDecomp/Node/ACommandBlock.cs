@@ -34,16 +34,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
         {
             // Call CaseACommandBlock directly if sw is PrunedReversedDepthFirstAdapter or PrunedDepthFirstAdapter
             // This ensures the visitor pattern routes correctly to CaseACommandBlock
+            JavaSystem.@out.Println($"DEBUG AST.ACommandBlock.Apply: sw type={sw.GetType().Name}, cmd count={this.GetCmd().Count}");
             if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
             {
+                JavaSystem.@out.Println($"DEBUG AST.ACommandBlock.Apply: routing to PrunedReversedDepthFirstAdapter.CaseACommandBlock");
                 prdfa.CaseACommandBlock(this);
             }
             else if (sw is Analysis.PrunedDepthFirstAdapter pdfa)
             {
+                JavaSystem.@out.Println($"DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock");
                 pdfa.CaseACommandBlock(this);
             }
             else
             {
+                JavaSystem.@out.Println($"DEBUG AST.ACommandBlock.Apply: routing to DefaultIn");
                 sw.DefaultIn(this);
             }
         }

@@ -90,10 +90,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseASubroutine(ASubroutine node)
         {
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseASubroutine(root): this type={this.GetType().Name}");
             this.InASubroutine(node);
-            if (node.GetCommandBlock() != null)
+            PCommandBlock cmdBlock = node.GetCommandBlock();
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseASubroutine(root): GetCommandBlock() returned {cmdBlock?.GetType().Name ?? "null"}");
+            if (cmdBlock != null)
             {
-                node.GetCommandBlock().Apply(this);
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseASubroutine(root): calling GetCommandBlock().Apply");
+                cmdBlock.Apply(this);
             }
 
             if (node.GetReturn() != null)
@@ -108,10 +112,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public virtual void CaseASubroutine(AST.ASubroutine node)
         {
             // Treat AST.ASubroutine the same as root namespace ASubroutine
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseASubroutine(AST): this type={this.GetType().Name}");
             this.DefaultIn(node);
-            if (node.GetCommandBlock() != null)
+            PCommandBlock cmdBlock = node.GetCommandBlock();
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseASubroutine(AST): GetCommandBlock() returned {cmdBlock?.GetType().Name ?? "null"}");
+            if (cmdBlock != null)
             {
-                node.GetCommandBlock().Apply(this);
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseASubroutine(AST): calling GetCommandBlock().Apply");
+                cmdBlock.Apply(this);
             }
 
             if (node.GetReturn() != null)
@@ -134,11 +142,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseACommandBlock(ACommandBlock node)
         {
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock(root): this type={this.GetType().Name}, cmd count={node.GetCmd().Count}");
             this.InACommandBlock(node);
             Object[] temp = node.GetCmd().ToArray();
             for (int i = 0; i < temp.Length; ++i)
             {
-                ((PCmd)temp[i]).Apply(this);
+                PCmd cmd = (PCmd)temp[i];
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock(root): applying cmd[{i}] type={cmd.GetType().Name}");
+                cmd.Apply(this);
             }
 
             this.OutACommandBlock(node);
@@ -148,11 +159,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public virtual void CaseACommandBlock(AST.ACommandBlock node)
         {
             // Treat AST.ACommandBlock the same as root namespace ACommandBlock
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock(AST): this type={this.GetType().Name}, cmd count={node.GetCmd().Count}");
             this.DefaultIn(node);
             Object[] temp = node.GetCmd().ToArray();
             for (int i = 0; i < temp.Length; ++i)
             {
-                ((PCmd)temp[i]).Apply(this);
+                PCmd cmd = (PCmd)temp[i];
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock(AST): applying cmd[{i}] type={cmd.GetType().Name}");
+                cmd.Apply(this);
             }
 
             this.DefaultOut(node);
@@ -184,10 +198,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public virtual void CaseARsaddCmd(AST.ARsaddCmd node)
         {
             // Treat AST.ARsaddCmd similar to AAddVarCmd - visit the RsaddCommand child
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCmd(AST): this type={this.GetType().Name}");
             this.DefaultIn(node);
             if (node.GetRsaddCommand() != null)
             {
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCmd(AST): calling GetRsaddCommand().Apply, command type={node.GetRsaddCommand().GetType().Name}");
                 node.GetRsaddCommand().Apply(this);
+            }
+            else
+            {
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCmd(AST): GetRsaddCommand() returned null");
             }
 
             this.DefaultOut(node);
@@ -784,18 +804,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public virtual void CaseARsaddCommand(AST.ARsaddCommand node)
         {
             // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCommand(AST): this type={this.GetType().Name}");
             this.DefaultIn(node);
             // Call OutARsaddCommand if visitor supports it (e.g., DoGlobalVars, MainPass)
             if (this is DoGlobalVars dgv)
             {
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCommand(AST): calling DoGlobalVars.OutARsaddCommand");
                 dgv.OutARsaddCommand(node);
             }
             else if (this is MainPass mp)
             {
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCommand(AST): calling MainPass.OutARsaddCommand");
                 mp.OutARsaddCommand(node);
             }
             else
             {
+                JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseARsaddCommand(AST): calling DefaultOut");
                 this.DefaultOut(node);
             }
         }
