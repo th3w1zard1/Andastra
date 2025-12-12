@@ -34,7 +34,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                     $"  Variable: {varName}");
             }
 
-            // Get scoped info after compiling (matching PyKotor line 2917)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2917
+            // Original: isglobal, variable_type, stack_index, is_const = self.field_access.get_scoped(block, root)
             GetScopedResult scoped = FieldAccess.GetScoped(block, root);
             bool isGlobal = scoped.IsGlobal;
             int stackIndex = scoped.Offset;
