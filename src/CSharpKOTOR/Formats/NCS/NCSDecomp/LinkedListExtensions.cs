@@ -19,6 +19,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return new LinkedListListIterator<T>(list, index);
         }
 
+        // Extension for List<T> to support ListIterator (needed since ScriptRootNode.GetChildren() returns List<ScriptNode>)
+        public static ListIterator ListIterator<T>(this List<T> list)
+        {
+            return new ListListIterator<T>(list);
+        }
+
+        public static ListIterator ListIterator<T>(this List<T> list, int index)
+        {
+            return new ListListIterator<T>(list, index);
+        }
+
         private class LinkedListListIterator<T> : ListIterator
         {
             private readonly LinkedList<T> _list;
@@ -107,6 +118,82 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     _list.AddBefore(_current, (T)o);
                 }
+                _index++;
+            }
+        }
+
+        private class ListListIterator<T> : ListIterator
+        {
+            private readonly List<T> _list;
+            private int _index;
+
+            public ListListIterator(List<T> list)
+            {
+                _list = list;
+                _index = 0;
+            }
+
+            public ListListIterator(List<T> list, int index)
+            {
+                _list = list;
+                _index = index;
+            }
+
+            public bool HasNext()
+            {
+                return _index < _list.Count;
+            }
+
+            public object Next()
+            {
+                if (_index >= _list.Count)
+                    throw new InvalidOperationException("No next element");
+                object result = _list[_index];
+                _index++;
+                return result;
+            }
+
+            public bool HasPrevious()
+            {
+                return _index > 0;
+            }
+
+            public object Previous()
+            {
+                if (_index <= 0)
+                    throw new InvalidOperationException("No previous element");
+                _index--;
+                return _list[_index];
+            }
+
+            public int NextIndex()
+            {
+                return _index;
+            }
+
+            public int PreviousIndex()
+            {
+                return _index - 1;
+            }
+
+            public void Remove()
+            {
+                if (_index <= 0 || _index > _list.Count)
+                    throw new InvalidOperationException("Cannot remove");
+                _list.RemoveAt(_index - 1);
+                _index--;
+            }
+
+            public void Set(object o)
+            {
+                if (_index <= 0 || _index > _list.Count)
+                    throw new InvalidOperationException("Cannot set");
+                _list[_index - 1] = (T)o;
+            }
+
+            public void Add(object o)
+            {
+                _list.Insert(_index, (T)o);
                 _index++;
             }
         }
