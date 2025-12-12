@@ -93,6 +93,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public void Delete() { _fileInfo.Delete(); }
         public bool Exists() { return _fileInfo.Exists; }
         public File GetAbsoluteFile() { return new File(_fileInfo.FullName); }
+        public File GetParentFile()
+        {
+            if (_fileInfo.Directory != null)
+            {
+                return new File(_fileInfo.Directory);
+            }
+            return null;
+        }
         public bool Mkdirs()
         {
             try

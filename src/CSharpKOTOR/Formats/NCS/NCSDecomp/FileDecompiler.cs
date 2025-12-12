@@ -818,105 +818,77 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return buffer.ToString();
         }
 
-        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:727-855
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:875-929
         // Original: private File getCompilerFile()
         private File GetCompilerFile()
         {
-            // Priority order: primary first, then secondary, then others
-            string[] compilerNames = {
-                "nwnnsscomp.exe",              // Primary - generic name (highest priority)
-                "nwnnsscomp_kscript.exe",      // Secondary - KOTOR Scripting Tool
-                "nwnnsscomp_tslpatcher.exe",   // TSLPatcher variant
-                "nwnnsscomp_v1.exe"            // v1.3 first public release
-            };
-
-            // 1. Try configured path (if set) - all filenames
-            if (nwnnsscompPath != null && nwnnsscompPath.Trim().Length > 0)
+            // GUI MODE: Try to get compiler from Settings
+            try
             {
-                File configuredDir = new File(nwnnsscompPath);
-                if (configuredDir.IsDirectory())
+                File settingsCompiler = CompilerUtil.GetCompilerFromSettings();
+                if (settingsCompiler != null)
                 {
-                    // If it's a directory, try all filenames in it
-                    foreach (string name in compilerNames)
+                    // If Settings compiler exists, use it
+                    if (settingsCompiler.Exists() && settingsCompiler.IsFile())
                     {
-                        File candidate = new File(Path.Combine(configuredDir.FullName, name));
-                        if (candidate.Exists())
-                        {
-                            return candidate;
-                        }
+                        JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Using Settings compiler: "
+                            + settingsCompiler.GetAbsolutePath());
+                        return settingsCompiler;
                     }
-                }
-                else
-                {
-                    // If it's a file, check if it exists
-                    if (configuredDir.Exists())
+                    // Settings compiler doesn't exist - try fallback to JAR/EXE directory's tools folder
+                    JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Settings compiler not found: "
+                        + settingsCompiler.GetAbsolutePath() + ", trying fallback to JAR directory");
+
+                    // Try JAR/EXE directory's tools folder with all known compiler names
+                    File ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
+                    if (ncsDecompDir != null)
                     {
-                        return configuredDir;
-                    }
-                    // Also try other filenames in the same directory
-                    if (configuredDir.Directory != null)
-                    {
+                        File jarToolsDir = new File(Path.Combine(ncsDecompDir.FullName, "tools"));
+                        string[] compilerNames = CompilerUtil.GetCompilerNames();
                         foreach (string name in compilerNames)
                         {
-                            File candidate = new File(Path.Combine(configuredDir.Directory.FullName, name));
-                            if (candidate.Exists())
+                            File fallbackCompiler = new File(Path.Combine(jarToolsDir.FullName, name));
+                            if (fallbackCompiler.Exists() && fallbackCompiler.IsFile())
                             {
-                                return candidate;
+                                JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Found fallback compiler in JAR directory: "
+                                    + fallbackCompiler.GetAbsolutePath());
+                                return fallbackCompiler;
                             }
                         }
+                        JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: No fallback compiler found in JAR directory: "
+                            + jarToolsDir.GetAbsolutePath());
                     }
+
+                    // Fallback failed, but return the Settings path anyway (caller will handle error)
+                    JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Using Settings compiler (not found): "
+                        + settingsCompiler.GetAbsolutePath());
+                    return settingsCompiler;
                 }
             }
-
-            // 2. Try tools/ directory - all filenames
-            string userDir = JavaSystem.GetProperty("user.dir");
-            File toolsDir = new File(Path.Combine(userDir, "tools"));
-            foreach (string name in compilerNames)
+            catch (NoClassDefFoundError)
             {
-                File candidate = new File(Path.Combine(toolsDir.FullName, name));
-                if (candidate.Exists())
-                {
-                    return candidate;
-                }
+                // CompilerUtil or Decompiler.settings not available - likely CLI mode
+                JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Settings not available (CLI mode): NoClassDefFoundError");
             }
-
-            // 3. Try current working directory - all filenames
-            File cwd = new File(userDir);
-            foreach (string name in compilerNames)
+            catch (Exception e)
             {
-                File candidate = new File(Path.Combine(cwd.FullName, name));
-                if (candidate.Exists())
-                {
-                    return candidate;
-                }
+                // CompilerUtil or Decompiler.settings not available - likely CLI mode
+                JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Settings not available (CLI mode): "
+                    + e.GetType().Name);
             }
 
-            // 4. Try NCSDecomp installation directory - all filenames
-            File ncsDecompDir = GetNCSDecompDirectory();
-            if (ncsDecompDir != null && !ncsDecompDir.FullName.Equals(cwd.FullName))
+            // CLI MODE: Use nwnnsscompPath if set (set by CLI argument)
+            if (nwnnsscompPath != null && !string.IsNullOrWhiteSpace(nwnnsscompPath))
             {
-                foreach (string name in compilerNames)
-                {
-                    File candidate = new File(Path.Combine(ncsDecompDir.FullName, name));
-                    if (candidate.Exists())
-                    {
-                        return candidate;
-                    }
-                }
-                // Also try tools/ subdirectory of NCSDecomp directory
-                File ncsToolsDir = new File(Path.Combine(ncsDecompDir.FullName, "tools"));
-                foreach (string name in compilerNames)
-                {
-                    File candidate = new File(Path.Combine(ncsToolsDir.FullName, name));
-                    if (candidate.Exists())
-                    {
-                        return candidate;
-                    }
-                }
+                File cliCompiler = new File(nwnnsscompPath);
+                JavaSystem.@err.Println(
+                    "DEBUG FileDecompiler.getCompilerFile: Using CLI nwnnsscompPath: " + cliCompiler.GetAbsolutePath());
+                return cliCompiler;
             }
 
-            // Final fallback: return nwnnsscomp.exe in current directory (may not exist)
-            return new File(Path.Combine(userDir, "nwnnsscomp.exe"));
+            // NO FALLBACKS - return null if not configured
+            JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: No compiler configured - returning null");
+            return null;
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:728-762
