@@ -164,7 +164,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // If still not found, try JAR/EXE directory's tools folder
                 if (!actionfile.IsFile())
                 {
-                    File ncsDecompDir = GetNCSDecompDirectoryStatic();
+                    File ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
                     if (ncsDecompDir != null)
                     {
                         File jarToolsDir = new File(Path.Combine(ncsDecompDir.FullName, "tools"));
@@ -174,7 +174,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // If still not found, try JAR/EXE directory itself
                 if (!actionfile.IsFile())
                 {
-                    File ncsDecompDir = GetNCSDecompDirectoryStatic();
+                    File ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
                     if (ncsDecompDir != null)
                     {
                         actionfile = isK2Selected ? new File(Path.Combine(ncsDecompDir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(ncsDecompDir.FullName, "k1_nwscript.nss"));
@@ -892,36 +892,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:728-762
-        // Original: private File getNCSDecompDirectory()
-        private File GetNCSDecompDirectory()
-        {
-            return GetNCSDecompDirectoryStatic();
-        }
-
-        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:325-352
-        // Original: public static File getNCSDecompDirectory()
-        private static File GetNCSDecompDirectoryStatic()
-        {
-            try
-            {
-                // Try to get the location of the assembly
-                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                if (assembly != null && !string.IsNullOrEmpty(assembly.Location))
-                {
-                    File assemblyFile = new File(assembly.Location);
-                    if (assemblyFile.Exists() && assemblyFile.Directory != null)
-                    {
-                        return new File(assemblyFile.Directory);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Fall through to user.dir
-            }
-            // Fallback to user.dir if we can't determine assembly location
-            return new File(JavaSystem.GetProperty("user.dir"));
-        }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:861-864
         // Original: private boolean checkCompilerExists()
