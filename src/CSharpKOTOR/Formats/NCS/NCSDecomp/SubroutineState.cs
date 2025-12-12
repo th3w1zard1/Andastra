@@ -28,6 +28,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private NodeAnalysisData nodedata;
         private LinkedList decisionqueue;
         private byte id;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:40-50
+        // Original: public SubroutineState(NodeAnalysisData nodedata, Node root, byte id) { this.status = 0; ... }
         public SubroutineState(NodeAnalysisData nodedata, Node root, byte id)
         {
             this.nodedata = nodedata;
@@ -35,7 +37,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.decisionqueue = new LinkedList();
             this.paramstyped = true;
             this.paramsize = 0;
-            this.status = PROTO_NO;
+            this.status = 0;
             this.type = new Type((byte)0);
             this.root = root;
             this.id = id;
@@ -48,7 +50,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.decisionqueue = null;
         }
 
-        public virtual void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:58-73
+        // Original: public void close() { ... it.next().close(); ... }
+        public virtual void Close()
         {
             this.@params = null;
             this.root = null;
@@ -68,6 +72,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             this.type = null;
+        }
+
+        public virtual void Dispose()
+        {
+            Close();
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:75-88
