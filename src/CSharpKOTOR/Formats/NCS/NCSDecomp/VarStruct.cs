@@ -15,7 +15,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:19
         // Original: protected LinkedList<Variable> vars = new LinkedList<>();
-        protected NCSDecompLinkedList vars = new NCSDecompLinkedList();
+        // Note: C# LinkedList is not generic, so we use the non-generic version
+        protected LinkedList vars = new LinkedList();
         protected StructType structtype;
         public VarStruct() : base(new UtilsType(unchecked((byte)(-15))))
         {
@@ -23,15 +24,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             this.structtype = new StructType();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:28-40
+        // Original: public VarStruct(StructType structtype) { this(); this.structtype = structtype; List<Type> types = structtype.types(); for (Type type : types) { if (StructType.class.isInstance(type)) { this.addVar(new VarStruct((StructType)type)); } else { this.addVar(new Variable(type)); } } }
         public VarStruct(StructType structtype) : this()
         {
             this.structtype = structtype;
-            foreach (object typeObj in structtype.Types())
+
+            List<object> types = structtype.Types();
+            foreach (object typeObj in types)
             {
                 UtilsType type = (UtilsType)typeObj;
-                if (typeof(StructType).IsInstanceOfType(typeObj))
+                if (type is StructType)
                 {
-                    this.AddVar(new VarStruct((StructType)typeObj));
+                    this.AddVar(new VarStruct((StructType)type));
                 }
                 else
                 {
@@ -40,8 +45,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:43-57
-        // Original: @Override public void close()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:42-57
+        // Original: @Override public void close() { ... for (int i = 0; i < this.vars.size(); i++) { this.vars.get(i).close(); } ... }
         public override void Close()
         {
             base.Close();
