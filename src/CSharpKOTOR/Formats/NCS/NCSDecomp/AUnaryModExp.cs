@@ -1,7 +1,6 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
@@ -9,17 +8,17 @@ using ScriptNodeNS = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:10-14
+    // Original: public class AUnaryModExp extends ScriptNode implements AExpression { private AVarRef varref; private String op; private boolean prefix; private StackEntry stackentry; }
     public class AUnaryModExp : ScriptNode, AExpression
     {
         private ScriptNodeNS.AVarRef varref;
-        private AExpression target; // Generic target for edge cases
-        // Generic target for edge cases
         private string op;
-        // Generic target for edge cases
         private bool prefix;
-        // Generic target for edge cases
         private StackEntry stackentry;
-        // Generic target for edge cases
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:16-20
+        // Original: public AUnaryModExp(AVarRef varref, String op, boolean prefix) { this.varRef(varref); this.op = op; this.prefix = prefix; }
         public AUnaryModExp(ScriptNodeNS.AVarRef varref, string op, bool prefix)
         {
             this.VarRef(varref);
@@ -27,68 +26,58 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.prefix = prefix;
         }
 
-        // Generic target for edge cases
-        // Constructor for edge cases where target is not a variable reference
-        public AUnaryModExp(AExpression target, string op, bool prefix)
-        {
-            if (target is ScriptNodeNS.AVarRef)
-            {
-                this.VarRef((ScriptNodeNS.AVarRef)target);
-            }
-            else
-            {
-                this.target = target;
-                if (target != null)
-                {
-                    ((ScriptNode)target).Parent(this);
-                }
-            }
-
-            this.op = op;
-            this.prefix = prefix;
-        }
-
-        // Generic target for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:22-25
+        // Original: protected void varRef(AVarRef varref) { this.varref = varref; varref.parent(this); }
         protected virtual void VarRef(ScriptNodeNS.AVarRef varref)
         {
             this.varref = varref;
-            if (varref != null)
-            {
-                // Use AExpression.Parent() which accepts Scriptnode.ScriptNode
-                ((AExpression)varref).Parent(this);
-            }
+            varref.Parent(this);
         }
 
-        // Generic target for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:27-29
+        // Original: public AVarRef varRef() { return this.varref; }
+        public virtual ScriptNodeNS.AVarRef VarRef()
+        {
+            return this.varref;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:31-33
+        // Original: public String op() { return this.op; }
+        public virtual string Op()
+        {
+            return this.op;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:35-37
+        // Original: public boolean prefix() { return this.prefix; }
+        public virtual bool Prefix()
+        {
+            return this.prefix;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:39-42
+        // Original: @Override public String toString() { return ExpressionFormatter.format(this); }
         public override string ToString()
         {
-            string targetStr = this.varref != null ? this.varref.ToString() : (this.target != null ? this.target.ToString() : "/* unknown */");
-            if (this.prefix)
-            {
-                return "(" + this.op + targetStr + ")";
-            }
-
-            return "(" + targetStr + this.op + ")";
+            return ExpressionFormatter.Format(this);
         }
 
-        // Generic target for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:44-47
+        // Original: @Override public StackEntry stackentry() { return this.stackentry; }
         public virtual StackEntry Stackentry()
         {
             return this.stackentry;
         }
 
-        // Generic target for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:49-52
+        // Original: @Override public void stackentry(StackEntry stackentry) { this.stackentry = stackentry; }
         public virtual void Stackentry(StackEntry stackentry)
         {
             this.stackentry = stackentry;
         }
 
-        // Generic target for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:54-67
+        // Original: @Override public void close() { ... }
         public override void Close()
         {
             base.Close();

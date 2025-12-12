@@ -1,7 +1,6 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
@@ -9,152 +8,73 @@ using ScriptNodeNS = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:10-12
+    // Original: public class AModifyExp extends ScriptNode implements AExpression { private AVarRef varref; private AExpression exp; }
     public class AModifyExp : ScriptNode, AExpression
     {
         private ScriptNodeNS.AVarRef varref;
-        private AExpression target; // Generic target expression for edge cases
-        // Generic target expression for edge cases
         private AExpression exp;
-        // Generic target expression for edge cases
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:14-17
+        // Original: public AModifyExp(AVarRef varref, AExpression exp) { this.varRef(varref); this.expression(exp); }
         public AModifyExp(ScriptNodeNS.AVarRef varref, AExpression exp)
         {
             this.VarRef(varref);
             this.Expression(exp);
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
-        public AModifyExp(AExpression target, AExpression exp)
-        {
-            if (target is ScriptNodeNS.AVarRef)
-            {
-                this.VarRef((ScriptNodeNS.AVarRef)target);
-            }
-            else
-            {
-                this.target = target;
-                if (target != null)
-                {
-                    ((ScriptNode)target).Parent(this);
-                }
-            }
-
-            this.Expression(exp);
-        }
-
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:19-22
+        // Original: protected void varRef(AVarRef varref) { this.varref = varref; varref.parent(this); }
         protected virtual void VarRef(ScriptNodeNS.AVarRef varref)
         {
             this.varref = varref;
-            if (varref != null)
-            {
-                ((AExpression)varref).Parent(this);
-            }
+            varref.Parent(this);
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:24-27
+        // Original: protected void expression(AExpression exp) { this.exp = exp; exp.parent(this); }
         protected virtual void Expression(AExpression exp)
         {
-            (this.exp = exp).Parent(this);
+            this.exp = exp;
+            exp.Parent(this);
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:29-31
+        // Original: public AExpression expression() { return this.exp; }
         public virtual AExpression Expression()
         {
             return this.exp;
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:33-35
+        // Original: public AVarRef varRef() { return this.varref; }
         public virtual ScriptNodeNS.AVarRef VarRef()
         {
             return this.varref;
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:37-40
+        // Original: @Override public String toString() { return ExpressionFormatter.format(this); }
         public override string ToString()
         {
-            // Check for compound assignments: x = x + 5 -> x += 5
-            // Use reflection to access private fields since ABinaryExp doesn't expose Left/Right/GetOp
-            if (this.varref != null && this.exp is ABinaryExp binaryExp)
-            {
-                System.Reflection.FieldInfo leftField = typeof(ABinaryExp).GetField("left", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                System.Reflection.FieldInfo rightField = typeof(ABinaryExp).GetField("right", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                System.Reflection.FieldInfo opField = typeof(ABinaryExp).GetField("op", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-                if (leftField != null && rightField != null && opField != null)
-                {
-                    AExpression left = (AExpression)leftField.GetValue(binaryExp);
-                    AExpression right = (AExpression)rightField.GetValue(binaryExp);
-                    string op = (string)opField.GetValue(binaryExp);
-
-                    if (left is ScriptNodeNS.AVarRef leftVarRef &&
-                        leftVarRef.Var() == this.varref.Var())
-                    {
-                        string compoundOp = GetCompoundOperator(op);
-                        if (compoundOp != null)
-                        {
-                            return this.varref.ToString() + " " + compoundOp + " " + right.ToString();
-                        }
-                    }
-                }
-            }
-
-            if (this.varref != null)
-            {
-                return this.varref.ToString() + " = " + this.exp.ToString();
-            }
-            else if (this.target != null)
-            {
-                return this.target.ToString() + " = " + this.exp.ToString();
-            }
-
-            return "/* unknown target */ = " + this.exp.ToString();
+            return ExpressionFormatter.Format(this);
         }
 
-        private string GetCompoundOperator(string op)
-        {
-            switch (op)
-            {
-                case "+": return "+=";
-                case "-": return "-=";
-                case "*": return "*=";
-                case "/": return "/=";
-                case "%": return "%=";
-                case "<<": return "<<=";
-                case ">>": return ">>=";
-                case ">>>": return ">>>=";
-                case "&": return "&=";
-                case "|": return "|=";
-                case "^": return "^=";
-                default: return null;
-            }
-        }
-
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:42-45
+        // Original: @Override public StackEntry stackentry() { return this.varref.var(); }
         public virtual StackEntry Stackentry()
         {
-            if (this.varref != null)
-            {
-                return this.varref.Var();
-            }
-
-            return null;
+            return this.varref.Var();
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:47-50
+        // Original: @Override public void stackentry(StackEntry stackentry) { }
         public virtual void Stackentry(StackEntry stackentry)
         {
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java
-        // Original: @Override public void close()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:52-64
+        // Original: @Override public void close() { ... }
         public override void Close()
         {
             base.Close();
@@ -164,9 +84,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             }
 
             this.exp = null;
-            if (this.varref != null && this.varref is IDisposable disposableVarRef)
+            if (this.varref != null)
             {
-                disposableVarRef.Dispose();
+                this.varref.Close();
             }
 
             this.varref = null;
