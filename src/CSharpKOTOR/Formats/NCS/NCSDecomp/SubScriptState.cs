@@ -333,9 +333,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private bool RemovingSwitchVar(List<object> vars, Node node)
         {
-            if (vars.Count == 1 && this.current.HasChildren() && typeof(Scriptnode.ASwitch).IsInstanceOfType(this.current.GetLastChild()))
+            if (vars.Count == 1 && this.current.HasChildren() && typeof(ScriptNode.ASwitch).IsInstanceOfType(this.current.GetLastChild()))
             {
-                AExpression exp = ((Scriptnode.ASwitch)this.current.GetLastChild()).GetSwitchExp();
+                AExpression exp = ((ScriptNode.ASwitch)this.current.GetLastChild()).GetSwitchExp();
                 return typeof(ScriptNode.AVarRef).IsInstanceOfType(exp) && ((ScriptNode.AVarRef)exp).Var().Equals(vars[0]);
             }
 
@@ -452,15 +452,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     // When preferSwitches is enabled, be more aggressive about creating switches
                     // Check if we can add to an existing switch or create a new one
                     bool canCreateSwitch = typeof(AConst).IsInstanceOfType(cond.Right());
-                    Scriptnode.ASwitch existingSwitch = null;
+                    ScriptNode.ASwitch existingSwitch = null;
 
                     // Check if we can continue an existing switch when preferSwitches is enabled
                     if (this.preferSwitches && this.current.HasChildren())
                     {
                         Scriptnode.ScriptNode last = this.current.GetLastChild();
-                        if (typeof(Scriptnode.ASwitch).IsInstanceOfType(last))
+                        if (typeof(ScriptNode.ASwitch).IsInstanceOfType(last))
                         {
-                            existingSwitch = (Scriptnode.ASwitch)last;
+                            existingSwitch = (ScriptNode.ASwitch)last;
                             // Verify the switch expression matches
                             AExpression switchExp = existingSwitch.GetSwitchExp();
                             if (typeof(AVarRef).IsInstanceOfType(cond.Left()) && typeof(AVarRef).IsInstanceOfType(switchExp)
@@ -483,7 +483,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                     if (canCreateSwitch)
                     {
-                        Scriptnode.ASwitch aswitch = null;
+                                ScriptNode.ASwitch aswitch = null;
                         ASwitchCase acase = new ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
                         if (this.current.HasChildren())
                         {
@@ -494,7 +494,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 Scriptnode.AExpression exp = this.RemoveLastExp(false);
                                 if (exp is AVarRef varref)
                                 {
-                                    aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), varref);
+                                    aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), varref);
                                 }
                                 else
                                 {
