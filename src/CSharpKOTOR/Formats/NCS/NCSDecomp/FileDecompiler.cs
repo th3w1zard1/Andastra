@@ -897,7 +897,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     {
                         cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
                         cleanpass.Apply();
-                        data.SetGlobals(doglobs.GetState());
+                        var globalsState = doglobs.GetState();
+                        JavaSystem.@out.Println($"DEBUG FileDecompiler: setting globals, state is {(globalsState != null ? "non-null" : "null")}");
+                        data.SetGlobals(globalsState);
                         doglobs.Done();
                         cleanpass.Done();
                     }
@@ -922,6 +924,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     // Fallback: if doglobs is null but globals were processed, try to get state from subdata
                     SubScriptState globalState = subdata.GlobalState();
+                    JavaSystem.@out.Println($"DEBUG FileDecompiler: doglobs is null, fallback globalState is {(globalState != null ? "non-null" : "null")}");
                     if (globalState != null)
                     {
                         try

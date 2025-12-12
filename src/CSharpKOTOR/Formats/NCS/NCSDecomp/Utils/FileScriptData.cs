@@ -162,7 +162,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 string globs = "";
                 if (globals != null)
                 {
-                    globs = "// Globals" + newline + globals.ToStringGlobals() + newline;
+                    try
+                    {
+                        string globalsStr = globals.ToStringGlobals();
+                        JavaSystem.@out.Println($"DEBUG GenerateCode: globals is non-null, ToStringGlobals() returned length {globalsStr?.Length ?? 0}");
+                        globs = "// Globals" + newline + globalsStr + newline;
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println($"DEBUG GenerateCode: error calling ToStringGlobals(): {e.Message}");
+                        globs = "// Error: Could not decompile globals" + newline;
+                    }
+                }
+                else
+                {
+                    JavaSystem.@out.Println("DEBUG GenerateCode: globals is null");
                 }
                 string protohdr = "";
                 if (protobuff.Count > 0)
