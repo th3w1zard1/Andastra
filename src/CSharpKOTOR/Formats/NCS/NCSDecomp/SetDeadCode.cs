@@ -156,22 +156,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.RemoveDestination(origin, destination, this.origins);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:145-153
+        // Original: private void removeDestination(Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
         private void RemoveDestination(Node origin, Node destination, Dictionary<object, object> hash)
         {
-            object originListObj = hash[destination];
+            object originListObj = hash.ContainsKey(destination) ? hash[destination] : null;
             List<object> originList = originListObj as List<object>;
-            if (originList == null)
+            if (originList != null)
             {
-                return;
+                originList.Remove(origin);
+                if (originList.Count == 0)
+                {
+                    hash.Remove(destination);
+                }
             }
-
-            originList.Remove(origin);
-            if (originList == null || originList.Count == 0)
-            {
-                hash.Remove(destination);
-            }
-
-            originList = null;
         }
 
         private void TransferDestination(Node origin, Node destination)
