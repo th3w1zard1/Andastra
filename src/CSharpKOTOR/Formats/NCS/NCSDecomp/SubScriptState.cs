@@ -9,6 +9,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using AVarRef = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
+using AConst = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AConst;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
