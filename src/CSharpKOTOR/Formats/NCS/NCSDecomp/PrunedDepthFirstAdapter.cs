@@ -509,6 +509,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutABpCmd(node);
         }
 
+        // Handle AST.ABpCmd as well (from NcsToAstConverter)
+        public virtual void CaseABpCmd(AST.ABpCmd node)
+        {
+            // Treat AST.ABpCmd the same as root namespace ABpCmd
+            this.DefaultIn(node);
+            if (node.GetBpCommand() != null)
+            {
+                node.GetBpCommand().Apply(this);
+            }
+
+            this.DefaultOut(node);
+        }
+
         public virtual void InAActionCmd(AActionCmd node)
         {
             this.DefaultIn(node);
@@ -879,6 +892,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             this.InABpCommand(node);
             this.OutABpCommand(node);
+        }
+
+        // Handle AST.ABpCommand as well (from NcsToAstConverter)
+        public virtual void CaseABpCommand(AST.ABpCommand node)
+        {
+            // Treat AST.ABpCommand the same as root namespace ABpCommand
+            this.DefaultIn(node);
+            this.DefaultOut(node);
         }
 
         public virtual void InAStoreStateCommand(AStoreStateCommand node)
