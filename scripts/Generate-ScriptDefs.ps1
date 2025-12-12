@@ -180,17 +180,20 @@ function Parse-NssFunction {
             }
 
             foreach ($paramPart in $paramParts) {
-                # Pattern: type name [= default]
-                if ($paramPart -match '^\s*(\w+)\s+(\w+)\s*(?:=\s*(.+))?\s*$') {
-                    $paramType = $Matches[1]
-                    $paramName = $Matches[2]
-                    $paramDefault = if ($Matches[3]) { $Matches[3].Trim() } else { $null }
+                try {
+                    # Pattern: type name [= default]
+                    # Handle defaults that might contain brackets (vectors) or other complex expressions
+                    if ($paramPart -match '^\s*(\w+)\s+(\w+)(?:\s*=\s*(.+))?\s*$') {
+                        $paramType = $Matches[1]
+                        $paramName = $Matches[2]
+                        $paramDefault = if ($Matches[3]) { $Matches[3].Trim() } else { $null }
 
-                    $paramDataType = Get-DataType -TypeName $paramType
-                    if (-not $paramDataType) {
-                        # Unknown parameter type, skip this param (function will be incomplete)
-                        continue
-                    }
+                        $paramDataType = Get-DataType -TypeName $paramType
+                        if (-not $paramDataType) {
+                            # Unknown parameter type, skip this param (function will be incomplete)
+                            Write-Warning "Unknown parameter type '$paramType' in function parameter '$paramPart'"
+                            continue
+                        }
 
                     # Format default value
                     $formattedDefault = if ($paramDefault) {
@@ -249,11 +252,20 @@ function Parse-NssFunction {
                         'null'
                     }
 
-                    $params += @{
-                        Type    = $paramDataType
-                        Name    = $paramName
-                        Default = $formattedDefault
+                        $params += @{
+                            Type    = $paramDataType
+                            Name    = $paramName
+                            Default = $formattedDefault
+                        }
                     }
+                    else {
+                        # Parameter doesn't match pattern - might be malformed, but continue
+                        Write-Warning "Parameter doesn't match expected pattern: '$paramPart'"
+                    }
+                }
+                catch {
+                    # Error parsing parameter - skip it but continue with function
+                    Write-Warning "Error parsing parameter '$paramPart': $($_.Exception.Message)"
                 }
             }
         }
