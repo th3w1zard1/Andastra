@@ -16,19 +16,39 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     {
         private static readonly string ConfigFileName = "NCSDecomp.conf";
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Settings.java:377-412
+        // Original: public void load() { ... }
         public new void Load()
         {
+            string configToLoad = ConfigFileName;
+            if (!System.IO.File.Exists(configToLoad))
+            {
+                string legacyConfigFile = "dencs.conf";
+                if (System.IO.File.Exists(legacyConfigFile))
+                {
+                    configToLoad = legacyConfigFile;
+                }
+            }
+
             try
             {
-                if (System.IO.File.Exists(ConfigFileName))
+                if (System.IO.File.Exists(configToLoad))
                 {
-                    using (var fis = new FileInputStream(ConfigFileName))
+                    using (var fis = new FileInputStream(configToLoad))
                     {
                         base.Load(fis);
                     }
                 }
                 else
                 {
+                    try
+                    {
+                        System.IO.File.Create(ConfigFileName).Close();
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore
+                    }
                     Reset();
                     Save();
                 }
@@ -36,9 +56,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             catch (Exception ex)
             {
                 ex.PrintStackTrace();
+                try
+                {
+                    System.IO.File.Create(ConfigFileName).Close();
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
                 Reset();
                 Save();
             }
+
+            // Apply loaded settings to static flags (matching Java Settings.load() lines 405-411)
+            string gameVariant = GetProperty("Game Variant", "k1").ToLower();
+            FileDecompiler.isK2Selected = gameVariant.Equals("k2") || gameVariant.Equals("tsl") || gameVariant.Equals("2");
+            FileDecompiler.preferSwitches = bool.Parse(GetProperty("Prefer Switches", "false"));
+            FileDecompiler.strictSignatures = bool.Parse(GetProperty("Strict Signatures", "false"));
+            string nwnnsscompPath = GetProperty("nwnnsscomp Path", "");
+            FileDecompiler.nwnnsscompPath = string.IsNullOrEmpty(nwnnsscompPath) ? null : nwnnsscompPath;
         }
 
         public new void Save()
@@ -56,14 +92,30 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Settings.java:430-450
+        // Original: public void reset() { ... }
         public new void Reset()
         {
             base.Reset();
-            SetProperty("Output Directory", JavaSystem.GetProperty("user.dir"));
+            // Default output directory: ./ncsdecomp_converted relative to current working directory
+            string defaultOutputDir = Path.Combine(JavaSystem.GetProperty("user.dir"), "ncsdecomp_converted");
+            SetProperty("Output Directory", defaultOutputDir);
             SetProperty("Open Directory", JavaSystem.GetProperty("user.dir"));
+            string defaultNwnnsscompPath = Path.Combine(Path.Combine(JavaSystem.GetProperty("user.dir"), "tools"), "nwnnsscomp.exe");
+            SetProperty("nwnnsscomp Path", defaultNwnnsscompPath);
+            string defaultK1Path = Path.Combine(Path.Combine(JavaSystem.GetProperty("user.dir"), "tools"), "k1_nwscript.nss");
+            string defaultK2Path = Path.Combine(Path.Combine(JavaSystem.GetProperty("user.dir"), "tools"), "tsl_nwscript.nss");
+            SetProperty("K1 nwscript Path", defaultK1Path);
+            SetProperty("K2 nwscript Path", defaultK2Path);
+            SetProperty("Game Variant", "k1");
+            SetProperty("Prefer Switches", "false");
+            SetProperty("Strict Signatures", "false");
+            SetProperty("Overwrite Files", "false");
+            SetProperty("Encoding", "Windows-1252");
+            SetProperty("File Extension", ".nss");
+            SetProperty("Filename Prefix", "");
+            SetProperty("Filename Suffix", "");
             SetProperty("Link Scroll Bars", "false");
-            SetProperty("NWScript Path", ""); // Empty = auto-detect
-            SetProperty("Game Type", "K1"); // K1 or TSL
         }
 
         /// <summary>
