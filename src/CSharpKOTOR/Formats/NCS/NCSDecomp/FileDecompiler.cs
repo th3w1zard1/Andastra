@@ -11,6 +11,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.NCS;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using File = System.IO.FileInfo;
@@ -1676,7 +1677,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                                 // If we found some structure, try to continue with minimal setup
                                 if (subCount2 > 0)
                                 {
-                                    JavaSystem.@out.Println("Detected " + subCount + " potential subroutines in decoded commands, but full parse failed.");
+                                    JavaSystem.@out.Println("Detected " + subCount2 + " potential subroutines in decoded commands, but full parse failed.");
                                     // We'll fall through to create a stub, but with better information
                                 }
                             }

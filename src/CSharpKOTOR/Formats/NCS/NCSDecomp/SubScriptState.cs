@@ -490,8 +490,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                             if (typeof(AVarRef).IsInstanceOfType(last) && typeof(AVarRef).IsInstanceOfType(cond.Left())
                                 && ((AVarRef)last).Var().Equals(((AVarRef)cond.Left()).Var()))
                             {
-                                AVarRef varref = (AVarRef)this.RemoveLastExp(false);
-                                aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), varref);
+                                Scriptnode.AExpression exp = this.RemoveLastExp(false);
+                                if (exp is AVarRef varref)
+                                {
+                                    aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), varref);
+                                }
+                                else
+                                {
+                                    aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), cond.Left());
+                                }
                             }
                         }
 
