@@ -423,7 +423,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             // nwnnsscomp is optional - decompilation should work without it
             try
             {
-                return this.CompileAndCompare(file, data.GetCode(), data);
+            return this.CompileAndCompare(file, data.GetCode(), data);
             }
             catch (Exception e)
             {
@@ -869,23 +869,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 string outname = this.GetShortName(inFile) + ".pcode";
-                File result = new File(outname);
+                File result = new File(outname).GetAbsoluteFile();
                 if (result.Exists())
                 {
                     result.Delete();
                 }
 
-                // Note: NwnnsscompConfig would be used here in Java version
-                // For C# version, we'll use a simplified approach
-                // TODO: Implement NwnnsscompConfig equivalent if needed
-                string[] args = new string[] {
-                    compiler.GetAbsolutePath(),
-                    "-d",
-                    inFile.GetAbsolutePath(),
-                    outname
-                };
+                // Use compiler detection to get correct command-line arguments
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:893
+                // Original: NwnnsscompConfig config = new NwnnsscompConfig(compiler, in, result, k2);
+                NwnnsscompConfig config = new NwnnsscompConfig(compiler, inFile, result, k2);
+                string[] args = config.GetDecompileArgs(compiler.GetAbsolutePath());
 
-                JavaSystem.@out.Println("[NCSDecomp] Using compiler: " + compiler.Name);
+                JavaSystem.@out.Println("[NCSDecomp] Using compiler: " + config.GetChosenCompiler().Name +
+                    " (SHA256: " + config.GetSha256Hash().Substring(0, Math.Min(16, config.GetSha256Hash().Length)) + "...)");
                 JavaSystem.@out.Println("[NCSDecomp] Input file: " + inFile.GetAbsolutePath());
                 JavaSystem.@out.Println("[NCSDecomp] Expected output: " + result.GetAbsolutePath());
 
@@ -955,12 +952,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 string outname = this.GetShortName(file) + ".ncs";
-                File result = new File(outname);
+                File result = new File(outname).GetAbsoluteFile();
 
                 // Ensure nwscript.nss is in the compiler's directory (like test does)
-                if (compiler.Directory != null)
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:960-975
+                File compilerDir = compiler.Directory;
+                if (compilerDir != null)
                 {
-                    File compilerNwscript = new File(Path.Combine(compiler.Directory.FullName, "nwscript.nss"));
+                    File compilerNwscript = new File(Path.Combine(compilerDir.FullName, "nwscript.nss"));
                     string userDir = JavaSystem.GetProperty("user.dir");
                     File nwscriptSource = k2
                         ? new File(Path.Combine(userDir, "tools", "tsl_nwscript.nss"))
@@ -979,15 +978,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     }
                 }
 
-                // Note: NwnnsscompConfig would be used here in Java version
-                // For C# version, we'll use a simplified approach
-                string[] args = new string[] {
-                    compiler.GetAbsolutePath(),
-                    file.GetAbsolutePath(),
-                    outname
-                };
+                // Use compiler detection to get correct command-line arguments
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:978-983
+                // Original: NwnnsscompConfig config = new NwnnsscompConfig(compiler, file, result, k2);
+                // Original: String[] args = config.getCompileArgs(compiler.getAbsolutePath());
+                NwnnsscompConfig config = new NwnnsscompConfig(compiler, file, result, k2);
+                // For GUI compilation, match test behavior: don't use -i flags
+                // Test shows compilers work without -i when includes are in source directory or compiler directory
+                string[] args = config.GetCompileArgs(compiler.GetAbsolutePath());
 
-                JavaSystem.@out.Println("[NCSDecomp] Using compiler: " + compiler.Name);
+                JavaSystem.@out.Println("[NCSDecomp] Using compiler: " + config.GetChosenCompiler().Name +
+                    " (SHA256: " + config.GetSha256Hash().Substring(0, Math.Min(16, config.GetSha256Hash().Length)) + "...)");
                 JavaSystem.@out.Println("[NCSDecomp] Input file: " + file.GetAbsolutePath());
                 JavaSystem.@out.Println("[NCSDecomp] Expected output: " + result.GetAbsolutePath());
 
@@ -2661,12 +2662,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     {
                         mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
                         iterSub.Apply(mainpass);
-                        cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
-                        cleanpass.Apply();
-                        data.AddSub(mainpass.GetState());
+                    cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
+                    cleanpass.Apply();
+                    data.AddSub(mainpass.GetState());
                         JavaSystem.@err.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
-                        mainpass.Done();
-                        cleanpass.Done();
+                    mainpass.Done();
+                    cleanpass.Done();
                     }
                     catch (Exception e)
                     {
@@ -3046,8 +3047,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 if (this.globals != null)
                 {
                     try
-                    {
-                        globs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
+                {
+                    globs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
                     }
                     catch (Exception e)
                     {
