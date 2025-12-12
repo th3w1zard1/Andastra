@@ -63,9 +63,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         Scriptnode.ScriptNode AExpression.Parent() => (Scriptnode.ScriptNode)(object)base.Parent();
         void AExpression.Parent(Scriptnode.ScriptNode p0) => base.SetParent((ScriptNode)(object)p0);
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:35
+        // Original: return ExpressionFormatter.format(this);
         public override string ToString()
         {
-            return "(" + _op + (_exp != null ? _exp.ToString() : "") + ")";
+            return ExpressionFormatter.Format(this);
         }
 
         public override void Close()

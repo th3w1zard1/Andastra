@@ -42,13 +42,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _returnExp = returnExp;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AReturnStatement.java:31
+        // Original: : this.tabs + "return " + ExpressionFormatter.formatValue(this.returnexp) + ";" + this.newline;
         public override string ToString()
         {
             if (_returnExp == null)
             {
                 return GetTabs() + "return;" + GetNewline();
             }
-            return GetTabs() + "return " + _returnExp.ToString() + ";" + GetNewline();
+            return GetTabs() + "return " + ExpressionFormatter.FormatValue(_returnExp) + ";" + GetNewline();
         }
 
         public override void Close()
