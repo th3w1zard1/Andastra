@@ -178,9 +178,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.AddDestination(origin, destination, this.deadorigins);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:160-168
+        // Original: private void addDestination(Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
         private void AddDestination(Node origin, Node destination, Dictionary<object, object> hash)
         {
-            object originsListObj = hash[destination];
+            object originsListObj = hash.ContainsKey(destination) ? hash[destination] : null;
             List<object> originsList = originsListObj as List<object>;
             if (originsList == null)
             {
@@ -189,7 +191,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             originsList.Add(origin);
-            originsList = null;
         }
     }
 }
