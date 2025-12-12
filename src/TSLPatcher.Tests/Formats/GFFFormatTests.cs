@@ -60,8 +60,8 @@ namespace CSharpKOTOR.Tests.Formats
             locstring.Get(Language.German, Gender.Female).Should().Be("fem_german");
 
             gff.Root.GetStruct("child_struct").GetUInt8("child_uint8").Should().Be(4);
-            gff.Root.GetList("list").At(0)!.StructId.Should().Be(1);
-            gff.Root.GetList("list").At(1)!.StructId.Should().Be(2);
+            gff.Root.GetList("list").At(0).StructId.Should().Be(1);
+            gff.Root.GetList("list").At(1).StructId.Should().Be(2);
         }
 
         [Fact]

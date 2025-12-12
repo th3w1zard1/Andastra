@@ -117,7 +117,7 @@ namespace CSharpKOTOR.Tests.Uninstall
 
             // Assert
             result.Should().NotBeNull();
-            result!.Name.Should().Be("2024-01-16_10.20.30");
+            result.Name.Should().Be("2024-01-16_10.20.30");
         }
 
         [Fact]

@@ -11,7 +11,7 @@ using JetBrains.Annotations;
 namespace CSharpKOTOR.Formats.NCS
 {
     /// <summary>
-    /// NCS to NSS decompiler based on KNCSDecomp implementation.
+    /// NCS to NSS decompiler based on NCSDecomp implementation.
     ///
     /// This module provides comprehensive decompilation of NCS bytecode back to NSS source code,
     /// handling all instruction types, control flow, expressions, and data structures.
@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Formats.NCS
     /// ----------
     ///     vendor/xoreos-tools/src/nwscript/decompiler.cpp (NCS decompilation algorithm)
     ///     vendor/xoreos-docs/specs/torlack/ncs.html (NCS format specification)
-    ///     KNCSDecomp - Original NCS decompiler implementation
+    ///     NCSDecomp - Original NCS decompiler implementation
     /// </summary>
 
     /// <summary>
@@ -197,7 +197,7 @@ namespace CSharpKOTOR.Formats.NCS
     /// <summary>
     /// Decompiles NCS bytecode to NSS source code.
     ///
-    /// Based on KNCSDecomp implementation, this decompiler reconstructs NSS source
+    /// Based on NCSDecomp implementation, this decompiler reconstructs NSS source
     /// from NCS bytecode using control flow analysis and expression reconstruction.
     /// </summary>
     public class NCSDecompiler
@@ -284,7 +284,7 @@ namespace CSharpKOTOR.Formats.NCS
         /// ------
         ///     DecompileError: If decompilation fails
         /// </summary>
-        public string DecompileKNCSDecomp()
+        public string DecompileNCSDecomp()
         {
             try
             {

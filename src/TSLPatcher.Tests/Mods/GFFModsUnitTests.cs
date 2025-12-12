@@ -254,7 +254,7 @@ namespace CSharpKOTOR.Tests.Mods
             GFFList patchedList = patchedGff.Root.GetList("List");
             GFFStruct patchedStruct = patchedList.At(0);
             patchedStruct.Should().NotBeNull();
-            patchedStruct!.GetValue("String").Should().Be("abc");
+            patchedStruct.GetValue("String").Should().Be("abc");
         }
 
         [Fact]

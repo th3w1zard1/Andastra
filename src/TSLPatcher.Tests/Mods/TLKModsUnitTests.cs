@@ -25,15 +25,17 @@ namespace CSharpKOTOR.Tests.Mods
             config.Modifiers.Add(m1);
             config.Modifiers.Add(m2);
 
-            var dialogTlk = new TLK();
-            dialogTlk.Add("Old1");
-            dialogTlk.Add("Old2");
+            var dialogTlk = new TLK
+            {
+                "Old1",
+                "Old2",
+            };
 
             config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
 
             dialogTlk.Count.Should().Be(4);
-            dialogTlk.Get(2)!.Text.Should().Be("Append2");
-            dialogTlk.Get(3)!.Text.Should().Be("Append1");
+            dialogTlk.Get(2).Text.Should().Be("Append2");
+            dialogTlk.Get(3).Text.Should().Be("Append1");
 
             memory.MemoryStr[0].Should().Be(2);
             memory.MemoryStr[1].Should().Be(3);
@@ -59,8 +61,8 @@ namespace CSharpKOTOR.Tests.Mods
             config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
 
             dialogTlk.Count.Should().Be(4);
-            dialogTlk.Get(1)!.Text.Should().Be("Replace2");
-            dialogTlk.Get(2)!.Text.Should().Be("Replace3");
+            dialogTlk.Get(1).Text.Should().Be("Replace2");
+            dialogTlk.Get(2).Text.Should().Be("Replace3");
 
             // Replace operations do NOT store memory (Python line 146: dialog.replace only, no memory assignment)
             memory.MemoryStr.Should().NotContainKey(1);
@@ -106,7 +108,7 @@ namespace CSharpKOTOR.Tests.Mods
 
             TLKEntry entry = dialogTlk.Get(0);
             entry.Should().NotBeNull();
-            entry!.Voiceover.ToString().Should().Be("testsound");
+            entry.Voiceover.ToString().Should().Be("testsound");
         }
 
 
@@ -129,9 +131,9 @@ namespace CSharpKOTOR.Tests.Mods
             config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
 
             dialogTlk.Count.Should().Be(3);
-            dialogTlk.Get(0)!.Text.Should().Be("Replace0");
-            dialogTlk.Get(1)!.Text.Should().Be("Append1");
-            dialogTlk.Get(2)!.Text.Should().Be("Append2");
+            dialogTlk.Get(0).Text.Should().Be("Replace0");
+            dialogTlk.Get(1).Text.Should().Be("Append1");
+            dialogTlk.Get(2).Text.Should().Be("Append2");
 
             memory.MemoryStr[0].Should().Be(1);
             memory.MemoryStr[1].Should().Be(2);
@@ -150,7 +152,7 @@ namespace CSharpKOTOR.Tests.Mods
             config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
 
             dialogTlk.Count.Should().Be(1);
-            dialogTlk.Get(0)!.Text.Should().Be("First");
+            dialogTlk.Get(0).Text.Should().Be("First");
             memory.MemoryStr[0].Should().Be(0);
         }
     }

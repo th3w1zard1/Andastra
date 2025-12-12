@@ -387,7 +387,7 @@ Label=TestStruct
 
             GFFStruct struct1 = patchedGff.Root.GetStruct("TestStruct");
             struct1.Should().NotBeNull();
-            struct1!.StructId.Should().Be(0);
+            struct1.StructId.Should().Be(0);
         }
 
         [Fact]

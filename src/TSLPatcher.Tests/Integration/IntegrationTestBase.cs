@@ -12,8 +12,6 @@ using CSharpKOTOR.Reader;
 using IniParser.Model;
 using IniParser.Parser;
 
-#nullable enable
-
 namespace CSharpKOTOR.Tests.Integration
 {
 
@@ -62,7 +60,7 @@ namespace CSharpKOTOR.Tests.Integration
         /// <summary>
         /// Sets up an INI configuration and parses it into a PatcherConfig.
         /// </summary>
-        protected PatcherConfig SetupIniAndConfig(string iniText, string? modPath = null)
+        protected PatcherConfig SetupIniAndConfig(string iniText, string modPath = null)
         {
             // Use unified INI parser (case-sensitive for changes.ini files)
             IniData ini = CSharpKOTOR.Reader.ConfigReader.ParseIniText(iniText, caseInsensitive: false);

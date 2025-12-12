@@ -70,7 +70,7 @@ col_rowcell=other_column
 
             var addRow = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddRow2DA;
             addRow.Should().NotBeNull();
-            addRow!.Cells.Should().HaveCount(7);
+            addRow.Cells.Should().HaveCount(7);
 
             addRow.Cells["col_constant"].Should().BeOfType<RowValueConstant>();
             addRow.Cells["col_tlk"].Should().BeOfType<RowValueTLKMemory>();
@@ -108,13 +108,13 @@ col_b=High()
             var copyRow = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as CopyRow2DA;
             copyRow.Should().NotBeNull();
 
-            var highA = copyRow!.Cells["col_a"] as RowValueHigh;
+            var highA = copyRow.Cells["col_a"] as RowValueHigh;
             highA.Should().NotBeNull();
-            highA!.Column.Should().Be("col_a");
+            highA.Column.Should().Be("col_a");
 
             var highB = copyRow.Cells["col_b"] as RowValueHigh;
             highB.Should().NotBeNull();
-            highB!.Column.Should().Be("col_b");
+            highB.Column.Should().Be("col_b");
         }
 
         [Fact]
@@ -189,7 +189,7 @@ col1=value
 
             var change = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as ChangeRow2DA;
             change.Should().NotBeNull();
-            change!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+            change.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
         }
 
         [Fact]
@@ -217,7 +217,7 @@ RowLabel(label_test)=labeled_value
 
             var addColumn = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             addColumn.Should().NotBeNull();
-            addColumn!.Header.Should().Be("NewCol");
+            addColumn.Header.Should().Be("NewCol");
             addColumn.Default.Should().Be("default_value");
         }
 
@@ -246,7 +246,7 @@ col1=value
 
             var change = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as ChangeRow2DA;
             change.Should().NotBeNull();
-            change!.Store2DA.Should().HaveCount(3);
+            change.Store2DA.Should().HaveCount(3);
             change.Store2DA.Keys.Should().Contain(0);
             change.Store2DA.Keys.Should().Contain(1);
             change.Store2DA.Keys.Should().Contain(2);
@@ -282,11 +282,11 @@ unique_id=200
 
             var add = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddRow2DA;
             add.Should().NotBeNull();
-            add!.ExclusiveColumn.Should().Be("unique_id");
+            add.ExclusiveColumn.Should().Be("unique_id");
 
             var copy = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[1] as CopyRow2DA;
             copy.Should().NotBeNull();
-            copy!.ExclusiveColumn.Should().Be("unique_id");
+            copy.ExclusiveColumn.Should().Be("unique_id");
         }
 
         [Fact]
@@ -311,7 +311,7 @@ col1=value
 
             var change = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as ChangeRow2DA;
             change.Should().NotBeNull();
-            change!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
+            change.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
             // Python: assert mod_2da_2.target.value == "3" - value is stored as string, not RowValueConstant
             change.Target.Value.Should().Be("5");
         }
@@ -340,15 +340,15 @@ col2=****
             var add = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddRow2DA;
             add.Should().NotBeNull();
 
-            var col1 = add!.Cells["col1"] as RowValueConstant;
+            var col1 = add.Cells["col1"] as RowValueConstant;
             col1.Should().NotBeNull();
-            col1!.String.Should().Be("");
+            col1.String.Should().Be("");
 
             var col2 = add.Cells["col2"] as RowValueConstant;
             col2.Should().NotBeNull();
             // Python: elif value == "****": row_value = RowValueConstant("")
             // "****" is converted to empty string in Python
-            col2!.String.Should().Be("");
+            col2.String.Should().Be("");
         }
 
         [Fact]

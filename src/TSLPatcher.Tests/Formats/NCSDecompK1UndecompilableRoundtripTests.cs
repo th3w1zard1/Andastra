@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.KNCSDecomp;
+using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using Xunit;
 using IOFile = System.IO.File;
-using JavaFile = CSharpKOTOR.Formats.NCS.KNCSDecomp.File;
+using JavaFile = CSharpKOTOR.Formats.NCS.NCSDecomp.File;
 
 namespace CSharpKOTOR.Tests.Formats
 {
@@ -19,14 +19,14 @@ namespace CSharpKOTOR.Tests.Formats
     /// decompile and recompile to byte-identical NCS.
     /// Ported from K1UndecompilableRoundtripTest.java
     /// </summary>
-    public class KNCSDecompK1UndecompilableRoundtripTests : IDisposable
+    public class NCSDecompK1UndecompilableRoundtripTests : IDisposable
     {
         private readonly string _tempDir;
         private readonly List<string> _tempFiles = new List<string>();
 
-        public KNCSDecompK1UndecompilableRoundtripTests()
+        public NCSDecompK1UndecompilableRoundtripTests()
         {
-            _tempDir = Path.Combine(Path.GetTempPath(), $"KNCSDecomp_test_{Guid.NewGuid()}");
+            _tempDir = Path.Combine(Path.GetTempPath(), $"NCSDecomp_test_{Guid.NewGuid()}");
             Directory.CreateDirectory(_tempDir);
         }
 
@@ -158,7 +158,7 @@ namespace CSharpKOTOR.Tests.Formats
                 string[] candidates = {
                     Path.Combine(dir.FullName, "vendor", "KotOR-Scripting-Tool", "NWN Script", "k1", "nwscript.nss"),
                     Path.Combine(dir.FullName, "vendor", "NorthernLights", "nwscript.nss"),
-                    Path.Combine(dir.FullName, "vendor", "PyKotor", "vendor", "KNCSDecomp", "nwscript.nss")
+                    Path.Combine(dir.FullName, "vendor", "PyKotor", "vendor", "NCSDecomp", "nwscript.nss")
                 };
 
                 foreach (string candidate in candidates)
@@ -185,7 +185,7 @@ namespace CSharpKOTOR.Tests.Formats
                 string[] candidates = {
                     Path.Combine(dir.FullName, "vendor", "KotOR-Scripting-Tool", "NWN Script", "k1", "nwnnsscomp.exe"),
                     Path.Combine(dir.FullName, "vendor", "NorthernLights", "nwnnsscomp", "nwnnsscomp.exe"),
-                    Path.Combine(dir.FullName, "vendor", "PyKotor", "vendor", "KNCSDecomp", "nwnnsscomp.exe")
+                    Path.Combine(dir.FullName, "vendor", "PyKotor", "vendor", "NCSDecomp", "nwnnsscomp.exe")
                 };
 
                 foreach (string candidate in candidates)
@@ -216,7 +216,7 @@ namespace CSharpKOTOR.Tests.Formats
             return null;
         }
 
-        private bool TestRoundtrip(CSharpKOTOR.Formats.NCS.KNCSDecomp.FileDecompiler decompiler, string originalNcsPath, string testId, string nwnnsscompPath)
+        private bool TestRoundtrip(CSharpKOTOR.Formats.NCS.NCSDecomp.FileDecompiler decompiler, string originalNcsPath, string testId, string nwnnsscompPath)
         {
             // Read original NCS bytes
             byte[] originalBytes = IOFile.ReadAllBytes(originalNcsPath);

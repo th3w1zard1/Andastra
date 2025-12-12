@@ -335,7 +335,7 @@ namespace CSharpKOTOR.Tests.Mods
 
             GFFList patchedList = patchedGff.Root.GetList("List");
             GFFStruct patchedStruct = patchedList.At(0);
-            patchedStruct!.GetValue("String").Should().Be("abc");
+            patchedStruct.GetValue("String").Should().Be("abc");
         }
 
         [Fact]
@@ -413,7 +413,7 @@ namespace CSharpKOTOR.Tests.Mods
 
             patchedGff.Root.GetList("List").Should().NotBeNull();
             patchedGff.Root.GetList("List").At(0).Should().NotBeNull();
-            patchedGff.Root.GetList("List").At(0)!.GetUInt8("SomeInteger").Should().Be(123);
+            patchedGff.Root.GetList("List").At(0).GetUInt8("SomeInteger").Should().Be(123);
         }
 
         [Fact]
@@ -445,7 +445,7 @@ namespace CSharpKOTOR.Tests.Mods
 
             GFFList patchedList = patchedGff.Root.GetList("List");
             GFFStruct patchedStruct = patchedList.At(0);
-            patchedStruct!.GetValue("String").Should().Be("abc");
+            patchedStruct.GetValue("String").Should().Be("abc");
         }
 
         [Fact]
@@ -546,9 +546,9 @@ namespace CSharpKOTOR.Tests.Mods
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             GFFList patchedList = patchedGff.Root.GetList("List");
-            patchedList.At(0)!.StructId.Should().Be(5);
-            patchedList.At(1)!.StructId.Should().Be(3);
-            patchedList.At(2)!.StructId.Should().Be(1);
+            patchedList.At(0).StructId.Should().Be(5);
+            patchedList.At(1).StructId.Should().Be(3);
+            patchedList.At(2).StructId.Should().Be(1);
         }
 
         [Fact]

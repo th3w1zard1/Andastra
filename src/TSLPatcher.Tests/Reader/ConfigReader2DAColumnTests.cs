@@ -75,12 +75,12 @@ DefaultValue=0
 
             var mod0 = modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
-            mod0!.Header.Should().Be("label");
+            mod0.Header.Should().Be("label");
             mod0.Default.Should().Be("");
 
             var mod1 = modifiers[1] as AddColumn2DA;
             mod1.Should().NotBeNull();
-            mod1!.Header.Should().Be("someint");
+            mod1.Header.Should().Be("someint");
             mod1.Default.Should().Be("0");
         }
 
@@ -110,20 +110,20 @@ I2=StrRef5
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
 
-            mod0!.IndexInsert.Should().ContainKey(0);
+            mod0.IndexInsert.Should().ContainKey(0);
             var value0 = mod0.IndexInsert[0] as RowValueConstant;
             value0.Should().NotBeNull();
-            value0!.Value(null, null, null).Should().Be("abc");
+            value0.Value(null, null, null).Should().Be("abc");
 
             mod0.IndexInsert.Should().ContainKey(1);
             var value1 = mod0.IndexInsert[1] as RowValue2DAMemory;
             value1.Should().NotBeNull();
-            value1!.TokenId.Should().Be(4);
+            value1.TokenId.Should().Be(4);
 
             mod0.IndexInsert.Should().ContainKey(2);
             var value2 = mod0.IndexInsert[2] as RowValueTLKMemory;
             value2.Should().NotBeNull();
-            value2!.TokenId.Should().Be(5);
+            value2.TokenId.Should().Be(5);
         }
 
         [Fact]
@@ -152,20 +152,20 @@ L2=StrRef5
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
 
-            mod0!.LabelInsert.Should().ContainKey("0");
+            mod0.LabelInsert.Should().ContainKey("0");
             var value0 = mod0.LabelInsert["0"] as RowValueConstant;
             value0.Should().NotBeNull();
-            value0!.Value(null, null, null).Should().Be("abc");
+            value0.Value(null, null, null).Should().Be("abc");
 
             mod0.LabelInsert.Should().ContainKey("1");
             var value1 = mod0.LabelInsert["1"] as RowValue2DAMemory;
             value1.Should().NotBeNull();
-            value1!.TokenId.Should().Be(4);
+            value1.TokenId.Should().Be(4);
 
             mod0.LabelInsert.Should().ContainKey("2");
             var value2 = mod0.LabelInsert["2"] as RowValueTLKMemory;
             value2.Should().NotBeNull();
-            value2!.TokenId.Should().Be(5);
+            value2.TokenId.Should().Be(5);
         }
 
         [Fact]
@@ -193,7 +193,7 @@ DefaultValue=****
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
 
-            mod0!.Store2DA.Should().HaveCount(2);
+            mod0.Store2DA.Should().HaveCount(2);
             mod0.Store2DA[0].Should().Be("I0");
             mod0.Store2DA[1].Should().Be("L0");
         }
@@ -227,7 +227,7 @@ L10=val10
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
 
-            mod0!.Header.Should().Be("TestColumn");
+            mod0.Header.Should().Be("TestColumn");
             mod0.Default.Should().Be("def");
             mod0.IndexInsert.Should().HaveCount(2);
             mod0.LabelInsert.Should().HaveCount(2);
@@ -256,7 +256,7 @@ DefaultValue=
 
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
-            mod0!.Default.Should().Be("");
+            mod0.Default.Should().Be("");
         }
 
         [Fact]
@@ -281,7 +281,7 @@ DefaultValue=****
 
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
-            mod0!.Default.Should().Be("");
+            mod0.Default.Should().Be("");
         }
 
         [Fact]
@@ -309,16 +309,16 @@ L5=labelValue
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
 
-            mod0!.IndexInsert.Should().ContainKey(5);
+            mod0.IndexInsert.Should().ContainKey(5);
             mod0.LabelInsert.Should().ContainKey("5");
 
             var indexVal = mod0.IndexInsert[5] as RowValueConstant;
             indexVal.Should().NotBeNull();
-            indexVal!.String.Should().Be("indexValue");
+            indexVal.String.Should().Be("indexValue");
 
             var labelVal = mod0.LabelInsert["5"] as RowValueConstant;
             labelVal.Should().NotBeNull();
-            labelVal!.String.Should().Be("labelValue");
+            labelVal.String.Should().Be("labelValue");
         }
 
         [Fact]
@@ -347,7 +347,7 @@ DefaultValue=****
             var mod0 = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as AddColumn2DA;
             mod0.Should().NotBeNull();
 
-            mod0!.Store2DA.Should().HaveCount(3);
+            mod0.Store2DA.Should().HaveCount(3);
             mod0.Store2DA[0].Should().Be("I5");
             mod0.Store2DA[1].Should().Be("L10");
             mod0.Store2DA[2].Should().Be("Col1");

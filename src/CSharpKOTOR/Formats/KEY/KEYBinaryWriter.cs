@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.KEY
                 {
                     resref = resref.Substring(0, ResRef.MaxLength);
                 }
-                _writer.WriteString(resref, Encoding.ASCII);
+                _writer.WriteString(resref, Encoding.ASCII.WebName);
                 if (resref.Length < ResRef.MaxLength)
                 {
                     _writer.WriteBytes(new byte[ResRef.MaxLength - resref.Length]);

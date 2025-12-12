@@ -70,11 +70,11 @@ Appearance_Type=123
 
             var modify = modifiers[0] as ModifyFieldGFF;
             modify.Should().NotBeNull();
-            modify!.Path.Should().Be("Appearance_Type");
+            modify.Path.Should().Be("Appearance_Type");
 
             var value = modify.Value as FieldValueConstant;
             value.Should().NotBeNull();
-            value!.Value(null, GFFFieldType.Int32).Should().Be(123);
+            value.Value(null, GFFFieldType.Int32).Should().Be(123);
         }
 
         [Fact]
@@ -97,10 +97,10 @@ FirstName=TestName
 
             // Assert
             var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
-            modify!.Path.Should().Be("FirstName");
+            modify.Path.Should().Be("FirstName");
 
             var value = modify.Value as FieldValueConstant;
-            value!.Value(null, GFFFieldType.String).Should().Be("TestName");
+            value.Value(null, GFFFieldType.String).Should().Be("TestName");
         }
 
         [Fact]
@@ -123,10 +123,10 @@ ChallengeRating=5.5
 
             // Assert
             var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
-            modify!.Path.Should().Be("ChallengeRating");
+            modify.Path.Should().Be("ChallengeRating");
 
             var value = modify.Value as FieldValueConstant;
-            value!.Value(null, GFFFieldType.Single).Should().Be(5.5f);
+            value.Value(null, GFFFieldType.Single).Should().Be(5.5f);
         }
 
         [Fact]
@@ -149,11 +149,11 @@ Description=StrRef5
 
             // Assert
             var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
-            modify!.Path.Should().Be("Description");
+            modify.Path.Should().Be("Description");
 
             var value = modify.Value as FieldValueTLKMemory;
             value.Should().NotBeNull();
-            value!.TokenId.Should().Be(5);
+            value.TokenId.Should().Be(5);
         }
 
         [Fact]
@@ -176,11 +176,11 @@ Appearance_Type=2DAMEMORY3
 
             // Assert
             var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
-            modify!.Path.Should().Be("Appearance_Type");
+            modify.Path.Should().Be("Appearance_Type");
 
             var value = modify.Value as FieldValue2DAMemory;
             value.Should().NotBeNull();
-            value!.TokenId.Should().Be(3);
+            value.TokenId.Should().Be(3);
         }
 
         [Fact]
@@ -203,10 +203,10 @@ ScriptEndRound\1\ScriptEndRound=k_ai_master
 
             // Assert
             var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
-            modify!.Path.Should().Be("ScriptEndRound\\1\\ScriptEndRound");
+            modify.Path.Should().Be("ScriptEndRound\\1\\ScriptEndRound");
 
             var value = modify.Value as FieldValueConstant;
-            value!.Value(null, GFFFieldType.String).Should().Be("k_ai_master");
+            value.Value(null, GFFFieldType.String).Should().Be("k_ai_master");
         }
 
         [Fact]
@@ -235,12 +235,12 @@ Value=999
             // Assert
             var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
             addField.Should().NotBeNull();
-            addField!.Label.Should().Be("CustomInt");
+            addField.Label.Should().Be("CustomInt");
             addField.FieldType.Should().Be(GFFFieldType.Int32);
 
             var value = addField.Value as FieldValueConstant;
             value.Should().NotBeNull();
-            value!.Value(null, GFFFieldType.Int32).Should().Be(999);
+            value.Value(null, GFFFieldType.Int32).Should().Be(999);
         }
 
         [Fact]
@@ -268,12 +268,12 @@ Value=TestString
 
             // Assert
             var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
-            addField!.Label.Should().Be("CustomString");
+            addField.Label.Should().Be("CustomString");
             addField.FieldType.Should().Be(GFFFieldType.String);
 
             var value = addField.Value as FieldValueConstant;
             value.Should().NotBeNull();
-            value!.Value(null, GFFFieldType.String).Should().Be("TestString");
+            value.Value(null, GFFFieldType.String).Should().Be("TestString");
         }
 
         [Fact]
@@ -301,12 +301,12 @@ Value=1.0|2.0|3.0
 
             // Assert
             var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
-            addField!.Label.Should().Be("Position");
+            addField.Label.Should().Be("Position");
             addField.FieldType.Should().Be(GFFFieldType.Vector3);
 
             var value = addField.Value as FieldValueConstant;
             value.Should().NotBeNull();
-            object vectorValue = value!.Value(null, GFFFieldType.Vector3);
+            object vectorValue = value.Value(null, GFFFieldType.Vector3);
             vectorValue.Should().BeOfType<Vector3>();
             var vector = (Vector3)vectorValue;
             vector.X.Should().BeApproximately(1.0f, 0.0001f);
@@ -340,7 +340,7 @@ Path=ItemList\0
 
             // Assert
             var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
-            addField!.Path.Should().Be("ItemList\\0");
+            addField.Path.Should().Be("ItemList\\0");
             addField.Label.Should().Be("CustomInt");
         }
 
@@ -379,7 +379,7 @@ TypeId=111
             var mod_0 = result.PatchesGFF[0].Modifiers[0] as AddFieldGFF;
             mod_0.Should().NotBeNull();
             mod_0.Should().BeOfType<AddFieldGFF>();
-            mod_0!.Value.Should().BeOfType<FieldValueConstant>();
+            mod_0.Value.Should().BeOfType<FieldValueConstant>();
             // Python: assert not mod_0.path.name - checks if path name is empty/falsy
             // When Path is empty and FieldType is List (not Struct), path should be empty
             // In Python, path.name is the last component - if path is empty, name is empty
@@ -389,10 +389,10 @@ TypeId=111
             var mod_1 = mod_0.Modifiers[0] as AddStructToListGFF;
             mod_1.Should().NotBeNull();
             mod_1.Should().BeOfType<AddStructToListGFF>();
-            mod_1!.Value.Should().BeOfType<FieldValueConstant>();
+            mod_1.Value.Should().BeOfType<FieldValueConstant>();
             var gffStruct = mod_1.Value.Value(null, GFFFieldType.Struct) as GFFStruct;
             gffStruct.Should().NotBeNull();
-            gffStruct!.StructId.Should().Be(111);
+            gffStruct.StructId.Should().Be(111);
             mod_1.IndexToToken.Should().Be(5);
         }
 
@@ -423,9 +423,9 @@ Value=0
             // Assert
             var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
             addField.Should().NotBeNull();
-            var memory2DA = addField!.Modifiers[0] as Memory2DAModifierGFF;
+            var memory2DA = addField.Modifiers[0] as Memory2DAModifierGFF;
             memory2DA.Should().NotBeNull();
-            memory2DA!.DestTokenId.Should().Be(5);
+            memory2DA.DestTokenId.Should().Be(5);
             memory2DA.Path.Should().Be("MyField");
         }
 

@@ -232,7 +232,7 @@ RowIndex=1
 
             // Verify Store2DA is populated - this should pass based on the reader test
             // If this fails, there's a difference between integration and reader test setup
-            changeRow!.Store2DA.Should().ContainKey(5, "Store2DA should contain key 5 from 2DAMEMORY5=RowLabel");
+            changeRow.Store2DA.Should().ContainKey(5, "Store2DA should contain key 5 from 2DAMEMORY5=RowLabel");
             changeRow.Store2DA[5].Should().BeOfType<RowValueRowLabel>();
 
             modifications.Apply(twoda, memory, new PatchLogger(), Game.K1);

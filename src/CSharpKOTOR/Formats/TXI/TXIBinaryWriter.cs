@@ -81,24 +81,24 @@ namespace CSharpKOTOR.Formats.TXI
                     {
                         lines.Add(string.Format(CultureInfo.InvariantCulture, "{0} {1}", command.Value.GetValue(), value));
                     }
-                    else if (value is List<Tuple<float, float, int>> coordList)
+                    else if (value is List<Tuple<float, float, int>> coordList2)
                     {
                         if (attr.ToLowerInvariant() == "upperleftcoords" || attr.ToLowerInvariant() == "lowerrightcoords")
                         {
-                            lines.Add($"{command.Value.GetValue()} {coordList.Count}");
-                            foreach (var coord in coordList)
+                            lines.Add($"{command.Value.GetValue()} {coordList2.Count}");
+                            foreach (var coord in coordList2)
                             {
                                 lines.Add(string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", coord.Item1, coord.Item2, coord.Item3));
                             }
                         }
                     }
-                    else if (value is List<float> floatList)
+                    else if (value is List<float> floatList2)
                     {
-                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", floatList.Select(v => v.ToString(CultureInfo.InvariantCulture)))}");
+                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", floatList2.Select(v => v.ToString(CultureInfo.InvariantCulture)))}");
                     }
-                    else if (value is List<int> intList)
+                    else if (value is List<int> intList2)
                     {
-                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", intList.Select(v => v.ToString(CultureInfo.InvariantCulture)))}");
+                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", intList2.Select(v => v.ToString(CultureInfo.InvariantCulture)))}");
                     }
                     else if (value is string strValue)
                     {

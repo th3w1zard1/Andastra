@@ -31,8 +31,11 @@ namespace CSharpKOTOR.Tests.Formats
             }
 
             // Python: ncs = NCSBinaryReader(BINARY_TEST_FILE).load()
-            using var reader = new NCSBinaryReader(BinaryTestFile);
-            NCS ncs = reader.Load();
+            NCS ncs;
+            using (var reader = new NCSBinaryReader(BinaryTestFile))
+            {
+                ncs = reader.Load();
+            }
             ValidateIO(ncs);
 
             // Python: write_ncs(ncs, file_path)

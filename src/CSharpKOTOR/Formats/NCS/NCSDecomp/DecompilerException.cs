@@ -1,0 +1,20 @@
+// 
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+
+namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+{
+    public class DecompilerException : Exception
+    {
+        public DecompilerException(string msg) : base(msg)
+        {
+        }
+    }
+}
+
+
+
+

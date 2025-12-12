@@ -10,8 +10,6 @@ using CSharpKOTOR.Resources;
 using Moq;
 using Xunit;
 
-#nullable enable
-
 namespace CSharpKOTOR.Tests.Patcher
 {
 
@@ -45,7 +43,7 @@ namespace CSharpKOTOR.Tests.Patcher
         /// Helper to create TestPatcherModifications instances for tests.
         /// </summary>
         private static TestPatcherModifications CreatePatch(string sourceFile = "file1", bool? replace = null,
-            string? destination = null, string? saveAs = null, string? action = null, bool? skipIfNotReplace = null)
+            string destination = null, string saveAs = null, string action = null, bool? skipIfNotReplace = null)
         {
             var patch = new TestPatcherModifications(sourceFile, replace);
             if (destination != null) patch.Destination = destination;
@@ -56,7 +54,7 @@ namespace CSharpKOTOR.Tests.Patcher
         }
         private readonly string _tempDirectory;
         private readonly string _tempChangesIni;
-        private ModInstaller? _installer;
+        private ModInstaller _installer;
 
         public ModInstallerTests()
         {
@@ -327,7 +325,7 @@ namespace CSharpKOTOR.Tests.Patcher
             var mockCapsule = new Capsule(Path.Combine(_tempDirectory, "test.mod"), createIfNotExist: true);
 
             // Act
-            byte[]? result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: true, capsule: mockCapsule);
+            byte[] result = _installer.LookupResource(patch, _tempDirectory, existsAtOutput: true, capsule: mockCapsule);
 
             // Assert
             Assert.Null(result);

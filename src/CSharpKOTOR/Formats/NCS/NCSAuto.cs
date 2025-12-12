@@ -244,7 +244,7 @@ namespace CSharpKOTOR.Formats.NCS
             }
 
             var decompiler = new NCSDecompiler(ncs, game, functions, constants);
-            return decompiler.DecompileKNCSDecomp();
+            return decompiler.DecompileNCSDecomp();
         }
 
         private static string EncodeBytecodeBlock(NCS ncs)

@@ -48,12 +48,12 @@ Path=TestStruct
 
             var addStruct = modifiers[0] as AddFieldGFF;
             addStruct.Should().NotBeNull();
-            addStruct!.Label.Should().Be("TestStruct");
+            addStruct.Label.Should().Be("TestStruct");
             addStruct.FieldType.Should().Be(GFFFieldType.Struct);
 
             var addInside = modifiers[1] as AddFieldGFF;
             addInside.Should().NotBeNull();
-            addInside!.Label.Should().Be("InnerField");
+            addInside.Label.Should().Be("InnerField");
             addInside.Path.Should().Be("TestStruct");
 
             // Act - Apply to actual GFF
@@ -167,11 +167,11 @@ Value=99
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
             var mod0 = modifications.Modifiers[0] as AddFieldGFF;
             mod0.Should().NotBeNull();
-            var mod1 = mod0!.Modifiers[0] as AddFieldGFF;
+            var mod1 = mod0.Modifiers[0] as AddFieldGFF;
             mod1.Should().NotBeNull();
 
             // Assert - Python line 390: checks that path.parts[-1] == "GrandChildField"
-            mod1!.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("GrandChildField");
+            mod1.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("GrandChildField");
         }
 
         [Fact]

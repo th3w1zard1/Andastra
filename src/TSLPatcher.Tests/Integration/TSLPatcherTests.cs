@@ -78,10 +78,10 @@ namespace CSharpKOTOR.Tests.Integration
             config.Patches2DA[0].Modifiers.Should().HaveCount(1);
             var mod = config.Patches2DA[0].Modifiers[0] as ChangeRow2DA;
             mod.Should().NotBeNull();
-            mod!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+            mod.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
             mod.Target.Value.Should().Be(1);
             mod.Cells.Should().ContainKey("Col1");
-            ((RowValueConstant)mod.Cells["Col1"]!).Value(null, null, null).Should().Be("X");
+            ((RowValueConstant)mod.Cells["Col1"]).Value(null, null, null).Should().Be("X");
 
             // Act
             config.Patches2DA[0].Apply(twoda, memory, logger, Game.K1);
@@ -232,13 +232,13 @@ namespace CSharpKOTOR.Tests.Integration
 
             // Expected:
             // gff.Root.GetStruct("SomeStruct").Should().NotBeNull();
-            // gff.Root.GetStruct("SomeStruct")!.GetByte("InsideStruct").Should().Be(123);
+            // gff.Root.GetStruct("SomeStruct").GetByte("InsideStruct").Should().Be(123);
 
             gff.Root.Exists("SomeStruct").Should().BeTrue();
             gff.Root.GetFieldType("SomeStruct").Should().Be(GFFFieldType.Struct);
             GFFStruct someStruct = gff.Root.GetStruct("SomeStruct");
             someStruct.Should().NotBeNull();
-            someStruct!.StructId.Should().Be(321);
+            someStruct.StructId.Should().Be(321);
 
             someStruct.Exists("InsideStruct").Should().BeTrue();
             someStruct.GetFieldType("InsideStruct").Should().Be(GFFFieldType.UInt8);

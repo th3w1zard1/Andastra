@@ -9,7 +9,7 @@ namespace CSharpKOTOR.Tests.Formats
     /// Tests for PcodeReader parseFixedSizeArgs functionality.
     /// Ported from PcodeReaderTest.java
     /// </summary>
-    public class KNCSDecompPcodeReaderTests
+    public class NCSDecompPcodeReaderTests
     {
         [Fact]
         public void TestParseFixedSizeArgs()

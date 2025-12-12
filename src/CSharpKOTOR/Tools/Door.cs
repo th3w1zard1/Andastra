@@ -127,7 +127,7 @@ namespace CSharpKOTOR.Tools
                 // TODO: Implement read_utd equivalent
                 // var utd = ReadUTD(utdData);
                 // logger.Debug($"[DOOR DEBUG] Processing door {doorNameStr} (appearance_id={utd.AppearanceId})");
-                // 
+                //
                 // // Get door model name from UTD using genericdoors.2da
                 // var genericdoors2DA = genericdoors ?? LoadGenericDoors2DA(installation, logger);
                 // if (genericdoors2DA == null)
@@ -135,17 +135,17 @@ namespace CSharpKOTOR.Tools
                 //     logger.Warning($"Could not load genericdoors.2da for door {doorNameStr}, using defaults");
                 //     return (doorWidth, doorHeight);
                 // }
-                // 
+                //
                 // string modelName = GetModel(utd, installation, genericdoors: genericdoors2DA);
                 // if (string.IsNullOrEmpty(modelName))
                 // {
                 //     logger.Warning($"Could not get model name for door {doorNameStr} (appearance_id={utd.AppearanceId}), using defaults");
                 //     return (doorWidth, doorHeight);
                 // }
-                // 
+                //
                 // // Try method 1: Get dimensions from model bounding box
                 // // TODO: Implement _load_mdl_with_variations and _get_door_dimensions_from_model
-                // 
+                //
                 // // Fallback: Get dimensions from door texture if model-based extraction failed
                 // // TODO: Implement _get_door_dimensions_from_texture
             }

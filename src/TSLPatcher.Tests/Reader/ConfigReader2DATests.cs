@@ -77,11 +77,11 @@ RowLabel=1
 
             var mod0 = modifiers[0] as ChangeRow2DA;
             mod0.Should().NotBeNull();
-            mod0!.Identifier.Should().Be("change_row_0");
+            mod0.Identifier.Should().Be("change_row_0");
 
             var mod1 = modifiers[1] as ChangeRow2DA;
             mod1.Should().NotBeNull();
-            mod1!.Identifier.Should().Be("change_row_1");
+            mod1.Identifier.Should().Be("change_row_1");
         }
 
         [Fact]
@@ -117,17 +117,17 @@ LabelIndex=3
 
             var mod_2da_0 = modifiers[0] as ChangeRow2DA;
             mod_2da_0.Should().NotBeNull();
-            mod_2da_0!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+            mod_2da_0.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
             mod_2da_0.Target.Value.Should().Be(1);
 
             var mod_2da_1 = modifiers[1] as ChangeRow2DA;
             mod_2da_1.Should().NotBeNull();
-            mod_2da_1!.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
+            mod_2da_1.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
             mod_2da_1.Target.Value.Should().Be("2");
 
             var mod_2da_2 = modifiers[2] as ChangeRow2DA;
             mod_2da_2.Should().NotBeNull();
-            mod_2da_2!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
+            mod_2da_2.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
             mod_2da_2.Target.Value.Should().Be("3");
         }
 
@@ -160,7 +160,7 @@ RowIndex=0
             var mod_2da_0 = result.Patches2DA[0].Modifiers[0] as ChangeRow2DA;
             mod_2da_0.Should().NotBeNull();
 
-            var store_2da_0a = mod_2da_0!.Store2DA[0] as RowValueRowIndex;
+            var store_2da_0a = mod_2da_0.Store2DA[0] as RowValueRowIndex;
             store_2da_0a.Should().NotBeNull();
 
             var store_2da_0b = mod_2da_0.Store2DA[1] as RowValueRowLabel;
@@ -168,7 +168,7 @@ RowIndex=0
 
             var store_2da_0c = mod_2da_0.Store2DA[2] as RowValueRowCell;
             store_2da_0c.Should().NotBeNull();
-            store_2da_0c!.Column.Should().Be("label");
+            store_2da_0c.Column.Should().Be("label");
         }
 
         [Fact]
@@ -200,17 +200,17 @@ appearance=2DAMEMORY5
             var mod_2da_0 = result.Patches2DA[0].Modifiers[0] as ChangeRow2DA;
             mod_2da_0.Should().NotBeNull();
 
-            var cell_0_label = mod_2da_0!.Cells["label"] as RowValueConstant;
+            var cell_0_label = mod_2da_0.Cells["label"] as RowValueConstant;
             cell_0_label.Should().NotBeNull();
-            cell_0_label!.String.Should().Be("Test123");
+            cell_0_label.String.Should().Be("Test123");
 
             var cell_0_dialog = mod_2da_0.Cells["dialog"] as RowValueTLKMemory;
             cell_0_dialog.Should().NotBeNull();
-            cell_0_dialog!.TokenId.Should().Be(4);
+            cell_0_dialog.TokenId.Should().Be(4);
 
             var cell_0_appearance = mod_2da_0.Cells["appearance"] as RowValue2DAMemory;
             cell_0_appearance.Should().NotBeNull();
-            cell_0_appearance!.TokenId.Should().Be(5);
+            cell_0_appearance.TokenId.Should().Be(5);
         }
 
         #endregion
@@ -245,11 +245,11 @@ AddRow1=add_row_1
 
             var mod_0 = modifiers[0] as AddRow2DA;
             mod_0.Should().NotBeNull();
-            mod_0!.Identifier.Should().Be("add_row_0");
+            mod_0.Identifier.Should().Be("add_row_0");
 
             var mod_1 = modifiers[1] as AddRow2DA;
             mod_1.Should().NotBeNull();
-            mod_1!.Identifier.Should().Be("add_row_1");
+            mod_1.Identifier.Should().Be("add_row_1");
         }
 
         [Fact]
@@ -282,13 +282,13 @@ RowLabel=123
             var mod_0 = modifiers[0] as AddRow2DA;
             mod_0.Should().NotBeNull();
             mod_0.Should().BeOfType<AddRow2DA>();
-            mod_0!.Identifier.Should().Be("add_row_0");
+            mod_0.Identifier.Should().Be("add_row_0");
             mod_0.RowLabel.Should().Be("123");
 
             var mod_1 = modifiers[1] as AddRow2DA;
             mod_1.Should().NotBeNull();
             mod_1.Should().BeOfType<AddRow2DA>();
-            mod_1!.Identifier.Should().Be("add_row_1");
+            mod_1.Identifier.Should().Be("add_row_1");
             mod_1.RowLabel.Should().BeNull();
         }
 
@@ -322,13 +322,13 @@ ExclusiveColumn=label
             var mod_0 = modifiers[0] as AddRow2DA;
             mod_0.Should().NotBeNull();
             mod_0.Should().BeOfType<AddRow2DA>();
-            mod_0!.Identifier.Should().Be("add_row_0");
+            mod_0.Identifier.Should().Be("add_row_0");
             mod_0.ExclusiveColumn.Should().Be("label");
 
             var mod_1 = modifiers[1] as AddRow2DA;
             mod_1.Should().NotBeNull();
             mod_1.Should().BeOfType<AddRow2DA>();
-            mod_1!.Identifier.Should().Be("add_row_1");
+            mod_1.Identifier.Should().Be("add_row_1");
             mod_1.ExclusiveColumn.Should().BeNull();
         }
 
@@ -361,7 +361,7 @@ AddRow0=add_row_0
             var mod_0 = result.Patches2DA[0].Modifiers[0] as AddRow2DA;
             mod_0.Should().NotBeNull();
 
-            var store_0a = mod_0!.Store2DA[0] as RowValueRowIndex;
+            var store_0a = mod_0.Store2DA[0] as RowValueRowIndex;
             store_0a.Should().NotBeNull();
 
             var store_0b = mod_0.Store2DA[1] as RowValueRowLabel;
@@ -369,7 +369,7 @@ AddRow0=add_row_0
 
             var store_0c = mod_0.Store2DA[2] as RowValueRowCell;
             store_0c.Should().NotBeNull();
-            store_0c!.Column.Should().Be("label");
+            store_0c.Column.Should().Be("label");
         }
 
         [Fact]
@@ -400,17 +400,17 @@ appearance=2DAMEMORY5
             var mod_0 = result.Patches2DA[0].Modifiers[0] as AddRow2DA;
             mod_0.Should().NotBeNull();
 
-            var cell_0_label = mod_0!.Cells["label"] as RowValueConstant;
+            var cell_0_label = mod_0.Cells["label"] as RowValueConstant;
             cell_0_label.Should().NotBeNull();
-            cell_0_label!.String.Should().Be("Test123");
+            cell_0_label.String.Should().Be("Test123");
 
             var cell_0_dialog = mod_0.Cells["dialog"] as RowValueTLKMemory;
             cell_0_dialog.Should().NotBeNull();
-            cell_0_dialog!.TokenId.Should().Be(4);
+            cell_0_dialog.TokenId.Should().Be(4);
 
             var cell_0_appearance = mod_0.Cells["appearance"] as RowValue2DAMemory;
             cell_0_appearance.Should().NotBeNull();
-            cell_0_appearance!.TokenId.Should().Be(5);
+            cell_0_appearance.TokenId.Should().Be(5);
         }
 
         #endregion
@@ -447,11 +447,11 @@ RowLabel=1
 
             var mod_0 = modifiers[0] as CopyRow2DA;
             mod_0.Should().NotBeNull();
-            mod_0!.Identifier.Should().Be("copy_row_0");
+            mod_0.Identifier.Should().Be("copy_row_0");
 
             var mod_1 = modifiers[1] as CopyRow2DA;
             mod_1.Should().NotBeNull();
-            mod_1!.Identifier.Should().Be("copy_row_1");
+            mod_1.Identifier.Should().Be("copy_row_1");
         }
 
         [Fact]
@@ -487,17 +487,17 @@ LabelIndex=3
 
             var mod_0 = modifiers[0] as CopyRow2DA;
             mod_0.Should().NotBeNull();
-            mod_0!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+            mod_0.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
             mod_0.Target.Value.Should().Be(1);
 
             var mod_1 = modifiers[1] as CopyRow2DA;
             mod_1.Should().NotBeNull();
-            mod_1!.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
+            mod_1.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
             mod_1.Target.Value.Should().Be("2");
 
             var mod_2 = modifiers[2] as CopyRow2DA;
             mod_2.Should().NotBeNull();
-            mod_2!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
+            mod_2.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
             mod_2.Target.Value.Should().Be("3");
         }
 
@@ -533,13 +533,13 @@ RowIndex=0
             var mod_0 = modifiers[0] as CopyRow2DA;
             mod_0.Should().NotBeNull();
             mod_0.Should().BeOfType<CopyRow2DA>();
-            mod_0!.Identifier.Should().Be("copy_row_0");
+            mod_0.Identifier.Should().Be("copy_row_0");
             mod_0.ExclusiveColumn.Should().Be("label");
 
             var mod_1 = modifiers[1] as CopyRow2DA;
             mod_1.Should().NotBeNull();
             mod_1.Should().BeOfType<CopyRow2DA>();
-            mod_1!.Identifier.Should().Be("copy_row_1");
+            mod_1.Identifier.Should().Be("copy_row_1");
             mod_1.ExclusiveColumn.Should().BeNull();
         }
 
@@ -575,13 +575,13 @@ RowIndex=0
             var mod_0 = modifiers[0] as CopyRow2DA;
             mod_0.Should().NotBeNull();
             mod_0.Should().BeOfType<CopyRow2DA>();
-            mod_0!.Identifier.Should().Be("copy_row_0");
+            mod_0.Identifier.Should().Be("copy_row_0");
             mod_0.RowLabel.Should().Be("123");
 
             var mod_1 = modifiers[1] as CopyRow2DA;
             mod_1.Should().NotBeNull();
             mod_1.Should().BeOfType<CopyRow2DA>();
-            mod_1!.Identifier.Should().Be("copy_row_1");
+            mod_1.Identifier.Should().Be("copy_row_1");
             mod_1.RowLabel.Should().BeNull();
         }
 
@@ -614,7 +614,7 @@ RowLabel=0
             var mod_0 = result.Patches2DA[0].Modifiers[0] as CopyRow2DA;
             mod_0.Should().NotBeNull();
 
-            var store_0a = mod_0!.Store2DA[0] as RowValueRowIndex;
+            var store_0a = mod_0.Store2DA[0] as RowValueRowIndex;
             store_0a.Should().NotBeNull();
 
             var store_0b = mod_0.Store2DA[1] as RowValueRowLabel;
@@ -622,7 +622,7 @@ RowLabel=0
 
             var store_0c = mod_0.Store2DA[2] as RowValueRowCell;
             store_0c.Should().NotBeNull();
-            store_0c!.Column.Should().Be("label");
+            store_0c.Column.Should().Be("label");
         }
 
         [Fact]
@@ -654,17 +654,17 @@ appearance=2DAMEMORY5
             var mod_0 = result.Patches2DA[0].Modifiers[0] as CopyRow2DA;
             mod_0.Should().NotBeNull();
 
-            var cell_0_label = mod_0!.Cells["label"] as RowValueConstant;
+            var cell_0_label = mod_0.Cells["label"] as RowValueConstant;
             cell_0_label.Should().NotBeNull();
-            cell_0_label!.String.Should().Be("Test123");
+            cell_0_label.String.Should().Be("Test123");
 
             var cell_0_dialog = mod_0.Cells["dialog"] as RowValueTLKMemory;
             cell_0_dialog.Should().NotBeNull();
-            cell_0_dialog!.TokenId.Should().Be(4);
+            cell_0_dialog.TokenId.Should().Be(4);
 
             var cell_0_appearance = mod_0.Cells["appearance"] as RowValue2DAMemory;
             cell_0_appearance.Should().NotBeNull();
-            cell_0_appearance!.TokenId.Should().Be(5);
+            cell_0_appearance.TokenId.Should().Be(5);
         }
 
         #endregion
@@ -696,7 +696,7 @@ DefaultValue=
             // Assert
             var addColumn = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as AddColumn2DA;
             addColumn.Should().NotBeNull();
-            addColumn!.Header.Should().Be("newcolumn");
+            addColumn.Header.Should().Be("newcolumn");
         }
 
         [Fact]
@@ -723,7 +723,7 @@ DefaultValue=123
 
             // Assert
             var addColumn = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as AddColumn2DA;
-            addColumn!.Header.Should().Be("newcolumn");
+            addColumn.Header.Should().Be("newcolumn");
             addColumn.Default.Should().Be("123");
         }
 

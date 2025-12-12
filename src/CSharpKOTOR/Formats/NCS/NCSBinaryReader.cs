@@ -290,7 +290,7 @@ namespace CSharpKOTOR.Formats.NCS
             else if (instruction.InsType == NCSInstructionType.CONSTO)
             {
                 // Object constants are stored as signed 32-bit integers, not 16-bit
-                // See KNCSDecomp Decoder.java case 4, subcase 6 (OBJECT type uses readSignedInt)
+                // See NCSDecomp Decoder.java case 4, subcase 6 (OBJECT type uses readSignedInt)
                 instruction.Args.Add(_reader.ReadInt32(bigEndian: true));
             }
             else if (instruction.InsType == NCSInstructionType.ACTION)
@@ -327,7 +327,7 @@ namespace CSharpKOTOR.Formats.NCS
             else if (instruction.InsType == NCSInstructionType.EQUALTT || instruction.InsType == NCSInstructionType.NEQUALTT)
             {
                 // Struct equality comparisons include a size field
-                // See KNCSDecomp Decoder.java case 11/12 with qualifier 0x24 (36 = StructStruct)
+                // See NCSDecomp Decoder.java case 11/12 with qualifier 0x24 (36 = StructStruct)
                 instruction.Args.Add(_reader.ReadUInt16(bigEndian: true));
             }
             else if (instruction.InsType == NCSInstructionType.LOGANDII || instruction.InsType == NCSInstructionType.LOGORII

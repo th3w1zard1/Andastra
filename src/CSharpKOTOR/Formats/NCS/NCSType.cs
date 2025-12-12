@@ -7,7 +7,7 @@ namespace CSharpKOTOR.Formats.NCS
     /// <summary>
     /// Represents a type in the NCS type system.
     /// Provides type information, size calculations, and type conversion utilities.
-    /// Based on KNCSDecomp Type.java implementation.
+    /// Based on NCSDecomp Type.java implementation.
     /// </summary>
     public class NCSType : IEquatable<NCSType>
     {

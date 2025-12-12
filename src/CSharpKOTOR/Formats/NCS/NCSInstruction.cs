@@ -249,9 +249,45 @@ namespace CSharpKOTOR.Formats.NCS
 
         public override int GetHashCode()
         {
-            int argsHash = Args.Aggregate(0, (hash, arg) => HashCode.Combine(hash, arg));
+            // Manual hash calculation to avoid HashCode.Combine issues with float/double conversion
+            int argsHash = 0;
+            foreach (object arg in Args)
+            {
+                int argHash = 0;
+                if (arg != null)
+                {
+                    // Handle common types explicitly to avoid any implicit conversions
+                    if (arg is int i)
+                    {
+                        argHash = i.GetHashCode();
+                    }
+                    else if (arg is float f)
+                    {
+                        argHash = f.GetHashCode();
+                    }
+                    else if (arg is string s)
+                    {
+                        argHash = s.GetHashCode();
+                    }
+                    else
+                    {
+                        argHash = arg.GetHashCode();
+                    }
+                }
+                unchecked
+                {
+                    argsHash = argsHash * 31 + argHash;
+                }
+            }
             int jumpHash = Jump != null ? RuntimeHelpers.GetHashCode(Jump) : 0;
-            return HashCode.Combine(InsType, argsHash, jumpHash);
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + InsType.GetHashCode();
+                hash = hash * 31 + argsHash;
+                hash = hash * 31 + jumpHash;
+                return hash;
+            }
         }
 
         public override string ToString()

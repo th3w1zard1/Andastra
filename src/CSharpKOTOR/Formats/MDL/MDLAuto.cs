@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Formats.MDL
             }
             if (fmt == ResourceType.MDL_ASCII)
             {
-                return new MDLAsciiReader(source, offset, size ?? 0).Load();
+                return CreateAsciiReader(source, offset, size ?? 0).Load();
             }
             throw new ArgumentException("Failed to determine the format of the MDL file.");
         }
@@ -71,7 +71,7 @@ namespace CSharpKOTOR.Formats.MDL
             }
             if (fmt == ResourceType.MDL_ASCII)
             {
-                return new MDLAsciiReader(source, offset, size ?? 0).Load();
+                return CreateAsciiReader(source, offset, size ?? 0).Load();
             }
             throw new ArgumentException("Failed to determine the format of the MDL file.");
         }
@@ -85,12 +85,40 @@ namespace CSharpKOTOR.Formats.MDL
             }
             else if (fmt == ResourceType.MDL_ASCII)
             {
-                new MDLAsciiWriter(mdl, target).Write();
+                if (target is string filepath)
+                {
+                    new MDLAsciiWriter(mdl, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new MDLAsciiWriter(mdl, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for MDL_ASCII");
+                }
             }
             else
             {
                 throw new ArgumentException("Unsupported format specified; use MDL or MDL_ASCII.");
             }
+        }
+
+        private static MDLAsciiReader CreateAsciiReader(object source, int offset, int size)
+        {
+            if (source is string path)
+            {
+                return new MDLAsciiReader(path, offset, size);
+            }
+            if (source is byte[] bytes)
+            {
+                return new MDLAsciiReader(bytes, offset, size);
+            }
+            if (source is Stream stream)
+            {
+                return new MDLAsciiReader(stream, offset, size);
+            }
+            throw new ArgumentException("Source must be string, byte[], or Stream for MDL ASCII");
         }
     }
 }

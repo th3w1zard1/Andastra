@@ -129,11 +129,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Formats\NCS\KNCSDecomp\K1UndecompilableRoundtripTest.cs" />
+    <Compile Remove="Formats\NCS\NCSDecomp\K1UndecompilableRoundtripTest.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Formats\NCS\KNCSDecomp\lexer.dat" />
+    <EmbeddedResource Include="Formats\NCS\NCSDecomp\lexer.dat" />
   </ItemGroup>
 
 </Project>

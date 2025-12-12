@@ -47,8 +47,8 @@ namespace CSharpKOTOR.Tests.Mods
             config.Apply(dialogTlk, memory, logger, Game.K1);
 
             dialogTlk.Count.Should().Be(4);
-            dialogTlk.Get(2)!.Text.Should().Be("Append2");
-            dialogTlk.Get(3)!.Text.Should().Be("Append1");
+            dialogTlk.Get(2).Text.Should().Be("Append2");
+            dialogTlk.Get(3).Text.Should().Be("Append1");
 
             memory.MemoryStr[0].Should().Be(2);
             memory.MemoryStr[1].Should().Be(3);

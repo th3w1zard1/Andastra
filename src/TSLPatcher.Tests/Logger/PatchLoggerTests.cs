@@ -86,7 +86,7 @@ namespace CSharpKOTOR.Tests.Logger
 
             // Assert
             addedLog.Should().NotBeNull();
-            addedLog!.Message.Should().Be("Test message");
+            addedLog.Message.Should().Be("Test message");
             addedLog.LogType.Should().Be(LogType.Note);
         }
 

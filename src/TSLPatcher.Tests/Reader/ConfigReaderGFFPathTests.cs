@@ -298,7 +298,7 @@ Value=123
 
             GFFStruct someStruct = patched.Root.GetStruct("SomeStruct");
             someStruct.Should().NotBeNull();
-            byte insideStructValue = someStruct!.GetUInt8("InsideStruct");
+            byte insideStructValue = someStruct.GetUInt8("InsideStruct");
             insideStructValue.Should().Be(123);
         }
 

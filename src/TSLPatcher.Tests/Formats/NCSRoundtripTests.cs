@@ -80,7 +80,7 @@ namespace CSharpKOTOR.Tests.Formats
         };
 
         // Paths relative to repository root
-        private static readonly string RepoRoot = Directory.GetCurrentDirectory();
+        private static readonly string RepoRoot = FindRepositoryRoot();
 
         // Test output directories (gitignored)
         private static readonly string WorkRoot = Path.Combine(TestWorkDir, "roundtrip-work");
@@ -113,6 +113,29 @@ namespace CSharpKOTOR.Tests.Formats
         private static readonly Dictionary<string, string> FactionConstantsK2 = LoadConstantsWithPrefix(K2Nwscript, "STANDARD_FACTION_");
         private static readonly Dictionary<string, string> AnimationConstantsK1 = LoadConstantsWithPrefix(K1Nwscript, "ANIMATION_");
         private static readonly Dictionary<string, string> AnimationConstantsK2 = LoadConstantsWithPrefix(K2Nwscript, "ANIMATION_");
+
+        /// <summary>
+        /// Finds the repository root by searching upward for .git directory or .sln file.
+        /// </summary>
+        private static string FindRepositoryRoot()
+        {
+            string currentDir = Directory.GetCurrentDirectory();
+            DirectoryInfo dir = new DirectoryInfo(currentDir);
+
+            while (dir != null)
+            {
+                // Check for .git directory or .sln file
+                if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
+                    Directory.GetFiles(dir.FullName, "*.sln").Length > 0)
+                {
+                    return dir.FullName;
+                }
+                dir = dir.Parent;
+            }
+
+            // Fallback to current directory if not found
+            return currentDir;
+        }
 
         /// <summary>
         /// Finds the compiler executable by trying multiple filenames in multiple locations.
@@ -617,11 +640,11 @@ namespace CSharpKOTOR.Tests.Formats
         private static void RunInbuiltCompiler(string originalNssPath, string compiledOut, string gameFlag)
         {
             Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
-            
+
             string source = File.ReadAllText(originalNssPath, Encoding.UTF8);
             string parentDir = Path.GetDirectoryName(originalNssPath);
             List<string> libraryLookup = parentDir != null ? new List<string> { parentDir } : new List<string>();
-            
+
             // Add vanilla script directories to lookup
             if (gameFlag.Equals("k1"))
             {

@@ -171,12 +171,14 @@ cd <workspace_path>/vendor/PyKotor; & "<workspace_path>/vendor/PyKotor/.venv_3.1
 ```
 
 **Components Explained**:
+
 1. **Change Directory**: `cd <workspace_path>/vendor/PyKotor` - Changes to the PyKotor directory
 2. **Activate Virtual Environment**: `& "<workspace_path>/vendor/PyKotor/.venv_3.13/Scripts/Activate.ps1"` - Activates the Python virtual environment (the `&` operator executes the script in PowerShell)
 3. **Load Environment Variables**: `Get-Content .env | ForEach-Object { if ($_ -match '^([^#][^=]*)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] } }` - Parses the `.env` file and loads environment variables (skips comment lines, extracts KEY=VALUE pairs)
 4. **Execute Python Command**: Your actual Python command (e.g., `python -m pytest Libraries/PyKotor/tests/resource/formats/test_ncs.py -v --tb=short 2>&1`)
 
 **Examples**:
+
 - Running pytest: Replace `<your_python_command>` with `python -m pytest Libraries/PyKotor/tests/resource/formats/test_ncs.py -v --tb=short 2>&1`
 - Running a Python script: Replace `<your_python_command>` with `python path/to/script.py`
 - Running a Python module: Replace `<your_python_command>` with `python -m module.name`

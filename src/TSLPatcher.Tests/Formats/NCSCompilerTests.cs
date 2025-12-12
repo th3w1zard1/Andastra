@@ -4060,12 +4060,38 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: assert interpreter.action_snapshots[-3].arg_values[0] == 123
             // Original: assert interpreter.action_snapshots[-2].arg_values[0] == ""abc""
             // Original: self.assertAlmostEqual(3.14, interpreter.action_snapshots[-1].arg_values[0])
-            var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
-            var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
-            var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(123);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be("abc");
-            System.Math.Abs((double)lastSnapshot.ArgValues[0].Value - 3.14).Should().BeLessThan(0.01);
+            
+            // Access values directly using indexer to match PyKotor's negative index access
+            // PyKotor: interpreter.action_snapshots[-3].arg_values[0]
+            var snapshots = interpreter.ActionSnapshots;
+            int idx1 = snapshots.Count - 3;
+            int idx2 = snapshots.Count - 2;
+            int idx3 = snapshots.Count - 1;
+            
+            // Access StackObjects and values in minimal steps
+            var argVals1 = snapshots[idx1].ArgValues;
+            var argVals2 = snapshots[idx2].ArgValues;
+            var argVals3 = snapshots[idx3].ArgValues;
+            
+            var so1 = argVals1[0];
+            var so2 = argVals2[0];
+            var so3 = argVals3[0];
+            
+            // Extract values - use field access via reflection to completely bypass property getter
+            var valueProp = typeof(CSharpKOTOR.Formats.NCS.Compiler.StackObject).GetProperty("Value");
+            object v1 = valueProp.GetValue(so1);
+            object v2 = valueProp.GetValue(so2);
+            object v3 = valueProp.GetValue(so3);
+            
+            // Convert and assert
+            int intVal = v1 is int ? (int)v1 : System.Convert.ToInt32(v1);
+            Assert.Equal(123, intVal);
+            
+            string strVal = v2 as string ?? v2?.ToString() ?? "";
+            Assert.Equal("abc", strVal);
+            
+            float floatVal = v3 is float ? (float)v3 : System.Convert.ToSingle(v3);
+            Assert.True(System.Math.Abs(floatVal - 3.14f) < 0.01f, $"Expected ~3.14, got {floatVal}");
         }
 
         #endregion

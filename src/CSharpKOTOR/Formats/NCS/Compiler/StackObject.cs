@@ -40,7 +40,38 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(DataType, Value != null ? Value.GetHashCode() : 0);
+            // Avoid using HashCode.Combine with Value directly as it might cause type conversion issues
+            // Calculate hash manually to avoid any float/double conversion problems
+            int dataTypeHash = DataType.GetHashCode();
+            int valueHash = 0;
+            if (Value != null)
+            {
+                // Handle common types explicitly to avoid any implicit conversions
+                if (Value is int i)
+                {
+                    valueHash = i.GetHashCode();
+                }
+                else if (Value is float f)
+                {
+                    valueHash = f.GetHashCode();
+                }
+                else if (Value is string s)
+                {
+                    valueHash = s.GetHashCode();
+                }
+                else
+                {
+                    valueHash = Value.GetHashCode();
+                }
+            }
+            // Manual hash combination to avoid HashCode.Combine potential issues
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + dataTypeHash;
+                hash = hash * 31 + valueHash;
+                return hash;
+            }
         }
     }
 }

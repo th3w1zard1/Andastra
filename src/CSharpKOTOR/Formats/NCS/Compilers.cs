@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Formats.NCS
         KOTOR_TOOL,
         V1,
         KOTOR_SCRIPTING_TOOL,
-        KNCSDecomp,
+        NCSDecomp,
         XOREOS,
         KNSSCOMP
     }
@@ -130,9 +130,9 @@ namespace CSharpKOTOR.Formats.NCS
                         ["decompile"] = new List<string> { "-d", "--outputdir", "{output_dir}", "-o", "{output_name}", "-g", "{game_value}", "{source}" }
                     }
                 ),
-                [KnownExternalCompilers.KNCSDecomp] = new ExternalCompilerConfig(
+                [KnownExternalCompilers.NCSDecomp] = new ExternalCompilerConfig(
                     "539EB689D2E0D3751AEED273385865278BEF6696C46BC0CAB116B40C3B2FE820",
-                    "KNCSDecomp",
+                    "NCSDecomp",
                     new DateTime(2006, 5, 30),
                     "todo",
                     new Dictionary<string, List<string>>()

@@ -552,7 +552,7 @@ TypeId=1
 
             GFFList list = patchedGff.Root.GetList("List");
             list.Should().NotBeNull();
-            list!.Count.Should().Be(3);
+            list.Count.Should().Be(3);
             list[0].StructId.Should().Be(5);
             list[1].StructId.Should().Be(3);
             list[2].StructId.Should().Be(1);
@@ -595,7 +595,7 @@ TypeId=0
 
             GFFList list = patchedGff.Root.GetList("List");
             list.Should().NotBeNull();
-            list!.Count.Should().Be(2);
+            list.Count.Should().Be(2);
             memory.Memory2DA[12].Should().Be("1");
         }
 

@@ -35,10 +35,6 @@ namespace CSharpKOTOR.Formats.BWM
                 using (var writer = CreateWriter(wok, target))
                 {
                     writer.Write();
-                    if (target is byte[] bytes && writer is RawBinaryWriterMemory memWriter)
-                    {
-                        Array.Copy(memWriter.Data(), bytes, memWriter.Data().Length);
-                    }
                 }
             }
             else
