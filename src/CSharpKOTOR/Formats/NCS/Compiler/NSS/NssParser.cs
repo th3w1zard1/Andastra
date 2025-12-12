@@ -2030,7 +2030,45 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
         {
             SkipWhitespaceAndComments();
 
-            // Unary minus
+            // Prefix increment (++) - must check BEFORE unary plus
+            // Matching PyKotor implementation order: multi-character operators first
+            {
+                int savedIndex = _tokenIndex;
+                if (MatchOperator(NssOperators.Addition))
+                {
+                    if (MatchOperator(NssOperators.Addition))
+                    {
+                        Expression operand = ParseUnaryExpression();
+                        FieldAccess fieldAccess = ConvertToFieldAccess(operand);
+                        return new PreIncrementExpression(fieldAccess);
+                    }
+                    else
+                    {
+                        _tokenIndex = savedIndex;
+                    }
+                }
+            }
+
+            // Prefix decrement (--) - must check BEFORE unary minus
+            // Matching PyKotor implementation order: multi-character operators first
+            {
+                int savedIndex = _tokenIndex;
+                if (MatchOperator(NssOperators.Subtraction))
+                {
+                    if (MatchOperator(NssOperators.Subtraction))
+                    {
+                        Expression operand = ParseUnaryExpression();
+                        FieldAccess fieldAccess = ConvertToFieldAccess(operand);
+                        return new PreDecrementExpression(fieldAccess);
+                    }
+                    else
+                    {
+                        _tokenIndex = savedIndex;
+                    }
+                }
+            }
+
+            // Unary minus (after checking for --)
             if (MatchOperator(NssOperators.Subtraction))
             {
                 Expression operand = ParseUnaryExpression();
@@ -2049,42 +2087,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
             {
                 Expression operand = ParseUnaryExpression();
                 return new UnaryOperatorExpression(operand, Operator.ONES_COMPLEMENT, OperatorMappings.BitwiseNot);
-            }
-
-            // Prefix increment (++)
-            {
-                int savedIndex = _tokenIndex;
-                if (MatchOperator(NssOperators.Addition))
-                {
-                    if (MatchOperator(NssOperators.Addition))
-                    {
-                        Expression operand = ParseUnaryExpression();
-                        FieldAccess fieldAccess = ConvertToFieldAccess(operand);
-                        return new PreIncrementExpression(fieldAccess);
-                    }
-                    else
-                    {
-                        _tokenIndex = savedIndex;
-                    }
-                }
-            }
-
-            // Prefix decrement (--)
-            {
-                int savedIndex = _tokenIndex;
-                if (MatchOperator(NssOperators.Subtraction))
-                {
-                    if (MatchOperator(NssOperators.Subtraction))
-                    {
-                        Expression operand = ParseUnaryExpression();
-                        FieldAccess fieldAccess = ConvertToFieldAccess(operand);
-                        return new PreDecrementExpression(fieldAccess);
-                    }
-                    else
-                    {
-                        _tokenIndex = savedIndex;
-                    }
-                }
             }
 
             return ParsePostfixExpression();
