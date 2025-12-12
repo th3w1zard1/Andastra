@@ -47,8 +47,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:90-94
         // Original: public FileDecompiler() throws DecompilerException
         public FileDecompiler()
-            : this(null, null)
         {
+            this.filedata = new Dictionary<object, object>();
+            this.actions = LoadActionsDataInternal(isK2Selected);
+            LoadPreferSwitchesFromConfig();
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:101-111
@@ -100,6 +102,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             // Actions will be loaded lazily on first use
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:120-122
+        // Original: public void loadActionsData(boolean isK2Selected) throws DecompilerException
+        public void LoadActionsData(bool isK2Selected)
+        {
+            this.actions = LoadActionsDataInternal(isK2Selected);
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1031-1035
@@ -562,11 +571,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             GC.Collect();
         }
 
-        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:447-455
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:447-455
         // Original: public String decompileToString(File file) throws DecompilerException
         public virtual string DecompileToString(File file)
         {
-            Utils.FileScriptData data = this.DecompileNcsObjectFromFile(file);
+            Utils.FileScriptData data = this.DecompileNcs(file);
             if (data == null)
             {
                 throw new DecompilerException("Decompile failed for " + file.GetAbsolutePath());
@@ -2670,12 +2679,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 dotypes = null;
                 nodedata.ClearProtoData();
-                JavaSystem.@err.Println("DEBUG decompileNcs: iterating subroutines, numSubs=" + subdata.NumSubs());
                 int subCount = 0;
                 foreach (ASubroutine iterSub in this.SubIterable(subdata))
                 {
                     subCount++;
-                    JavaSystem.@err.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + nodedata.GetPos(iterSub));
                     try
                     {
                         mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
