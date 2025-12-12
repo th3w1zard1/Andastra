@@ -415,6 +415,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         {
             return this.type;
         }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:57-58
+        // Original: public void close() { }
+        public virtual void Close()
+        {
+        }
     }
 }
 

@@ -145,8 +145,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             // Original: if (this.type != null) { this.type.close(); } this.type = null;
             if (this.type != null)
             {
-                // Type in Java has close(), but UtilsType in C# is a struct/value type, so no cleanup needed
-                // Just set to null to match Java behavior
+                this.type.Close();
             }
             this.type = null;
         }

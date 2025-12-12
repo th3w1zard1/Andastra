@@ -36,6 +36,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             this.parent = null;
         }
+
+        public string GetTabs()
+        {
+            return this.tabs ?? "";
+        }
+
+        public string GetNewline()
+        {
+            return this.newline ?? System.Environment.NewLine;
+        }
     }
 }
 

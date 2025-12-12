@@ -79,7 +79,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp is Scriptnode.ScriptNode scriptNode)
                 {
-                    scriptNode.Dispose();
+                    scriptNode.Close();
                 }
                 else if (_exp is StackEntry expEntry)
                 {

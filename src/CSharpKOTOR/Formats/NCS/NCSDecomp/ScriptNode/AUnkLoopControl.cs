@@ -21,7 +21,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
         public override string ToString()
         {
-            return GetTabs() + "BREAK or CONTINUE undetermined" + GetNewline();
+            return this.tabs + "BREAK or CONTINUE undetermined" + this.newline;
         }
     }
 }

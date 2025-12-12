@@ -82,9 +82,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (_exp == null)
             {
-                return GetTabs() + (_var != null ? _var.ToDeclString() : "") + ";" + GetNewline();
+                return this.tabs + (_var != null ? _var.ToDeclString() : "") + ";" + this.newline;
             }
-            return GetTabs() + (_var != null ? _var.ToDeclString() : "") + " = " + ExpressionFormatter.FormatValue(_exp) + ";" + GetNewline();
+            return this.tabs + (_var != null ? _var.ToDeclString() : "") + " = " + ExpressionFormatter.FormatValue(_exp) + ";" + this.newline;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVarDecl.java

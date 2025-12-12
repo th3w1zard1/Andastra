@@ -100,7 +100,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                     {
                         if (param is Scriptnode.ScriptNode paramNode)
                         {
-                            paramNode.Dispose();
+                            paramNode.Close();
                         }
                         else if (param is StackEntry paramEntry)
                         {

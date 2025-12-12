@@ -27,7 +27,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:17-22
         // Original: public void parent(ScriptNode parent)
-        public void Parent(ScriptNode parent)
+        public virtual void Parent(ScriptNode parent)
         {
             this.parent = parent;
             if (parent != null)

@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp1 is Scriptnode.ScriptNode node1)
                 {
-                    node1.Dispose();
+                    node1.Close();
                 }
                 _exp1 = null;
             }
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp2 is Scriptnode.ScriptNode node2)
                 {
-                    node2.Dispose();
+                    node2.Close();
                 }
                 _exp2 = null;
             }
