@@ -13,6 +13,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
     {
         private Dictionary<object, object> @in;
         private Dictionary<object, object> @out;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:152-154
+        // Original: @Override public Object getIn(Node node) { return this.in == null ? null : this.in.get(node); }
         public virtual object GetIn(Node node)
         {
             if (this.@in == null)
@@ -20,7 +22,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
                 return null;
             }
 
-            return this.@in[node];
+            object result;
+            return this.@in.TryGetValue(node, out result) ? result : null;
         }
 
         public virtual void SetIn(Node node, object @in)
@@ -40,6 +43,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:170-172
+        // Original: @Override public Object getOut(Node node) { return this.out == null ? null : this.out.get(node); }
         public virtual object GetOut(Node node)
         {
             if (this.@out == null)
@@ -47,7 +52,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
                 return null;
             }
 
-            return this.@out[node];
+            object result;
+            return this.@out.TryGetValue(node, out result) ? result : null;
         }
 
         public virtual void SetOut(Node node, object @out)

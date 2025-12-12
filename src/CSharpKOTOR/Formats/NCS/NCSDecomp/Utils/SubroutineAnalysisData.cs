@@ -92,26 +92,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:107-116
+        // Original: public void printStates() { Enumeration<Node> subnodes = this.substates.keys(); while (subnodes.hasMoreElements()) { ... } }
         public void PrintStates()
         {
-            PrintStates(int.MaxValue);
-        }
-
-        public void PrintStates(int maxStates)
-        {
-            int count = 0;
             IEnumerator<object> subnodes = new DictionaryKeyEnumeratorAdapter(this.substates);
-            while (subnodes.HasNext() && count < maxStates)
+            while (subnodes.HasNext())
             {
                 Node node = (Node)subnodes.Next();
                 SubroutineState state = (SubroutineState)this.substates[node];
                 Console.WriteLine("Printing state for subroutine at " + this.nodedata.GetPos(node).ToString());
                 state.PrintState();
-                count++;
-            }
-            if (subnodes.HasNext())
-            {
-                Console.WriteLine("... (additional states omitted to prevent spam)");
             }
         }
 
