@@ -35,6 +35,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public override void DefaultOut(Node node)
         {
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:36-38
+            // Original: this.nodedata.setPos(node, this.currentPos);
+            // Always add node to hashtable, even if GetCommandPos returned -1
+            // This ensures ProcessCode can find the node later
             this.nodedata.SetPos(node, this.currentPos);
         }
     }
