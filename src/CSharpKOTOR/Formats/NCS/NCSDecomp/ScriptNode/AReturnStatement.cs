@@ -33,11 +33,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (_returnExp != null && _returnExp is ScriptNode returnExpNode)
             {
-                returnExpNode.SetParent(null);
+                returnExpNode.Parent(null);
             }
             if (returnExp != null && returnExp is ScriptNode returnExpNode2)
             {
-                returnExpNode2.SetParent(this);
+                returnExpNode2.Parent(this);
             }
             _returnExp = returnExp;
         }

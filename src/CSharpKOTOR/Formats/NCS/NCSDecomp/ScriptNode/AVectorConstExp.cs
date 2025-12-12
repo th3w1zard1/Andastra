@@ -107,7 +107,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp3 is Scriptnode.ScriptNode node3)
                 {
-                    node3.Dispose();
+                    node3.Close();
                 }
                 _exp3 = null;
             }
