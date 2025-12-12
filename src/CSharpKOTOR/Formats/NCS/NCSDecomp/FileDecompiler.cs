@@ -122,13 +122,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 return null;
             }
-            FileScriptData data = (FileScriptData)this.filedata[file];
+            Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
             if (data == null)
             {
                 return null;
             }
 
-            return data.GetVars();
+            Dictionary<string, List<object>> vars = data.GetVars();
+            if (vars == null)
+            {
+                return null;
+            }
+
+            Dictionary<object, object> result = new Dictionary<object, object>();
+            foreach (var kvp in vars)
+            {
+                result[kvp.Key] = kvp.Value;
+            }
+            return result;
         }
 
         public virtual string GetGeneratedCode(File file)
@@ -137,7 +148,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 return null;
             }
-            FileScriptData data = (FileScriptData)this.filedata[file];
+            Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
             if (data == null)
             {
                 return null;
@@ -152,7 +163,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 return null;
             }
-            FileScriptData data = (FileScriptData)this.filedata[file];
+            Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
             if (data == null)
             {
                 return null;
@@ -167,7 +178,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 return null;
             }
-            FileScriptData data = (FileScriptData)this.filedata[file];
+            Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
             if (data == null)
             {
                 return null;
@@ -178,19 +189,38 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         public virtual int Decompile(File file)
         {
-            FileScriptData data = null;
+            Utils.FileScriptData data = null;
             if (this.filedata.ContainsKey(file))
             {
-                data = (FileScriptData)this.filedata[file];
+                data = (Utils.FileScriptData)this.filedata[file];
             }
 
             if (data == null)
             {
                 JavaSystem.@out.Println("\n---> starting decompilation: " + file.Name + " <---");
-                data = this.DecompileNcs(file);
+                NCS ncs = null;
+                try
+                {
+                    using (var reader = new NCSBinaryReader(file.GetAbsolutePath()))
+                    {
+                        ncs = reader.Load();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    JavaSystem.@out.Println("Failed to read NCS file: " + ex.Message);
+                    return FAILURE;
+                }
+
+                if (ncs == null)
+                {
+                    return FAILURE;
+                }
+
+                data = this.DecompileNcsObject(ncs);
                 if (data == null)
                 {
-                    return 0;
+                    return FAILURE;
                 }
 
                 this.filedata[file] = data;
@@ -202,24 +232,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         public virtual int CompileAndCompare(File file, File newfile)
         {
-            FileScriptData data = null;
+            Utils.FileScriptData data = null;
             if (this.filedata.ContainsKey(file))
             {
-                data = (FileScriptData)this.filedata[file];
+                data = (Utils.FileScriptData)this.filedata[file];
             }
             return this.CompileAndCompare(file, newfile, data);
         }
 
         public virtual int CompileOnly(File nssFile)
         {
-            FileScriptData data = null;
+            Utils.FileScriptData data = null;
             if (this.filedata.ContainsKey(nssFile))
             {
-                data = (FileScriptData)this.filedata[nssFile];
+                data = (Utils.FileScriptData)this.filedata[nssFile];
             }
             if (data == null)
             {
-                data = new FileScriptData();
+                data = new Utils.FileScriptData();
             }
 
             return this.CompileNss(nssFile, data);
@@ -236,14 +266,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 return null;
             }
-            FileScriptData data = (FileScriptData)this.filedata[file];
+            Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
             if (data == null)
             {
                 return null;
             }
 
             data.ReplaceSubName(oldname, newname);
-            return data.GetVars();
+            Dictionary<string, List<object>> vars = data.GetVars();
+            if (vars == null)
+            {
+                return null;
+            }
+            Dictionary<object, object> result = new Dictionary<object, object>();
+            foreach (var kvp in vars)
+            {
+                result[kvp.Key] = kvp.Value;
+            }
+            return result;
         }
 
         public virtual string RegenerateCode(File file)
@@ -252,7 +292,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 return null;
             }
-            FileScriptData data = (FileScriptData)this.filedata[file];
+            Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
             if (data == null)
             {
                 return null;
@@ -266,10 +306,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             if (this.filedata.ContainsKey(file))
             {
-                FileScriptData data = (FileScriptData)this.filedata[file];
+                Utils.FileScriptData data = (Utils.FileScriptData)this.filedata[file];
                 if (data != null)
                 {
-                    data.Dispose();
+                    data.Close();
                 }
                 this.filedata.Remove(file);
             }
@@ -291,13 +331,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             GC.Collect();
         }
 
-        private int CompileAndCompare(File file, File newfile, FileScriptData data)
+        private int CompileAndCompare(File file, File newfile, Utils.FileScriptData data)
         {
             string code = this.ReadFile(newfile);
             return this.CompileAndCompare(file, code, data);
         }
 
-        private int CompileAndCompare(File file, string code, FileScriptData data)
+        private int CompileAndCompare(File file, string code, Utils.FileScriptData data)
         {
             Game game = this.MapGameType();
             NCS originalNcs = null;
@@ -343,7 +383,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        private int CompileNss(File nssFile, FileScriptData data)
+        private int CompileNss(File nssFile, Utils.FileScriptData data)
         {
             string code = this.ReadFile(nssFile);
             return this.CompileAndCompare(nssFile, code, data);
@@ -585,10 +625,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return Game.K1;
         }
 
-        private FileScriptData DecompileNcs(File file)
+        /// <summary>
+        /// Decompiles an NCS object in memory (not from file).
+        /// This is the core decompilation logic extracted from DecompileNcs(File).
+        /// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:588-916
+        /// </summary>
+        public virtual Utils.FileScriptData DecompileNcsObject(NCS ncs)
         {
-            FileScriptData data = null;
-            NCS ncs = null;
+            Utils.FileScriptData data = null;
             SetDestinations setdest = null;
             DoTypes dotypes = null;
             Node ast = null;
@@ -603,8 +647,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             MainPass mainpass = null;
             DestroyParseTree destroytree = null;
 
-            // Check if file exists before processing
-            if (file == null || !file.Exists())
+            if (ncs == null)
             {
                 return null;
             }
@@ -622,111 +665,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
             try
             {
-                data = new FileScriptData();
-                FileInputStream fileStream = new FileInputStream(file);
-                BinaryReader bufferedStream = new BinaryReader(fileStream);
-
-                // Check if file is pcode (text) format or binary NCS
-                bufferedStream.Mark(100);
-                byte[] header = new byte[20];
-                int bytesRead = bufferedStream.Read(header);
-                bufferedStream.Reset();
-                bool isPcode = false;
-                if (bytesRead >= 8)
-                {
-
-                    // Check if it's the standard NCS binary header "NCS V1.0"
-                    byte[] ncsHeader = new byte[]
-                    {
-                        0x4E,
-                        0x43,
-                        0x53,
-                        0x20,
-                        0x56,
-                        0x31,
-                        0x2E,
-                        0x30
-                    };
-                    bool isBinaryNcs = true;
-                    for (int i = 0; i < 8; i++)
-                    {
-                        if (header[i] != ncsHeader[i])
-                        {
-                            isBinaryNcs = false;
-                            break;
-                        }
-                    }
-
-
-                    // If not binary NCS, check if it's pcode (text format starting with hex offset)
-                    if (!isBinaryNcs)
-                    {
-
-                        // Pcode format: first 8 bytes are hex digits (ASCII '0'-'9', 'A'-'F')
-                        bool allHex = true;
-                        for (int i = 0; i < 8 && i < bytesRead; i++)
-                        {
-                            byte b = header[i];
-                            if (!((b >= 0x30 && b <= 0x39) || (b >= 0x41 && b <= 0x46) || (b >= 0x61 && b <= 0x66)))
-                            {
-                                allHex = false;
-                                break;
-                            }
-                        }
-
-                        if (allHex && bytesRead >= 13)
-                        {
-
-                            // Check if byte 8 is space (0x20) and bytes 9-10 are hex (opcode/qualifier)
-                            if (header[8] == 0x20 && ((header[9] >= 0x30 && header[9] <= 0x39) || (header[9] >= 0x41 && header[9] <= 0x46) || (header[9] >= 0x61 && header[9] <= 0x66)) && ((header[10] >= 0x30 && header[10] <= 0x39) || (header[10] >= 0x41 && header[10] <= 0x46) || (header[10] >= 0x61 && header[10] <= 0x66)))
-                            {
-                                isPcode = true;
-                            }
-                        }
-                    }
-                }
-
-                if (isPcode)
-                {
-
-                    // Convert pcode to binary NCS
-                    JavaSystem.@out.Println("    Detected pcode format, converting to binary NCS...");
-                    byte[] binaryNcs = PcodeReader.ConvertPcodeToBinary(bufferedStream.BaseStream);
-                    JavaSystem.@out.Println("    Converted binary NCS size: " + binaryNcs.Length + " bytes");
-                    JavaSystem.@out.Println("    First 32 bytes of converted binary: " + BytesToHexString(binaryNcs, 0, Math.Min(32, binaryNcs.Length)));
-                    try
-                    {
-                        using (var ncsReader = new NCSBinaryReader(binaryNcs))
-                        {
-                            ncs = ncsReader.Load();
-                        }
-                    }
-                    catch (System.IO.InvalidDataException e)
-                    {
-                        JavaSystem.@out.Println("Failed to load NCS file: " + e.Message);
-                        return null;
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        using (var ncsReader = new NCSBinaryReader(bufferedStream.BaseStream))
-                        {
-                            ncs = ncsReader.Load();
-                        }
-                    }
-                    catch (System.IO.InvalidDataException e)
-                    {
-                        JavaSystem.@out.Println("Failed to load NCS file: " + e.Message);
-                        return null;
-                    }
-                }
-
-                if (ncs == null)
-                {
-                    return null;
-                }
+                data = new Utils.FileScriptData();
 
                 if (ncs.Instructions == null || ncs.Instructions.Count == 0)
                 {
@@ -860,12 +799,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 data.AddSub(mainpass.GetState());
                 mainpass.Done();
                 cleanpass.Done();
-                data.Subdata(subdata);
+                data.SetSubdata(subdata);
                 if (doglobs != null)
                 {
                     cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
                     cleanpass.Apply();
-                    data.Globals(doglobs.GetState());
+                    data.SetGlobals(doglobs.GetState());
                     doglobs.Done();
                     cleanpass.Done();
                 }

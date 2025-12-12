@@ -7,9 +7,12 @@ using System.Text.RegularExpressions;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS.Compiler;
+using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using CSharpKOTOR.Formats.NCS.Optimizers;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
+using FileScriptData = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.FileScriptData;
 
 namespace CSharpKOTOR.Formats.NCS
 {
@@ -78,7 +81,7 @@ namespace CSharpKOTOR.Formats.NCS
             }
 
             byte[] data = new NCSBinaryWriter(ncs).Write();
-            File.WriteAllBytes(filepath, data);
+            System.IO.File.WriteAllBytes(filepath, data);
         }
 
         public static void WriteNcs(NCS ncs, [CanBeNull] Stream target, ResourceType fileFormat = null)
@@ -191,6 +194,7 @@ namespace CSharpKOTOR.Formats.NCS
 
         /// <summary>
         /// Decompile NCS bytecode to NSS source code.
+        /// Uses the DeNCS decompiler (1:1 port from vendor/DeNCS) for accurate decompilation.
         /// </summary>
         public static string DecompileNcs(
             [CanBeNull] NCS ncs,
@@ -203,8 +207,24 @@ namespace CSharpKOTOR.Formats.NCS
                 throw new ArgumentNullException(nameof(ncs));
             }
 
-            var decompiler = new NCSDecompiler(ncs, game, functions, constants);
-            return decompiler.DecompileNCSDecomp();
+            // Use FileDecompiler (DeNCS port) for 1:1 accurate decompilation
+            NWScriptLocator.GameType gameType = game.IsK2() ? NWScriptLocator.GameType.TSL : NWScriptLocator.GameType.K1;
+            var fileDecompiler = new NCSDecomp.FileDecompiler(null, gameType);
+
+            FileScriptData data = fileDecompiler.DecompileNcsObject(ncs);
+            if (data == null)
+            {
+                throw new InvalidOperationException("Decompilation failed - FileDecompiler returned null");
+            }
+
+            data.GenerateCode();
+            string code = data.GetCode();
+
+            // Clean up
+            data.Close();
+            fileDecompiler.CloseAllFiles();
+
+            return code ?? string.Empty;
         }
     }
 }
