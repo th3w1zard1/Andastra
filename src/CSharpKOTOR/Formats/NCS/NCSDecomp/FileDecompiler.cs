@@ -1228,33 +1228,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                using (BufferedReader reader1 = new BufferedReader(new FileReader(originalPcode));
-                    BufferedReader reader2 = new BufferedReader(new FileReader(newPcode)))
+                using (BufferedReader reader1 = new BufferedReader(new FileReader(originalPcode)))
                 {
-                    string line1;
-                    string line2;
-                    int line = 1;
-
-                    while (true)
+                    using (BufferedReader reader2 = new BufferedReader(new FileReader(newPcode)))
                     {
-                        line1 = reader1.ReadLine();
-                        line2 = reader2.ReadLine();
+                        string line1;
+                        string line2;
+                        int line = 1;
 
-                        // both files ended -> identical
-                        if (line1 == null && line2 == null)
+                        while (true)
                         {
-                            return null; // identical
-                        }
+                            line1 = reader1.ReadLine();
+                            line2 = reader2.ReadLine();
 
-                        // Detect differences: missing line or differing content
-                        if (line1 == null || line2 == null || !line1.Equals(line2))
-                        {
-                            string left = line1 == null ? "<EOF>" : line1;
-                            string right = line2 == null ? "<EOF>" : line2;
-                            return "Mismatch at line " + line + " | original: " + left + " | generated: " + right;
-                        }
+                            // both files ended -> identical
+                            if (line1 == null && line2 == null)
+                            {
+                                return null; // identical
+                            }
 
-                        line++;
+                            // Detect differences: missing line or differing content
+                            if (line1 == null || line2 == null || !line1.Equals(line2))
+                            {
+                                string left = line1 == null ? "<EOF>" : line1;
+                                string right = line2 == null ? "<EOF>" : line2;
+                                return "Mismatch at line " + line + " | original: " + left + " | generated: " + right;
+                            }
+
+                            line++;
+                        }
                     }
                 }
             }
@@ -1271,23 +1273,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                using (var a = new BufferedStream(new FileStream(original.FullName, FileMode.Open, FileAccess.Read));
-                    var b = new BufferedStream(new FileStream(generated.FullName, FileMode.Open, FileAccess.Read)))
+                using (var a = new BufferedStream(new FileStream(original.FullName, FileMode.Open, FileAccess.Read)))
                 {
-                    int ba;
-                    int bb;
-                    while (true)
+                    using (var b = new BufferedStream(new FileStream(generated.FullName, FileMode.Open, FileAccess.Read)))
                     {
-                        ba = a.ReadByte();
-                        bb = b.ReadByte();
-                        if (ba == -1 || bb == -1)
+                        int ba;
+                        int bb;
+                        while (true)
                         {
-                            return ba == -1 && bb == -1;
-                        }
+                            ba = a.ReadByte();
+                            bb = b.ReadByte();
+                            if (ba == -1 || bb == -1)
+                            {
+                                return ba == -1 && bb == -1;
+                            }
 
-                        if (ba != bb)
-                        {
-                            return false;
+                            if (ba != bb)
+                            {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -1768,19 +1772,53 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     JavaSystem.@out.Println("Unable to do final prototype of all subroutines. Continuing with partial results.");
                 }
 
+                this.EnforceStrictSignatures(subdata, nodedata);
+
                 dotypes = null;
                 nodedata.ClearProtoData();
-                subs = subdata.GetSubroutines();
-                while (subs.HasNext())
+                JavaSystem.@err.Println("DEBUG decompileNcs: iterating subroutines, numSubs=" + subdata.NumSubs());
+                int subCount = 0;
+                foreach (ASubroutine iterSub in this.SubIterable(subdata))
                 {
-                    sub = (ASubroutine)subs.Next();
-                    mainpass = new MainPass(subdata.GetState(sub), nodedata, subdata, this.actions);
-                    sub.Apply(mainpass);
-                    cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
-                    cleanpass.Apply();
-                    data.AddSub(mainpass.GetState());
-                    mainpass.Done();
-                    cleanpass.Done();
+                    subCount++;
+                    JavaSystem.@err.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + nodedata.GetPos(iterSub));
+                    try
+                    {
+                        mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
+                        iterSub.Apply(mainpass);
+                        cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
+                        cleanpass.Apply();
+                        data.AddSub(mainpass.GetState());
+                        JavaSystem.@err.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
+                        mainpass.Done();
+                        cleanpass.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@err.Println("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
+                        JavaSystem.@out.Println("Error while processing subroutine: " + e);
+                        e.PrintStackTrace(JavaSystem.@out);
+                        // Try to add partial subroutine state even if processing failed
+                        try
+                        {
+                            SubroutineState state = subdata.GetState(iterSub);
+                            if (state != null)
+                            {
+                                MainPass recoveryPass = new MainPass(state, nodedata, subdata, this.actions);
+                                // Try to get state even if apply failed
+                                SubScriptState recoveryState = recoveryPass.GetState();
+                                if (recoveryState != null)
+                                {
+                                    data.AddSub(recoveryState);
+                                    JavaSystem.@out.Println("Added partial subroutine state after error recovery.");
+                                }
+                            }
+                        }
+                        catch (Exception e2)
+                        {
+                            JavaSystem.@out.Println("Could not recover partial subroutine state: " + e2.Message);
+                        }
+                    }
                 }
 
                 mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);

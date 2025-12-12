@@ -7,6 +7,8 @@ using System.IO;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:96-175
+    // Original: public class Decompiler extends JFrame ...
     /// <summary>
     /// Static settings and utilities for the NCS decompiler.
     /// The actual UI is implemented in the NCSDecomp project using Avalonia.
@@ -17,6 +19,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public static readonly double screenWidth;
         public static readonly double screenHeight;
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
+        // Original: static { ... }
         static Decompiler()
         {
             // Default screen dimensions (will be overridden by Avalonia UI)
@@ -24,13 +28,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             screenHeight = 1080;
             (Decompiler.settings = new Settings()).Load();
             string outputDir = Decompiler.settings.GetProperty("Output Directory");
+            // If output directory is not set or empty, use default: ./ncsdecomp_converted
             if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
             {
-                // Default to current directory if output directory is not set
-                // The Avalonia UI will prompt the user to select a directory
-                Decompiler.settings.SetProperty("Output Directory", Directory.GetCurrentDirectory());
+                string defaultOutputDir = Path.Combine(JavaSystem.GetProperty("user.dir"), "ncsdecomp_converted");
+                // If default doesn't exist, try to create it, otherwise prompt user
+                if (!Directory.Exists(defaultOutputDir))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(defaultOutputDir);
+                        Decompiler.settings.SetProperty("Output Directory", defaultOutputDir);
+                    }
+                    catch
+                    {
+                        // If we can't create it, prompt user (synchronous version for compatibility)
+                        Decompiler.settings.SetProperty("Output Directory", ChooseOutputDirectory());
+                    }
+                }
+                else
+                {
+                    Decompiler.settings.SetProperty("Output Directory", defaultOutputDir);
+                }
                 Decompiler.settings.Save();
             }
+            // Apply game variant setting to FileDecompiler
+            string gameVariant = Decompiler.settings.GetProperty("Game Variant", "k1").ToLower();
+            FileDecompiler.isK2Selected = gameVariant.Equals("k2") || gameVariant.Equals("tsl") || gameVariant.Equals("2");
+            FileDecompiler.preferSwitches = bool.Parse(Decompiler.settings.GetProperty("Prefer Switches", "false"));
+            FileDecompiler.strictSignatures = bool.Parse(Decompiler.settings.GetProperty("Strict Signatures", "false"));
         }
 
         public static void Exit()
