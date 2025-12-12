@@ -157,3 +157,28 @@ Before making ANY edit to ANY file, you MUST locate the corresponding source cod
    // Original: self._name = name
    this._name = name;
    ```
+
+## Running PyKotor Python Code
+
+**CRITICAL: Virtual Environment Setup for Python Execution**
+
+When running ANY Python code or tests in `vendor/PyKotor`, you MUST use the following pattern to ensure the correct virtual environment is activated and environment variables are loaded:
+
+**PowerShell Command Pattern**:
+
+```powershell
+cd <workspace_path>/vendor/PyKotor; & "<workspace_path>/vendor/PyKotor/.venv_3.13/Scripts/Activate.ps1"; Get-Content .env | ForEach-Object { if ($_ -match '^([^#][^=]*)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] } }; <your_python_command>
+```
+
+**Components Explained**:
+1. **Change Directory**: `cd <workspace_path>/vendor/PyKotor` - Changes to the PyKotor directory
+2. **Activate Virtual Environment**: `& "<workspace_path>/vendor/PyKotor/.venv_3.13/Scripts/Activate.ps1"` - Activates the Python virtual environment (the `&` operator executes the script in PowerShell)
+3. **Load Environment Variables**: `Get-Content .env | ForEach-Object { if ($_ -match '^([^#][^=]*)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] } }` - Parses the `.env` file and loads environment variables (skips comment lines, extracts KEY=VALUE pairs)
+4. **Execute Python Command**: Your actual Python command (e.g., `python -m pytest Libraries/PyKotor/tests/resource/formats/test_ncs.py -v --tb=short 2>&1`)
+
+**Examples**:
+- Running pytest: Replace `<your_python_command>` with `python -m pytest Libraries/PyKotor/tests/resource/formats/test_ncs.py -v --tb=short 2>&1`
+- Running a Python script: Replace `<your_python_command>` with `python path/to/script.py`
+- Running a Python module: Replace `<your_python_command>` with `python -m module.name`
+
+**IMPORTANT**: Always replace `<workspace_path>` with the actual workspace root path (e.g., `G:\GitHub\HoloPatcher.NET`). All commands are chained with semicolons (`;`) to execute as a single PowerShell command.
