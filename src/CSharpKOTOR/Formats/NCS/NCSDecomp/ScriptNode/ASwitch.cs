@@ -177,7 +177,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             Scriptnode.ScriptNode parent = Parent();
             if (parent != null)
             {
-                return parent.GetTabs() + "\t";
+                return (parent.tabs ?? "") + "\t" + "\t";
             }
             return "";
         }
@@ -187,7 +187,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             Scriptnode.ScriptNode parent = Parent();
             if (parent != null)
             {
-                return parent.GetNewline();
+                return parent.newline ?? System.Environment.NewLine;
             }
             return System.Environment.NewLine;
         }
