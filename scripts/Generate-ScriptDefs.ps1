@@ -214,11 +214,17 @@ function Parse-NssFunction {
                         }
                         elseif ($paramDefault -match '^\[[\d\.,\s]+\]$') {
                             # Vector literal [x, y, z]
-                            $vectorParts = $paramDefault -replace '[\[\]]', '' -split ','
-                            $x = $vectorParts[0].Trim()
-                            $y = $vectorParts[1].Trim()
-                            $z = $vectorParts[2].Trim()
-                            "new Vector3(${x}f, ${y}f, ${z}f)"
+                            $vectorParts = $paramDefault -replace '[\[\]]', '' -split ',' | Where-Object { $_ }
+                            if ($vectorParts.Count -eq 3) {
+                                $x = $vectorParts[0].Trim()
+                                $y = $vectorParts[1].Trim()
+                                $z = $vectorParts[2].Trim()
+                                "new Vector3(${x}f, ${y}f, ${z}f)"
+                            }
+                            else {
+                                # Vector doesn't have 3 components, treat as unknown
+                                $paramDefault
+                            }
                         }
                         else {
                             # Constant reference - try to resolve to numeric value
@@ -303,7 +309,9 @@ function Parse-NssFile {
         catch {
             # Skip functions that fail to parse
             $errMsg = $_.Exception.Message
+            $funcLine = $lines[$i]
             Write-Warning "Failed to parse function at line $i : $errMsg"
+            Write-Warning "  Line content: $($funcLine.Substring(0, [Math]::Min(100, $funcLine.Length)))"
         }
     }
 
