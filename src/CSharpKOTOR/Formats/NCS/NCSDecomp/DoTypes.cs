@@ -16,7 +16,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     public class DoTypes : PrunedDepthFirstAdapter
     {
         private SubroutineState state;
-        protected LocalTypeStack stack;
+        /** Type-only view of the execution stack for inference. */
+        protected LocalTypeStack stack = new LocalTypeStack();
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
         private ActionsData actions;
@@ -25,23 +26,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         private bool protoreturn;
         private bool skipdeadcode;
         private LocalTypeStack backupstack;
-        // Debug mode - set to true for verbose stack tracing
-        private static bool DEBUG_STACK = JavaSystem.GetProperty("NCSDecomp.debug.stack") == "true";
-        // Debug mode - set to true for verbose stack tracing
-        private int instructionCount = 0;
-        // Debug mode - set to true for verbose stack tracing
-        private void DebugLog(string operation, string details, int sizeBefore, int sizeAfter)
-        {
-            if (DEBUG_STACK)
-            {
-                JavaSystem.@out.Println(String.Format("[DoTypes #%d] %s: %s | stack: %d -> %d (delta: %+d)", instructionCount, operation, details, sizeBefore, sizeAfter, sizeAfter - sizeBefore));
-            }
-        }
 
-        // Debug mode - set to true for verbose stack tracing
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:58-71
+        // Original: public DoTypes(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions, boolean initialprototyping)
         public DoTypes(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions, bool initialprototyping)
         {
-            this.stack = new LocalTypeStack();
             this.nodedata = nodedata;
             this.subdata = subdata;
             this.state = state;
@@ -57,7 +46,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.protoreturn = (this.initialproto || !state.Type().IsTyped());
         }
 
-        // Debug mode - set to true for verbose stack tracing
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:73-88
+        // Original: public void done()
         public virtual void Done()
         {
             this.state = null;
@@ -78,7 +68,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.actions = null;
         }
 
-        // Debug mode - set to true for verbose stack tracing
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:90-96
+        // Original: public void assertStack()
         public virtual void AssertStack()
         {
             if (this.stack.Size() > 0)
@@ -90,22 +81,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Debug mode - set to true for verbose stack tracing
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:99-105
+        // Original: @Override public void outARsaddCommand(ARsaddCommand node)
         public override void OutARsaddCommand(ARsaddCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
-                int before = this.stack.Size();
                 UtilsType type = NodeUtils.GetType(node);
                 this.stack.Push(type);
-                DebugLog("RSADD", "type=" + type.ByteValue(), before, this.stack.Size());
             }
         }
 
         // Debug mode - set to true for verbose stack tracing
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:106-128
+        // Original: @Override public void outACopyDownSpCommand(ACopyDownSpCommand node)
         public override void OutACopyDownSpCommand(ACopyDownSpCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -132,16 +123,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
 
-                // CPDOWNSP doesn't change stack size, it copies TO a location
-                DebugLog("CPDOWNSP", "copy=" + copy + " loc=" + loc, before, this.stack.Size());
             }
         }
 
         // Debug mode - set to true for verbose stack tracing
         // CPDOWNSP doesn't change stack size, it copies TO a location
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:129-140
+        // Original: @Override public void outACopyTopSpCommand(ACopyTopSpCommand node)
         public override void OutACopyTopSpCommand(ACopyTopSpCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -151,30 +141,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     this.stack.Push(this.stack.Get(loc, this.state));
                 }
-
-                DebugLog("CPTOPSP", "copy=" + copy + " loc=" + loc, before, this.stack.Size());
             }
         }
 
         // Debug mode - set to true for verbose stack tracing
         // CPDOWNSP doesn't change stack size, it copies TO a location
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:141-147
+        // Original: @Override public void outAConstCommand(AConstCommand node)
         public override void OutAConstCommand(AConstCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
-                int before = this.stack.Size();
                 UtilsType type = NodeUtils.GetType(node);
                 this.stack.Push(type);
-                DebugLog("CONST", "type=" + type.ByteValue(), before, this.stack.Size());
             }
         }
 
         // Debug mode - set to true for verbose stack tracing
         // CPDOWNSP doesn't change stack size, it copies TO a location
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:148-167
+        // Original: @Override public void outAActionCommand(AActionCommand node)
         public override void OutAActionCommand(AActionCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -200,8 +188,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     this.stack.Push(type);
                 }
 
-                string actionName = (this.actions != null) ? this.actions.GetName(NodeUtils.GetActionId(node)) : "action_" + NodeUtils.GetActionId(node);
-                DebugLog("ACTION", actionName + " remove=" + remove + " add=" + add + " retType=" + type.ByteValue(), before, this.stack.Size());
             }
         }
 
@@ -209,9 +195,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // CPDOWNSP doesn't change stack size, it copies TO a location
         // Safety check: don't remove more than we have
         // Remove what we can
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:168-180
+        // Original: @Override public void outALogiiCommand(ALogiiCommand node)
         public override void OutALogiiCommand(ALogiiCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -228,7 +215,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 this.stack.Push(new UtilsType((byte)3));
-                DebugLog("LOGII", "", before, this.stack.Size());
             }
         }
 
@@ -237,9 +223,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Safety check: don't remove more than we have
         // Remove what we can
         // Safety check
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:182-301
+        // Original: @Override public void outABinaryCommand(ABinaryCommand node)
         public override void OutABinaryCommand(ABinaryCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -298,8 +285,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     this.stack.Push(resulttype);
                 }
-
-                DebugLog("BINARY", opType + " p1=" + sizep3 + " p2=" + sizep2 + " result=" + sizeresult, before, this.stack.Size());
             }
         }
 
@@ -309,16 +294,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Remove what we can
         // Safety check
         // Safety check
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:303-312
+        // Original: @Override public void outAUnaryCommand(AUnaryCommand node)
         public override void OutAUnaryCommand(AUnaryCommand node)
         {
-            instructionCount++;
-
             // Unary operations don't change stack size - they operate on top of stack in place
-            if (!this.protoskipping && !this.skipdeadcode)
-            {
-                int before = this.stack.Size();
-                DebugLog("UNARY", "", before, this.stack.Size());
-            }
         }
 
         // Debug mode - set to true for verbose stack tracing
@@ -328,9 +308,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Safety check
         // Safety check
         // Unary operations don't change stack size - they operate on top of stack in place
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:314-372
+        // Original: @Override public void outAMoveSpCommand(AMoveSpCommand node)
         public override void OutAMoveSpCommand(AMoveSpCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -367,8 +348,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         this.stack.Remove(removeCount);
                     }
                 }
-
-                DebugLog("MOVSP", "remove=" + removeCount, before, this.stack.Size());
             }
         }
 
@@ -380,16 +359,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Safety check
         // Unary operations don't change stack size - they operate on top of stack in place
         // Safety check
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:374-384
+        // Original: @Override public void outAStoreStateCommand(AStoreStateCommand node)
         public override void OutAStoreStateCommand(AStoreStateCommand node)
         {
-            instructionCount++;
-
             // STORESTATE doesn't modify the stack - it saves state for later
-            if (!this.protoskipping && !this.skipdeadcode)
-            {
-                int before = this.stack.Size();
-                DebugLog("STORESTATE", "", before, this.stack.Size());
-            }
         }
 
         // Debug mode - set to true for verbose stack tracing
@@ -401,16 +375,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Unary operations don't change stack size - they operate on top of stack in place
         // Safety check
         // STORESTATE doesn't modify the stack - it saves state for later
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:386-404
+        // Original: @Override public void outAStackCommand(AStackCommand node)
         public override void OutAStackCommand(AStackCommand node)
         {
-            instructionCount++;
-
             // Handle SAVEBP/RESTOREBP - these don't affect SP stack
-            if (!this.protoskipping && !this.skipdeadcode)
-            {
-                int before = this.stack.Size();
-                DebugLog("STACK", NodeUtils.GetType(node).ToString(), before, this.stack.Size());
-            }
         }
 
         // Debug mode - set to true for verbose stack tracing
@@ -423,9 +392,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Safety check
         // STORESTATE doesn't modify the stack - it saves state for later
         // Handle SAVEBP/RESTOREBP - these don't affect SP stack
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:406-444
+        // Original: @Override public void outAConditionalJumpCommand(AConditionalJumpCommand node)
         public override void OutAConditionalJumpCommand(AConditionalJumpCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -439,8 +409,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     this.stack.Remove(1);
                 }
-
-                DebugLog("JZ/JNZ", "", before, this.stack.Size());
             }
 
             this.CheckProtoskippingStart(node);
@@ -461,14 +429,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // STORESTATE doesn't modify the stack - it saves state for later
         // Handle SAVEBP/RESTOREBP - these don't affect SP stack
         // Safety check
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:446-470
+        // Original: @Override public void outAJumpCommand(AJumpCommand node)
         public override void OutAJumpCommand(AJumpCommand node)
         {
-            instructionCount++;
-            if (!this.protoskipping && !this.skipdeadcode)
-            {
-                int before = this.stack.Size();
-                DebugLog("JMP", "", before, this.stack.Size());
-            }
+            // JMP doesn't modify stack
 
             this.CheckProtoskippingStart(node);
             if (!this.protoskipping && !this.skipdeadcode)
@@ -488,9 +453,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // STORESTATE doesn't modify the stack - it saves state for later
         // Handle SAVEBP/RESTOREBP - these don't affect SP stack
         // Safety check
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:472-548
+        // Original: @Override public void outAJumpToSubroutine(AJumpToSubroutine node)
         public override void OutAJumpToSubroutine(AJumpToSubroutine node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -543,8 +509,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         }
                     }
                 }
-
-                DebugLog("JSR", "params=" + paramsize + " retType=" + substate.Type().ByteValue(), before, this.stack.Size());
             }
         }
 
@@ -560,9 +524,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Handle SAVEBP/RESTOREBP - these don't affect SP stack
         // Safety check
         // Safety check
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:550-592
+        // Original: @Override public void outADestructCommand(ADestructCommand node)
         public override void OutADestructCommand(ADestructCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -589,8 +554,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     JavaSystem.@out.Println("[DoTypes] WARNING: DESTRUCT second remove issue");
                 }
-
-                DebugLog("DESTRUCT", "rem=" + removesize + " start=" + savestart + " save=" + savesize, before, this.stack.Size());
             }
         }
 
@@ -608,9 +571,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Safety check
         // Safety check
         // Second removal
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:594-626
+        // Original: @Override public void outACopyTopBpCommand(ACopyTopBpCommand node)
         public override void OutACopyTopBpCommand(ACopyTopBpCommand node)
         {
-            instructionCount++;
             if (!this.protoskipping && !this.skipdeadcode)
             {
                 int before = this.stack.Size();
@@ -621,8 +585,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     this.stack.Push(this.subdata.GetGlobalStack().GetType(loc));
                     --loc;
                 }
-
-                DebugLog("CPTOPBP", "copy=" + copy, before, this.stack.Size());
             }
         }
 
@@ -640,16 +602,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Safety check
         // Safety check
         // Second removal
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:628-650
+        // Original: @Override public void outACopyDownBpCommand(ACopyDownBpCommand node)
         public override void OutACopyDownBpCommand(ACopyDownBpCommand node)
         {
-            instructionCount++;
-
             // CPDOWNBP copies from stack to global - doesn't change SP stack size
-            if (!this.protoskipping && !this.skipdeadcode)
-            {
-                int before = this.stack.Size();
-                DebugLog("CPDOWNBP", "", before, this.stack.Size());
-            }
         }
 
         // Debug mode - set to true for verbose stack tracing
