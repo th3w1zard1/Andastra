@@ -33,9 +33,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
         {
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:38-42
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             this.stackcounts = null;
             this.varstruct = null;
         }

@@ -9,13 +9,16 @@ using NCSDecompLinkedList = CSharpKOTOR.Formats.NCS.NCSDecomp.LinkedList;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:18-26
+    // Original: public class VarStruct extends Variable
     public class VarStruct : Variable
     {
-        protected NCSDecompLinkedList vars;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:19
+        // Original: protected LinkedList<Variable> vars = new LinkedList<>();
+        protected NCSDecompLinkedList vars = new NCSDecompLinkedList();
         protected StructType structtype;
         public VarStruct() : base(new UtilsType(unchecked((byte)(-15))))
         {
-            this.vars = new NCSDecompLinkedList();
             this.size = 0;
             this.structtype = new StructType();
         }
@@ -37,21 +40,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             }
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:43-57
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.vars != null)
             {
-                for (int i = 0; i < this.vars.Count; ++i)
+                for (int i = 0; i < this.vars.Count; i++)
                 {
-                    ((Variable)this.vars[i]).Dispose();
+                    ((Variable)this.vars[i]).Close();
                 }
             }
 
             this.vars = null;
             if (this.structtype != null)
             {
-                this.structtype.Dispose();
+                this.structtype.Close();
             }
 
             this.structtype = null;
