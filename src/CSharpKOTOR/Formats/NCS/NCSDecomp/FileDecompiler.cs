@@ -1627,7 +1627,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     using (var stringReader = new StringReader(commands))
                     using (var pushbackReader = new PushbackReader(stringReader, 1024))
                     {
-                        ast = new Parser(new Lexer(pushbackReader)).Parse();
+                        ast = new Parser.Parser(new Lexer.Lexer(pushbackReader)).Parse();
                     }
                     JavaSystem.@out.Println("DEBUG decompileNcs: parse successful");
                 }
@@ -1646,7 +1646,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         using (var stringReader = new StringReader(commands))
                         using (var pushbackReader = new PushbackReader(stringReader, 2048))
                         {
-                            ast = new Parser(new Lexer(pushbackReader)).Parse();
+                            ast = new Parser.Parser(new Lexer.Lexer(pushbackReader)).Parse();
                         }
                         JavaSystem.@out.Println("Successfully recovered parse with larger buffer.");
                     }
@@ -1663,18 +1663,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                                 // Try to find subroutine boundaries in the commands string
                                 // This is a heuristic recovery - look for common patterns
                                 string[] lines = commands.Split('\n');
-                                int subCount = 0;
+                                int subCount2 = 0;
                                 foreach (string line in lines)
                                 {
                                     string trimmed = line.Trim();
                                     if (trimmed.StartsWith("sub") || trimmed.StartsWith("function"))
                                     {
-                                        subCount++;
+                                        subCount2++;
                                     }
                                 }
 
                                 // If we found some structure, try to continue with minimal setup
-                                if (subCount > 0)
+                                if (subCount2 > 0)
                                 {
                                     JavaSystem.@out.Println("Detected " + subCount + " potential subroutines in decoded commands, but full parse failed.");
                                     // We'll fall through to create a stub, but with better information

@@ -76,9 +76,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
         // This is called from PrunedDepthFirstAdapter.CaseARsaddCommand overload
-        public void OutARsaddCommand(AST.ARsaddCommand node)
+        // Override MainPass.OutARsaddCommand(AST.ARsaddCommand) to use freezeStack instead of skipdeadcode
+        public override void OutARsaddCommand(AST.ARsaddCommand node)
         {
             // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
+            // Use freezeStack check instead of skipdeadcode (matching DoGlobalVars pattern)
             if (!this.freezeStack)
             {
                 // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
