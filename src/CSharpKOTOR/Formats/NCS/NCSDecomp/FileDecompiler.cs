@@ -2634,26 +2634,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 ast = null;
                 JavaSystem.@out.Println("TRACE DecompileNcsObject: Getting main subroutine, total subs=" + subdata.NumSubs());
                 mainsub = subdata.GetMainSub();
-                if (mainsub == null)
+                if (mainsub != null)
                 {
-                    JavaSystem.@out.Println("TRACE DecompileNcsObject: No main subroutine found, returning null");
-                    JavaSystem.@out.Println("No main subroutine found in NCS - cannot decompile.");
-                    JavaSystem.@out.Println("Subroutines count: " + subdata.NumSubs());
-                    return null;
-                }
-                JavaSystem.@out.Println("TRACE DecompileNcsObject: Main subroutine found, type=" + mainsub.GetType().Name);
-                flatten = new FlattenSub(mainsub, nodedata);
-                mainsub.Apply(flatten);
-                subs = subdata.GetSubroutines();
-                while (subs.HasNext())
-                {
-                    sub = (ASubroutine)subs.Next();
-                    flatten.SetSub(sub);
-                    sub.Apply(flatten);
-                }
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: Main subroutine found, type=" + mainsub.GetType().Name);
+                    flatten = new FlattenSub(mainsub, nodedata);
+                    mainsub.Apply(flatten);
+                    subs = subdata.GetSubroutines();
+                    while (subs.HasNext())
+                    {
+                        sub = (ASubroutine)subs.Next();
+                        flatten.SetSub(sub);
+                        sub.Apply(flatten);
+                    }
 
-                flatten.Done();
-                flatten = null;
+                    flatten.Done();
+                    flatten = null;
+                }
+                else
+                {
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: No main subroutine found, continuing with partial decompilation");
+                    JavaSystem.@out.Println("Warning: No main subroutine available, continuing with partial decompilation.");
+                }
                 doglobs = null;
                 // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1392-1414
                 try
@@ -2891,15 +2892,64 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     }
                 }
 
-                mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
-                mainsub.Apply(mainpass);
-                mainpass.AssertStack();
-                cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
-                cleanpass.Apply();
-                mainpass.GetState().IsMain(true);
-                data.AddSub(mainpass.GetState());
-                mainpass.Done();
-                cleanpass.Done();
+                // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2032-2079
+                // Generate code for main subroutine - recover if this fails
+                if (mainsub != null)
+                {
+                    try
+                    {
+                        mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
+                        mainsub.Apply(mainpass);
+                        try
+                        {
+                            mainpass.AssertStack();
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Could not assert stack, continuing anyway.");
+                        }
+                        cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
+                        cleanpass.Apply();
+                        mainpass.GetState().IsMain(true);
+                        data.AddSub(mainpass.GetState());
+                        mainpass.Done();
+                        cleanpass.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error generating code for main subroutine: " + e.Message);
+                        // Try to create a minimal main function stub using MainPass
+                        try
+                        {
+                            mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
+                            // Even if apply fails, try to get the state
+                            try
+                            {
+                                mainsub.Apply(mainpass);
+                            }
+                            catch (Exception e2)
+                            {
+                                JavaSystem.@out.Println("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                            }
+                            SubScriptState minimalMain = mainpass.GetState();
+                            if (minimalMain != null)
+                            {
+                                minimalMain.IsMain(true);
+                                data.AddSub(minimalMain);
+                                JavaSystem.@out.Println("Created minimal main subroutine stub.");
+                            }
+                            mainpass.Done();
+                        }
+                        catch (Exception e2)
+                        {
+                            JavaSystem.@out.Println("Could not create minimal main stub: " + e2.Message);
+                        }
+                    }
+                }
+                else
+                {
+                    JavaSystem.@out.Println("Warning: No main subroutine available for code generation.");
+                }
                 data.SetSubdata(subdata);
                 // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1600-1618
                 if (doglobs != null)
