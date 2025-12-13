@@ -55,26 +55,32 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return buff.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:46-49
+        // Original: @Override public StackEntry stackentry() { return this.stackentry; }
         public virtual StackEntry Stackentry()
         {
             return this.stackentry;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:51-54
+        // Original: @Override public void stackentry(StackEntry stackentry) { this.stackentry = stackentry; }
         public virtual void Stackentry(StackEntry stackentry)
         {
             this.stackentry = stackentry;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java
-        // Original: @Override public void close()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:56-72
+        // Original: @Override public void close() { super.close(); if (this.params != null) { for (AExpression param : this.params) { ((ScriptNode)param).close(); } this.params = null; } if (this.stackentry != null) { this.stackentry.close(); } this.stackentry = null; }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:56-72
+        // Original: @Override public void close() { super.close(); if (this.params != null) { for (AExpression param : this.params) { ((ScriptNode)param).close(); } this.params = null; } if (this.stackentry != null) { this.stackentry.close(); } this.stackentry = null; }
         public override void Close()
         {
             base.Close();
             if (this.@params != null)
             {
-                foreach (ScriptNode param in this.@params)
+                for (int i = 0; i < this.@params.Count; ++i)
                 {
-                    param.Close();
+                    ((ScriptNode)this.@params[i]).Close();
                 }
 
                 this.@params = null;
