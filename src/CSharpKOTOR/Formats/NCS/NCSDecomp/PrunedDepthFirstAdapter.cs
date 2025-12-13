@@ -69,8 +69,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
                 node.GetReturn().Apply(this);
             }
 
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrunedDepthFirstAdapter.java:109-113
+            // Original: PSubroutine[] temp = node.getSubroutine().toArray(new PSubroutine[0]); for (int i = 0; i < temp.length; i++) { temp[i].apply(this); }
             Object[] temp = node.GetSubroutine().ToArray();
-            for (int i = 0; i < temp.Length; ++i)
+            for (int i = 0; i < temp.Length; i++)
             {
                 ((PSubroutine)temp[i]).Apply(this);
             }
