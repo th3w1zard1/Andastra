@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrunedReversedDepthFirstAdapter.java:59-939
+// Original: public class PrunedReversedDepthFirstAdapter extends AnalysisAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +12,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 {
     public class PrunedReversedDepthFirstAdapter : AnalysisAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrunedReversedDepthFirstAdapter.java:60-62
+        // Original: public void inStart(Start node) { this.defaultIn(node); }
         public virtual void InStart(Start node)
         {
             this.DefaultIn(node);

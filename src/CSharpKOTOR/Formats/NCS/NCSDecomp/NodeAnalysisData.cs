@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:18-321
+// Original: public class NodeAnalysisData
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

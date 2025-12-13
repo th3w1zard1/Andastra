@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:22-480
+// Original: public class SubroutineState
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,6 +13,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineState
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:23-38
+        // Original: private static final byte PROTO_NO = 0; private static final byte PROTO_IN_PROGRESS = 1; private static final byte PROTO_DONE = 2; protected static final byte JUMP_YES = 0; protected static final byte JUMP_NO = 1; protected static final byte JUMP_NA = 2; private Type type; private ArrayList<Type> params; private int returndepth; private Node root; private int paramsize; private boolean paramstyped; private byte status; private NodeAnalysisData nodedata; private LinkedList<DecisionData> decisionqueue; private byte id;
         private static readonly byte PROTO_NO = 0;
         private static readonly byte PROTO_IN_PROGRESS = 1;
         private static readonly byte PROTO_DONE = 2;

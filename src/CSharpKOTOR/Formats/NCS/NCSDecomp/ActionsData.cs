@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:22-219
+// Original: public class ActionsData
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,12 +10,17 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:22-38
-    // Original: public class ActionsData { private final List<Action> actions; private final BufferedReader actionsreader; public ActionsData(BufferedReader actionsreader) throws IOException { this.actionsreader = actionsreader; this.actions = new ArrayList<>(877); this.readActions(); } }
     public class ActionsData
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:23-26
+        // Original: /** Ordered list of parsed actions (index matches opcode value). */ private final List<Action> actions; /** Reader over the nwscript actions block. */ private final BufferedReader actionsreader;
+        /** Ordered list of parsed actions (index matches opcode value). */
         private List<object> actions;
+        /** Reader over the nwscript actions block. */
         private StreamReader actionsreader;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:28-38
+        // Original: public ActionsData(BufferedReader actionsreader) throws IOException { this.actionsreader = actionsreader; this.actions = new ArrayList<>(877); this.readActions(); }
         public ActionsData(StreamReader actionsreader)
         {
             this.actionsreader = actionsreader;
