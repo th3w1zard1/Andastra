@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Extract;
 using CSharpKOTOR.Mods;
 using KotorDiff.NET.Diff;
 using KotorDiff.NET.Generator;
@@ -146,11 +147,35 @@ namespace KotorDiff.NET.App
             var allPaths = config.Paths;
 
             // Create incremental writer if requested
-            // TODO: Implement IncrementalTSLPatchDataWriter
-            // For now, just use non-incremental mode
+            IncrementalTSLPatchDataWriter incrementalWriter = null;
             if (config.TslPatchDataPath != null && config.UseIncrementalWriter)
             {
-                DiffLogger.GetLogger()?.Warning("[Warning] Incremental writer not yet implemented, using non-incremental mode");
+                string baseDataPath = null;
+                // Try to determine base path from first valid directory path
+                foreach (var candidatePath in allPaths)
+                {
+                    if (candidatePath is Installation install)
+                    {
+                        baseDataPath = install.InstallationPath;
+                        break;
+                    }
+                    else if (candidatePath is string pathStr && Directory.Exists(pathStr))
+                    {
+                        baseDataPath = pathStr;
+                        break;
+                    }
+                }
+
+                incrementalWriter = new IncrementalTSLPatchDataWriter(
+                    config.TslPatchDataPath.FullName,
+                    config.IniFilename,
+                    baseDataPath: baseDataPath,
+                    moddedDataPath: null, // TODO: Determine modded path
+                    strrefCache: null, // TODO: Implement StrRefReferenceCache
+                    twodaCaches: null, // TODO: Implement TwoDAMemoryReferenceCache
+                    logFunc: (msg) => DiffLogger.GetLogger()?.Info(msg)
+                );
+                DiffLogger.GetLogger()?.Info($"Using incremental writer for tslpatchdata: {config.TslPatchDataPath}");
             }
 
             // Run the diff
@@ -160,10 +185,42 @@ namespace KotorDiff.NET.App
                 filters: config.Filters,
                 logFunc: logFunc,
                 compareHashes: config.CompareHashes,
-                modificationsByType: modificationsByType);
+                modificationsByType: modificationsByType,
+                incrementalWriter: incrementalWriter);
 
             // Finalize TSLPatcher data if requested
-            if (config.TslPatchDataPath != null && !config.UseIncrementalWriter)
+            if (config.TslPatchDataPath != null)
+            {
+                if (config.UseIncrementalWriter && incrementalWriter != null)
+                {
+                    try
+                    {
+                        // Finalize INI by writing InstallList section
+                        incrementalWriter.FinalizeWriter();
+                        
+                        // Summary
+                        DiffLogger.GetLogger()?.Info("\nTSLPatcher data generation complete:");
+                        DiffLogger.GetLogger()?.Info($"  Location: {config.TslPatchDataPath}");
+                        DiffLogger.GetLogger()?.Info($"  INI file: {config.IniFilename}");
+                        DiffLogger.GetLogger()?.Info($"  TLK modifications: {incrementalWriter.AllModifications.Tlk.Count}");
+                        DiffLogger.GetLogger()?.Info($"  2DA modifications: {incrementalWriter.AllModifications.Twoda.Count}");
+                        DiffLogger.GetLogger()?.Info($"  GFF modifications: {incrementalWriter.AllModifications.Gff.Count}");
+                        DiffLogger.GetLogger()?.Info($"  SSF modifications: {incrementalWriter.AllModifications.Ssf.Count}");
+                        DiffLogger.GetLogger()?.Info($"  NCS modifications: {incrementalWriter.AllModifications.Ncs.Count}");
+                        int totalInstallFiles = incrementalWriter.InstallFolders.Values.Sum(files => files.Count);
+                        DiffLogger.GetLogger()?.Info($"  Install files: {totalInstallFiles}");
+                        DiffLogger.GetLogger()?.Info($"  Install folders: {incrementalWriter.InstallFolders.Count}");
+                    }
+                    catch (Exception genError)
+                    {
+                        DiffLogger.GetLogger()?.Error($"[Error] Failed to finalize TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
+                        DiffLogger.GetLogger()?.Debug("Full traceback:");
+                        DiffLogger.GetLogger()?.Debug(genError.StackTrace);
+                        return null;
+                    }
+                }
+                else if (!config.UseIncrementalWriter)
+                {
             {
                 try
                 {

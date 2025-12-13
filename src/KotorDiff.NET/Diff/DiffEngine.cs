@@ -7,6 +7,7 @@ using System.Linq;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
+using KotorDiff.NET.Generator;
 
 namespace KotorDiff.NET.Diff
 {
@@ -21,7 +22,8 @@ namespace KotorDiff.NET.Diff
             List<string> filters = null,
             Action<string> logFunc = null,
             bool compareHashes = true,
-            ModificationsByType modificationsByType = null)
+            ModificationsByType modificationsByType = null,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -72,7 +74,8 @@ namespace KotorDiff.NET.Diff
                     pathInfos,
                     logFunc: logFunc,
                     compareHashes: compareHashes,
-                    modificationsByType: modificationsByType);
+                    modificationsByType: modificationsByType,
+                    incrementalWriter: incrementalWriter);
 
                 logFunc("[DEBUG] Comparison complete");
                 return result;
@@ -240,7 +243,8 @@ namespace KotorDiff.NET.Diff
             List<PathInfo> pathInfos,
             Action<string> logFunc = null,
             bool compareHashes = true,
-            ModificationsByType modificationsByType = null)
+            ModificationsByType modificationsByType = null,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             bool? isSameResult = true;
             int processedCount = 0;
@@ -301,7 +305,8 @@ namespace KotorDiff.NET.Diff
                             ctx,
                             compareHashes: compareHashes,
                             modificationsByType: modificationsByType,
-                            logFunc: logFunc);
+                            logFunc: logFunc,
+                            incrementalWriter: incrementalWriter);
 
                         if (diffResult == false)
                         {
@@ -388,7 +393,8 @@ namespace KotorDiff.NET.Diff
             DiffContext context,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            Action<string> logFunc = null)
+            Action<string> logFunc = null,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -411,25 +417,25 @@ namespace KotorDiff.NET.Diff
 
             if (gffTypes.Contains(context.Ext))
             {
-                return DiffGffData(data1, data2, context, modificationsByType, logFunc);
+                return DiffGffData(data1, data2, context, modificationsByType, logFunc, incrementalWriter);
             }
 
             // Handle 2DA files
             if (context.Ext.Equals("2da", StringComparison.OrdinalIgnoreCase))
             {
-                return DiffTwoDaData(data1, data2, context, modificationsByType, logFunc, compareHashes);
+                return DiffTwoDaData(data1, data2, context, modificationsByType, logFunc, compareHashes, incrementalWriter);
             }
 
             // Handle TLK files
             if (context.Ext.Equals("tlk", StringComparison.OrdinalIgnoreCase))
             {
-                return DiffTlkData(data1, data2, context, modificationsByType, logFunc);
+                return DiffTlkData(data1, data2, context, modificationsByType, logFunc, incrementalWriter);
             }
 
             // Handle SSF files
             if (context.Ext.Equals("ssf", StringComparison.OrdinalIgnoreCase))
             {
-                return DiffSsfData(data1, data2, context, modificationsByType, logFunc, compareHashes);
+                return DiffSsfData(data1, data2, context, modificationsByType, logFunc, compareHashes, incrementalWriter);
             }
 
             // Handle text files
@@ -469,7 +475,8 @@ namespace KotorDiff.NET.Diff
             byte[] data2,
             DiffContext context,
             ModificationsByType modificationsByType,
-            Action<string> logFunc)
+            Action<string> logFunc,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -488,7 +495,16 @@ namespace KotorDiff.NET.Diff
                             modGff.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
                             modGff.SourceFile = resourceName;
                             modGff.SaveAs = resourceName;
-                            modificationsByType.Gff.Add(modGff);
+                            
+                            if (incrementalWriter != null)
+                            {
+                                incrementalWriter.AddModification(modGff);
+                            }
+                            else
+                            {
+                                modificationsByType?.Gff.Add(modGff);
+                            }
+                            
                             logFunc($"\n[PATCH] {context.Where}");
                             logFunc("  |-- !ReplaceFile: 0 (patch existing file, don't replace)");
                             logFunc($"  |-- Modifications: {modGff.Modifiers.Count} field/struct changes");
@@ -523,14 +539,22 @@ namespace KotorDiff.NET.Diff
                 if (analyzer != null)
                 {
                     var result = analyzer.Analyze(data1, data2, context.Where);
-                    if (result != null && modificationsByType != null)
+                    if (result != null)
                     {
                         if (result is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             mod2da.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
                             mod2da.SourceFile = resourceName;
-                            modificationsByType.Twoda.Add(mod2da);
+                            
+                            if (incrementalWriter != null)
+                            {
+                                incrementalWriter.AddModification(mod2da);
+                            }
+                            else if (modificationsByType != null)
+                            {
+                                modificationsByType.Twoda.Add(mod2da);
+                            }
                             logFunc($"\n[PATCH] {context.Where}");
                             logFunc("  |-- !ReplaceFile: 0 (patch existing 2DA)");
                             logFunc($"  |-- Modifications: {mod2da.Modifiers.Count} row/column changes");
@@ -562,7 +586,8 @@ namespace KotorDiff.NET.Diff
             byte[] data2,
             DiffContext context,
             ModificationsByType modificationsByType,
-            Action<string> logFunc)
+            Action<string> logFunc,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -570,13 +595,21 @@ namespace KotorDiff.NET.Diff
                 if (analyzer != null)
                 {
                     var result = analyzer.Analyze(data1, data2, context.Where);
-                    if (result != null && modificationsByType != null)
+                    if (result != null)
                     {
                         // TLK analyzer returns tuple: (ModificationsTLK, strref_mappings)
                         if (result is ValueTuple<CSharpKOTOR.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
                         {
                             var modTlk = tuple.Item1;
-                            modificationsByType.Tlk.Add(modTlk);
+                            
+                            if (incrementalWriter != null)
+                            {
+                                incrementalWriter.AddModification(modTlk);
+                            }
+                            else if (modificationsByType != null)
+                            {
+                                modificationsByType.Tlk.Add(modTlk);
+                            }
                             logFunc($"\n[PATCH] {context.Where}");
                             logFunc("  |-- Mode: Append entries (TSLPatcher design)");
                             logFunc($"  |-- Modifications: {modTlk.Modifiers.Count} TLK entries");
@@ -604,7 +637,8 @@ namespace KotorDiff.NET.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            bool compareHashes)
+            bool compareHashes,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -612,14 +646,22 @@ namespace KotorDiff.NET.Diff
                 if (analyzer != null)
                 {
                     var result = analyzer.Analyze(data1, data2, context.Where);
-                    if (result != null && modificationsByType != null)
+                    if (result != null)
                     {
                         if (result is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modSsf.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
                             modSsf.SourceFile = resourceName;
-                            modificationsByType.Ssf.Add(modSsf);
+                            
+                            if (incrementalWriter != null)
+                            {
+                                incrementalWriter.AddModification(modSsf);
+                            }
+                            else if (modificationsByType != null)
+                            {
+                                modificationsByType.Ssf.Add(modSsf);
+                            }
                             logFunc($"\n[PATCH] {context.Where}");
                             logFunc("  |-- !ReplaceFile: 0 (patch existing SSF)");
                             logFunc($"  |-- Modifications: {modSsf.Modifiers.Count} sound slot changes");
@@ -687,7 +729,7 @@ namespace KotorDiff.NET.Diff
             var ctx = new DiffContext(Path.GetFileName(file1), Path.GetFileName(file2), ext);
             byte[] data1 = File.ReadAllBytes(file1);
             byte[] data2 = File.ReadAllBytes(file2);
-            return DiffData(data1, data2, ctx, compareHashes, modificationsByType, logFunc);
+            return DiffData(data1, data2, ctx, compareHashes, modificationsByType, logFunc, null);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1777-1903
