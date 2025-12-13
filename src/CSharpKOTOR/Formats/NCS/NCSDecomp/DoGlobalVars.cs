@@ -1,6 +1,8 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:24-122
 // Original: public class DoGlobalVars extends MainPass
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
@@ -18,8 +20,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.freezeStack = false;
         }
 
-        // Override DefaultIn to ensure skipdeadcode is set correctly for globals
-
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:33-36
         // Original: @Override public String getCode() { return this.state.toStringGlobals(); }
         public override string GetCode()
@@ -29,18 +29,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:38-41
         // Original: @Override public void outABpCommand(ABpCommand node) { this.freezeStack = true; }
-        public override void OutABpCommand(ABpCommand node)
+        public virtual void OutABpCommand(ABpCommand node)
         {
-            this.freezeStack = true;
-        }
-
-        // Handle AST.ABpCommand as well (from NcsToAstConverter)
-        // This is called from PrunedDepthFirstAdapter.CaseABpCommand overload
-        public void OutABpCommand(AST.ABpCommand node)
-        {
-            // Treat AST.ABpCommand the same as root namespace ABpCommand
-            // Set freezeStack to true when we encounter SAVEBP/RESTOREBP
-            // This prevents stack mutations after BP ops, but commands before SAVEBP should still be processed
             this.freezeStack = true;
         }
 
@@ -66,6 +56,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:60-65
+        // Original: @Override public void outACopyDownSpCommand(ACopyDownSpCommand node) { if (!this.freezeStack) { this.state.transformCopyDownSp(node); } }
         public override void OutACopyDownSpCommand(ACopyDownSpCommand node)
         {
             if (!this.freezeStack)
@@ -74,6 +66,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:67-75
+        // Original: @Override public void outARsaddCommand(ARsaddCommand node) { if (!this.freezeStack) { Variable var = new Variable(NodeUtils.getType(node)); this.stack.push(var); this.state.transformRSAdd(node); var = null; } }
         public override void OutARsaddCommand(ARsaddCommand node)
         {
             if (!this.freezeStack)
@@ -85,32 +79,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
-        // This is called from PrunedDepthFirstAdapter.CaseARsaddCommand overload
-        // Override MainPass.OutARsaddCommand(AST.ARsaddCommand) to use freezeStack instead of skipdeadcode
-        public override void OutARsaddCommand(AST.ARsaddCommand node)
-        {
-            // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
-            // Use freezeStack check instead of skipdeadcode (matching DoGlobalVars pattern)
-            if (!this.freezeStack)
-            {
-                // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
-                // Parse the type value from the TIntegerConstant's text
-                int typeVal = 0;
-                if (node.GetType() != null && node.GetType().GetText() != null)
-                {
-                    if (int.TryParse(node.GetType().GetText(), out int parsedType))
-                    {
-                        typeVal = parsedType;
-                    }
-                }
-                Variable var = new Variable(new UtilsType((byte)typeVal));
-                this.stack.Push(var);
-                this.state.TransformRSAdd(node);
-                var = null;
-            }
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:77-79
+        // Original: public LocalVarStack getStack() { return this.stack; }
         public virtual LocalVarStack GetStack()
         {
             return this.stack;

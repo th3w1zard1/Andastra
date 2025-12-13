@@ -30,6 +30,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.nodedata = nodedata;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:52-56
+        // Original: public void done() { this.sub = null; this.commands = null; this.nodedata = null; }
         public virtual void Done()
         {
             this.sub = null;
@@ -37,11 +39,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.nodedata = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:58-60
+        // Original: public void setSub(ASubroutine sub) { this.sub = sub; }
         public virtual void SetSub(ASubroutine sub)
         {
             this.sub = sub;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:63-75
+        // Original: @Override public void caseACommandBlock(ACommandBlock node) { ... }
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.commands = node.GetCmd();
@@ -60,6 +66,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:78-100
+        // Original: @Override public void caseAActionJumpCmd(AActionJumpCmd node) { ... }
         public override void CaseAActionJumpCmd(AActionJumpCmd node)
         {
             AStoreStateCommand sscommand = (AStoreStateCommand)node.GetStoreStateCommand();

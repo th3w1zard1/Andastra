@@ -21,6 +21,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             node.SetPProgram(null);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/DestroyParseTree.java:67-95
+        // Original: @Override public void caseAProgram(AProgram node) { ... }
         public override void CaseAProgram(AProgram node)
         {
             if (node.GetSize() != null)
@@ -56,6 +58,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             node.SetSubroutine(new Vector(1));
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/DestroyParseTree.java:98-109
+        // Original: @Override public void caseASubroutine(ASubroutine node) { ... }
         public override void CaseASubroutine(ASubroutine node)
         {
             if (node.GetCommandBlock() != null)
@@ -72,6 +76,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             node.SetReturn(null);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/DestroyParseTree.java:112-120
+        // Original: @Override public void caseACommandBlock(ACommandBlock node) { ... }
         public override void CaseACommandBlock(ACommandBlock node)
         {
             Object[] temp = node.GetCmd().ToArray();
