@@ -1,4 +1,6 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:71-1050
+// Original: public class Lexer
+// Note: This file is generated from lexer grammar, matching the Java implementation structure
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +13,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer
 {
     public class Lexer
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:72-81
+        // Original: private static int[][][][] gotoTable; private static int[][] accept; protected Token token; protected Lexer.State state = Lexer.State.INITIAL; private PushbackReader in; private int line; private int pos; private boolean cr; private boolean eof; private final StringBuffer text = new StringBuffer();
         private static int[][][][] gotoTable;
         private static int[][] accept;
         protected Token token;
@@ -21,6 +25,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer
         private bool cr;
         private bool eof;
         private readonly StringBuilder text;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:83-103
+        // Original: public Lexer(PushbackReader in) { this.in = in; if (gotoTable == null) { ... } }
         public Lexer(PushbackReader @in)
         {
             this.state = State.INITIAL;

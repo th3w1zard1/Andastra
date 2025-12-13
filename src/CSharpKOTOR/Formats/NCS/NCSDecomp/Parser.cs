@@ -1,4 +1,6 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:189-1517
+// Original: public class Parser
+// Note: This file is generated from parser grammar, matching the Java implementation structure
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +17,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
 {
     public class Parser
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:190-207
+        // Original: private static final int SHIFT = 0; private static final int REDUCE = 1; private static final int ACCEPT = 2; private static final int ERROR = 3; private static int[][][] actionTable; private static int[][][] gotoTable; private static String[] errorMessages; private static int[] errors; public final Analysis ignoredTokens = new AnalysisAdapter(); protected Node node; private final Lexer lexer; private final ListIterator<State> stack = new LinkedList<State>().listIterator(); private int last_shift; private int last_pos; private int last_line; private Token last_token; private final TokenIndex converter = new TokenIndex(); private final int[] action = new int[2];
         private const int SHIFT = 0;
         private const int REDUCE = 1;
         private const int ACCEPT = 2;
