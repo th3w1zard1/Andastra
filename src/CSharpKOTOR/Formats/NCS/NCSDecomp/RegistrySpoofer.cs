@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
@@ -563,7 +564,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             try
             {
                 string markerPath = Path.Combine(JavaSystem.GetProperty("user.dir"), DONT_SHOW_INFO_MARKER_FILE);
-                return !File.Exists(markerPath);
+                return !System.IO.File.Exists(markerPath);
             }
             catch (Exception)
             {
@@ -579,7 +580,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 string markerPath = Path.Combine(JavaSystem.GetProperty("user.dir"), DONT_SHOW_INFO_MARKER_FILE);
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: CREATING marker file: " + Path.GetFullPath(markerPath));
-                File.Create(markerPath).Close();
+                System.IO.File.Create(markerPath).Close();
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: Created marker file: " + Path.GetFullPath(markerPath));
             }
             catch (Exception e)
@@ -626,7 +627,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // Create a temporary batch file to run the reg command elevated
                 // This avoids complex PowerShell escaping issues
                 string tempBatch = Path.GetTempFileName();
-                File.Delete(tempBatch); // Delete the temp file created by GetTempFileName
+                System.IO.File.Delete(tempBatch); // Delete the temp file created by GetTempFileName
                 tempBatch = Path.ChangeExtension(tempBatch, ".bat");
 
                 // Write the batch file content
@@ -647,7 +648,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: CREATING temporary batch file: " + tempBatch);
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: WRITING batch file content (length: " + Encoding.UTF8.GetByteCount(batchContent) + " bytes)");
-                File.WriteAllText(tempBatch, batchContent, Encoding.UTF8);
+                System.IO.File.WriteAllText(tempBatch, batchContent, Encoding.UTF8);
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: Created temporary batch file: " + tempBatch);
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: Batch file content:\n" + batchContent);
 
@@ -700,7 +701,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     try
                     {
                         JavaSystem.@out.Println("[INFO] RegistrySpoofer: DELETING temporary batch file: " + tempBatch);
-                        File.Delete(tempBatch);
+                        System.IO.File.Delete(tempBatch);
                         JavaSystem.@out.Println("[INFO] RegistrySpoofer: Deleted temporary batch file");
                     }
                     catch (Exception e)
@@ -815,7 +816,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: WRITING chitin.key file: " + chitinKey.GetAbsolutePath() + " (size: " + keyFile.Length + " bytes)");
                 System.IO.File.WriteAllBytes(chitinKey.GetAbsolutePath(), keyFile);
-                JavaSystem.@out.Println("[INFO] RegistrySpoofer: Created valid chitin.key file (size: " + chitinKey.Length() + " bytes, header: KEY V1)");
+                JavaSystem.@out.Println("[INFO] RegistrySpoofer: Created valid chitin.key file (size: " + chitinKey.Length + " bytes, header: KEY V1)");
 
                 // Create required directories - these ARE checked by the loader
                 string[] dirs = { "override", "modules", "hak" };
