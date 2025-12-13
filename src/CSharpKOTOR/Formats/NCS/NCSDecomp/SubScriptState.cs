@@ -787,7 +787,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 Variable retVar = this.stack.Size() >= 1 ? (Variable)this.stack.Get(1) : new Variable(new UtilsType((byte)0));
                 AVarDecl decl;
                 // Check if variable is already declared to prevent duplicates
-                decl = (AVarDecl)this.vardecs.Get(retVar);
+                object existingDecl;
+                decl = this.vardecs.TryGetValue(retVar, out existingDecl) ? (AVarDecl)existingDecl : null;
                 if (decl == null)
                 {
                     // Also check if last child is a matching AVarDecl
