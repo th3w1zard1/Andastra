@@ -157,7 +157,7 @@ namespace KotorDiff.NET.App
                 {
                     if (candidatePath is Installation install)
                     {
-                        baseDataPath = install.Path();
+                        baseDataPath = install.Path;
                         break;
                     }
                     else if (candidatePath is string pathStr && Directory.Exists(pathStr))
