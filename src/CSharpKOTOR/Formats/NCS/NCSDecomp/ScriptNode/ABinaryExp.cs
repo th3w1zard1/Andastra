@@ -1,10 +1,10 @@
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
-    public class ABinaryExp : Scriptnode.ScriptNode, AExpression
+    public class ABinaryExp : ScriptNode, AExpression
     {
         private AExpression _left;
         private AExpression _right;
@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _left = left;
             if (left != null)
             {
-                left.Parent((Scriptnode.ScriptNode)(object)this);
+                left.Parent((ScriptNode)(object)this);
             }
         }
 
@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _right = right;
             if (right != null)
             {
-                right.Parent((Scriptnode.ScriptNode)(object)this);
+                right.Parent((ScriptNode)(object)this);
             }
         }
 
@@ -66,10 +66,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _stackEntry = p0;
         }
 
-        public new Scriptnode.ScriptNode Parent() => base.Parent();
-        public new void Parent(Scriptnode.ScriptNode p0) => base.Parent(p0);
+        public new ScriptNode Parent() => base.Parent();
+        public new void Parent(ScriptNode p0) => base.Parent(p0);
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ABinaryExp.java:44-46
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ABinaryExp.java:44-46
         // Original: @Override public String toString() { return ExpressionFormatter.format(this); }
         public override string ToString()
         {
@@ -80,7 +80,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (_left != null)
             {
-                if (_left is Scriptnode.ScriptNode leftNode)
+                if (_left is ScriptNode leftNode)
                 {
                     leftNode.Close();
                 }
@@ -92,7 +92,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             if (_right != null)
             {
-                if (_right is Scriptnode.ScriptNode rightNode)
+                if (_right is ScriptNode rightNode)
                 {
                     rightNode.Close();
                 }

@@ -1,5 +1,5 @@
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _returnExp = returnExp;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AReturnStatement.java:31
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AReturnStatement.java:31
         // Original: : this.tabs + "return " + ExpressionFormatter.formatValue(this.returnexp) + ";" + this.newline;
         public override string ToString()
         {

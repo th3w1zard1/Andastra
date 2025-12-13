@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
-    public class AActionExp : Scriptnode.ScriptNode, AExpression
+    public class AActionExp : ScriptNode, AExpression
     {
         private string _action;
         private int _id;
@@ -30,7 +30,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (param != null)
             {
-                param.Parent((Scriptnode.ScriptNode)(object)this);
+                param.Parent((ScriptNode)(object)this);
             }
             _params.Add(param);
         }
@@ -75,8 +75,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _stackEntry = p0;
         }
 
-        public new Scriptnode.ScriptNode Parent() => base.Parent();
-        public new void Parent(Scriptnode.ScriptNode p0) => base.Parent(p0);
+        public new ScriptNode Parent() => base.Parent();
+        public new void Parent(ScriptNode p0) => base.Parent(p0);
 
         public override string ToString()
         {
@@ -101,7 +101,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 {
                     if (param != null)
                     {
-                        if (param is Scriptnode.ScriptNode paramNode)
+                        if (param is ScriptNode paramNode)
                         {
                             paramNode.Close();
                         }

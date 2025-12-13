@@ -1,4 +1,4 @@
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
@@ -7,7 +7,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
     {
         private AVarRef _varRef;
         private AExpression _exp;
-        private Scriptnode.ScriptNode _interfaceParent;
+        private ScriptNode _interfaceParent;
 
         public AModifyExp(AVarRef varRef, AExpression exp)
         {
@@ -25,7 +25,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _varRef = varRef;
             if (varRef != null)
             {
-                ((AExpression)varRef).Parent((Scriptnode.ScriptNode)(AExpression)this);
+                ((AExpression)varRef).Parent((ScriptNode)(AExpression)this);
             }
         }
 
@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _exp = exp;
             if (exp != null)
             {
-                exp.Parent((Scriptnode.ScriptNode)(AExpression)this);
+                exp.Parent((ScriptNode)(AExpression)this);
             }
         }
 
@@ -63,10 +63,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             // Do nothing - stackentry is derived from varref
         }
 
-        Scriptnode.ScriptNode AExpression.Parent() => _interfaceParent;
-        void AExpression.Parent(Scriptnode.ScriptNode p0) => _interfaceParent = p0;
+        ScriptNode AExpression.Parent() => _interfaceParent;
+        void AExpression.Parent(ScriptNode p0) => _interfaceParent = p0;
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:39
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AModifyExp.java:39
         // Original: return ExpressionFormatter.format(this);
         public override string ToString()
         {
@@ -77,9 +77,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (_exp != null)
             {
-                if (_exp is Scriptnode.ScriptNode scriptNode)
+                if (_exp is ScriptNode ScriptNode)
                 {
-                    scriptNode.Close();
+                    ScriptNode.Close();
                 }
                 else if (_exp is StackEntry expEntry)
                 {

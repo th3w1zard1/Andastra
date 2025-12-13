@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 
@@ -55,7 +55,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             if (exp != null)
             {
-                exp.Parent((Scriptnode.ScriptNode)(object)this);
+                exp.Parent((ScriptNode)(object)this);
             }
             _exp = exp;
         }
@@ -76,14 +76,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return _exp;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVarDecl.java:54-56
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarDecl.java:54-56
         // Original: public AExpression exp() { return this.exp; }
         public AExpression Exp()
         {
             return _exp;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVarDecl.java:62
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarDecl.java:62
         // Original: : this.tabs + this.var.toDeclString() + " = " + ExpressionFormatter.formatValue(this.exp) + ";" + this.newline;
         public override string ToString()
         {
@@ -94,14 +94,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return this.tabs + (_var != null ? _var.ToDeclString() : "") + " = " + ExpressionFormatter.FormatValue(_exp) + ";" + this.newline;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVarDecl.java
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarDecl.java
         // Original: @Override public void close()
         public override void Close()
         {
             base.Close();
             if (_exp != null)
             {
-                if (_exp is Scriptnode.ScriptNode expNode)
+                if (_exp is ScriptNode expNode)
                 {
                     expNode.Close();
                 }

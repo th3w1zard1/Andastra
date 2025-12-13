@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Scriptutils = CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils

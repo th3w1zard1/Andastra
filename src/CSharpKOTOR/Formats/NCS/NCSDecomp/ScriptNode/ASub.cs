@@ -1,8 +1,8 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:15-194
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASub.java:15-194
 // Original: public class ASub extends ScriptRootNode
 using System.Collections.Generic;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 
@@ -10,7 +10,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ASub : ScriptRootNode
     {
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:16-20
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASub.java:16-20
         // Original: private Type type; private byte id; private List<ScriptNode> params; private String name; private boolean ismain;
         private Type _type;
         private int _id;
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 _params = null;
                 _name = "";
             }
-            // SetTabs is not available in Scriptnode.ScriptNode
+            // SetTabs is not available in ScriptNode
         }
 
         public ASub(Type typeVal, int? idVal, List<AVarRef> @params, int start, int end) : base(start, end)
@@ -69,7 +69,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 _params = null;
                 _name = "";
             }
-            // SetTabs is not available in Scriptnode.ScriptNode
+            // SetTabs is not available in ScriptNode
         }
 
         public void AddParam(AVarRef param)

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ACodeBlock.java:7-10
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ACodeBlock.java:7-10
     // Original: public class ACodeBlock extends ScriptRootNode { public ACodeBlock(int start, int end) { super(start, end); } }
     public class ACodeBlock : ScriptRootNode
     {
@@ -12,7 +12,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ACodeBlock.java:12-23
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ACodeBlock.java:12-23
         // Original: @Override public String toString() { ... }
         public override string ToString()
         {

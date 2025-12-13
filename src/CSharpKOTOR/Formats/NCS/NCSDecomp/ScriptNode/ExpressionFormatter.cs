@@ -1,11 +1,11 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:1-235
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:1-235
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // Visit https://bolabaden.org for more information and other ventures
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
@@ -37,7 +37,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         private const int PREC_MULTIPLICATIVE = 11;
         private const int PREC_UNARY = 12;
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:36-38
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:36-38
         // Original: static String format(AExpression expr)
         public static string Format(AExpression expr)
         {
@@ -49,7 +49,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         /// and preserves explicit grouping for simple comparison operations to match
         /// the original source style used by most shipped scripts.
         /// </summary>
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:45-51
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:45-51
         // Original: static String formatValue(AExpression expr)
         public static string FormatValue(AExpression expr)
         {
@@ -61,7 +61,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return rendered;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:53-76
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:53-76
         // Original: private static String format(AExpression expr, int parentPrec, Position side, String parentOp)
         private static string Format(AExpression expr, int parentPrec, Position side, string parentOp)
         {
@@ -95,7 +95,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return expr.ToString();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:78-85
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:78-85
         // Original: private static String formatBinary(ABinaryExp exp, int parentPrec, Position side, String parentOp)
         private static string FormatBinary(ABinaryExp exp, int parentPrec, Position side, string parentOp)
         {
@@ -107,7 +107,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return WrapIfNeeded(rendered, prec, parentPrec, side, parentOp, op);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:87-94
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:87-94
         // Original: private static String formatConditional(AConditionalExp exp, int parentPrec, Position side, String parentOp)
         private static string FormatConditional(AConditionalExp exp, int parentPrec, Position side, string parentOp)
         {
@@ -119,7 +119,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return WrapIfNeeded(rendered, prec, parentPrec, side, parentOp, op);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:96-102
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:96-102
         // Original: private static String formatUnary(AUnaryExp exp, int parentPrec, Position side, String parentOp)
         private static string FormatUnary(AUnaryExp exp, int parentPrec, Position side, string parentOp)
         {
@@ -130,7 +130,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return WrapIfNeeded(rendered, prec, parentPrec, side, parentOp, op);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:104-110
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:104-110
         // Original: private static String formatUnaryMod(AUnaryModExp exp, int parentPrec, Position side, String parentOp)
         private static string FormatUnaryMod(AUnaryModExp exp, int parentPrec, Position side, string parentOp)
         {
@@ -141,7 +141,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return WrapIfNeeded(rendered, prec, parentPrec, side, parentOp, op);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:112-118
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:112-118
         // Original: private static String formatAssignment(AModifyExp exp, int parentPrec, Position side, String parentOp)
         private static string FormatAssignment(AModifyExp exp, int parentPrec, Position side, string parentOp)
         {
@@ -152,14 +152,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return WrapIfNeeded(rendered, prec, parentPrec, side, parentOp, "=");
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:120-123
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:120-123
         // Original: private static String wrapIfNeeded(String rendered, int selfPrec, int parentPrec, Position side, String parentOp, String selfOp)
         private static string WrapIfNeeded(string rendered, int selfPrec, int parentPrec, Position side, string parentOp, string selfOp)
         {
             return ShouldParenthesize(selfPrec, parentPrec, side, parentOp, selfOp) ? "(" + rendered + ")" : rendered;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:125-146
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:125-146
         // Original: private static boolean shouldParenthesize(int selfPrec, int parentPrec, Position side, String parentOp, String selfOp)
         private static bool ShouldParenthesize(int selfPrec, int parentPrec, Position side, string parentOp, string selfOp)
         {
@@ -189,7 +189,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return false;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:148-184
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:148-184
         // Original: private static int precedence(String op)
         private static int Precedence(string op)
         {
@@ -232,7 +232,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:186-207
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:186-207
         // Original: private static boolean isNonAssociative(String op)
         private static bool IsNonAssociative(string op)
         {
@@ -260,7 +260,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:209-212
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:209-212
         // Original: private static boolean needsValueParens(ABinaryExp exp)
         private static bool NeedsValueParens(ABinaryExp exp)
         {
@@ -268,7 +268,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return IsComparisonOp(op);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:214-229
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:214-229
         // Original: private static boolean isComparisonOp(String op)
         private static bool IsComparisonOp(string op)
         {
@@ -290,7 +290,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ExpressionFormatter.java:231-234
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:231-234
         // Original: private static String ensureWrapped(String rendered)
         private static string EnsureWrapped(string rendered)
         {

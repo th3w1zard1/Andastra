@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (param != null)
             {
-                param.Parent((Scriptnode.ScriptNode)(AExpression)this);
+                param.Parent((ScriptNode)(AExpression)this);
             }
             _params.Add(param);
         }
@@ -73,8 +73,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _stackEntry = p0;
         }
 
-        Scriptnode.ScriptNode AExpression.Parent() => (Scriptnode.ScriptNode)(object)base.Parent();
-        void AExpression.Parent(Scriptnode.ScriptNode p0) => base.Parent((ScriptNode)(object)p0);
+        ScriptNode AExpression.Parent() => (ScriptNode)(object)base.Parent();
+        void AExpression.Parent(ScriptNode p0) => base.Parent((ScriptNode)(object)p0);
 
         public override string ToString()
         {
@@ -98,7 +98,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 {
                     if (param != null)
                     {
-                        if (param is Scriptnode.ScriptNode paramNode)
+                        if (param is ScriptNode paramNode)
                         {
                             paramNode.Close();
                         }

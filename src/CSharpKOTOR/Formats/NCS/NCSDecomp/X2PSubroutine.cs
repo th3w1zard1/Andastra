@@ -1,8 +1,5 @@
 //
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
@@ -17,7 +14,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         public X2PSubroutine(PSubroutine _pSubroutine_)
         {
-            this.SetPSubroutine(_pSubroutine_);
+            SetPSubroutine(_pSubroutine_);
         }
 
         public override object Clone()
@@ -31,14 +28,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         public PSubroutine GetPSubroutine()
         {
-            return this._pSubroutine_;
+            return _pSubroutine_;
         }
 
         public void SetPSubroutine(PSubroutine node)
         {
-            if (this._pSubroutine_ != null)
+            if (_pSubroutine_ != null)
             {
-                this._pSubroutine_.Parent(null);
+                _pSubroutine_.Parent(null);
             }
 
             if (node != null)
@@ -51,14 +48,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 node.Parent(this);
             }
 
-            this._pSubroutine_ = node;
+            _pSubroutine_ = node;
         }
 
         public override void RemoveChild(Node child)
         {
-            if (this._pSubroutine_ == child)
+            if (_pSubroutine_ == child)
             {
-                this._pSubroutine_ = null;
+                _pSubroutine_ = null;
             }
         }
 
@@ -68,7 +65,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         public override string ToString()
         {
-            return new StringBuilder().Append(this.ToString(this._pSubroutine_)).ToString();
+            return new StringBuilder().Append(ToString(_pSubroutine_)).ToString();
         }
     }
 }

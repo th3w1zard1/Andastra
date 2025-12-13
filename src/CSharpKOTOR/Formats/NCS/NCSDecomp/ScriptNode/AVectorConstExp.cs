@@ -1,4 +1,4 @@
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
@@ -26,7 +26,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _exp1 = exp1;
             if (exp1 != null)
             {
-                exp1.Parent((Scriptnode.ScriptNode)(object)this);
+                exp1.Parent((ScriptNode)(object)this);
             }
         }
 
@@ -40,7 +40,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _exp2 = exp2;
             if (exp2 != null)
             {
-                exp2.Parent((Scriptnode.ScriptNode)(object)this);
+                exp2.Parent((ScriptNode)(object)this);
             }
         }
 
@@ -54,16 +54,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _exp3 = exp3;
             if (exp3 != null)
             {
-                exp3.Parent((Scriptnode.ScriptNode)(object)this);
+                exp3.Parent((ScriptNode)(object)this);
             }
         }
 
-        Scriptnode.ScriptNode AExpression.Parent()
+        ScriptNode AExpression.Parent()
         {
-            return (Scriptnode.ScriptNode)(object)this;
+            return (ScriptNode)(object)this;
         }
 
-        void AExpression.Parent(Scriptnode.ScriptNode p0)
+        void AExpression.Parent(ScriptNode p0)
         {
             // This class doesn't support changing parent through the interface
         }
@@ -89,7 +89,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             base.Close();
             if (_exp1 != null)
             {
-                if (_exp1 is Scriptnode.ScriptNode node1)
+                if (_exp1 is ScriptNode node1)
                 {
                     node1.Close();
                 }
@@ -97,7 +97,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             if (_exp2 != null)
             {
-                if (_exp2 is Scriptnode.ScriptNode node2)
+                if (_exp2 is ScriptNode node2)
                 {
                     node2.Close();
                 }
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             if (_exp3 != null)
             {
-                if (_exp3 is Scriptnode.ScriptNode node3)
+                if (_exp3 is ScriptNode node3)
                 {
                     node3.Close();
                 }

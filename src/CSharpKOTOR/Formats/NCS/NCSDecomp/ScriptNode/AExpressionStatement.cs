@@ -1,4 +1,4 @@
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
@@ -25,7 +25,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             if (exp != null)
             {
-                exp.Parent((Scriptnode.ScriptNode)(object)this);
+                exp.Parent((ScriptNode)(object)this);
             }
             _exp = exp;
         }
@@ -40,7 +40,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             base.Close();
             if (_exp != null)
             {
-                if (_exp is Scriptnode.ScriptNode expNode)
+                if (_exp is ScriptNode expNode)
                 {
                     expNode.Close();
                 }

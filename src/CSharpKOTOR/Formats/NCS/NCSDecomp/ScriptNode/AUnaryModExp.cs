@@ -1,5 +1,5 @@
 using System;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _varRef = varRef;
             if (varRef != null)
             {
-                ((AExpression)varRef).Parent((Scriptnode.ScriptNode)(object)this);
+                ((AExpression)varRef).Parent((ScriptNode)(object)this);
             }
         }
 
@@ -77,10 +77,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _stackEntry = p0;
         }
 
-        Scriptnode.ScriptNode AExpression.Parent() => (Scriptnode.ScriptNode)(object)base.Parent();
-        void AExpression.Parent(Scriptnode.ScriptNode p0) => base.Parent((ScriptNode)(object)p0);
+        ScriptNode AExpression.Parent() => (ScriptNode)(object)base.Parent();
+        void AExpression.Parent(ScriptNode p0) => base.Parent((ScriptNode)(object)p0);
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:41
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AUnaryModExp.java:41
         // Original: return ExpressionFormatter.format(this);
         public override string ToString()
         {
