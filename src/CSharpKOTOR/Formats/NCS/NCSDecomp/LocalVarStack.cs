@@ -93,12 +93,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return size;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:69-72
+        // Original: public void push(StackEntry entry) { this.stack.addFirst(entry); entry.addedToStack(this); }
         public virtual void Push(StackEntry entry)
         {
             this.stack.AddFirst(entry);
             entry.AddedToStack(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:74-98
+        // Original: public StackEntry get(int offset) { ... }
         public virtual StackEntry Get(int offset)
         {
             ListIterator it = this.stack.ListIterator();
@@ -129,15 +133,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return (StackEntry)this.stack.GetLast();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:100-103
-        // Original: public Type getType(int offset)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:100-102
+        // Original: public Type getType(int offset) { return this.get(offset).type(); }
         public virtual UtilsType GetType(int offset)
         {
             return this.Get(offset).Type();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:104-113
-        // Original: public StackEntry remove()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:104-112
+        // Original: public StackEntry remove() { if (this.stack == null || this.stack.isEmpty()) { return this.newPlaceholderVariable(); } StackEntry entry = this.stack.removeFirst(); entry.removedFromStack(this); return entry; }
         public virtual StackEntry Remove()
         {
             StackEntry entry = (StackEntry)this.stack.RemoveFirst();
@@ -145,6 +149,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return entry;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:114-134
+        // Original: public void destruct(int removesize, int savestart, int savesize, SubroutineAnalysisData subdata) { ... }
         public virtual void Destruct(int removesize, int savestart, int savesize, SubroutineAnalysisData subdata)
         {
             this.Structify(1, removesize, subdata);
@@ -160,6 +166,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             element = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:136-185
+        // Original: public VarStruct structify(int firstelement, int count, SubroutineAnalysisData subdata) { ... }
         public virtual VarStruct Structify(int firstelement, int count, SubroutineAnalysisData subdata)
         {
             ListIterator it = this.stack.ListIterator();
@@ -203,6 +211,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:187-200
+        // Original: @Override public String toString() { ... }
         public override string ToString()
         {
             string newline = Environment.NewLine;
@@ -218,6 +228,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return buffer.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:202-215
+        // Original: @Override public LocalVarStack clone() { ... }
         public override object Clone()
         {
             LocalVarStack newStack = new LocalVarStack();
