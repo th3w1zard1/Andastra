@@ -46,11 +46,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             List<AUnkLoopControl> unks = new List<AUnkLoopControl>();
 
-            foreach (ScriptNode node in this.children)
+            foreach (Scriptnode.ScriptNode node in this.children)
             {
-                if (typeof(AUnkLoopControl).IsInstanceOfType(node))
+                if (node is ScriptNode.AUnkLoopControl unk)
                 {
-                    unks.Add((AUnkLoopControl)node);
+                    unks.Add(unk);
                 }
             }
 
@@ -59,10 +59,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:44-48
         // Original: public void replaceUnknown(AUnkLoopControl unk, ScriptNode newnode) { newnode.parent(this); this.children.set(this.children.indexOf(unk), newnode); unk.parent(null); }
-        public virtual void ReplaceUnknown(AUnkLoopControl unk, ScriptNode newnode)
+        public virtual void ReplaceUnknown(AUnkLoopControl unk, Scriptnode.ScriptNode newnode)
         {
             newnode.Parent(this);
-            this.children[this.children.IndexOf(unk)] = newnode;
+            int index = -1;
+            for (int i = 0; i < this.children.Count; i++)
+            {
+                if (this.children[i] is ScriptNode.AUnkLoopControl && this.children[i] == (Scriptnode.ScriptNode)(object)unk)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            if (index >= 0)
+            {
+                this.children[index] = newnode;
+            }
             unk.Parent(null);
         }
 
