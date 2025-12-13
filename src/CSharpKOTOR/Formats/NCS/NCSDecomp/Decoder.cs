@@ -1,3 +1,5 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decoder.java:20-496
+// Original: public class Decoder
 using System;
 using System.IO;
 using System.Numerics;
@@ -8,6 +10,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public class Decoder
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decoder.java:21-56
+        // Original: private static final int DECOCT_CPDOWNSP = 1; ... private static final int DECOCT_NOP = 45; private static final int DECOCT_T = 66;
         private const byte DECOCT_CPDOWNSP = 1;
         private const byte DECOCT_RSADD = 2;
         private const byte DECOCT_CPTOPSP = 3;

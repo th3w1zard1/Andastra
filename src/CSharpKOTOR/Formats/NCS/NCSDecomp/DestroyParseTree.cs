@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/DestroyParseTree.java:59-479
+// Original: public class DestroyParseTree extends AnalysisAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,6 +13,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class DestroyParseTree : AnalysisAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/DestroyParseTree.java:60-64
+        // Original: @Override public void caseStart(Start node) { node.getPProgram().apply(this); node.setPProgram(null); }
         public override void CaseStart(Start node)
         {
             node.GetPProgram().Apply(this);

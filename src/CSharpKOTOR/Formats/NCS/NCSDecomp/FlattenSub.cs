@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:39-143
+// Original: public class FlattenSub extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,11 +13,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class FlattenSub : PrunedDepthFirstAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:40-44
+        // Original: private ASubroutine sub; private boolean actionjumpfound; private int i; private LinkedList<PCmd> commands; private NodeAnalysisData nodedata;
         private ASubroutine sub;
         private bool actionjumpfound;
         private int i;
         private TypedLinkedList commands;
         private NodeAnalysisData nodedata;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/FlattenSub.java:46-50
+        // Original: public FlattenSub(ASubroutine sub, NodeAnalysisData nodedata) { this.setSub(sub); this.actionjumpfound = false; this.nodedata = nodedata; }
         public FlattenSub(ASubroutine sub, NodeAnalysisData nodedata)
         {
             this.SetSub(sub);
