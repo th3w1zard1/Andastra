@@ -240,6 +240,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return false;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:184-193
+        // Original: public void setParamCount(int params) { this.paramsize = params; if (params > 0) { this.paramstyped = false; if (this.returndepth <= params) { this.type = new Type((byte)0); } } this.ensureParamPlaceholders(); }
         public virtual void SetParamCount(int @params)
         {
             this.paramsize = @params;
@@ -251,46 +253,63 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     this.type = new Type((byte)0);
                 }
             }
+            this.EnsureParamPlaceholders();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:195-197
+        // Original: public int getParamCount() { return this.paramsize; }
         public virtual int GetParamCount()
         {
             return this.paramsize;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:199-201
+        // Original: public Type type() { return this.type; }
         public virtual Type Type()
         {
             return this.type;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:203-205
+        // Original: public ArrayList<Type> params() { return this.params; }
         public virtual List<object> Params()
         {
-            return new List<object>(this.@params.Cast<object>());
+            return this.@params;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:207-210
+        // Original: public void setReturnType(Type type, int depth) { this.type = type; this.returndepth = depth; }
         public virtual void SetReturnType(Type type, int depth)
         {
             this.type = type;
             this.returndepth = depth;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:212-239
+        // Original: public void updateParams(LinkedList<Type> types) { ... }
         public virtual void UpdateParams(LinkedList types)
         {
             new Type(unchecked((byte)(-1)));
             this.paramstyped = true;
             bool redo = this.@params.Count > 0;
-            if (types.Count != this.paramsize)
+            if (types.Count < this.paramsize)
             {
-                throw new Exception("Parameter count does not match: expected " + this.paramsize + " and got " + types.Count);
+                while (types.Count < this.paramsize)
+                {
+                    types.AddFirst(new Type(unchecked((byte)(-1))));
+                }
+            }
+            else if (types.Count > this.paramsize)
+            {
+                while (types.Count > this.paramsize)
+                {
+                    types.RemoveFirst();
+                }
             }
 
-            for (int i = 0; i < types.Count; ++i)
+            for (int i = 0; i < types.Count; i++)
             {
                 Type newtype = (Type)types[i];
-                if (redo)
-                {
-                    Type type = this.@params[i];
-                }
 
                 if (redo && !this.@params[i].IsTyped())
                 {
@@ -308,48 +327,45 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:251-253
+        // Original: public Type getParamType(int pos) { return this.params.size() < pos ? new Type((byte)0) : this.params.get(pos - 1); }
         public virtual Type GetParamType(int pos)
         {
-            if (this.@params.Count < pos)
-            {
-                return new Type((byte)0);
-            }
-
-            return this.@params[pos - 1];
+            return this.@params.Count < pos ? new Type((byte)0) : this.@params[pos - 1];
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:255-275
+        // Original: public void initStack(LocalTypeStack stack) { ... if (!this.type.equals((byte)-15)) { stack.push(this.type); } else { ... } ... }
         public virtual void InitStack(LocalTypeStack stack)
         {
             if (this.IsPrototyped())
             {
                 if (this.type.IsTyped() && !this.type.Equals((byte)0))
                 {
-                    if (this.type.Equals(unchecked((byte)(-15))))
+                    if (!this.type.Equals(unchecked((byte)(-15))))
                     {
-                        List<object> structtypes = ((StructType)this.type).Types();
-                        for (int i = 0; i < structtypes.Count; ++i)
-                        {
-                            stack.Push((Type)structtypes[i]);
-                        }
-
-                        structtypes = null;
+                        stack.Push(this.type);
                     }
                     else
                     {
-                        stack.Push(this.type);
+                        List<object> structtypes = ((StructType)this.type).Types();
+                        foreach (Type structtype in structtypes)
+                        {
+                            stack.Push(structtype);
+                        }
                     }
                 }
 
                 if (this.paramsize == this.@params.Count)
                 {
-                    for (int j = 0; j < this.paramsize; ++j)
+                    for (int i = 0; i < this.paramsize; i++)
                     {
-                        stack.Push(this.@params[j]);
+                        stack.Push(this.@params[i]);
                     }
                 }
                 else
                 {
-                    for (int j = 0; j < this.paramsize; ++j)
+                    for (int i = 0; i < this.paramsize; i++)
                     {
                         stack.Push(new Type(unchecked((byte)(-1))));
                     }

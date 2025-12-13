@@ -34,16 +34,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return true;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:112-116
+        // Original: public static boolean isJzPastOne(Node node) { return AConditionalJumpCommand.class.isInstance(node) && AZeroJumpIf.class.isInstance(((AConditionalJumpCommand)node).getJumpIf()) ? Integer.parseInt(((AConditionalJumpCommand)node).getOffset().getText()) == 12 : false; }
         public static bool IsJzPastOne(Node node)
         {
-            return typeof(AConditionalJumpCommand).IsInstanceOfType(node) && typeof(AZeroJumpIf).IsInstanceOfType(((AConditionalJumpCommand)node).GetJumpIf()) && Integer.ParseInt(((AConditionalJumpCommand)node).GetOffset().GetText()) == 12;
+            return typeof(AConditionalJumpCommand).IsInstanceOfType(node) && typeof(AZeroJumpIf).IsInstanceOfType(((AConditionalJumpCommand)node).GetJumpIf()) ? Integer.ParseInt(((AConditionalJumpCommand)node).GetOffset().GetText()) == 12 : false;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:118-120
+        // Original: public static boolean isJz(Node node) { return AConditionalJumpCommand.class.isInstance(node) ? AZeroJumpIf.class.isInstance(((AConditionalJumpCommand)node).getJumpIf()) : false; }
         public static bool IsJz(Node node)
         {
-            return typeof(AConditionalJumpCommand).IsInstanceOfType(node) && typeof(AZeroJumpIf).IsInstanceOfType(((AConditionalJumpCommand)node).GetJumpIf());
+            return typeof(AConditionalJumpCommand).IsInstanceOfType(node) ? typeof(AZeroJumpIf).IsInstanceOfType(((AConditionalJumpCommand)node).GetJumpIf()) : false;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:122-142
+        // Original: public static boolean isCommandNode(Node node) { return ... }
         public static bool IsCommandNode(Node node)
         {
             return typeof(AConditionalJumpCommand).IsInstanceOfType(node) || typeof(AJumpCommand).IsInstanceOfType(node) || typeof(AJumpToSubroutine).IsInstanceOfType(node) || typeof(AReturn).IsInstanceOfType(node) || typeof(ACopyDownSpCommand).IsInstanceOfType(node) || typeof(ACopyTopSpCommand).IsInstanceOfType(node) || typeof(ACopyDownBpCommand).IsInstanceOfType(node) || typeof(ACopyTopBpCommand).IsInstanceOfType(node) || typeof(AMoveSpCommand).IsInstanceOfType(node) || typeof(ARsaddCommand).IsInstanceOfType(node) || typeof(AConstCommand).IsInstanceOfType(node) || typeof(AActionCommand).IsInstanceOfType(node) || typeof(ALogiiCommand).IsInstanceOfType(node) || typeof(ABinaryCommand).IsInstanceOfType(node) || typeof(AUnaryCommand).IsInstanceOfType(node) || typeof(AStackCommand).IsInstanceOfType(node) || typeof(ADestructCommand).IsInstanceOfType(node) || typeof(ABpCommand).IsInstanceOfType(node) || typeof(AStoreStateCommand).IsInstanceOfType(node);
