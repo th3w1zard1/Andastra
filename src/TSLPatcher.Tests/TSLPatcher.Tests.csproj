@@ -30,6 +30,14 @@
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
+    <!-- Enable parallel builds -->
+    <BuildInParallel>true</BuildInParallel>
+    <MaxCpuCount>0</MaxCpuCount>
+    <!-- Optimize incremental builds -->
+    <UseSharedCompilation>true</UseSharedCompilation>
+    <UseRidGraph>true</UseRidGraph>
+    <!-- Skip validation for faster builds -->
+    <SkipValidateExecutableReferences>true</SkipValidateExecutableReferences>
   </PropertyGroup>
 
   <ItemGroup>

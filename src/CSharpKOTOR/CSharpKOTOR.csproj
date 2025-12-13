@@ -55,41 +55,22 @@
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TargetFrameworks></TargetFrameworks>
-    <!-- Helper to append without duplicate semicolons -->
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
-      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
-    </TargetFrameworks>
-    <!-- Add each TFM conditionally -->
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
-      $(TargetFrameworks);net10
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
-      $(TargetFrameworks);net9
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
-      $(TargetFrameworks);net8
-    </TargetFrameworks>
-    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
-      $(TargetFrameworks);net7;net6
-    </TargetFrameworks>
-    <!-- === .NET 6 SDK: include (legacy support) === -->
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
-      $(TargetFrameworks);net6
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
-      $(TargetFrameworks);net48
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
-      $(TargetFrameworks);net462
-    </TargetFrameworks>
-    <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
-    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8</TargetFrameworks>
+    <!-- Single target framework for fastest Debug builds -->
+    <TargetFrameworks>net9</TargetFrameworks>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
+    <!-- Disable reference assembly generation in Debug -->
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <!-- Enable parallel builds -->
+    <BuildInParallel>true</BuildInParallel>
+    <MaxCpuCount>0</MaxCpuCount>
+    <!-- Optimize incremental builds -->
+    <UseSharedCompilation>true</UseSharedCompilation>
+    <UseRidGraph>true</UseRidGraph>
+    <!-- Skip validation for faster builds -->
+    <SkipValidateExecutableReferences>true</SkipValidateExecutableReferences>
   </PropertyGroup>
 
   <!-- Default to Library -->
