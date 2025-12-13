@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:13-100
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:13-71
 // Original: public class Const extends StackEntry
 using System;
 using System.Collections.Generic;
