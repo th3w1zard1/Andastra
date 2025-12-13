@@ -223,7 +223,8 @@ namespace CSharpKOTOR.Formats.NCS
             [CanBeNull] NCS ncs,
             Game game,
             List<ScriptFunction> functions = null,
-            [CanBeNull] List<ScriptConstant> constants = null)
+            [CanBeNull] List<ScriptConstant> constants = null,
+            [CanBeNull] string nwscriptPath = null)
         {
             if (ncs == null)
             {
@@ -231,15 +232,41 @@ namespace CSharpKOTOR.Formats.NCS
             }
 
             // Use FileDecompiler (DeNCS port) for 1:1 accurate decompilation
-            NWScriptLocator.GameType gameType = game.IsK2() ? NWScriptLocator.GameType.TSL : NWScriptLocator.GameType.K1;
-            var fileDecompiler = new NCSDecomp.FileDecompiler(null, gameType);
+            NCSDecomp.FileDecompiler fileDecompiler;
+            if (!string.IsNullOrEmpty(nwscriptPath) && System.IO.File.Exists(nwscriptPath))
+            {
+                // Use nwscript file directly if provided
+                var nwscriptFile = new NCSDecomp.File(nwscriptPath);
+                fileDecompiler = new NCSDecomp.FileDecompiler(nwscriptFile);
+            }
+            else
+            {
+                // Fall back to lazy loading (will search for nwscript file)
+                NWScriptLocator.GameType gameType = game.IsK2() ? NWScriptLocator.GameType.TSL : NWScriptLocator.GameType.K1;
+                fileDecompiler = new NCSDecomp.FileDecompiler(null, gameType);
+            }
 
-            FileScriptData data = fileDecompiler.DecompileNcsObject(ncs);
+            FileScriptData data = null;
+            try
+            {
+                data = fileDecompiler.DecompileNcsObject(ncs);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    "Decompilation failed with exception: " + ex.Message + 
+                    (ex.InnerException != null ? " (Inner: " + ex.InnerException.Message + ")" : "") +
+                    ". FileDecompiler returned null. " +
+                    "This usually means the decompiler couldn't analyze the NCS bytecode structure. " +
+                    "Check console output for detailed error messages.", ex);
+            }
+            
             if (data == null)
             {
                 throw new InvalidOperationException(
                     "Decompilation failed - FileDecompiler returned null. " +
                     "This usually means the decompiler couldn't analyze the NCS bytecode structure. " +
+                    "Possible causes: no main subroutine found, actions file not loaded, or exception during decompilation. " +
                     "Check console output for detailed error messages.");
             }
 

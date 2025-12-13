@@ -165,9 +165,11 @@ namespace KotorDiff.NET.App
             var iniPath = new FileInfo(Path.Combine(tslpatchdataPath.FullName, iniFilename));
             Console.WriteLine($"\nGenerating {iniFilename} at: {iniPath}");
 
-            // TODO: Implement INI serialization
-            // This should use TSLPatcherINISerializer from CSharpKOTOR (when ported)
-            Console.WriteLine("[Warning] INI serialization not yet implemented");
+            // Serialize INI file
+            var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
+            string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: false, verbose: false);
+            File.WriteAllText(iniPath.FullName, iniContent, Encoding.UTF8);
+            Console.WriteLine($"Generated {iniFilename} with {iniContent.Split('\n').Length} lines");
 
             // Summary
             Console.WriteLine("\nTSLPatcher data generation complete:");

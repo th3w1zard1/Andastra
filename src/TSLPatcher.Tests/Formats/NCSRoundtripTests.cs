@@ -1279,78 +1279,67 @@ namespace CSharpKOTOR.Tests.Formats
                 var outputCapture = new StringWriter();
                 var errorCapture = new StringWriter();
                 
+                string decompiled = null;
+                Exception decompileEx = null;
+                
                 try
                 {
                     // Temporarily redirect output to capture verbose logging
                     Console.SetOut(outputCapture);
                     Console.SetError(errorCapture);
                     
-                    string decompiled = NCSAuto.DecompileNcs(ncs, game, null, null, nwscriptPath);
-                    
-                    // Restore original output streams
-                    Console.SetOut(originalOut);
-                    Console.SetError(originalErr);
-                    
-                    // If decompilation failed or produced null/empty, output all captured logs
-                    if (string.IsNullOrEmpty(decompiled))
-                    {
-                        string capturedOutput = outputCapture.ToString();
-                        string capturedError = errorCapture.ToString();
-                        if (!string.IsNullOrEmpty(capturedOutput) || !string.IsNullOrEmpty(capturedError))
-                        {
-                            Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
-                            Console.Error.WriteLine($"DECOMPILATION VERBOSE OUTPUT FOR: {DisplayPath(ncsPath)}");
-                            Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
-                            if (!string.IsNullOrEmpty(capturedOutput))
-                            {
-                                Console.Error.WriteLine("STDOUT CAPTURE:");
-                                Console.Error.WriteLine(capturedOutput);
-                            }
-                            if (!string.IsNullOrEmpty(capturedError))
-                            {
-                                Console.Error.WriteLine("STDERR CAPTURE:");
-                                Console.Error.WriteLine(capturedError);
-                            }
-                            Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
-                        }
-                        throw new InvalidOperationException($"Decompilation returned null or empty for {DisplayPath(ncsPath)}");
-                    }
-                    
-                    File.WriteAllText(nssOut, decompiled, Encoding.UTF8);
-
-                    if (!File.Exists(nssOut))
-                    {
-                        throw new InvalidOperationException($"Decompile did not produce output: {DisplayPath(nssOut)}");
-                    }
+                    decompiled = NCSAuto.DecompileNcs(ncs, game, null, null, nwscriptPath);
                 }
-                catch (Exception decompileEx)
+                catch (Exception ex)
                 {
-                    // Restore original output streams before rethrowing
+                    decompileEx = ex;
+                }
+                finally
+                {
+                    // Always restore original output streams
                     Console.SetOut(originalOut);
                     Console.SetError(originalErr);
-                    
-                    // Output captured logs for debugging
-                    string capturedOutput = outputCapture.ToString();
-                    string capturedError = errorCapture.ToString();
-                    if (!string.IsNullOrEmpty(capturedOutput) || !string.IsNullOrEmpty(capturedError))
+                }
+                
+                // Output captured logs for debugging (always, if there's any output)
+                string capturedOutput = outputCapture.ToString();
+                string capturedError = errorCapture.ToString();
+                if (!string.IsNullOrEmpty(capturedOutput) || !string.IsNullOrEmpty(capturedError))
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                    Console.Error.WriteLine($"DECOMPILATION VERBOSE OUTPUT FOR: {DisplayPath(ncsPath)}");
+                    Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                    if (!string.IsNullOrEmpty(capturedOutput))
                     {
-                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
-                        Console.Error.WriteLine($"DECOMPILATION VERBOSE OUTPUT FOR: {DisplayPath(ncsPath)}");
-                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
-                        if (!string.IsNullOrEmpty(capturedOutput))
-                        {
-                            Console.Error.WriteLine("STDOUT CAPTURE:");
-                            Console.Error.WriteLine(capturedOutput);
-                        }
-                        if (!string.IsNullOrEmpty(capturedError))
-                        {
-                            Console.Error.WriteLine("STDERR CAPTURE:");
-                            Console.Error.WriteLine(capturedError);
-                        }
-                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        Console.Error.WriteLine("STDOUT CAPTURE:");
+                        Console.Error.WriteLine(capturedOutput);
                     }
-                    
+                    if (!string.IsNullOrEmpty(capturedError))
+                    {
+                        Console.Error.WriteLine("STDERR CAPTURE:");
+                        Console.Error.WriteLine(capturedError);
+                    }
+                    Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                    Console.Error.WriteLine();
+                }
+                
+                // Now handle the result
+                if (decompileEx != null)
+                {
                     throw new InvalidOperationException($"Decompile failed for {DisplayPath(ncsPath)}: {decompileEx.Message}", decompileEx);
+                }
+                
+                if (string.IsNullOrEmpty(decompiled))
+                {
+                    throw new InvalidOperationException($"Decompilation returned null or empty for {DisplayPath(ncsPath)}");
+                }
+                
+                File.WriteAllText(nssOut, decompiled, Encoding.UTF8);
+
+                if (!File.Exists(nssOut))
+                {
+                    throw new InvalidOperationException($"Decompile did not produce output: {DisplayPath(nssOut)}");
                 }
             }
             catch (Exception ex)

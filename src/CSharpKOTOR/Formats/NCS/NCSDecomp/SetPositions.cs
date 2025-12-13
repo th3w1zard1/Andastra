@@ -48,29 +48,49 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // For ASubroutine nodes, try to get position from first command if currentPos is 0
             // Since we're using reversed depth-first traversal, children are visited first,
             // so positions should already be set on command nodes
-            if (typeof(ASubroutine).IsInstanceOfType(node) && this.currentPos == 0)
+            if (typeof(ASubroutine).IsInstanceOfType(node))
             {
-                Node firstCmd = NodeUtils.GetCommandChild(node);
-                if (firstCmd != null)
+                int originalPos = this.currentPos;
+                if (this.currentPos == 0)
                 {
-                    // Try to get position that was already set on the first command
-                    int existingPos = this.nodedata.TryGetPos(firstCmd);
-                    if (existingPos > 0)
+                    Node firstCmd = NodeUtils.GetCommandChild(node);
+                    if (firstCmd != null)
                     {
-                        this.currentPos = existingPos;
+                        // Try to get position that was already set on the first command
+                        int existingPos = this.nodedata.TryGetPos(firstCmd);
+                        if (existingPos > 0)
+                        {
+                            this.currentPos = existingPos;
+                            JavaSystem.@out.Println("DEBUG SetPositions: Set ASubroutine position from first command: " + existingPos);
+                        }
+                        else
+                        {
+                            // Fallback: try GetCommandPos if position wasn't set yet
+                            int cmdPos = NodeUtils.GetCommandPos(firstCmd);
+                            if (cmdPos > 0)
+                            {
+                                this.currentPos = cmdPos;
+                                JavaSystem.@out.Println("DEBUG SetPositions: Set ASubroutine position from GetCommandPos: " + cmdPos);
+                            }
+                            else
+                            {
+                                JavaSystem.@out.Println("DEBUG SetPositions: ASubroutine first command has no position, keeping currentPos=" + this.currentPos);
+                            }
+                        }
                     }
                     else
                     {
-                        // Fallback: try GetCommandPos if position wasn't set yet
-                        int cmdPos = NodeUtils.GetCommandPos(firstCmd);
-                        if (cmdPos > 0)
-                        {
-                            this.currentPos = cmdPos;
-                        }
+                        JavaSystem.@out.Println("DEBUG SetPositions: ASubroutine has no first command, keeping currentPos=" + this.currentPos);
                     }
                 }
+                // Always set position on subroutine node, even if it's 0 (main subroutine is at position 0)
+                this.nodedata.SetPos(node, this.currentPos);
+                JavaSystem.@out.Println("DEBUG SetPositions: Set ASubroutine position to " + this.currentPos + " (original was " + originalPos + ")");
             }
-            this.nodedata.SetPos(node, this.currentPos);
+            else
+            {
+                this.nodedata.SetPos(node, this.currentPos);
+            }
         }
     }
 }
