@@ -1,17 +1,25 @@
-//
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:12-73
+// Original: public class AFcnCallExp extends ScriptNode implements AExpression
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public class AFcnCallExp : ScriptNode, AExpression
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:13
+        // Original: private List<AExpression> params;
+        // Note: Using List<object> to handle type compatibility
         private List<object> @params;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:14
+        // Original: private byte id;
         private byte id;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:15
+        // Original: private StackEntry stackentry;
         private StackEntry stackentry;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:17-24
+        // Original: public AFcnCallExp(byte id, List<AExpression> params) { this.id = id; this.params = new ArrayList<>(); for (int i = 0; i < params.size(); i++) { this.addParam(params.get(i)); } }
         public AFcnCallExp(byte id, List<object> @params)
         {
             this.id = id;
@@ -22,6 +30,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:26-29
+        // Original: protected void addParam(AExpression param) { param.parent(this); this.params.add(param); }
         protected virtual void AddParam(AExpression param)
         {
             param.Parent(this);

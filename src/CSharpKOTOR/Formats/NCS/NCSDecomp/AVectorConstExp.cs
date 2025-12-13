@@ -1,18 +1,23 @@
-// 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVectorConstExp.java:10-69
+// Original: public class AVectorConstExp extends ScriptNode implements AExpression
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public class AVectorConstExp : ScriptNode, AExpression
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVectorConstExp.java:11
+        // Original: private AExpression exp1;
         private AExpression exp1;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVectorConstExp.java:12
+        // Original: private AExpression exp2;
         private AExpression exp2;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVectorConstExp.java:13
+        // Original: private AExpression exp3;
         private AExpression exp3;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVectorConstExp.java:15-19
+        // Original: public AVectorConstExp(AExpression exp1, AExpression exp2, AExpression exp3) { this.exp1(exp1); this.exp2(exp2); this.exp3(exp3); }
         public AVectorConstExp(AExpression exp1, AExpression exp2, AExpression exp3)
         {
             this.Exp1(exp1);
