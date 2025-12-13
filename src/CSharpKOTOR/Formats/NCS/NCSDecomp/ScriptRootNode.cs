@@ -22,6 +22,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.end = end;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:27-30
+        // Original: public void addChild(ScriptNode child) { this.children.add(child); child.parent(this); }
         public virtual void AddChild(ScriptNode child)
         {
             this.children.Add(child);
@@ -78,6 +80,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return lastNode;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:62-65
+        // Original: public void removeChild(ScriptNode child) { this.children.remove(child); child.parent(null); }
         public virtual void RemoveChild(ScriptNode child)
         {
             bool removed = this.children.Remove(child);
@@ -99,8 +103,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:73-75
         // Original: public ScriptNode getLastChild() { return this.children.getLast(); }
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:73-75
-        // Original: public ScriptNode getLastChild() { return this.children.getLast(); }
         public virtual ScriptNode GetLastChild()
         {
             if (this.children.Count == 0)
@@ -117,16 +119,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.children.Count < pos ? null : this.children[this.children.Count - pos];
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:81-83
+        // Original: public boolean hasChildren() { return this.children.size() > 0; }
         public virtual bool HasChildren()
         {
             return this.children.Count > 0;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:85-87
+        // Original: public int getEnd() { return this.end; }
         public virtual int GetEnd()
         {
             return this.end;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:89-91
+        // Original: public int getStart() { return this.start; }
         public virtual int GetStart()
         {
             return this.start;
@@ -156,6 +164,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             oldchild.Parent(null);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:108-117
+        // Original: @Override public String toString() { StringBuffer buff = new StringBuffer(); for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } return buff.toString(); }
         public override string ToString()
         {
             StringBuilder buff = new StringBuilder();
@@ -167,9 +177,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return buff.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:119-121
+        // Original: public int size() { return this.children.size(); }
         public virtual int Size()
         {
             return this.children.Count;
+        }
+
+        public virtual ScriptNode GetChild(int index)
+        {
+            if (index < 0 || index >= this.children.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+            return this.children[index];
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:123-133
@@ -177,7 +198,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         public virtual void Close()
         {
             base.Close();
-            IEnumerator<ScriptNode> it = this.children.GetEnumerator();
+            System.Collections.Generic.IEnumerator<ScriptNode> it = this.children.GetEnumerator();
             while (it.MoveNext())
             {
                 it.Current.Close();
