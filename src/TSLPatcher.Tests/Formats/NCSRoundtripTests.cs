@@ -439,7 +439,19 @@ namespace CSharpKOTOR.Tests.Formats
 
         /// <summary>
         /// Performs a complete round-trip test: NSS->NCS->NSS->NCS
-        /// Primary goal: bytecode must match 1:1
+        ///
+        /// TEST FLOW (EXACT REQUIREMENTS):
+        /// =================================
+        /// Step 1: NSS -> NCS using INBUILT .NET compiler (RunInbuiltCompiler)
+        /// Step 2: NCS -> NSS using INBUILT .NET decompiler (RunDecompile)
+        /// Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only)
+        /// Step 4: NSS -> NCS using EXTERNAL nwnnsscomp.exe compiler from ./tools (RunExternalCompiler)
+        /// Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch)
+        ///
+        /// PRIORITIES:
+        /// ===========
+        /// PRIMARY: Bytecode comparison (Step 5) - MUST match 1:1 byte-by-byte. Test FAST FAILS if mismatch.
+        /// SECONDARY: Text comparison (Step 3) - Should match after normalization. Only WARNS if mismatch.
         ///
         /// ⚠️ CRITICAL REQUIREMENT - DO NOT MODIFY ⚠️
         /// ============================================
@@ -587,7 +599,7 @@ namespace CSharpKOTOR.Tests.Formats
                     $"Error: {e.Message}", e);
             }
 
-            // Step 3: Compare original NSS vs decompiled NSS (text comparison)
+            // Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only, does not fail test)
             Console.Write($"  [3/5] Comparing original vs decompiled (text)");
             long compareTextStart = Stopwatch.GetTimestamp();
             string textMismatchMessage = null;
@@ -745,10 +757,10 @@ namespace CSharpKOTOR.Tests.Formats
                 }
             }
 
-            // Step 5: If recompilation succeeded, compare bytecode
+            // Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch)
             if (recompilationSucceeded)
             {
-                Console.Write($"  [5/5] Comparing bytecode (original vs recompiled)");
+                Console.Write($"  [5/5] Comparing bytecode (original vs recompiled) - PRIMARY");
                 long compareBytecodeStart = Stopwatch.GetTimestamp();
                 try
                 {
@@ -2231,10 +2243,15 @@ namespace CSharpKOTOR.Tests.Formats
             return result;
         }
 
+        /// <summary>
+        /// PRIMARY PRIORITY: Compares bytecode from first compilation (inbuilt) vs second compilation (external).
+        /// This is the PRIMARY validation - test FAST FAILS on any mismatch.
+        /// Bytecode must match 1:1, byte-by-byte, with zero tolerance for differences.
+        /// </summary>
         private static void AssertBytecodeEqual(string originalNcs, string roundTripNcs, string gameFlag, string displayName)
         {
             // CRITICAL: Bytecode must match 1:1, byte-by-byte, with zero tolerance for differences
-            // This is the PRIMARY validation - any mismatch is a failure
+            // This is the PRIMARY validation - any mismatch is a failure and causes test to FAST FAIL
             
             // First, verify both files exist and are readable
             if (!File.Exists(originalNcs))
