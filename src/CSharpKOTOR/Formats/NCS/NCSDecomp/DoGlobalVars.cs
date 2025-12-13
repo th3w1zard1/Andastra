@@ -68,29 +68,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:67-75
         // Original: @Override public void outARsaddCommand(ARsaddCommand node) { if (!this.freezeStack) { Variable var = new Variable(NodeUtils.getType(node)); this.stack.push(var); this.state.transformRSAdd(node); var = null; } }
-        // Note: For globals, we need to emit code even after freezeStack is set (per comment "while still emitting globals code").
-        // However, we should only mutate the stack when freezeStack is false.
         public override void OutARsaddCommand(ARsaddCommand node)
         {
-            Variable var = new Variable(NodeUtils.GetType(node));
             if (!this.freezeStack)
             {
+                Variable var = new Variable(NodeUtils.GetType(node));
                 this.stack.Push(var);
+                this.state.TransformRSAdd(node);
+                var = null;
             }
-            // Always call TransformRSAdd to emit the variable declaration, even if stack is frozen
-            // TransformRSAdd reads from stack position 1, so we need to ensure var is on the stack
-            // If freezeStack is true, we still push temporarily for TransformRSAdd to work
-            if (this.freezeStack)
-            {
-                this.stack.Push(var);
-            }
-            this.state.TransformRSAdd(node);
-            // If stack was frozen, remove the var we just pushed
-            if (this.freezeStack)
-            {
-                this.stack.Remove();
-            }
-            var = null;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:77-79
