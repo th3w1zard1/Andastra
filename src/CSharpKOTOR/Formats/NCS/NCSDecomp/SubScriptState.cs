@@ -6,13 +6,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using AVarRef = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
-using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
@@ -27,7 +27,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private const sbyte STATE_WHILECOND = 3;
         private const sbyte STATE_SWITCHCASES = 4;
         private const sbyte STATE_INPREFIXSTACK = 5;
-        private Scriptnode.ASub root;
+        private ScriptNode.ASub root;
         private ScriptRootNode current;
         private sbyte state;
         private NodeAnalysisData nodedata;
@@ -52,7 +52,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.varprefix = "";
             UtilsType type = protostate.Type();
             byte id = protostate.GetId();
-            this.root = new Scriptnode.ASub(type, id, this.GetParams(protostate.GetParamCount()), protostate.GetStart(), protostate.GetEnd());
+            this.root = new ScriptNode.ASub(type, id, this.GetParams(protostate.GetParamCount()), protostate.GetStart(), protostate.GetEnd());
             this.current = this.root;
             this.varnames = new HashMap();
             this.actions = actions;
@@ -67,7 +67,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.subdata = subdata;
             this.state = 0;
             this.vardecs = new HashMap();
-            this.root = new Scriptnode.ASub(0, 0);
+            this.root = new ScriptNode.ASub(0, 0);
             this.current = this.root;
             this.stack = stack;
             this.varcounts = new HashMap();
@@ -157,7 +157,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return this.root.GetHeader();
         }
 
-        public virtual Scriptnode.ASub GetRoot()
+        public virtual ScriptNode.ASub GetRoot()
         {
             return this.root;
         }
@@ -241,10 +241,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.AssertState(node);
             if (this.current.HasChildren())
             {
-                Scriptnode.ScriptNode lastNode = this.current.GetLastChild();
-                if (typeof(Scriptnode.ASwitch).IsInstanceOfType(lastNode) && this.nodedata.GetPos(node) == ((Scriptnode.ASwitch)lastNode).GetFirstCaseStart())
+                ScriptNode.ScriptNode lastNode = this.current.GetLastChild();
+                if (typeof(ScriptNode.ASwitch).IsInstanceOfType(lastNode) && this.nodedata.GetPos(node) == ((ScriptNode.ASwitch)lastNode).GetFirstCaseStart())
                 {
-                    this.current = ((Scriptnode.ASwitch)lastNode).GetFirstCase();
+                    this.current = ((ScriptNode.ASwitch)lastNode).GetFirstCase();
                 }
             }
         }
@@ -260,7 +260,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                 if (typeof(ASwitchCase).IsInstanceOfType(this.current))
                 {
-                    ASwitchCase nextCase = ((Scriptnode.ASwitch)this.current.Parent()).GetNextCase((ASwitchCase)this.current);
+                    ASwitchCase nextCase = ((ScriptNode.ASwitch)this.current.Parent()).GetNextCase((ASwitchCase)this.current);
                     if (nextCase != null)
                     {
                         this.current = nextCase;
@@ -311,14 +311,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual void TransformPlaceholderVariableRemoved(Variable var)
         {
-            Scriptnode.AVarDecl vardec = (Scriptnode.AVarDecl)this.vardecs[var];
+            ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
             if (vardec != null && vardec.IsFcnReturn())
             {
                 object exp = vardec.Exp();
                 ScriptRootNode parent = (ScriptRootNode)vardec.Parent();
                 if (exp != null)
                 {
-                    parent.ReplaceChild(vardec, (Scriptnode.ScriptNode)exp);
+                    parent.ReplaceChild(vardec, (ScriptNode.ScriptNode)exp);
                 }
                 else
                 {
@@ -374,7 +374,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             for (int i = 0; i < vars.Count; ++i)
             {
                 Variable var = (Variable)vars[i];
-                Scriptnode.AVarDecl vardec = (Scriptnode.AVarDecl)this.vardecs[var];
+                ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
                 earliestdec = this.GetEarlierDec(vardec, earliestdec);
             }
 
@@ -382,7 +382,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             {
                 Node prev = NodeUtils.GetPreviousCommand(node, this.nodedata);
                 ACodeBlock block = new ACodeBlock(-1, this.nodedata.GetPos(prev));
-                List<Scriptnode.ScriptNode> children = this.current.RemoveChildren(earliestdec);
+                List<ScriptNode.ScriptNode> children = this.current.RemoveChildren(earliestdec);
                 this.current.AddChild(block);
                 block.AddChildren(children);
                 children = null;
@@ -419,7 +419,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual void TransformOriginFound(Node destination, Node origin)
         {
-            Scriptnode.AControlLoop loop = this.GetLoop(destination, origin);
+            ScriptNode.AControlLoop loop = this.GetLoop(destination, origin);
             this.current.AddChild(loop);
             this.current = loop;
             if (typeof(AWhileLoop).IsInstanceOfType(loop))
@@ -458,7 +458,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     // Check if we can continue an existing switch when preferSwitches is enabled
                     if (this.preferSwitches && this.current.HasChildren())
                     {
-                        Scriptnode.ScriptNode last = this.current.GetLastChild();
+                        ScriptNode.ScriptNode last = this.current.GetLastChild();
                         if (typeof(ScriptNode.ASwitch).IsInstanceOfType(last))
                         {
                             existingSwitch = (ScriptNode.ASwitch)last;
@@ -473,7 +473,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 {
                                     aprevcase.SetEnd(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
                                 }
-                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(Scriptnode.AConst)cond.Right());
+                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.Right());
                                 existingSwitch.AddCase(acasex);
                                 this.state = 4;
                                 this.CheckEnd(node);
@@ -485,14 +485,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     if (canCreateSwitch)
                     {
                                 ScriptNode.ASwitch aswitch = null;
-                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(Scriptnode.AConst)cond.Right());
+                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.Right());
                         if (this.current.HasChildren())
                         {
-                            Scriptnode.ScriptNode last = this.current.GetLastChild();
+                            ScriptNode.ScriptNode last = this.current.GetLastChild();
                             if (typeof(ScriptNode.AVarRef).IsInstanceOfType(last) && typeof(ScriptNode.AVarRef).IsInstanceOfType(cond.Left())
                                 && ((ScriptNode.AVarRef)(object)last).Var().Equals(((ScriptNode.AVarRef)cond.Left()).Var()))
                             {
-                                Scriptnode.AExpression exp = this.RemoveLastExp(false);
+                                ScriptNode.AExpression exp = this.RemoveLastExp(false);
                                 if (exp is AVarRef varref)
                                 {
                                     aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), varref);
@@ -527,7 +527,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     ScriptNode.ASwitch aswitchx = (ScriptNode.ASwitch)this.current.GetLastChild();
                     ScriptNode.ASwitchCase aprevcase = aswitchx.GetLastCase();
                     aprevcase.SetEnd(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
-                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(Scriptnode.AConst)condx.Right());
+                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(ScriptNode.AConst)condx.Right());
                     aswitchx.AddCase(acasex);
                 }
             }
@@ -574,7 +574,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
             if (this.current.Size() == 1)
             {
-                Scriptnode.ScriptNode last = this.current.GetLastChild();
+                ScriptNode.ScriptNode last = this.current.GetLastChild();
                 if (last is AExpression lastExp && lastExp is ScriptNode.AVarRef lastVarRef)
                 {
                     return !lastVarRef.Var().IsAssigned() && !lastVarRef.Var().IsParam();
@@ -676,7 +676,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             AFcnCallExp jsr = new AFcnCallExp(this.GetFcnId(node), this.RemoveFcnParams(node));
             if (!this.GetFcnType(node).Equals((byte)0))
             {
-                Scriptnode.ScriptNode lastChild = this.current.GetLastChild();
+                ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
                 if (typeof(AVarDecl).IsInstanceOfType(lastChild))
                 {
                     ((AVarDecl)lastChild).IsFcnReturn(true);
@@ -822,7 +822,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             else
             {
                 AExpression varref = this.GetVarToCopy(node);
-                this.current.AddChild((Scriptnode.ScriptNode)varref);
+                this.current.AddChild((ScriptNode.ScriptNode)varref);
             }
 
             this.CheckEnd(node);
@@ -846,7 +846,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             this.CheckStart(node);
             AExpression varref = this.GetVarToCopy(node);
-            this.current.AddChild((Scriptnode.ScriptNode)varref);
+            this.current.AddChild((ScriptNode.ScriptNode)varref);
             this.CheckEnd(node);
         }
 
@@ -855,7 +855,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             if (this.state == 1)
             {
-                Scriptnode.ScriptNode last = this.current.GetLastChild();
+                ScriptNode.ScriptNode last = this.current.GetLastChild();
                 if (!typeof(AReturnStatement).IsInstanceOfType(last))
                 {
 
@@ -1003,7 +1003,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
 
             exp.Stackentry(this.stack.Get(1));
-            this.current.AddChild((Scriptnode.ScriptNode)exp);
+            this.current.AddChild((ScriptNode.ScriptNode)exp);
             this.CheckEnd(node);
         }
 
@@ -1020,7 +1020,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformStack(AStackCommand node)
         {
             this.CheckStart(node);
-            Scriptnode.ScriptNode last = this.current.GetLastChild();
+            ScriptNode.ScriptNode last = this.current.GetLastChild();
             AExpression target = this.GetVarToAssignTo(node);
             bool prefix;
             if (typeof(AVarRef).IsInstanceOfType(target) && typeof(AVarRef).IsInstanceOfType(last) && ((AVarRef)(object)last).Var() == ((AVarRef)target).Var())
@@ -1141,13 +1141,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     continue;
                 }
 
-                Scriptnode.AVarDecl vardec = (Scriptnode.AVarDecl)this.vardecs[var];
+                ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
                 if (vardec == null)
                 {
                     continue;
                 }
 
-                Scriptnode.ScriptNode parent = vardec.Parent();
+                ScriptNode.ScriptNode parent = vardec.Parent();
                 bool found = false;
                 while (parent != null && !found)
                 {
@@ -1170,7 +1170,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return true;
         }
 
-        private int GetEarlierDec(Scriptnode.AVarDecl vardec, int earliestdec)
+        private int GetEarlierDec(ScriptNode.AVarDecl vardec, int earliestdec)
         {
             if (this.current.GetChildLocation(vardec) == -1)
             {
@@ -1192,7 +1192,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual AExpression GetReturnExp()
         {
-            Scriptnode.ScriptNode last = this.current.RemoveLastChild();
+            ScriptNode.ScriptNode last = this.current.RemoveLastChild();
             if (typeof(AModifyExp).IsInstanceOfType(last))
             {
                 return ((AModifyExp)last).Expression();
@@ -1251,9 +1251,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return this.GetEnclosingLoop(this.current);
         }
 
-        private ScriptRootNode GetEnclosingLoop(Scriptnode.ScriptNode start)
+        private ScriptRootNode GetEnclosingLoop(ScriptNode.ScriptNode start)
         {
-            for (Scriptnode.ScriptNode node = start; node != null; node = node.Parent())
+            for (ScriptNode.ScriptNode node = start; node != null; node = node.Parent())
             {
                 if (typeof(ADoLoop).IsInstanceOfType(node) || typeof(AWhileLoop).IsInstanceOfType(node))
                 {
@@ -1266,9 +1266,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private ScriptRootNode GetBreakable()
         {
-            for (Scriptnode.ScriptNode node = this.current; node != null; node = node.Parent())
+            for (ScriptNode.ScriptNode node = this.current; node != null; node = node.Parent())
             {
-                if (typeof(Scriptnode.ADoLoop).IsInstanceOfType(node) || typeof(Scriptnode.AWhileLoop).IsInstanceOfType(node) || typeof(Scriptnode.ASwitchCase).IsInstanceOfType(node))
+                if (typeof(ScriptNode.ADoLoop).IsInstanceOfType(node) || typeof(ScriptNode.AWhileLoop).IsInstanceOfType(node) || typeof(ScriptNode.ASwitchCase).IsInstanceOfType(node))
                 {
                     return (ScriptRootNode)node;
                 }
@@ -1277,62 +1277,62 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return null;
         }
 
-        private Scriptnode.AControlLoop GetLoop(Node destination, Node origin)
+        private ScriptNode.AControlLoop GetLoop(Node destination, Node origin)
         {
             Node beforeJump = NodeUtils.GetPreviousCommand(origin, this.nodedata);
             if (NodeUtils.IsJzPastOne(beforeJump))
             {
-                Scriptnode.ADoLoop doloop = new Scriptnode.ADoLoop(this.nodedata.GetPos(destination), this.nodedata.GetPos(origin));
+                ScriptNode.ADoLoop doloop = new ScriptNode.ADoLoop(this.nodedata.GetPos(destination), this.nodedata.GetPos(origin));
                 return doloop;
             }
 
-            Scriptnode.AWhileLoop whileloop = new Scriptnode.AWhileLoop(this.nodedata.GetPos(destination), this.nodedata.GetPos(origin));
+            ScriptNode.AWhileLoop whileloop = new ScriptNode.AWhileLoop(this.nodedata.GetPos(destination), this.nodedata.GetPos(origin));
             return whileloop;
         }
 
-        private Scriptnode.AExpression RemoveIfAsExp()
+        private ScriptNode.AExpression RemoveIfAsExp()
         {
-            Scriptnode.AIf aif = (Scriptnode.AIf)this.current;
-            Scriptnode.AExpression exp = aif.Condition();
+            ScriptNode.AIf aif = (ScriptNode.AIf)this.current;
+            ScriptNode.AExpression exp = aif.Condition();
             (this.current = (ScriptRootNode)this.current.Parent()).RemoveChild(aif);
             aif.Parent(null);
             exp.Parent(null);
             return exp;
         }
 
-        private Scriptnode.AExpression RemoveLastExp(bool forceOneOnly)
+        private ScriptNode.AExpression RemoveLastExp(bool forceOneOnly)
         {
             if (!this.current.HasChildren() && typeof(AIf).IsInstanceOfType(this.current))
             {
                 return this.RemoveIfAsExp();
             }
 
-            Scriptnode.ScriptNode anode = this.current.RemoveLastChild();
-            if (typeof(Scriptnode.AExpression).IsInstanceOfType(anode))
+            ScriptNode.ScriptNode anode = this.current.RemoveLastChild();
+            if (typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
             {
                 if (!forceOneOnly && typeof(AVarRef).IsInstanceOfType(anode) && !((AVarRef)(object)anode).Var().IsAssigned() && !((AVarRef)(object)anode).Var().IsParam() && this.current.HasChildren())
                 {
-                    Scriptnode.ScriptNode last = this.current.GetLastChild();
-                    if (typeof(Scriptnode.AExpression).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((Scriptnode.AExpression)last).Stackentry()))
+                    ScriptNode.ScriptNode last = this.current.GetLastChild();
+                    if (typeof(ScriptNode.AExpression).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AExpression)last).Stackentry()))
                     {
                         return this.RemoveLastExp(false);
                     }
 
-                    if (typeof(Scriptnode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((Scriptnode.AVarDecl)last).Var()) && ((Scriptnode.AVarDecl)last).Exp() != null)
+                    if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AVarDecl)last).Var()) && ((ScriptNode.AVarDecl)last).Exp() != null)
                     {
                         return this.RemoveLastExp(false);
                     }
                 }
 
-                return (Scriptnode.AExpression)anode;
+                return (ScriptNode.AExpression)anode;
             }
 
-            if (typeof(Scriptnode.AVarDecl).IsInstanceOfType(anode))
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode))
             {
-                Scriptnode.AVarDecl vardec = (Scriptnode.AVarDecl)anode;
+                ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)anode;
                 if (vardec.IsFcnReturn() && vardec.Exp() != null)
                 {
-                    Scriptnode.AExpression exp = vardec.Exp();
+                    ScriptNode.AExpression exp = vardec.Exp();
                     vardec.RemoveExp();
                     return exp;
                 }
@@ -1353,9 +1353,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
 
             // Handle AExpressionStatement - extract the contained expression
-            if (typeof(Scriptnode.AExpressionStatement).IsInstanceOfType(anode))
+            if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(anode))
             {
-                Scriptnode.AExpressionStatement exprStmt = (Scriptnode.AExpressionStatement)anode;
+                ScriptNode.AExpressionStatement exprStmt = (ScriptNode.AExpressionStatement)anode;
                 return exprStmt.Exp();
             }
 
@@ -1363,42 +1363,42 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             throw new Exception("Last child not an expression: " + anode.GetType());
         }
 
-        private Scriptnode.AExpression GetLastExp()
+        private ScriptNode.AExpression GetLastExp()
         {
-            Scriptnode.ScriptNode anode = this.current.GetLastChild();
-            if (typeof(Scriptnode.AExpression).IsInstanceOfType(anode))
+            ScriptNode.ScriptNode anode = this.current.GetLastChild();
+            if (typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
             {
-                return (Scriptnode.AExpression)anode;
+                return (ScriptNode.AExpression)anode;
             }
 
-            if (typeof(Scriptnode.AVarDecl).IsInstanceOfType(anode) && ((Scriptnode.AVarDecl)anode).IsFcnReturn())
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).IsFcnReturn())
             {
-                return ((Scriptnode.AVarDecl)anode).Exp();
+                return ((ScriptNode.AVarDecl)anode).Exp();
             }
 
             JavaSystem.@out.Println(anode.ToString());
             throw new Exception("Last child not an expression " + anode);
         }
 
-        private Scriptnode.AExpression GetPreviousExp(int pos)
+        private ScriptNode.AExpression GetPreviousExp(int pos)
         {
-            Scriptnode.ScriptNode node = this.current.GetPreviousChild(pos);
+            ScriptNode.ScriptNode node = this.current.GetPreviousChild(pos);
             if (node == null)
             {
                 return null;
             }
 
-            if (typeof(Scriptnode.AVarDecl).IsInstanceOfType(node) && ((Scriptnode.AVarDecl)node).IsFcnReturn())
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(node) && ((ScriptNode.AVarDecl)node).IsFcnReturn())
             {
-                return ((Scriptnode.AVarDecl)node).Exp();
+                return ((ScriptNode.AVarDecl)node).Exp();
             }
 
-            if (!typeof(Scriptnode.AExpression).IsInstanceOfType(node))
+            if (!typeof(ScriptNode.AExpression).IsInstanceOfType(node))
             {
                 return null;
             }
 
-            return (Scriptnode.AExpression)node;
+            return (ScriptNode.AExpression)node;
         }
 
         public virtual void SetVarStructName(VarStruct varstruct)
@@ -1436,7 +1436,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private void UpdateStructVar(ADestructCommand node)
         {
-            Scriptnode.AExpression lastExp = this.GetLastExp();
+            ScriptNode.AExpression lastExp = this.GetLastExp();
             int removesize = NodeUtils.StackSizeToPos(node.GetSizeRem());
             int savestart = NodeUtils.StackSizeToPos(node.GetOffset());
             int savesize = NodeUtils.StackSizeToPos(node.GetSizeSave());
@@ -1452,9 +1452,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 this.SetVarStructName((VarStruct)varref.Var());
                 varref.ChooseStructElement(elementVar);
             }
-            else if (typeof(Scriptnode.AActionExp).IsInstanceOfType(lastExp))
+            else if (typeof(ScriptNode.AActionExp).IsInstanceOfType(lastExp))
             {
-                Scriptnode.AActionExp actionExp = (Scriptnode.AActionExp)lastExp;
+                ScriptNode.AActionExp actionExp = (ScriptNode.AActionExp)lastExp;
                 StackEntry stackEntry = actionExp.Stackentry();
                 if (stackEntry != null && typeof(VarStruct).IsInstanceOfType(stackEntry))
                 {
@@ -1472,9 +1472,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
             }
-            else if (typeof(Scriptnode.AFcnCallExp).IsInstanceOfType(lastExp))
+            else if (typeof(ScriptNode.AFcnCallExp).IsInstanceOfType(lastExp))
             {
-                Scriptnode.AFcnCallExp fcnExp = (Scriptnode.AFcnCallExp)lastExp;
+                ScriptNode.AFcnCallExp fcnExp = (ScriptNode.AFcnCallExp)lastExp;
                 StackEntry stackEntry = fcnExp.Stackentry();
                 if (stackEntry != null && typeof(VarStruct).IsInstanceOfType(stackEntry))
                 {
@@ -1492,7 +1492,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
             }
-            else if (typeof(Scriptnode.ABinaryExp).IsInstanceOfType(lastExp) || typeof(Scriptnode.AUnaryExp).IsInstanceOfType(lastExp) || typeof(Scriptnode.AConditionalExp).IsInstanceOfType(lastExp))
+            else if (typeof(ScriptNode.ABinaryExp).IsInstanceOfType(lastExp) || typeof(ScriptNode.AUnaryExp).IsInstanceOfType(lastExp) || typeof(ScriptNode.AConditionalExp).IsInstanceOfType(lastExp))
             {
                 StackEntry stackEntry = lastExp.Stackentry();
                 if (stackEntry != null && typeof(VarStruct).IsInstanceOfType(stackEntry))
@@ -1513,7 +1513,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
         }
 
-        private Scriptnode.AExpression GetVarToAssignTo(AStackCommand node)
+        private ScriptNode.AExpression GetVarToAssignTo(AStackCommand node)
         {
             int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
             if (NodeUtils.IsGlobalStackOp(node))
@@ -1537,7 +1537,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             {
                 if (typeof(Const).IsInstanceOfType(entry))
                 {
-                    return new Scriptnode.AConst((Const)entry);
+                    return new ScriptNode.AConst((Const)entry);
                 }
 
                 throw new Exception("getVarToAssignTo: unexpected type at loc " + loc + ": " + entry.GetType().Name);
@@ -1570,27 +1570,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return false;
         }
 
-        private Scriptnode.AExpression GetVarToAssignTo(ACopyDownSpCommand node)
+        private ScriptNode.AExpression GetVarToAssignTo(ACopyDownSpCommand node)
         {
             return this.GetVar(NodeUtils.StackSizeToPos(node.GetSize()), NodeUtils.StackOffsetToPos(node.GetOffset()), this.stack, true, this);
         }
 
-        private Scriptnode.AExpression GetVarToAssignTo(ACopyDownBpCommand node)
+        private ScriptNode.AExpression GetVarToAssignTo(ACopyDownBpCommand node)
         {
             return this.GetVar(NodeUtils.StackSizeToPos(node.GetSize()), NodeUtils.StackOffsetToPos(node.GetOffset()), this.subdata.GetGlobalStack(), true, this.subdata.GlobalState());
         }
 
-        private Scriptnode.AExpression GetVarToCopy(ACopyTopSpCommand node)
+        private ScriptNode.AExpression GetVarToCopy(ACopyTopSpCommand node)
         {
             return this.GetVar(NodeUtils.StackSizeToPos(node.GetSize()), NodeUtils.StackOffsetToPos(node.GetOffset()), this.stack, false, this);
         }
 
-        private Scriptnode.AExpression GetVarToCopy(ACopyTopBpCommand node)
+        private ScriptNode.AExpression GetVarToCopy(ACopyTopBpCommand node)
         {
             return this.GetVar(NodeUtils.StackSizeToPos(node.GetSize()), NodeUtils.StackOffsetToPos(node.GetOffset()), this.subdata.GetGlobalStack(), false, this.subdata.GlobalState());
         }
 
-        private Scriptnode.AExpression GetVar(int copy, int loc, LocalVarStack stack, bool assign, SubScriptState state)
+        private ScriptNode.AExpression GetVar(int copy, int loc, LocalVarStack stack, bool assign, SubScriptState state)
         {
             bool isstruct = copy > 1;
             StackEntry entry = stack.Get(loc);
@@ -1605,7 +1605,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     {
 
                         // Return the constant - the decompiler will handle it as an expression
-                        return new Scriptnode.AConst((Const)entry);
+                        return new ScriptNode.AConst((Const)entry);
                     }
 
                     throw new Exception("Attempting to assign to a non-variable of type: " + entry.GetType().Name);
@@ -1614,7 +1614,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
             if (typeof(Const).IsInstanceOfType(entry))
             {
-                return new Scriptnode.AConst((Const)entry);
+                return new ScriptNode.AConst((Const)entry);
             }
 
             Variable var = (Variable)entry;
@@ -1678,7 +1678,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             int i = 0;
             while (i < paramcount)
             {
-                Scriptnode.AExpression exp = this.RemoveLastExp(false);
+                ScriptNode.AExpression exp = this.RemoveLastExp(false);
                 i += this.GetExpSize(exp);
                 @params.Add(exp);
             }
@@ -1693,7 +1693,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return ((AVarRef)exp).Var().Size();
             }
 
-            if (typeof(Scriptnode.AConst).IsInstanceOfType(exp))
+            if (typeof(ScriptNode.AConst).IsInstanceOfType(exp))
             {
                 return 1;
             }
@@ -1710,7 +1710,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             for (int paramcount = NodeUtils.GetActionParamCount(node), i = 0; i < paramcount; ++i)
             {
                 UtilsType paramtype = (UtilsType)paramtypes[i];
-                Scriptnode.AExpression exp;
+                ScriptNode.AExpression exp;
                 if (paramtype.Equals(unchecked((byte)(-16))))
                 {
                     exp = this.GetLastExp();
@@ -1720,7 +1720,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                     else
                     {
-                        exp = new Scriptnode.AVectorConstExp(this.RemoveLastExp(false), this.RemoveLastExp(false), this.RemoveLastExp(false));
+                        exp = new ScriptNode.AVectorConstExp(this.RemoveLastExp(false), this.RemoveLastExp(false), this.RemoveLastExp(false));
                     }
                 }
                 else

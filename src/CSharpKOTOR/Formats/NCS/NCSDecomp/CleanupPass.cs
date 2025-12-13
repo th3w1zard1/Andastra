@@ -184,7 +184,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:166-168
         // Original: private boolean isDanglingExpression(ScriptNode node) { return AExpression.class.isInstance(node); }
-        private bool IsDanglingExpression(Scriptnode.ScriptNode node)
+        private bool IsDanglingExpression(ScriptNode.ScriptNode node)
         {
             return typeof(AExpression).IsInstanceOfType(node);
         }
