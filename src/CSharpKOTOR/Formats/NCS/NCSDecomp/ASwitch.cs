@@ -1,20 +1,27 @@
-// 
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:15-130
+// Original: public class ASwitch extends ScriptNode
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public class ASwitch : ScriptNode
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:16
+        // Original: protected AExpression switchexp;
         protected AExpression switchexp;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:17
         // Original: protected List<ASwitchCase> cases;
         protected List<ASwitchCase> cases;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:18
+        // Original: protected ASwitchCase defaultcase;
         protected ASwitchCase defaultcase;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:19
+        // Original: protected int start;
         protected int start;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:20
+        // Original: protected int end;
         protected int end;
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:22-26
         // Original: public ASwitch(int start, AExpression switchexp) { this.start = start; this.cases = new ArrayList<>(); this.switchExp(switchexp); }
         public ASwitch(int start, AExpression switchexp)
@@ -24,17 +31,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.SwitchExp(switchexp);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:28-31
+        // Original: public void switchExp(AExpression switchexp) { switchexp.parent(this); this.switchexp = switchexp; }
         public virtual void SwitchExp(AExpression switchexp)
         {
             switchexp.Parent(this);
             this.switchexp = switchexp;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:33-35
+        // Original: public AExpression switchExp() { return this.switchexp; }
         public virtual AExpression SwitchExp()
         {
             return this.switchexp;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:37-44
+        // Original: public void end(int end) { this.end = end; if (this.defaultcase != null) { this.defaultcase.end(end); } else if (this.cases.size() > 0) { this.cases.get(this.cases.size() - 1).end(end); } }
         public virtual void End(int end)
         {
             this.end = end;
@@ -48,17 +61,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:46-48
+        // Original: public int end() { return this.end; }
         public virtual int End()
         {
             return this.end;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:50-53
+        // Original: public void addCase(ASwitchCase acase) { acase.parent(this); this.cases.add(acase); }
         public virtual void AddCase(ASwitchCase acase)
         {
             acase.Parent(this);
             this.cases.Add(acase);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:55-58
+        // Original: public void addDefaultCase(ASwitchCase acase) { acase.parent(this); this.defaultcase = acase; }
         public virtual void AddDefaultCase(ASwitchCase acase)
         {
             acase.Parent(this);
