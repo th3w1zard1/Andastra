@@ -1,21 +1,22 @@
-// 
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:37-191
+// Original: public class CleanupPass
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using ScriptnodeScriptNode = CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode.ScriptNode;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class CleanupPass
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:38-41
+        // Original: private ASub root; private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private SubScriptState state;
         private ASub root;
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
         private SubScriptState state;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:43-48
+        // Original: public CleanupPass(ASub root, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, SubScriptState state) { this.root = root; this.nodedata = nodedata; this.subdata = subdata; this.state = state; }
         public CleanupPass(ASub root, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, SubScriptState state)
         {
             this.root = root;
@@ -24,12 +25,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.state = state;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:50-53
+        // Original: public void apply() { this.checkSubCodeBlock(); this.apply(this.root); }
         public virtual void Apply()
         {
             this.CheckSubCodeBlock();
             this.Apply(this.root);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:55-60
+        // Original: public void done() { this.root = null; this.nodedata = null; this.subdata = null; this.state = null; }
         public virtual void Done()
         {
             this.root = null;
