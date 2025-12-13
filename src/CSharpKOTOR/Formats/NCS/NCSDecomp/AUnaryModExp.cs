@@ -32,7 +32,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         protected virtual void VarRef(ScriptNodeNS.AVarRef varref)
         {
             this.varref = varref;
-            varref.Parent(this);
+            if (varref != null)
+            {
+                ((AExpression)varref).Parent(this);
+            }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryModExp.java:27-29
