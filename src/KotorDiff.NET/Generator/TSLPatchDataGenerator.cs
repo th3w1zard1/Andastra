@@ -14,6 +14,7 @@ using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Resources;
+using CSharpKOTOR.Common;
 using GFFContent = CSharpKOTOR.Formats.GFF.GFFContent;
 using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
 using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
@@ -242,8 +243,7 @@ namespace KotorDiff.NET.Generator
                 if (replaceFile)
                 {
                     // Apply all modifications to generate the replacement file
-                    // TODO: Implement _apply_gff_modifications
-                    // For now, just copy the base file
+                    ApplyGffModifications(baseGff, modGff.Modifiers);
                 }
 
                 // Write the GFF file
@@ -375,13 +375,13 @@ namespace KotorDiff.NET.Generator
             var filesByFolder = new Dictionary<string, List<string>>();
             foreach (var installFile in installFiles)
             {
-                string folder = !string.IsNullOrEmpty(installFile.Destination) && installFile.Destination != "." 
-                    ? installFile.Destination 
+                string folder = !string.IsNullOrEmpty(installFile.Destination) && installFile.Destination != "."
+                    ? installFile.Destination
                     : "Override";
-                string filename = !string.IsNullOrEmpty(installFile.SaveAs) 
-                    ? installFile.SaveAs 
+                string filename = !string.IsNullOrEmpty(installFile.SaveAs)
+                    ? installFile.SaveAs
                     : installFile.SourceFile;
-                
+
                 if (!filesByFolder.ContainsKey(folder))
                 {
                     filesByFolder[folder] = new List<string>();
@@ -408,6 +408,519 @@ namespace KotorDiff.NET.Generator
             }
 
             return copiedFiles;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:490-508
+        // Original: def _apply_gff_modifications(...): ...
+        private void ApplyGffModifications(GFF gff, List<ModifyGFF> modifiers)
+        {
+            foreach (var modifier in modifiers)
+            {
+                if (modifier is ModifyFieldGFF modifyField)
+                {
+                    ApplyModifyField(gff.Root, modifyField);
+                }
+                else if (modifier is AddFieldGFF addField)
+                {
+                    ApplyAddField(gff.Root, addField);
+                }
+                else if (modifier is AddStructToListGFF addStructToList)
+                {
+                    ApplyAddStructToList(gff.Root, addStructToList);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:509-551
+        // Original: def _navigate_to_parent_struct(...): ...
+        private GFFStruct NavigateToParentStruct(GFFStruct rootStruct, List<string> pathParts, string context = "modification")
+        {
+            GFFStruct currentStruct = rootStruct;
+
+            for (int i = 0; i < pathParts.Count - 1; i++)
+            {
+                string part = pathParts[i];
+                if (currentStruct == null)
+                {
+                    Console.WriteLine($"[ERROR] Cannot navigate {context}: current_struct is None at '{part}'");
+                    return null;
+                }
+
+                if (int.TryParse(part, out int listIndex))
+                {
+                    // List index navigation - this shouldn't happen in parent navigation
+                    Console.WriteLine($"[ERROR] Path part '{part}' expects list but got GFFStruct during {context}");
+                    return null;
+                }
+                else
+                {
+                    // Struct field navigation
+                    GFFStruct nestedStruct = currentStruct.GetStruct(part);
+                    if (nestedStruct == null)
+                    {
+                        Console.WriteLine($"[ERROR] Cannot navigate to struct field '{part}' during {context} - field missing or wrong type");
+                        return null;
+                    }
+                    currentStruct = nestedStruct;
+                }
+            }
+
+            return currentStruct;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:553-574
+        // Original: def _apply_modify_field(...): ...
+        private void ApplyModifyField(GFFStruct rootStruct, ModifyFieldGFF modifier)
+        {
+            // Navigate to the correct struct
+            var pathParts = modifier.Path.Replace("\\", "/").Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            GFFStruct currentStruct = NavigateToParentStruct(rootStruct, pathParts, $"ModifyField: {modifier.Path}");
+
+            if (currentStruct == null)
+            {
+                return;
+            }
+
+            // Set the field value
+            string fieldLabel = pathParts[pathParts.Count - 1];
+            object value = ExtractFieldValue(modifier.Value);
+            SetFieldValue(currentStruct, fieldLabel, value);
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:576-600
+        // Original: def _set_field_value(...): ...
+        private void SetFieldValue(GFFStruct gffStruct, string fieldLabel, object value)
+        {
+            if (value is int intValue)
+            {
+                gffStruct.SetUInt32(fieldLabel, (uint)intValue);
+            }
+            else if (value is float floatValue)
+            {
+                gffStruct.SetSingle(fieldLabel, floatValue);
+            }
+            else if (value is string stringValue)
+            {
+                gffStruct.SetString(fieldLabel, stringValue);
+            }
+            else if (value is ResRef resRefValue)
+            {
+                gffStruct.SetResRef(fieldLabel, resRefValue);
+            }
+            else if (value is LocalizedString locStringValue)
+            {
+                gffStruct.SetLocString(fieldLabel, locStringValue);
+            }
+            else if (value is Vector3 vector3Value)
+            {
+                gffStruct.SetVector3(fieldLabel, vector3Value);
+            }
+            else if (value is Vector4 vector4Value)
+            {
+                gffStruct.SetVector4(fieldLabel, vector4Value);
+            }
+            else
+            {
+                Console.WriteLine($"[ERROR] Unknown value type for field '{fieldLabel}': {value?.GetType().Name ?? "null"}");
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:602-644
+        // Original: def _navigate_to_struct_creating_if_needed(...): ...
+        private GFFStruct NavigateToStructCreatingIfNeeded(GFFStruct rootStruct, List<string> pathParts, string context = "AddField")
+        {
+            GFFStruct currentStruct = rootStruct;
+
+            foreach (string part in pathParts)
+            {
+                if (string.IsNullOrWhiteSpace(part))
+                {
+                    continue;
+                }
+
+                if (int.TryParse(part, out int listIndex))
+                {
+                    // List index navigation - not supported in this context
+                    Console.WriteLine($"[ERROR] Expected struct at '{part}' but got list index in {context}");
+                    return null;
+                }
+                else
+                {
+                    // Struct field - check if exists, create if not
+                    if (currentStruct.Exists(part))
+                    {
+                        GFFStruct nestedStruct = currentStruct.GetStruct(part);
+                        if (nestedStruct == null)
+                        {
+                            Console.WriteLine($"[ERROR] Field '{part}' exists but is not a struct in {context}");
+                            return null;
+                        }
+                        currentStruct = nestedStruct;
+                    }
+                    else
+                    {
+                        // Create new struct if field doesn't exist
+                        var newStruct = new GFFStruct();
+                        currentStruct.SetStruct(part, newStruct);
+                        currentStruct = newStruct;
+                    }
+                }
+            }
+
+            return currentStruct;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:646-673
+        // Original: def _apply_nested_modifiers(...): ...
+        private void ApplyNestedModifiers(GFFStruct currentStruct, AddFieldGFF modifier)
+        {
+            if (modifier.Modifiers == null || modifier.Modifiers.Count == 0)
+            {
+                return;
+            }
+
+            if (modifier.FieldType == GFFFieldType.Struct)
+            {
+                GFFStruct nestedStruct = currentStruct.GetStruct(modifier.Label);
+                if (nestedStruct == null)
+                {
+                    Console.WriteLine($"[ERROR] Cannot apply nested modifiers: struct field '{modifier.Label}' not found after creation");
+                    return;
+                }
+                foreach (var nestedMod in modifier.Modifiers)
+                {
+                    if (nestedMod is AddFieldGFF addField)
+                    {
+                        ApplyAddField(nestedStruct, addField);
+                    }
+                    else if (nestedMod is AddStructToListGFF)
+                    {
+                        Console.WriteLine($"[ERROR] Unexpected AddStructToListGFF in Struct context for '{modifier.Label}'");
+                    }
+                }
+            }
+            else if (modifier.FieldType == GFFFieldType.List)
+            {
+                // Lists handle their own nested modifiers via AddStructToListGFF
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:675-699
+        // Original: def _apply_add_field(...): ...
+        private void ApplyAddField(GFFStruct rootStruct, AddFieldGFF modifier)
+        {
+            // Navigate to parent struct, creating intermediate structs as needed
+            var pathParts = !string.IsNullOrEmpty(modifier.Path)
+                ? modifier.Path.Replace("\\", "/").Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList()
+                : new List<string>();
+            GFFStruct currentStruct = NavigateToStructCreatingIfNeeded(rootStruct, pathParts, $"AddField: {modifier.Label}");
+
+            if (currentStruct == null)
+            {
+                return;
+            }
+
+            // Add the field to the struct
+            object value = ExtractFieldValue(modifier.Value);
+            SetFieldByType(currentStruct, modifier.Label, modifier.FieldType, value);
+
+            // Recursively apply nested modifiers if present
+            if (modifier.FieldType == GFFFieldType.Struct || modifier.FieldType == GFFFieldType.List)
+            {
+                ApplyNestedModifiers(currentStruct, modifier);
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:849-891
+        // Original: def _set_field_by_type(...): ...
+        private void SetFieldByType(GFFStruct gffStruct, string label, GFFFieldType fieldType, object value)
+        {
+            try
+            {
+                switch (fieldType)
+                {
+                    case GFFFieldType.UInt8:
+                        gffStruct.SetUInt8(label, Convert.ToByte(value));
+                        break;
+                    case GFFFieldType.Int8:
+                        gffStruct.SetInt8(label, Convert.ToSByte(value));
+                        break;
+                    case GFFFieldType.UInt16:
+                        gffStruct.SetUInt16(label, Convert.ToUInt16(value));
+                        break;
+                    case GFFFieldType.Int16:
+                        gffStruct.SetInt16(label, Convert.ToInt16(value));
+                        break;
+                    case GFFFieldType.UInt32:
+                        gffStruct.SetUInt32(label, Convert.ToUInt32(value));
+                        break;
+                    case GFFFieldType.Int32:
+                        gffStruct.SetInt32(label, Convert.ToInt32(value));
+                        break;
+                    case GFFFieldType.UInt64:
+                        gffStruct.SetUInt64(label, Convert.ToUInt64(value));
+                        break;
+                    case GFFFieldType.Int64:
+                        gffStruct.SetInt64(label, Convert.ToInt64(value));
+                        break;
+                    case GFFFieldType.Single:
+                        gffStruct.SetSingle(label, Convert.ToSingle(value));
+                        break;
+                    case GFFFieldType.Double:
+                        gffStruct.SetDouble(label, Convert.ToDouble(value));
+                        break;
+                    case GFFFieldType.String:
+                        gffStruct.SetString(label, value?.ToString() ?? "");
+                        break;
+                    case GFFFieldType.ResRef:
+                        if (value is ResRef resRef)
+                        {
+                            gffStruct.SetResRef(label, resRef);
+                        }
+                        else
+                        {
+                            string resRefStr = value?.ToString() ?? "";
+                            gffStruct.SetResRef(label, string.IsNullOrEmpty(resRefStr) ? ResRef.FromBlank() : new ResRef(resRefStr));
+                        }
+                        break;
+                    case GFFFieldType.LocalizedString:
+                        if (value is LocalizedString locString)
+                        {
+                            gffStruct.SetLocString(label, locString);
+                        }
+                        break;
+                    case GFFFieldType.Vector3:
+                        if (value is Vector3 v3)
+                        {
+                            gffStruct.SetVector3(label, v3);
+                        }
+                        break;
+                    case GFFFieldType.Vector4:
+                        if (value is Vector4 v4)
+                        {
+                            gffStruct.SetVector4(label, v4);
+                        }
+                        break;
+                    case GFFFieldType.Struct:
+                        if (value is GFFStruct structValue)
+                        {
+                            gffStruct.SetStruct(label, structValue);
+                        }
+                        break;
+                    case GFFFieldType.List:
+                        if (value is GFFList listValue)
+                        {
+                            gffStruct.SetList(label, listValue);
+                        }
+                        else
+                        {
+                            gffStruct.SetList(label, new GFFList());
+                        }
+                        break;
+                    default:
+                        Console.WriteLine($"[DEBUG] No setter for field type: {fieldType}");
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[DEBUG] Error setting field {label} with type {fieldType}: {e.Message}");
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:893-909
+        // Original: def _extract_field_value(...): ...
+        private object ExtractFieldValue(FieldValue fieldValue)
+        {
+            if (fieldValue is FieldValueConstant constant)
+            {
+                // FieldValueConstant has a Stored property
+                var storedProperty = constant.GetType().GetProperty("Stored");
+                if (storedProperty != null)
+                {
+                    return storedProperty.GetValue(constant);
+                }
+            }
+
+            // If it's a FieldValue with a Value method, call it with null memory
+            var valueMethod = fieldValue.GetType().GetMethod("Value");
+            if (valueMethod != null)
+            {
+                try
+                {
+                    return valueMethod.Invoke(fieldValue, new object[] { null, null });
+                }
+                catch
+                {
+                    // Fall through
+                }
+            }
+
+            return fieldValue;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:701-750
+        // Original: def _navigate_to_list_creating_if_needed(...): ...
+        private GFFList NavigateToListCreatingIfNeeded(GFFStruct rootStruct, List<string> pathParts, string context = "AddStructToList")
+        {
+            object currentObj = rootStruct;
+
+            foreach (string part in pathParts)
+            {
+                if (string.IsNullOrWhiteSpace(part))
+                {
+                    continue;
+                }
+
+                if (int.TryParse(part, out int listIndex))
+                {
+                    // List index navigation
+                    if (!(currentObj is GFFList currentList))
+                    {
+                        Console.WriteLine($"[ERROR] Expected list at index '{part}' but got {currentObj.GetType().Name} in {context}");
+                        return null;
+                    }
+                    GFFStruct item = currentList.At(listIndex);
+                    if (item == null)
+                    {
+                        Console.WriteLine($"[ERROR] List index {part} out of bounds in {context}");
+                        return null;
+                    }
+                    currentObj = item;
+                }
+                else if (currentObj is GFFStruct currentStruct)
+                {
+                    object navigatedObj = NavigateStructFieldToList(currentStruct, part, context);
+                    if (navigatedObj == null)
+                    {
+                        return null;
+                    }
+                    currentObj = navigatedObj;
+                }
+                else
+                {
+                    Console.WriteLine($"[ERROR] Cannot navigate from {currentObj.GetType().Name} at '{part}' in {context}");
+                    return null;
+                }
+            }
+
+            // Verify final object is a list
+            if (!(currentObj is GFFList resultList))
+            {
+                Console.WriteLine($"[ERROR] Path '{string.Join("/", pathParts)}' did not resolve to GFFList in {context}, got {currentObj.GetType().Name}");
+                return null;
+            }
+
+            return resultList;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:752-789
+        // Original: def _navigate_struct_field_to_list(...): ...
+        private object NavigateStructFieldToList(GFFStruct currentStruct, string fieldName, string context)
+        {
+            if (!currentStruct.Exists(fieldName))
+            {
+                // Field doesn't exist - create new list
+                var newList = new GFFList();
+                currentStruct.SetList(fieldName, newList);
+                return newList;
+            }
+
+            // Field exists - navigate to it
+            GFFFieldType? fieldType = currentStruct.GetFieldType(fieldName);
+            if (!fieldType.HasValue)
+            {
+                return null;
+            }
+
+            // Navigate based on field type
+            if (fieldType.Value == GFFFieldType.List)
+            {
+                GFFList resultList = currentStruct.GetList(fieldName);
+                if (resultList == null)
+                {
+                    Console.WriteLine($"[ERROR] get_list('{fieldName}') returned None in {context}");
+                }
+                return resultList;
+            }
+
+            if (fieldType.Value == GFFFieldType.Struct)
+            {
+                GFFStruct resultStruct = currentStruct.GetStruct(fieldName);
+                if (resultStruct == null)
+                {
+                    Console.WriteLine($"[ERROR] get_struct('{fieldName}') returned None in {context}");
+                }
+                return resultStruct;
+            }
+
+            Console.WriteLine($"[ERROR] Field '{fieldName}' has type {fieldType.Value}, expected List or Struct in {context}");
+            return null;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:791-811
+        // Original: def _extract_struct_from_modifier(...): ...
+        private GFFStruct ExtractStructFromModifier(AddStructToListGFF modifier)
+        {
+            if (modifier.Value is FieldValueConstant constant)
+            {
+                var storedProperty = constant.GetType().GetProperty("Stored");
+                if (storedProperty != null)
+                {
+                    object stored = storedProperty.GetValue(constant);
+                    if (stored is GFFStruct gffStruct)
+                    {
+                        return gffStruct;
+                    }
+                }
+            }
+
+            // Create new struct
+            return new GFFStruct();
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:813-848
+        // Original: def _apply_add_struct_to_list(...): ...
+        private void ApplyAddStructToList(GFFStruct rootStruct, AddStructToListGFF modifier)
+        {
+            // Navigate to the target list
+            var pathParts = !string.IsNullOrEmpty(modifier.Path)
+                ? modifier.Path.Replace("\\", "/").Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList()
+                : new List<string>();
+            GFFList targetList = NavigateToListCreatingIfNeeded(rootStruct, pathParts, $"AddStructToList: {modifier.Identifier}");
+
+            if (targetList == null)
+            {
+                return;
+            }
+
+            // Extract struct from modifier
+            GFFStruct newStruct = ExtractStructFromModifier(modifier);
+
+            // Add the struct to the list
+            GFFStruct addedStruct = targetList.Add(newStruct.StructId);
+
+            // Copy fields from newStruct to addedStruct
+            foreach ((string fieldLabel, GFFFieldType fieldType, object fieldValue) in newStruct)
+            {
+                SetFieldByType(addedStruct, fieldLabel, fieldType, fieldValue);
+            }
+
+            // Apply nested modifiers to the added struct
+            if (modifier.Modifiers != null)
+            {
+                foreach (var nestedMod in modifier.Modifiers)
+                {
+                    if (nestedMod is AddFieldGFF addField)
+                    {
+                        ApplyAddField(addedStruct, addField);
+                    }
+                    else if (nestedMod is AddStructToListGFF addStructToList)
+                    {
+                        ApplyAddStructToList(addedStruct, addStructToList);
+                    }
+                }
+            }
         }
     }
 }
