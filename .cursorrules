@@ -196,3 +196,23 @@ When debugging bytecode mismatches, use the `Compare-NcsFiles.ps1` script:
 This displays instructions from both files side-by-side with differences highlighted. Use `-ShowOnly "original"` or `-ShowOnly "roundtrip"` to view a single file.
 
 Feel free to modify `Compare-NcsFiles.ps1` to add additional functionality as needed.
+
+## NCSDecomp.NET - External Compiler Prohibition
+
+**CRITICAL: ABSOLUTE PROHIBITION OF EXTERNAL COMPILERS**
+
+**FOR NCSDecomp.NET ONLY**: Under NO circumstances should NCSDecomp.NET use external compilers, especially NOT `nwnnsscomp.exe` or any other external compiler tool.
+
+**The entire purpose of NCSDecomp.NET is to implement its own self-contained compiler/decompiler.**
+
+**This means:**
+- DO NOT call `nwnnsscomp.exe` from NCSDecomp.NET code
+- DO NOT invoke any external compiler executables
+- DO NOT use `CompilerUtil`, `NWScriptLocator`, or any compiler wrapper classes
+- DO NOT implement compiler execution methods (`externalCompile`, `externalDecompile`, etc.)
+- DO NOT depend on external compiler availability for decompilation to work
+- NCSDecomp.NET must be completely self-contained and functional without any external tools
+
+**Note**: This restriction applies ONLY to `src/NCSDecomp` and `src/CSharpKOTOR/Formats/NCS/NCSDecomp`. Other parts of HoloPatcher.NET (e.g., tests, round-trip validation utilities) MAY use external compilers, but the core decompiler library must NOT.
+
+**If you see code in NCSDecomp.NET that calls external compilers, it should be removed or refactored to use internal implementations only.**
