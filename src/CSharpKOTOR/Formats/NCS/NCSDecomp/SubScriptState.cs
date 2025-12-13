@@ -728,32 +728,34 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         else if (this.nodedata.GetPos(dest) >= this.nodedata.GetPos(node))
                         {
                             ScriptRootNode loop = this.GetBreakable();
-                    if (typeof(ASwitchCase).IsInstanceOfType(loop))
-                    {
-                        loop = this.GetEnclosingLoop(loop);
-                        if (loop == null)
-                        {
-                            ABreakStatement abreak = new ABreakStatement();
-                            this.current.AddChild(abreak);
-                        }
-                        else
-                        {
-                            AUnkLoopControl aunk = new AUnkLoopControl(this.nodedata.GetPos(dest));
-                            this.current.AddChild(aunk);
-                        }
-                    }
-                    else if (loop != null && this.nodedata.GetPos(dest) > loop.GetEnd())
-                    {
-                        ABreakStatement abreak = new ABreakStatement();
-                        this.current.AddChild(abreak);
-                    }
-                    else
-                    {
-                        loop = this.GetLoop();
-                        if (loop != null && this.nodedata.GetPos(dest) <= loop.GetEnd())
-                        {
-                            AContinueStatement acont = new AContinueStatement();
-                            this.current.AddChild(acont);
+                            if (typeof(ASwitchCase).IsInstanceOfType(loop))
+                            {
+                                loop = this.GetEnclosingLoop(loop);
+                                if (loop == null)
+                                {
+                                    ABreakStatement abreak = new ABreakStatement();
+                                    this.current.AddChild(abreak);
+                                }
+                                else
+                                {
+                                    AUnkLoopControl aunk = new AUnkLoopControl(this.nodedata.GetPos(dest));
+                                    this.current.AddChild(aunk);
+                                }
+                            }
+                            else if (loop != null && this.nodedata.GetPos(dest) > loop.GetEnd())
+                            {
+                                ABreakStatement abreak = new ABreakStatement();
+                                this.current.AddChild(abreak);
+                            }
+                            else
+                            {
+                                loop = this.GetLoop();
+                                if (loop != null && this.nodedata.GetPos(dest) <= loop.GetEnd())
+                                {
+                                    AContinueStatement acont = new AContinueStatement();
+                                    this.current.AddChild(acont);
+                                }
+                            }
                         }
                     }
                 }
