@@ -341,10 +341,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             if (mainPos < 0)
             {
                 // Try to get position from first command
-                Node firstCmd = NodeUtils.GetCommandChild(this.mainsub);
-                if (firstCmd != null)
+                try
                 {
-                    mainPos = this.nodedata.TryGetPos(firstCmd);
+                    Node firstCmd = NodeUtils.GetCommandChild(this.mainsub);
+                    if (firstCmd != null)
+                    {
+                        mainPos = this.nodedata.TryGetPos(firstCmd);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    JavaSystem.@out.Println("Warning: Could not get first command for main subroutine: " + ex.Message);
+                    // Continue with default position
                 }
                 // If still no position, set to 0 (main is always at position 0)
                 if (mainPos < 0)
@@ -353,6 +361,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 this.nodedata.SetPos(this.mainsub, mainPos);
             }
+            // Always add the state, even if GetCommandChild failed
             if (conditional)
             {
                 this.AddSubState(this.mainsub, (byte)0, new Type((byte)3));
@@ -533,12 +542,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Always add the first (or second if globals was first) subroutine as main
             this.AddMain(node, conditional);
             byte id = 1;
-            int skippedCount = 0;
             while (subroutines.Count > 0)
             {
                 node = (ASubroutine)subroutines.RemoveFirst();
                 int pos = this.nodedata.TryGetPos(node);
-                // If the subroutine doesn't have a position set, get it from the first command
+                // If the subroutine doesn't have a position set, try to get it from the first command
                 if (pos < 0)
                 {
                     Node firstCmd = NodeUtils.GetCommandChild(node);
@@ -546,27 +554,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     {
                         pos = this.nodedata.TryGetPos(firstCmd);
                         // If we got a position from the first command, set it on the subroutine node too
-                        if (pos > 0)
+                        if (pos >= 0)
                         {
                             this.nodedata.SetPos(node, pos);
                         }
+                        else
+                        {
+                            // Fallback: try GetCommandPos if position wasn't set yet
+                            int cmdPos = NodeUtils.GetCommandPos(firstCmd);
+                            if (cmdPos >= 0)
+                            {
+                                pos = cmdPos;
+                                this.nodedata.SetPos(node, pos);
+                            }
+                        }
                     }
                 }
-                // If still no position, we need to skip it (shouldn't happen in normal cases)
-                if (pos <= 0)
-                {
-                    skippedCount++;
-                    JavaSystem.@out.Println("WARNING: Skipping subroutine with no position or position <= 0 (pos=" + pos + ")");
-                    continue;
-                }
-                ASubroutine node2 = node;
-                byte id2 = id;
-                id = (byte)(id2 + 1);
-                this.AddSubroutine(pos, node2, id2);
-            }
-            if (skippedCount > 0)
-            {
-                JavaSystem.@out.Println("WARNING: Skipped " + skippedCount + " subroutines due to missing or invalid positions");
+                // Matching Java implementation: always add subroutine, even if position is -1 or 0
+                // The position will be used for indexing, but we shouldn't skip subroutines
+                // Note: position 0 is the main subroutine, which is already added, but we still process others
+                this.AddSubroutine(pos, node, id++);
             }
             subroutines = null;
             node = null;
