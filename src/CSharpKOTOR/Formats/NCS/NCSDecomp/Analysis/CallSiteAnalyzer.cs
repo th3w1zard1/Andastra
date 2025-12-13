@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             if (NodeUtils.IsCommandNode(node))
             {
-                this.skipdeadcode = !this.nodedata.ProcessCode(node);
+                this.skipdeadcode = !this.nodedata.TryProcessCode(node);
             }
         }
 

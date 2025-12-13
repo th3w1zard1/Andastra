@@ -188,6 +188,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Helper method to safely check if code should be processed without throwing exception
+        // Returns true if node is not in hashtable (assume it should be processed)
+        public virtual bool TryProcessCode(Node node)
+        {
+            object existing;
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                return true; // Default to processing if node not found
+            }
+            else
+            {
+                NodeData data = (NodeData)existing;
+                return data.state != 1;
+            }
+        }
+
         private NodeData GetOrCreateNodeData(Node node)
         {
             object existing;

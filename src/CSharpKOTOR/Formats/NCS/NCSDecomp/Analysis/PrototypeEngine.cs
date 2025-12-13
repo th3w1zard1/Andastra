@@ -37,14 +37,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             CallGraphBuilder.CallGraph graph = new CallGraphBuilder(this.nodedata, this.subdata).Build();
             Dictionary<int, ASubroutine> subByPos = this.IndexSubroutines();
 
-            int mainPos = this.nodedata.GetPos(this.subdata.GetMainSub());
+            int mainPos = this.nodedata.TryGetPos(this.subdata.GetMainSub());
+            if (mainPos < 0)
+            {
+                JavaSystem.@out.Println("WARNING: Main subroutine has no position, skipping prototype engine");
+                return;
+            }
             HashSet<int> reachable = graph.ReachableFrom(mainPos);
             if (this.subdata.GetGlobalsSub() != null)
             {
-                HashSet<int> globalsReachable = graph.ReachableFrom(this.nodedata.GetPos(this.subdata.GetGlobalsSub()));
-                foreach (int pos in globalsReachable)
+                int globalsPos = this.nodedata.TryGetPos(this.subdata.GetGlobalsSub());
+                if (globalsPos >= 0)
                 {
-                    reachable.Add(pos);
+                    HashSet<int> globalsReachable = graph.ReachableFrom(globalsPos);
+                    foreach (int pos in globalsReachable)
+                    {
+                        reachable.Add(pos);
+                    }
                 }
             }
 
@@ -80,7 +89,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             while (it.HasNext())
             {
                 ASubroutine sub = (ASubroutine)it.Next();
-                map[this.nodedata.GetPos(sub)] = sub;
+                int pos = this.nodedata.TryGetPos(sub);
+                if (pos >= 0)
+                {
+                    map[pos] = sub;
+                }
             }
             return map;
         }
@@ -134,13 +147,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
                 SubroutineState state = this.subdata.GetState(sub);
                 if (!state.IsPrototyped())
                 {
+                    int pos = this.nodedata.TryGetPos(sub);
+                    if (pos < 0)
+                    {
+                        JavaSystem.@out.Println("WARNING: Subroutine has no position, skipping prototype");
+                        continue;
+                    }
                     if (this.strict)
                     {
                         JavaSystem.@out.Println(
-                            "Strict signatures: missing prototype for subroutine at " + this.nodedata.GetPos(sub).ToString() + " (continuing)"
+                            "Strict signatures: missing prototype for subroutine at " + pos.ToString() + " (continuing)"
                         );
                     }
-                    int pos = this.nodedata.GetPos(sub);
                     int inferredParams = 0;
                     if (callsiteParams.ContainsKey(pos))
                     {

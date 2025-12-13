@@ -611,7 +611,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.CheckOrigins(node);
             if (NodeUtils.IsCommandNode(node))
             {
-                this.skipdeadcode = !this.nodedata.ProcessCode(node);
+                this.skipdeadcode = !this.nodedata.TryProcessCode(node);
             }
         }
 
