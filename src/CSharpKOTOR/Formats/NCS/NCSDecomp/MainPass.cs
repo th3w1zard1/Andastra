@@ -6,8 +6,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
@@ -115,23 +116,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             if (!this.skipdeadcode)
             {
-                Variable var = new Variable(NodeUtils.GetType(node));
-                this.stack.Push(var);
-                var = null;
-                this.state.TransformRSAdd(node);
-            }
-            else
-            {
-                this.state.TransformDeadCode(node);
-            }
-        }
-
-        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
-        public virtual void OutARsaddCommand(AST.ARsaddCommand node)
-        {
-            if (!this.skipdeadcode)
-            {
-                // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
+                // Extract type from ARsaddCommand's GetType() which returns TIntegerConstant
                 int typeVal = 0;
                 if (node.GetType() != null && node.GetType().GetText() != null)
                 {
@@ -139,6 +124,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     {
                         typeVal = parsedType;
                     }
+                }
+                else
+                {
+                    // Fallback to NodeUtils.GetType for compatibility
+                    typeVal = NodeUtils.GetType(node).Value;
                 }
                 Variable var = new Variable(new UtilsType((byte)typeVal));
                 this.stack.Push(var);

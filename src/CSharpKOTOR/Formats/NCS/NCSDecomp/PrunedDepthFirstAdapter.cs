@@ -111,23 +111,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutASubroutine(node);
         }
 
-        // Handle AST.ASubroutine as well (from NcsToAstConverter)
-        public virtual void CaseASubroutine(AST.ASubroutine node)
-        {
-            // Treat AST.ASubroutine the same as root namespace ASubroutine
-            this.DefaultIn(node);
-            if (node.GetCommandBlock() != null)
-            {
-                node.GetCommandBlock().Apply(this);
-            }
-
-            if (node.GetReturn() != null)
-            {
-                node.GetReturn().Apply(this);
-            }
-
-            this.DefaultOut(node);
-        }
 
         public virtual void InACommandBlock(ACommandBlock node)
         {
@@ -157,23 +140,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutACommandBlock(node);
         }
 
-        // Handle AST.ACommandBlock as well (from NcsToAstConverter)
-        public virtual void CaseACommandBlock(AST.ACommandBlock node)
-        {
-            // Treat AST.ACommandBlock the same as root namespace ACommandBlock
-            this.DefaultIn(node);
-            Object[] temp = node.GetCmd().ToArray();
-
-            for (int i = 0; i < temp.Length; i++)
-            {
-                if (temp[i] is PCmd cmd)
-                {
-                    cmd.Apply(this);
-                }
-            }
-
-            this.DefaultOut(node);
-        }
 
         public virtual void InAAddVarCmd(AAddVarCmd node)
         {
@@ -540,18 +506,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutABpCmd(node);
         }
 
-        // Handle AST.ABpCmd as well (from NcsToAstConverter)
-        public virtual void CaseABpCmd(AST.ABpCmd node)
-        {
-            // Treat AST.ABpCmd the same as root namespace ABpCmd
-            this.DefaultIn(node);
-            if (node.GetBpCommand() != null)
-            {
-                node.GetBpCommand().Apply(this);
-            }
-
-            this.DefaultOut(node);
-        }
 
         public virtual void InAActionCmd(AActionCmd node)
         {
@@ -797,25 +751,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutARsaddCommand(node);
         }
 
-        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
-        public virtual void CaseARsaddCommand(AST.ARsaddCommand node)
-        {
-            // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
-            this.DefaultIn(node);
-            // Call OutARsaddCommand if visitor supports it (e.g., DoGlobalVars, MainPass)
-            if (this is DoGlobalVars dgv)
-            {
-                dgv.OutARsaddCommand(node);
-            }
-            else if (this is MainPass mp)
-            {
-                mp.OutARsaddCommand(node);
-            }
-            else
-            {
-                this.DefaultOut(node);
-            }
-        }
 
         public virtual void InAConstCommand(AConstCommand node)
         {
@@ -945,21 +880,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutABpCommand(node);
         }
 
-        // Handle AST.ABpCommand as well (from NcsToAstConverter)
-        public virtual void CaseABpCommand(AST.ABpCommand node)
-        {
-            // Treat AST.ABpCommand the same as root namespace ABpCommand
-            this.DefaultIn(node);
-            // Call OutABpCommand if visitor supports it (e.g., DoGlobalVars)
-            if (this is DoGlobalVars dgv)
-            {
-                dgv.OutABpCommand(node);
-            }
-            else
-            {
-                this.DefaultOut(node);
-            }
-        }
 
         public virtual void InAStoreStateCommand(AStoreStateCommand node)
         {

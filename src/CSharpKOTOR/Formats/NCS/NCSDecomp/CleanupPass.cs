@@ -51,14 +51,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 if (this.root.Size() == 1 && typeof(ACodeBlock).IsInstanceOfType(this.root.GetLastChild()))
                 {
                     ACodeBlock block = (ACodeBlock)this.root.RemoveLastChild();
-                    List<ScriptnodeScriptNode> children = block.RemoveChildren();
+                    List<ScriptNode.ScriptNode> children = block.RemoveChildren();
                     this.root.AddChildren(children);
                 }
             }
             finally
             {
                 ACodeBlock block = null;
-                List<ScriptnodeScriptNode> children = null;
+                List<ScriptNode.ScriptNode> children = null;
             }
         }
 
@@ -68,18 +68,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             try
             {
-                List<ScriptnodeScriptNode> children = rootnode.GetChildren();
+                List<ScriptNode.ScriptNode> children = rootnode.GetChildren();
                 ListIterator it = children.ListIterator();
 
                 while (it.HasNext())
                 {
-                    ScriptnodeScriptNode node1 = (ScriptnodeScriptNode)it.Next();
+                    ScriptNode.ScriptNode node1 = (ScriptNode.ScriptNode)it.Next();
                     if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
                         AVarDecl decl = (AVarDecl)node1;
                         if (decl.Exp() == null && it.HasNext())
                         {
-                            ScriptnodeScriptNode maybeAssign = (ScriptnodeScriptNode)it.Next();
+                            ScriptNode.ScriptNode maybeAssign = (ScriptNode.ScriptNode)it.Next();
                             if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
                                 && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
                             {
@@ -109,7 +109,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                             AVarDecl structdecx = new AVarDecl(structx);
                             if (it.HasNext())
                             {
-                                node1 = (ScriptnodeScriptNode)it.Next();
+                                node1 = (ScriptNode.ScriptNode)it.Next();
                             }
                             else
                             {
@@ -122,7 +122,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 node1.Parent(null);
                                 if (it.HasNext())
                                 {
-                                    node1 = (ScriptnodeScriptNode)it.Next();
+                                    node1 = (ScriptNode.ScriptNode)it.Next();
                                 }
                                 else
                                 {
@@ -136,7 +136,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 it.Previous();
                             }
 
-                            node1 = (ScriptnodeScriptNode)it.Next();
+                            node1 = (ScriptNode.ScriptNode)it.Next();
                             structdecx.Parent(node1.Parent());
                             it.Set(structdecx);
                             node1 = structdecx;
@@ -169,13 +169,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             finally
             {
-                List<ScriptnodeScriptNode> children = null;
+                List<ScriptNode.ScriptNode> children = null;
                 ListIterator it = null;
-                ScriptnodeScriptNode node1x = null;
+                ScriptNode.ScriptNode node1x = null;
                 Variable var = null;
                 VarStruct structx = null;
                 AVarDecl structdecx = null;
-                ScriptnodeScriptNode node2 = null;
+                ScriptNode.ScriptNode node2 = null;
                 AModifyExp modexp = null;
                 AExpressionStatement expstm = null;
                 ASwitchCase acase = null;

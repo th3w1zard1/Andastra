@@ -22,7 +22,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
             return _text;
         }
 
-        public void SetText(string text)
+        public virtual void SetText(string text)
         {
             _text = text;
         }

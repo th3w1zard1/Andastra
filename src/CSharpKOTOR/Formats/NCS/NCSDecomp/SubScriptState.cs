@@ -911,25 +911,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckEnd(node);
         }
 
-        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1154-1170
-        // Original: public void transformRSAdd(ARsaddCommand node) { ... }
-        public virtual void TransformRSAdd(AST.ARsaddCommand node)
-        {
-            // Matching DeNCS implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
-            this.CheckStart(node);
-            Variable var = (Variable)this.stack.Get(1);
-            // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
-            AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
-            if (existingVardec == null)
-            {
-                AVarDecl vardec = new AVarDecl(var);
-                this.UpdateVarCount(var);
-                this.current.AddChild(vardec);
-                this.vardecs.Put(var, vardec);
-            }
-            this.CheckEnd(node);
-        }
 
         public virtual void TransformConst(AConstCommand node)
         {
