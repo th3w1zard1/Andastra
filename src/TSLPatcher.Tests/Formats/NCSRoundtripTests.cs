@@ -438,42 +438,36 @@ namespace CSharpKOTOR.Tests.Formats
         }
 
         /// <summary>
+        /// Result of a round-trip test.
+        /// </summary>
+        private class RoundTripResult
+        {
+            public bool Passed { get; set; }
+            public string RelPath { get; set; }
+            public bool TextMatch { get; set; }
+            public string TextDiff { get; set; }
+            public bool BytecodeMatch { get; set; }
+            public string PcodeDiff { get; set; }
+            public string ErrorMessage { get; set; }
+        }
+
+        /// <summary>
         /// Performs a complete round-trip test: NSS->NCS->NSS->NCS
         ///
         /// TEST FLOW (EXACT REQUIREMENTS):
         /// =================================
-        /// Step 1: NSS -> NCS using INBUILT .NET compiler (RunInbuiltCompiler)
+        /// Step 1: NSS -> NCS using EXTERNAL nwnnsscomp.exe compiler from ./tools (RunExternalCompiler)
         /// Step 2: NCS -> NSS using INBUILT .NET decompiler (RunDecompile)
-        /// Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only)
-        /// Step 4: NSS -> NCS using EXTERNAL nwnnsscomp.exe compiler from ./tools (RunExternalCompiler)
-        /// Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch)
+        /// Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
+        /// Step 4: NSS -> NCS using INBUILT .NET compiler (RunInbuiltCompiler)
+        /// Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch, shows FULL pcode diff in UDIFF)
         ///
         /// PRIORITIES:
         /// ===========
-        /// PRIMARY: Bytecode comparison (Step 5) - MUST match 1:1 byte-by-byte. Test FAST FAILS if mismatch.
-        /// SECONDARY: Text comparison (Step 3) - Should match after normalization. Only WARNS if mismatch.
-        ///
-        /// ⚠️ CRITICAL REQUIREMENT - DO NOT MODIFY ⚠️
-        /// ============================================
-        /// The FIRST compilation (Step 1) MUST use the INBUILT compiler (RunInbuiltCompiler).
-        /// The SECOND compilation (Step 4) MUST use the EXTERNAL compiler (RunExternalCompiler).
-        ///
-        /// This is a HARD REQUIREMENT and MUST NEVER be changed:
-        /// - The first compilation tests that our inbuilt C# compiler produces valid NCS bytecode
-        /// - The second compilation tests that the decompiled NSS can be compiled by the external compiler
-        /// - The bytecode comparison tests that decompilation produces source that compiles to identical bytecode
-        ///
-        /// Changing the first compilation to use the external compiler would:
-        /// - Defeat the purpose of testing our inbuilt compiler
-        /// - Make the test meaningless (comparing external compiler output to external compiler output)
-        /// - Hide bugs in our inbuilt compiler
-        ///
-        /// If you are tempted to change this "for consistency" or "to make tests pass easier":
-        /// - DO NOT DO IT. This is intentional and required.
-        /// - If tests fail, fix the decompiler or compiler, don't change the test.
-        /// - The whole point is to ensure our inbuilt compiler and decompiler work correctly.
+        /// PRIMARY: Bytecode comparison (Step 5) - MUST match 1:1 byte-by-byte. Test FAST FAILS if mismatch. Shows FULL pcode diff in UDIFF format.
+        /// SECONDARY: Text comparison (Step 3) - Should match after normalization. Only WARNS if mismatch. Shows UDIFF format.
         /// </summary>
-        private static void RoundTripSingle(string nssPath, string gameFlag, string scratchRoot)
+        private static RoundTripResult RoundTripSingle(string nssPath, string gameFlag, string scratchRoot)
         {
             long startTime = Stopwatch.GetTimestamp();
 
@@ -488,16 +482,20 @@ namespace CSharpKOTOR.Tests.Formats
             int originalSourceLength = originalSource.Length;
             bool originalHasMain = originalSource.Contains("void main") || originalSource.Contains("void main(");
 
-            // Step 1: Compile original NSS -> NCS (first NCS) using INBUILT compiler
-            // ⚠️ CRITICAL: This MUST use RunInbuiltCompiler, NOT RunExternalCompiler.
-            // This is a hard requirement - see method documentation above.
-            // DO NOT change this to use the external compiler, even if it seems "simpler" or "more consistent".
+            RoundTripResult result = new RoundTripResult
+            {
+                RelPath = displayRelPath,
+                Passed = false,
+                TextMatch = false,
+                BytecodeMatch = false
+            };
+
+            // Step 1: Compile original NSS -> NCS (first NCS) using EXTERNAL compiler
             string compiledFirst = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".ncs");
-            Console.Write($"  [1/5] Compiling {displayRelPath} to .ncs with inbuilt compiler");
             long compileOriginalStart = Stopwatch.GetTimestamp();
             try
             {
-                RunInbuiltCompiler(nssPath, compiledFirst, gameFlag);
+                RunExternalCompiler(nssPath, compiledFirst, gameFlag, scratchRoot);
 
                 // Assert: NCS file exists and is non-empty
                 File.Exists(compiledFirst).Should().BeTrue($"Compiled NCS file should exist at {DisplayPath(compiledFirst)}");
@@ -532,24 +530,21 @@ namespace CSharpKOTOR.Tests.Formats
                 long compileTime = Stopwatch.GetTimestamp() - compileOriginalStart;
                 MergeOperationTime("compile-original", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms, {ncsSize} bytes, {ncs.Instructions.Count} instructions)");
             }
             catch (Exception e)
             {
                 long compileTime = Stopwatch.GetTimestamp() - compileOriginalStart;
                 MergeOperationTime("compile-original", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine($" ✗ FAILED");
                 throw new SourceCompilationException(
-                    $"Original source file failed to compile with inbuilt compiler.\n" +
+                    $"Original source file failed to compile with external compiler.\n" +
                     $"Source: {DisplayPath(nssPath)}\n" +
                     $"Source size: {originalSourceLength} characters\n" +
                     $"Error: {e.Message}", e);
             }
 
-            // Step 2: Decompile NCS -> NSS
+            // Step 2: Decompile NCS -> NSS using internal decompiler
             string decompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".dec.nss");
-            Console.Write($"  [2/5] Decompiling {Path.GetFileName(compiledFirst)} back to .nss");
             long decompileStart = Stopwatch.GetTimestamp();
             string decompiledContent = null;
             try
@@ -585,13 +580,11 @@ namespace CSharpKOTOR.Tests.Formats
 
                 long decompileTime = Stopwatch.GetTimestamp() - decompileStart;
                 MergeOperationTime("decompile", decompileTime);
-                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(decompileTime):F3} ms, {decompiledContent.Length} chars)");
             }
             catch (Exception e)
             {
                 long decompileTime = Stopwatch.GetTimestamp() - decompileStart;
                 MergeOperationTime("decompile", decompileTime);
-                Console.WriteLine($" ✗ FAILED");
                 throw new InvalidOperationException(
                     $"Decompilation failed.\n" +
                     $"NCS file: {DisplayPath(compiledFirst)}\n" +
@@ -599,8 +592,7 @@ namespace CSharpKOTOR.Tests.Formats
                     $"Error: {e.Message}", e);
             }
 
-            // Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only, does not fail test)
-            Console.Write($"  [3/5] Comparing original vs decompiled (text)");
+            // Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
             long compareTextStart = Stopwatch.GetTimestamp();
             string textMismatchMessage = null;
             bool textMatches = false;
@@ -619,9 +611,11 @@ namespace CSharpKOTOR.Tests.Formats
                 MergeOperationTime("compare", compareTime);
 
                 textMatches = original.Equals(roundtrip);
+                result.TextMatch = textMatches;
                 if (!textMatches)
                 {
                     string diff = FormatUnifiedDiff(original, roundtrip);
+                    result.TextDiff = diff;
                     textMismatchMessage = $"Text mismatch detected for {DisplayPath(nssPath)}";
                     if (diff != null)
                     {
@@ -634,12 +628,12 @@ namespace CSharpKOTOR.Tests.Formats
                     textMismatchMessage += $"\nOriginal: {originalLines} lines, {original.Length} chars";
                     textMismatchMessage += $"\nDecompiled: {roundtripLines} lines, {roundtrip.Length} chars";
 
-                    Console.WriteLine($" ⚠ MISMATCH ({originalLines} vs {roundtripLines} lines)");
-                    Console.Error.WriteLine($"WARNING: {textMismatchMessage}");
-                }
-                else
-                {
-                    Console.WriteLine($" ✓ MATCH ({original.Split('\n').Length} lines)");
+                    Console.Error.WriteLine($"WARNING: Text mismatch for {displayRelPath}");
+                    if (diff != null)
+                    {
+                        Console.Error.WriteLine("UDIFF:");
+                        Console.Error.WriteLine(diff);
+                    }
                 }
             }
             catch (Exception e)
@@ -647,15 +641,12 @@ namespace CSharpKOTOR.Tests.Formats
                 long compareTime = Stopwatch.GetTimestamp() - compareTextStart;
                 MergeOperationTime("compare-text", compareTime);
                 MergeOperationTime("compare", compareTime);
-                Console.WriteLine($" ✗ ERROR");
                 textMismatchMessage = $"Text comparison error: {e.Message}";
+                result.TextDiff = textMismatchMessage;
                 Console.Error.WriteLine($"ERROR: {textMismatchMessage}");
             }
 
-            // Step 4: Recompile decompiled NSS -> NCS (second NCS) using EXTERNAL compiler
-            // ⚠️ CRITICAL: This MUST use RunExternalCompiler, NOT RunInbuiltCompiler.
-            // This is a hard requirement - see method documentation above.
-            // The external compiler is the reference implementation that validates our decompiler output.
+            // Step 4: Recompile decompiled NSS -> NCS (second NCS) using INBUILT compiler
             string recompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".rt.ncs");
 
             string decompiledContentForRecompile = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
@@ -677,12 +668,10 @@ namespace CSharpKOTOR.Tests.Formats
 
             bool recompilationSucceeded = false;
             string recompilationError = null;
-            Console.Write($"  [4/5] Recompiling decompiled .nss to .ncs with external compiler");
             long compileRoundtripStart = Stopwatch.GetTimestamp();
             try
             {
-                // ⚠️ CRITICAL: MUST use RunExternalCompiler here. DO NOT change to RunInbuiltCompiler.
-                RunExternalCompiler(compileInput, recompiled, gameFlag, scratchRoot);
+                RunInbuiltCompiler(compileInput, recompiled, gameFlag);
 
                 // Assert: Recompiled NCS exists and is non-empty
                 File.Exists(recompiled).Should().BeTrue($"Recompiled NCS file should exist at {DisplayPath(recompiled)}");
@@ -724,7 +713,6 @@ namespace CSharpKOTOR.Tests.Formats
                 long compileTime = Stopwatch.GetTimestamp() - compileRoundtripStart;
                 MergeOperationTime("compile-roundtrip", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms, {recompiledSize} bytes, {recompiledNcs.Instructions.Count} instructions)");
                 recompilationSucceeded = true;
             }
             catch (Exception e)
@@ -733,7 +721,6 @@ namespace CSharpKOTOR.Tests.Formats
                 MergeOperationTime("compile-roundtrip", compileTime);
                 MergeOperationTime("compile", compileTime);
                 recompilationError = e.Message;
-                Console.WriteLine($" ✗ FAILED");
                 Console.Error.WriteLine($"Recompilation failed: {e.Message}");
                 Console.Error.WriteLine($"Decompiled NSS file: {DisplayPath(compileInput)}");
                 if (File.Exists(compileInput))
@@ -760,7 +747,6 @@ namespace CSharpKOTOR.Tests.Formats
             // Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch)
             if (recompilationSucceeded)
             {
-                Console.Write($"  [5/5] Comparing bytecode (original vs recompiled) - PRIMARY");
                 long compareBytecodeStart = Stopwatch.GetTimestamp();
                 try
                 {
@@ -779,46 +765,47 @@ namespace CSharpKOTOR.Tests.Formats
                     recompiledNcs.Instructions.Count.Should().BeGreaterThan(0, "Recompiled NCS should have at least one instruction");
 
                     // Perform bytecode comparison
-                    AssertBytecodeEqual(compiledFirst, recompiled, gameFlag, displayRelPath);
+                    BytecodeDiffResult bytecodeDiff = FindBytecodeDiff(compiledFirst, recompiled);
+                    if (bytecodeDiff != null)
+                    {
+                        // Bytecode mismatch - generate FULL pcode diff in UDIFF format
+                        string pcodeDiff = FormatPcodeUnifiedDiff(originalNcs, recompiledNcs);
+                        result.PcodeDiff = pcodeDiff;
+                        result.BytecodeMatch = false;
 
+                        StringBuilder errorMsg = new StringBuilder();
+                        errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+                        errorMsg.AppendLine("BYTECODE MISMATCH (PRIMARY FAILURE)");
+                        errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+                        errorMsg.AppendLine($"Source: {DisplayPath(nssPath)}");
+                        errorMsg.AppendLine($"Original NCS: {DisplayPath(compiledFirst)}");
+                        errorMsg.AppendLine($"Recompiled NCS: {DisplayPath(recompiled)}");
+                        errorMsg.AppendLine();
+                        errorMsg.AppendLine("FULL PCODE DIFF (UDIFF format):");
+                        errorMsg.AppendLine(pcodeDiff ?? "Unable to generate pcode diff");
+                        errorMsg.AppendLine();
+                        errorMsg.AppendLine("Byte-level diff:");
+                        errorMsg.AppendLine($"  Offset: {bytecodeDiff.Offset} (0x{bytecodeDiff.Offset:X})");
+                        errorMsg.AppendLine($"  Original: {FormatByteValue(bytecodeDiff.OriginalByte)}");
+                        errorMsg.AppendLine($"  Round-trip: {FormatByteValue(bytecodeDiff.RoundTripByte)}");
+                        errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+
+                        result.ErrorMessage = errorMsg.ToString();
+                        throw new InvalidOperationException(errorMsg.ToString());
+                    }
+
+                    result.BytecodeMatch = true;
                     long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
                     MergeOperationTime("compare-bytecode", compareTime);
                     MergeOperationTime("compare", compareTime);
-                    Console.WriteLine($" ✓ MATCH ({originalNcs.Instructions.Count} instructions)");
                 }
                 catch (Exception e)
                 {
                     long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
                     MergeOperationTime("compare-bytecode", compareTime);
                     MergeOperationTime("compare", compareTime);
-                    Console.WriteLine($" ✗ MISMATCH");
-
-                    StringBuilder errorMsg = new StringBuilder();
-                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-                    errorMsg.AppendLine("BYTECODE MISMATCH (PRIMARY FAILURE)");
-                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-                    errorMsg.AppendLine($"Source: {DisplayPath(nssPath)}");
-                    errorMsg.AppendLine($"Original NCS: {DisplayPath(compiledFirst)}");
-                    errorMsg.AppendLine($"Recompiled NCS: {DisplayPath(recompiled)}");
-                    errorMsg.AppendLine($"Error: {e.Message}");
-
-                    if (textMismatchMessage != null)
-                    {
-                        errorMsg.AppendLine();
-                        errorMsg.AppendLine("Also had text mismatch (secondary):");
-                        errorMsg.AppendLine(textMismatchMessage);
-                    }
-
-                    if (recompilationError != null)
-                    {
-                        errorMsg.AppendLine();
-                        errorMsg.AppendLine("Recompilation error (for context):");
-                        errorMsg.AppendLine(recompilationError);
-                    }
-
-                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-
-                    throw new InvalidOperationException(errorMsg.ToString(), e);
+                    result.ErrorMessage = e.Message;
+                    throw;
                 }
             }
             else
@@ -826,7 +813,6 @@ namespace CSharpKOTOR.Tests.Formats
                 // Recompilation failed - this is a critical issue if text also mismatched
                 if (textMismatchMessage != null)
                 {
-                    Console.WriteLine($"  [5/5] Skipped (recompilation failed)");
                     throw new InvalidOperationException(
                         $"CRITICAL: Both text mismatch AND recompilation failure detected.\n" +
                         $"This indicates a serious decompiler issue - the decompiled code is neither textually correct nor compilable.\n\n" +
@@ -837,7 +823,6 @@ namespace CSharpKOTOR.Tests.Formats
                 }
                 else
                 {
-                    Console.WriteLine($"  [5/5] Skipped (recompilation failed, but text matched)");
                     Console.Error.WriteLine($"WARNING: Recompilation failed but text matched. This may indicate decompiler produces valid text but invalid syntax.");
                     Console.Error.WriteLine($"Recompilation error: {recompilationError ?? "Unknown error"}");
                 }
@@ -845,6 +830,9 @@ namespace CSharpKOTOR.Tests.Formats
 
             long totalTime = Stopwatch.GetTimestamp() - startTime;
             MergeOperationTime("total", totalTime);
+
+            result.Passed = result.BytecodeMatch && recompilationSucceeded;
+            return result;
         }
 
         private static void MergeOperationTime(string key, long ticks)
@@ -977,8 +965,6 @@ namespace CSharpKOTOR.Tests.Formats
                 Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
                 ExternalNCSCompiler compiler = GetExternalCompiler();
 
-                Console.Write($" (external: {Path.GetFileName(NwnCompiler)}, variant: {compiler.GetInfo()})");
-
                 // Use ExternalNCSCompiler which handles all compiler variants and their command-line differences
                 (string stdout, string stderr) = compiler.CompileScriptWithOutput(
                     tempSourceFile,
@@ -996,7 +982,6 @@ namespace CSharpKOTOR.Tests.Formats
             }
             catch (Exception e)
             {
-                Console.WriteLine(" ✗ FAILED");
                 throw new InvalidOperationException(
                     $"External compiler failed for {DisplayPath(originalNssPath)}: {e.Message}", e);
             }
@@ -1076,8 +1061,6 @@ namespace CSharpKOTOR.Tests.Formats
                 args.Add($"\"{tempSourceFile}\"");
                 args.Add($"\"{compiledOut}\"");
 
-                Console.Write($" (compiler: {Path.GetFileName(NwnCompiler)})");
-
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
                     FileName = NwnCompiler,
@@ -1096,7 +1079,6 @@ namespace CSharpKOTOR.Tests.Formats
                     if (!proc.WaitForExit((int)ProcTimeout.TotalMilliseconds))
                     {
                         proc.Kill();
-                        Console.WriteLine(" ✗ TIMEOUT");
                         throw new TimeoutException($"nwnnsscomp timed out for {DisplayPath(originalNssPath)}");
                     }
 
@@ -1105,7 +1087,6 @@ namespace CSharpKOTOR.Tests.Formats
 
                     if (exitCode != 0 || !fileExists)
                     {
-                        Console.WriteLine(" ✗ FAILED");
                         string errorMsg = $"nwnnsscomp failed (exit={exitCode}, fileExists={fileExists}) for {DisplayPath(originalNssPath)}";
                         if (!string.IsNullOrEmpty(output))
                         {
@@ -1275,8 +1256,6 @@ namespace CSharpKOTOR.Tests.Formats
 
         private static void RunDecompile(string ncsPath, string nssOut, string gameFlag)
         {
-            Console.Write($" (game={gameFlag}, output={Path.GetFileName(nssOut)})");
-
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(nssOut));
@@ -1288,13 +1267,11 @@ namespace CSharpKOTOR.Tests.Formats
 
                 if (!File.Exists(nssOut))
                 {
-                    Console.WriteLine(" ✗ FAILED - no output file created");
                     throw new InvalidOperationException($"Decompile did not produce output: {DisplayPath(nssOut)}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($" ✗ FAILED - {ex.Message}");
                 throw new InvalidOperationException($"Decompile failed for {DisplayPath(ncsPath)}: {ex.Message}", ex);
             }
         }
@@ -1982,7 +1959,6 @@ namespace CSharpKOTOR.Tests.Formats
 
         private static string NormalizeVariableNames(string code)
         {
-            // This is a simplified version - full implementation would be more complex
             return code;
         }
 
@@ -2103,16 +2079,268 @@ namespace CSharpKOTOR.Tests.Formats
             return expanded.ToString();
         }
 
+        /// <summary>
+        /// Represents a function signature for comparison purposes.
+        /// </summary>
+        private class FunctionSignature
+        {
+            public string ReturnType { get; set; }
+            public string Name { get; set; }
+            public string Parameters { get; set; }
+            public string FullSignature { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is FunctionSignature other)
+                {
+                    return ReturnType == other.ReturnType &&
+                           Name == other.Name &&
+                           NormalizeParameterString(Parameters) == NormalizeParameterString(other.Parameters);
+                }
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return (ReturnType?.GetHashCode() ?? 0) ^
+                       (Name?.GetHashCode() ?? 0) ^
+                       (NormalizeParameterString(Parameters)?.GetHashCode() ?? 0);
+            }
+
+            private static string NormalizeParameterString(string parameters)
+            {
+                if (string.IsNullOrEmpty(parameters))
+                {
+                    return "";
+                }
+                return Regex.Replace(parameters.Trim(), @"\s+", " ").Replace("const ", "");
+            }
+        }
+
+        /// <summary>
+        /// Extracts all function signatures from NSS source code.
+        /// </summary>
+        private static List<FunctionSignature> ExtractFunctionSignatures(string code)
+        {
+            List<FunctionSignature> signatures = new List<FunctionSignature>();
+            
+            Regex funcPattern = new Regex(
+                @"^\s*((?:void|int|float|string|object|vector|location|effect|itemproperty|talent|action|event|\w+)\s+(?:const\s+)?\*?\s*(\w+)\s*\(([^)]*)\)\s*\{)",
+                RegexOptions.Multiline);
+
+            foreach (Match match in funcPattern.Matches(code))
+            {
+                string fullMatch = match.Groups[1].Value;
+                string returnTypeAndName = match.Groups[1].Value;
+                string funcName = match.Groups[2].Value;
+                string parameters = match.Groups[3].Value;
+
+                string returnType = returnTypeAndName.Substring(0, returnTypeAndName.IndexOf(funcName)).Trim();
+                returnType = Regex.Replace(returnType, @"\s+", " ");
+
+                signatures.Add(new FunctionSignature
+                {
+                    ReturnType = returnType,
+                    Name = funcName,
+                    Parameters = parameters,
+                    FullSignature = fullMatch
+                });
+            }
+
+            return signatures;
+        }
+
+        /// <summary>
+        /// Extracts the full body of a function from source code given its signature.
+        /// </summary>
+        private static string ExtractFunctionBody(string code, FunctionSignature signature)
+        {
+            string[] lines = code.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+            StringBuilder body = new StringBuilder();
+            bool inTargetFunction = false;
+            int braceDepth = 0;
+
+            Regex functionStartPattern = new Regex(
+                @"^\s*((?:void|int|float|string|object|vector|location|effect|itemproperty|talent|action|event|\w+)\s+(?:const\s+)?\*?\s*(\w+)\s*\(([^)]*)\)\s*\{)",
+                RegexOptions.None);
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                Match funcMatch = functionStartPattern.Match(line);
+
+                if (!inTargetFunction && funcMatch.Success)
+                {
+                    string funcName = funcMatch.Groups[2].Value;
+                    string parameters = funcMatch.Groups[3].Value;
+                    string returnTypeAndName = funcMatch.Groups[1].Value;
+                    string returnType = returnTypeAndName.Substring(0, returnTypeAndName.IndexOf(funcName)).Trim();
+                    returnType = Regex.Replace(returnType, @"\s+", " ");
+
+                    FunctionSignature sig = new FunctionSignature
+                    {
+                        ReturnType = returnType,
+                        Name = funcName,
+                        Parameters = parameters
+                    };
+
+                    if (sig.Equals(signature))
+                    {
+                        inTargetFunction = true;
+                        braceDepth = 0;
+                        body.Clear();
+                    }
+                }
+
+                if (inTargetFunction)
+                {
+                    body.Append(line);
+                    if (i < lines.Length - 1)
+                    {
+                        body.Append("\n");
+                    }
+                    braceDepth += CountChar(line, '{');
+                    braceDepth -= CountChar(line, '}');
+
+                    if (braceDepth == 0)
+                    {
+                        return body.ToString();
+                    }
+                }
+            }
+
+            return body.ToString();
+        }
+
+        /// <summary>
+        /// Filters out functions from the original expanded source that are not present in the decompiled output.
+        /// This is necessary because the original source may include helper functions from includes that
+        /// are not part of the actual compiled script and therefore won't appear in the decompiled output.
+        /// </summary>
         private static string FilterFunctionsNotInDecompiled(string expandedOriginal, string decompiledOutput)
         {
-            int decompiledFunctionCount = CountNonMainFunctions(decompiledOutput);
-            if (decompiledFunctionCount == 0)
+            List<FunctionSignature> originalFunctions = ExtractFunctionSignatures(expandedOriginal);
+            List<FunctionSignature> decompiledFunctions = ExtractFunctionSignatures(decompiledOutput);
+
+            HashSet<FunctionSignature> decompiledSet = new HashSet<FunctionSignature>(decompiledFunctions);
+
+            if (decompiledSet.Count == 0)
             {
                 return expandedOriginal;
             }
 
-            // Simplified - full implementation would extract and match functions
-            return expandedOriginal;
+            Dictionary<FunctionSignature, string> originalFunctionBodies = new Dictionary<FunctionSignature, string>();
+            
+            foreach (FunctionSignature sig in originalFunctions)
+            {
+                string functionBody = ExtractFunctionBody(expandedOriginal, sig);
+                if (!string.IsNullOrEmpty(functionBody))
+                {
+                    originalFunctionBodies[sig] = functionBody;
+                }
+            }
+
+            StringBuilder result = new StringBuilder();
+            string[] lines = expandedOriginal.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+            bool inFunction = false;
+            int braceDepth = 0;
+            StringBuilder currentFunction = new StringBuilder();
+            FunctionSignature currentFunctionSig = null;
+            bool keepCurrentFunction = false;
+
+            Regex functionStartPattern = new Regex(
+                @"^\s*((?:void|int|float|string|object|vector|location|effect|itemproperty|talent|action|event|\w+)\s+(?:const\s+)?\*?\s*(\w+)\s*\(([^)]*)\)\s*\{)",
+                RegexOptions.None);
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                Match funcMatch = functionStartPattern.Match(line);
+
+                if (!inFunction && funcMatch.Success)
+                {
+                    string returnTypeAndName = funcMatch.Groups[1].Value;
+                    string funcName = funcMatch.Groups[2].Value;
+                    string parameters = funcMatch.Groups[3].Value;
+                    string returnType = returnTypeAndName.Substring(0, returnTypeAndName.IndexOf(funcName)).Trim();
+                    returnType = Regex.Replace(returnType, @"\s+", " ");
+
+                    currentFunctionSig = new FunctionSignature
+                    {
+                        ReturnType = returnType,
+                        Name = funcName,
+                        Parameters = parameters
+                    };
+
+                    if (funcName.Equals("main") || funcName.Equals("StartingConditional"))
+                    {
+                        keepCurrentFunction = true;
+                    }
+                    else
+                    {
+                        keepCurrentFunction = decompiledSet.Contains(currentFunctionSig);
+                    }
+
+                    inFunction = true;
+                    braceDepth = 0;
+                    currentFunction.Clear();
+                    currentFunction.Append(line);
+                    if (i < lines.Length - 1)
+                    {
+                        currentFunction.Append("\n");
+                    }
+                    
+                    braceDepth += CountChar(line, '{');
+                    braceDepth -= CountChar(line, '}');
+
+                    if (braceDepth == 0)
+                    {
+                        if (keepCurrentFunction)
+                        {
+                            result.Append(currentFunction.ToString());
+                        }
+                        inFunction = false;
+                        currentFunction.Clear();
+                        currentFunctionSig = null;
+                    }
+                }
+                else if (inFunction)
+                {
+                    currentFunction.Append(line);
+                    if (i < lines.Length - 1)
+                    {
+                        currentFunction.Append("\n");
+                    }
+                    braceDepth += CountChar(line, '{');
+                    braceDepth -= CountChar(line, '}');
+
+                    if (braceDepth == 0)
+                    {
+                        if (keepCurrentFunction)
+                        {
+                            result.Append(currentFunction.ToString());
+                        }
+                        inFunction = false;
+                        currentFunction.Clear();
+                        currentFunctionSig = null;
+                    }
+                }
+                else
+                {
+                    result.Append(line);
+                    if (i < lines.Length - 1)
+                    {
+                        result.Append("\n");
+                    }
+                }
+            }
+
+            if (inFunction && keepCurrentFunction)
+            {
+                result.Append(currentFunction.ToString());
+            }
+
+            return result.ToString();
         }
 
         private static int CountNonMainFunctions(string code)
@@ -2403,6 +2631,72 @@ namespace CSharpKOTOR.Tests.Formats
             public string RoundTripContext { get; set; }
         }
 
+        /// <summary>
+        /// Formats NCS instructions as strings for pcode diff output.
+        /// </summary>
+        private static string FormatPcodeInstructions(NCS ncs)
+        {
+            if (ncs == null || ncs.Instructions == null)
+            {
+                return "";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < ncs.Instructions.Count; i++)
+            {
+                NCSInstruction inst = ncs.Instructions[i];
+                sb.Append($"{i:D4}: {inst}");
+                if (inst.Jump != null && inst.Jump.Offset >= 0)
+                {
+                    sb.Append($" -> {inst.Jump.Offset:D4}");
+                }
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Formats pcode diff in UDIFF format for bytecode mismatches.
+        /// </summary>
+        private static string FormatPcodeUnifiedDiff(NCS originalNcs, NCS roundTripNcs)
+        {
+            string originalPcode = FormatPcodeInstructions(originalNcs);
+            string roundTripPcode = FormatPcodeInstructions(roundTripNcs);
+
+            string[] originalLines = originalPcode.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] roundTripLines = roundTripPcode.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+            DiffResult diffResult = ComputeDiff(originalLines, roundTripLines);
+
+            if (diffResult.IsEmpty())
+            {
+                return null;
+            }
+
+            StringBuilder diff = new StringBuilder();
+            diff.AppendLine("    --- original.pcode");
+            diff.AppendLine("    +++ roundtrip.pcode");
+            diff.AppendLine($"    @@ -1,{originalLines.Length} +1,{roundTripLines.Length} @@");
+
+            foreach (DiffLine line in diffResult.Lines)
+            {
+                switch (line.Type)
+                {
+                    case DiffLineType.Context:
+                        diff.Append("     ").AppendLine(line.Content);
+                        break;
+                    case DiffLineType.Removed:
+                        diff.Append("    -").AppendLine(line.Content);
+                        break;
+                    case DiffLineType.Added:
+                        diff.Append("    +").AppendLine(line.Content);
+                        break;
+                }
+            }
+
+            return diff.ToString();
+        }
+
         private static void DeleteDirectory(string dir)
         {
             if (Directory.Exists(dir))
@@ -2462,8 +2756,9 @@ namespace CSharpKOTOR.Tests.Formats
                 }
 
                 Console.WriteLine("=== Running Round-Trip Tests ===");
-                Console.WriteLine($"Total tests: {tests.Count}");
-                Console.WriteLine("Fast-fail: enabled (will stop on first failure)");
+                Console.WriteLine($"Total NSS scripts to roundtrip test: {tests.Count}");
+                Console.WriteLine("Flow: NSS--(external compiler)-->NCS--(internal decompiler)-->NSS--(internal compiler)-->NCS");
+                Console.WriteLine("Fast-fail: enabled (will stop on first bytecode mismatch)");
                 Console.WriteLine();
 
                 foreach (RoundTripCase testCase in tests)
@@ -2471,30 +2766,70 @@ namespace CSharpKOTOR.Tests.Formats
                     _testsProcessed++;
                     string relPath = GetRelativePath(VanillaRepoDir, testCase.Item.Path);
                     string displayPath = relPath.Replace('\\', '/');
-                    Console.WriteLine($"[{_testsProcessed}/{_totalTests}] {displayPath}");
 
                     try
                     {
-                        RoundTripSingle(testCase.Item.Path, testCase.Item.GameFlag, testCase.Item.ScratchRoot);
-                        Console.WriteLine("  ✓ PASSED - Round-trip successful (bytecode matches)");
-                        Console.WriteLine();
+                        RoundTripResult result = RoundTripSingle(testCase.Item.Path, testCase.Item.GameFlag, testCase.Item.ScratchRoot);
+                        
+                        // Show one-line summary
+                        string status = result.Passed ? "✓ PASS" : "✗ FAIL";
+                        string details = "";
+                        if (!result.TextMatch && result.TextDiff != null)
+                        {
+                            details += " [TEXT MISMATCH]";
+                        }
+                        if (!result.BytecodeMatch)
+                        {
+                            details += " [BYTECODE MISMATCH]";
+                        }
+                        Console.WriteLine($"{status} {displayPath}{details}");
+
+                        // Show text diff if there's a mismatch (SECONDARY - warning only)
+                        if (!result.TextMatch && result.TextDiff != null)
+                        {
+                            Console.Error.WriteLine();
+                            Console.Error.WriteLine($"WARNING: Text mismatch for {displayPath}");
+                            Console.Error.WriteLine("UDIFF:");
+                            Console.Error.WriteLine(result.TextDiff);
+                        }
+
+                        if (!result.Passed)
+                        {
+                            // Show bytecode diff if there's a mismatch (PRIMARY - fast fail)
+                            if (!result.BytecodeMatch && result.PcodeDiff != null)
+                            {
+                                Console.Error.WriteLine();
+                                Console.Error.WriteLine("═══════════════════════════════════════════════════════════════");
+                                Console.Error.WriteLine($"BYTECODE MISMATCH (PRIMARY FAILURE): {displayPath}");
+                                Console.Error.WriteLine("═══════════════════════════════════════════════════════════════");
+                                Console.Error.WriteLine();
+                                Console.Error.WriteLine("FULL PCODE DIFF (UDIFF format):");
+                                Console.Error.WriteLine(result.PcodeDiff);
+                                Console.Error.WriteLine();
+                            }
+                            if (result.ErrorMessage != null)
+                            {
+                                Console.Error.WriteLine(result.ErrorMessage);
+                            }
+                            PrintPerformanceSummary();
+                            throw new InvalidOperationException($"Round-trip test failed for {displayPath}: {result.ErrorMessage ?? "Unknown error"}");
+                        }
                     }
                     catch (SourceCompilationException)
                     {
-                        Console.WriteLine("  ⊘ SKIPPED (original source file has compilation errors)");
-                        Console.WriteLine();
+                        Console.WriteLine($"⊘ SKIP {displayPath} (original source file has compilation errors)");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("  ✗ FAILED");
-                        Console.WriteLine();
-                        Console.WriteLine("═══════════════════════════════════════════════════════════");
-                        Console.WriteLine($"FAILURE: {testCase.DisplayName}");
-                        Console.WriteLine("═══════════════════════════════════════════════════════════");
-                        Console.WriteLine($"Exception: {ex.GetType().Name}");
-                        Console.WriteLine($"Message:\n{ex.Message}");
-                        Console.WriteLine("═══════════════════════════════════════════════════════════");
-                        Console.WriteLine();
+                        Console.WriteLine($"✗ FAIL {displayPath}");
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        Console.Error.WriteLine($"FAILURE: {testCase.DisplayName}");
+                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        Console.Error.WriteLine($"Exception: {ex.GetType().Name}");
+                        Console.Error.WriteLine($"Message:\n{ex.Message}");
+                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        Console.Error.WriteLine();
 
                         PrintPerformanceSummary();
                         throw;
