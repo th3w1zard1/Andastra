@@ -41,7 +41,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             bool wasK2 = FileDecompiler.isK2Selected;
             try
             {
-                FileDecompiler.isK2Selected = "k2".Equals(gameFlag, StringComparison.OrdinalIgnoreCase);
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RoundTripUtil.java:42
+                // Original: FileDecompiler.isK2Selected = "k2".equals(gameFlag);
+                FileDecompiler.isK2Selected = "k2".Equals(gameFlag);
 
                 // Create a temporary output file (matches test pattern)
                 File tempNssFile;
@@ -124,7 +126,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             bool wasK2 = FileDecompiler.isK2Selected;
             try
             {
-                FileDecompiler.isK2Selected = "k2".Equals(gameFlag, StringComparison.OrdinalIgnoreCase);
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RoundTripUtil.java:42
+                // Original: FileDecompiler.isK2Selected = "k2".equals(gameFlag);
+                FileDecompiler.isK2Selected = "k2".Equals(gameFlag);
 
                 // Ensure output directory exists
                 if (nssOutputFile.Directory != null && !nssOutputFile.Directory.Exists)
