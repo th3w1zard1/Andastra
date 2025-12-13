@@ -2594,12 +2594,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 ast.Apply(new SetDeadCode(nodedata, subdata, setdest.GetOrigins()));
                 setdest.Done();
                 setdest = null;
-                subdata.SplitOffSubroutines(ast);
+                try
+                {
+                    subdata.SplitOffSubroutines(ast);
+                }
+                catch (Exception splitEx)
+                {
+                    JavaSystem.@out.Println("Exception in SplitOffSubroutines: " + splitEx.GetType().Name + ": " + splitEx.Message);
+                    if (splitEx.StackTrace != null)
+                    {
+                        JavaSystem.@out.Println("Stack trace: " + splitEx.StackTrace);
+                    }
+                    splitEx.PrintStackTrace(JavaSystem.@out);
+                    // Try to continue - maybe we can still get a main subroutine
+                }
                 ast = null;
                 mainsub = subdata.GetMainSub();
                 if (mainsub == null)
                 {
                     JavaSystem.@out.Println("No main subroutine found in NCS - cannot decompile.");
+                    JavaSystem.@out.Println("Subroutines count: " + subdata.NumSubs());
                     return null;
                 }
                 flatten = new FlattenSub(mainsub, nodedata);

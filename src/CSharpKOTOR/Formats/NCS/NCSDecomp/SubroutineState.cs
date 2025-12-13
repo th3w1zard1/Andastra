@@ -427,7 +427,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: public int getStart() { return this.nodedata.getPos(this.root); }
         public virtual int GetStart()
         {
-            return this.nodedata.GetPos(this.root);
+            // Try to get position from the subroutine node itself
+            int pos = this.nodedata.TryGetPos(this.root);
+            if (pos >= 0)
+            {
+                return pos;
+            }
+            // If subroutine node doesn't have position, get it from the first command
+            Node firstCmd = NodeUtils.GetCommandChild(this.root);
+            if (firstCmd != null)
+            {
+                pos = this.nodedata.TryGetPos(firstCmd);
+                if (pos >= 0)
+                {
+                    return pos;
+                }
+            }
+            // Fallback: return 0 if no position found (shouldn't happen in normal cases)
+            return 0;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:308-310

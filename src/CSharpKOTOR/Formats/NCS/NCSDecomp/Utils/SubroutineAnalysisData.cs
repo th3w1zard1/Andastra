@@ -336,6 +336,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private void AddMain(ASubroutine sub, bool conditional)
         {
             this.mainsub = sub;
+            // Ensure main subroutine has position set (main is always at position 0)
+            int mainPos = this.nodedata.TryGetPos(this.mainsub);
+            if (mainPos < 0)
+            {
+                // Try to get position from first command
+                Node firstCmd = NodeUtils.GetCommandChild(this.mainsub);
+                if (firstCmd != null)
+                {
+                    mainPos = this.nodedata.TryGetPos(firstCmd);
+                }
+                // If still no position, set to 0 (main is always at position 0)
+                if (mainPos < 0)
+                {
+                    mainPos = 0;
+                }
+                this.nodedata.SetPos(this.mainsub, mainPos);
+            }
             if (conditional)
             {
                 this.AddSubState(this.mainsub, (byte)0, new Type((byte)3));
@@ -498,12 +515,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 subroutines.Add(sub);
             }
+            
+            // Ensure we have at least one subroutine (the main)
+            if (subroutines.Count == 0)
+            {
+                JavaSystem.@out.Println("WARNING: No subroutines found in AST - cannot decompile.");
+                return;
+            }
+            
             ASubroutine node = (ASubroutine)subroutines.RemoveFirst();
+            // Check if first subroutine is globals - only separate it if there are other subroutines
             if (subroutines.Count > 0 && this.IsGlobalsSub(node))
             {
                 this.AddGlobals(node);
                 node = (ASubroutine)subroutines.RemoveFirst();
             }
+            // Always add the first (or second if globals was first) subroutine as main
             this.AddMain(node, conditional);
             byte id = 1;
             while (subroutines.Count > 0)
