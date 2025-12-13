@@ -865,7 +865,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     return settingsCompiler;
                 }
             }
-            catch (NoClassDefFoundError)
+            catch (TypeLoadException)
             {
                 // CompilerUtil or Decompiler.settings not available - likely CLI mode
                 JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Settings not available (CLI mode): NoClassDefFoundError");

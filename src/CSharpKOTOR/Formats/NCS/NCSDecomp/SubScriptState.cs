@@ -379,7 +379,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             {
                 Node prev = NodeUtils.GetPreviousCommand(node, this.nodedata);
                 ACodeBlock block = new ACodeBlock(-1, this.nodedata.GetPos(prev));
-                List<object> children = this.current.RemoveChildren(earliestdec);
+                List<Scriptnode.ScriptNode> children = this.current.RemoveChildren(earliestdec);
                 this.current.AddChild(block);
                 block.AddChildren(children);
                 children = null;
@@ -781,10 +781,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 }
                 else
                 {
-
                     // Edge case: target is a constant, create a pseudo-assignment expression
-                    AModifyExp modexp = new AModifyExp(target, exp);
-                    this.current.AddChild(modexp);
+                    // Note: AModifyExp requires AVarRef, so we cast target
+                    if (target is ScriptNode.AVarRef targetVarRef)
+                    {
+                        AModifyExp modexp = new AModifyExp(targetVarRef, exp);
+                        this.current.AddChild(modexp);
+                    }
                 }
 
                 this.state = 1;
@@ -827,7 +830,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             AExpression target = this.GetVarToAssignTo(node);
             AExpression exp = this.RemoveLastExp(false);
-            AModifyExp modexp = new AModifyExp(target, exp);
+            if (target is ScriptNode.AVarRef targetVarRef)
+            {
+                AModifyExp modexp = new AModifyExp(targetVarRef, exp);
+                this.current.AddChild(modexp);
+            }
             this.current.AddChild(modexp);
             this.state = 1;
             this.CheckEnd(node);
@@ -1025,7 +1032,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 prefix = true;
             }
 
-            AUnaryModExp unexp = new AUnaryModExp(target, NodeUtils.GetOp(node), prefix);
+            if (target is ScriptNode.AVarRef targetVarRef)
+            {
+                AUnaryModExp unexp = new AUnaryModExp(targetVarRef, NodeUtils.GetOp(node), prefix);
+                unexp.Stackentry(this.stack.Get(1));
+                this.current.AddChild(unexp);
+            }
             unexp.Stackentry(this.stack.Get(1));
             this.current.AddChild(unexp);
             this.CheckEnd(node);
@@ -1645,9 +1657,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return new AVarRef(newstruct);
         }
 
-        private List<object> GetParams(int paramcount)
+        private List<AVarRef> GetParams(int paramcount)
         {
-            List<object> @params = new List<object>();
+            List<AVarRef> @params = new List<AVarRef>();
             for (int i = 1; i <= paramcount; ++i)
             {
                 Variable var = (Variable)this.stack.Get(i);
