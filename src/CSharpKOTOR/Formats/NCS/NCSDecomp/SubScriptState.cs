@@ -67,7 +67,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.subdata = subdata;
             this.state = 0;
             this.vardecs = new HashMap();
-            this.root = new ScriptNode.ASub(0, null, null, 0, 0);
+            // Matching DeNCS implementation: for globals, use ASub(0, 0) which sets start=0, end=0
+            // Use a large end value to prevent CheckEnd from moving away from root when processing nodes at position 0
+            this.root = new ScriptNode.ASub(0, null, null, 0, int.MaxValue);
             this.current = this.root;
             this.stack = stack;
             this.varcounts = new HashMap();
