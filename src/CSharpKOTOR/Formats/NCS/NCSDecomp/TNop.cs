@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TNop.java:9-33
+// Original: public final class TNop extends Token { public TNop() { super.setText("NOP"); } ... public void setText(String text) { throw new RuntimeException("Cannot change TNop text."); } }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public sealed class TNop : Token
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TNop.java:10-23
+        // Original: public TNop() { super.setText("NOP"); } public TNop(int line, int pos) { super.setText("NOP"); ... }
         public TNop()
         {
             base.SetText("NOP");

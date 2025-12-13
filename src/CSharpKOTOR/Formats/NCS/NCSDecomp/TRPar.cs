@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TRPar.java:9-33
+// Original: public final class TRPar extends Token { public TRPar() { super.setText(")"); } ... public void setText(String text) { throw new RuntimeException("Cannot change TRPar text."); } }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public sealed class TRPar : Token
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TRPar.java:10-23
+        // Original: public TRPar() { super.setText(")"); } public TRPar(int line, int pos) { super.setText(")"); ... }
         public TRPar()
         {
             base.SetText(")");

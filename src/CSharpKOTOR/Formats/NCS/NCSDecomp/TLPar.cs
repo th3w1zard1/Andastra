@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TLPar.java:9-33
+// Original: public final class TLPar extends Token { public TLPar() { super.setText("("); } ... public void setText(String text) { throw new RuntimeException("Cannot change TLPar text."); } }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public sealed class TLPar : Token
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TLPar.java:10-23
+        // Original: public TLPar() { super.setText("("); } public TLPar(int line, int pos) { super.setText("("); ... }
         public TLPar()
         {
             base.SetText("(");

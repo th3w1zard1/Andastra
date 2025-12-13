@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TBlank.java:9-28
+// Original: public final class TBlank extends Token { ... public void apply(Switch sw) { ((Analysis)sw).caseTBlank(this); } }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public sealed class TBlank : Token
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TBlank.java:10-18
+        // Original: public TBlank(String text) { this.setText(text); } public TBlank(String text, int line, int pos) { ... }
         public TBlank(string text)
         {
             this.SetText(text);
