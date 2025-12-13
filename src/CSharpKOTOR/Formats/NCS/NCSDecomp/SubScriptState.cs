@@ -1642,21 +1642,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return (ScriptNode.AExpression)anode;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1666-1678
+        // Original: private AExpression getLastExp() { ScriptNode anode = this.current.getLastChild(); if (!AExpression.class.isInstance(anode)) { if (AVarDecl.class.isInstance(anode) && ((AVarDecl) anode).isFcnReturn()) { return ((AVarDecl) anode).exp(); } else { System.out.println(anode.toString()); throw new RuntimeException("Last child not an expression " + anode); } } else { return (AExpression) anode; } }
         private ScriptNode.AExpression GetLastExp()
         {
             ScriptNode.ScriptNode anode = this.current.GetLastChild();
-            if (typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
+            if (!typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
+            {
+                if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).IsFcnReturn())
+                {
+                    return ((ScriptNode.AVarDecl)anode).GetExp();
+                }
+                else
+                {
+                    JavaSystem.@out.Println(anode.ToString());
+                    throw new Exception("Last child not an expression " + anode);
+                }
+            }
+            else
             {
                 return (ScriptNode.AExpression)anode;
             }
-
-            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).IsFcnReturn())
-            {
-                return ((ScriptNode.AVarDecl)anode).GetExp();
-            }
-
-            JavaSystem.@out.Println(anode.ToString());
-            throw new Exception("Last child not an expression " + anode);
         }
 
         private ScriptNode.AExpression GetPreviousExp(int pos)
