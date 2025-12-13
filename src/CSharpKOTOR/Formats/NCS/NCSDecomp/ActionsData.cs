@@ -108,6 +108,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return ((Action)this.actions[index]).Name();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:90-95
+        // Original: public List<Type> getParamTypes(int index) { if (index < 0 || index >= this.actions.size()) { throw new RuntimeException("Invalid action index: " + index + " (actions list size: " + this.actions.size() + ")"); } return this.actions.get(index).params(); }
         public virtual List<object> GetParamTypes(int index)
         {
             if (index < 0 || index >= this.actions.Count)
