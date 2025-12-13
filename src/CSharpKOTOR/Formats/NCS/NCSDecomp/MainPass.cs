@@ -141,18 +141,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:138-149
+        // Original: @Override public void outACopyDownSpCommand(ACopyDownSpCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { int copy = NodeUtils.stackSizeToPos(node.getSize()); int loc = NodeUtils.stackOffsetToPos(node.getOffset()); if (copy > 1) { this.stack.structify(loc - copy + 1, copy, this.subdata); } this.state.transformCopyDownSp(node); }); } else { this.state.transformDeadCode(node); } }
         public override void OutACopyDownSpCommand(ACopyDownSpCommand node)
         {
             if (!this.skipdeadcode)
             {
-                int copy = NodeUtils.StackSizeToPos(node.GetSize());
-                int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
-                if (copy > 1)
+                this.WithRecovery(node, () =>
                 {
-                    this.stack.Structify(loc - copy + 1, copy, this.subdata);
-                }
+                    int copy = NodeUtils.StackSizeToPos(node.GetSize());
+                    int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
+                    if (copy > 1)
+                    {
+                        this.stack.Structify(loc - copy + 1, copy, this.subdata);
+                    }
 
-                this.state.TransformCopyDownSp(node);
+                    this.state.TransformCopyDownSp(node);
+                });
             }
             else
             {
@@ -160,31 +165,36 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:155-178
+        // Original: @Override public void outACopyTopSpCommand(ACopyTopSpCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutACopyTopSpCommand(ACopyTopSpCommand node)
         {
             if (!this.skipdeadcode)
             {
-                VarStruct varstruct = null;
-                int copy = NodeUtils.StackSizeToPos(node.GetSize());
-                int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
-                if (copy > 1)
+                this.WithRecovery(node, () =>
                 {
-                    varstruct = this.stack.Structify(loc - copy + 1, copy, this.subdata);
-                }
-
-                this.state.TransformCopyTopSp(node);
-                if (copy > 1)
-                {
-                    this.stack.Push(varstruct);
-                }
-                else
-                {
-                    for (int i = 0; i < copy; ++i)
+                    VarStruct varstruct = null;
+                    int copy = NodeUtils.StackSizeToPos(node.GetSize());
+                    int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
+                    if (copy > 1)
                     {
-                        StackEntry entry = this.stack.Get(loc);
-                        this.stack.Push(entry);
+                        varstruct = this.stack.Structify(loc - copy + 1, copy, this.subdata);
                     }
-                }
+
+                    this.state.TransformCopyTopSp(node);
+                    if (copy > 1)
+                    {
+                        this.stack.Push(varstruct);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < copy; i++)
+                        {
+                            StackEntry entry = this.stack.Get(loc);
+                            this.stack.Push(entry);
+                        }
+                    }
+                });
             }
             else
             {
@@ -192,33 +202,36 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:189-201
-        // Original: public void outAConstCommand(AConstCommand node)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:181-208
+        // Original: @Override public void outAConstCommand(AConstCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutAConstCommand(AConstCommand node)
         {
             if (!this.skipdeadcode)
             {
-                UtilsType type = NodeUtils.GetType(node);
-                Const aconst;
-                switch (type.ByteValue())
+                this.WithRecovery(node, () =>
                 {
-                    case 3:
-                        aconst = Const.NewConst(type, NodeUtils.GetIntConstValue(node));
-                        break;
-                    case 4:
-                        aconst = Const.NewConst(type, NodeUtils.GetFloatConstValue(node));
-                        break;
-                    case 5:
-                        aconst = Const.NewConst(type, NodeUtils.GetStringConstValue(node));
-                        break;
-                    case 6:
-                        aconst = Const.NewConst(type, NodeUtils.GetObjectConstValue(node));
-                        break;
-                    default:
-                        throw new Exception("Invalid const type " + type);
-                }
-                this.stack.Push(aconst);
-                this.state.TransformConst(node);
+                    UtilsType type = NodeUtils.GetType(node);
+                    Const aconst;
+                    switch (type.ByteValue())
+                    {
+                        case 3:
+                            aconst = Const.NewConst(type, NodeUtils.GetIntConstValue(node));
+                            break;
+                        case 4:
+                            aconst = Const.NewConst(type, NodeUtils.GetFloatConstValue(node));
+                            break;
+                        case 5:
+                            aconst = Const.NewConst(type, NodeUtils.GetStringConstValue(node));
+                            break;
+                        case 6:
+                            aconst = Const.NewConst(type, NodeUtils.GetObjectConstValue(node));
+                            break;
+                        default:
+                            throw new Exception("Invalid const type " + type);
+                    }
+                    this.stack.Push(aconst);
+                    this.state.TransformConst(node);
+                });
             }
             else
             {
@@ -226,35 +239,54 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:211-248
+        // Original: @Override public void outAActionCommand(AActionCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutAActionCommand(AActionCommand node)
         {
             if (!this.skipdeadcode)
             {
-                StackEntry entry;
-                for (int remove = NodeUtils.ActionRemoveElementCount(node, this.actions), i = 0; i < remove; i += entry.Size())
+                this.WithRecovery(node, () =>
                 {
-                    entry = this.RemoveFromStack();
-                }
+                    int remove = NodeUtils.ActionRemoveElementCount(node, this.actions);
+                    int i = 0;
 
-                UtilsType type = NodeUtils.GetReturnType(node, this.actions);
-                if (type.Equals(unchecked((byte)(-16))))
-                {
-                    for (int j = 0; j < 3; ++j)
+                    while (i < remove)
                     {
-                        Variable var1 = new Variable((byte)4);
-                        this.stack.Push(var1);
+                        StackEntry entry = this.RemoveFromStack();
+                        i += entry.Size();
                     }
 
-                    this.stack.Structify(1, 3, this.subdata);
-                }
-                else if (!type.Equals((byte)0))
-                {
-                    Variable var2 = new Variable(type);
-                    this.stack.Push(var2);
-                }
+                    UtilsType type;
+                    try
+                    {
+                        type = NodeUtils.GetReturnType(node, this.actions);
+                    }
+                    catch (Exception e)
+                    {
+                        // Action metadata missing or invalid - assume void return
+                        type = new UtilsType((byte)0);
+                    }
+                    if (!type.Equals(unchecked((byte)(-16))))
+                    {
+                        if (!type.Equals((byte)0))
+                        {
+                            Variable var = new Variable(type);
+                            this.stack.Push(var);
+                        }
+                    }
+                    else
+                    {
+                        for (int ix = 0; ix < 3; ix++)
+                        {
+                            Variable var = new Variable((byte)4);
+                            this.stack.Push(var);
+                        }
 
-                //UtilsType type2 = null;
-                this.state.TransformAction(node);
+                        this.stack.Structify(1, 3, this.subdata);
+                    }
+
+                    this.state.TransformAction(node);
+                });
             }
             else
             {
@@ -262,16 +294,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:251-263
+        // Original: @Override public void outALogiiCommand(ALogiiCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutALogiiCommand(ALogiiCommand node)
         {
             if (!this.skipdeadcode)
             {
-                this.RemoveFromStack();
-                this.RemoveFromStack();
-                Variable var = new Variable((byte)3);
-                this.stack.Push(var);
-                var = null;
-                this.state.TransformLogii(node);
+                this.WithRecovery(node, () =>
+                {
+                    this.RemoveFromStack();
+                    this.RemoveFromStack();
+                    Variable var = new Variable((byte)3);
+                    this.stack.Push(var);
+                    this.state.TransformLogii(node);
+                });
             }
             else
             {
@@ -279,57 +315,61 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:266-309
+        // Original: @Override public void outABinaryCommand(ABinaryCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutABinaryCommand(ABinaryCommand node)
         {
             if (!this.skipdeadcode)
             {
-                int sizep3;
-                int sizep2;
-                int sizeresult;
-                UtilsType resulttype;
-                if (NodeUtils.IsEqualityOp(node))
+                this.WithRecovery(node, () =>
                 {
-                    if (NodeUtils.GetType(node).Equals((byte)36))
+                    int sizep1;
+                    int sizep2;
+                    int sizeresult;
+                    UtilsType resulttype;
+                    if (NodeUtils.IsEqualityOp(node))
                     {
-                        sizep2 = (sizep3 = NodeUtils.StackSizeToPos(node.GetSize()));
+                        if (NodeUtils.GetType(node).Equals((byte)36))
+                        {
+                            sizep1 = sizep2 = NodeUtils.StackSizeToPos(node.GetSize());
+                        }
+                        else
+                        {
+                            sizep2 = 1;
+                            sizep1 = 1;
+                        }
+
+                        sizeresult = 1;
+                        resulttype = new UtilsType((byte)3);
+                    }
+                    else if (NodeUtils.IsVectorAllowedOp(node))
+                    {
+                        sizep1 = NodeUtils.GetParam1Size(node);
+                        sizep2 = NodeUtils.GetParam2Size(node);
+                        sizeresult = NodeUtils.GetResultSize(node);
+                        resulttype = NodeUtils.GetReturnType(node);
                     }
                     else
                     {
-                        sizep2 = (sizep3 = 1);
+                        sizep1 = 1;
+                        sizep2 = 1;
+                        sizeresult = 1;
+                        resulttype = new UtilsType((byte)3);
                     }
 
-                    sizeresult = 1;
-                    resulttype = new UtilsType((byte)3);
-                }
-                else if (NodeUtils.IsVectorAllowedOp(node))
-                {
-                    sizep3 = NodeUtils.GetParam1Size(node);
-                    sizep2 = NodeUtils.GetParam2Size(node);
-                    sizeresult = NodeUtils.GetResultSize(node);
-                    resulttype = NodeUtils.GetReturnType(node);
-                }
-                else
-                {
-                    sizep3 = 1;
-                    sizep2 = 1;
-                    sizeresult = 1;
-                    resulttype = new UtilsType((byte)3);
-                }
+                    for (int i = 0; i < sizep1 + sizep2; i++)
+                    {
+                        this.RemoveFromStack();
+                    }
 
-                for (int i = 0; i < sizep3 + sizep2; ++i)
-                {
-                    this.RemoveFromStack();
-                }
+                    for (int i = 0; i < sizeresult; i++)
+                    {
+                        Variable var = new Variable(resulttype);
+                        this.stack.Push(var);
+                    }
 
-                for (int j = 0; j < sizeresult; ++j)
-                {
-                    Variable varLocal = new Variable(resulttype);
-                    this.stack.Push(varLocal);
-                }
-
-                //Variable var = null;
-                resulttype = null;
-                this.state.TransformBinary(node);
+                    this.state.TransformBinary(node);
+                });
             }
             else
             {
@@ -337,11 +377,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:312-318
+        // Original: @Override public void outAUnaryCommand(AUnaryCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> this.state.transformUnary(node)); } else { this.state.transformDeadCode(node); } }
         public override void OutAUnaryCommand(AUnaryCommand node)
         {
             if (!this.skipdeadcode)
             {
-                this.state.TransformUnary(node);
+                this.WithRecovery(node, () => this.state.TransformUnary(node));
             }
             else
             {
@@ -606,6 +648,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             restore = null;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:540-554
+        // Original: private void withRecovery(Node node, Runnable action) { LocalVarStack stackSnapshot = (LocalVarStack)this.stack.clone(); LocalVarStack backupSnapshot = this.backupstack != null ? (LocalVarStack)this.backupstack.clone() : null; try { action.run(); } catch (RuntimeException e) { System.err.println("Decompiler recovery triggered at position " + this.nodedata.getPos(node) + ": " + e.getMessage()); e.printStackTrace(); this.stack = stackSnapshot; this.state.setStack(this.stack); this.backupstack = backupSnapshot; this.state.emitError(node, this.nodedata.getPos(node)); } }
+        private void WithRecovery(Node node, System.Action action)
+        {
+            LocalVarStack stackSnapshot = (LocalVarStack)this.stack.Clone();
+            LocalVarStack backupSnapshot = this.backupstack != null ? (LocalVarStack)this.backupstack.Clone() : null;
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                // Log the exception details for debugging while allowing decompiler to continue
+                JavaSystem.@err.Println("Decompiler recovery triggered at position " + this.nodedata.GetPos(node) + ": " + e.Message);
+                e.PrintStackTrace(JavaSystem.@err);
+                this.stack = stackSnapshot;
+                this.state.SetStack(this.stack);
+                this.backupstack = backupSnapshot;
+                this.state.EmitError(node, this.nodedata.GetPos(node));
+            }
         }
 
         private void CheckOrigins(Node node)
