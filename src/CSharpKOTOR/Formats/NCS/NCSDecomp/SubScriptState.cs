@@ -251,6 +251,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             {
                 this.current = this.root;
             }
+            // For globals, prevent CheckStart from moving away from root
+            // The root has end = int.MaxValue, so CheckEnd won't match, but CheckStart might move to a switch case
+            // For globals, we want to keep current at root to add variable declarations
+            if (this.current == this.root && this.root.GetEnd() == int.MaxValue)
+            {
+                // This is the globals root - don't move away from it
+                return;
+            }
             if (this.current.HasChildren())
             {
                 ScriptNode.ScriptNode lastNode = this.current.GetLastChild();
