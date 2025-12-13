@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/Analysis.java:147-748
+// Original: public interface Analysis extends Switch
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +12,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 {
     public interface IAnalysis : Switch
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/Analysis.java:148-154
+        // Original: Object getIn(Node var1); void setIn(Node var1, Object var2); Object getOut(Node var1); void setOut(Node var1, Object var2);
         object GetIn(Node p0);
         void SetIn(Node p0, object p1);
         object GetOut(Node p0);

@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Switch.java:7-8
+// Original: public interface Switch { }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
