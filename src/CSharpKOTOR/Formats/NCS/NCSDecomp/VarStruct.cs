@@ -67,54 +67,70 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             this.structtype = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:59-64
+        // Original: public void addVar(Variable var) { this.vars.addFirst(var); var.varstruct(this); this.structtype.addType(var.type()); this.size = this.size + var.size(); }
         public virtual void AddVar(Variable var)
         {
             this.vars.AddFirst(var);
             var.Varstruct(this);
             this.structtype.AddType(var.Type());
-            this.size += var.Size();
+            this.size = this.size + var.Size();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:66-71
+        // Original: public void addVarStackOrder(Variable var) { this.vars.add(var); var.varstruct(this); this.structtype.addTypeStackOrder(var.type()); this.size = this.size + var.size(); }
         public virtual void AddVarStackOrder(Variable var)
         {
             this.vars.Add(var);
             var.Varstruct(this);
             this.structtype.AddTypeStackOrder(var.Type());
-            this.size += var.Size();
+            this.size = this.size + var.Size();
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:74-76
-        // Original: @Override public void name(String prefix, byte count)
+        // Original: @Override public void name(String prefix, byte count) { this.name = prefix + "struct" + Byte.toString(count); }
         public override void Name(string prefix, byte count)
         {
-            this.name = prefix + "struct" + count;
+            this.name = prefix + "struct" + count.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:78-80
+        // Original: public String name() { return this.name; }
         public virtual string Name()
         {
             return this.name;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:82-84
+        // Original: public void structType(StructType structtype) { this.structtype = structtype; }
         public virtual void StructType(StructType structtype)
         {
             this.structtype = structtype;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:87-89
+        // Original: @Override public String toString() { return this.name; }
         public override string ToString()
         {
             return this.name;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:91-93
+        // Original: public String typeName() { return this.structtype.typeName(); }
         public virtual string TypeName()
         {
             return this.structtype.TypeName();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:96-98
+        // Original: @Override public String toDeclString() { return this.structtype.toDeclString() + " " + this.name; }
         public override string ToDeclString()
         {
             return this.structtype.ToDeclString() + " " + this.name;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:100-110
+        // Original: public void updateNames() { if (this.structtype.isVector()) { ... } else { ... } }
         public virtual void UpdateNames()
         {
             if (this.structtype.IsVector())
@@ -125,7 +141,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             }
             else
             {
-                for (int i = 0; i < this.vars.Count; ++i)
+                for (int i = 0; i < this.vars.Count; i++)
                 {
                     ((Variable)this.vars[i]).Name(this.structtype.ElementName(this.vars.Count - i - 1));
                 }
@@ -158,28 +174,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return this.structtype;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:134-151
+        // Original: @Override public StackEntry getElement(int stackpos) { int pos = 0; for (int i = this.vars.size() - 1; i >= 0; i--) { StackEntry entry = this.vars.get(i); pos += entry.size(); if (pos == stackpos) { return entry.getElement(1); } if (pos > stackpos) { return entry.getElement(pos - stackpos + 1); } } throw new RuntimeException("Stackpos was greater than stack size"); }
         public override StackEntry GetElement(int stackpos)
         {
-
-            // Handle edge case: empty struct
-            if (this.vars.Count == 0)
-            {
-                throw new Exception("Attempting to get element from empty VarStruct");
-            }
-
-
-            // Handle edge case: stackpos beyond struct bounds - return last element
-            // This can happen with certain bytecode patterns
-            if (stackpos > this.size)
-            {
-
-                // Return the last variable element as fallback
-                StackEntry lastEntry = (StackEntry)this.vars[this.vars.Count - 1];
-                return lastEntry.GetElement(1);
-            }
-
             int pos = 0;
-            for (int i = this.vars.Count - 1; i >= 0; --i)
+
+            for (int i = this.vars.Count - 1; i >= 0; i--)
             {
                 StackEntry entry = (StackEntry)this.vars[i];
                 pos += entry.Size();
@@ -194,10 +195,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
                 }
             }
 
-
-            // Fallback: return first element if we couldn't find exact match
-            StackEntry firstEntry = (StackEntry)this.vars[0];
-            return firstEntry.GetElement(1);
+            throw new Exception("Stackpos was greater than stack size");
         }
 
         // Handle edge case: empty struct
