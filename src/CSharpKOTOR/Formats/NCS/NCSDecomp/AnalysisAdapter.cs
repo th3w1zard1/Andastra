@@ -61,6 +61,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return this.@out.TryGetValue(node, out result) ? result : null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:174-185
+        // Original: @Override public void setOut(Node node, Object out) { if (this.out == null) { this.out = new Hashtable<>(1); } if (out != null) { this.out.put(node, out); } else { this.out.remove(node); } }
         public virtual void SetOut(Node node, object @out)
         {
             if (this.@out == null)
