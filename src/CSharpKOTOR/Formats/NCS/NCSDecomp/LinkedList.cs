@@ -220,6 +220,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return _list.Remove(item);
         }
 
+        public virtual bool Contains(object item)
+        {
+            return _list.Contains(item);
+        }
+
         public virtual void Clear()
         {
             _list.Clear();

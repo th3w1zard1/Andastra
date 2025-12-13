@@ -67,7 +67,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.subdata = subdata;
             this.state = 0;
             this.vardecs = new HashMap();
-            this.root = new ScriptNode.ASub(0, 0);
+            this.root = new ScriptNode.ASub(0, null, null, 0, 0);
             this.current = this.root;
             this.stack = stack;
             this.varcounts = new HashMap();
@@ -166,14 +166,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         // Original: public String getName() { return this.root.name(); }
         public virtual string GetName()
         {
-            return this.root.Name();
+            return this.root.GetName();
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:218-220
         // Original: public void setName(String name)
         public virtual void SetName(string name)
         {
-            this.root.Name(name);
+            this.root.SetName(name);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:222-270
@@ -205,7 +205,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual void IsMain(bool ismain)
         {
-            this.root.IsMain(ismain);
+            this.root.SetIsMain(ismain);
         }
 
         public virtual bool IsMain()

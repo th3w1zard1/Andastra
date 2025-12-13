@@ -1,5 +1,6 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:14-294
 // Original: public class Variable extends StackEntry implements Comparable<Variable>
+using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using Comparable = System.IComparable;

@@ -239,6 +239,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     {
         public IOException() : base() { }
         public IOException(string message) : base(message) { }
+        public IOException(string message, Exception innerException) : base(message, innerException) { }
     }
 
     public class FileNotFoundException : IOException

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         // Original: public static String getNameFromAction(AActionExp actionexp) { ... }
         public static string GetNameFromAction(AActionExp actionexp)
         {
-            string action = actionexp.Action();
+            string action = actionexp.GetAction();
             if (action.Equals("GetObjectByTag"))
             {
                 string tag = ActionParamTag(actionexp.GetParam(0));

@@ -128,7 +128,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 else
                 {
                     // Fallback to NodeUtils.GetType for compatibility
-                    typeVal = NodeUtils.GetType(node).Value;
+                    typeVal = NodeUtils.GetType(node).ByteValue();
                 }
                 Variable var = new Variable(new UtilsType((byte)typeVal));
                 this.stack.Push(var);

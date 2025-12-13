@@ -1,7 +1,9 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:28-241
 // Original: public class SetDestinations extends PrunedDepthFirstAdapter
+using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {

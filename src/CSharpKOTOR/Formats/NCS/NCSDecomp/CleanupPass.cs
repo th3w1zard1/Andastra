@@ -1,7 +1,9 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:37-191
 // Original: public class CleanupPass
+using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
@@ -81,12 +83,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         {
                             ScriptNode.ScriptNode maybeAssign = (ScriptNode.ScriptNode)it.Next();
                             if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
-                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
+                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).GetExp()))
                             {
-                                AModifyExp modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
-                                if (modexp.VarRef().Var() == decl.Var())
+                                AModifyExp modexp = (AModifyExp)((AExpressionStatement)maybeAssign).GetExp();
+                                if (modexp.GetVarRef().Var() == decl.GetVarVar())
                                 {
-                                    decl.InitializeExp(modexp.Expression());
+                                    decl.InitializeExp(modexp.GetExpression());
                                     it.Remove(); // drop the now-merged assignment statement
                                 }
                                 else
@@ -102,10 +104,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                     if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
-                        Variable var = ((AVarDecl)node1).Var();
+                        Variable var = ((AVarDecl)node1).GetVarVar();
                         if (var != null && var.IsStruct())
                         {
-                            VarStruct structx = ((AVarDecl)node1).Var().Varstruct();
+                            VarStruct structx = ((AVarDecl)node1).GetVarVar().Varstruct();
                             AVarDecl structdecx = new AVarDecl(structx);
                             if (it.HasNext())
                             {
@@ -116,7 +118,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 node1 = null;
                             }
 
-                            while (typeof(AVarDecl).IsInstanceOfType(node1) && structx.Equals(((AVarDecl)node1).Var().Varstruct()))
+                            while (typeof(AVarDecl).IsInstanceOfType(node1) && structx.Equals(((AVarDecl)node1).GetVarVar().Varstruct()))
                             {
                                 it.Remove();
                                 node1.Parent(null);

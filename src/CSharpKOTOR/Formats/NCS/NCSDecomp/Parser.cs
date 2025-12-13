@@ -852,7 +852,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
             PJumpToSubroutine node7 = (PJumpToSubroutine)this.Pop();
             PRsaddCommand node8 = null;
             PSize node9 = (PSize)this.Pop();
-            AProgram node10 = new AProgram(node9, node8, node7, node6, node5);
+            List<PSubroutine> subroutines = new List<PSubroutine>();
+            if (node5 is X1PSubroutine x1)
+            {
+                PSubroutine sub = x1.GetPSubroutine();
+                if (sub != null)
+                {
+                    subroutines.Add(sub);
+                }
+            }
+            else if (node5 is X2PSubroutine x2)
+            {
+                PSubroutine sub = x2.GetPSubroutine();
+                if (sub != null)
+                {
+                    subroutines.Add(sub);
+                }
+            }
+            AProgram node10 = new AProgram(node9, node8, node7, node6, subroutines);
             return node10;
         }
 
@@ -878,7 +895,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
             PJumpToSubroutine node7 = (PJumpToSubroutine)this.Pop();
             PRsaddCommand node8 = (PRsaddCommand)this.Pop();
             PSize node9 = (PSize)this.Pop();
-            AProgram node10 = new AProgram(node9, node8, node7, node6, node5);
+            List<PSubroutine> subroutines = new List<PSubroutine>();
+            if (node5 is X1PSubroutine x1)
+            {
+                PSubroutine sub = x1.GetPSubroutine();
+                if (sub != null)
+                {
+                    subroutines.Add(sub);
+                }
+            }
+            else if (node5 is X2PSubroutine x2)
+            {
+                PSubroutine sub = x2.GetPSubroutine();
+                if (sub != null)
+                {
+                    subroutines.Add(sub);
+                }
+            }
+            AProgram node10 = new AProgram(node9, node8, node7, node6, subroutines);
             return node10;
         }
 
@@ -901,7 +935,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
         protected virtual Node New6()
         {
             XPCmd node1 = (XPCmd)this.Pop();
-            ACommandBlock node2 = new ACommandBlock(node1);
+            List<PCmd> cmds = new List<PCmd>();
+            if (node1 is X1PCmd x1)
+            {
+                PCmd cmd = x1.GetPCmd();
+                if (cmd != null)
+                {
+                    cmds.Add(cmd);
+                }
+            }
+            else if (node1 is X2PCmd x2)
+            {
+                PCmd cmd = x2.GetPCmd();
+                if (cmd != null)
+                {
+                    cmds.Add(cmd);
+                }
+            }
+            ACommandBlock node2 = new ACommandBlock(cmds);
             return node2;
         }
 

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
-    public class ASwitch : Scriptnode.ScriptNode
+    public class ASwitch : ScriptNode
     {
         private int _start;
         private int _end;
@@ -45,11 +45,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _end = end;
             if (_defaultCase != null)
             {
-                _defaultCase.SetEnd(end);
+                _defaultCase.End(end);
             }
             else if (_cases.Count > 0)
             {
-                _cases[_cases.Count - 1].SetEnd(end);
+                _cases[_cases.Count - 1].End(end);
             }
         }
 
@@ -154,7 +154,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return _defaultCase;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:91-106
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASwitch.java:91-106
         // Original: @Override public String toString() { ... buff.append(this.tabs + "switch(" + this.switchexp + ") {" + this.newline); ... }
         public override string ToString()
         {
@@ -189,7 +189,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _defaultCase = null;
             if (_switchExp != null)
             {
-                if (_switchExp is Scriptnode.ScriptNode switchExpNode)
+                if (_switchExp is ScriptNode switchExpNode)
                 {
                     switchExpNode.Close();
                 }
