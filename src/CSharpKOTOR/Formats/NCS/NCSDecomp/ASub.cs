@@ -1,9 +1,6 @@
-// 
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:15-135
+// Original: public class ASub extends ScriptRootNode
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using ScriptNodeNS = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
@@ -12,13 +9,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public class ASub : ScriptRootNode
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:16
+        // Original: private Type type;
         private UtilsType type;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:17
+        // Original: private byte id;
         private byte id;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:18
         // Original: private List<ScriptNode> params;
         // Note: Using List<object> to handle ScriptNodeNS.AVarRef (ScriptNode namespace) vs Scriptnode.ScriptNode namespace mismatch
         private List<object> @params;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:19
+        // Original: private String name;
         private string name;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:20
+        // Original: private boolean ismain;
         private bool ismain;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:22-34
         // Original: public ASub(Type type, byte id, List<AVarRef> params, int start, int end) { ... this.name = "sub" + Byte.toString(id); }
@@ -36,6 +41,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.name = "sub" + this.id.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:36-41
+        // Original: public ASub(int start, int end) { super(start, end); this.type = new Type((byte)0); this.params = null; this.tabs = ""; }
         public ASub(int start, int end) : base(start, end)
         {
             this.type = new UtilsType((byte)0);
@@ -47,15 +54,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         // Original: protected void addParam(AVarRef param) { param.parent(this); this.params.add(param); }
         protected virtual void AddParam(ScriptNodeNS.AVarRef param)
         {
-            param.Parent(this);
+            param.Parent((ScriptNodeNS.ScriptNode)(object)this);
             this.@params.Add(param);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:48-50
+        // Original: @Override public String toString() { return this.getHeader() + " {" + this.newline + this.getBody() + "}" + this.newline; }
         public override string ToString()
         {
             return this.GetHeader() + " {" + this.newline + this.GetBody() + "}" + this.newline;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:53-61
+        // Original: public String getBody() { StringBuffer buff = new StringBuffer(); for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } return buff.toString(); }
         public virtual string GetBody()
         {
             StringBuilder buff = new StringBuilder();
@@ -67,6 +78,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return buff.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:63-77
+        // Original: public String getHeader() { ... }
         public virtual string GetHeader()
         {
             StringBuilder buff = new StringBuilder();
@@ -84,6 +97,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return buff.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:79-88
+        // Original: public void isMain(boolean ismain) { this.ismain = ismain; if (ismain) { if (this.type.equals((byte)3)) { this.name = "StartingConditional"; } else { this.name = "main"; } } }
         public virtual void IsMain(bool ismain)
         {
             this.ismain = ismain;
@@ -100,21 +115,29 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:90-92
+        // Original: public boolean isMain() { return this.ismain; }
         public virtual bool IsMain()
         {
             return this.ismain;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:94-96
+        // Original: public Type type() { return this.type; }
         public virtual UtilsType Type()
         {
             return this.type;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:98-100
+        // Original: public void name(String name) { this.name = name; }
         public virtual void Name(string name)
         {
             this.name = name;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:102-104
+        // Original: public String name() { return this.name; }
         public virtual string Name()
         {
             return this.name;
@@ -127,7 +150,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             List<Variable> vars = new List<Variable>();
             if (this.@params != null)
             {
-                IEnumerator<object> it = this.@params.GetEnumerator();
+                System.Collections.Generic.IEnumerator<object> it = this.@params.GetEnumerator();
                 while (it.MoveNext())
                 {
                     vars.Add(((ScriptNodeNS.AVarRef)it.Current).Var());
