@@ -14,6 +14,11 @@ using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Resources;
+using GFFContent = CSharpKOTOR.Formats.GFF.GFFContent;
+using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
+using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
 
 namespace KotorDiff.NET.Generator
 {
@@ -103,10 +108,44 @@ namespace KotorDiff.NET.Generator
         {
             var generated = new Dictionary<string, FileInfo>();
 
+            if (tlkModifications == null || tlkModifications.Count == 0)
+            {
+                return generated;
+            }
+
             foreach (var modTlk in tlkModifications)
             {
-                // TODO: Implement TLK file generation
-                // This should create append.tlk with all modifiers
+                // All modifiers should be appends (no replacements per TSLPatcher design)
+                var appends = modTlk.Modifiers.Where(m => !m.IsReplacement).ToList();
+
+                // Warn if any replacements are found
+                var replacements = modTlk.Modifiers.Where(m => m.IsReplacement).ToList();
+                if (replacements.Count > 0)
+                {
+                    Console.WriteLine($"[WARNING] Found {replacements.Count} replacement modifiers in TLK - TSLPatcher only supports appends!");
+                }
+
+                // Create append.tlk with all modifiers
+                if (appends.Count > 0)
+                {
+                    var appendTlk = new TLK();
+                    appendTlk.Resize(appends.Count);
+
+                    // Sort by token_id (which is the index in append.tlk)
+                    var sortedAppends = appends.OrderBy(m => m.TokenId).ToList();
+
+                    for (int appendIdx = 0; appendIdx < sortedAppends.Count; appendIdx++)
+                    {
+                        var modifier = sortedAppends[appendIdx];
+                        string text = modifier.Text ?? "";
+                        string soundStr = modifier.Sound ?? "";
+                        appendTlk.Replace(appendIdx, text, soundStr);
+                    }
+
+                    var appendPath = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, "append.tlk"));
+                    TLKAuto.WriteTlk(appendTlk, appendPath.FullName, ResourceType.TLK);
+                    generated["append.tlk"] = appendPath;
+                }
             }
 
             return generated;
@@ -120,13 +159,53 @@ namespace KotorDiff.NET.Generator
         {
             var generated = new Dictionary<string, FileInfo>();
 
+            if (twodaModifications == null || twodaModifications.Count == 0)
+            {
+                return generated;
+            }
+
             foreach (var mod2da in twodaModifications)
             {
                 string filename = mod2da.SourceFile;
                 var outputPath = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, filename));
 
-                // TODO: Load base 2DA file from baseDataPath and write to output
-                // This should use CSharpKOTOR.Formats.TwoDA readers/writers
+                // Try to load base 2DA file from baseDataPath
+                if (baseDataPath != null)
+                {
+                    // Try Override first, then other locations
+                    var potentialPaths = new[]
+                    {
+                        new FileInfo(Path.Combine(baseDataPath.FullName, "Override", filename)),
+                        new FileInfo(Path.Combine(baseDataPath.FullName, filename))
+                    };
+
+                    bool found = false;
+                    foreach (var potentialPath in potentialPaths)
+                    {
+                        if (potentialPath.Exists)
+                        {
+                            try
+                            {
+                                // Copy using TwoDA reader/writer to ensure proper format
+                                var twodaObj = new TwoDABinaryReader(potentialPath.FullName).Load();
+                                TwoDAAuto.WriteTwoDA(twodaObj, outputPath.FullName, ResourceType.TwoDA);
+                                generated[filename] = outputPath;
+                                found = true;
+                                break;
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"[ERROR] Failed to read base 2DA {potentialPath.FullName}: {e.Message}");
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        Console.WriteLine($"[WARNING] Could not find base 2DA file for {filename} - TSLPatcher may fail without it");
+                    }
+                }
             }
 
             return generated;
@@ -140,13 +219,83 @@ namespace KotorDiff.NET.Generator
         {
             var generated = new Dictionary<string, FileInfo>();
 
+            if (gffModifications == null || gffModifications.Count == 0)
+            {
+                return generated;
+            }
+
             foreach (var modGff in gffModifications)
             {
-                // TODO: Implement GFF file generation
-                // This should use CSharpKOTOR.Formats.GFF readers/writers
+                bool replaceFile = modGff.ReplaceFile;
+
+                // Get the actual filename (might be different from sourcefile)
+                string filename = !string.IsNullOrEmpty(modGff.SaveAs) ? modGff.SaveAs : modGff.SourceFile;
+
+                // CRITICAL: ALL files go directly in tslpatchdata root, NOT in subdirectories
+                var outputPath = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, filename));
+
+                // Try to load base file if baseDataPath provided, otherwise create new
+                GFF baseGff = LoadOrCreateGff(baseDataPath, filename);
+
+                // For replace operations, apply modifications
+                // For patch operations, just copy the base file as-is
+                if (replaceFile)
+                {
+                    // Apply all modifications to generate the replacement file
+                    // TODO: Implement _apply_gff_modifications
+                    // For now, just copy the base file
+                }
+
+                // Write the GFF file
+                GFFAuto.WriteGff(baseGff, outputPath.FullName, ResourceType.GFF);
+                generated[filename] = outputPath;
             }
 
             return generated;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:452-488
+        // Original: def _load_or_create_gff(...): ...
+        private GFF LoadOrCreateGff(DirectoryInfo baseDataPath, string filename)
+        {
+            // Try to load base file if baseDataPath provided
+            if (baseDataPath != null)
+            {
+                var potentialBase = new FileInfo(Path.Combine(baseDataPath.FullName, filename));
+                if (potentialBase.Exists)
+                {
+                    try
+                    {
+                        var baseGff = new GFFBinaryReader(potentialBase.FullName).Load();
+                        return baseGff;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"[DEBUG] Could not load base GFF {potentialBase.FullName}: {e.GetType().Name}: {e.Message}");
+                    }
+                }
+            }
+
+            // Create new GFF structure
+            string ext = Path.GetExtension(filename).TrimStart('.').ToUpperInvariant();
+            GFFContent gffContent;
+            try
+            {
+                if (Enum.TryParse<GFFContent>(ext, out GFFContent parsedContent))
+                {
+                    gffContent = parsedContent;
+                }
+                else
+                {
+                    gffContent = GFFContent.GFF;
+                }
+            }
+            catch
+            {
+                gffContent = GFFContent.GFF;
+            }
+
+            return new GFF(gffContent);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:911-972
@@ -157,10 +306,58 @@ namespace KotorDiff.NET.Generator
         {
             var generated = new Dictionary<string, FileInfo>();
 
+            if (ssfModifications == null || ssfModifications.Count == 0)
+            {
+                return generated;
+            }
+
             foreach (var modSsf in ssfModifications)
             {
-                // TODO: Implement SSF file generation
-                // This should use CSharpKOTOR.Formats.SSF readers/writers
+                bool replaceFile = modSsf.ReplaceFile;
+
+                // Create new SSF or load base
+                SSF ssf = null;
+                if (baseDataPath != null)
+                {
+                    var potentialBase = new FileInfo(Path.Combine(baseDataPath.FullName, modSsf.SourceFile));
+                    if (potentialBase.Exists)
+                    {
+                        try
+                        {
+                            ssf = new SSFBinaryReader(potentialBase.FullName).Load();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"[DEBUG] Could not load base SSF '{potentialBase.FullName}': {e.GetType().Name}: {e.Message}");
+                        }
+                    }
+                }
+
+                if (ssf == null)
+                {
+                    ssf = new SSF();
+                }
+
+                // For replace operations, apply modifications
+                // For patch operations, just copy the base file as-is
+                if (replaceFile)
+                {
+                    // Apply modifications to generate the replacement file
+                    foreach (var modifier in modSsf.Modifiers)
+                    {
+                        if (modifier is CSharpKOTOR.Mods.SSF.ModifySSF modifySsf)
+                        {
+                            // TODO: Resolve StrRef token value
+                            // For now, skip applying modifications
+                            // ssf.SetSound(modifySsf.Sound, modifySsf.StringRefValue);
+                        }
+                    }
+                }
+
+                // Write SSF file
+                var outputPath = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, modSsf.SourceFile));
+                SSFAuto.WriteSsf(ssf, outputPath.FullName, ResourceType.SSF);
+                generated[modSsf.SourceFile] = outputPath;
             }
 
             return generated;
