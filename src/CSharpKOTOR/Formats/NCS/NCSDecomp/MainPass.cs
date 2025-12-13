@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:50-635
+// Original: public class MainPass extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,6 +17,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public class MainPass : PrunedDepthFirstAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:51-64
+        // Original: /** Live variable stack reflecting current execution point. */ protected LocalVarStack stack = new LocalVarStack(); protected NodeAnalysisData nodedata; protected SubroutineAnalysisData subdata; protected boolean skipdeadcode; /** Mutable script output for the current subroutine. */ protected SubScriptState state; private ActionsData actions; /** Whether we are operating on the globals block. */ protected boolean globals; /** Backup stack used around jumps to restore state. */ protected LocalVarStack backupstack; /** Declared return type of the current subroutine. */ protected Type type;
         /** Live variable stack reflecting current execution point. */
         protected LocalVarStack stack = new LocalVarStack();
         protected NodeAnalysisData nodedata;

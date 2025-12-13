@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:40-786
+// Original: public class DoTypes extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +16,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public class DoTypes : PrunedDepthFirstAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:41-56
+        // Original: private SubroutineState state; /** Type-only view of the execution stack for inference. */ protected LocalTypeStack stack = new LocalTypeStack(); private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private ActionsData actions; /** Whether we are in the first prototyping pass. */ private boolean initialproto; /** True while temporarily skipping sections during prototyping. */ private boolean protoskipping; /** Whether we should emit return type information during this pass. */ private boolean protoreturn; /** Skip nodes flagged as dead code. */ private boolean skipdeadcode; /** Backup stack used around jumps for restoration. */ private LocalTypeStack backupstack;
         private SubroutineState state;
         /** Type-only view of the execution stack for inference. */
         protected LocalTypeStack stack = new LocalTypeStack();
@@ -46,7 +49,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.protoreturn = (this.initialproto || !state.Type().IsTyped());
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:73-88
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:73-88
         // Original: public void done() { ... this.stack.close(); ... this.backupstack.close(); ... }
         public virtual void Done()

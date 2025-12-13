@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:147-748
+// Original: public class AnalysisAdapter implements Analysis
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +12,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 {
     public class AnalysisAdapter : IAnalysis
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:148-149
+        // Original: private Hashtable<Node, Object> in; private Hashtable<Node, Object> out;
         private Dictionary<object, object> @in;
         private Dictionary<object, object> @out;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:152-154
