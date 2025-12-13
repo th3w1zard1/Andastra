@@ -454,18 +454,18 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Performs a complete round-trip test: NSS->NCS->NSS->NCS
         ///
-        /// TEST FLOW (EXACT REQUIREMENTS):
-        /// =================================
+        /// TEST FLOW (EXACT REQUIREMENTS - IN ORDER):
+        /// ===========================================
         /// Step 1: NSS -> NCS using EXTERNAL nwnnsscomp.exe compiler from ./tools (RunExternalCompiler)
         /// Step 2: NCS -> NSS using INBUILT .NET decompiler (RunDecompile)
-        /// Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
-        /// Step 4: NSS -> NCS using INBUILT .NET compiler (RunInbuiltCompiler)
-        /// Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch, shows FULL pcode diff in UDIFF)
+        /// Step 3: NSS -> NCS using INBUILT .NET compiler in ./tools (RunInbuiltCompiler)
+        /// Step 4: Compare bytecode from Step 1 vs Step 3 - PRIMARY PRIORITY (fast-fails on mismatch, shows FULL pcode diff in UDIFF)
+        /// Step 5: Compare original NSS vs roundtrip NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
         ///
         /// PRIORITIES:
         /// ===========
-        /// PRIMARY: Bytecode comparison (Step 5) - MUST match 1:1 byte-by-byte. Test FAST FAILS if mismatch. Shows FULL pcode diff in UDIFF format.
-        /// SECONDARY: Text comparison (Step 3) - Should match after normalization. Only WARNS if mismatch. Shows UDIFF format.
+        /// PRIMARY: Bytecode comparison (Step 4) - MUST match 1:1 byte-by-byte. Test FAST FAILS if mismatch. Shows FULL pcode diff in UDIFF format.
+        /// SECONDARY: Text comparison (Step 5) - Should match after normalization. Only WARNS if mismatch. Shows UDIFF format.
         /// </summary>
         private static RoundTripResult RoundTripSingle(string nssPath, string gameFlag, string scratchRoot)
         {
@@ -594,61 +594,7 @@ namespace CSharpKOTOR.Tests.Formats
                     $"Error: {e.Message}", e);
             }
 
-            // Step 3: Compare original NSS vs decompiled NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
-            long compareTextStart = Stopwatch.GetTimestamp();
-            string textMismatchMessage = null;
-            bool textMatches = false;
-            try
-            {
-                bool isK2 = gameFlag.Equals("k2");
-                string originalExpanded = ExpandIncludes(nssPath, gameFlag);
-                string roundtripRaw = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
-
-                string originalExpandedFiltered = FilterFunctionsNotInDecompiled(originalExpanded, roundtripRaw);
-
-                string original = NormalizeNewlines(originalExpandedFiltered, isK2);
-                string roundtrip = NormalizeNewlines(roundtripRaw, isK2);
-                long compareTime = Stopwatch.GetTimestamp() - compareTextStart;
-                MergeOperationTime("compare-text", compareTime);
-                MergeOperationTime("compare", compareTime);
-
-                textMatches = original.Equals(roundtrip);
-                result.TextMatch = textMatches;
-                if (!textMatches)
-                {
-                    string diff = FormatUnifiedDiff(original, roundtrip);
-                    result.TextDiff = diff;
-                    textMismatchMessage = $"Text mismatch detected for {DisplayPath(nssPath)}";
-                    if (diff != null)
-                    {
-                        textMismatchMessage += Environment.NewLine + diff;
-                    }
-
-                    // Show key differences
-                    int originalLines = original.Split('\n').Length;
-                    int roundtripLines = roundtrip.Split('\n').Length;
-                    textMismatchMessage += $"\nOriginal: {originalLines} lines, {original.Length} chars";
-                    textMismatchMessage += $"\nDecompiled: {roundtripLines} lines, {roundtrip.Length} chars";
-
-                    Console.Error.WriteLine($"WARNING: Text mismatch for {displayRelPath}");
-                    if (diff != null)
-                    {
-                        Console.Error.WriteLine("UDIFF:");
-                        Console.Error.WriteLine(diff);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                long compareTime = Stopwatch.GetTimestamp() - compareTextStart;
-                MergeOperationTime("compare-text", compareTime);
-                MergeOperationTime("compare", compareTime);
-                textMismatchMessage = $"Text comparison error: {e.Message}";
-                result.TextDiff = textMismatchMessage;
-                Console.Error.WriteLine($"ERROR: {textMismatchMessage}");
-            }
-
-            // Step 4: Recompile decompiled NSS -> NCS (second NCS) using INBUILT compiler
+            // Step 3: Recompile decompiled NSS -> NCS (second NCS) using INBUILT compiler
             string recompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".rt.ncs");
 
             string decompiledContentForRecompile = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
@@ -747,88 +693,132 @@ namespace CSharpKOTOR.Tests.Formats
                 }
             }
 
-            // Step 5: Compare bytecode from Step 1 vs Step 4 - PRIMARY PRIORITY (fast-fails on mismatch)
-            if (recompilationSucceeded)
+            // Step 4: Compare bytecode from Step 1 vs Step 3 - PRIMARY PRIORITY (fast-fails on mismatch)
+            if (!recompilationSucceeded)
             {
-                long compareBytecodeStart = Stopwatch.GetTimestamp();
-                try
+                // Recompilation failed - cannot proceed with bytecode comparison
+                throw new InvalidOperationException(
+                    $"Recompilation failed - cannot compare bytecode.\n" +
+                    $"Source: {DisplayPath(nssPath)}\n" +
+                    $"Recompilation error: {recompilationError ?? "Unknown error"}\n" +
+                    $"Decompiled NSS: {DisplayPath(compileInput)}");
+            }
+
+            long compareBytecodeStart = Stopwatch.GetTimestamp();
+            try
+            {
+                // Assert: Both NCS files exist
+                File.Exists(compiledFirst).Should().BeTrue($"Original NCS should exist: {DisplayPath(compiledFirst)}");
+                File.Exists(recompiled).Should().BeTrue($"Recompiled NCS should exist: {DisplayPath(recompiled)}");
+
+                // Assert: Both NCS files can be loaded
+                NCS originalNcs = NCSAuto.ReadNcs(compiledFirst);
+                NCS recompiledNcs = NCSAuto.ReadNcs(recompiled);
+
+                // Assert: Both have instructions
+                originalNcs.Instructions.Should().NotBeNull("Original NCS should have instructions");
+                recompiledNcs.Instructions.Should().NotBeNull("Recompiled NCS should have instructions");
+                originalNcs.Instructions.Count.Should().BeGreaterThan(0, "Original NCS should have at least one instruction");
+                recompiledNcs.Instructions.Count.Should().BeGreaterThan(0, "Recompiled NCS should have at least one instruction");
+
+                // Perform bytecode comparison - PRIMARY PRIORITY: FAST FAIL on mismatch
+                BytecodeDiffResult bytecodeDiff = FindBytecodeDiff(compiledFirst, recompiled);
+                if (bytecodeDiff != null)
                 {
-                    // Assert: Both NCS files exist
-                    File.Exists(compiledFirst).Should().BeTrue($"Original NCS should exist: {DisplayPath(compiledFirst)}");
-                    File.Exists(recompiled).Should().BeTrue($"Recompiled NCS should exist: {DisplayPath(recompiled)}");
+                    // Bytecode mismatch - generate FULL pcode diff in UDIFF format
+                    string pcodeDiff = FormatPcodeUnifiedDiff(originalNcs, recompiledNcs);
+                    result.PcodeDiff = pcodeDiff;
+                    result.BytecodeMatch = false;
 
-                    // Assert: Both NCS files can be loaded
-                    NCS originalNcs = NCSAuto.ReadNcs(compiledFirst);
-                    NCS recompiledNcs = NCSAuto.ReadNcs(recompiled);
+                    StringBuilder errorMsg = new StringBuilder();
+                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+                    errorMsg.AppendLine("BYTECODE MISMATCH (PRIMARY FAILURE)");
+                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+                    errorMsg.AppendLine($"Source: {DisplayPath(nssPath)}");
+                    errorMsg.AppendLine($"Original NCS: {DisplayPath(compiledFirst)}");
+                    errorMsg.AppendLine($"Recompiled NCS: {DisplayPath(recompiled)}");
+                    errorMsg.AppendLine();
+                    errorMsg.AppendLine("FULL PCODE DIFF (UDIFF format):");
+                    errorMsg.AppendLine(pcodeDiff ?? "Unable to generate pcode diff");
+                    errorMsg.AppendLine();
+                    errorMsg.AppendLine("Byte-level diff:");
+                    errorMsg.AppendLine($"  Offset: {bytecodeDiff.Offset} (0x{bytecodeDiff.Offset:X})");
+                    errorMsg.AppendLine($"  Original: {FormatByteValue(bytecodeDiff.OriginalByte)}");
+                    errorMsg.AppendLine($"  Round-trip: {FormatByteValue(bytecodeDiff.RoundTripByte)}");
+                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
 
-                    // Assert: Both have instructions
-                    originalNcs.Instructions.Should().NotBeNull("Original NCS should have instructions");
-                    recompiledNcs.Instructions.Should().NotBeNull("Recompiled NCS should have instructions");
-                    originalNcs.Instructions.Count.Should().BeGreaterThan(0, "Original NCS should have at least one instruction");
-                    recompiledNcs.Instructions.Count.Should().BeGreaterThan(0, "Recompiled NCS should have at least one instruction");
+                    result.ErrorMessage = errorMsg.ToString();
+                    throw new InvalidOperationException(errorMsg.ToString());
+                }
 
-                    // Perform bytecode comparison
-                    BytecodeDiffResult bytecodeDiff = FindBytecodeDiff(compiledFirst, recompiled);
-                    if (bytecodeDiff != null)
+                result.BytecodeMatch = true;
+                long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
+                MergeOperationTime("compare-bytecode", compareTime);
+                MergeOperationTime("compare", compareTime);
+            }
+            catch (Exception e)
+            {
+                long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
+                MergeOperationTime("compare-bytecode", compareTime);
+                MergeOperationTime("compare", compareTime);
+                result.ErrorMessage = e.Message;
+                throw; // Fast fail on bytecode mismatch
+            }
+
+            // Step 5: Compare original NSS vs roundtrip NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
+            long compareTextStart = Stopwatch.GetTimestamp();
+            string textMismatchMessage = null;
+            bool textMatches = false;
+            try
+            {
+                bool isK2 = gameFlag.Equals("k2");
+                string originalExpanded = ExpandIncludes(nssPath, gameFlag);
+                string roundtripRaw = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
+
+                string originalExpandedFiltered = FilterFunctionsNotInDecompiled(originalExpanded, roundtripRaw);
+
+                string original = NormalizeNewlines(originalExpandedFiltered, isK2);
+                string roundtrip = NormalizeNewlines(roundtripRaw, isK2);
+                long compareTime = Stopwatch.GetTimestamp() - compareTextStart;
+                MergeOperationTime("compare-text", compareTime);
+                MergeOperationTime("compare", compareTime);
+
+                textMatches = original.Equals(roundtrip);
+                result.TextMatch = textMatches;
+                if (!textMatches)
+                {
+                    string diff = FormatUnifiedDiff(original, roundtrip);
+                    result.TextDiff = diff;
+                    textMismatchMessage = $"Text mismatch detected for {DisplayPath(nssPath)}";
+                    if (diff != null)
                     {
-                        // Bytecode mismatch - generate FULL pcode diff in UDIFF format
-                        string pcodeDiff = FormatPcodeUnifiedDiff(originalNcs, recompiledNcs);
-                        result.PcodeDiff = pcodeDiff;
-                        result.BytecodeMatch = false;
-
-                        StringBuilder errorMsg = new StringBuilder();
-                        errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-                        errorMsg.AppendLine("BYTECODE MISMATCH (PRIMARY FAILURE)");
-                        errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-                        errorMsg.AppendLine($"Source: {DisplayPath(nssPath)}");
-                        errorMsg.AppendLine($"Original NCS: {DisplayPath(compiledFirst)}");
-                        errorMsg.AppendLine($"Recompiled NCS: {DisplayPath(recompiled)}");
-                        errorMsg.AppendLine();
-                        errorMsg.AppendLine("FULL PCODE DIFF (UDIFF format):");
-                        errorMsg.AppendLine(pcodeDiff ?? "Unable to generate pcode diff");
-                        errorMsg.AppendLine();
-                        errorMsg.AppendLine("Byte-level diff:");
-                        errorMsg.AppendLine($"  Offset: {bytecodeDiff.Offset} (0x{bytecodeDiff.Offset:X})");
-                        errorMsg.AppendLine($"  Original: {FormatByteValue(bytecodeDiff.OriginalByte)}");
-                        errorMsg.AppendLine($"  Round-trip: {FormatByteValue(bytecodeDiff.RoundTripByte)}");
-                        errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-
-                        result.ErrorMessage = errorMsg.ToString();
-                        throw new InvalidOperationException(errorMsg.ToString());
+                        textMismatchMessage += Environment.NewLine + diff;
                     }
 
-                    result.BytecodeMatch = true;
-                    long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
-                    MergeOperationTime("compare-bytecode", compareTime);
-                    MergeOperationTime("compare", compareTime);
-                }
-                catch (Exception e)
-                {
-                    long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
-                    MergeOperationTime("compare-bytecode", compareTime);
-                    MergeOperationTime("compare", compareTime);
-                    result.ErrorMessage = e.Message;
-                    throw;
+                    // Show key differences
+                    int originalLines = original.Split('\n').Length;
+                    int roundtripLines = roundtrip.Split('\n').Length;
+                    textMismatchMessage += $"\nOriginal: {originalLines} lines, {original.Length} chars";
+                    textMismatchMessage += $"\nDecompiled: {roundtripLines} lines, {roundtrip.Length} chars";
+
+                    // SECONDARY PRIORITY: Only warn, don't fail
+                    Console.Error.WriteLine($"WARNING: Text mismatch for {displayRelPath}");
+                    if (diff != null)
+                    {
+                        Console.Error.WriteLine("UDIFF:");
+                        Console.Error.WriteLine(diff);
+                    }
                 }
             }
-            else
+            catch (Exception e)
             {
-                // Recompilation failed - this is a critical issue if text also mismatched
-                if (textMismatchMessage != null)
-                {
-                    throw new InvalidOperationException(
-                        $"CRITICAL: Both text mismatch AND recompilation failure detected.\n" +
-                        $"This indicates a serious decompiler issue - the decompiled code is neither textually correct nor compilable.\n\n" +
-                        $"Source: {DisplayPath(nssPath)}\n" +
-                        $"Text mismatch:\n{textMismatchMessage}\n\n" +
-                        $"Recompilation error: {recompilationError ?? "Unknown error"}\n\n" +
-                        $"Decompiled NSS: {DisplayPath(decompiled)}");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"WARNING: Recompilation failed but text matched. This may indicate decompiler produces valid text but invalid syntax.");
-                    Console.Error.WriteLine($"Recompilation error: {recompilationError ?? "Unknown error"}");
-                }
+                long compareTime = Stopwatch.GetTimestamp() - compareTextStart;
+                MergeOperationTime("compare-text", compareTime);
+                MergeOperationTime("compare", compareTime);
+                textMismatchMessage = $"Text comparison error: {e.Message}";
+                result.TextDiff = textMismatchMessage;
+                // SECONDARY PRIORITY: Only warn, don't fail
+                Console.Error.WriteLine($"WARNING: {textMismatchMessage}");
             }
 
             long totalTime = Stopwatch.GetTimestamp() - startTime;
