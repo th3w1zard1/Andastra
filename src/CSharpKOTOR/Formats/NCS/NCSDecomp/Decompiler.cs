@@ -21,6 +21,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public static readonly double screenWidth;
         public static readonly double screenHeight;
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:121-122
+        // Original: private static final String[] LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"}; private static final int DEFAULT_LOG_LEVEL_INDEX = 2; // INFO
+        public static readonly string[] LogLevels = { "TRACE", "DEBUG", "INFO", "WARNING", "ERROR" };
+        public const int DefaultLogLevelIndex = 2; // INFO
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:152-153
+        // Original: private static final String CARD_EMPTY = "empty"; private static final String CARD_TABS = "tabs";
+        public const string CardEmpty = "empty";
+        public const string CardTabs = "tabs";
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:156-158
+        // Original: private static final String PROJECT_URL = "https://bolabaden.org"; private static final String GITHUB_URL = "https://github.com/bolabaden"; private static final String SPONSOR_URL = "https://github.com/sponsors/th3w1zard1";
+        public const string ProjectUrl = "https://bolabaden.org";
+        public const string GitHubUrl = "https://github.com/bolabaden";
+        public const string SponsorUrl = "https://github.com/sponsors/th3w1zard1";
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
         // Original: static { settings.load(); String outputDir = settings.getProperty("Output Directory"); ... }
         static Decompiler()
