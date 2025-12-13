@@ -56,24 +56,32 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return new ObjectConst(objectValue);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:43-48
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:43-44
         // Original: @Override public void removedFromStack(LocalStack<?> stack)
         public override void RemovedFromStack(LocalStack stack)
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:47-48
+        // Original: @Override public void addedToStack(LocalStack<?> stack)
         public override void AddedToStack(LocalStack stack)
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:51-52
+        // Original: @Override public void doneParse()
         public override void DoneParse()
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:55-56
+        // Original: @Override public void doneWithStack(LocalVarStack stack)
         public override void DoneWithStack(LocalVarStack stack)
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:59-61
+        // Original: @Override public String toString() { return ""; }
         public override string ToString()
         {
             return "";
