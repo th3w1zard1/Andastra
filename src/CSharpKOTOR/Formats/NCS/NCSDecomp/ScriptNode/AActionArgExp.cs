@@ -1,18 +1,32 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AActionArgExp.java:9-24
+// Original: public class AActionArgExp extends ScriptRootNode implements AExpression
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
-    public class AActionArgExp : Scriptnode.ScriptNode, AExpression
+    public class AActionArgExp : ScriptRootNode, AExpression
     {
-        public AActionArgExp()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AActionArgExp.java:10-14
+        // Original: public AActionArgExp(int start, int end) { super(start, end); this.start = start; this.end = end; }
+        public AActionArgExp(int start, int end) : base(start, end)
         {
+            this.start = start;
+            this.end = end;
         }
 
-        Scriptnode.ScriptNode AExpression.Parent() => base.Parent();
-        void AExpression.Parent(Scriptnode.ScriptNode p0) => base.Parent(p0);
-        public StackEntry Stackentry() => null;
-        public void Stackentry(StackEntry p0) { }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AActionArgExp.java:16-19
+        // Original: @Override public StackEntry stackentry() { return null; }
+        public StackEntry Stackentry()
+        {
+            return null;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AActionArgExp.java:21-23
+        // Original: @Override public void stackentry(StackEntry stackentry) { }
+        public void Stackentry(StackEntry stackentry)
+        {
+        }
     }
 }
 
