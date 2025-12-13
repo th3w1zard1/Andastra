@@ -1,31 +1,32 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AIf.java
+// Original: public class AIf extends AControlLoop
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AIf.java:8-26
+    // Original: public AIf(int start, int end, AExpression condition) { super(start, end); this.condition(condition); }
     public class AIf : AControlLoop
     {
-        public AIf() : this(0, 0, null)
-        {
-        }
-
         public AIf(int start, int end, AExpression condition) : base(start, end)
         {
-            if (condition != null)
-            {
-                SetCondition(condition);
-            }
+            this.Condition(condition);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AIf.java:14-26
+        // Original: @Override public String toString() { StringBuffer buff = new StringBuffer(); String cond = this.formattedCondition(); buff.append(this.tabs + "if" + cond + " {" + this.newline); for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } buff.append(this.tabs + "}" + this.newline); return buff.toString(); }
         public override string ToString()
         {
-            var buff = new StringBuilder();
-            var condition = GetCondition();
-            buff.Append(this.tabs + "if (" + (condition != null ? condition.ToString() : "") + ") {" + this.newline);
-            foreach (var child in GetChildren())
+            StringBuilder buff = new StringBuilder();
+            string cond = this.FormattedCondition();
+            buff.Append(this.tabs + "if" + cond + " {" + this.newline);
+
+            for (int i = 0; i < this.children.Count; i++)
             {
-                buff.Append(child.ToString());
+                buff.Append(this.children[i].ToString());
             }
+
             buff.Append(this.tabs + "}" + this.newline);
             return buff.ToString();
         }

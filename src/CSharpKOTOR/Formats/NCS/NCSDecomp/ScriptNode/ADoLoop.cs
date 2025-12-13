@@ -1,28 +1,32 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ADoLoop.java
+// Original: public class ADoLoop extends AControlLoop
 using System.Text;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ADoLoop.java:7-24
+    // Original: public ADoLoop(int start, int end) { super(start, end); }
     public class ADoLoop : AControlLoop
     {
-        public ADoLoop() : this(0, 0)
-        {
-        }
-
         public ADoLoop(int start, int end) : base(start, end)
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ADoLoop.java:12-24
+        // Original: @Override public String toString() { StringBuffer buff = new StringBuffer(); buff.append(this.tabs); buff.append("do {" + this.newline); for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } buff.append(this.tabs + "} while" + this.formattedCondition() + ";" + this.newline); return buff.toString(); }
         public override string ToString()
         {
-            var buff = new StringBuilder();
-            var condition = GetCondition();
+            StringBuilder buff = new StringBuilder();
             buff.Append(this.tabs);
             buff.Append("do {" + this.newline);
-            foreach (var child in GetChildren())
+
+            for (int i = 0; i < this.children.Count; i++)
             {
-                buff.Append(child.ToString());
+                buff.Append(this.children[i].ToString());
             }
-            buff.Append(this.tabs + "} while (" + (condition != null ? condition.ToString() : "") + ");" + this.newline);
+
+            buff.Append(this.tabs + "} while" + this.FormattedCondition() + ";" + this.newline);
             return buff.ToString();
         }
     }

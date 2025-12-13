@@ -1,53 +1,32 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AWhileLoop.java
+// Original: public class AWhileLoop extends AControlLoop
 using System.Text;
-using Scriptnode = CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AWhileLoop.java:8-24
+    // Original: public AWhileLoop(int start, int end) { super(start, end); }
     public class AWhileLoop : AControlLoop
     {
-        public AWhileLoop() : this(0, 0)
-        {
-        }
-
         public AWhileLoop(int start, int end) : base(start, end)
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AWhileLoop.java:13-24
+        // Original: @Override public String toString() { StringBuffer buff = new StringBuffer(); buff.append(this.tabs + "while" + this.formattedCondition() + " {" + this.newline); for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } buff.append(this.tabs + "}" + this.newline); return buff.toString(); }
         public override string ToString()
         {
-            var buff = new StringBuilder();
-            var condition = GetCondition();
-            var tabs = GetTabs();
-            var newline = GetNewline();
-            buff.Append(tabs + "while (" + (condition != null ? condition.ToString() : "") + ") {" + newline);
-            foreach (var child in GetChildren())
+            StringBuilder buff = new StringBuilder();
+            buff.Append(this.tabs + "while" + this.FormattedCondition() + " {" + this.newline);
+
+            for (int i = 0; i < this.children.Count; i++)
             {
-                buff.Append(child.ToString());
+                buff.Append(this.children[i].ToString());
             }
-            buff.Append(tabs + "}" + newline);
+
+            buff.Append(this.tabs + "}" + this.newline);
             return buff.ToString();
-        }
-
-        private new string GetTabs()
-        {
-            return new string('\t', GetDepth());
-        }
-
-        private new string GetNewline()
-        {
-            return System.Environment.NewLine;
-        }
-
-        private int GetDepth()
-        {
-            int depth = 0;
-            Scriptnode.ScriptNode node = this;
-            while (node.Parent() != null)
-            {
-                depth++;
-                node = node.Parent();
-            }
-            return depth;
         }
     }
 }
