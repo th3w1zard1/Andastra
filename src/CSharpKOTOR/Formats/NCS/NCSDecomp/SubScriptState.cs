@@ -757,7 +757,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
                 }
-                }
                 else
                 {
                     JavaSystem.@err.Println("DEBUG transformJump: at if end, skipping return/break/continue handling (will be handled by checkEnd)");
