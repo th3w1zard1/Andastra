@@ -77,7 +77,7 @@ namespace KNSSComp.NET
             Console.WriteLine("Drop-in compatible with all nwnnsscomp.exe variants");
             Console.WriteLine();
             Console.WriteLine("USAGE:");
-            Console.WriteLine("  knsscomp.net.exe [OPTIONS]");
+            Console.WriteLine("  knsscomp [OPTIONS]");
             Console.WriteLine();
             Console.WriteLine("OPERATIONS:");
             Console.WriteLine("  -c, --compile          Compile NSS to NCS");
@@ -137,31 +137,31 @@ namespace KNSSComp.NET
             Console.WriteLine();
             Console.WriteLine("EXAMPLES:");
             Console.WriteLine("  # Compile (TSLPatcher style)");
-            Console.WriteLine("  knsscomp.net.exe -c script.nss -o script.ncs");
+            Console.WriteLine("  knsscomp -c script.nss -o script.ncs");
             Console.WriteLine();
             Console.WriteLine("  # Compile (KOTOR Tool style)");
-            Console.WriteLine("  knsscomp.net.exe -c script.nss --outputdir . -o script.ncs -g 2");
+            Console.WriteLine("  knsscomp -c script.nss --outputdir . -o script.ncs -g 2");
             Console.WriteLine();
             Console.WriteLine("  # Compile (V1 style)");
-            Console.WriteLine("  knsscomp.net.exe -c script.nss script.ncs");
+            Console.WriteLine("  knsscomp -c script.nss script.ncs");
             Console.WriteLine();
             Console.WriteLine("  # Compile with includes");
-            Console.WriteLine("  knsscomp.net.exe -c script.nss -o script.ncs -i ./includes");
+            Console.WriteLine("  knsscomp -c script.nss -o script.ncs -i ./includes");
             Console.WriteLine();
             Console.WriteLine("  # Decompile single file");
-            Console.WriteLine("  knsscomp.net.exe -d script.ncs -o script.nss");
+            Console.WriteLine("  knsscomp -d script.ncs -o script.nss");
             Console.WriteLine();
             Console.WriteLine("  # Decompile to stdout");
-            Console.WriteLine("  knsscomp.net.exe -d script.ncs --stdout");
+            Console.WriteLine("  knsscomp -d script.ncs --stdout");
             Console.WriteLine();
             Console.WriteLine("  # Decompile directory recursively");
-            Console.WriteLine("  knsscomp.net.exe -d -i scripts_dir -r -O output_dir");
+            Console.WriteLine("  knsscomp -d -i scripts_dir -r -O output_dir");
             Console.WriteLine();
             Console.WriteLine("  # Decompile multiple files");
-            Console.WriteLine("  knsscomp.net.exe -d -i file1.ncs -i file2.ncs -O output");
+            Console.WriteLine("  knsscomp -d -i file1.ncs -i file2.ncs -O output");
             Console.WriteLine();
             Console.WriteLine("  # Compile with custom nwscript.nss");
-            Console.WriteLine("  knsscomp.net.exe -c script.nss -o script.ncs --nwscript custom_nwscript.nss");
+            Console.WriteLine("  knsscomp -c script.nss -o script.ncs --nwscript custom_nwscript.nss");
         }
 
         private static void PrintVersion()

@@ -6,6 +6,7 @@
     <LangVersion>7.3</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <AssemblyName>knsscomp</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
