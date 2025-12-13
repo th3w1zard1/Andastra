@@ -434,25 +434,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 try
                 {
-                    JavaSystem.@out.Println("[NCSDecomp] Attempting to capture original bytecode from NCS file...");
                     this.CaptureBytecodeFromNcs(file, file, isK2Selected, true);
-                    JavaSystem.@out.Println("[NCSDecomp] Attempted to capture original bytecode");
                 }
                 catch (Exception e)
                 {
-                    JavaSystem.@out.Println("[NCSDecomp] Exception while capturing original bytecode:");
-                    JavaSystem.@out.Println("[NCSDecomp]   Exception Type: " + e.GetType().Name);
-                    JavaSystem.@out.Println("[NCSDecomp]   Exception Message: " + e.Message);
-                    if (e.InnerException != null)
-                    {
-                        JavaSystem.@out.Println("[NCSDecomp]   Caused by: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
-                    }
-                    e.PrintStackTrace(JavaSystem.@out);
+                    // Ignore errors - bytecode capture is optional
                 }
-            }
-            else
-            {
-                JavaSystem.@out.Println("[NCSDecomp] nwnnsscomp.exe not found - cannot capture original bytecode");
             }
 
             // Try validation, but don't fail if it doesn't work
