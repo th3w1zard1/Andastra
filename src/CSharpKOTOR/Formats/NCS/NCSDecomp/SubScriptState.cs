@@ -1926,8 +1926,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
             VarStruct newstruct = new VarStruct();
             newstruct.AddVar(var);
-            for (int i = loc - 1; i > loc - copy; --i)
+
+            for (int i = loc - 1; i > loc - copy; i--)
             {
+                // Defensive check: ensure we don't access beyond stack size
+                if (i < 1 || i > stack.Size())
+                {
+                    break;
+                }
                 var = (Variable)stack.Get(i);
                 newstruct.AddVar(var);
             }
