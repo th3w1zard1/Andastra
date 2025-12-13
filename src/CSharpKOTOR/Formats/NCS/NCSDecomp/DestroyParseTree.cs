@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             Object[] temp = node.GetSubroutine().ToArray();
-            for (int i = 0; i < temp.Length; ++i)
+            for (int i = 0; i < temp.Length; i++)
             {
                 ((PSubroutine)temp[i]).Apply(this);
             }
@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public override void CaseACommandBlock(ACommandBlock node)
         {
             Object[] temp = node.GetCmd().ToArray();
-            for (int i = 0; i < temp.Length; ++i)
+            for (int i = 0; i < temp.Length; i++)
             {
                 ((PCmd)temp[i]).Apply(this);
             }
