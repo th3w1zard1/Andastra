@@ -300,16 +300,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     this.TransformEndDoLoop();
                 }
 
-                // Matching DeNCS implementation: if current is root (ASub), parent() returns null, so loop exits
-                // Don't move away from root for globals - if parent is null, we're at root, so exit
-                ScriptRootNode parent = (ScriptRootNode)this.current.Parent();
-                if (parent == null)
-                {
-                    // We're at the root and it has no parent - this is normal for globals
-                    // Don't set state to DONE here, just exit the loop
-                    return;
-                }
-                this.current = parent;
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:443-445
+                // Original: ScriptRootNode newCurrent = (ScriptRootNode) this.current.parent(); this.current = newCurrent;
+                this.current = (ScriptRootNode)this.current.Parent();
             }
 
             this.state = STATE_DONE;
