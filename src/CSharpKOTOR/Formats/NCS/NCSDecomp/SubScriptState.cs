@@ -337,7 +337,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual void TransformPlaceholderVariableRemoved(Variable var)
         {
-            ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
+            // Matching DeNCS implementation: use get() which returns null if key doesn't exist
+            object vardecObj;
+            ScriptNode.AVarDecl vardec = this.vardecs.TryGetValue(var, out vardecObj) ? (ScriptNode.AVarDecl)vardecObj : null;
             if (vardec != null && vardec.IsFcnReturn())
             {
                 object exp = vardec.GetExp();
@@ -413,7 +415,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             for (int i = 0; i < vars.Count; ++i)
             {
                 Variable var = (Variable)vars[i];
-                ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
+                // Matching DeNCS implementation: use get() which returns null if key doesn't exist
+                object vardecObj;
+                ScriptNode.AVarDecl vardec = this.vardecs.TryGetValue(var, out vardecObj) ? (ScriptNode.AVarDecl)vardecObj : null;
                 earliestdec = this.GetEarlierDec(vardec, earliestdec);
             }
 
@@ -902,7 +906,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (typeof(AActionExp).IsInstanceOfType(exp))
             {
                 string name = NameGenerator.GetNameFromAction((AActionExp)exp);
-                if (name != null && !this.varnames.ContainsKey(name))
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:957
+                // Original: if (name != null && !this.varnames.containsKey(name))
+                // Ensure name is not null and not empty before using as dictionary key
+                if (name != null && name.Length > 0 && !this.varnames.ContainsKey(name))
                 {
                     varref.Var().Name(name);
                     this.varnames.Put(name, 1);
@@ -998,7 +1005,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             Variable var = (Variable)this.stack.Get(1);
             // Matching NCSDecomp implementation: check if variable is already declared to prevent duplicates
-            AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1158
+            // Original: AVarDecl existingVardec = this.vardecs.get(var);
+            object existingVardecObj;
+            AVarDecl existingVardec = this.vardecs.TryGetValue(var, out existingVardecObj) ? (AVarDecl)existingVardecObj : null;
             if (existingVardec == null)
             {
                 AVarDecl vardec = new AVarDecl(var);
@@ -1220,7 +1230,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     continue;
                 }
 
-                ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
+                // Matching DeNCS implementation: use get() which returns null if key doesn't exist
+                object vardecObj;
+                ScriptNode.AVarDecl vardec = this.vardecs.TryGetValue(var, out vardecObj) ? (ScriptNode.AVarDecl)vardecObj : null;
                 if (vardec == null)
                 {
                     continue;
