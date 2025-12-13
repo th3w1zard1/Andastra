@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:38-41
         // Original: @Override public void outABpCommand(ABpCommand node) { this.freezeStack = true; }
-        public virtual void OutABpCommand(ABpCommand node)
+        public override void OutABpCommand(ABpCommand node)
         {
             this.freezeStack = true;
         }
