@@ -260,12 +260,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     return;
                 }
 
-                // Don't move away from the root for globals (root has no parent)
-                if (typeof(ScriptNode.ASub).IsInstanceOfType(this.current) && this.current == this.root)
-                {
-                    return;
-                }
-
                 if (typeof(ASwitchCase).IsInstanceOfType(this.current))
                 {
                     ASwitchCase nextCase = ((ScriptNode.ASwitch)this.current.Parent()).GetNextCase((ASwitchCase)this.current);
