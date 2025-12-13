@@ -20,16 +20,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return this.stack.Count;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java:20-26
+        // Original: @Override @SuppressWarnings("unchecked") public LocalStack<T> clone() { LocalStack<T> newStack = new LocalStack<>(); newStack.stack = new LinkedList<>(this.stack); return newStack; }
         public virtual object Clone()
         {
             LocalStack newStack = new LocalStack();
-            // Clone the custom LinkedList
-            newStack.stack = new LinkedList();
-            var it = this.stack.Iterator();
-            while (it.HasNext())
-            {
-                newStack.stack.Add(it.Next());
-            }
+            // Clone the custom LinkedList - matching Java's new LinkedList<>(this.stack) copy constructor
+            newStack.stack = this.stack.Clone();
             return newStack;
         }
 

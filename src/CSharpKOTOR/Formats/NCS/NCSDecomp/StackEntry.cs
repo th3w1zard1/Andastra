@@ -39,7 +39,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             this.type = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:42
+        // Original: public abstract void doneParse();
         public abstract void DoneParse();
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:44
+        // Original: public abstract void doneWithStack(LocalVarStack var1);
         public abstract void DoneWithStack(LocalVarStack p0);
     }
 }
