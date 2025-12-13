@@ -50,7 +50,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.stack = stack;
             this.varcounts = new HashMap();
             this.varprefix = "";
-            UtilsType type = protostate.Type();
+            UtilsType type = protostate.GetType();
             byte id = protostate.GetId();
             this.root = new ScriptNode.ASub(type, id, this.GetParams(protostate.GetParamCount()), protostate.GetStart(), protostate.GetEnd());
             this.current = this.root;
@@ -312,9 +312,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformPlaceholderVariableRemoved(Variable var)
         {
             ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
-            if (vardec != null && vardec.IsFcnReturn())
+            if (vardec != null && vardec.SetIsFcnReturn())
             {
-                object exp = vardec.Exp();
+                object exp = vardec.GetExp();
                 ScriptRootNode parent = (ScriptRootNode)vardec.Parent();
                 if (exp != null)
                 {
@@ -609,7 +609,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                     if (typeof(AMoveSpCommand).IsInstanceOfType(dest))
                     {
-                        aswitch.End(this.nodedata.GetPos(this.nodedata.GetDestination(node)));
+                        aswitch.SetEnd(this.nodedata.GetPos(this.nodedata.GetDestination(node)));
                     }
                     else
                     {
@@ -622,7 +622,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 else if (this.IsReturn(node))
                 {
                     AReturnStatement areturn;
-                    if (!this.root.Type().Equals((byte)0))
+                    if (!this.root.GetType().Equals((byte)0))
                     {
                         areturn = new AReturnStatement(this.GetReturnExp());
                     }
@@ -679,7 +679,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
                 if (typeof(AVarDecl).IsInstanceOfType(lastChild))
                 {
-                    ((AVarDecl)lastChild).IsFcnReturn(true);
+                    ((AVarDecl)lastChild).SetIsFcnReturn(true);
                     ((AVarDecl)lastChild).InitializeExp(jsr);
                     jsr.Stackentry(this.stack.Get(1));
                 }
@@ -690,7 +690,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     // Create a new variable declaration to hold the function return value
                     Variable var = (Variable)this.stack.Get(1);
                     AVarDecl vardec = new AVarDecl(var);
-                    vardec.IsFcnReturn(true);
+                    vardec.SetIsFcnReturn(true);
                     vardec.InitializeExp(jsr);
                     jsr.Stackentry(var);
                     this.UpdateVarCount(var);
@@ -706,7 +706,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     // Fallback: add the function call as a new declaration
                     Variable var = (Variable)this.stack.Get(1);
                     AVarDecl vardec = new AVarDecl(var);
-                    vardec.IsFcnReturn(true);
+                    vardec.SetIsFcnReturn(true);
                     vardec.InitializeExp(jsr);
                     jsr.Stackentry(var);
                     this.UpdateVarCount(var);
@@ -731,7 +731,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             List<AExpression> @params = this.RemoveActionParams(node);
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:889
             // Original: AActionExp act = new AActionExp(actionName, NodeUtils.getActionId(node), params, this.actions);
-            AActionExp act = new AActionExp(NodeUtils.GetActionName(node, this.actions), NodeUtils.GetActionId(node), @params, this.actions);
+            AActionExp act = new AActionExp(NodeUtils.GetActionName(node, this.actions), NodeUtils.GetActionId(node), @params);
             UtilsType type = NodeUtils.GetReturnType(node, this.actions);
             if (!type.Equals((byte)0))
             {
@@ -743,7 +743,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                 act.Stackentry(var);
                 AVarDecl vardec = new AVarDecl(var);
-                vardec.IsFcnReturn(true);
+                vardec.SetIsFcnReturn(true);
                 vardec.InitializeExp(act);
                 this.UpdateVarCount(var);
                 this.current.AddChild(vardec);
@@ -1095,12 +1095,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual bool IsMiddleOfReturn(Node node)
         {
-            if (!this.root.Type().Equals((byte)0) && this.current.HasChildren() && typeof(AReturnStatement).IsInstanceOfType(this.current.GetLastChild()))
+            if (!this.root.GetType().Equals((byte)0) && this.current.HasChildren() && typeof(AReturnStatement).IsInstanceOfType(this.current.GetLastChild()))
             {
                 return true;
             }
 
-            if (this.root.Type().Equals((byte)0))
+            if (this.root.GetType().Equals((byte)0))
             {
                 Node next = NodeUtils.GetNextCommand(node, this.nodedata);
                 if (next != null && typeof(AJumpCommand).IsInstanceOfType(next) && typeof(AReturn).IsInstanceOfType(this.nodedata.GetDestination(next)))
@@ -1176,17 +1176,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             ScriptNode.ScriptNode last = this.current.RemoveLastChild();
             if (typeof(AModifyExp).IsInstanceOfType(last))
             {
-                return ((AModifyExp)last).Expression();
+                return ((AModifyExp)last).GetExpression();
             }
 
-            if (typeof(AExpressionStatement).IsInstanceOfType(last) && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)last).Exp()))
+            if (typeof(AExpressionStatement).IsInstanceOfType(last) && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)last).GetExp()))
             {
-                return ((AModifyExp)((AExpressionStatement)last).Exp()).Expression();
+                return ((AModifyExp)((AExpressionStatement)last).GetExp()).GetExpression();
             }
 
             if (typeof(AReturnStatement).IsInstanceOfType(last))
             {
-                return ((AReturnStatement)last).Exp();
+                return ((AReturnStatement)last).GetExp();
             }
 
             JavaSystem.@out.Println(last);
@@ -1299,7 +1299,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         return this.RemoveLastExp(false);
                     }
 
-                    if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AVarDecl)last).Var()) && ((ScriptNode.AVarDecl)last).Exp() != null)
+                    if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AVarDecl)last).Var()) && ((ScriptNode.AVarDecl)last).GetExp() != null)
                     {
                         return this.RemoveLastExp(false);
                     }
@@ -1311,14 +1311,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode))
             {
                 ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)anode;
-                if (vardec.IsFcnReturn() && vardec.Exp() != null)
+                if (vardec.SetIsFcnReturn() && vardec.GetExp() != null)
                 {
-                    ScriptNode.AExpression exp = vardec.Exp();
+                    ScriptNode.AExpression exp = vardec.GetExp();
                     vardec.RemoveExp();
                     return exp;
                 }
 
-                if (vardec.Exp() != null)
+                if (vardec.GetExp() != null)
                 {
                     return vardec.RemoveExp();
                 }
@@ -1337,7 +1337,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(anode))
             {
                 ScriptNode.AExpressionStatement exprStmt = (ScriptNode.AExpressionStatement)anode;
-                return exprStmt.Exp();
+                return exprStmt.GetExp();
             }
 
             JavaSystem.@out.Println(anode.ToString());
@@ -1352,9 +1352,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return (ScriptNode.AExpression)anode;
             }
 
-            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).IsFcnReturn())
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).SetIsFcnReturn())
             {
-                return ((ScriptNode.AVarDecl)anode).Exp();
+                return ((ScriptNode.AVarDecl)anode).GetExp();
             }
 
             JavaSystem.@out.Println(anode.ToString());
@@ -1369,9 +1369,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return null;
             }
 
-            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(node) && ((ScriptNode.AVarDecl)node).IsFcnReturn())
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(node) && ((ScriptNode.AVarDecl)node).SetIsFcnReturn())
             {
-                return ((ScriptNode.AVarDecl)node).Exp();
+                return ((ScriptNode.AVarDecl)node).GetExp();
             }
 
             if (!typeof(ScriptNode.AExpression).IsInstanceOfType(node))
@@ -1403,7 +1403,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private void UpdateVarCount(Variable var)
         {
             int count = 1;
-            UtilsType key = var.Type();
+            UtilsType key = var.GetType();
             object curcountObj = this.varcounts[key];
             if (curcountObj != null)
             {
@@ -1531,7 +1531,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private bool IsReturn(ACopyDownSpCommand node)
         {
-            return !this.root.Type().Equals((byte)0) && this.stack.Size() == NodeUtils.StackOffsetToPos(node.GetOffset());
+            return !this.root.GetType().Equals((byte)0) && this.stack.Size() == NodeUtils.StackOffsetToPos(node.GetOffset());
         }
 
         private bool IsReturn(AJumpCommand node)
@@ -1695,7 +1695,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 if (paramtype.Equals(unchecked((byte)(-16))))
                 {
                     exp = this.GetLastExp();
-                    if (exp.Stackentry().Type().Equals(unchecked((byte)(-16))) || exp.Stackentry().Type().Equals(unchecked((byte)(-15))))
+                    if (exp.Stackentry().GetType().Equals(unchecked((byte)(-16))) || exp.Stackentry().GetType().Equals(unchecked((byte)(-15))))
                     {
                         exp = this.RemoveLastExp(false);
                     }
@@ -1722,7 +1722,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private UtilsType GetFcnType(AJumpToSubroutine node)
         {
-            return this.subdata.GetState(this.nodedata.GetDestination(node)).Type();
+            return this.subdata.GetState(this.nodedata.GetDestination(node)).GetType();
         }
 
         private int GetNextCommand(AJumpCommand node)
