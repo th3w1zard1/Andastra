@@ -15,6 +15,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
         // Original: protected LinkedList<T> stack = new LinkedList<>();
         protected LinkedList stack = new LinkedList();
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java:16-18
+        // Original: public int size() { return this.stack.size(); }
         public virtual int Size()
         {
             return this.stack.Count;
