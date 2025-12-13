@@ -835,7 +835,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 AModifyExp modexp = new AModifyExp(targetVarRef, exp);
                 this.current.AddChild(modexp);
             }
-            this.current.AddChild(modexp);
             this.state = 1;
             this.CheckEnd(node);
         }
@@ -1038,8 +1037,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 unexp.Stackentry(this.stack.Get(1));
                 this.current.AddChild(unexp);
             }
-            unexp.Stackentry(this.stack.Get(1));
-            this.current.AddChild(unexp);
             this.CheckEnd(node);
         }
 
