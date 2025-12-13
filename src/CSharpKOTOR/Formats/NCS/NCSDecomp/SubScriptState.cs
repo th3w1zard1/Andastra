@@ -1829,30 +1829,69 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1921
-        // Original: private List<AExpression> removeActionParams(AActionCommand node) { ArrayList<AExpression> params = new ArrayList<>(); ... }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1921-1970
+        // Original: private List<AExpression> removeActionParams(AActionCommand node) { ArrayList<AExpression> params = new ArrayList<>(); List<Type> paramtypes; try { paramtypes = NodeUtils.getActionParamTypes(node, this.actions); } catch (RuntimeException e) { ... } ... }
         private List<AExpression> RemoveActionParams(AActionCommand node)
         {
             List<AExpression> @params = new List<AExpression>();
-            List<object> paramtypes = NodeUtils.GetActionParamTypes(node, this.actions);
-            for (int paramcount = NodeUtils.GetActionParamCount(node), i = 0; i < paramcount; ++i)
+            List<object> paramtypes;
+            try
+            {
+                paramtypes = NodeUtils.GetActionParamTypes(node, this.actions);
+            }
+            catch (Exception)
+            {
+                // Action metadata missing or invalid - use placeholder params based on arg count
+                int paramcount = NodeUtils.GetActionParamCount(node);
+                for (int i = 0; i < paramcount; i++)
+                {
+                    try
+                    {
+                        ScriptNode.AExpression exp = this.RemoveLastExp(false);
+                        @params.Add(exp);
+                    }
+                    catch (Exception)
+                    {
+                        // Stack doesn't have enough entries - use placeholder
+                        @params.Add(this.BuildPlaceholderParam(i + 1));
+                    }
+                }
+                return @params;
+            }
+            int paramcount = Math.Min(NodeUtils.GetActionParamCount(node), paramtypes.Count);
+
+            for (int i = 0; i < paramcount; i++)
             {
                 UtilsType paramtype = (UtilsType)paramtypes[i];
                 ScriptNode.AExpression exp;
-                if (paramtype.Equals(unchecked((byte)(-16))))
+                try
                 {
-                    exp = this.GetLastExp();
-                    if (exp.Stackentry().GetType().Equals(unchecked((byte)(-16))) || exp.Stackentry().GetType().Equals(unchecked((byte)(-15))))
+                    if (paramtype.Equals(unchecked((byte)(-16))))
                     {
-                        exp = this.RemoveLastExp(false);
+                        exp = this.GetLastExp();
+                        if (!exp.Stackentry().GetType().Equals(unchecked((byte)(-16))) && !exp.Stackentry().GetType().Equals(unchecked((byte)(-15))))
+                        {
+                            // When creating a vector from three float constants, removeLastExp removes from the end,
+                            // so we get them in reverse order (z, y, x). We need to reverse to get (x, y, z).
+                            ScriptNode.AExpression exp3 = this.RemoveLastExp(false); // z (last on stack, first removed)
+                            ScriptNode.AExpression exp2 = this.RemoveLastExp(false); // y
+                            ScriptNode.AExpression exp1 = this.RemoveLastExp(false); // x (first on stack, last removed)
+                            exp = new ScriptNode.AVectorConstExp(exp1, exp2, exp3); // [x, y, z]
+                        }
+                        else
+                        {
+                            exp = this.RemoveLastExp(false);
+                        }
                     }
                     else
                     {
-                        exp = new ScriptNode.AVectorConstExp(this.RemoveLastExp(false), this.RemoveLastExp(false), this.RemoveLastExp(false));
+                        exp = this.RemoveLastExp(false);
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    exp = this.RemoveLastExp(false);
+                    // Stack doesn't have enough entries - use placeholder
+                    exp = this.BuildPlaceholderParam(i + 1);
                 }
 
                 @params.Add(exp);
