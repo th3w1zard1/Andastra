@@ -693,6 +693,22 @@ namespace CSharpKOTOR.Tests.Formats
                 recompiledNcs.Instructions.Count.Should().BeGreaterThan(0,
                     $"Recompiled NCS should have at least one instruction (found {recompiledNcs.Instructions.Count} instructions)");
 
+                // Assert: Recompiled NCS size is reasonable (not suspiciously small)
+                // If the original NCS was large, the recompiled one should be similar in size
+                // This catches cases where the external compiler produces minimal/empty bytecode
+                if (File.Exists(compiledFirst))
+                {
+                    long originalSize = new FileInfo(compiledFirst).Length;
+                    if (originalSize > 100 && recompiledSize < originalSize * 0.1)
+                    {
+                        throw new InvalidOperationException(
+                            $"Recompiled NCS is suspiciously small ({recompiledSize} bytes) compared to original ({originalSize} bytes). " +
+                            $"This suggests the decompiled NSS failed to compile correctly with the external compiler. " +
+                            $"Original NCS: {DisplayPath(compiledFirst)}, Recompiled NCS: {DisplayPath(recompiled)}, " +
+                            $"Decompiled NSS: {DisplayPath(compileInput)}");
+                    }
+                }
+
                 long compileTime = Stopwatch.GetTimestamp() - compileRoundtripStart;
                 MergeOperationTime("compile-roundtrip", compileTime);
                 MergeOperationTime("compile", compileTime);
