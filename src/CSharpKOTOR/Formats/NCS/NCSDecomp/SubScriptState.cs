@@ -635,44 +635,97 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 this.current.AddChild(aarg);
                 this.current = aarg;
             }
-            else if (!typeof(AIf).IsInstanceOfType(this.current) || this.nodedata.GetPos(node) != this.current.GetEnd())
+            else
             {
-                if (this.state == 4)
-                {
-                    ScriptNode.ASwitch aswitch = (ScriptNode.ASwitch)this.current.GetLastChild();
-                    ScriptNode.ASwitchCase aprevcase = aswitch.GetLastCase();
-                    if (aprevcase != null)
-                    {
-                        aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(dest, this.nodedata)));
-                    }
+                bool atIfEnd = this.IsAtIfEnd(node);
+                JavaSystem.@err.Println("DEBUG transformJump: isAtIfEnd=" + atIfEnd);
 
-                    if (typeof(AMoveSpCommand).IsInstanceOfType(dest))
+                if (!atIfEnd)
+                {
+                    // Only process as return/break/continue if we're NOT at the end of an enclosing AIf
+                    // (otherwise, this JMP is the "skip else" jump and should be handled by checkEnd)
+                    if (this.state == 4)
                     {
-                        aswitch.SetEnd(this.nodedata.GetPos(this.nodedata.GetDestination(node)));
+                        JavaSystem.@err.Println("DEBUG transformJump: state==4 (switch), handling switch case/end");
+                        ScriptNode.ASwitch aswitch = (ScriptNode.ASwitch)this.current.GetLastChild();
+                        ScriptNode.ASwitchCase aprevcase = aswitch.GetLastCase();
+                        if (aprevcase != null)
+                        {
+                            int prevCaseEnd = this.nodedata.GetPos(NodeUtils.GetPreviousCommand(dest, this.nodedata));
+                            JavaSystem.@err.Println("DEBUG transformJump: setting prevCase end to " + prevCaseEnd);
+                            aprevcase.End(prevCaseEnd);
+                        }
+
+                        if (typeof(AMoveSpCommand).IsInstanceOfType(dest))
+                        {
+                            int switchEnd = this.nodedata.GetPos(this.nodedata.GetDestination(node));
+                            JavaSystem.@err.Println("DEBUG transformJump: dest is MoveSpCommand, setting switch end to " + switchEnd);
+                            aswitch.SetEnd(switchEnd);
+                        }
+                        else
+                        {
+                            int defaultStart = this.nodedata.GetPos(dest);
+                            JavaSystem.@err.Println("DEBUG transformJump: creating default case at " + defaultStart);
+                            ScriptNode.ASwitchCase adefault = new ScriptNode.ASwitchCase(defaultStart);
+                            aswitch.AddDefaultCase(adefault);
+                        }
+
+                        this.state = 0;
                     }
                     else
                     {
-                        ScriptNode.ASwitchCase adefault = new ScriptNode.ASwitchCase(this.nodedata.GetPos(dest));
-                        aswitch.AddDefaultCase(adefault);
-                    }
+                        bool isRet = this.IsReturn(node);
+                        JavaSystem.@err.Println("DEBUG transformJump: isReturn=" + isRet);
 
-                    this.state = 0;
-                }
-                else if (this.IsReturn(node))
-                {
-                    AReturnStatement areturn;
-                    if (!this.root.GetType().Equals((byte)0))
-                    {
-                        areturn = new AReturnStatement(this.GetReturnExp());
-                    }
-                    else
-                    {
-                        areturn = new AReturnStatement();
-                    }
+                        if (isRet)
+                        {
+                            JavaSystem.@err.Println("DEBUG transformJump: treating as RETURN, adding AReturnStatement to " + this.current.GetType().Name);
+                            AReturnStatement areturn;
+                            if (!this.root.GetType().Equals((byte)0))
+                            {
+                                areturn = new AReturnStatement(this.GetReturnExp());
+                            }
+                            else
+                            {
+                                areturn = new AReturnStatement();
+                            }
 
-                    this.current.AddChild(areturn);
-                }
-                else if (this.nodedata.GetPos(dest) >= this.nodedata.GetPos(node))
+                            // If we're inside a switch case, ensure the return is added to the case, not the parent
+                            // The return JMP might be at the end of a switch case, but checkEnd from the previous
+                            // instruction may have already moved this.current up. We need to find the switch case
+                            // that ends at nodePos (or just before it) and add the return to that case.
+                            ScriptRootNode targetNode = this.current;
+                            ScriptNode.ASwitchCase switchCase = null;
+
+                            // First check if current is a switch case
+                            if (typeof(ASwitchCase).IsInstanceOfType(this.current))
+                            {
+                                switchCase = (ScriptNode.ASwitchCase)this.current;
+                                targetNode = switchCase;
+                            }
+                            else
+                            {
+                                // Walk up to find the switch case
+                                ScriptNode.ScriptNode walker = this.current;
+                                while (walker != null && !typeof(ScriptNode.ASwitchCase).IsInstanceOfType(walker) && !typeof(ScriptNode.ASub).IsInstanceOfType(walker))
+                                {
+                                    walker = walker.Parent();
+                                }
+                                if (typeof(ScriptNode.ASwitchCase).IsInstanceOfType(walker))
+                                {
+                                    switchCase = (ScriptNode.ASwitchCase)walker;
+                                    targetNode = switchCase;
+                                }
+                            }
+
+                            if (switchCase != null)
+                            {
+                                JavaSystem.@err.Println("DEBUG transformJump: adding return to switch case");
+                            }
+
+                            targetNode.AddChild(areturn);
+                        }
+                        else if (this.nodedata.GetPos(dest) >= this.nodedata.GetPos(node))
                 {
                     ScriptRootNode loop = this.GetBreakable();
                     if (typeof(ASwitchCase).IsInstanceOfType(loop))
@@ -704,8 +757,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
                 }
+                    }
                 }
-            }
 
             this.CheckEnd(node);
         }
