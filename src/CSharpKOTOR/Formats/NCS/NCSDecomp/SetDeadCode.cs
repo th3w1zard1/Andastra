@@ -1,20 +1,20 @@
-// 
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:24-203
+// Original: public class SetDeadCode extends PrunedDepthFirstAdapter
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class SetDeadCode : PrunedDepthFirstAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:25-28
+        // Original: private static final byte STATE_NORMAL = 0; private static final byte STATE_JZ1_CP = 1; private static final byte STATE_JZ2_JZ = 2; private static final byte STATE_JZ3_CP2 = 3;
         private const byte STATE_NORMAL = 0;
         private const byte STATE_JZ1_CP = 1;
         private const byte STATE_JZ2_JZ = 2;
         private const byte STATE_JZ3_CP2 = 3;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:29-35
+        // Original: private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private int actionarg; private Hashtable<Node, ArrayList<Node>> origins; private Hashtable<Node, ArrayList<Node>> deadorigins; private byte deadstate; private byte state;
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
         private int actionarg;
@@ -22,6 +22,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private Dictionary<object, object> deadorigins;
         private byte deadstate;
         private byte state;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:37-45
+        // Original: public SetDeadCode(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, Hashtable<Node, ArrayList<Node>> origins) { this.nodedata = nodedata; this.origins = origins; this.subdata = subdata; this.actionarg = 0; this.deadstate = 0; this.state = 0; this.deadorigins = new Hashtable<Node, ArrayList<Node>>(1); }
         public SetDeadCode(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, Dictionary<object, object> origins)
         {
             this.nodedata = nodedata;
@@ -33,6 +36,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.deadorigins = new Dictionary<object, object>();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:47-52
+        // Original: public void done() { this.nodedata = null; this.subdata = null; this.origins = null; this.deadorigins = null; }
         public virtual void Done()
         {
             this.nodedata = null;

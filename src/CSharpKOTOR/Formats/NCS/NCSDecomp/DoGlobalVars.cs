@@ -1,20 +1,17 @@
-//
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:24-122
+// Original: public class DoGlobalVars extends MainPass
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public class DoGlobalVars : MainPass
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:25
+        // Original: private boolean freezeStack;
         private bool freezeStack;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:27-31
+        // Original: public DoGlobalVars(NodeAnalysisData nodedata, SubroutineAnalysisData subdata) { super(nodedata, subdata); this.state.setVarPrefix("GLOB_"); this.freezeStack = false; }
         public DoGlobalVars(NodeAnalysisData nodedata, SubroutineAnalysisData subdata) : base(nodedata, subdata)
         {
             this.state.SetVarPrefix("GLOB_");
