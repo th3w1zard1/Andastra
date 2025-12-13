@@ -206,6 +206,7 @@ Feel free to modify `Compare-NcsFiles.ps1` to add additional functionality as ne
 **The entire purpose of NCSDecomp.NET is to implement its own self-contained compiler/decompiler.**
 
 **This means:**
+
 - DO NOT call `nwnnsscomp.exe` from NCSDecomp.NET code
 - DO NOT invoke any external compiler executables
 - DO NOT use `CompilerUtil`, `NWScriptLocator`, or any compiler wrapper classes

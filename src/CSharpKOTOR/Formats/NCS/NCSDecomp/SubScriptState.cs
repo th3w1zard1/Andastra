@@ -1219,26 +1219,69 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return earliestdec;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1418-1465
+        // Original: public AExpression getReturnExp() { ... if (!this.current.hasChildren()) { return new AConst(new IntConst(0L)); } ... }
         public virtual AExpression GetReturnExp()
         {
+            JavaSystem.@err.Println("DEBUG getReturnExp: current=" + this.current.GetType().Name + ", hasChildren=" + this.current.HasChildren());
+
+            if (!this.current.HasChildren())
+            {
+                JavaSystem.@err.Println("DEBUG getReturnExp: no children, returning placeholder");
+                return new ScriptNode.AConst(Const.NewConst(new UtilsType((byte)3), 0L));
+            }
+
             ScriptNode.ScriptNode last = this.current.RemoveLastChild();
+            JavaSystem.@err.Println("DEBUG getReturnExp: removed last child=" + last.GetType().Name);
+
             if (typeof(AModifyExp).IsInstanceOfType(last))
             {
+                JavaSystem.@err.Println("DEBUG getReturnExp: last is AModifyExp, extracting expression");
                 return ((AModifyExp)last).GetExpression();
             }
-
-            if (typeof(AExpressionStatement).IsInstanceOfType(last) && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)last).GetExp()))
+            else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(last))
             {
-                return ((AModifyExp)((AExpressionStatement)last).GetExp()).GetExpression();
-            }
+                ScriptNode.AExpression exp = ((ScriptNode.AExpressionStatement)last).GetExp();
+                JavaSystem.@err.Println("DEBUG getReturnExp: last is AExpressionStatement, exp=" + (exp != null ? exp.GetType().Name : "null"));
 
-            if (typeof(AReturnStatement).IsInstanceOfType(last))
+                if (typeof(AModifyExp).IsInstanceOfType(exp))
+                {
+                    JavaSystem.@err.Println("DEBUG getReturnExp: extracting expression from AModifyExp inside AExpressionStatement");
+                    return ((AModifyExp)exp).GetExpression();
+                }
+                else if (typeof(ScriptNode.AExpression).IsInstanceOfType(exp))
+                {
+                    // AExpressionStatement containing a plain expression (e.g., AVarRef)
+                    // Extract the expression for the return statement
+                    // IMPORTANT: The AExpressionStatement has been removed from the AST, so the expression
+                    // inside it should be extracted and used. However, we need to clear the parent relationship
+                    // since the AExpressionStatement is being discarded.
+                    JavaSystem.@err.Println("DEBUG getReturnExp: extracting plain expression from AExpressionStatement");
+                    exp.Parent(null); // Clear parent since AExpressionStatement is being discarded
+                    return exp;
+                }
+                else
+                {
+                    JavaSystem.@err.Println("DEBUG getReturnExp: AExpressionStatement with unexpected exp type, returning placeholder");
+                    return new ScriptNode.AConst(Const.NewConst(new UtilsType((byte)3), 0L));
+                }
+            }
+            else if (typeof(ScriptNode.AReturnStatement).IsInstanceOfType(last))
             {
-                return ((AReturnStatement)last).GetExp();
+                JavaSystem.@err.Println("DEBUG getReturnExp: last is AReturnStatement, extracting exp");
+                return ((ScriptNode.AReturnStatement)last).GetExp();
             }
-
-            JavaSystem.@out.Println(last);
-            throw new Exception("Trying to get return expression, unexpected scriptnode.scriptnode class " + last.GetType());
+            else if (typeof(ScriptNode.AExpression).IsInstanceOfType(last))
+            {
+                JavaSystem.@err.Println("DEBUG getReturnExp: last is AExpression, returning directly");
+                return (ScriptNode.AExpression)last;
+            }
+            else
+            {
+                // Keep decompilation alive; emit placeholder when structure is unexpected.
+                JavaSystem.@err.Println("DEBUG getReturnExp: unexpected last child type, returning placeholder");
+                return new ScriptNode.AConst(Const.NewConst(new UtilsType((byte)3), 0L));
+            }
         }
 
         private void CheckSwitchEnd(AMoveSpCommand node)

@@ -21,7 +21,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         // Original: @Override public String toString() { return this.tabs + "/* " + this.message + " */" + this.newline; }
         public override string ToString()
         {
-            return this.tabs + "/* " + this.message + " */" + this.newline;
+            return tabs + "/* " + message + " */" + newline;
         }
     }
 }
