@@ -1842,8 +1842,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             catch (Exception)
             {
                 // Action metadata missing or invalid - use placeholder params based on arg count
-                int paramcount = NodeUtils.GetActionParamCount(node);
-                for (int i = 0; i < paramcount; i++)
+                int actionParamCount = NodeUtils.GetActionParamCount(node);
+                for (int i = 0; i < actionParamCount; i++)
                 {
                     try
                     {
