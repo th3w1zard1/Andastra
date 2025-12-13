@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
@@ -28,6 +29,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.ReadActions();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:46-53
+        // Original: public String getAction(int index) { try { ActionsData.Action action = this.actions.get(index); return action.toString(); } catch (IndexOutOfBoundsException var3) { throw new RuntimeException("Invalid action call: action " + Integer.toString(index)); } }
         public virtual string GetAction(int index)
         {
             try
