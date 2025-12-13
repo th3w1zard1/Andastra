@@ -73,15 +73,48 @@ namespace KotorDiff.NET.Diff
         }
     }
 
-    // Wrapper for GFF analyzer - uses CSharpKOTOR's GFFDiffAnalyzer when available
+    // Wrapper for GFF analyzer - uses CSharpKOTOR's GffDiff
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:296-688
+    // Original: class GFFDiffAnalyzer(DiffAnalyzer): ...
     internal class GFFDiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
         {
-            // TODO: Implement full GFFDiffAnalyzer
-            // For now, return null to indicate no modifications (files are identical)
-            // Full implementation will use CSharpKOTOR.Formats.GFF readers and generate ModificationsGFF
-            return null;
+            try
+            {
+                // Read GFF files
+                var leftReader = new CSharpKOTOR.Formats.GFF.GFFBinaryReader(leftData);
+                var rightReader = new CSharpKOTOR.Formats.GFF.GFFBinaryReader(rightData);
+                var leftGff = leftReader.Load();
+                var rightGff = rightReader.Load();
+
+                // Extract filename from identifier
+                string filename = System.IO.Path.GetFileName(identifier);
+                var modifications = new CSharpKOTOR.Mods.GFF.ModificationsGFF(filename, replace: false);
+
+                // Use GffDiff to find differences
+                var compareResult = CSharpKOTOR.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
+
+                // Convert differences to ModificationsGFF
+                foreach (var (path, oldValue, newValue) in compareResult.Differences)
+                {
+                    if (newValue != null)
+                    {
+                        // Create ModifyFieldGFF for changed/added fields
+                        var modifyField = new CSharpKOTOR.Mods.GFF.ModifyFieldGFF(
+                            path: path.Replace("/", "\\"), // TSLPatcher uses backslashes
+                            value: new CSharpKOTOR.Mods.GFF.FieldValueConstant(newValue)
+                        );
+                        modifications.Modifiers.Add(modifyField);
+                    }
+                }
+
+                return modifications.Modifiers.Count > 0 ? modifications : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 
