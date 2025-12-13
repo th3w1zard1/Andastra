@@ -69,9 +69,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.vardecs = new HashMap();
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:129
             // Original: this.root = new ASub(0, 0);
-            // For globals, use a large end value to prevent CheckEnd from moving away from root when processing nodes at position 0
-            // This ensures that CheckEnd won't think we're at the end of the root and try to move up
-            this.root = new ScriptNode.ASub(0, null, null, 0, int.MaxValue);
+            this.root = new ScriptNode.ASub(0, null, null, 0, 0);
             this.current = this.root;
             this.stack = stack;
             this.varcounts = new HashMap();
