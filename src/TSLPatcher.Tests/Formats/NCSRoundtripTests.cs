@@ -2217,16 +2217,35 @@ namespace CSharpKOTOR.Tests.Formats
 
         private static void AssertBytecodeEqual(string originalNcs, string roundTripNcs, string gameFlag, string displayName)
         {
+            // CRITICAL: Bytecode must match 1:1, byte-by-byte, with zero tolerance for differences
+            // This is the PRIMARY validation - any mismatch is a failure
+            
+            // First, verify both files exist and are readable
+            if (!File.Exists(originalNcs))
+            {
+                throw new InvalidOperationException($"Original NCS file does not exist: {DisplayPath(originalNcs)}");
+            }
+            if (!File.Exists(roundTripNcs))
+            {
+                throw new InvalidOperationException($"Round-trip NCS file does not exist: {DisplayPath(roundTripNcs)}");
+            }
+
+            // Perform strict byte-by-byte comparison
             BytecodeDiffResult diff = FindBytecodeDiff(originalNcs, roundTripNcs);
             if (diff == null)
             {
+                // Files are identical - test passes
                 return;
             }
 
+            // Bytecode mismatch detected - this is a PRIMARY FAILURE
+            // Build detailed error message with all diagnostic information
             StringBuilder message = new StringBuilder();
             message.Append("═══════════════════════════════════════════════════════════════\n");
-            message.Append("BYTECODE MISMATCH: ").Append(displayName).Append("\n");
+            message.Append("BYTECODE MISMATCH (PRIMARY FAILURE): ").Append(displayName).Append("\n");
             message.Append("═══════════════════════════════════════════════════════════════\n");
+            message.Append("\n");
+            message.Append("CRITICAL: Bytecode must match 1:1. Any difference is a failure.\n");
             message.Append("\n");
             message.Append("LOCATION:\n");
             message.Append("  Offset: ").Append(diff.Offset).Append(" (0x").Append(diff.Offset.ToString("X")).Append(")\n");
@@ -2234,34 +2253,65 @@ namespace CSharpKOTOR.Tests.Formats
             message.Append("  Round-trip: ").Append(FormatByteValue(diff.RoundTripByte)).Append("\n");
             message.Append("\n");
             message.Append("FILES:\n");
-            message.Append("  Original NCS: ").Append(originalNcs).Append("\n");
-            message.Append("  Round-trip NCS: ").Append(roundTripNcs).Append("\n");
+            message.Append("  Original NCS: ").Append(DisplayPath(originalNcs)).Append("\n");
+            message.Append("  Round-trip NCS: ").Append(DisplayPath(roundTripNcs)).Append("\n");
             message.Append("\n");
-            message.Append("BYTECODE CONTEXT:\n");
+            message.Append("BYTECODE CONTEXT (hex dump around mismatch):\n");
             message.Append("  Original:  ").Append(diff.OriginalContext).Append("\n");
             message.Append("  Round-trip: ").Append(diff.RoundTripContext).Append("\n");
             message.Append("\n");
             message.Append("FILE SIZES:\n");
             message.Append("  Original: ").Append(diff.OriginalLength).Append(" bytes\n");
             message.Append("  Round-trip: ").Append(diff.RoundTripLength).Append(" bytes\n");
+            if (diff.OriginalLength != diff.RoundTripLength)
+            {
+                message.Append("  ⚠️ WARNING: File sizes differ by ").Append(Math.Abs(diff.OriginalLength - diff.RoundTripLength)).Append(" bytes\n");
+            }
             message.Append("\n");
             message.Append("═══════════════════════════════════════════════════════════════\n");
 
             throw new InvalidOperationException(message.ToString());
         }
 
+        /// <summary>
+        /// Performs strict byte-by-byte comparison of two NCS files.
+        /// Returns null if files are identical, otherwise returns detailed diff information.
+        /// This is the PRIMARY validation - bytecode must match 1:1 with zero tolerance.
+        /// </summary>
         private static BytecodeDiffResult FindBytecodeDiff(string originalNcs, string roundTripNcs)
         {
+            // Read both files as raw byte arrays for strict comparison
             byte[] originalBytes = File.ReadAllBytes(originalNcs);
             byte[] roundTripBytes = File.ReadAllBytes(roundTripNcs);
-            int maxLength = Math.Max(originalBytes.Length, roundTripBytes.Length);
-
-            for (int i = 0; i < maxLength; i++)
+            
+            // Quick check: if lengths differ, files cannot be identical
+            if (originalBytes.Length != roundTripBytes.Length)
             {
-                int original = i < originalBytes.Length ? originalBytes[i] & 0xFF : -1;
-                int roundTrip = i < roundTripBytes.Length ? roundTripBytes[i] & 0xFF : -1;
+                // Find the first position where they differ (which will be at min length)
+                int firstDiffOffset = Math.Min(originalBytes.Length, roundTripBytes.Length);
+                return new BytecodeDiffResult
+                {
+                    Offset = firstDiffOffset,
+                    OriginalByte = firstDiffOffset < originalBytes.Length ? originalBytes[firstDiffOffset] & 0xFF : -1,
+                    RoundTripByte = firstDiffOffset < roundTripBytes.Length ? roundTripBytes[firstDiffOffset] & 0xFF : -1,
+                    OriginalLength = originalBytes.Length,
+                    RoundTripLength = roundTripBytes.Length,
+                    OriginalContext = RenderHexContext(originalBytes, firstDiffOffset),
+                    RoundTripContext = RenderHexContext(roundTripBytes, firstDiffOffset)
+                };
+            }
+
+            // Files have same length - perform byte-by-byte comparison
+            // This is the strictest possible comparison: every single byte must match
+            for (int i = 0; i < originalBytes.Length; i++)
+            {
+                // Compare as unsigned bytes (0-255) to ensure correct comparison
+                int original = originalBytes[i] & 0xFF;
+                int roundTrip = roundTripBytes[i] & 0xFF;
+                
                 if (original != roundTrip)
                 {
+                    // First byte mismatch found - return detailed diff information
                     return new BytecodeDiffResult
                     {
                         Offset = i,
@@ -2275,6 +2325,7 @@ namespace CSharpKOTOR.Tests.Formats
                 }
             }
 
+            // All bytes match - files are identical
             return null;
         }
 
