@@ -155,6 +155,106 @@ The UI should use the following classes from `CSharpKOTOR.Formats.NCS.NCSDecomp`
 5. **Error Handling**: Show user-friendly error dialogs for decompilation failures
 6. **Progress Indicators**: Show progress for long-running operations (decompilation, compilation)
 
+## Stream Redirection Implementation Details
+
+The Java version uses inner classes `DualOutputPrintStream` and `DualOutputStream` to redirect `System.out` and `System.err` to the GUI log area. The C# UI should implement similar functionality.
+
+### Required Components
+
+1. **Dual Output Stream**: A custom stream that writes to both:
+   - The original console output (for debugging)
+   - The GUI log area (with color coding)
+
+2. **Dual Output Print Stream**: A wrapper around the dual output stream that provides PrintStream-like functionality
+
+3. **Helper Methods** (from Java `Decompiler.java:361-484`):
+
+   - **`parseLogSeverity(text: string): LogSeverity`**: Parses log severity from log line text
+     - Looks for markers like `[TRACE]`, `[DEBUG]`, `[INFO]`, `[WARN]`, `[ERROR]`
+     - Handles special cases for decompiler control flow logs
+     - Defaults to `INFO` if no severity marker found
+
+   - **`shouldShowLog(severity: LogSeverity, filterLevel: string): bool`**: Determines if log should be shown based on filter
+     - Compares log severity index with selected filter level index
+     - Shows log if severity >= filter level
+
+   - **`getSeverityIndex(level: string): int`**: Gets index of severity level for comparison
+     - Maps level string to index in `Decompiler.LogLevels` array
+     - Returns `Decompiler.DefaultLogLevelIndex` if not found
+
+   - **`getColorForSeverity(severity: LogSeverity): Color`**: Gets color for log severity
+     - TRACE: Gray (128, 128, 128)
+     - DEBUG: Green (0, 128, 0)
+     - INFO: Black (0, 0, 0)
+     - WARNING: Orange (255, 140, 0)
+     - ERROR: Crimson red (220, 20, 60)
+
+### Implementation Pattern
+
+```csharp
+// Pseudo-code for C# implementation
+public class DualOutputStream : Stream
+{
+    private readonly Stream original;
+    private readonly TextBlock guiLog; // or equivalent UI control
+    private readonly StringBuilder lineBuffer = new StringBuilder();
+    
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        // Write to original stream
+        original.Write(buffer, offset, count);
+        
+        // Buffer text for GUI
+        string text = Encoding.UTF8.GetString(buffer, offset, count);
+        lineBuffer.Append(text);
+        
+        // Flush line when newline found
+        if (text.Contains("\n"))
+        {
+            FlushLine();
+        }
+    }
+    
+    private void FlushLine()
+    {
+        if (lineBuffer.Length > 0)
+        {
+            string line = lineBuffer.ToString();
+            lineBuffer.Clear();
+            AppendToGuiLog(line);
+        }
+    }
+    
+    private void AppendToGuiLog(string text)
+    {
+        // Parse severity and apply color
+        LogSeverity severity = ParseLogSeverity(text);
+        Color color = GetColorForSeverity(severity);
+        
+        // Check filter
+        if (!ShouldShowLog(severity, currentFilterLevel))
+            return;
+        
+        // Append to GUI with color (thread-safe, use UI dispatcher)
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            // Append styled text to log area
+        });
+    }
+}
+```
+
+### Thread Safety
+
+- All GUI updates must be performed on the UI thread (use `Dispatcher.Invoke` in Avalonia/WPF)
+- Buffer writes can happen on any thread, but GUI appends must be synchronized
+
+### Constants Available from Core Library
+
+- `Decompiler.LogLevels`: Array of log level strings
+- `Decompiler.DefaultLogLevelIndex`: Default log level index (2 = INFO)
+- `Decompiler.LogSeverity`: Enum with TRACE, DEBUG, INFO, WARNING, ERROR values
+
 ## Missing Features (Placeholders in Java Version)
 
 These features are planned but not yet implemented in the Java version:
