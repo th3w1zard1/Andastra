@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
@@ -46,6 +47,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.id = id;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:52-56
+        // Original: public void parseDone() { this.root = null; this.nodedata = null; this.decisionqueue = null; }
         public virtual void ParseDone()
         {
             this.root = null;
@@ -54,7 +57,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:58-73
-        // Original: public void close() { ... it.next().close(); ... }
+        // Original: public void close() { this.params = null; this.root = null; this.nodedata = null; if (this.decisionqueue != null) { Iterator<DecisionData> it = this.decisionqueue.iterator(); while (it.hasNext()) { it.next().close(); } this.decisionqueue = null; } this.type = null; }
         public virtual void Close()
         {
             this.@params = null;
@@ -63,12 +66,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             if (this.decisionqueue != null)
             {
                 IEnumerator<object> it = this.decisionqueue.Iterator();
+
                 while (it.HasNext())
                 {
-                    if (it.Next() is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                    }
+                    DecisionData data = (DecisionData)it.Next();
+                    data.Close();
                 }
 
                 this.decisionqueue = null;
@@ -77,17 +79,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.type = null;
         }
 
-        public virtual void Dispose()
-        {
-            Close();
-        }
-
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:75-88
-        // Original: public void printState()
+        // Original: public void printState() { System.out.println("Return type is " + this.type); System.out.println("There are " + Integer.toString(this.paramsize) + " parameters"); if (this.paramsize > 0) { StringBuffer buff = new StringBuffer(); buff.append(" Types: "); for (Type paramType : this.params) { buff.append(paramType + " "); } System.out.println(buff); } }
         public virtual void PrintState()
         {
             JavaSystem.@out.Println("Return type is " + this.type);
-            JavaSystem.@out.Println("There are " + this.paramsize + " parameters");
+            JavaSystem.@out.Println("There are " + this.paramsize.ToString() + " parameters");
             if (this.paramsize > 0)
             {
                 StringBuilder buff = new StringBuilder();
@@ -102,33 +99,38 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:90-109
+        // Original: public void printDecisions() { ... }
         public virtual void PrintDecisions()
         {
             JavaSystem.@out.Println("-----------------------------");
             JavaSystem.@out.Println("Jump Decisions");
-            for (int i = 0; i < this.decisionqueue.Count; ++i)
+
+            for (int i = 0; i < this.decisionqueue.Count; i++)
             {
                 DecisionData data = (DecisionData)this.decisionqueue[i];
-                string str = "  (" + (i + 1);
-                str = str.ToString() + ") at pos " + this.nodedata.GetPos(data.decisionnode);
+                string str = "  (" + (i + 1).ToString();
+                str = str + ") at pos " + this.nodedata.GetPos(data.decisionnode).ToString();
                 if (data.decision == 0)
                 {
-                    str = str.ToString() + " do optional jump to ";
+                    str = str + " do optional jump to ";
                 }
                 else if (data.decision == 2)
                 {
-                    str = str.ToString() + " do required jump to ";
+                    str = str + " do required jump to ";
                 }
                 else
                 {
-                    str = str.ToString() + " do not jump to ";
+                    str = str + " do not jump to ";
                 }
 
-                str = str.ToString() + data.destination;
+                str = str + data.destination.ToString();
                 JavaSystem.@out.Println(str);
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:111-130
+        // Original: public String toString(boolean main) { ... buff.append("sub" + Byte.toString(this.id) + "("); ... buff.append(link + ptype.toDeclString() + " param" + Integer.toString(i)); ... }
         public virtual string ToString(bool main)
         {
             StringBuilder buff = new StringBuilder();
@@ -139,14 +141,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             else
             {
-                buff.Append("sub" + this.id + "(");
+                buff.Append("sub" + this.id.ToString() + "(");
             }
 
             string link = "";
-            for (int i = 0; i < this.paramsize; ++i)
+
+            for (int i = 0; i < this.paramsize; i++)
             {
                 Type ptype = this.@params[i];
-                buff.Append(link + ptype.ToDeclString() + " param" + i);
+                buff.Append(link + ptype.ToDeclString() + " param" + i.ToString());
                 link = ", ";
             }
 
@@ -154,11 +157,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return buff.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:132-134
+        // Original: public void startPrototyping() { this.status = 1; }
         public virtual void StartPrototyping()
         {
             this.status = PROTO_IN_PROGRESS;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:136-143
+        // Original: public void stopPrototyping(boolean success) { if (success) { this.status = 2; this.decisionqueue = null; } else { this.status = 0; } }
         public virtual void StopPrototyping(bool success)
         {
             if (success)
@@ -172,50 +179,64 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:145-147
+        // Original: public boolean isPrototyped() { return this.status == 2; }
         public virtual bool IsPrototyped()
         {
             return this.status == PROTO_DONE;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:149-151
+        // Original: public boolean isBeingPrototyped() { return this.status == 1; }
         public virtual bool IsBeingPrototyped()
         {
             return this.status == PROTO_IN_PROGRESS;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:153-155
+        // Original: public boolean isTotallyPrototyped() { return this.status == 2 && this.params.size() >= this.paramsize; }
         public virtual bool IsTotallyPrototyped()
         {
-            return this.status == PROTO_DONE && this.paramstyped && this.type.IsTyped();
+            return this.status == PROTO_DONE && this.@params.Count >= this.paramsize;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:157-172
+        // Original: public boolean getSkipStart(int pos) { if (this.decisionqueue != null && !this.decisionqueue.isEmpty()) { ... } else { return false; } }
         public virtual bool GetSkipStart(int pos)
         {
-            if (this.decisionqueue == null || this.decisionqueue.IsEmpty())
+            if (this.decisionqueue != null && !this.decisionqueue.IsEmpty())
+            {
+                DecisionData decision = (DecisionData)this.decisionqueue.GetFirst();
+                if (this.nodedata.GetPos(decision.decisionnode) == pos)
+                {
+                    if (decision.DoJump())
+                    {
+                        return true;
+                    }
+
+                    this.decisionqueue.RemoveFirst();
+                }
+
+                return false;
+            }
+            else
             {
                 return false;
             }
-
-            DecisionData decision = (DecisionData)this.decisionqueue.GetFirst();
-            if (this.nodedata.GetPos(decision.decisionnode) == pos)
-            {
-                if (decision.DoJump())
-                {
-                    return true;
-                }
-
-                this.decisionqueue.RemoveFirst();
-            }
-
-            return false;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:174-182
+        // Original: public boolean getSkipEnd(int pos) { if (this.decisionqueue != null && !this.decisionqueue.isEmpty()) { if (this.decisionqueue.getFirst().destination == pos) { this.decisionqueue.removeFirst(); return true; } } return false; }
         public virtual bool GetSkipEnd(int pos)
         {
-            if (((DecisionData)this.decisionqueue.GetFirst()).destination == pos)
+            if (this.decisionqueue != null && !this.decisionqueue.IsEmpty())
             {
-                this.decisionqueue.RemoveFirst();
-                return true;
+                if (((DecisionData)this.decisionqueue.GetFirst()).destination == pos)
+                {
+                    this.decisionqueue.RemoveFirst();
+                    return true;
+                }
             }
-
             return false;
         }
 
@@ -469,7 +490,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 return false;
             }
 
-            public virtual void Dispose()
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:375-377
+            // Original: public void close() { this.decisionnode = null; }
+            public virtual void Close()
             {
                 this.decisionnode = null;
             }
