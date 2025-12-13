@@ -20,11 +20,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Override DefaultIn to ensure skipdeadcode is set correctly for globals
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:33-36
+        // Original: @Override public String getCode() { return this.state.toStringGlobals(); }
         public override string GetCode()
         {
             return this.state.ToStringGlobals();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:38-41
+        // Original: @Override public void outABpCommand(ABpCommand node) { this.freezeStack = true; }
         public override void OutABpCommand(ABpCommand node)
         {
             this.freezeStack = true;
@@ -40,6 +44,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.freezeStack = true;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:43-46
+        // Original: @Override public void outAJumpToSubroutine(AJumpToSubroutine node) { this.freezeStack = true; }
         public override void OutAJumpToSubroutine(AJumpToSubroutine node)
         {
             this.freezeStack = true;
