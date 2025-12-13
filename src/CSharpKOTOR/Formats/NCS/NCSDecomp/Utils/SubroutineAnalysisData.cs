@@ -1,3 +1,5 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:23-569
+// Original: public class SubroutineAnalysisData
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +14,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineAnalysisData
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:24-31
+        // Original: private NodeAnalysisData nodedata; private LinkedHashMap<Integer, ASubroutine> subroutines; private Hashtable<Node, SubroutineState> substates; private ASubroutine mainsub; private ASubroutine globalsub; private LocalVarStack globalstack; private ArrayList<StructType> globalstructs; private SubScriptState globalstate;
         private NodeAnalysisData nodedata;
         private Dictionary<object, object> subroutines;
         private Dictionary<object, object> substates;
@@ -22,6 +26,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private SubScriptState globalstate;
         //private bool result;
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:33-41
+        // Original: public SubroutineAnalysisData(NodeAnalysisData nodedata) { ... }
         public SubroutineAnalysisData(NodeAnalysisData nodedata)
         {
             this.nodedata = nodedata;
