@@ -63,6 +63,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.retry = 0;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:72-77
+        // Original: public void done() { this.nodedata = null; this.subdata = null; this.state = null; this.destinationcommands = null; }
         public virtual void Done()
         {
             this.nodedata = null;

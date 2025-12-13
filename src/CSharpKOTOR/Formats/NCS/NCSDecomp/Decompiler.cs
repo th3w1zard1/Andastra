@@ -7,20 +7,22 @@ using System.IO;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
-    // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:96-175
-    // Original: public class Decompiler extends JFrame ...
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:104-175
+    // Original: public class Decompiler extends JFrame ... public static Settings settings = new Settings(); ... static { ... }
     /// <summary>
     /// Static settings and utilities for the NCS decompiler.
     /// The actual UI is implemented in the NCSDecomp project using Avalonia.
     /// </summary>
     public static class Decompiler
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:106-108
+        // Original: public static Settings settings = new Settings(); public static final double screenWidth = Toolkit.getDefaultToolkit().getScreenSize().getWidth(); public static final double screenHeight = Toolkit.getDefaultToolkit().getScreenSize().getHeight();
         public static Settings settings;
         public static readonly double screenWidth;
         public static readonly double screenHeight;
 
-        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
-        // Original: static { ... }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
+        // Original: static { settings.load(); String outputDir = settings.getProperty("Output Directory"); ... }
         static Decompiler()
         {
             // Default screen dimensions (will be overridden by Avalonia UI)
@@ -64,6 +66,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             JavaSystem.Exit(0);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:2289-2304
+        // Original: public static String chooseOutputDirectory() { JFileChooser jFC = new JFileChooser(settings.getProperty("Output Directory")); ... }
+        // Note: C# version simplified for CLI compatibility - UI version is in NCSDecomp MainWindow
         public static string ChooseOutputDirectory()
         {
             // Synchronous version for compatibility - returns current setting
