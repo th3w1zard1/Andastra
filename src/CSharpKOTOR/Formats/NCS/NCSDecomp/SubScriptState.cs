@@ -243,8 +243,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private void CheckStart(Node node)
         {
             this.AssertState(node);
-            // If current is null (e.g., after CheckEnd moved away from root), reset to root
-            // This can happen for globals when CheckEnd is called on the root
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:292-314
+            // Original: private void checkStart(Node node) { this.assertState(node); ... if (this.current.hasChildren()) { ... } }
+            // Note: The vendor code doesn't check for null current - it assumes current is never null
+            // If current is null, we need to reset it to root (this can happen for globals)
             if (this.current == null)
             {
                 this.current = this.root;
