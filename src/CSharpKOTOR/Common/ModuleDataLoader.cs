@@ -3,6 +3,7 @@ using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
+using CSharpKOTOR.Tools;
 
 namespace CSharpKOTOR.Common
 {
@@ -89,13 +90,12 @@ namespace CSharpKOTOR.Common
             return (git, lyt);
         }
 
-        public Dictionary<string, object> GetCreatureModelData(object gitCreature, Module module)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:98-173
+        // Original: def get_creature_model_data(self, git_creature, module: Module) -> dict[str, str | None]:
+        public Dictionary<string, object> GetCreatureModelData(GITCreature gitCreature, Module module)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:98-173
-            // Original: def get_creature_model_data(self, git_creature, module: Module) -> dict[str, str | None]:
-
             // Get creature resource from module
-            var creatureResRef = ""; // TODO: Extract resref from gitCreature (GITCreature.ResRef)
+            string creatureResRef = gitCreature?.ResRef?.ToString() ?? "";
             var creatureResource = module.Creature(creatureResRef);
 
             if (creatureResource == null)
@@ -127,16 +127,33 @@ namespace CSharpKOTOR.Common
                 };
             }
 
-            // TODO: Implement creature.get_body_model, get_head_model, get_weapon_models, get_mask_model
-            // These require porting the creature utility functions from tools/creature.py
-            // For now, return placeholder values
-            var bodyModel = (string)null; // creature.get_body_model(utc, _installation, appearance: TableCreatures, baseitems: TableBaseItems);
-            var bodyTexture = (string)null; // creature.get_body_model(utc, _installation, appearance: TableCreatures, baseitems: TableBaseItems);
-            var headModel = (string)null; // creature.get_head_model(utc, _installation, appearance: TableCreatures, heads: TableHeads);
-            var headTexture = (string)null; // creature.get_head_model(utc, _installation, appearance: TableCreatures, heads: TableHeads);
-            var rhandModel = (string)null; // creature.get_weapon_models(utc, _installation, appearance: TableCreatures, baseitems: TableBaseItems);
-            var lhandModel = (string)null; // creature.get_weapon_models(utc, _installation, appearance: TableCreatures, baseitems: TableBaseItems);
-            var maskModel = (string)null; // creature.get_mask_model(utc, _installation);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:145-163
+            // Original: body_model, body_texture = creature.get_body_model(...)
+            var (bodyModel, bodyTexture) = Creature.GetBodyModel(
+                utc,
+                _installation,
+                TableCreatures,
+                TableBaseItems
+            );
+
+            // Original: head_model, head_texture = creature.get_head_model(...)
+            var (headModel, headTexture) = Creature.GetHeadModel(
+                utc,
+                _installation,
+                TableCreatures,
+                TableHeads
+            );
+
+            // Original: rhand_model, lhand_model = creature.get_weapon_models(...)
+            var (rhandModel, lhandModel) = Creature.GetWeaponModels(
+                utc,
+                _installation,
+                TableCreatures,
+                TableBaseItems
+            );
+
+            // Original: mask_model = creature.get_mask_model(...)
+            string maskModel = Creature.GetMaskModel(utc, _installation);
 
             return new Dictionary<string, object>
             {
@@ -150,13 +167,12 @@ namespace CSharpKOTOR.Common
             };
         }
 
-        public string GetDoorModelName(object door, Module module)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:175-199
+        // Original: def get_door_model_name(self, door, module: Module) -> str | None:
+        public string GetDoorModelName(GITDoor door, Module module)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:175-199
-            // Original: def get_door_model_name(self, door, module: Module) -> str | None:
-
             // Get door resource from module
-            var doorResRef = ""; // TODO: Extract resref from door (GITDoor.ResRef)
+            string doorResRef = door?.ResRef?.ToString() ?? "";
             var doorResource = module.Door(doorResRef);
 
             if (doorResource == null)
@@ -182,13 +198,12 @@ namespace CSharpKOTOR.Common
             return row.GetString("modelname");
         }
 
-        public string GetPlaceableModelName(object placeable, Module module)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:201-225
+        // Original: def get_placeable_model_name(self, placeable, module: Module) -> str | None:
+        public string GetPlaceableModelName(GITPlaceable placeable, Module module)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:201-225
-            // Original: def get_placeable_model_name(self, placeable, module: Module) -> str | None:
-
             // Get placeable resource from module
-            var placeableResRef = ""; // TODO: Extract resref from placeable (GITPlaceable.ResRef)
+            string placeableResRef = placeable?.ResRef?.ToString() ?? "";
             var placeableResource = module.Placeable(placeableResRef);
 
             if (placeableResource == null)
