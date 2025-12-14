@@ -405,6 +405,8 @@ namespace Odyssey.MonoGame.Rendering
         public int OcclusionCulled;
         public int DistanceCulled;
         public int DrawCalls;
+        public int TrianglesRendered;
+        public int ObjectsCulled;
         public LODStats LODStats;
         public CullingStats FrustumStats;
 
@@ -422,6 +424,8 @@ namespace Odyssey.MonoGame.Rendering
             OcclusionCulled = 0;
             DistanceCulled = 0;
             DrawCalls = 0;
+            TrianglesRendered = 0;
+            ObjectsCulled = 0;
             LODStats.Reset();
             FrustumStats.Reset();
         }
