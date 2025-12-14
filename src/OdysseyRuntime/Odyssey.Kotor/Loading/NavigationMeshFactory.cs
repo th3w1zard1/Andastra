@@ -16,12 +16,16 @@ namespace Odyssey.Kotor.Loading
     /// Factory for creating NavigationMesh from BWM walkmesh data.
     /// </summary>
     /// <remarks>
-    /// BWM File Format (from spec):
-    /// - Type 1: Area walkmesh (WOK) - Includes AABB tree + walkable adjacency + perimeter edges
-    /// - Type 0: Placeable/door walkmesh (PWK/DWK) - Collision + hook vectors
-    /// 
-    /// Adjacency encoding: adjacency = faceIndex * 3 + edgeIndex
-    /// Decode: face = adjacency / 3, edge = adjacency % 3
+    /// Navigation Mesh Factory:
+    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - Located via string references: "walkmesh" pathfinding functions, "nwsareapathfind.cpp"
+    /// - Original implementation: Combines multiple room walkmeshes into single navigation mesh for pathfinding
+    /// - BWM File Format (from spec):
+    ///   - Type 1: Area walkmesh (WOK) - Includes AABB tree + walkable adjacency + perimeter edges
+    ///   - Type 0: Placeable/door walkmesh (PWK/DWK) - Collision + hook vectors
+    /// - Adjacency encoding: adjacency = faceIndex * 3 + edgeIndex
+    /// - Decode: face = adjacency / 3, edge = adjacency % 3
+    /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
     /// </remarks>
     public class NavigationMeshFactory
     {
@@ -45,7 +49,7 @@ namespace Odyssey.Kotor.Loading
             int vertexOffset = 0;
             int faceOffset = 0;
 
-            foreach (var room in rooms)
+            foreach (RoomInfo room in rooms)
             {
                 string wokResRef = room.ModelName;
                 if (string.IsNullOrEmpty(wokResRef))
@@ -65,9 +69,9 @@ namespace Odyssey.Kotor.Loading
 
                 // Build vertex index map for this walkmesh
                 var vertexIndexMap = new Dictionary<CSharpKOTOR.Common.Vector3, int>();
-                
+
                 // Process faces from this walkmesh
-                foreach (var face in bwm.Faces)
+                foreach (BWMFace face in bwm.Faces)
                 {
                     // Add vertices (with room offset applied)
                     int idx1 = AddVertex(allVertices, face.V1, roomPosition, vertexIndexMap);
@@ -85,11 +89,11 @@ namespace Odyssey.Kotor.Loading
 
                 // Process adjacency
                 // Note: Adjacency references within same walkmesh need to be remapped
-                var walkableFaces = bwm.WalkableFaces();
+                List<BWMFace> walkableFaces = bwm.WalkableFaces();
                 for (int i = 0; i < bwm.Faces.Count; i++)
                 {
-                    var face = bwm.Faces[i];
-                    var adj = bwm.Adjacencies(face);
+                    BWMFace face = bwm.Faces[i];
+                    Tuple<BWMAdjacency, BWMAdjacency, BWMAdjacency> adj = bwm.Adjacencies(face);
 
                     // For each edge, compute the remapped adjacency
                     allAdjacency.Add(RemapAdjacency(adj.Item1, bwm.Faces, faceOffset));
@@ -107,7 +111,7 @@ namespace Odyssey.Kotor.Loading
             }
 
             // Build AABB tree for spatial queries
-            var aabbRoot = BuildAabbTree(allVertices, allFaceIndices, allSurfaceMaterials);
+            NavigationMesh.AabbNode aabbRoot = BuildAabbTree(allVertices, allFaceIndices, allSurfaceMaterials);
 
             return new NavigationMesh(
                 allVertices.ToArray(),
@@ -136,7 +140,7 @@ namespace Odyssey.Kotor.Loading
 
             var vertexIndexMap = new Dictionary<CSharpKOTOR.Common.Vector3, int>();
 
-            foreach (var face in bwm.Faces)
+            foreach (BWMFace face in bwm.Faces)
             {
                 int idx1 = AddVertex(vertices, face.V1, offset, vertexIndexMap);
                 int idx2 = AddVertex(vertices, face.V2, offset, vertexIndexMap);
@@ -152,15 +156,15 @@ namespace Odyssey.Kotor.Loading
             // Process adjacency
             for (int i = 0; i < bwm.Faces.Count; i++)
             {
-                var face = bwm.Faces[i];
-                var adj = bwm.Adjacencies(face);
+                BWMFace face = bwm.Faces[i];
+                Tuple<BWMAdjacency, BWMAdjacency, BWMAdjacency> adj = bwm.Adjacencies(face);
 
                 adjacency.Add(RemapAdjacency(adj.Item1, bwm.Faces, 0));
                 adjacency.Add(RemapAdjacency(adj.Item2, bwm.Faces, 0));
                 adjacency.Add(RemapAdjacency(adj.Item3, bwm.Faces, 0));
             }
 
-            var aabbRoot = BuildAabbTree(vertices, faceIndices, surfaceMaterials);
+            NavigationMesh.AabbNode aabbRoot = BuildAabbTree(vertices, faceIndices, surfaceMaterials);
 
             return new NavigationMesh(
                 vertices.ToArray(),
@@ -183,14 +187,14 @@ namespace Odyssey.Kotor.Loading
             {
                 // WOK files are usually stored with the module
                 // For now, try to load from installation
-                var installation = module.Installation;
+                Installation installation = module.Installation;
                 if (installation == null)
                 {
                     return null;
                 }
 
                 // Search for WOK resource
-                var wokResource = installation.Resource(resRef, ResourceType.WOK, 
+                CSharpKOTOR.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
                     new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
 
                 if (wokResource == null || wokResource.Data == null)
@@ -210,7 +214,7 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Adds a vertex to the list, returning its index.
         /// </summary>
-        private int AddVertex(List<System.Numerics.Vector3> vertices, CSharpKOTOR.Common.Vector3 v, System.Numerics.Vector3 offset, 
+        private int AddVertex(List<System.Numerics.Vector3> vertices, CSharpKOTOR.Common.Vector3 v, System.Numerics.Vector3 offset,
             Dictionary<CSharpKOTOR.Common.Vector3, int> indexMap)
         {
             // Check if vertex already exists
@@ -281,11 +285,11 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Recursively builds the AABB tree.
         /// </summary>
-        private NavigationMesh.AabbNode BuildAabbTreeRecursive(List<System.Numerics.Vector3> vertices, List<int> faceIndices, 
+        private NavigationMesh.AabbNode BuildAabbTreeRecursive(List<System.Numerics.Vector3> vertices, List<int> faceIndices,
             List<int> materials, List<int> faceList, int depth)
         {
             const int MaxDepth = 32;
-            
+
             if (faceList.Count == 0)
             {
                 return null;
@@ -363,7 +367,7 @@ namespace Odyssey.Kotor.Loading
                 // Try another axis
                 int nextAxis = (splitAxis + 1) % 3;
                 float nextSplitValue = (GetAxisValue(bbMin, nextAxis) + GetAxisValue(bbMax, nextAxis)) * 0.5f;
-                
+
                 leftFaces.Clear();
                 rightFaces.Clear();
 
