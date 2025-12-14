@@ -184,6 +184,13 @@ namespace Odyssey.Game.Core
             _cameraEntity.Transform.Rotation = Quaternion.Identity;
 
             // #region agent log
+            // Access camera slot ID for logging
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
+            // CameraComponent.Slot property gets the camera slot ID assigned to this camera
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlotId.html
+            // SceneCameraSlotId.Id property gets the unique identifier for the camera slot
+            // Method signature: uint Id { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
             DebugLog("B", "OdysseyGame.InitializeCamera:end", "Camera entity created", "slot=" + _cameraComponent.Slot.Id);
             // #endregion
 
