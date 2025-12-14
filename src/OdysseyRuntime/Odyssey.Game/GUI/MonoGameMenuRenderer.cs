@@ -222,7 +222,7 @@ namespace Odyssey.Game.GUI
                 int btnBorderThickness = (i == _selectedIndex) ? 6 : 4;
                 DrawBorder(_spriteBatch, button.Rect, btnBorderThickness, _borderColor);
 
-                // Draw button text
+                // Draw button text (if font is available)
                 if (_font != null)
                 {
                     Vector2 textSize = _font.MeasureString(button.Label);
@@ -232,6 +232,8 @@ namespace Odyssey.Game.GUI
                     );
                     _spriteBatch.DrawString(_font, button.Label, textPosition, Color.White);
                 }
+                // Note: If font is null, buttons will still be visible as colored rectangles
+                // and fully functional - just without text labels
             }
 
             // End sprite batch rendering
