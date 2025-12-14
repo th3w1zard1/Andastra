@@ -2079,6 +2079,37 @@ namespace Odyssey.Game.Core
         }
 
         /// <summary>
+        /// Finds which room the player is currently in based on position.
+        /// </summary>
+        private int FindPlayerRoom(Odyssey.Core.Module.RuntimeArea area, System.Numerics.Vector3 playerPosition)
+        {
+            if (area.Rooms == null || area.Rooms.Count == 0)
+            {
+                return -1;
+            }
+
+            // Find the room closest to the player (simple distance-based approach)
+            // In a full implementation, we'd check if player is inside room bounds
+            int closestRoomIndex = 0;
+            float closestDistance = float.MaxValue;
+
+            for (int i = 0; i < area.Rooms.Count; i++)
+            {
+                var room = area.Rooms[i];
+                var roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
+                float distance = System.Numerics.Vector3.Distance(playerPosition, roomPos);
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestRoomIndex = i;
+                }
+            }
+
+            return closestRoomIndex;
+        }
+
+        /// <summary>
         /// Handles dialogue node enter events.
         /// </summary>
         private void OnDialogueNodeEnter(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
