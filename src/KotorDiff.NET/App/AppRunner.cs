@@ -5,9 +5,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Extract;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Mods;
+using CSharpKOTOR.Tools;
+using CSharpKOTOR.Utility;
 using KotorDiff.NET.Diff;
 using KotorDiff.NET.Generator;
 using KotorDiff.NET.Logger;
@@ -103,7 +106,7 @@ namespace KotorDiff.NET.App
             {
                 try
                 {
-                    outputFile = new StreamWriter(config.OutputLogPath.FullName, append: true, Encoding.UTF8);
+                    outputFile = new StreamWriter(config.OutputLogPath.FullName, append: true, System.Text.Encoding.UTF8);
                 }
                 catch (Exception e)
                 {
@@ -176,13 +179,46 @@ namespace KotorDiff.NET.App
 
                 if (config.UseIncrementalWriter)
                 {
+                    // Determine game from first valid directory path (matching Python lines 441-450)
+                    CSharpKOTOR.Common.Game game = CSharpKOTOR.Common.Game.K1;
+                    if (baseDataPath != null)
+                    {
+                        try
+                        {
+                            if (baseDataPath.Exists)
+                            {
+                                // Try to detect game from installation
+                                var install = new Installation(baseDataPath.FullName);
+                                game = install.Game;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            DiffLogger.GetLogger()?.Warning($"[Warning] Could not determine game: {e.GetType().Name}: {e.Message}");
+                            DiffLogger.GetLogger()?.Debug("Full traceback:");
+                            DiffLogger.GetLogger()?.Debug(e.StackTrace);
+                        }
+                    }
+
+                    // Create StrRef cache if we have a valid game (matching Python line 453)
+                    CSharpKOTOR.Tools.StrRefReferenceCache strrefCache = new CSharpKOTOR.Tools.StrRefReferenceCache(game);
+
+                    // Create 2DA memory caches if we have a valid game (matching Python lines 455-464)
+                    // Structure: {installation_index: CaseInsensitiveDict[TwoDAMemoryReferenceCache]}
+                    Dictionary<int, CSharpKOTOR.Utility.CaseInsensitiveDict<CSharpKOTOR.Tools.TwoDAMemoryReferenceCache>> twodaCaches = new Dictionary<int, CSharpKOTOR.Utility.CaseInsensitiveDict<CSharpKOTOR.Tools.TwoDAMemoryReferenceCache>>();
+                    // Initialize caches for each path index
+                    for (int idx = 0; idx < allPaths.Count; idx++)
+                    {
+                        twodaCaches[idx] = new CSharpKOTOR.Utility.CaseInsensitiveDict<CSharpKOTOR.Tools.TwoDAMemoryReferenceCache>();
+                    }
+
                     incrementalWriter = new IncrementalTSLPatchDataWriter(
                         config.TslPatchDataPath.FullName,
                         config.IniFilename,
                         baseDataPath: baseDataPath?.FullName,
                         moddedDataPath: null, // TODO: Determine modded path
-                        strrefCache: null, // TODO: Implement StrRefReferenceCache
-                        twodaCaches: null, // TODO: Implement TwoDAMemoryReferenceCache
+                        strrefCache: strrefCache,
+                        twodaCaches: twodaCaches,
                         logFunc: (msg) => DiffLogger.GetLogger()?.Info(msg)
                     );
                     DiffLogger.GetLogger()?.Info($"Using incremental writer for tslpatchdata: {config.TslPatchDataPath}");
@@ -341,7 +377,7 @@ namespace KotorDiff.NET.App
             // Serialize INI file
             var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true, verbose: false);
-            File.WriteAllText(iniPath.FullName, iniContent, Encoding.UTF8);
+            File.WriteAllText(iniPath.FullName, iniContent, System.Text.Encoding.UTF8);
             DiffLogger.GetLogger()?.Info($"Generated {iniFilename} with {iniContent.Split('\n').Length} lines");
 
             // Summary
@@ -371,7 +407,7 @@ namespace KotorDiff.NET.App
                 string output = $"Profiler output - Elapsed time: {profiler.Elapsed.TotalSeconds} seconds\n";
                 output += $"Total milliseconds: {profiler.Elapsed.TotalMilliseconds}\n";
                 output += $"Ticks: {profiler.Elapsed.Ticks}\n";
-                File.WriteAllText(profilerOutputFile, output, Encoding.UTF8);
+                File.WriteAllText(profilerOutputFile, output, System.Text.Encoding.UTF8);
                 DiffLogger.GetLogger()?.Info($"Profiler output saved to: {profilerOutputFile}");
             }
             catch (Exception e)
