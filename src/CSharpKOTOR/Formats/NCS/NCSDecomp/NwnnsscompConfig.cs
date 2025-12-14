@@ -21,9 +21,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     public class NwnnsscompConfig
     {
         private readonly string sha256Hash;
-        private readonly File sourceFile;
-        private readonly File outputFile;
-        private readonly File outputDir;
+        private readonly NcsFile sourceFile;
+        private readonly NcsFile outputFile;
+        private readonly NcsFile outputDir;
         private readonly string outputName;
         private readonly bool isK2;
         private readonly KnownExternalCompilers.CompilerInfo chosenCompiler;
@@ -39,13 +39,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="isK2">true for KotOR 2 (TSL), false for KotOR 1</param>
         /// <exception cref="IOException">If the compiler file cannot be read or hashed</exception>
         /// <exception cref="ArgumentException">If the compiler version is not recognized</exception>
-        public NwnnsscompConfig(File compilerPath, File sourceFile, File outputFile, bool isK2)
+        public NwnnsscompConfig(NcsFile compilerPath, NcsFile sourceFile, NcsFile outputFile, bool isK2)
         {
             this.sourceFile = sourceFile;
             // Convert to absolute path to ensure parent directory is always available
-            File absoluteOutputFile = new File(outputFile.GetAbsolutePath());
+            NcsFile absoluteOutputFile = new NcsFile(outputFile.GetAbsolutePath());
             this.outputFile = absoluteOutputFile;
-            this.outputDir = absoluteOutputFile.Directory != null ? new File(absoluteOutputFile.Directory) : null;
+            this.outputDir = absoluteOutputFile.Directory != null ? new NcsFile(absoluteOutputFile.Directory) : null;
             this.outputName = absoluteOutputFile.Name;
             this.isK2 = isK2;
 
@@ -82,13 +82,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="executable">Path to the nwnnsscomp executable</param>
         /// <param name="includeDirs">Optional include directories to append via -i</param>
         /// <returns>Array of command-line arguments</returns>
-        public string[] GetCompileArgs(string executable, List<File> includeDirs)
+        public string[] GetCompileArgs(string executable, List<NcsFile> includeDirs)
         {
             // Build include arguments array for {includes} placeholder
             List<string> includeArgs = new List<string>();
             if (includeDirs != null && includeDirs.Count > 0)
             {
-                foreach (File dir in includeDirs)
+                foreach (NcsFile dir in includeDirs)
                 {
                     if (dir != null && dir.Exists())
                     {

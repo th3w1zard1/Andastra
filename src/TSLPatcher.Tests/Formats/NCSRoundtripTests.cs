@@ -13,6 +13,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using IOException = CSharpKOTOR.Formats.NCS.NCSDecomp.IOException;
+using NcsFile = CSharpKOTOR.Formats.NCS.NCSDecomp.NcsFile;
 using CSharpKOTOR.Tests.Performance;
 using FluentAssertions;
 using Xunit;
@@ -1414,11 +1417,11 @@ namespace CSharpKOTOR.Tests.Formats
 
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(nssOut));
-
-                Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
-                string nwscriptPath = gameFlag.Equals("k2") ? K2Nwscript : K1Nwscript;
-                NCS ncs = NCSAuto.ReadNcs(ncsPath);
+                // Use RoundTripUtil to match Java implementation exactly
+                // Matching DeNCS implementation at vendor/DeNCS/src/test/java/com/kotor/resource/formats/ncs/NCSDecompCLIRoundTripTest.java:1768-1789
+                // Original: RoundTripUtil.decompileNcsToNssFile(ncsFile, nssFile, gameFlag, StandardCharsets.UTF_8);
+                NcsFile ncsFile = new NcsFile(ncsPath);
+                NcsFile nssFile = new NcsFile(nssOut);
                 
                 // Capture all console output during decompilation for exhaustive debugging
                 var originalOut = Console.Out;
@@ -1426,7 +1429,6 @@ namespace CSharpKOTOR.Tests.Formats
                 var outputCapture = new StringWriter();
                 var errorCapture = new StringWriter();
                 
-                string decompiled = null;
                 Exception decompileEx = null;
                 
                 try
@@ -1435,7 +1437,7 @@ namespace CSharpKOTOR.Tests.Formats
                     Console.SetOut(outputCapture);
                     Console.SetError(errorCapture);
                     
-                    decompiled = NCSAuto.DecompileNcs(ncs, game, null, null, nwscriptPath);
+                    RoundTripUtil.DecompileNcsToNssFile(ncsFile, nssFile, gameFlag, Encoding.UTF8);
                 }
                 catch (Exception ex)
                 {
@@ -1476,13 +1478,6 @@ namespace CSharpKOTOR.Tests.Formats
                 {
                     throw new InvalidOperationException($"Decompile failed for {DisplayPath(ncsPath)}: {decompileEx.Message}", decompileEx);
                 }
-                
-                if (string.IsNullOrEmpty(decompiled))
-                {
-                    throw new InvalidOperationException($"Decompilation returned null or empty for {DisplayPath(ncsPath)}");
-                }
-                
-                File.WriteAllText(nssOut, decompiled, Encoding.UTF8);
 
                 if (!File.Exists(nssOut))
                 {

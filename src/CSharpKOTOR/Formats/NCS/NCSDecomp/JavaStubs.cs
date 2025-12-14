@@ -61,20 +61,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     }
 
     // Java file I/O classes
-    public class File
+    public class NcsFile
     {
         private System.IO.FileInfo _fileInfo;
-        public File(string path)
+        public NcsFile(string path)
         {
             _fileInfo = new System.IO.FileInfo(path);
         }
-        public File(File parent, string child)
+        public NcsFile(NcsFile parent, string child)
         {
             _fileInfo = new System.IO.FileInfo(System.IO.Path.Combine(parent.GetAbsolutePath(), child));
         }
         public string GetAbsolutePath() { return _fileInfo.FullName; }
         public string GetCanonicalPath() { return _fileInfo.FullName; }
-        public bool RenameTo(File dest)
+        public bool RenameTo(NcsFile dest)
         {
             try
             {
@@ -115,12 +115,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 throw new IOException(ex.Message, ex);
             }
         }
-        public File GetAbsoluteFile() { return new File(_fileInfo.FullName); }
-        public File GetParentFile()
+        public NcsFile GetAbsoluteFile() { return new NcsFile(_fileInfo.FullName); }
+        public NcsFile GetParentFile()
         {
             if (_fileInfo.Directory != null)
             {
-                return new File(_fileInfo.Directory);
+                return new NcsFile(_fileInfo.Directory);
             }
             return null;
         }
@@ -145,7 +145,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 return false;
             }
         }
-        public File(System.IO.DirectoryInfo dirInfo)
+        public NcsFile(System.IO.DirectoryInfo dirInfo)
         {
             if (dirInfo == null)
                 throw new System.ArgumentNullException(nameof(dirInfo));
@@ -156,13 +156,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     public class FileInputStream : System.IO.FileStream
     {
         public FileInputStream(string path) : base(path, System.IO.FileMode.Open) { }
-        public FileInputStream(File file) : base(file.GetAbsolutePath(), System.IO.FileMode.Open) { }
+        public FileInputStream(NcsFile file) : base(file.GetAbsolutePath(), System.IO.FileMode.Open) { }
     }
 
     public class FileOutputStream : System.IO.FileStream
     {
         public FileOutputStream(string path) : base(path, System.IO.FileMode.Create) { }
-        public FileOutputStream(File file) : base(file.GetAbsolutePath(), System.IO.FileMode.Create) { }
+        public FileOutputStream(NcsFile file) : base(file.GetAbsolutePath(), System.IO.FileMode.Create) { }
     }
 
     public class ByteArrayInputStream : System.IO.MemoryStream
@@ -192,14 +192,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
     public class FileReader : System.IO.StreamReader
     {
-        public FileReader(File file) : base(file.GetAbsolutePath()) { }
+        public FileReader(NcsFile file) : base(file.GetAbsolutePath()) { }
         public FileReader(string path) : base(path) { }
     }
 
     public class FileWriter : System.IO.StreamWriter
     {
         public FileWriter(string path) : base(path) { }
-        public FileWriter(File file) : base(file.GetAbsolutePath()) { }
+        public FileWriter(NcsFile file) : base(file.GetAbsolutePath()) { }
     }
 
     public class BufferedReader : System.IO.StreamReader

@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:101-111
         // Original: public FileDecompiler(File nwscriptFile) throws DecompilerException
-        public FileDecompiler(File nwscriptFile)
+        public FileDecompiler(NcsFile nwscriptFile)
         {
             this.filedata = new Dictionary<object, object>();
             if (nwscriptFile == null || !nwscriptFile.IsFile())
@@ -128,7 +128,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                File actionfile = null;
+                NcsFile actionfile = null;
 
                 // Check settings first (GUI mode) - only if Decompiler class is loaded
                 try
@@ -140,7 +140,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         : Decompiler.settings.GetProperty("K1 nwscript Path");
                     if (!string.IsNullOrEmpty(settingsPath))
                     {
-                        actionfile = new File(settingsPath);
+                        actionfile = new NcsFile(settingsPath);
                         if (actionfile.IsFile())
                         {
                             return new ActionsData(new BufferedReader(new FileReader(actionfile)));
@@ -154,31 +154,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 // Fall back to default location in tools/ directory
                 string userDir = JavaSystem.GetProperty("user.dir");
-                File dir = new File(Path.Combine(userDir, "tools"));
-                actionfile = isK2Selected ? new File(Path.Combine(dir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(dir.FullName, "k1_nwscript.nss"));
+                NcsFile dir = new NcsFile(Path.Combine(userDir, "tools"));
+                actionfile = isK2Selected ? new NcsFile(Path.Combine(dir.FullName, "tsl_nwscript.nss")) : new NcsFile(Path.Combine(dir.FullName, "k1_nwscript.nss"));
                 // If not in tools/, try current directory (legacy support)
                 if (!actionfile.IsFile())
                 {
-                    dir = new File(userDir);
-                    actionfile = isK2Selected ? new File(Path.Combine(dir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(dir.FullName, "k1_nwscript.nss"));
+                    dir = new NcsFile(userDir);
+                    actionfile = isK2Selected ? new NcsFile(Path.Combine(dir.FullName, "tsl_nwscript.nss")) : new NcsFile(Path.Combine(dir.FullName, "k1_nwscript.nss"));
                 }
                 // If still not found, try JAR/EXE directory's tools folder
                 if (!actionfile.IsFile())
                 {
-                    File ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
+                    NcsFile ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
                     if (ncsDecompDir != null)
                     {
-                        File jarToolsDir = new File(Path.Combine(ncsDecompDir.FullName, "tools"));
-                        actionfile = isK2Selected ? new File(Path.Combine(jarToolsDir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(jarToolsDir.FullName, "k1_nwscript.nss"));
+                        NcsFile jarToolsDir = new NcsFile(Path.Combine(ncsDecompDir.FullName, "tools"));
+                        actionfile = isK2Selected ? new NcsFile(Path.Combine(jarToolsDir.FullName, "tsl_nwscript.nss")) : new NcsFile(Path.Combine(jarToolsDir.FullName, "k1_nwscript.nss"));
                     }
                 }
                 // If still not found, try JAR/EXE directory itself
                 if (!actionfile.IsFile())
                 {
-                    File ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
+                    NcsFile ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
                     if (ncsDecompDir != null)
                     {
-                        actionfile = isK2Selected ? new File(Path.Combine(ncsDecompDir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(ncsDecompDir.FullName, "k1_nwscript.nss"));
+                        actionfile = isK2Selected ? new NcsFile(Path.Combine(ncsDecompDir.FullName, "tsl_nwscript.nss")) : new NcsFile(Path.Combine(ncsDecompDir.FullName, "k1_nwscript.nss"));
                     }
                 }
                 if (actionfile.IsFile())
@@ -204,10 +204,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 string userDir = JavaSystem.GetProperty("user.dir");
                 string configDir = Path.Combine(userDir, "config");
-                File configFile = new File(Path.Combine(configDir, "ncsdecomp.conf"));
+                NcsFile configFile = new NcsFile(Path.Combine(configDir, "ncsdecomp.conf"));
                 if (!configFile.Exists())
                 {
-                    configFile = new File(Path.Combine(configDir, "dencs.conf"));
+                    configFile = new NcsFile(Path.Combine(configDir, "dencs.conf"));
                 }
 
                 if (configFile.Exists() && configFile.IsFile())
@@ -262,7 +262,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 // Try to find nwscript.nss file
-                File actionfile = NWScriptLocator.FindNWScriptFile(this.gameType, this.settings);
+                NcsFile actionfile = NWScriptLocator.FindNWScriptFile(this.gameType, this.settings);
                 if (actionfile == null || !actionfile.IsFile())
                 {
                     // Build error message with candidate paths
@@ -285,7 +285,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        public virtual Dictionary<object, object> GetVariableData(File file)
+        public virtual Dictionary<object, object> GetVariableData(NcsFile file)
         {
             if (!this.filedata.ContainsKey(file))
             {
@@ -311,7 +311,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return result;
         }
 
-        public virtual string GetGeneratedCode(File file)
+        public virtual string GetGeneratedCode(NcsFile file)
         {
             if (!this.filedata.ContainsKey(file))
             {
@@ -326,7 +326,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return data.GetCode();
         }
 
-        public virtual string GetOriginalByteCode(File file)
+        public virtual string GetOriginalByteCode(NcsFile file)
         {
             if (!this.filedata.ContainsKey(file))
             {
@@ -341,7 +341,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return data.GetOriginalByteCode();
         }
 
-        public virtual string GetNewByteCode(File file)
+        public virtual string GetNewByteCode(NcsFile file)
         {
             if (!this.filedata.ContainsKey(file))
             {
@@ -358,7 +358,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:253-352
         // Original: public int decompile(File file)
-        public virtual int Decompile(File file)
+        public virtual int Decompile(NcsFile file)
         {
             try
             {
@@ -491,7 +491,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        public virtual int CompileAndCompare(File file, File newfile)
+        public virtual int CompileAndCompare(NcsFile file, NcsFile newfile)
         {
             Utils.FileScriptData data = null;
             if (this.filedata.ContainsKey(file))
@@ -501,7 +501,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return this.CompileAndCompare(file, newfile, data);
         }
 
-        public virtual int CompileOnly(File nssFile)
+        public virtual int CompileOnly(NcsFile nssFile)
         {
             Utils.FileScriptData data = null;
             if (this.filedata.ContainsKey(nssFile))
@@ -518,14 +518,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:415-417
         // Original: public boolean captureBytecodeForNssFile(File nssFile, File compiledNcs, boolean isK2, boolean asOriginal) { return this.captureBytecodeFromNcs(nssFile, compiledNcs, isK2, asOriginal); }
-        public virtual bool CaptureBytecodeForNssFile(File nssFile, File compiledNcs, bool isK2, bool asOriginal)
+        public virtual bool CaptureBytecodeForNssFile(NcsFile nssFile, NcsFile compiledNcs, bool isK2, bool asOriginal)
         {
             return this.CaptureBytecodeFromNcs(nssFile, compiledNcs, isK2, asOriginal);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:429-466
         // Original: public boolean captureBytecodeFromNcs(File sourceFile, File compiledNcs, boolean isK2, boolean asOriginal) { ... }
-        public virtual bool CaptureBytecodeFromNcs(File sourceFile, File compiledNcs, bool isK2, bool asOriginal)
+        public virtual bool CaptureBytecodeFromNcs(NcsFile sourceFile, NcsFile compiledNcs, bool isK2, bool asOriginal)
         {
             try
             {
@@ -535,7 +535,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 // Decompile the compiled NCS to bytecode (pcode)
-                File pcodeFile = this.ExternalDecompile(compiledNcs, isK2, null);
+                NcsFile pcodeFile = this.ExternalDecompile(compiledNcs, isK2, null);
                 if (pcodeFile == null || !pcodeFile.Exists())
                 {
                     return false;
@@ -581,12 +581,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:432-443
         // Original: public File compileNssToNcs(File nssFile, File outputDir)
-        public virtual File CompileNssToNcs(File nssFile, File outputDir)
+        public virtual NcsFile CompileNssToNcs(NcsFile nssFile, NcsFile outputDir)
         {
             return this.ExternalCompile(nssFile, isK2Selected, outputDir);
         }
 
-        public virtual Dictionary<object, object> UpdateSubName(File file, string oldname, string newname)
+        public virtual Dictionary<object, object> UpdateSubName(NcsFile file, string oldname, string newname)
         {
             if (file == null)
             {
@@ -617,7 +617,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return result;
         }
 
-        public virtual string RegenerateCode(File file)
+        public virtual string RegenerateCode(NcsFile file)
         {
             if (!this.filedata.ContainsKey(file))
             {
@@ -633,7 +633,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return data.ToString();
         }
 
-        public virtual void CloseFile(File file)
+        public virtual void CloseFile(NcsFile file)
         {
             if (this.filedata.ContainsKey(file))
             {
@@ -664,7 +664,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:447-455
         // Original: public String decompileToString(File file) throws DecompilerException
-        public virtual string DecompileToString(File file)
+        public virtual string DecompileToString(NcsFile file)
         {
             Utils.FileScriptData data = this.DecompileNcs(file);
             if (data == null)
@@ -678,7 +678,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:460-474
         // Original: public void decompileToFile(File input, File output, Charset charset, boolean overwrite) throws DecompilerException, IOException
-        public virtual void DecompileToFile(File input, File output, System.Text.Encoding charset, bool overwrite)
+        public virtual void DecompileToFile(NcsFile input, NcsFile output, System.Text.Encoding charset, bool overwrite)
         {
             if (output.Exists() && !overwrite)
             {
@@ -698,7 +698,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Helper method to decompile from file (used by DecompileToString)
-        private Utils.FileScriptData DecompileNcsObjectFromFile(File file)
+        private Utils.FileScriptData DecompileNcsObjectFromFile(NcsFile file)
         {
             NCS ncs = null;
             try
@@ -721,13 +721,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return this.DecompileNcsObject(ncs);
         }
 
-        private int CompileAndCompare(File file, File newfile, Utils.FileScriptData data)
+        private int CompileAndCompare(NcsFile file, NcsFile newfile, Utils.FileScriptData data)
         {
             string code = this.ReadFile(newfile);
             return this.CompileAndCompare(file, code, data);
         }
 
-        private int CompileAndCompare(File file, string code, Utils.FileScriptData data)
+        private int CompileAndCompare(NcsFile file, string code, Utils.FileScriptData data)
         {
             Game game = this.MapGameType();
             NCS originalNcs = null;
@@ -773,13 +773,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        private int CompileNss(File nssFile, Utils.FileScriptData data)
+        private int CompileNss(NcsFile nssFile, Utils.FileScriptData data)
         {
             string code = this.ReadFile(nssFile);
             return this.CompileAndCompare(nssFile, code, data);
         }
 
-        private string ReadFile(File file)
+        private string ReadFile(NcsFile file)
         {
             if (file == null || !file.Exists())
             {
@@ -835,12 +835,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:875-929
         // Original: private File getCompilerFile()
-        private File GetCompilerFile()
+        private NcsFile GetCompilerFile()
         {
             // GUI MODE: Try to get compiler from Settings
             try
             {
-                File settingsCompiler = CompilerUtil.GetCompilerFromSettings();
+                NcsFile settingsCompiler = CompilerUtil.GetCompilerFromSettings();
                 if (settingsCompiler != null)
                 {
                     // If Settings compiler exists, use it
@@ -855,14 +855,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         + settingsCompiler.GetAbsolutePath() + ", trying fallback to JAR directory");
 
                     // Try JAR/EXE directory's tools folder with all known compiler names
-                    File ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
+                    NcsFile ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
                     if (ncsDecompDir != null)
                     {
-                        File jarToolsDir = new File(Path.Combine(ncsDecompDir.FullName, "tools"));
+                        NcsFile jarToolsDir = new NcsFile(Path.Combine(ncsDecompDir.FullName, "tools"));
                         string[] compilerNames = CompilerUtil.GetCompilerNames();
                         foreach (string name in compilerNames)
                         {
-                            File fallbackCompiler = new File(Path.Combine(jarToolsDir.FullName, name));
+                            NcsFile fallbackCompiler = new NcsFile(Path.Combine(jarToolsDir.FullName, name));
                             if (fallbackCompiler.Exists() && fallbackCompiler.IsFile())
                             {
                                 JavaSystem.@err.Println("DEBUG FileDecompiler.getCompilerFile: Found fallback compiler in JAR directory: "
@@ -895,7 +895,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             // CLI MODE: Use nwnnsscompPath if set (set by CLI argument)
             if (nwnnsscompPath != null && !string.IsNullOrWhiteSpace(nwnnsscompPath))
             {
-                File cliCompiler = new File(nwnnsscompPath);
+                NcsFile cliCompiler = new NcsFile(nwnnsscompPath);
                 JavaSystem.@err.Println(
                     "DEBUG FileDecompiler.getCompilerFile: Using CLI nwnnsscompPath: " + cliCompiler.GetAbsolutePath());
                 return cliCompiler;
@@ -912,13 +912,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: private boolean checkCompilerExists()
         private bool CheckCompilerExists()
         {
-            File compiler = GetCompilerFile();
+            NcsFile compiler = GetCompilerFile();
             return compiler.Exists();
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:869-872
         // Original: private String getShortName(File in)
-        private string GetShortName(File inFile)
+        private string GetShortName(NcsFile inFile)
         {
             string path = inFile.GetAbsolutePath();
             int i = path.LastIndexOf('.');
@@ -928,11 +928,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:878-921
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:888-963
         // Original: private File externalDecompile(File in, boolean k2, File outputDir)
-        private File ExternalDecompile(File inFile, bool k2, File outputDir)
+        private NcsFile ExternalDecompile(NcsFile inFile, bool k2, NcsFile outputDir)
         {
             try
             {
-                File compiler = GetCompilerFile();
+                NcsFile compiler = GetCompilerFile();
                 if (!compiler.Exists())
                 {
                     JavaSystem.@out.Println("[NCSDecomp] ERROR: Compiler not found: " + compiler.GetAbsolutePath());
@@ -940,7 +940,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 // Determine output directory: use provided outputDir, or temp if null
-                File actualOutputDir;
+                NcsFile actualOutputDir;
                 if (outputDir != null)
                 {
                     actualOutputDir = outputDir;
@@ -949,7 +949,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     // Default to temp directory to avoid creating files without user consent
                     string tmpDir = JavaSystem.GetProperty("java.io.tmpdir");
-                    actualOutputDir = new File(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
+                    actualOutputDir = new NcsFile(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
                     if (!actualOutputDir.Exists())
                     {
                         actualOutputDir.Mkdirs();
@@ -963,7 +963,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     baseName = baseName.Substring(0, lastDot);
                 }
-                File result = new File(Path.Combine(actualOutputDir.FullName, baseName + ".pcode"));
+                NcsFile result = new NcsFile(Path.Combine(actualOutputDir.FullName, baseName + ".pcode"));
                 if (result.Exists())
                 {
                     result.Delete();
@@ -1019,16 +1019,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:926-943
         // Original: private File writeCode(String code)
-        private File WriteCode(string code)
+        private NcsFile WriteCode(string code)
         {
             try
             {
-                File outFile = new File("_generatedcode.nss");
+                NcsFile outFile = new NcsFile("_generatedcode.nss");
                 using (var writer = new StreamWriter(outFile.FullName, false, System.Text.Encoding.UTF8))
                 {
                     writer.Write(code);
                 }
-                File result = new File("_generatedcode.ncs");
+                NcsFile result = new NcsFile("_generatedcode.ncs");
                 if (result.Exists())
                 {
                     result.Delete();
@@ -1046,11 +1046,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:948-1010
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1008-1105
         // Original: public File externalCompile(File file, boolean k2, File outputDir)
-        private File ExternalCompile(File file, bool k2, File outputDir)
+        private NcsFile ExternalCompile(NcsFile file, bool k2, NcsFile outputDir)
         {
             try
             {
-                File compiler = GetCompilerFile();
+                NcsFile compiler = GetCompilerFile();
                 if (!compiler.Exists())
                 {
                     JavaSystem.@out.Println("[NCSDecomp] ERROR: Compiler not found: " + compiler.GetAbsolutePath());
@@ -1058,7 +1058,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 // Determine output directory: use provided outputDir, or temp if null
-                File actualOutputDir;
+                NcsFile actualOutputDir;
                 if (outputDir != null)
                 {
                     actualOutputDir = outputDir;
@@ -1067,7 +1067,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     // Default to temp directory to avoid creating files without user consent
                     string tmpDir = JavaSystem.GetProperty("java.io.tmpdir");
-                    actualOutputDir = new File(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
+                    actualOutputDir = new NcsFile(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
                     if (!actualOutputDir.Exists())
                     {
                         actualOutputDir.Mkdirs();
@@ -1081,18 +1081,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     baseName = baseName.Substring(0, lastDot);
                 }
-                File result = new File(Path.Combine(actualOutputDir.FullName, baseName + ".ncs"));
+                NcsFile result = new NcsFile(Path.Combine(actualOutputDir.FullName, baseName + ".ncs"));
 
                 // Ensure nwscript.nss is in the compiler's directory (like test does)
                 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:960-975
-                File compilerDir = compiler.Directory != null ? new File(compiler.Directory) : null;
+                NcsFile compilerDir = compiler.Directory != null ? new NcsFile(compiler.Directory) : null;
                 if (compilerDir != null)
                 {
-                    File compilerNwscript = new File(Path.Combine(compilerDir.FullName, "nwscript.nss"));
+                    NcsFile compilerNwscript = new NcsFile(Path.Combine(compilerDir.FullName, "nwscript.nss"));
                     string userDir = JavaSystem.GetProperty("user.dir");
-                    File nwscriptSource = k2
-                        ? new File(Path.Combine(userDir, "tools", "tsl_nwscript.nss"))
-                        : new File(Path.Combine(userDir, "tools", "k1_nwscript.nss"));
+                    NcsFile nwscriptSource = k2
+                        ? new NcsFile(Path.Combine(userDir, "tools", "tsl_nwscript.nss"))
+                        : new NcsFile(Path.Combine(userDir, "tools", "k1_nwscript.nss"));
                     if (nwscriptSource.Exists() && (!compilerNwscript.Exists() || !compilerNwscript.GetAbsolutePath().Equals(nwscriptSource.GetAbsolutePath())))
                     {
                         try
@@ -1149,17 +1149,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1012-1029
         // Original: private List<File> buildIncludeDirs(boolean k2)
-        private List<File> BuildIncludeDirs(bool k2)
+        private List<NcsFile> BuildIncludeDirs(bool k2)
         {
-            List<File> dirs = new List<File>();
-            File baseDir = new File(Path.Combine("test-work", "Vanilla_KOTOR_Script_Source"));
-            File gameDir = new File(Path.Combine(baseDir.FullName, k2 ? "TSL" : "K1"));
-            File scriptsBif = new File(Path.Combine(gameDir.FullName, "Data", "scripts.bif"));
+            List<NcsFile> dirs = new List<NcsFile>();
+            NcsFile baseDir = new NcsFile(Path.Combine("test-work", "Vanilla_KOTOR_Script_Source"));
+            NcsFile gameDir = new NcsFile(Path.Combine(baseDir.FullName, k2 ? "TSL" : "K1"));
+            NcsFile scriptsBif = new NcsFile(Path.Combine(gameDir.FullName, "Data", "scripts.bif"));
             if (scriptsBif.Exists())
             {
                 dirs.Add(scriptsBif);
             }
-            File rootOverride = new File(Path.Combine(gameDir.FullName, "Override"));
+            NcsFile rootOverride = new NcsFile(Path.Combine(gameDir.FullName, "Override"));
             if (rootOverride.Exists())
             {
                 dirs.Add(rootOverride);
@@ -1190,7 +1190,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1065-1180
         // Original: private String generateComprehensiveFallbackStub(File file, String errorStage, Exception exception, String additionalInfo)
-        private string GenerateComprehensiveFallbackStub(File file, string errorStage, Exception exception, string additionalInfo)
+        private string GenerateComprehensiveFallbackStub(NcsFile file, string errorStage, Exception exception, string additionalInfo)
         {
             StringBuilder stub = new StringBuilder();
             string newline = Environment.NewLine;
@@ -1335,7 +1335,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:667-696
         // Original: private String comparePcodeFiles(File originalPcode, File newPcode)
-        private string ComparePcodeFiles(File originalPcode, File newPcode)
+        private string ComparePcodeFiles(NcsFile originalPcode, NcsFile newPcode)
         {
             try
             {
@@ -1380,7 +1380,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:701-721
         // Original: private boolean compareBinaryFiles(File original, File generated)
-        private bool CompareBinaryFiles(File original, File generated)
+        private bool CompareBinaryFiles(NcsFile original, NcsFile generated)
         {
             try
             {
@@ -1415,7 +1415,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Placeholder for old ComparePcodeFiles that was not decompiled:
-        private string ComparePcodeFilesOld(File file1, File file2)
+        private string ComparePcodeFilesOld(NcsFile file1, NcsFile file2)
         {
 
             //
@@ -1642,7 +1642,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1193-1847
         // Original: private FileDecompiler.FileScriptData decompileNcs(File file)
-        private Utils.FileScriptData DecompileNcs(File file)
+        private Utils.FileScriptData DecompileNcs(NcsFile file)
         {
             Utils.FileScriptData data = null;
             string commands = null;

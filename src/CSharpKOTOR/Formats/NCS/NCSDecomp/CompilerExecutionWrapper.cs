@@ -23,9 +23,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     /// </summary>
     public class CompilerExecutionWrapper
     {
-        private readonly File compilerFile;
-        private readonly File sourceFile;
-        private readonly File outputFile; // Used by NwnnsscompConfig internally
+        private readonly NcsFile compilerFile;
+        private readonly NcsFile sourceFile;
+        private readonly NcsFile outputFile; // Used by NwnnsscompConfig internally
         private readonly bool isK2;
         private readonly KnownExternalCompilers.CompilerInfo compiler;
         private readonly NwnnsscompConfig config;
@@ -33,15 +33,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         private readonly Dictionary<string, string> envOverrides = new Dictionary<string, string>();
 
         // Files/directories that need cleanup
-        private readonly List<File> copiedIncludeFiles = new List<File>();
-        private readonly List<File> copiedNwscriptFiles = new List<File>();
-        private File originalNwscriptBackup = null;
-        private File copiedSourceFile = null; // When using registry spoofing, source is copied to spoofed directory
-        private File actualSourceFile = null; // The actual source file to use (original or copied)
+        private readonly List<NcsFile> copiedIncludeFiles = new List<NcsFile>();
+        private readonly List<NcsFile> copiedNwscriptFiles = new List<NcsFile>();
+        private NcsFile originalNwscriptBackup = null;
+        private NcsFile copiedSourceFile = null; // When using registry spoofing, source is copied to spoofed directory
+        private NcsFile actualSourceFile = null; // The actual source file to use (original or copied)
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:62-70
         // Original: public CompilerExecutionWrapper(File compilerFile, File sourceFile, File outputFile, boolean isK2) throws IOException
-        public CompilerExecutionWrapper(File compilerFile, File sourceFile, File outputFile, bool isK2)
+        public CompilerExecutionWrapper(NcsFile compilerFile, NcsFile sourceFile, NcsFile outputFile, bool isK2)
         {
             this.compilerFile = compilerFile;
             this.sourceFile = sourceFile;
@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:79-93
         // Original: public void prepareExecutionEnvironment(List<File> includeDirs) throws IOException
-        public void PrepareExecutionEnvironment(List<File> includeDirs)
+        public void PrepareExecutionEnvironment(List<NcsFile> includeDirs)
         {
             // Pattern 2: nwscript.nss abstraction (must be done first for registry spoofing logic)
             PrepareNwscriptFile();
@@ -83,9 +83,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:106-150
         // Original: private void prepareRegistrySpoofedEnvironment(List<File> includeDirs) throws IOException
-        private void PrepareRegistrySpoofedEnvironment(List<File> includeDirs)
+        private void PrepareRegistrySpoofedEnvironment(List<NcsFile> includeDirs)
         {
-            File toolsDir = compilerFile.GetParentFile(); // tools/ directory (where registry is spoofed)
+            NcsFile toolsDir = compilerFile.GetParentFile(); // tools/ directory (where registry is spoofed)
             if (toolsDir == null || !toolsDir.Exists())
             {
                 throw new IOException("Compiler directory does not exist: " + (toolsDir != null ? toolsDir.GetAbsolutePath() : "null"));
@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: Preparing registry-spoofed environment in: " + toolsDir.GetAbsolutePath());
 
             // Copy source file to tools directory
-            copiedSourceFile = new File(toolsDir, sourceFile.Name);
+            copiedSourceFile = new NcsFile(toolsDir, sourceFile.Name);
             JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: COPYING source file: " + sourceFile.GetAbsolutePath() + " -> " + copiedSourceFile.GetAbsolutePath());
             System.IO.File.Copy(sourceFile.GetAbsolutePath(), copiedSourceFile.GetAbsolutePath(), true);
             actualSourceFile = copiedSourceFile;
@@ -106,7 +106,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 HashSet<string> neededIncludes = ExtractIncludeFiles(sourceFile);
                 foreach (string includeName in neededIncludes)
                 {
-                    File destFile = new File(toolsDir, includeName);
+                    NcsFile destFile = new NcsFile(toolsDir, includeName);
                     // Skip if already exists
                     if (destFile.Exists())
                     {
@@ -115,11 +115,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     }
 
                     // Search for include file in include directories
-                    foreach (File includeDir in includeDirs)
+                    foreach (NcsFile includeDir in includeDirs)
                     {
                         if (includeDir != null && includeDir.Exists())
                         {
-                            File includeFile = new File(includeDir, includeName);
+                            NcsFile includeFile = new NcsFile(includeDir, includeName);
                             if (includeFile.Exists() && includeFile.IsFile())
                             {
                                 JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: COPYING include file: " + includeFile.GetAbsolutePath() + " -> " + destFile.GetAbsolutePath());
@@ -139,7 +139,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:156-198
         // Original: private void prepareIncludeFiles(List<File> includeDirs) throws IOException
-        private void PrepareIncludeFiles(List<File> includeDirs)
+        private void PrepareIncludeFiles(List<NcsFile> includeDirs)
         {
             if (includeDirs == null || includeDirs.Count == 0)
             {
@@ -153,7 +153,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             if (!supportsIncludeFlag)
             {
                 // Compiler doesn't support -i, copy include files to source directory
-                File sourceDir = sourceFile.GetParentFile();
+                NcsFile sourceDir = sourceFile.GetParentFile();
                 if (sourceDir == null)
                 {
                     return;
@@ -165,7 +165,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // Copy needed include files from include directories to source directory
                 foreach (string includeName in neededIncludes)
                 {
-                    File destFile = new File(sourceDir, includeName);
+                    NcsFile destFile = new NcsFile(sourceDir, includeName);
                     // Skip if already exists in source directory
                     if (destFile.Exists())
                     {
@@ -173,11 +173,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     }
 
                     // Search for include file in include directories
-                    foreach (File includeDir in includeDirs)
+                    foreach (NcsFile includeDir in includeDirs)
                     {
                         if (includeDir != null && includeDir.Exists())
                         {
-                            File includeFile = new File(includeDir, includeName);
+                            NcsFile includeFile = new NcsFile(includeDir, includeName);
                             if (includeFile.Exists() && includeFile.IsFile())
                             {
                                 JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: COPYING include file: " + includeFile.GetAbsolutePath() + " -> " + destFile.GetAbsolutePath());
@@ -196,16 +196,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: private void prepareNwscriptFile() throws IOException
         private void PrepareNwscriptFile()
         {
-            File compilerDir = compilerFile.GetParentFile();
+            NcsFile compilerDir = compilerFile.GetParentFile();
             if (compilerDir == null)
             {
                 return;
             }
 
-            File compilerNwscript = new File(compilerDir, "nwscript.nss");
+            NcsFile compilerNwscript = new NcsFile(compilerDir, "nwscript.nss");
 
             // Determine which nwscript.nss to use
-            File nwscriptSource = DetermineNwscriptSource();
+            NcsFile nwscriptSource = DetermineNwscriptSource();
             if (nwscriptSource == null || !nwscriptSource.Exists())
             {
                 JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: Warning: nwscript.nss source not found");
@@ -238,7 +238,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // Backup original if it exists and is different
                 if (compilerNwscript.Exists())
                 {
-                    File backup = new File(compilerDir, "nwscript.nss.backup");
+                    NcsFile backup = new NcsFile(compilerDir, "nwscript.nss.backup");
                     if (backup.Exists())
                     {
                         JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: DELETING existing backup file: " + backup.GetAbsolutePath());
@@ -261,14 +261,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:260-282
         // Original: private File determineNwscriptSource()
-        private File DetermineNwscriptSource()
+        private NcsFile DetermineNwscriptSource()
         {
-            File toolsDir = new File(new File(JavaSystem.GetProperty("user.dir")), "tools");
+            NcsFile toolsDir = new NcsFile(new NcsFile(JavaSystem.GetProperty("user.dir")), "tools");
 
             if (isK2)
             {
                 // For K2, use tsl_nwscript.nss
-                return new File(toolsDir, "tsl_nwscript.nss");
+                return new NcsFile(toolsDir, "tsl_nwscript.nss");
             }
             else
             {
@@ -277,10 +277,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 if (needsAsc)
                 {
                     // Try k1_asc_nwscript.nss first, then k1_asc_donotuse_nwscript.nss
-                    File ascNwscript = new File(toolsDir, "k1_asc_nwscript.nss");
+                    NcsFile ascNwscript = new NcsFile(toolsDir, "k1_asc_nwscript.nss");
                     if (!ascNwscript.Exists())
                     {
-                        ascNwscript = new File(toolsDir, "k1_asc_donotuse_nwscript.nss");
+                        ascNwscript = new NcsFile(toolsDir, "k1_asc_donotuse_nwscript.nss");
                     }
                     if (ascNwscript.Exists())
                     {
@@ -288,13 +288,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     }
                 }
                 // Default to k1_nwscript.nss
-                return new File(toolsDir, "k1_nwscript.nss");
+                return new NcsFile(toolsDir, "k1_nwscript.nss");
             }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:287-299
         // Original: private boolean checkNeedsAscNwscript(File nssFile)
-        private bool CheckNeedsAscNwscript(File nssFile)
+        private bool CheckNeedsAscNwscript(NcsFile nssFile)
         {
             try
             {
@@ -314,7 +314,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:304-322
         // Original: private Set<String> extractIncludeFiles(File sourceFile)
-        private HashSet<string> ExtractIncludeFiles(File sourceFile)
+        private HashSet<string> ExtractIncludeFiles(NcsFile sourceFile)
         {
             HashSet<string> includes = new HashSet<string>();
             try
@@ -342,7 +342,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:328-354
         // Original: public File getWorkingDirectory()
-        public File GetWorkingDirectory()
+        public NcsFile GetWorkingDirectory()
         {
             // Some legacy compilers (KOTOR Tool / Scripting Tool) behave more reliably
             // when run from their own directory because they probe for nwscript.nss and
@@ -350,7 +350,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             if (compiler == KnownExternalCompilers.KOTOR_TOOL || compiler == KnownExternalCompilers.KOTOR_SCRIPTING_TOOL
                   || !SupportsGameFlag())
             {
-                File compilerDir = compilerFile.GetParentFile();
+                NcsFile compilerDir = compilerFile.GetParentFile();
                 if (compilerDir != null && compilerDir.Exists())
                 {
                     JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: Using compiler directory as working dir: "
@@ -360,24 +360,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             // Most compilers work best when run from the source file's directory
-            File sourceDir = sourceFile.GetParentFile();
+            NcsFile sourceDir = sourceFile.GetParentFile();
             if (sourceDir != null && sourceDir.Exists())
             {
                 return sourceDir;
             }
             // Fallback to compiler directory
-            File compilerDir2 = compilerFile.GetParentFile();
+            NcsFile compilerDir2 = compilerFile.GetParentFile();
             if (compilerDir2 != null && compilerDir2.Exists())
             {
                 return compilerDir2;
             }
             // Final fallback to current directory
-            return new File(JavaSystem.GetProperty("user.dir"));
+            return new NcsFile(JavaSystem.GetProperty("user.dir"));
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:361-375
         // Original: public String[] getCompileArgs(List<File> includeDirs)
-        public string[] GetCompileArgs(List<File> includeDirs)
+        public string[] GetCompileArgs(List<NcsFile> includeDirs)
         {
             // If we copied the source file for registry spoofing, we need to create a new config with the copied file
             if (actualSourceFile != null && !actualSourceFile.GetAbsolutePath().Equals(sourceFile.GetAbsolutePath()))
@@ -419,7 +419,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             // Clean up copied include files
-            foreach (File copiedFile in copiedIncludeFiles)
+            foreach (NcsFile copiedFile in copiedIncludeFiles)
             {
                 try
                 {
@@ -442,10 +442,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 try
                 {
-                    File compilerDir = compilerFile.GetParentFile();
+                    NcsFile compilerDir = compilerFile.GetParentFile();
                     if (compilerDir != null)
                     {
-                        File compilerNwscript = new File(compilerDir, "nwscript.nss");
+                        NcsFile compilerNwscript = new NcsFile(compilerDir, "nwscript.nss");
                         if (compilerNwscript.Exists())
                         {
                             JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: COPYING (RESTORE) nwscript.nss from backup: " + originalNwscriptBackup.GetAbsolutePath() + " -> " + compilerNwscript.GetAbsolutePath());
@@ -489,7 +489,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: private void buildEnvironmentOverrides()
         private void BuildEnvironmentOverrides()
         {
-            File toolsDir = new File(new File(JavaSystem.GetProperty("user.dir")), "tools");
+            NcsFile toolsDir = new NcsFile(new NcsFile(JavaSystem.GetProperty("user.dir")), "tools");
 
             // Only apply overrides for legacy compilers that ignore -g or probe registry
             bool needsRootOverride = compiler == KnownExternalCompilers.KOTOR_TOOL
@@ -532,7 +532,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             if (compiler == KnownExternalCompilers.KOTOR_TOOL || compiler == KnownExternalCompilers.KOTOR_SCRIPTING_TOOL)
             {
                 // Use the tools directory as the installation path (where compiler and nwscript files are)
-                File toolsDir = new File(new File(JavaSystem.GetProperty("user.dir")), "tools");
+                NcsFile toolsDir = new NcsFile(new NcsFile(JavaSystem.GetProperty("user.dir")), "tools");
                 try
                 {
                     RegistrySpoofer spoofer = new RegistrySpoofer(toolsDir, isK2);

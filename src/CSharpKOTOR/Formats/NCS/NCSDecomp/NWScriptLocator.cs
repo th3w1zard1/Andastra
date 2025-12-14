@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using File = System.IO.FileInfo;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
@@ -24,13 +23,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="gameType">Game type (K1 or TSL)</param>
         /// <param name="settings">Settings instance to check configured path</param>
         /// <returns>FileInfo for nwscript.nss if found, null otherwise</returns>
-        public static File FindNWScriptFile(GameType gameType, Settings settings)
+        public static NcsFile FindNWScriptFile(GameType gameType, Settings settings)
         {
             // 1. Check settings-configured path first
             string settingsPath = settings.GetProperty("NWScript Path");
             if (!string.IsNullOrEmpty(settingsPath))
             {
-                File settingsFile = new File(settingsPath);
+                NcsFile settingsFile = new NcsFile(settingsPath);
                 if (settingsFile.IsFile())
                 {
                     return settingsFile;
@@ -38,7 +37,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             // 2. Check current directory
-            File currentDirFile = new File(Path.Combine(JavaSystem.GetProperty("user.dir"), "nwscript.nss"));
+            NcsFile currentDirFile = new NcsFile(Path.Combine(JavaSystem.GetProperty("user.dir"), "nwscript.nss"));
             if (currentDirFile.IsFile())
             {
                 return currentDirFile;
@@ -52,7 +51,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 string k1Nwscript = Path.Combine(repoRoot, "vendor", "PyKotor", "vendor", "NorthernLights", "Scripts", "k1_nwscript.nss");
                 if (gameType == GameType.K1)
                 {
-                    File k1File = new File(k1Nwscript);
+                    NcsFile k1File = new NcsFile(k1Nwscript);
                     if (k1File.IsFile())
                     {
                         return k1File;
@@ -63,7 +62,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 string k2Nwscript = Path.Combine(repoRoot, "include", "k2_nwscript.nss");
                 if (gameType == GameType.TSL)
                 {
-                    File k2File = new File(k2Nwscript);
+                    NcsFile k2File = new NcsFile(k2Nwscript);
                     if (k2File.IsFile())
                     {
                         return k2File;
@@ -75,7 +74,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 string toolsK2 = Path.Combine(repoRoot, "tools", "tsl_nwscript.nss");
                 if (gameType == GameType.K1)
                 {
-                    File toolsK1File = new File(toolsK1);
+                    NcsFile toolsK1File = new NcsFile(toolsK1);
                     if (toolsK1File.IsFile())
                     {
                         return toolsK1File;
@@ -83,7 +82,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
                 else
                 {
-                    File toolsK2File = new File(toolsK2);
+                    NcsFile toolsK2File = new NcsFile(toolsK2);
                     if (toolsK2File.IsFile())
                     {
                         return toolsK2File;
@@ -127,7 +126,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             // Check each candidate path
             foreach (string candidatePath in candidatePaths)
             {
-                File candidateFile = new File(candidatePath);
+                NcsFile candidateFile = new NcsFile(candidatePath);
                 if (candidateFile.IsFile())
                 {
                     return candidateFile;
@@ -169,7 +168,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                                             if (!string.IsNullOrEmpty(gamePath))
                                             {
                                                 string nwscriptPath = Path.Combine(gamePath, "nwscript.nss");
-                                                File gameFile = new File(nwscriptPath);
+                                                NcsFile gameFile = new NcsFile(nwscriptPath);
                                                 if (gameFile.IsFile())
                                                 {
                                                     return gameFile;

@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using System.Text;
-using File = System.IO.FileInfo;
 using IOException = CSharpKOTOR.Formats.NCS.NCSDecomp.IOException;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
@@ -31,7 +30,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="gameFlag">The game flag ("k1" or "k2")</param>
         /// <returns>The decompiled NSS code as a string, or null if decompilation fails</returns>
         /// <exception cref="DecompilerException">If decompilation fails</exception>
-        public static string DecompileNcsToNss(File ncsFile, string gameFlag)
+        public static string DecompileNcsToNss(NcsFile ncsFile, string gameFlag)
         {
             if (ncsFile == null || !ncsFile.Exists())
             {
@@ -47,11 +46,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 FileDecompiler.isK2Selected = "k2".Equals(gameFlag);
 
                 // Create a temporary output file (matches test pattern)
-                File tempNssFile;
+                NcsFile tempNssFile;
                 try
                 {
                     string tempPath = Path.Combine(Path.GetTempPath(), "roundtrip_" + Guid.NewGuid().ToString("N") + ".nss");
-                    tempNssFile = new File(tempPath);
+                    tempNssFile = new NcsFile(tempPath);
                 }
                 catch (Exception e)
                 {
@@ -127,7 +126,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="gameFlag">The game flag ("k1" or "k2")</param>
         /// <param name="charset">The charset to use for writing (defaults to UTF-8 if null)</param>
         /// <exception cref="DecompilerException">If decompilation fails</exception>
-        public static void DecompileNcsToNssFile(File ncsFile, File nssOutputFile, string gameFlag, Encoding charset)
+        public static void DecompileNcsToNssFile(NcsFile ncsFile, NcsFile nssOutputFile, string gameFlag, Encoding charset)
         {
             if (ncsFile == null || !ncsFile.Exists())
             {
@@ -178,7 +177,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="savedNssFile">The saved NSS file (after compilation, this should have a corresponding .ncs file)</param>
         /// <param name="gameFlag">The game flag ("k1" or "k2")</param>
         /// <returns>Round-trip decompiled NSS code, or null if not available</returns>
-        public static string GetRoundTripDecompiledCode(File savedNssFile, string gameFlag)
+        public static string GetRoundTripDecompiledCode(NcsFile savedNssFile, string gameFlag)
         {
             try
             {
@@ -196,7 +195,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     baseName = nssName.Substring(0, lastDot);
                 }
-                File recompiledNcsFile = new File(Path.Combine(savedNssFile.DirectoryName, baseName + ".ncs"));
+                NcsFile recompiledNcsFile = new NcsFile(Path.Combine(savedNssFile.DirectoryName, baseName + ".ncs"));
 
                 if (!recompiledNcsFile.Exists())
                 {
