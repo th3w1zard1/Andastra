@@ -220,7 +220,23 @@ namespace Odyssey.Content.MDL
 
                 for (int i = 0; i < namesCount; i++)
                 {
-                    _nodeNames[i] = ReadNullTerminatedString(mdlPtr, MDLConstants.FILE_HEADER_SIZE + nameOffsets[i]);
+                    // Validate offset is non-negative (negative offsets indicate invalid data)
+                    if (nameOffsets[i] >= 0)
+                    {
+                        long absoluteOffsetLong = (long)MDLConstants.FILE_HEADER_SIZE + nameOffsets[i];
+                        if (absoluteOffsetLong >= 0 && absoluteOffsetLong < _mdlData.Length)
+                        {
+                            _nodeNames[i] = ReadNullTerminatedString(mdlPtr, (int)absoluteOffsetLong);
+                        }
+                        else
+                        {
+                            _nodeNames[i] = string.Empty;
+                        }
+                    }
+                    else
+                    {
+                        _nodeNames[i] = string.Empty;
+                    }
                 }
             }
             else
@@ -236,7 +252,30 @@ namespace Odyssey.Content.MDL
 
                 for (int i = 0; i < model.AnimationCount; i++)
                 {
-                    model.Animations[i] = ReadAnimation(mdlPtr, MDLConstants.FILE_HEADER_SIZE + animOffsets[i]);
+                    // Validate offset is non-negative (negative offsets indicate invalid data)
+                    if (animOffsets[i] >= 0)
+                    {
+                        long absoluteOffsetLong = (long)MDLConstants.FILE_HEADER_SIZE + animOffsets[i];
+                        if (absoluteOffsetLong >= 0 && absoluteOffsetLong < _mdlData.Length)
+                        {
+                            model.Animations[i] = ReadAnimation(mdlPtr, (int)absoluteOffsetLong);
+                        }
+                        else
+                        {
+                            throw new InvalidDataException(
+                                $"Animation offset {i} is out of bounds: " +
+                                $"FILE_HEADER_SIZE ({MDLConstants.FILE_HEADER_SIZE}) + " +
+                                $"animOffsets[{i}] ({animOffsets[i]}) = {absoluteOffsetLong}, " +
+                                $"file length = {_mdlData.Length}"
+                            );
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(
+                            $"Animation offset {i} is negative ({animOffsets[i]}), indicating corrupted data."
+                        );
+                    }
                 }
             }
             else
@@ -383,7 +422,30 @@ namespace Odyssey.Content.MDL
 
                 for (int i = 0; i < childCount; i++)
                 {
-                    node.Children[i] = ReadNode(mdlPtr, MDLConstants.FILE_HEADER_SIZE + childOffsets[i]);
+                    // Validate offset is non-negative (negative offsets indicate invalid data)
+                    if (childOffsets[i] >= 0)
+                    {
+                        long absoluteOffsetLong = (long)MDLConstants.FILE_HEADER_SIZE + childOffsets[i];
+                        if (absoluteOffsetLong >= 0 && absoluteOffsetLong < _mdlData.Length)
+                        {
+                            node.Children[i] = ReadNode(mdlPtr, (int)absoluteOffsetLong);
+                        }
+                        else
+                        {
+                            throw new InvalidDataException(
+                                $"Child node offset {i} is out of bounds: " +
+                                $"FILE_HEADER_SIZE ({MDLConstants.FILE_HEADER_SIZE}) + " +
+                                $"childOffsets[{i}] ({childOffsets[i]}) = {absoluteOffsetLong}, " +
+                                $"file length = {_mdlData.Length}"
+                            );
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(
+                            $"Child node offset {i} is negative ({childOffsets[i]}), indicating corrupted data."
+                        );
+                    }
                 }
             }
             else
