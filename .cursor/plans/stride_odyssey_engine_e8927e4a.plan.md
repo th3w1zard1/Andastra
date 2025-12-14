@@ -561,3 +561,210 @@ The runtime is “playable KOTOR” when all are true:
   - Mitigation: caching with hashes + background conversion; progressive loading.
 - **Behavior parity**:
   - Mitigation: vertical slice acceptance tests; instrumented builds; controlled determinism mode.
+
+### 22) Stride implementation decisions (make these explicit up front)
+
+To avoid death-by-architecture, decide these once and enforce consistently:
+
+- **Target frameworks**:
+  - Runtime: `net8.0` (Stride current baseline; adjust to Stride-supported target).
+  - Libraries (`Odyssey.Core`, `Odyssey.Scripting`): keep portable; no platform APIs.
+- **C# language version**: pin to **7.3** for all new projects to match repo conventions.
+- **Physics**:
+  - Use Stride’s physics integration for broad-phase/colliders where sensible.
+  - Walkmesh remains the authority for navigation + ground projection (character controller should be walkmesh-driven, not “capsule-on-mesh” only).
+- **Renderer**:
+  - Standardize on a small set of Effect/Material variants:
+    - Opaque
+    - AlphaCutout
+    - AlphaBlend
+    - Additive
+    - Lightmapped variants of the above
+  - Avoid per-material custom shader explosions; keep a strict compatibility matrix.
+- **Threading**:
+  - Content conversion in background tasks with cancellation.
+  - Scene mutation on Stride main thread only.
+- **Determinism mode**:
+  - Fixed-step simulation time.
+  - Deterministic RNG with seed control.
+  - Deterministic content cache keys.
+
+### 23) Concrete epic breakdown (by new project)
+
+This is the “execution checklist” that teams can parallelize without stepping on each other.
+
+#### `Odyssey.Core`
+
+- Entity/component model and world container
+- Time system (fixed tick, frame delta separation)
+- Event bus + routing (entity-scoped and world-scoped)
+- SaveModel (engine-neutral)
+- Diagnostics contracts (logging categories, trace events)
+
+#### `Odyssey.Content`
+
+- Content cache:
+  - keying (hash + converter version),
+  - storage path strategy,
+  - pruning policy.
+- Texture import:
+  - TPC decode → pixel buffer → Stride texture creation
+  - TGA path support (fallback precedence)
+  - sRGB rules and alpha rules (codified in tests).
+- Model import:
+  - MDL/MDX decode → mesh buffers → Stride mesh/model
+  - skeletons/animations/attachments
+  - material binding to textures/lightmaps/envmaps.
+- Walkmesh import:
+  - BWM decode → nav triangles + collision triangles
+  - triangle adjacency for movement projection
+  - door/trigger volumes.
+- Optional pre-warm pipeline:
+  - batch conversion for a module list.
+
+#### `Odyssey.Scripting`
+
+- NCS execution VM:
+  - stack, call stack, locals/globals
+  - instruction decoding and dispatch
+  - `STORE_STATE` / action parameters behavior
+  - error model + trace hooks.
+- Scheduler:
+  - per-entity queues
+  - Delay wheel / priority queue
+  - heartbeat integration.
+- Engine API surface:
+  - generated dispatch tables (K1/K2)
+  - partial implementations separated from generated code
+  - strict argument/return type checks (in debug builds).
+
+#### `Odyssey.Kotor`
+
+- Game profile definitions (K1 vs K2)
+- 2DA-backed systems:
+  - appearance/baseitems/feat/spells/classes etc. (incremental)
+- Loaders:
+  - IFO/ARE/GIT: spawn entities + attach templates
+  - module transition rules
+- Dialogue system:
+  - DLG traversal + conditional evaluation
+  - TLK integration
+  - VO/LIP binding strategy.
+- Save/Load:
+  - serialize core state
+  - later: parity mappings to KOTOR save content.
+
+#### `Odyssey.Stride`
+
+- Scene bridge:
+  - entity ↔ Stride Entity mapping
+  - transform sync and attachment nodes.
+- Rendering:
+  - room instantiation from LYT
+  - VIS-driven culling groups
+  - lightmap support and transparency ordering
+  - debug visualizations (walkmesh overlay, triggers).
+- Input:
+  - click-to-move, camera
+  - debug controls.
+- Audio bridge:
+  - VO + SFX playback; spatialization.
+- UI:
+  - dialogue UI and menus.
+
+#### `Odyssey.Game`
+
+- Minimal launcher flow:
+  - pick install, pick module, start
+  - show errors with actionable guidance (missing chitin, etc.)
+- Config:
+  - install path persistence
+  - graphics settings, keybinds.
+
+#### `Odyssey.Tests`
+
+- VM semantics tests (deterministic)
+- Resource precedence tests (synthetic mini-install)
+- Content import tests on synthetic fixtures
+- “Vertical slice” harness tests for non-render logic.
+
+### 24) NWScript coverage strategy (how we avoid “implement 3000 funcs”)
+
+You will not finish by attempting to implement all NWScript functions alphabetically.
+
+Do it by *observed usage*:
+
+- Build a script usage indexer:
+  - scan all modules/override/core for `*.ncs`
+  - decompile to AST (for analysis only) or parse instruction streams
+  - extract routine id usage frequencies and per-script call graphs.
+- Create coverage tiers:
+  - Tier 0: boot + area + movement + interaction + dialogue entry
+  - Tier 1: combat core + inventory + party management essentials
+  - Tier 2: quests, journals, influence, minigames, full AI
+  - Tier 3: edge features and obscure calls.
+- Maintain a living “Engine API coverage” dashboard:
+  - Implemented / stubbed / unimplemented
+  - Tests per function group.
+
+### 25) CI/CD, packaging, and developer ergonomics
+
+- CI:
+  - Build all projects.
+  - Run unit tests (VM, precedence, serialization).
+  - Smoke-run headless tooling commands with synthetic fixtures.
+- Local developer workflow:
+  - dev config file pointing to a local KOTOR install (ignored by git).
+  - one command to warm-cache a module for quick iteration.
+- Packaging:
+  - distribute runtime without assets
+  - first-run wizard to locate installation
+  - cache directory defaults documented in-app.
+
+### 26) Performance budgets (set them early)
+
+Define budgets for the vertical slice:
+
+- Module load:
+  - cold: acceptable “first build” time with progress (cache building)
+  - warm: fast load (target: seconds, not minutes).
+- Frame:
+  - maintain stable 60fps on representative modules on a midrange GPU
+  - cap script execution time per frame (budget + spillover queue).
+- Memory:
+  - bounded caches with eviction; no unbounded texture/model retention.
+
+Instrumentation requirements:
+
+- Timers around:
+  - resource lookup
+  - decode/convert
+  - GPU upload
+  - script ticks
+  - AI/combat ticks.
+
+### 27) Integration with existing tooling in this repo
+
+This plan intentionally reuses existing libraries and avoids duplicating tool stacks:
+
+- **CSharpKOTOR** remains the canonical format layer; the runtime wraps it rather than re-parsing formats elsewhere.
+- **HolocronToolset.NET** can become a future “authoring” companion; the runtime should expose:
+  - a stable content cache format (or import APIs),
+  - a module preview mode for rapid iteration.
+- **HoloPatcher** (TSLPatcher port) remains the mod application tool:
+  - runtime should respect the same precedence semantics so patched installs behave as expected.
+
+### 28) Non-goals (explicitly out of scope for the first playable engine)
+
+- Multiplayer/network play.
+- Full editor parity with any existing toolset.
+- Full cross-game support beyond K1/K2 (only placeholder profiles until KOTOR parity is achieved).
+- Perfect visual parity before functional parity (functionality and correctness win first).
+
+### 29) Immediate next steps (first “week” checklist)
+
+- Lock Stride version and baseline platform targets.
+- Create `OdysseyRuntime` projects and solution wiring.
+- Implement installation selection and `CSharpKOTOR.Installation` validation path.
+- Build content cache skeleton and decode a single TPC/TGA into a Stride texture.
+- Load one room model and render it in a Stride scene.
