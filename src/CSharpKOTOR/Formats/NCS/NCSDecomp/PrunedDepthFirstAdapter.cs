@@ -777,10 +777,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.DefaultOut(node);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrunedDepthFirstAdapter.java:695-698
+        // Original: @Override public void caseAActionCommand(AActionCommand node) { this.inAActionCommand(node); this.outAActionCommand(node); }
         public override void CaseAActionCommand(AActionCommand node)
         {
+            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCommand: ENTERED";
+            try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
             this.InAActionCommand(node);
+            debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCommand: calling OutAActionCommand";
+            try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
             this.OutAActionCommand(node);
+            debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCommand: OutAActionCommand returned";
+            try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
         }
 
         public virtual void InALogiiCommand(ALogiiCommand node)

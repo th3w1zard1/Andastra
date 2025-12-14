@@ -36,13 +36,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            // Matching DeNCS implementation - cast to IAnalysis interface and call CaseAActionCommand directly
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/AActionCommand.java:53-56
+            // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseAActionCommand(this); }
+            string debugMsg = "DEBUG AActionCommand.Apply(AnalysisAdapter): ENTERED, sw type=" + sw.GetType().Name + ", is IAnalysis=" + (sw is Analysis.IAnalysis);
+            try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
             if (sw is Analysis.IAnalysis analysis)
             {
+                debugMsg = "DEBUG AActionCommand.Apply: calling CaseAActionCommand";
+                try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
                 analysis.CaseAActionCommand(this);
+                debugMsg = "DEBUG AActionCommand.Apply: CaseAActionCommand returned";
+                try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
             }
             else
             {
+                debugMsg = "DEBUG AActionCommand.Apply: routing to DefaultIn";
+                try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
                 sw.DefaultIn(this);
             }
         }
