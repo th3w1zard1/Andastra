@@ -99,12 +99,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             this.InASubroutine(node);
             string cmdBlockStatus = node.GetCommandBlock() != null ? "not null" : "null";
-            Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: ENTERED, commandBlock=" + cmdBlockStatus);
-            JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: ENTERED, commandBlock=" + cmdBlockStatus);
+            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseASubroutine: ENTERED, commandBlock=" + cmdBlockStatus;
+            Console.Error.WriteLine(debugMsg);
+            JavaSystem.@out.Println(debugMsg);
+            try
+            {
+                System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+            }
+            catch { }
             if (node.GetCommandBlock() != null)
             {
-                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: Visiting commandBlock");
-                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: Visiting commandBlock");
+                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseASubroutine: Visiting commandBlock";
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try
+                {
+                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+                }
+                catch { }
                 node.GetCommandBlock().Apply(this);
             }
 
@@ -133,16 +145,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             this.InACommandBlock(node);
             Object[] temp = node.GetCmd().ToArray();
-            Console.Error.WriteLine($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Found {temp.Length} commands");
-            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Found {temp.Length} commands");
+            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Found " + temp.Length + " commands";
+            Console.Error.WriteLine(debugMsg);
+            JavaSystem.@out.Println(debugMsg);
+            try
+            {
+                System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+            }
+            catch { }
 
             for (int i = 0; i < temp.Length; i++)
             {
                 if (temp[i] is PCmd cmd)
                 {
                     string cmdType = cmd.GetType().Name;
-                    Console.Error.WriteLine($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Visiting command[{i}]={cmdType}");
-                    JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Visiting command[{i}]={cmdType}");
+                    debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Visiting command[" + i + "]=" + cmdType;
+                    Console.Error.WriteLine(debugMsg);
+                    JavaSystem.@out.Println(debugMsg);
+                    try
+                    {
+                        System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+                    }
+                    catch { }
                     cmd.Apply(this);
                 }
             }
@@ -529,21 +553,46 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseAActionCmd(AActionCmd node)
         {
-            Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: ENTERED, actionCommand=" + (node.GetActionCommand() != null ? "not null" : "null"));
-            JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: ENTERED, actionCommand=" + (node.GetActionCommand() != null ? "not null" : "null"));
+            string actionCmdStatus = node.GetActionCommand() != null ? "not null" : "null";
+            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: ENTERED, actionCommand=" + actionCmdStatus;
+            Console.Error.WriteLine(debugMsg);
+            JavaSystem.@out.Println(debugMsg);
+            try
+            {
+                System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+            }
+            catch { }
             this.InAActionCmd(node);
             if (node.GetActionCommand() != null)
             {
-                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: calling Apply on actionCommand");
-                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: calling Apply on actionCommand");
+                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: calling Apply on actionCommand";
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try
+                {
+                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+                }
+                catch { }
                 node.GetActionCommand().Apply(this);
-                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: Apply completed");
-                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: Apply completed");
+                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: Apply completed";
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try
+                {
+                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+                }
+                catch { }
             }
             else
             {
-                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: actionCommand is null!");
-                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: actionCommand is null!");
+                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: actionCommand is null!";
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try
+                {
+                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
+                }
+                catch { }
             }
 
             this.OutAActionCmd(node);

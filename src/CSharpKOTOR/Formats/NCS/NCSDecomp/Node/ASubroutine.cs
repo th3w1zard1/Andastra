@@ -37,23 +37,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            // Call CaseASubroutine directly if sw is PrunedReversedDepthFirstAdapter or PrunedDepthFirstAdapter
-            // This ensures the visitor pattern routes correctly to CaseASubroutine
-            string cmdBlockStatus = GetCommandBlock() != null ? "not null" : "null";
-            JavaSystem.@out.Println("DEBUG AST.ASubroutine.Apply: sw type=" + sw.GetType().Name + ", commandBlock=" + cmdBlockStatus);
-            if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:28-31
+            // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseASubroutine(this); }
+            // Cast to IAnalysis interface and call CaseASubroutine directly
+            if (sw is Analysis.IAnalysis analysis)
             {
-                JavaSystem.@out.Println("DEBUG AST.ASubroutine.Apply: routing to PrunedReversedDepthFirstAdapter.CaseASubroutine");
-                prdfa.CaseASubroutine(this);
-            }
-            else if (sw is Analysis.PrunedDepthFirstAdapter pdfa)
-            {
-                JavaSystem.@out.Println("DEBUG AST.ASubroutine.Apply: routing to PrunedDepthFirstAdapter.CaseASubroutine");
-                pdfa.CaseASubroutine(this);
+                analysis.CaseASubroutine(this);
             }
             else
             {
-                JavaSystem.@out.Println("DEBUG AST.ASubroutine.Apply: routing to DefaultIn");
                 sw.DefaultIn(this);
             }
         }
