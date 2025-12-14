@@ -43,32 +43,37 @@ The architecture separates engine-agnostic systems from game-specific implementa
 - [x] Resource provider interfaces
 - [x] Action queue system
 
-### Phase 1: Core Runtime
+### Phase 1: Core Runtime (In Progress)
 Current focus for achieving first playable module.
 
 #### 1.1 Resource System
-- [ ] `GameResourceProvider` with full precedence chain:
+- [x] `IGameResourceProvider` interface with `ResourceIdentifier` and `SearchLocation`
+- [ ] Full precedence chain implementation:
   - Override → Module → Save → TexturePacks → Chitin
 - [ ] Archive caching (LRU eviction for ERF/RIM/BIF handles)
 - [ ] Async resource streaming
 - [ ] Save overlay integration
 
 #### 1.2 Module Loading Pipeline
-- [ ] IFO parser (module metadata)
-- [ ] ARE parser (area properties, ambient settings)
-- [ ] GIT parser (entity spawn lists)
-- [ ] LYT parser (room layout, doorhooks)
-- [ ] VIS parser (room visibility graph)
+- [x] `ModuleLoader` orchestration class
+- [x] `TemplateLoader` for entity templates
+- [x] IFO integration (RuntimeModule with metadata)
+- [x] ARE integration (RuntimeArea with properties)
+- [x] GIT integration (entity spawning)
+- [ ] LYT integration (room instantiation)
+- [ ] VIS integration (culling groups)
 - [ ] PTH parser (path points)
 
 #### 1.3 Entity Templates
-- [ ] UTC → Creature template
-- [ ] UTP → Placeable template
-- [ ] UTD → Door template
-- [ ] UTT → Trigger template
-- [ ] UTW → Waypoint template
-- [ ] UTS → Sound template
-- [ ] UTE → Encounter template
+- [x] `IEntityTemplate` interface and implementations
+- [x] UTC → `CreatureTemplate`
+- [x] UTP → `PlaceableTemplate`
+- [x] UTD → `DoorTemplate`
+- [x] UTT → `TriggerTemplate`
+- [x] UTW → `WaypointTemplate`
+- [x] UTS → `SoundTemplate`
+- [x] UTE → `EncounterTemplate`
+- [x] UTM → `StoreTemplate`
 
 #### 1.4 Scene Assembly
 - [ ] Room instantiation from LYT
@@ -129,13 +134,15 @@ Current focus for achieving first playable module.
 - [ ] OnUsed
 - [ ] OnEnter/OnExit
 
-### Phase 4: Dialogue System
+### Phase 4: Dialogue System (Foundation Complete)
 
 #### 4.1 DLG Playback
-- [ ] Conversation graph traversal
-- [ ] Conditional script evaluation
-- [ ] Entry/reply script hooks
-- [ ] Node script execution
+- [x] `DialogueSystem` core with state machine
+- [x] `RuntimeDialogue`, `DialogueEntry`, `DialogueReply` data structures
+- [x] Conversation graph traversal
+- [x] Conditional script evaluation integration
+- [x] Entry/reply script hooks
+- [ ] Full node script execution
 
 #### 4.2 Localization
 - [ ] TLK string lookup
@@ -143,29 +150,33 @@ Current focus for achieving first playable module.
 - [ ] Language support
 
 #### 4.3 Voice/Lipsync
+- [x] `IVoicePlayer` and `ILipSyncController` interfaces
+- [x] `LipSyncController` with phoneme interpolation
 - [ ] VO playback from StreamVoice/StreamWaves
-- [ ] LIP keyframe interpolation
 - [ ] Facial animation blending
 - [ ] Camera transitions (speaker/listener)
 
-### Phase 5: Combat System
+### Phase 5: Combat System (Foundation Complete)
 
 #### 5.1 Combat Resolution
-- [ ] D20 attack rolls
-- [ ] Defense calculations
-- [ ] Damage application
-- [ ] Critical hits
-- [ ] Saving throws
+- [x] `CombatSystem` with D20 attack rolls
+- [x] Defense calculations
+- [x] Damage application with reduction
+- [x] Critical hits (threat + confirmation)
+- [x] Saving throws (Fortitude, Reflex, Will)
+- [x] `AttackResult`, `DamageResult`, `SavingThrowResult` types
 
 #### 5.2 Combat Round System
-- [ ] 3-second round timing
+- [x] 3-second round timing
+- [x] Combat encounter tracking
 - [ ] Attack queue management
 - [ ] Animation synchronization
 - [ ] Projectile handling
 
 #### 5.3 Effect System
-- [ ] Buff/debuff application
-- [ ] Duration tracking
+- [x] `EffectSystem` with effect application/removal
+- [x] Duration tracking (Permanent, Temporary, Instant)
+- [x] Round-based expiration
 - [ ] Effect stacking rules
 - [ ] Visual effect spawning
 
@@ -189,20 +200,27 @@ Current focus for achieving first playable module.
 - [ ] Combat assistance
 - [ ] Script hooks
 
-### Phase 7: Save/Load System
+### Phase 7: Save/Load System (Foundation Complete)
 
 #### 7.1 State Serialization
-- [ ] Global variables
-- [ ] Local variables per object
-- [ ] Party state
-- [ ] Inventory state
-- [ ] Module state (entity positions, door states)
+- [x] `SaveSystem` with save/load orchestration
+- [x] `SaveGameData` with complete game state structures
+- [x] Global variables (`GlobalVariableState`)
+- [x] Local variables per object (`LocalVariableSet`)
+- [x] Party state (`PartyState`, `PartyMemberState`)
+- [x] Creature state (equipment, inventory, powers, skills)
+- [x] `AreaState` with entity states
+- [x] `EntityState` (positions, door states, HP, effects)
+- [x] Active effects serialization (`SavedEffect`)
 
 #### 7.2 SAV Format
-- [ ] SAV file reading
-- [ ] SAV file writing
+- [x] `SaveDataProvider` for file I/O
+- [x] `SaveSerializer` with GFF/ERF structure (placeholder)
+- [x] Save folder structure (savenfo.res, savegame.sav, screen.tga)
+- [x] Manual, auto, and quick save support
+- [x] Slot management
+- [ ] Full CSharpKOTOR GFF/ERF integration
 - [ ] Resource overlay integration
-- [ ] Autosave support
 
 ### Phase 8: Content Pipeline
 
