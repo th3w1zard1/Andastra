@@ -91,3 +91,44 @@ When fixing code, convert C# 8+ syntax to C# 7.3 compatible alternatives, includ
 - Switch expressions → switch statements
 - `using var x = ...` → `using (var x = ...) { }`
 - `namespace SomeNamespace;` → `namespace SomeNamespace { ... }`
+
+## Engine Development Documentation Requirements
+
+**CRITICAL: When working on engine code in `src/OdysseyRuntime/`, you MUST use research tools (context7, firecrawl, tavily, web_search) to provide verified documentation references.**
+
+**MANDATORY RESEARCH PIPELINE** for all engine implementations:
+
+1. **Search**: Use context7/firecrawl/tavily/web_search to find official API documentation for external libraries/frameworks (e.g., Stride3D, MonoGame, etc.)
+2. **Verify**: Cross-reference with multiple sources to validate API authenticity and correctness
+3. **Document**: Add inline comments above implementation code that include:
+   - Clear explanation of what the code does
+   - Official API reference URL (must be valid, verified, and accessible)
+   - Method signature/parameter details when relevant
+   - Additional context about behavior or defaults
+
+**Comment Format Requirements**:
+
+```csharp
+// Brief description of what this does
+// Based on [Library/Framework] API: [Official Documentation URL]
+// [Method/Property]([Parameters], ...)
+// [Additional context about behavior, defaults, or important notes]
+[Your implementation code]
+```
+
+**Example**:
+```csharp
+// Begin sprite batch
+// Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+// Begin(GraphicsContext, SpriteSortMode, BlendStateDescription?, ...)
+// Passing null for blendState uses default (BlendState.AlphaBlend equivalent)
+_spriteBatch.Begin(drawContext.GraphicsContext, SpriteSortMode.Deferred, null);
+```
+
+**ALL documentation URLs MUST be**:
+- Official sources (framework/library documentation sites)
+- Valid and accessible (verify links work)
+- Version-specific when applicable
+- Cross-validated with at least one additional source when possible
+
+**This requirement applies to ALL code in `src/OdysseyRuntime/` that uses external APIs, frameworks, or libraries.**
