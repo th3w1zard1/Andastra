@@ -1,7 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using System.Threading;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Common.Script;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resource.Generics;
+using CSharpKOTOR.Resources;
+using Odyssey.Content.Interfaces;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
@@ -1178,15 +1185,83 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
+            // Load UTI template from resource provider
+            UTI utiTemplate = null;
+            if (ctx.ResourceProvider != null)
+            {
+                try
+                {
+                    // Try IGameResourceProvider first
+                    if (ctx.ResourceProvider is IGameResourceProvider gameProvider)
+                    {
+                        var resourceId = new ResourceIdentifier(itemTemplate, ResourceType.UTI);
+                        System.Threading.Tasks.Task<byte[]> task = gameProvider.GetResourceBytesAsync(resourceId, CancellationToken.None);
+                        task.Wait();
+                        byte[] utiData = task.Result;
+
+                        if (utiData != null && utiData.Length > 0)
+                        {
+                            using (var stream = new MemoryStream(utiData))
+                            {
+                                var reader = new GFFBinaryReader(stream);
+                                GFF gff = reader.Load();
+                                utiTemplate = UTIHelpers.ConstructUti(gff);
+                            }
+                        }
+                    }
+                    // Fallback to CSharpKOTOR Installation provider
+                    else if (ctx.ResourceProvider is CSharpKOTOR.Installation.Installation installation)
+                    {
+                        CSharpKOTOR.Installation.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
+                        if (result != null && result.Data != null)
+                        {
+                            using (var stream = new MemoryStream(result.Data))
+                            {
+                                var reader = new GFFBinaryReader(stream);
+                                GFF gff = reader.Load();
+                                utiTemplate = UTIHelpers.ConstructUti(gff);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[K1EngineApi] Error loading UTI template '{itemTemplate}': {ex.Message}");
+                }
+            }
+
             // Create item entity
-            // TODO: Load item template from resource provider and create entity
-            // For now, create a basic item entity
             IEntity itemEntity = ctx.World.CreateEntity(ObjectType.Item, Vector3.Zero, 0f);
             if (itemEntity != null)
             {
-                itemEntity.Tag = itemTemplate;
-                // TODO: Add item component with template data
-                // TODO: Add to target's inventory if target has inventory component
+                // Set tag from template or use template name
+                if (utiTemplate != null && !string.IsNullOrEmpty(utiTemplate.Tag))
+                {
+                    itemEntity.Tag = utiTemplate.Tag;
+                }
+                else
+                {
+                    itemEntity.Tag = itemTemplate;
+                }
+
+                // TODO: Add item component with UTI template data
+                // This would require creating an IItemComponent interface that stores:
+                // - BaseItem, StackSize, Charges, Cost, Properties, etc.
+                // For now, the entity is created with the tag
+
+                // Add to target's inventory if target has inventory component
+                IInventoryComponent inventory = target.GetComponent<IInventoryComponent>();
+                if (inventory != null)
+                {
+                    // Add item to inventory (finds first available slot)
+                    if (!inventory.AddItem(itemEntity))
+                    {
+                        // Inventory full, destroy item entity
+                        ctx.World.DestroyEntity(itemEntity.ObjectId);
+                        return Variable.FromObject(ObjectInvalid);
+                    }
+                }
+
                 return Variable.FromObject(itemEntity.ObjectId);
             }
 
