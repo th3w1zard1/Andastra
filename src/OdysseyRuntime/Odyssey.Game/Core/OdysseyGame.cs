@@ -500,6 +500,9 @@ namespace Odyssey.Game.Core
                 // Start the game session
                 _session.StartNewGame();
 
+                // Initialize camera after player is created
+                UpdateCamera();
+
                 // Transition to in-game state
                 _currentState = GameState.InGame;
 
