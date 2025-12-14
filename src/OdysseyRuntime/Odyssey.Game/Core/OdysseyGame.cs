@@ -32,6 +32,7 @@ using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
+using Myra.Graphics2D.UI;
 
 namespace Odyssey.Game.Core
 {
@@ -1150,6 +1151,10 @@ namespace Odyssey.Game.Core
                 ProcessMainMenuInput();
 
                 // Update fallback menu renderer input
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+                // Game.Input property provides access to the InputManager for handling user input
+                // Input property is inherited from Game base class
+                // Source: https://doc.stride3d.net/latest/en/manual/input/index.html
                 if (_fallbackMenuRenderer != null && _fallbackMenuRenderer.IsVisible)
                 {
                     _fallbackMenuRenderer.UpdateMenu(Input);
@@ -1266,11 +1271,23 @@ namespace Odyssey.Game.Core
             // MousePosition property gets the current mouse position in screen coordinates (X, Y)
             // Method signatures: bool IsMouseButtonPressed(MouseButton button), Vector2 MousePosition { get; }
             // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
+            // Check for mouse click to move player
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsMouseButtonPressed(MouseButton) checks if a mouse button was just pressed this frame
+            // Method signature: bool IsMouseButtonPressed(MouseButton button)
+            // MouseButton.Left represents the left mouse button
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (Input.IsMouseButtonPressed(MouseButton.Left) && _playerController != null)
             {
                 System.Numerics.Vector3 worldPos;
+                // Convert mouse screen position to normalized coordinates (0-1 range)
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+                // MousePosition property gets the current mouse position in screen coordinates (X, Y)
+                // Method signature: Vector2 MousePosition { get; }
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
                 // Window.ClientBounds.Width/Height get the client area dimensions in pixels
+                // Dividing MousePosition by ClientBounds dimensions converts to normalized coordinates
+                // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
                 if (_playerController.ScreenToWorld(
                     Input.MousePosition.X / Window.ClientBounds.Width,
                     Input.MousePosition.Y / Window.ClientBounds.Height,
