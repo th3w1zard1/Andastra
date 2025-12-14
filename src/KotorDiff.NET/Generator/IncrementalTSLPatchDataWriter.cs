@@ -645,8 +645,97 @@ namespace KotorDiff.NET.Generator
         /// </summary>
         private bool VerifyStrrefLocation(byte[] sourceData, PendingStrRefReference pendingRef)
         {
-            // TODO: Implement StrRef location verification
-            return true; // Placeholder - always return true for now
+            try
+            {
+                if (pendingRef.LocationType == "2da")
+                {
+                    var reader = new TwoDABinaryReader(sourceData);
+                    TwoDA twoda = reader.Load();
+                    int rowIndex = (int)pendingRef.LocationData["row_index"];
+                    string columnName = (string)pendingRef.LocationData["column_name"];
+                    TwoDARow row = twoda.GetRow(rowIndex);
+                    string cellValue = row.GetString(columnName);
+                    if (!string.IsNullOrWhiteSpace(cellValue) && int.TryParse(cellValue.Trim(), out int cellStrref))
+                    {
+                        return cellStrref == pendingRef.OldStrref;
+                    }
+                    return false;
+                }
+
+                if (pendingRef.LocationType == "ssf")
+                {
+                    var reader = new SSFBinaryReader(sourceData);
+                    SSF ssf = reader.Load();
+                    SSFSound sound = (SSFSound)pendingRef.LocationData["sound"];
+                    int? ssfStrref = ssf.Get(sound);
+                    return ssfStrref.HasValue && ssfStrref.Value == pendingRef.OldStrref;
+                }
+
+                if (pendingRef.LocationType == "gff")
+                {
+                    var reader = new GFFBinaryReader(sourceData);
+                    GFF gff = reader.Load();
+                    string fieldPath = (string)pendingRef.LocationData["field_path"];
+                    return CheckGffFieldStrref(gff.Root, fieldPath, pendingRef.OldStrref);
+                }
+
+                // NCS verification is temporarily disabled in Python too
+            }
+            catch (Exception e)
+            {
+                _logFunc?.Invoke($"[DEBUG] Error verifying StrRef location: {e.GetType().Name}: {e.Message}");
+                return false;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check if a GFF field at the given path contains the StrRef.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3202-3259
+        /// </summary>
+        private bool CheckGffFieldStrref(GFFStruct gffStruct, string fieldPath, int strref)
+        {
+            // Parse field path (handle array indices)
+            string[] parts = fieldPath.Split('.');
+            GFFStruct current = gffStruct;
+
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string part = parts[i];
+                if (part.Contains("[") && part.Contains("]"))
+                {
+                    // Array access like "ItemList[0]"
+                    int bracketStart = part.IndexOf("[");
+                    int bracketEnd = part.IndexOf("]");
+                    string fieldLabel = part.Substring(0, bracketStart);
+                    int index = int.Parse(part.Substring(bracketStart + 1, bracketEnd - bracketStart - 1));
+                    
+                    // Get the list field
+                    GFFList list = current.GetList(fieldLabel);
+                    if (index < list.Count)
+                    {
+                        current = list[index];
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (i == parts.Length - 1)
+                {
+                    // Last part - check if it has the StrRef
+                    LocalizedString locString = current.GetLocString(part);
+                    return locString.StringRef == strref;
+                }
+                else
+                {
+                    // Not the last part - navigate deeper
+                    current = current.GetStruct(part);
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -655,8 +744,85 @@ namespace KotorDiff.NET.Generator
         /// </summary>
         private bool Verify2DaRowLocation(byte[] sourceData, Pending2DARowReference pendingRef)
         {
-            // TODO: Implement 2DA row location verification
-            return true; // Placeholder - always return true for now
+            try
+            {
+                var reader = new GFFBinaryReader(sourceData);
+                GFF gff = reader.Load();
+                
+                // Get the field names that should reference this 2DA file
+                string twodaResname = pendingRef.TwodaFilename.ToLowerInvariant().Replace(".2da", "");
+                var relevantFieldNames = new List<string>();
+                // TODO: Get GFF_FIELD_TO_2DA_MAPPING from CSharpKOTOR if available
+                // For now, we'll check all field paths directly
+                
+                // Verify all field paths in the pending reference still have the row index
+                foreach (string fieldPath in pendingRef.FieldPaths)
+                {
+                    if (!CheckGffField2DaRow(gff.Root, fieldPath, pendingRef.RowIndex, relevantFieldNames))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logFunc?.Invoke($"[DEBUG] Error verifying 2DA row location: {e.GetType().Name}: {e.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if a GFF field at the given path contains the 2DA row index.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3393-3452
+        /// </summary>
+        private bool CheckGffField2DaRow(GFFStruct gffStruct, string fieldPath, int rowIndex, List<string> relevantFieldNames)
+        {
+            // Parse field path (handle array indices)
+            string[] parts = fieldPath.Split('.');
+            GFFStruct current = gffStruct;
+
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string part = parts[i];
+                if (part.Contains("[") && part.Contains("]"))
+                {
+                    // Array access like "ItemList[0]"
+                    int bracketStart = part.IndexOf("[");
+                    int bracketEnd = part.IndexOf("]");
+                    string fieldLabel = part.Substring(0, bracketStart);
+                    int index = int.Parse(part.Substring(bracketStart + 1, bracketEnd - bracketStart - 1));
+                    
+                    // Get the list field
+                    GFFList list = current.GetList(fieldLabel);
+                    if (index < list.Count)
+                    {
+                        current = list[index];
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (i == parts.Length - 1)
+                {
+                    // Last part - check if it has the row index
+                    // Check if this field name is relevant and has the correct row index
+                    if (relevantFieldNames.Count == 0 || relevantFieldNames.Contains(part))
+                    {
+                        int? fieldValue = current.GetInt32(part);
+                        return fieldValue.HasValue && fieldValue.Value == rowIndex;
+                    }
+                    return false;
+                }
+                else
+                {
+                    // Not the last part - navigate deeper
+                    current = current.GetStruct(part);
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
