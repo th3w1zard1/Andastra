@@ -866,6 +866,11 @@ namespace Odyssey.Game.Core
             DebugLog("A", "OdysseyGame.BeginRun:start", "BeginRun() starting");
             // #endregion
 
+            // Call base BeginRun to initialize Stride game systems
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+            // Game.BeginRun() is called once before the game loop starts
+            // Method signature: protected virtual void BeginRun()
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.BeginRun();
 
             Console.WriteLine("[Odyssey] BeginRun - Setting up scene and UI...");
@@ -895,9 +900,17 @@ namespace Odyssey.Game.Core
             // #endregion
 
             // Create SceneInstance if it doesn't exist
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Scene.html
+            // Scene constructor creates a new scene container for entities
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
             if (sceneSystem.SceneInstance == null)
             {
                 var rootScene = new StrideEngine.Scene();
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneInstance.html
+                // SceneInstance(Services, Scene) constructor creates a scene instance for rendering
+                // Services parameter provides access to game services, Scene is the root scene
+                // Method signature: SceneInstance(IServiceRegistry services, Scene scene)
+                // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
                 sceneSystem.SceneInstance = new SceneInstance(Services, rootScene);
                 Console.WriteLine("[Odyssey] Created root SceneInstance for rendering");
             }
@@ -1059,6 +1072,11 @@ namespace Odyssey.Game.Core
 
         protected override void Update(GameTime gameTime)
         {
+            // Call base Update to process Stride game loop
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+            // Game.Update(GameTime) is called each frame to update game logic
+            // Method signature: protected virtual void Update(GameTime gameTime)
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.Update(gameTime);
 
             float deltaTime = (float)gameTime.Elapsed.TotalSeconds;
@@ -1777,6 +1795,10 @@ namespace Odyssey.Game.Core
             }
 
             // Call base to render scene and UI
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+            // Game.Draw(GameTime) is called each frame to render the scene
+            // Method signature: protected virtual void Draw(GameTime gameTime)
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.Draw(gameTime);
         }
 
@@ -1798,6 +1820,11 @@ namespace Odyssey.Game.Core
             _triggerSystem?.Clear();
             _heartbeatSystem?.Clear();
 
+            // Call base Destroy to clean up Stride game systems
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+            // Game.Destroy() is called when the game is shutting down
+            // Method signature: protected virtual void Destroy()
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.Destroy();
         }
     }
