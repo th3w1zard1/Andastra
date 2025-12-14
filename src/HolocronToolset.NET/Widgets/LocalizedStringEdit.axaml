@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HolocronToolset.NET.Widgets.LocalizedStringEdit">
+    <Grid ColumnDefinitions="*,Auto">
+        <TextBox Name="locstringText" Grid.Column="0" IsReadOnly="True" Margin="0,0,5,0" />
+        <Button Name="editButton" Grid.Column="1" Content="..." Width="26" />
+    </Grid>
+</UserControl>

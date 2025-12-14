@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HolocronToolset.NET.Widgets.Settings.InstallationsWidget">
+    <Grid ColumnDefinitions="200,5,*">
+        <!-- Path List (left) -->
+        <Grid Grid.Column="0" RowDefinitions="*,Auto,Auto">
+            <ListBox Name="pathList" Grid.Row="0" Margin="0,0,0,5" />
+            <Button Name="addPathButton" Grid.Row="1" Content="Add" Margin="0,0,0,5" />
+            <Button Name="removePathButton" Grid.Row="2" Content="Remove" />
+        </Grid>
+
+        <!-- Separator -->
+        <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="1,0,0,0" />
+
+        <!-- Path Frame (right) -->
+        <Border Name="pathFrame" Grid.Column="2" BorderBrush="LightGray" BorderThickness="1" Padding="10" IsEnabled="False">
+            <Grid RowDefinitions="Auto,Auto,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+                    <TextBlock Text="Name:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <TextBox Name="pathNameEdit" Grid.Column="1" />
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+                    <TextBlock Text="Path:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <TextBox Name="pathDirEdit" Grid.Column="1" />
+                </Grid>
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
+                    <TextBlock Text="TSL:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <CheckBox Name="pathTslCheckbox" Grid.Column="1" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,218 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CSharpKOTOR -> G:\GitHub\HoloPatcher.NET\src\CSharpKOTOR\bin\Debug\net9\CSharpKOTOR.dll
+  TSLPatcher.Tests -> G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\TSLPatcher.Tests.dll
+Test run for G:\GitHub\HoloPatcher.NET\src\TSLPatcher.Tests\bin\Debug\net9\TSLPatcher.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 9.0.11)
+[xUnit.net 00:00:00.12]   Discovering: TSLPatcher.Tests
+[xUnit.net 00:00:00.25]   Discovered:  TSLPatcher.Tests
+[xUnit.net 00:00:00.27]   Starting:    TSLPatcher.Tests
+=== Preflight Checks ===
+Using existing Vanilla_KOTOR_Script_Source repository at: Vanilla_KOTOR_Script_Source
+∩┐╜ Found compiler: tools/nwnnsscomp_kscript.exe
+∩┐╜ Found K1 nwscript: vendor/PyKotor/vendor/NorthernLights/Scripts/k1_nwscript.nss
+∩┐╜ Found TSL nwscript: include/k2_nwscript.nss
+∩┐╜ Vanilla repo structure verified
+=== Preflight Complete ===
+=== Discovering Test Files ===
+Found 23318 .nss files
+=== Test Discovery Complete ===
+=== Running Round-Trip Tests ===
+Total NSS scripts to roundtrip test: 23318
+Flow: NSS--(external compiler)-->NCS--(internal decompiler)-->NSS--(internal compiler)-->NCS
+Fast-fail: enabled (will stop on first bytecode mismatch)
+ (external: nwnnsscomp_kscript.exe, variant: TSLPATCHER)     Warning:
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.
+     A paid commercial license supports the development and continued increasing support of
+     Fluent Assertions users under both commercial and community licenses. Help us
+     keep Fluent Assertions at the forefront of unit testing.
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+DECOMPILATION VERBOSE OUTPUT FOR: roundtrip-work/k1/K1/Data/scripts.bif/01_test.ncs
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+STDOUT CAPTURE:
+read actions.  There were 772
+TRACE DecompileNcsObject: START
+TRACE DecompileNcsObject: ncs.Instructions count=3
+TRACE DecompileNcsObject: actions already loaded
+TRACE DecompileNcsObject: Converting NCS to AST, instruction count=3
+DEBUG NcsToAstConverter: Converting 3 instructions to AST
+DEBUG NcsToAstConverter: No SAVEBP instruction found - no globals subroutine will be created
+DEBUG NcsToAstConverter: Converted 2 commands, 0 returned null (range 0-2)
+DEBUG NcsToAstConverter: Converted 1 commands, 0 returned null (range 2-3)
+TRACE DecompileNcsObject: AST conversion complete, ast=Start
+DEBUG AST.ACommandBlock.Apply: sw type=CheckIsGlobals, cmd count=2
+DEBUG AST.ACommandBlock.Apply: routing to PrunedReversedDepthFirstAdapter.CaseACommandBlock
+TRACE DecompileNcsObject: Getting main subroutine, total subs=1
+TRACE DecompileNcsObject: Main subroutine found, type=ASubroutine
+DEBUG AST.ACommandBlock.Apply: sw type=FlattenSub, cmd count=2
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG AST.ACommandBlock.Apply: sw type=FlattenSub, cmd count=1
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG FileDecompiler.DecompileNcs: GetGlobalsSub() returned null
+DEBUG AST.ACommandBlock.Apply: sw type=CallGraphBuilder, cmd count=1
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG AST.ACommandBlock.Apply: sw type=CallSiteAnalyzer, cmd count=1
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG AST.ACommandBlock.Apply: sw type=MovespParamEstimator, cmd count=1
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG AST.ACommandBlock.Apply: sw type=DoTypes, cmd count=2
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG decompileNcs: Total subroutines in subdata: 1
+DEBUG AST.ACommandBlock.Apply: sw type=MainPass, cmd count=1
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+DEBUG decompileNcs: successfully added subroutine 1
+DEBUG AST.ACommandBlock.Apply: sw type=MainPass, cmd count=2
+DEBUG AST.ACommandBlock.Apply: routing to PrunedDepthFirstAdapter.CaseACommandBlock
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+ (game=k1, output=01_test.dec.nss) ∩┐╜ (95.385 ms, 71 chars)
+ ∩┐╜ (407.310 ms, 25 bytes, 4 instructions)
+? FAIL K1/Data/scripts.bif/01_test.nss
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+FAILURE: K1: K1\Data\scripts.bif\01_test.nss
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Exception: InvalidOperationException
+Message:
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+BYTECODE MISMATCH (PRIMARY FAILURE)
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Source: K1/Data/scripts.bif/01_test.nss
+Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.ncs
+Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.rt.ncs
+FULL PCODE DIFF (UDIFF format):
+    --- original.pcode
+    +++ roundtrip.pcode
+    @@ -1,3 +1,4 @@
+    -0000: JSR jump=<NCSInstruction#40906347> -> 0021
+    +0000: JSR jump=<NCSInstruction#20552794> -> 0023
+     0001: RETN
+     0002: RETN
+    +0003: RETN
+Byte-level diff:
+  Offset: 23 (0x17)
+  Original: <EOF>
+  Round-trip: 0x20 (32)
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+PERFORMANCE SUMMARY
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Total test time: 0.97 seconds
+Tests processed: 1 / 23318
+Operation breakdown (cumulative):
+  compile-original:     0.09 s (  9.4%)
+  compile     :     0.50 s ( 51.5%)
+  decompile   :     0.10 s (  9.9%)
+  compile-roundtrip:     0.41 s ( 42.1%)
+  compare-bytecode:     0.01 s (  0.8%)
+  compare     :     0.01 s (  0.8%)
+Profile log: test_profile.txt
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+FATAL ERROR: ∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+BYTECODE MISMATCH (PRIMARY FAILURE)
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Source: K1/Data/scripts.bif/01_test.nss
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+PERFORMANCE SUMMARY
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Total test time: 0.97 seconds
+Tests processed: 1 / 23318
+Operation breakdown (cumulative):
+Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.ncs
+  compile-original:     0.09 s (  9.3%)
+Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.rt.ncs
+  compile     :     0.50 s ( 51.4%)
+FULL PCODE DIFF (UDIFF format):
+  decompile   :     0.10 s (  9.9%)
+    --- original.pcode
+  compile-roundtrip:     0.41 s ( 42.1%)
+    +++ roundtrip.pcode
+  compare-bytecode:     0.01 s (  0.8%)
+    @@ -1,3 +1,4 @@
+  compare     :     0.01 s (  0.8%)
+    -0000: JSR jump=<NCSInstruction#40906347> -> 0021
+    +0000: JSR jump=<NCSInstruction#20552794> -> 0023
+     0001: RETN
+     0002: RETN
+    +0003: RETN
+Byte-level diff:
+  Offset: 23 (0x17)
+  Original: <EOF>
+  Round-trip: 0x20 (32)
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+Profile log: test_profile.txt
+∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜∩┐╜
+[xUnit.net 00:00:01.31]       System.InvalidOperationException : ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[xUnit.net 00:00:01.31]       BYTECODE MISMATCH (PRIMARY FAILURE)
+[xUnit.net 00:00:01.31]       ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[xUnit.net 00:00:01.31]       Source: K1/Data/scripts.bif/01_test.nss
+[xUnit.net 00:00:01.31]       Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.ncs
+[xUnit.net 00:00:01.31]       Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.rt.ncs
+[xUnit.net 00:00:01.31]       
+[xUnit.net 00:00:01.31]       FULL PCODE DIFF (UDIFF format):
+[xUnit.net 00:00:01.31]           --- original.pcode
+[xUnit.net 00:00:01.31]           +++ roundtrip.pcode
+[xUnit.net 00:00:01.31]           @@ -1,3 +1,4 @@
+[xUnit.net 00:00:01.31]           -0000: JSR jump=<NCSInstruction#40906347> -> 0021
+[xUnit.net 00:00:01.31]           +0000: JSR jump=<NCSInstruction#20552794> -> 0023
+[xUnit.net 00:00:01.31]            0001: RETN
+[xUnit.net 00:00:01.31]            0002: RETN
+[xUnit.net 00:00:01.31]           +0003: RETN
+[xUnit.net 00:00:01.31]       
+[xUnit.net 00:00:01.31]       
+[xUnit.net 00:00:01.31]       Byte-level diff:
+[xUnit.net 00:00:01.31]         Offset: 23 (0x17)
+[xUnit.net 00:00:01.31]         Original: <EOF>
+[xUnit.net 00:00:01.31]         Round-trip: 0x20 (32)
+[xUnit.net 00:00:01.31]       ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[xUnit.net 00:00:01.31]       
+[xUnit.net 00:00:01.31]       Stack Trace:
+[xUnit.net 00:00:01.31]            at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.RoundTripSingle(String nssPath, String gameFlag, String scratchRoot)
+[xUnit.net 00:00:01.31]            at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite()
+[xUnit.net 00:00:01.31]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.31]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.31]     CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite [FAIL]
+[xUnit.net 00:00:01.33]   Finished:    TSLPatcher.Tests
+  Failed CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite [998 ms]
+  Error Message:
+   System.InvalidOperationException : ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+BYTECODE MISMATCH (PRIMARY FAILURE)
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+Source: K1/Data/scripts.bif/01_test.nss
+Original NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.ncs
+Recompiled NCS: roundtrip-work/k1/K1/Data/scripts.bif/01_test.rt.ncs
+
+FULL PCODE DIFF (UDIFF format):
+    --- original.pcode
+    +++ roundtrip.pcode
+    @@ -1,3 +1,4 @@
+    -0000: JSR jump=<NCSInstruction#40906347> -> 0021
+    +0000: JSR jump=<NCSInstruction#20552794> -> 0023
+     0001: RETN
+     0002: RETN
+    +0003: RETN
+
+
+Byte-level diff:
+  Offset: 23 (0x17)
+  Original: <EOF>
+  Round-trip: 0x20 (32)
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  Stack Trace:
+     at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.RoundTripSingle(String nssPath, String gameFlag, String scratchRoot)
+   at CSharpKOTOR.Tests.Formats.NCSRoundtripTests.TestRoundTripSuite()
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 1.9552 Seconds

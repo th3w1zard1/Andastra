@@ -24,7 +24,7 @@ namespace HolocronToolset.NET.Editors
         private Panel _fieldBox;
         private ComboBox _typeCombo;
         private TextBox _labelEdit;
-        private StackPanel _pages;
+        private Panel _pages;
         private NumericUpDown _intSpin;
         private NumericUpDown _floatSpin;
         private TextBox _lineEdit;
@@ -124,7 +124,7 @@ namespace HolocronToolset.NET.Editors
             _labelEdit = new TextBox { Watermark = "Label" };
             _typeCombo = new ComboBox();
             _typeCombo.ItemsSource = Enum.GetValues(typeof(GFFFieldType)).Cast<GFFFieldType>().Select(t => t.ToString()).ToList();
-            _pages = new StackPanel();
+            _pages = new StackPanel { Orientation = Orientation.Vertical };
 
             // Integer page
             _intSpin = new NumericUpDown();
@@ -178,11 +178,17 @@ namespace HolocronToolset.NET.Editors
             stringrefPanel.Children.Add(_substringEdit);
             _pages.Children.Add(stringrefPanel);
 
-            _fieldBox.Children.Add(new TextBlock { Text = "Label:" });
-            _fieldBox.Children.Add(_labelEdit);
-            _fieldBox.Children.Add(new TextBlock { Text = "Type:" });
-            _fieldBox.Children.Add(_typeCombo);
-            _fieldBox.Children.Add(_pages);
+            if (_fieldBox is Panel fieldBoxPanel)
+            {
+                fieldBoxPanel.Children.Add(new TextBlock { Text = "Label:" });
+                fieldBoxPanel.Children.Add(_labelEdit);
+                fieldBoxPanel.Children.Add(new TextBlock { Text = "Type:" });
+                fieldBoxPanel.Children.Add(_typeCombo);
+                if (_pages is Panel pagesPanel)
+                {
+                    fieldBoxPanel.Children.Add(pagesPanel);
+                }
+            }
 
             rightPanel.Children.Add(_fieldBox);
 
@@ -192,27 +198,21 @@ namespace HolocronToolset.NET.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            _treeView = EditorHelpers.FindControlSafe<TreeView>(this, "TreeView");
-            _fieldBox = EditorHelpers.FindControlSafe<Panel>(this, "FieldBox");
-            _typeCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "TypeCombo");
-            _labelEdit = EditorHelpers.FindControlSafe<TextBox>(this, "LabelEdit");
-            _pages = EditorHelpers.FindControlSafe<StackPanel>(this, "Pages");
-            _intSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "IntSpin");
-            _floatSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "FloatSpin");
-            _lineEdit = EditorHelpers.FindControlSafe<TextBox>(this, "LineEdit");
-            _textEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TextEdit");
-            _xVec3Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "XVec3Spin");
-            _yVec3Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "YVec3Spin");
-            _zVec3Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "ZVec3Spin");
-            _xVec4Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "XVec4Spin");
-            _yVec4Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "YVec4Spin");
-            _zVec4Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "ZVec4Spin");
-            _wVec4Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "WVec4Spin");
-            _stringrefSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StringrefSpin");
-            _substringList = EditorHelpers.FindControlSafe<ListBox>(this, "SubstringList");
-            _addSubstringButton = EditorHelpers.FindControlSafe<Button>(this, "AddSubstringButton");
-            _removeSubstringButton = EditorHelpers.FindControlSafe<Button>(this, "RemoveSubstringButton");
-            _substringEdit = EditorHelpers.FindControlSafe<TextBox>(this, "SubstringEdit");
+            _treeView = this.FindControl<TreeView>("treeView");
+            var fieldBoxBorder = this.FindControl<Border>("fieldBox");
+            if (fieldBoxBorder != null && fieldBoxBorder.Child is Panel fieldBoxPanel)
+            {
+                _fieldBox = fieldBoxPanel;
+            }
+            _typeCombo = this.FindControl<ComboBox>("typeCombo");
+            _labelEdit = this.FindControl<TextBox>("labelEdit");
+            var pagesControl = this.FindControl<ContentControl>("pages");
+            // Create pages panel if not found
+            if (_pages == null)
+            {
+                _pages = new StackPanel();
+            }
+            // Note: Individual page controls will be created programmatically
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:83-118

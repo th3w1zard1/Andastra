@@ -10,7 +10,7 @@ namespace HolocronToolset.NET.Dialogs
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:14
     // Original: class LoadFromModuleDialog(QDialog):
-    public class LoadFromModuleDialog : Window
+    public partial class LoadFromModuleDialog : Window
     {
         private List<FileResource> _resources;
         private List<ResourceType> _supported;
@@ -68,9 +68,35 @@ namespace HolocronToolset.NET.Dialogs
             Content = panel;
         }
 
+        private ListBox _resourceList;
+        private Button _okButton;
+        private Button _cancelButton;
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Find controls from XAML
+            _resourceList = this.FindControl<ListBox>("resourceList");
+            _okButton = this.FindControl<Button>("okButton");
+            _cancelButton = this.FindControl<Button>("cancelButton");
+
+            if (_okButton != null)
+            {
+                _okButton.Click += (s, e) => { if (_selectedResource != null) Close(); };
+            }
+            if (_cancelButton != null)
+            {
+                _cancelButton.Click += (s, e) => { _selectedResource = null; Close(); };
+            }
+            if (_resourceList != null)
+            {
+                _resourceList.SelectionChanged += (s, e) =>
+                {
+                    if (_resourceList.SelectedItem is FileResource resource)
+                    {
+                        _selectedResource = resource;
+                    }
+                };
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:54-60
@@ -79,7 +105,14 @@ namespace HolocronToolset.NET.Dialogs
         {
             // Filter resources by supported types
             var filteredResources = _resources.Where(r => _supported.Contains(r.ResType)).ToList();
-            // Store for later use
+            if (_resourceList != null)
+            {
+                _resourceList.Items.Clear();
+                foreach (var resource in filteredResources)
+                {
+                    _resourceList.Items.Add(resource);
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:62-84

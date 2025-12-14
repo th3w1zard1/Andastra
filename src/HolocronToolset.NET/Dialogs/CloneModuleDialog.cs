@@ -8,7 +8,7 @@ namespace HolocronToolset.NET.Dialogs
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:30
     // Original: class CloneModuleDialog(QDialog):
-    public class CloneModuleDialog : Window
+    public partial class CloneModuleDialog : Window
     {
         private HTInstallation _active;
         private Dictionary<string, HTInstallation> _installations;
@@ -80,9 +80,58 @@ namespace HolocronToolset.NET.Dialogs
             Content = panel;
         }
 
+        private ComboBox _moduleSelect;
+        private TextBox _moduleRootEdit;
+        private TextBox _nameEdit;
+        private TextBox _filenameEdit;
+        private TextBox _prefixEdit;
+        private CheckBox _keepDoorsCheckbox;
+        private CheckBox _keepPlaceablesCheckbox;
+        private CheckBox _keepSoundsCheckbox;
+        private CheckBox _keepPathingCheckbox;
+        private CheckBox _copyTexturesCheckbox;
+        private CheckBox _copyLightmapsCheckbox;
+        private Button _createButton;
+        private Button _cancelButton;
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Find controls from XAML
+            _moduleSelect = this.FindControl<ComboBox>("moduleSelect");
+            _moduleRootEdit = this.FindControl<TextBox>("moduleRootEdit");
+            _nameEdit = this.FindControl<TextBox>("nameEdit");
+            _filenameEdit = this.FindControl<TextBox>("filenameEdit");
+            _prefixEdit = this.FindControl<TextBox>("prefixEdit");
+            _keepDoorsCheckbox = this.FindControl<CheckBox>("keepDoorsCheckbox");
+            _keepPlaceablesCheckbox = this.FindControl<CheckBox>("keepPlaceablesCheckbox");
+            _keepSoundsCheckbox = this.FindControl<CheckBox>("keepSoundsCheckbox");
+            _keepPathingCheckbox = this.FindControl<CheckBox>("keepPathingCheckbox");
+            _copyTexturesCheckbox = this.FindControl<CheckBox>("copyTexturesCheckbox");
+            _copyLightmapsCheckbox = this.FindControl<CheckBox>("copyLightmapsCheckbox");
+            _createButton = this.FindControl<Button>("createButton");
+            _cancelButton = this.FindControl<Button>("cancelButton");
+
+            if (_createButton != null)
+            {
+                _createButton.Click += (s, e) => Ok();
+            }
+            if (_cancelButton != null)
+            {
+                _cancelButton.Click += (s, e) => Close();
+            }
+            if (_moduleSelect != null)
+            {
+                _moduleSelect.SelectionChanged += (s, e) => OnModuleSelectionChanged();
+            }
+        }
+
+        private void OnModuleSelectionChanged()
+        {
+            if (_moduleSelect?.SelectedItem != null)
+            {
+                // Update module root edit when selection changes
+                // This will be implemented when module data is available
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:150-174

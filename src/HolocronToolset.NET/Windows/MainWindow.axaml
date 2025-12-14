@@ -102,14 +102,14 @@
                 <StackPanel Margin="5" Spacing="10">
                     <Button Name="openButton" Content="Open Selected" HorizontalAlignment="Stretch" />
                     <Button Name="extractButton" Content="Extract Selected" HorizontalAlignment="Stretch" />
-                    
+
                     <Expander Header="TPC" IsExpanded="True">
                         <StackPanel Spacing="5" Margin="5">
                             <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" />
                             <CheckBox Name="tpcTxiCheckbox" Content="Extract TXI" />
                         </StackPanel>
                     </Expander>
-                    
+
                     <Expander Header="MDL" IsExpanded="True">
                         <StackPanel Spacing="5" Margin="5">
                             <CheckBox Name="mdlDecompileCheckbox" Content="Decompile" IsEnabled="False" ToolTip.Tip="Decompile feature is not available." />

@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.LocalizedStringDialog"
+        Title="Edit Localized String"
+        Width="355" Height="214"
+        MinWidth="300" MinHeight="150"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+        <!-- StringRef Section -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,10">
+            <TextBlock Text="StringRef:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+            <NumericUpDown Name="stringrefSpin" Grid.Column="1" Minimum="-1" Maximum="999999999" Margin="0,0,5,0" />
+            <Button Name="stringrefNewButton" Grid.Column="2" Content="New" Width="40" Margin="0,0,5,0" />
+            <Button Name="stringrefNoneButton" Grid.Column="3" Content="None" Width="40" />
+        </Grid>
+
+        <!-- Language and Gender Selection -->
+        <Grid Name="substringFrame" Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10" IsVisible="False">
+            <ComboBox Name="languageSelect" Grid.Column="0" Margin="0,0,10,0">
+                <ComboBoxItem Content="English" IsSelected="True" />
+                <ComboBoxItem Content="French" />
+                <ComboBoxItem Content="German" />
+                <ComboBoxItem Content="Italian" />
+                <ComboBoxItem Content="Spanish" />
+                <ComboBoxItem Content="Polish" />
+            </ComboBox>
+            <RadioButton Name="maleRadio" Grid.Column="1" Content="Male" IsChecked="True" Margin="0,0,10,0" />
+            <RadioButton Name="femaleRadio" Grid.Column="2" Content="Female" />
+        </Grid>
+
+        <!-- String Edit -->
+        <TextBox Name="stringEdit" Grid.Row="2" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+        <!-- Buttons -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,*">
+            <Button Name="okButton" Grid.Column="0" Content="OK" HorizontalAlignment="Right" Width="75" Margin="0,0,5,0" />
+            <Button Name="cancelButton" Grid.Column="1" Content="Cancel" HorizontalAlignment="Left" Width="75" />
+        </Grid>
+    </Grid>
+</Window>

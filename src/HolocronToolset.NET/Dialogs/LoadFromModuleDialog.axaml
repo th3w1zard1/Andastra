@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.LoadFromModuleDialog"
+        Title="Select From Module"
+        Width="400" Height="300"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="*,Auto" Margin="10">
+        <!-- Resource List -->
+        <ListBox Name="resourceList" Grid.Row="0" Margin="0,0,0,10" />
+
+        <!-- Buttons -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*">
+            <Button Name="okButton" Grid.Column="0" Content="OK" HorizontalAlignment="Right" Width="75" Margin="0,0,5,0" />
+            <Button Name="cancelButton" Grid.Column="1" Content="Cancel" HorizontalAlignment="Left" Width="75" />
+        </Grid>
+    </Grid>
+</Window>

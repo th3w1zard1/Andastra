@@ -7,7 +7,7 @@ namespace HolocronToolset.NET.Dialogs
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:18
     // Original: class SettingsDialog(QDialog):
-    public class SettingsDialog : Window
+    public partial class SettingsDialog : Window
     {
         private bool _isResetting;
         private bool _installationEdited;
@@ -68,9 +68,35 @@ namespace HolocronToolset.NET.Dialogs
             Content = panel;
         }
 
+        private TreeView _settingsTree;
+        private ContentControl _settingsStack;
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Find controls from XAML
+            _settingsTree = this.FindControl<TreeView>("settingsTree");
+            _settingsStack = this.FindControl<ContentControl>("settingsStack");
+            var okButton = this.FindControl<Button>("okButton");
+            var cancelButton = this.FindControl<Button>("cancelButton");
+
+            if (okButton != null)
+            {
+                okButton.Click += (s, e) => Accept();
+            }
+            if (cancelButton != null)
+            {
+                cancelButton.Click += (s, e) => Close();
+            }
+            if (_settingsTree != null)
+            {
+                _settingsTree.SelectionChanged += (s, e) => OnSettingsTreeSelectionChanged();
+            }
+        }
+
+        private void OnSettingsTreeSelectionChanged()
+        {
+            // Switch between settings pages based on selection
+            // This will be implemented when settings widgets are available
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:116-125

@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.CloneModuleDialog"
+        Title="Clone Module"
+        Width="440" Height="273"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="*,Auto" Margin="10">
+        <!-- Main Content -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
+            <!-- Left Column -->
+            <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="0,0,10,0">
+                <TextBlock Text="Select an existing module:" Margin="0,0,0,5" />
+                <ComboBox Name="moduleSelect" Margin="0,0,0,5" />
+                <TextBox Name="moduleRootEdit" IsReadOnly="True" />
+            </StackPanel>
+
+            <!-- Right Column - Top -->
+            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
+                <TextBlock Text="Module name:" Margin="0,0,0,5" />
+                <TextBox Name="nameEdit" />
+            </StackPanel>
+
+            <!-- Right Column - Middle -->
+            <StackPanel Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="0,0,0,10">
+                <TextBlock Text="Module filename:" Margin="0,0,0,5" />
+                <TextBox Name="filenameEdit" MaxLength="16" />
+            </StackPanel>
+
+            <!-- Right Column - Bottom -->
+            <StackPanel Grid.Row="3" Grid.Column="1">
+                <TextBlock Text="Module prefix:" Margin="0,0,0,5" />
+                <TextBox Name="prefixEdit" MaxLength="3" />
+            </StackPanel>
+
+            <!-- Checkboxes Column -->
+            <StackPanel Grid.Row="2" Grid.Column="0" Grid.RowSpan="2" Margin="0,10,10,0">
+                <CheckBox Name="keepDoorsCheckbox" Content="Keep Doors" IsChecked="True" Margin="0,0,0,5" />
+                <CheckBox Name="keepPlaceablesCheckbox" Content="Keep Placeables" IsChecked="True" Margin="0,0,0,5" />
+                <CheckBox Name="keepSoundsCheckbox" Content="Keep Sounds" IsChecked="True" Margin="0,0,0,5" />
+                <CheckBox Name="keepPathingCheckbox" Content="Keep Pathing" IsChecked="True" Margin="0,0,0,5" />
+                <CheckBox Name="copyTexturesCheckbox" Content="Copy Textures" IsChecked="True" Margin="0,0,0,5" />
+                <CheckBox Name="copyLightmapsCheckbox" Content="Copy Lightmaps" IsChecked="True" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,10,0,0">
+            <Button Name="createButton" Grid.Column="1" Content="Create" Width="75" Margin="0,0,5,0" />
+            <Button Name="cancelButton" Grid.Column="2" Content="Cancel" Width="75" />
+        </Grid>
+    </Grid>
+</Window>

@@ -6,7 +6,7 @@ namespace HolocronToolset.NET.Dialogs
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:8
     // Original: class ExtractOptionsDialog(QDialog):
-    public class ExtractOptionsDialog : Window
+    public partial class ExtractOptionsDialog : Window
     {
         private bool _tpcDecompile;
         private bool _tpcExtractTxi;
@@ -61,9 +61,69 @@ namespace HolocronToolset.NET.Dialogs
             Content = panel;
         }
 
+        private CheckBox _tpcDecompileCheckbox;
+        private CheckBox _tpcTxiCheckbox;
+        private CheckBox _mdlDecompileCheckbox;
+        private CheckBox _mdlTexturesCheckbox;
+        private Button _okButton;
+        private Button _cancelButton;
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Find controls from XAML
+            _tpcDecompileCheckbox = this.FindControl<CheckBox>("tpcDecompileCheckbox");
+            _tpcTxiCheckbox = this.FindControl<CheckBox>("tpcTxiCheckbox");
+            _mdlDecompileCheckbox = this.FindControl<CheckBox>("mdlDecompileCheckbox");
+            _mdlTexturesCheckbox = this.FindControl<CheckBox>("mdlTexturesCheckbox");
+            _okButton = this.FindControl<Button>("okButton");
+            _cancelButton = this.FindControl<Button>("cancelButton");
+
+            if (_okButton != null)
+            {
+                _okButton.Click += (s, e) => { UpdateValues(); Close(); };
+            }
+            if (_cancelButton != null)
+            {
+                _cancelButton.Click += (s, e) => Close();
+            }
+
+            // Sync checkbox states with properties
+            if (_tpcDecompileCheckbox != null)
+            {
+                _tpcDecompileCheckbox.IsCheckedChanged += (s, e) => _tpcDecompile = _tpcDecompileCheckbox.IsChecked ?? false;
+            }
+            if (_tpcTxiCheckbox != null)
+            {
+                _tpcTxiCheckbox.IsCheckedChanged += (s, e) => _tpcExtractTxi = _tpcTxiCheckbox.IsChecked ?? false;
+            }
+            if (_mdlDecompileCheckbox != null)
+            {
+                _mdlDecompileCheckbox.IsCheckedChanged += (s, e) => _mdlDecompile = _mdlDecompileCheckbox.IsChecked ?? false;
+            }
+            if (_mdlTexturesCheckbox != null)
+            {
+                _mdlTexturesCheckbox.IsCheckedChanged += (s, e) => _mdlExtractTextures = _mdlTexturesCheckbox.IsChecked ?? false;
+            }
+        }
+
+        private void UpdateValues()
+        {
+            if (_tpcDecompileCheckbox != null)
+            {
+                _tpcDecompile = _tpcDecompileCheckbox.IsChecked ?? false;
+            }
+            if (_tpcTxiCheckbox != null)
+            {
+                _tpcExtractTxi = _tpcTxiCheckbox.IsChecked ?? false;
+            }
+            if (_mdlDecompileCheckbox != null)
+            {
+                _mdlDecompile = _mdlDecompileCheckbox.IsChecked ?? false;
+            }
+            if (_mdlTexturesCheckbox != null)
+            {
+                _mdlExtractTextures = _mdlTexturesCheckbox.IsChecked ?? false;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:22-40

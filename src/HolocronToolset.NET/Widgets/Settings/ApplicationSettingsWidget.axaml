@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HolocronToolset.NET.Widgets.Settings.ApplicationSettingsWidget">
+    <Grid RowDefinitions="Auto,*">
+        <!-- Reset Button -->
+        <Button Name="resetAttributesButton" Grid.Row="0" Content="Reset All on this Page" Height="50" Margin="0,0,0,10" />
+
+        <!-- Scrollable Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="10">
+                <!-- Font Settings -->
+                <Expander Header="Global Font Settings" IsExpanded="True">
+                    <StackPanel Spacing="5" Margin="5">
+                        <TextBlock Name="currentFontLabel" Text="Current Font: Default" />
+                        <Button Name="fontButton" Content="Select Font..." HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Expander>
+
+                <!-- Environment Variables -->
+                <Expander Header="Environment Variables" IsExpanded="True">
+                    <Grid RowDefinitions="*,Auto" Margin="5">
+                        <DataGrid Name="tableWidget" Grid.Row="0" AutoGenerateColumns="True" Margin="0,0,0,5" />
+                        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="5">
+                            <Button Name="addButton" Content="Add" />
+                            <Button Name="editButton" Content="Edit" />
+                            <Button Name="removeButton" Content="Remove" />
+                        </StackPanel>
+                    </Grid>
+                </Expander>
+
+                <!-- Miscellaneous Settings -->
+                <Expander Header="Miscellaneous Settings" IsExpanded="True">
+                    <StackPanel Name="verticalLayout_misc" Spacing="5" Margin="5" />
+                </Expander>
+
+                <!-- Experimental Settings -->
+                <Expander Header="Experimental settings (may cause app crashes)" IsExpanded="False">
+                    <StackPanel Name="verticalLayout_3" Spacing="5" Margin="5" />
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

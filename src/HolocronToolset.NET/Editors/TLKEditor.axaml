@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Editors.TLKEditor"
+        Title="TLK Editor"
+        Width="463" Height="577">
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_View">
+                <MenuItem Header="_Find" Name="actionFind" />
+                <MenuItem Header="_Go To" Name="actionGoTo" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Insert" Name="actionInsert" />
+            </MenuItem>
+            <MenuItem Header="_Language" Name="menuLanguage" />
+        </Menu>
+
+        <!-- Main Content -->
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+            <!-- Search Box -->
+            <Border Name="searchBox" Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="5" IsVisible="False">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Name="searchEdit" Grid.Column="0" Watermark="Search..." Margin="0,0,5,0" />
+                    <Button Name="searchButton" Grid.Column="1" Content="Search" Width="70" />
+                </Grid>
+            </Border>
+
+            <!-- Jump Box -->
+            <Border Name="jumpBox" Grid.Row="1" BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="5" IsVisible="False">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Text="Go To Line:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <NumericUpDown Name="jumpSpinbox" Grid.Column="1" Minimum="-2147483648" Maximum="2147483647" Margin="0,0,5,0" />
+                    <Button Name="jumpButton" Grid.Column="2" Content="Jump" Width="70" />
+                </Grid>
+            </Border>
+
+            <!-- Talk Table -->
+            <DataGrid Name="talkTable" Grid.Row="2" 
+                      AutoGenerateColumns="True"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      SelectionMode="Single" />
+
+            <!-- Bottom Panel -->
+            <Grid Grid.Row="3" RowDefinitions="Auto,Auto" Margin="5">
+                <TextBox Name="textEdit" Grid.Row="0" AcceptsReturn="True" TextWrapping="Wrap" IsReadOnly="True" Margin="0,0,0,5" />
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+                    <TextBlock Text="Sound ResRef:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <TextBox Name="soundEdit" Grid.Column="1" MaxLength="16" IsReadOnly="True" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

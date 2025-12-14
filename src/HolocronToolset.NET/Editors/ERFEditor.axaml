@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Editors.ERFEditor"
+        Title="ERF Editor"
+        Width="400" Height="369">
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Name="actionNew" />
+                <MenuItem Header="_Open" Name="actionOpen" />
+                <MenuItem Header="_Save" Name="actionSave" />
+                <MenuItem Header="Save _As" Name="actionSaveAs" />
+                <Separator />
+                <MenuItem Header="_Revert" Name="actionRevert" />
+                <Separator />
+                <MenuItem Header="E_xit" Name="actionExit" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Main Content -->
+        <Grid RowDefinitions="*,Auto,Auto">
+            <!-- Table View -->
+            <DataGrid Name="tableView" Grid.Row="0" 
+                      AutoGenerateColumns="True"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      SelectionMode="Extended"
+                      GridLinesVisibility="None" />
+
+            <!-- Extract and Open Buttons -->
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="5">
+                <Button Name="extractButton" Content="Extract" IsEnabled="False" Margin="0,0,5,0" />
+                <Button Name="openButton" Content="Open" IsEnabled="False" />
+            </StackPanel>
+
+            <!-- Add, Remove, Reload Buttons -->
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5">
+                <Button Name="loadButton" Content="Add" Margin="0,0,5,0" />
+                <Button Name="unloadButton" Content="Remove" IsEnabled="False" Margin="0,0,5,0" />
+                <Button Name="refreshButton" Content="Reload" IsEnabled="False" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

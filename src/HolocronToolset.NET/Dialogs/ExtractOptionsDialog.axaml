@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.ExtractOptionsDialog"
+        Title="Extract Options"
+        Width="300" Height="200"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="*,*,Auto" Margin="10">
+        <!-- TPC Options -->
+        <Expander Header="TPC Options" Grid.Row="0" IsExpanded="True" Margin="0,0,0,10">
+            <StackPanel Spacing="5" Margin="5">
+                <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" />
+                <CheckBox Name="tpcTxiCheckbox" Content="Extract TXI" />
+            </StackPanel>
+        </Expander>
+
+        <!-- MDL Options -->
+        <Expander Header="MDL Options" Grid.Row="1" IsExpanded="True" Margin="0,0,0,10">
+            <StackPanel Spacing="5" Margin="5">
+                <CheckBox Name="mdlDecompileCheckbox" Content="Decompile" IsEnabled="False" ToolTip.Tip="Decompile feature is not available." />
+                <CheckBox Name="mdlTexturesCheckbox" Content="Extract Textures" />
+            </StackPanel>
+        </Expander>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*">
+            <Button Name="okButton" Grid.Column="0" Content="OK" HorizontalAlignment="Right" Width="75" Margin="0,0,5,0" />
+            <Button Name="cancelButton" Grid.Column="1" Content="Cancel" HorizontalAlignment="Left" Width="75" />
+        </Grid>
+    </Grid>
+</Window>

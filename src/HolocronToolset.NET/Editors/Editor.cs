@@ -55,37 +55,15 @@ namespace HolocronToolset.NET.Editors
             // Setup file filters for open/save dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
             // Original: Additional formats handling
+            // Note: ResourceType is a class, not an enum, so we can't use Enum.TryParse
+            // For now, we'll skip adding format variants as they would need to be looked up differently
+            // This functionality can be added later when needed
             var additionalFormats = new[] { "XML", "JSON", "CSV", "ASCII", "YAML" };
             var readList = _readSupported.ToList();
             var writeList = _writeSupported.ToList();
 
-            // Add additional format variants
-            foreach (var format in additionalFormats)
-            {
-                foreach (var restype in _readSupported.ToList())
-                {
-                    var formatName = $"{restype.Name}_{format}";
-                    if (Enum.TryParse<ResourceType>(formatName, out var formatType))
-                    {
-                        if (!readList.Contains(formatType))
-                        {
-                            readList.Add(formatType);
-                        }
-                    }
-                }
-                foreach (var restype in _writeSupported.ToList())
-                {
-                    var formatName = $"{restype.Name}_{format}";
-                    if (Enum.TryParse<ResourceType>(formatName, out var formatType))
-                    {
-                        if (!writeList.Contains(formatType))
-                        {
-                            writeList.Add(formatType);
-                        }
-                    }
-                }
-            }
-
+            // TODO: Add additional format variants when ResourceType lookup by name is implemented
+            // For now, just use the provided supported types
             _readSupported = readList.ToArray();
             _writeSupported = writeList.ToArray();
         }

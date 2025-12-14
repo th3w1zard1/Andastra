@@ -35,8 +35,8 @@ namespace HolocronToolset.NET.Editors
         private NumericUpDown _jumpSpinbox;
         private Button _jumpButton;
         private DataGrid _talkTable;
-        private Panel _searchBox;
-        private Panel _jumpBox;
+        private Control _searchBox;
+        private Control _jumpBox;
         private TLKEntryViewModel _selectedEntry;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:57-95
@@ -81,20 +81,22 @@ namespace HolocronToolset.NET.Editors
             var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
 
             // Search box
-            _searchBox = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            var searchBoxPanel = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            _searchBox = searchBoxPanel;
             _searchEdit = new TextBox { Watermark = "Search..." };
             _searchButton = new Button { Content = "Search" };
-            _searchBox.Children.Add(_searchEdit);
-            _searchBox.Children.Add(_searchButton);
-            mainPanel.Children.Add(_searchBox);
+            searchBoxPanel.Children.Add(_searchEdit);
+            searchBoxPanel.Children.Add(_searchButton);
+            mainPanel.Children.Add(searchBoxPanel);
 
             // Jump box
-            _jumpBox = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            var jumpBoxPanel = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            _jumpBox = jumpBoxPanel;
             _jumpSpinbox = new NumericUpDown { Minimum = 0, Maximum = 0 };
             _jumpButton = new Button { Content = "Go" };
-            _jumpBox.Children.Add(_jumpSpinbox);
-            _jumpBox.Children.Add(_jumpButton);
-            mainPanel.Children.Add(_jumpBox);
+            jumpBoxPanel.Children.Add(_jumpSpinbox);
+            jumpBoxPanel.Children.Add(_jumpButton);
+            mainPanel.Children.Add(jumpBoxPanel);
 
             // Table
             _talkTable = new DataGrid
@@ -134,15 +136,23 @@ namespace HolocronToolset.NET.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            _talkTable = EditorHelpers.FindControlSafe<DataGrid>(this, "TalkTable");
-            _textEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TextEdit");
-            _soundEdit = EditorHelpers.FindControlSafe<TextBox>(this, "SoundEdit");
-            _searchEdit = EditorHelpers.FindControlSafe<TextBox>(this, "SearchEdit");
-            _searchButton = EditorHelpers.FindControlSafe<Button>(this, "SearchButton");
-            _jumpSpinbox = EditorHelpers.FindControlSafe<NumericUpDown>(this, "JumpSpinbox");
-            _jumpButton = EditorHelpers.FindControlSafe<Button>(this, "JumpButton");
-            _searchBox = EditorHelpers.FindControlSafe<Panel>(this, "SearchBox");
-            _jumpBox = EditorHelpers.FindControlSafe<Panel>(this, "JumpBox");
+            _talkTable = this.FindControl<DataGrid>("talkTable");
+            _textEdit = this.FindControl<TextBox>("textEdit");
+            _soundEdit = this.FindControl<TextBox>("soundEdit");
+            _searchEdit = this.FindControl<TextBox>("searchEdit");
+            _searchButton = this.FindControl<Button>("searchButton");
+            _jumpSpinbox = this.FindControl<NumericUpDown>("jumpSpinbox");
+            _jumpButton = this.FindControl<Button>("jumpButton");
+            var searchBoxBorder = this.FindControl<Border>("searchBox");
+            if (searchBoxBorder != null)
+            {
+                _searchBox = searchBoxBorder;
+            }
+            var jumpBoxBorder = this.FindControl<Border>("jumpBox");
+            if (jumpBoxBorder != null)
+            {
+                _jumpBox = jumpBoxBorder;
+            }
 
             if (_talkTable != null)
             {

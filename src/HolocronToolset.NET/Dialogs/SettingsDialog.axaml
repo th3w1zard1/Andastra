@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:widgets="using:HolocronToolset.NET.Widgets"
+        x:Class="HolocronToolset.NET.Dialogs.SettingsDialog"
+        Title="Settings"
+        Width="757" Height="451"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="*,Auto">
+        <!-- Splitter with Settings Tree and Stacked Widgets -->
+        <Grid ColumnDefinitions="200,*" Grid.Row="0">
+            <!-- Settings Tree (left side) -->
+            <TreeView Name="settingsTree" Grid.Column="0" Margin="5">
+                <TreeViewItem Header="Installations" IsSelected="True" />
+                <TreeViewItem Header="GIT Editor" />
+                <TreeViewItem Header="Module Designer" />
+                <TreeViewItem Header="Misc" />
+                <TreeViewItem Header="Application" />
+            </TreeView>
+
+            <!-- Stacked Widgets (right side) -->
+            <ContentControl Name="settingsStack" Grid.Column="1" Margin="5">
+                <!-- Content will be set programmatically -->
+            </ContentControl>
+        </Grid>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="10">
+            <Button Name="okButton" Grid.Column="0" Content="OK" HorizontalAlignment="Right" Width="75" Margin="0,0,5,0" />
+            <Button Name="cancelButton" Grid.Column="1" Content="Cancel" HorizontalAlignment="Left" Width="75" />
+        </Grid>
+    </Grid>
+</Window>
