@@ -18,15 +18,18 @@ namespace CSharpKOTOR.Resource.Generics
             GFF gff;
             if (source is string filepath)
             {
-                gff = GFFAuto.ReadGff(filepath, offset, size);
+                gff = new GFFBinaryReader(filepath).Load();
             }
             else if (source is byte[] data)
             {
-                gff = GFFAuto.ReadGff(data, offset, sizeValue);
+                using (var ms = new MemoryStream(data, offset, sizeValue > 0 ? sizeValue : data.Length - offset))
+                {
+                    gff = new GFFBinaryReader(ms).Load();
+                }
             }
             else if (source is Stream stream)
             {
-                gff = GFFAuto.ReadGff(stream, offset, sizeValue);
+                gff = new GFFBinaryReader(stream).Load();
             }
             else
             {
@@ -41,7 +44,19 @@ namespace CSharpKOTOR.Resource.Generics
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = PTHHelpers.DismantlePth(pth, game, useDeprecated);
-            GFFAuto.WriteGff(gff, target, format);
+            if (target is string filepath)
+            {
+                GFFAuto.WriteGff(gff, filepath, format);
+            }
+            else if (target is Stream stream)
+            {
+                byte[] data = GFFAuto.BytesGff(gff, format);
+                stream.Write(data, 0, data.Length);
+            }
+            else
+            {
+                throw new ArgumentException("Target must be string or Stream for PTH");
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:233-241
@@ -54,3 +69,4 @@ namespace CSharpKOTOR.Resource.Generics
         }
     }
 }
+

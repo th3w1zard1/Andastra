@@ -938,9 +938,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformAction(AActionCommand node)
         {
             this.CheckStart(node);
+            int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
+            JavaSystem.@out.Println("DEBUG transformAction: pos=" + nodePos + ", current=" + this.current.GetType().Name +
+                  ", hasChildren=" + this.current.HasChildren());
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:881
             // Original: List<AExpression> params = this.removeActionParams(node);
             List<AExpression> @params = this.RemoveActionParams(node);
+            JavaSystem.@out.Println("DEBUG transformAction: got " + @params.Count + " params");
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:930-936
             // Original: String actionName; try { actionName = NodeUtils.getActionName(node, this.actions); } catch (RuntimeException e) { actionName = "UnknownAction" + NodeUtils.getActionId(node); }
             string actionName;
@@ -989,7 +993,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:962-963
                 // Original: } else { this.current.addChild(act); }
                 // Java adds AActionExp directly - ASub.getBody() will handle converting it to a statement
+                JavaSystem.@out.Println("DEBUG transformAction: adding AActionExp directly to current, action=" + actionName + ", params=" + @params.Count);
                 this.current.AddChild(act);
+                JavaSystem.@out.Println("DEBUG transformAction: after adding, current hasChildren=" + this.current.HasChildren() + ", childrenCount=" + this.current.Size());
             }
 
             this.CheckEnd(node);
@@ -2293,28 +2299,37 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private List<AExpression> RemoveActionParams(AActionCommand node)
         {
             List<AExpression> @params = new List<AExpression>();
+            int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
+            JavaSystem.@out.Println("DEBUG removeActionParams: pos=" + nodePos + ", current=" + this.current.GetType().Name +
+                  ", hasChildren=" + this.current.HasChildren() + ", childrenCount=" + (this.current.HasChildren() ? this.current.Size() : 0));
+            
             List<object> paramtypes;
             try
             {
                 paramtypes = NodeUtils.GetActionParamTypes(node, this.actions);
+                JavaSystem.@out.Println("DEBUG removeActionParams: got paramtypes, count=" + (paramtypes != null ? paramtypes.Count : 0));
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 // Action metadata missing or invalid - use placeholder params based on arg count
                 int actionParamCount = NodeUtils.GetActionParamCount(node);
+                JavaSystem.@out.Println("DEBUG removeActionParams: action metadata missing, using paramcount=" + actionParamCount + ", exception=" + e.Message);
                 for (int i = 0; i < actionParamCount; i++)
                 {
                     try
                     {
                         ScriptNode.AExpression exp = this.RemoveLastExp(false);
+                        JavaSystem.@out.Println("DEBUG removeActionParams: removed param " + (i + 1) + "=" + exp.GetType().Name);
                         @params.Add(exp);
                     }
-                    catch (Exception)
+                    catch (Exception expEx)
                     {
                         // Stack doesn't have enough entries - use placeholder
+                        JavaSystem.@out.Println("DEBUG removeActionParams: failed to remove param " + (i + 1) + ", using placeholder: " + expEx.Message);
                         @params.Add(this.BuildPlaceholderParam(i + 1));
                     }
                 }
+                JavaSystem.@out.Println("DEBUG removeActionParams: returning " + @params.Count + " params (metadata missing case)");
                 return @params;
             }
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1994-2001
@@ -2325,6 +2340,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             // Original: int paramcount = paramtypes.size();
             int argBytes = NodeUtils.GetActionParamCount(node);
             int paramcount = paramtypes.Count;
+            JavaSystem.@out.Println("DEBUG removeActionParams: argBytes=" + argBytes + ", paramtypes.Count=" + paramtypes.Count +
+                  ", using paramcount=" + paramcount);
 
             for (int i = 0; i < paramcount; i++)
             {
@@ -2332,6 +2349,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 ScriptNode.AExpression exp;
                 try
                 {
+                    JavaSystem.@out.Println("DEBUG removeActionParams: removing param " + (i + 1) + "/" + paramcount + ", type=" + paramtype.TypeSize() +
+                          ", current hasChildren=" + this.current.HasChildren());
                     if (paramtype.Equals(unchecked((byte)(-16))))
                     {
                         exp = this.GetLastExp();
@@ -2353,16 +2372,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     {
                         exp = this.RemoveLastExp(false);
                     }
+                    JavaSystem.@out.Println("DEBUG removeActionParams: successfully removed param " + (i + 1) + "=" + exp.GetType().Name);
                 }
-                catch (Exception)
+                catch (Exception expEx)
                 {
                     // Stack doesn't have enough entries - use placeholder
+                    JavaSystem.@out.Println("DEBUG removeActionParams: failed to remove param " + (i + 1) + ", using placeholder: " + expEx.Message);
                     exp = this.BuildPlaceholderParam(i + 1);
                 }
 
                 @params.Add(exp);
             }
 
+            // Parameters are removed from the AST children list using removeLastExp, which removes from the end
+            // The order in which they're removed depends on how they were added to the AST
+            // Based on testing, they appear to be in the correct order already, so no reversal needed
+            JavaSystem.@out.Println("DEBUG removeActionParams: returning " + @params.Count + " params, remaining children=" + (this.current.HasChildren() ? this.current.Size() : 0));
             return @params;
         }
 

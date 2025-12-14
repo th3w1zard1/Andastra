@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Utility.MiscString
         {
             if (item is WrappedStr wrapped)
             {
-                return wrapped._content.ToLowerInvariant();
+                return ((string)wrapped).ToLowerInvariant();
             }
             if (item is string str)
             {
@@ -36,7 +36,7 @@ namespace CSharpKOTOR.Utility.MiscString
 
         public CaseInsensImmutableStr(WrappedStr content) : base(content)
         {
-            _casefoldContent = content?._content.ToLowerInvariant() ?? "";
+            _casefoldContent = content != null ? ((string)content).ToLowerInvariant() : "";
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/case_insens_str.py:34-38
@@ -141,10 +141,10 @@ namespace CSharpKOTOR.Utility.MiscString
         {
             if (suffix is IEnumerable<object> tuple)
             {
-                var parsedSuffix = tuple.Select(CoerceStr).ToArray();
+                var parsedSuffixArray = tuple.Select(CoerceStr).ToArray();
                 int startIdx = start ?? 0;
                 int endIdx = end ?? _casefoldContent.Length;
-                return parsedSuffix.Any(s => _casefoldContent.Substring(startIdx, endIdx - startIdx).EndsWith(s));
+                return parsedSuffixArray.Any(s => _casefoldContent.Substring(startIdx, endIdx - startIdx).EndsWith(s));
             }
             string parsedSuffix = CoerceStr(suffix);
             int startIndex = start ?? 0;
@@ -267,7 +267,25 @@ namespace CSharpKOTOR.Utility.MiscString
         {
             if (old == "")
             {
-                return new CaseInsensImmutableStr(_content.Replace(old, new_, count == -1 ? int.MaxValue : count));
+                // C# String.Replace doesn't support count parameter, so we need to implement it manually
+                if (count == -1 || count == int.MaxValue)
+                {
+                    return new CaseInsensImmutableStr(_content.Replace(old, new_));
+                }
+                else
+                {
+                    // Replace only the first 'count' occurrences
+                    string result = _content;
+                    int remaining = count;
+                    int index = 0;
+                    while (remaining > 0 && (index = result.IndexOf(old, index, StringComparison.Ordinal)) >= 0)
+                    {
+                        result = result.Substring(0, index) + new_ + result.Substring(index + old.Length);
+                        index += new_.Length;
+                        remaining--;
+                    }
+                    return new CaseInsensImmutableStr(result);
+                }
             }
 
             string pattern = Regex.Escape(old);
@@ -367,10 +385,10 @@ namespace CSharpKOTOR.Utility.MiscString
         {
             if (prefix is IEnumerable<object> tuple)
             {
-                var parsedPrefix = tuple.Select(CoerceStr).ToArray();
+                var parsedPrefixArray = tuple.Select(CoerceStr).ToArray();
                 int startIdx = start ?? 0;
                 int endIdx = end ?? _casefoldContent.Length;
-                return parsedPrefix.Any(s => _casefoldContent.Substring(startIdx, endIdx - startIdx).StartsWith(s));
+                return parsedPrefixArray.Any(s => _casefoldContent.Substring(startIdx, endIdx - startIdx).StartsWith(s));
             }
             string parsedPrefix = CoerceStr(prefix);
             int startIndex = start ?? 0;
@@ -379,3 +397,4 @@ namespace CSharpKOTOR.Utility.MiscString
         }
     }
 }
+
