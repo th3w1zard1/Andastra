@@ -62,6 +62,35 @@ namespace KotorDiff.NET.Cli
             string chitinKey = Path.Combine(path, "chitin.key");
             return File.Exists(chitinKey);
         }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/cli_utils.py:57-60
+        // Original: def prompt_for_path(title: str) -> str: ...
+        public static string PromptForPath(string title)
+        {
+            Console.Write($"{title}: ");
+            string userInput = Console.ReadLine()?.Trim() ?? "";
+            return NormalizePathArg(userInput) ?? "";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/cli_utils.py:63-75
+        // Original: def print_path_error_with_help(path: Path, parser: argparse.ArgumentParser) -> None: ...
+        public static void PrintPathErrorWithHelp(string path, bool showHelp = false)
+        {
+            Console.WriteLine($"Invalid path: {path}");
+            string pathStr = path ?? "";
+            if (pathStr.Contains("\"") || (path != null && !Directory.Exists(Path.GetDirectoryName(path))))
+            {
+                Console.WriteLine("\nNote: If using paths with spaces and trailing backslashes in PowerShell:");
+                Console.WriteLine("  - Remove trailing backslash: --path1=\"C:\\Program Files\\folder\"");
+                Console.WriteLine("  - Or double the backslash: --path1=\"C:\\Program Files\\folder\\\\\"");
+                Console.WriteLine("  - Or use forward slashes: --path1=\"C:/Program Files/folder/\"");
+            }
+            if (showHelp)
+            {
+                // Help text would be printed by the parser
+                Console.WriteLine("Use --help for usage information.");
+            }
+        }
     }
 }
 
