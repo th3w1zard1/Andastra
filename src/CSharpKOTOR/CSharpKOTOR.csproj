@@ -130,6 +130,7 @@
 
   <ItemGroup>
     <Compile Remove="Formats\NCS\NCSDecomp\K1UndecompilableRoundtripTest.cs" />
+    <Compile Remove="Tools\Archives.cs" />
   </ItemGroup>
 
   <ItemGroup>
