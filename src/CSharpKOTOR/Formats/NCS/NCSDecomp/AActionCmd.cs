@@ -27,7 +27,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
         public override void Apply(Switch sw)
         {
-            ((IAnalysis)sw).CaseAActionCmd(this);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/AActionCmd.java:24-27
+            // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseAActionCmd(this); }
+            string debugMsg = "DEBUG AActionCmd.Apply: ENTERED, sw type=" + (sw != null ? sw.GetType().Name : "null");
+            Console.Error.WriteLine(debugMsg);
+            JavaSystem.@out.Println(debugMsg);
+            try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
+            if (sw is Analysis.IAnalysis analysis)
+            {
+                debugMsg = "DEBUG AActionCmd.Apply: sw is IAnalysis, calling CaseAActionCmd";
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
+                analysis.CaseAActionCmd(this);
+                debugMsg = "DEBUG AActionCmd.Apply: CaseAActionCmd returned";
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
+            }
+            else
+            {
+                debugMsg = "DEBUG AActionCmd.Apply: sw is NOT IAnalysis, type=" + (sw != null ? sw.GetType().Name : "null");
+                Console.Error.WriteLine(debugMsg);
+                JavaSystem.@out.Println(debugMsg);
+                try { System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n"); } catch { }
+            }
         }
 
         public PActionCommand GetActionCommand()

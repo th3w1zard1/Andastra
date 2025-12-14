@@ -140,35 +140,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrunedDepthFirstAdapter.java:149-158
-        // Original: @Override public void caseACommandBlock(ACommandBlock node)
+        // Original: @Override public void caseACommandBlock(ACommandBlock node) { this.inACommandBlock(node); PCmd[] temp = node.getCmd().toArray(new PCmd[0]); for (int i = 0; i < temp.length; i++) { temp[i].apply(this); } this.outACommandBlock(node); }
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.InACommandBlock(node);
-            Object[] temp = node.GetCmd().ToArray();
-            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Found " + temp.Length + " commands";
-            Console.Error.WriteLine(debugMsg);
-            JavaSystem.@out.Println(debugMsg);
-            try
-            {
-                System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-            }
-            catch { }
-
+            // Matching Java: PCmd[] temp = node.getCmd().toArray(new PCmd[0]);
+            PCmd[] temp = node.GetCmd().ToArray();
+            // Matching Java: for (int i = 0; i < temp.length; i++) { temp[i].apply(this); }
             for (int i = 0; i < temp.Length; i++)
             {
-                if (temp[i] is PCmd cmd)
-                {
-                    string cmdType = cmd.GetType().Name;
-                    debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Visiting command[" + i + "]=" + cmdType;
-                    Console.Error.WriteLine(debugMsg);
-                    JavaSystem.@out.Println(debugMsg);
-                    try
-                    {
-                        System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-                    }
-                    catch { }
-                    cmd.Apply(this);
-                }
+                temp[i].Apply(this);
             }
 
             this.OutACommandBlock(node);
