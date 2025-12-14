@@ -983,25 +983,42 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             if (!isVoidType)
             {
-                Variable var = (Variable)this.stack.Get(1);
-                if (type.Equals(unchecked((byte)(-16))))
+                // Check if return value exists on stack (might be discarded by MOVSP)
+                if (actionName == "AddAvailableNPCByObject" || actionName == "AddPartyMember")
                 {
-                    var = var.Varstruct();
+                    Console.Error.WriteLine($"DEBUG transformAction: stack size={this.stack.Size()}, returnType={type.ByteValue()}");
                 }
+                if (this.stack.Size() >= 1)
+                {
+                    Variable var = (Variable)this.stack.Get(1);
+                    if (type.Equals(unchecked((byte)(-16))))
+                    {
+                        var = var.Varstruct();
+                    }
 
-                act.Stackentry(var);
-                // Check if variable is already declared to prevent duplicates
-                object existingVardecObj;
-                AVarDecl vardec = this.vardecs.TryGetValue(var, out existingVardecObj) ? (AVarDecl)existingVardecObj : null;
-                if (vardec == null)
-                {
-                    vardec = new AVarDecl(var);
-                    this.UpdateVarCount(var);
-                    this.current.AddChild(vardec);
-                    this.vardecs.Put(var, vardec);
+                    act.Stackentry(var);
+                    // Check if variable is already declared to prevent duplicates
+                    object existingVardecObj;
+                    AVarDecl vardec = this.vardecs.TryGetValue(var, out existingVardecObj) ? (AVarDecl)existingVardecObj : null;
+                    if (vardec == null)
+                    {
+                        vardec = new AVarDecl(var);
+                        this.UpdateVarCount(var);
+                        this.current.AddChild(vardec);
+                        this.vardecs.Put(var, vardec);
+                    }
+                    vardec.SetIsFcnReturn(true);
+                    vardec.InitializeExp(act);
                 }
-                vardec.SetIsFcnReturn(true);
-                vardec.InitializeExp(act);
+                else
+                {
+                    // Return value was discarded - emit as statement expression without variable assignment
+                    if (actionName == "AddAvailableNPCByObject" || actionName == "AddPartyMember")
+                    {
+                        Console.Error.WriteLine($"DEBUG transformAction: return value discarded (stack size < 1), emitting as void call");
+                    }
+                    this.current.AddChild(act);
+                }
             }
             else
             {
@@ -1232,7 +1249,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                JavaSystem.@err.Println("DEBUG transformMoveSp: state != 1, checking for standalone expression statement");
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1179-1207
+                // Original: When state == 0, check if we have a standalone expression (like int3;) that should be converted to an expression statement
                 // When state == 0, check if we have a standalone expression (like int3;)
                 // that should be converted to an expression statement
                 if (this.current.HasChildren())
@@ -1245,26 +1263,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                           && !typeof(AModifyExp).IsInstanceOfType(last) && !typeof(AUnaryModExp).IsInstanceOfType(last)
                           && !typeof(AReturnStatement).IsInstanceOfType(last))
                     {
-                        JavaSystem.@err.Println("DEBUG transformMoveSp: converting standalone expression to statement: " +
-                              last.GetType().Name);
                         AExpression expr = (AExpression)this.RemoveLastExp(true);
                         if (expr != null)
                         {
                             AExpressionStatement stmt = new AExpressionStatement(expr);
                             this.current.AddChild(stmt);
                             stmt.Parent(this.current);
-                            JavaSystem.@err.Println("DEBUG transformMoveSp: created AExpressionStatement");
                         }
                     }
                     else
                     {
-                        JavaSystem.@err.Println("DEBUG transformMoveSp: last child is not a standalone expression, calling checkSwitchEnd");
                         this.CheckSwitchEnd(node);
                     }
                 }
                 else
                 {
-                    JavaSystem.@err.Println("DEBUG transformMoveSp: no children, calling checkSwitchEnd");
                     this.CheckSwitchEnd(node);
                 }
             }

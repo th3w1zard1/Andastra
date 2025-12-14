@@ -101,26 +101,41 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                             maxIndex = idx;
                         }
                     }
+                    continue;
                 }
-                else if (started)
+
+                if (!started)
+                {
+                    continue;
+                }
+
+                // Skip comments/blank lines between header and signature.
+                if (string.IsNullOrWhiteSpace(str) || str.Trim().StartsWith("//"))
+                {
+                    continue;
+                }
+
+                // Bind the next signature line to the last seen numeric header.
+                if (pendingIndex >= 0)
                 {
                     Matcher m = sig.Matcher(str);
                     if (m.Matches())
                     {
-                        if (pendingIndex < 0)
-                        {
-                            // No header seen - skip this signature (shouldn't happen in well-formed files)
-                            continue;
-                        }
                         // Ensure list is large enough
                         while (this.actions.Count <= pendingIndex)
                         {
                             this.actions.Add(null);
                         }
                         this.actions[pendingIndex] = new Action(m.Group(1), m.Group(2), m.Group(3));
-                        pendingIndex = -1;
                     }
+                    pendingIndex = -1;
                 }
+            }
+
+            // Ensure list size is at least maxIndex+1 (preserve stable indexing).
+            while (this.actions.Count <= maxIndex)
+            {
+                this.actions.Add(null);
             }
 
             ((JavaPrintStream)JavaSystem.@out).Println("read actions.  There were " + this.actions.Count.ToString());

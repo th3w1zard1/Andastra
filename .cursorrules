@@ -280,6 +280,8 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 
 5. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
 
+<<<<<<< HEAD
+
 ### Engine Architecture Principles
 
 **Layered Architecture** (strict separation):
@@ -300,6 +302,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 ```
 
 **Dependency Rules**:
+
 - `Odyssey.Core` MUST NOT reference Stride, CSharpKOTOR.Formats, or game-specific code
 - `Odyssey.Scripting` MUST NOT reference Stride
 - `Odyssey.Content` may reference CSharpKOTOR for format parsing
@@ -361,6 +364,7 @@ Object (abstract base)
 ```
 
 **GFF Template Loading**:
+
 - UTC → Creature entity + components
 - UTP → Placeable entity + components
 - UTD → Door entity + components
@@ -372,6 +376,7 @@ Object (abstract base)
 ### Walkmesh Implementation
 
 BWM format requirements:
+
 - Type 1 (WOK): Area walkmesh with AABB tree, adjacency, perimeter edges
 - Type 0 (PWK/DWK): Placeable/door walkmesh with hook vectors
 - Adjacency encoding: `adjacency = faceIndex * 3 + edgeIndex`, `-1` = no neighbor
@@ -391,6 +396,7 @@ Finished    (3.0s)  - Complete
 ```
 
 D20 attack resolution:
+
 - Natural 20 = always hit (check for crit)
 - Natural 1 = always miss
 - Roll + attack bonus >= target AC = hit
@@ -417,3 +423,111 @@ The architecture supports future engines via abstraction:
 | Format Parsing | `CSharpKOTOR/Formats/*` |
 | Full Plan | `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` |
 | Roadmap | `docs/engine_roadmap.md` |
+
+### Engine Implementation Patterns
+
+**NCS Virtual Machine**:
+
+- Header: 13 bytes (`"NCS V1.0"` + `0x42` marker + big-endian file size)
+- Instructions: `<opcode:uint8><qualifier:uint8><args...>`
+- Stack: 4-byte aligned, vectors = 12 bytes (3 floats)
+- Jump offsets: Relative from instruction start (not next instruction)
+- Engine calls: `ACTION` with `uint16 routineId` + `uint8 argCount`
+
+**BWM Walkmesh**:
+
+- Types: WOK (area), PWK (placeable), DWK (door)
+- Adjacency encoding: `adjacency = faceIndex * 3 + edgeIndex`
+- Decode adjacency: `face = encoded / 3`, `edge = encoded % 3`
+- Surface materials: Walkability from surfacemat.2da semantics
+
+**Resource Precedence**:
+
+```
+Pre-save:  override → module archives → chitin (KEY/BIF) → defaults
+Post-save: override → module archives → save overlay → chitin → defaults
+```
+
+**Game Loop Phases**:
+
+1. Input Phase: Collect input, update camera, click-to-move
+2. Script Phase: Process delay wheel, heartbeats, actions (budget-limited)
+3. Simulation Phase: Update positions, perception, combat rounds
+4. Animation Phase: Skeletal animations, particles, lip sync
+5. Scene Sync Phase: Sync runtime transforms → Stride scene graph
+6. Render Phase: VIS culling, transparency sort, draw calls
+7. Audio Phase: Spatial audio, trigger one-shots
+
+**Object Type Hierarchy**:
+
+```
+Object (abstract)
+├── Creature (PC/NPC)
+├── Door
+├── Placeable
+├── Trigger
+├── Waypoint
+├── Sound
+├── Store
+├── Encounter
+├── Item
+└── AreaOfEffect
+```
+
+**GFF Template Types**:
+
+- UTC → Creature (Appearance_Type, Faction, HP, Scripts)
+- UTP → Placeable (Appearance, Useable, Locked, OnUsed)
+- UTD → Door (GenericType, Locked, OnOpen, OnClose)
+- UTT → Trigger (Geometry polygon, OnEnter, OnExit)
+- UTW → Waypoint (Tag, position)
+- UTS → Sound (Active, Looping, Positional, ResRef)
+- UTE → Encounter (Creature list, spawn conditions)
+- UTI → Item (BaseItem, Properties, Charges)
+
+**NWScript Engine API Coverage Strategy**:
+
+- Tier 0: Boot + area + movement + interaction + dialogue entry
+- Tier 1: Combat core + inventory + party management
+- Tier 2: Quests, journals, influence, minigames, AI
+- Tier 3: Edge features and obscure calls
+
+**Combat System** (~3 second rounds):
+
+- D20 attack resolution: roll + modifiers vs AC
+- Natural 20: Always hit, confirm crit
+- Natural 1: Always miss
+- Combat states: Starting → FirstAttack → SecondAttack → Cooldown → Finished
+
+**Engine Family Abstraction** (for future Aurora/Eclipse support):
+
+```csharp
+public interface IGameProfile
+{
+    string GameId { get; }
+    int ScriptFunctionCount { get; }
+    IResourceLayout ResourceLayout { get; }
+    IRuleSet RuleSet { get; }
+}
+```
+
+### Key 2DA Tables
+
+| Table | Purpose |
+|-------|---------|
+| `appearance.2da` | Model resref, walk/run speed |
+| `baseitems.2da` | Item categories, damage |
+| `feat.2da` | Feat definitions |
+| `spells.2da` | Force powers |
+| `classes.2da` | Class progression |
+| `surfacemat.2da` | Surface walkability |
+
+### Definition of Done for Engine Work
+
+A feature is complete when:
+
+- Implementation matches original engine behavior
+- Unit tests pass for deterministic logic
+- Integration with CSharpKOTOR format parsers works
+- No C# 8+ syntax used
+- Code compiles with no warnings

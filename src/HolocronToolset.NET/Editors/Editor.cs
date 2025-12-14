@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
@@ -167,6 +170,170 @@ namespace HolocronToolset.NET.Editors
             {
                 return false;
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:187-239
+        // Original: def _add_help_action(self, wiki_filename: str | None = None):
+        public void AddHelpAction(string wikiFilename = null)
+        {
+            // Auto-detect wiki file if not provided
+            if (string.IsNullOrEmpty(wikiFilename))
+            {
+                string editorClassName = GetType().Name;
+                wikiFilename = EditorWikiMapping.GetWikiFile(editorClassName);
+                if (string.IsNullOrEmpty(wikiFilename))
+                {
+                    // No wiki file for this editor, skip adding help
+                    return;
+                }
+            }
+
+            // Find or create Help menu item
+            MenuItem helpMenuItem = FindHelpMenuItem();
+            if (helpMenuItem == null)
+            {
+                helpMenuItem = CreateHelpMenuItem();
+            }
+
+            // Check if Documentation action already exists (idempotent)
+            MenuItem docAction = FindDocumentationAction(helpMenuItem);
+            if (docAction == null)
+            {
+                // Add help action with question mark icon
+                docAction = new MenuItem
+                {
+                    Header = "Documentation"
+                };
+                docAction.Click += (sender, e) => ShowHelpDialog(wikiFilename);
+                
+                // Add F1 shortcut
+                var shortcut = new KeyGesture(Key.F1);
+                docAction.HotKey = shortcut;
+                
+                helpMenuItem.Items.Add(docAction);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:241-251
+        // Original: def _show_help_dialog(self, wiki_filename: str):
+        public void ShowHelpDialog(string wikiFilename)
+        {
+            if (string.IsNullOrEmpty(wikiFilename))
+            {
+                return;
+            }
+
+            // Create non-blocking dialog
+            var dialog = new Dialogs.EditorHelpDialog(this, wikiFilename);
+            dialog.Show(); // Non-blocking show
+        }
+
+        // Helper method to find Help menu item in the window
+        private MenuItem FindHelpMenuItem()
+        {
+            // Search for Menu controls in the window
+            var menus = FindControls<Menu>(this);
+            foreach (var menu in menus)
+            {
+                // Check if this menu contains a Help item
+                foreach (var item in menu.Items)
+                {
+                    if (item is MenuItem menuItem && menuItem.Header?.ToString() == "Help")
+                    {
+                        return menuItem;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Helper method to create Help menu item
+        private MenuItem CreateHelpMenuItem()
+        {
+            // Find the main menu bar
+            var mainMenu = FindControls<Menu>(this).FirstOrDefault();
+            if (mainMenu == null)
+            {
+                // Create a menu bar if it doesn't exist
+                // In Avalonia, menus are typically added to a DockPanel or directly to the window
+                mainMenu = new Menu();
+                // Add menu to window - wrap content in DockPanel if needed
+                if (Content is Panel panel)
+                {
+                    var dockPanel = new DockPanel();
+                    dockPanel.Children.Add(mainMenu);
+                    DockPanel.SetDock(mainMenu, Dock.Top);
+                    // Move existing content
+                    var children = panel.Children.ToList();
+                    foreach (var child in children)
+                    {
+                        panel.Children.Remove(child);
+                        dockPanel.Children.Add(child);
+                    }
+                    Content = dockPanel;
+                }
+                else
+                {
+                    var dockPanel = new DockPanel();
+                    dockPanel.Children.Add(mainMenu);
+                    DockPanel.SetDock(mainMenu, Dock.Top);
+                    if (Content != null && Content is Control content)
+                    {
+                        dockPanel.Children.Add(content);
+                    }
+                    Content = dockPanel;
+                }
+            }
+
+            // Create Help menu item
+            var helpMenuItem = new MenuItem { Header = "Help" };
+            mainMenu.Items.Add(helpMenuItem);
+            return helpMenuItem;
+        }
+
+        // Helper method to find Documentation action in Help menu item
+        private MenuItem FindDocumentationAction(MenuItem helpMenuItem)
+        {
+            if (helpMenuItem == null)
+            {
+                return null;
+            }
+
+            foreach (var item in helpMenuItem.Items)
+            {
+                if (item is MenuItem menuItem && menuItem.Header?.ToString() == "Documentation")
+                {
+                    return menuItem;
+                }
+            }
+            return null;
+        }
+
+        // Helper method to find controls recursively
+        private static IEnumerable<T> FindControls<T>(Control parent) where T : Control
+        {
+            var results = new List<T>();
+            if (parent is T match)
+            {
+                results.Add(match);
+            }
+
+            if (parent is Panel panel)
+            {
+                foreach (var child in panel.Children)
+                {
+                    if (child is Control control)
+                    {
+                        results.AddRange(FindControls<T>(control));
+                    }
+                }
+            }
+            else if (parent is ContentControl contentControl && contentControl.Content is Control content)
+            {
+                results.AddRange(FindControls<T>(content));
+            }
+
+            return results;
         }
     }
 }

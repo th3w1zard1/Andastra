@@ -6,6 +6,8 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using Odyssey.Content.Interfaces;
+using CSharpKOTOR.Installation;
+using JetBrains.Annotations;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
@@ -13,470 +15,585 @@ using Odyssey.Core.Module;
 namespace Odyssey.Kotor.Loading
 {
     /// <summary>
-    /// Loads modules from game resources (IFO/ARE/GIT files).
+    /// Loads KotOR modules from CSharpKOTOR data structures into Odyssey runtime format.
     /// </summary>
     /// <remarks>
-    /// Module Loading Sequence (matches original engine):
-    /// 1. Load module.ifo - Module metadata
-    /// 2. Load area ARE - Area properties
-    /// 3. Load layout LYT - Room positions
-    /// 4. Load visibility VIS - Room visibility
-    /// 5. Load area GIT - Entity instances
-    /// 6. Spawn entities from GIT
+    /// Module Loading Sequence (from IFO spec):
+    /// 1. Read IFO - Parse module metadata
+    /// 2. Check Requirements - Verify Expansion_Pack and MinGameVer
+    /// 3. Load HAKs - Mount HAK files in order
+    /// 4. Play Movie - Show Mod_StartMovie if set
+    /// 5. Load Entry Area - Read ARE + GIT for Mod_Entry_Area
+    /// 6. Spawn Player - Place at Entry position/direction
+    /// 7. Fire OnModLoad - Execute module load script
+    /// 8. Fire OnModStart - Execute module start script
+    /// 9. Start Gameplay - Enable player control
     /// </remarks>
     public class ModuleLoader
     {
-        private readonly IGameResourceProvider _resourceProvider;
+        private readonly Installation _installation;
         private readonly EntityFactory _entityFactory;
-        private readonly IWorld _world;
+        private readonly NavigationMeshFactory _navMeshFactory;
 
-        public ModuleLoader(IGameResourceProvider resourceProvider, IWorld world)
+        public ModuleLoader(Installation installation)
         {
-            _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
-            _world = world ?? throw new ArgumentNullException("world");
-            _entityFactory = new EntityFactory(world);
+            _installation = installation ?? throw new ArgumentNullException("installation");
+            _entityFactory = new EntityFactory();
+            _navMeshFactory = new NavigationMeshFactory();
         }
 
         /// <summary>
-        /// Loads a module from its resource name.
+        /// Loads a module by name.
         /// </summary>
-        public RuntimeModule LoadModule(string moduleResRef)
+        /// <param name="moduleName">Module name (e.g., "end_m01aa" for Endar Spire)</param>
+        /// <returns>Loaded RuntimeModule</returns>
+        public RuntimeModule LoadModule(string moduleName)
         {
-            if (string.IsNullOrEmpty(moduleResRef))
+            if (string.IsNullOrEmpty(moduleName))
             {
-                throw new ArgumentNullException("moduleResRef");
+                throw new ArgumentException("Module name cannot be null or empty", "moduleName");
             }
 
-            // Load module.ifo
-            var ifoGff = LoadGff(moduleResRef, "module", "ifo");
-            if (ifoGff == null)
-            {
-                throw new InvalidOperationException("Failed to load module.ifo for module: " + moduleResRef);
-            }
-
-            var module = ParseModuleInfo(ifoGff, moduleResRef);
-
+            // Create CSharpKOTOR Module wrapper
+            var module = new Module(moduleName, _installation);
+            
+            // Create runtime module
+            var runtimeModule = new RuntimeModule();
+            
+            // Load IFO (module info)
+            LoadModuleInfo(module, runtimeModule);
+            
             // Load entry area
-            if (!string.IsNullOrEmpty(module.EntryArea))
+            string entryAreaResRef = runtimeModule.EntryArea;
+            if (!string.IsNullOrEmpty(entryAreaResRef))
             {
-                var entryArea = LoadArea(moduleResRef, module.EntryArea);
-                if (entryArea != null)
+                var area = LoadArea(module, entryAreaResRef);
+                if (area != null)
                 {
-                    module.AddArea(entryArea);
+                    runtimeModule.AddArea(area);
                 }
             }
 
-            return module;
+            return runtimeModule;
         }
 
         /// <summary>
-        /// Loads an area from its resource name.
+        /// Loads module info from IFO.
         /// </summary>
-        public RuntimeArea LoadArea(string moduleResRef, string areaResRef)
+        private void LoadModuleInfo(Module module, RuntimeModule runtimeModule)
         {
-            if (string.IsNullOrEmpty(areaResRef))
+            var ifoResource = module.Info();
+            if (ifoResource == null)
             {
-                return null;
+                throw new InvalidOperationException("Module has no IFO resource");
             }
+
+            object ifoData = ifoResource.Resource();
+            if (ifoData == null)
+            {
+                throw new InvalidOperationException("Failed to load module IFO");
+            }
+
+            // IFO is a GFF file
+            GFF ifoGff = ifoData as GFF;
+            if (ifoGff == null)
+            {
+                throw new InvalidOperationException("IFO resource is not a valid GFF");
+            }
+
+            GFFStruct root = ifoGff.Root;
+
+            // Basic info
+            runtimeModule.ResRef = module.GetRoot();
+            runtimeModule.Tag = GetStringField(root, "Mod_Tag");
+
+            // Display name (localized string)
+            if (root.Exists("Mod_Name"))
+            {
+                var nameLocStr = root.GetLocString("Mod_Name");
+                runtimeModule.DisplayName = nameLocStr != null ? nameLocStr.ToString() : string.Empty;
+            }
+
+            // Entry area
+            if (root.Exists("Mod_Entry_Area"))
+            {
+                var entryAreaRef = root.GetResRef("Mod_Entry_Area");
+                runtimeModule.EntryArea = entryAreaRef != null ? entryAreaRef.ToString() : string.Empty;
+            }
+
+            // Entry position
+            if (root.Exists("Mod_Entry_X") && root.Exists("Mod_Entry_Y") && root.Exists("Mod_Entry_Z"))
+            {
+                float x = root.GetFloat("Mod_Entry_X");
+                float y = root.GetFloat("Mod_Entry_Y");
+                float z = root.GetFloat("Mod_Entry_Z");
+                runtimeModule.EntryPosition = new Vector3(x, y, z);
+            }
+
+            // Entry direction
+            if (root.Exists("Mod_Entry_Dir_X") && root.Exists("Mod_Entry_Dir_Y"))
+            {
+                runtimeModule.EntryDirectionX = root.GetFloat("Mod_Entry_Dir_X");
+                runtimeModule.EntryDirectionY = root.GetFloat("Mod_Entry_Dir_Y");
+            }
+
+            // Time settings
+            runtimeModule.DawnHour = GetIntField(root, "Mod_DawnHour", 6);
+            runtimeModule.DuskHour = GetIntField(root, "Mod_DuskHour", 18);
+            runtimeModule.MinutesPastMidnight = GetIntField(root, "Mod_MinPerHour", 2) * 60; // Convert to minutes
+            runtimeModule.Day = GetIntField(root, "Mod_StartDay", 1);
+            runtimeModule.Month = GetIntField(root, "Mod_StartMonth", 1);
+            runtimeModule.Year = GetIntField(root, "Mod_StartYear", 3951);
+
+            // XP scale
+            runtimeModule.XPScale = GetIntField(root, "Mod_XPScale", 100);
+
+            // Start movie
+            if (root.Exists("Mod_StartMovie"))
+            {
+                var movieRef = root.GetResRef("Mod_StartMovie");
+                runtimeModule.StartMovie = movieRef != null ? movieRef.ToString() : string.Empty;
+            }
+
+            // Scripts
+            LoadModuleScripts(root, runtimeModule);
+        }
+
+        /// <summary>
+        /// Loads module scripts from IFO.
+        /// </summary>
+        private void LoadModuleScripts(GFFStruct root, RuntimeModule module)
+        {
+            // Map IFO script fields to ScriptEvent enum
+            var scriptMappings = new Dictionary<string, ScriptEvent>
+            {
+                { "Mod_OnAcquirItem", ScriptEvent.OnAcquireItem },
+                { "Mod_OnActvtItem", ScriptEvent.OnActivateItem },
+                { "Mod_OnClientEntr", ScriptEvent.OnClientEnter },
+                { "Mod_OnClientLeav", ScriptEvent.OnClientLeave },
+                { "Mod_OnHeartbeat", ScriptEvent.OnHeartbeat },
+                { "Mod_OnModLoad", ScriptEvent.OnModuleLoad },
+                { "Mod_OnModStart", ScriptEvent.OnModuleStart },
+                { "Mod_OnPlrDeath", ScriptEvent.OnPlayerDeath },
+                { "Mod_OnPlrDying", ScriptEvent.OnPlayerDying },
+                { "Mod_OnPlrLvlUp", ScriptEvent.OnPlayerLevelUp },
+                { "Mod_OnPlrRest", ScriptEvent.OnPlayerRest },
+                { "Mod_OnSpawnBtnDn", ScriptEvent.OnSpawnButtonDown },
+                { "Mod_OnUnAqreItem", ScriptEvent.OnUnacquireItem },
+                { "Mod_OnUsrDefined", ScriptEvent.OnUserDefined }
+            };
+
+            foreach (var mapping in scriptMappings)
+            {
+                if (root.Exists(mapping.Key))
+                {
+                    var scriptRef = root.GetResRef(mapping.Key);
+                    if (scriptRef != null && !string.IsNullOrEmpty(scriptRef.ToString()))
+                    {
+                        module.SetScript(mapping.Value, scriptRef.ToString());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads an area from ARE + GIT + LYT + VIS.
+        /// </summary>
+        [CanBeNull]
+        public RuntimeArea LoadArea(Module module, string areaResRef)
+        {
+            var area = new RuntimeArea();
+            area.ResRef = areaResRef;
 
             // Load ARE (area properties)
-            var areGff = LoadGff(moduleResRef, areaResRef, "are");
-            if (areGff == null)
+            var areResource = module.Are();
+            if (areResource != null)
             {
-                return null;
+                LoadAreaProperties(areResource, area);
             }
 
-            var area = ParseAreaProperties(areGff, areaResRef);
-
-            // Load LYT (layout)
-            var lyt = LoadLyt(moduleResRef, areaResRef);
-            if (lyt != null)
+            // Load LYT (room layout)
+            var lytResource = module.Layout();
+            if (lytResource != null)
             {
-                ParseLayout(area, lyt);
+                LoadLayout(lytResource, area);
             }
 
             // Load VIS (visibility)
-            var vis = LoadVis(moduleResRef, areaResRef);
-            if (vis != null)
+            var visResource = module.Vis();
+            if (visResource != null)
             {
-                ParseVisibility(area, vis);
+                LoadVisibility(visResource, area);
             }
 
-            // Load GIT (instances) and spawn entities
-            var gitGff = LoadGff(moduleResRef, areaResRef, "git");
-            if (gitGff != null)
+            // Load GIT (dynamic objects)
+            var gitResource = module.Git();
+            if (gitResource != null)
             {
-                SpawnEntities(area, gitGff);
+                LoadGitObjects(gitResource, area, module);
             }
+
+            // Load navigation mesh from BWM files
+            LoadNavigationMesh(module, area);
 
             return area;
         }
 
-        #region IFO Parsing
-
-        private RuntimeModule ParseModuleInfo(GFF ifo, string moduleResRef)
+        /// <summary>
+        /// Loads area properties from ARE.
+        /// </summary>
+        private void LoadAreaProperties(ModuleResource areResource, RuntimeArea area)
         {
-            var module = new RuntimeModule();
-            var root = ifo.Root;
-
-            module.ResRef = moduleResRef;
-
-            // Name and identifiers
-            if (root.TryGetLocString("Mod_Name", out LocalizedString modName))
+            object areData = areResource.Resource();
+            if (areData == null)
             {
-                module.DisplayName = modName.GetString(Language.English) ?? string.Empty;
-            }
-            module.Tag = root.GetString("Mod_Tag");
-
-            // Entry point
-            module.EntryArea = root.GetResRef("Mod_Entry_Area").Value ?? string.Empty;
-            module.EntryPosition = new Vector3(
-                root.GetSingle("Mod_Entry_X"),
-                root.GetSingle("Mod_Entry_Y"),
-                root.GetSingle("Mod_Entry_Z")
-            );
-            module.EntryDirectionX = root.GetSingle("Mod_Entry_Dir_X");
-            module.EntryDirectionY = root.GetSingle("Mod_Entry_Dir_Y");
-
-            // Time settings
-            module.DawnHour = root.GetInt32("Mod_DawnHour");
-            module.DuskHour = root.GetInt32("Mod_DuskHour");
-            module.MinutesPastMidnight = root.GetInt32("Mod_MinPerHour");
-            module.Day = root.GetInt32("Mod_StartDay");
-            module.Month = root.GetInt32("Mod_StartMonth");
-            module.Year = root.GetInt32("Mod_StartYear");
-
-            // Game settings
-            module.XPScale = root.GetInt32("Mod_XPScale");
-            module.StartMovie = root.GetString("Mod_StartMovie");
-            module.VoiceOverId = root.GetString("Mod_VO_ID");
-            module.ExpansionPack = root.GetInt32("Expansion_Pack");
-            module.MinGameVersion = root.GetString("Mod_MinGameVer");
-            module.HakFiles = root.GetString("Mod_Hak");
-            module.CacheNSSData = root.GetUInt8("Mod_CacheNSSData") != 0;
-
-            // Module ID (GUID)
-            module.ModuleId = root.GetBinary("Mod_ID");
-
-            // Module scripts
-            SetModuleScript(module, root, "Mod_OnAcquirItem", ScriptEvent.OnAcquireItem);
-            SetModuleScript(module, root, "Mod_OnActvtItem", ScriptEvent.OnActivateItem);
-            SetModuleScript(module, root, "Mod_OnClientEntr", ScriptEvent.OnClientEnter);
-            SetModuleScript(module, root, "Mod_OnClientLeav", ScriptEvent.OnClientLeave);
-            SetModuleScript(module, root, "Mod_OnHeartbeat", ScriptEvent.OnHeartbeat);
-            SetModuleScript(module, root, "Mod_OnModLoad", ScriptEvent.OnModuleLoad);
-            SetModuleScript(module, root, "Mod_OnModStart", ScriptEvent.OnModuleStart);
-            SetModuleScript(module, root, "Mod_OnPlrDeath", ScriptEvent.OnPlayerDeath);
-            SetModuleScript(module, root, "Mod_OnPlrDying", ScriptEvent.OnPlayerDying);
-            SetModuleScript(module, root, "Mod_OnPlrLvlUp", ScriptEvent.OnPlayerLevelUp);
-            SetModuleScript(module, root, "Mod_OnPlrRest", ScriptEvent.OnPlayerRest);
-            SetModuleScript(module, root, "Mod_OnSpawnBtnDn", ScriptEvent.OnSpawnButtonDown);
-            SetModuleScript(module, root, "Mod_OnUnAqreItem", ScriptEvent.OnUnacquireItem);
-            SetModuleScript(module, root, "Mod_OnUsrDefined", ScriptEvent.OnUserDefined);
-
-            return module;
-        }
-
-        private void SetModuleScript(RuntimeModule module, GFFStruct root, string fieldName, ScriptEvent eventType)
-        {
-            var script = root.GetResRef(fieldName);
-            if (script != null && !string.IsNullOrEmpty(script.Value))
-            {
-                module.SetScript(eventType, script.Value);
-            }
-        }
-
-        #endregion
-
-        #region ARE Parsing
-
-        private RuntimeArea ParseAreaProperties(GFF are, string areaResRef)
-        {
-            var area = new RuntimeArea();
-            var root = are.Root;
-
-            area.ResRef = areaResRef;
-            area.Tag = root.GetString("Tag");
-
-            // Name
-            if (root.TryGetLocString("Name", out LocalizedString areaName))
-            {
-                area.DisplayName = areaName.GetString(Language.English) ?? string.Empty;
+                return;
             }
 
-            // Ambient lighting
-            area.AmbientColor = root.GetUInt32("AmbientSndDay");
-            area.DynamicAmbientColor = root.GetUInt32("DynAmbientColor");
+            GFF areGff = areData as GFF;
+            if (areGff == null)
+            {
+                return;
+            }
 
-            // Fog settings
-            area.FogEnabled = root.GetUInt8("SunFogOn") != 0;
-            area.FogColor = root.GetUInt32("FogColor");
-            area.FogNear = root.GetSingle("FogNear");
-            area.FogFar = root.GetSingle("FogFar");
-            area.SunFogColor = root.GetUInt32("SunFogColor");
+            GFFStruct root = areGff.Root;
 
-            // Sun colors
-            area.SunDiffuseColor = root.GetUInt32("SunDiffuseColor");
-            area.SunAmbientColor = root.GetUInt32("SunAmbientColor");
+            // Basic info
+            if (root.Exists("Name"))
+            {
+                var nameLocStr = root.GetLocString("Name");
+                area.DisplayName = nameLocStr != null ? nameLocStr.ToString() : string.Empty;
+            }
+
+            area.Tag = GetStringField(root, "Tag");
+
+            // Lighting
+            area.AmbientColor = (uint)GetIntField(root, "AmbientColor", 0);
+            area.DynamicAmbientColor = (uint)GetIntField(root, "DynAmbientColor", 0);
+            area.SunAmbientColor = (uint)GetIntField(root, "SunAmbientColor", 0);
+            area.SunDiffuseColor = (uint)GetIntField(root, "SunDiffuseColor", 0);
+            area.SunFogColor = (uint)GetIntField(root, "SunFogColor", 0);
+
+            // Fog
+            area.FogEnabled = GetIntField(root, "SunFogOn", 0) != 0;
+            area.FogNear = root.Exists("SunFogNear") ? root.GetFloat("SunFogNear") : 0f;
+            area.FogFar = root.Exists("SunFogFar") ? root.GetFloat("SunFogFar") : 0f;
+            area.FogColor = (uint)GetIntField(root, "FogColor", 0);
 
             // Grass
-            area.GrassEnabled = root.GetUInt8("Grass_Ambient") != 0;
-            area.GrassTexture = root.GetString("Grass_TexName");
-            area.GrassDensity = root.GetSingle("Grass_Density");
-            area.GrassQuadSize = root.GetSingle("Grass_QuadSize");
+            area.GrassEnabled = GetIntField(root, "Grass_TexName", 0) != 0; // Has grass if texture specified
+            if (root.Exists("Grass_TexName"))
+            {
+                var grassTex = root.GetResRef("Grass_TexName");
+                area.GrassTexture = grassTex != null ? grassTex.ToString() : string.Empty;
+            }
+            area.GrassDensity = root.Exists("Grass_Density") ? root.GetFloat("Grass_Density") : 0f;
+            area.GrassQuadSize = root.Exists("Grass_QuadSize") ? root.GetFloat("Grass_QuadSize") : 0f;
 
-            // Music
-            area.MusicDay = root.GetInt32("MusicDay");
-            area.MusicNight = root.GetInt32("MusicNight");
-            area.MusicBattle = root.GetInt32("MusicBattle");
-
-            // Ambient sounds
-            area.AmbientSndDay = root.GetInt32("AmbientSndDay");
-            area.AmbientSndNight = root.GetInt32("AmbientSndNight");
+            // Audio
+            area.MusicDay = GetIntField(root, "MusicDay", -1);
+            area.MusicNight = GetIntField(root, "MusicNight", -1);
+            area.MusicBattle = GetIntField(root, "MusicBattle", -1);
+            area.AmbientSndDay = GetIntField(root, "AmbientSndDay", -1);
+            area.AmbientSndNight = GetIntField(root, "AmbientSndNight", -1);
 
             // Flags
-            area.IsInterior = (root.GetUInt32("Flags") & 1) != 0;
-            area.IsUnderground = (root.GetUInt32("Flags") & 2) != 0;
+            int flags = GetIntField(root, "Flags", 0);
+            area.IsInterior = (flags & 0x0001) != 0;
+            area.IsUnderground = (flags & 0x0002) != 0;
+            area.HasWeather = (flags & 0x0004) != 0;
 
             // Weather
-            area.HasWeather = root.GetUInt8("ChanceRain") > 0 ||
-                              root.GetUInt8("ChanceSnow") > 0 ||
-                              root.GetUInt8("ChanceLightning") > 0;
-            area.WeatherType = root.GetInt32("ChanceRain") > 50 ? 1 :
-                               root.GetInt32("ChanceSnow") > 50 ? 2 : 0;
+            area.WeatherType = GetIntField(root, "ChanceSnow", 0) > 0 ? 2 : 
+                              GetIntField(root, "ChanceRain", 0) > 0 ? 1 : 0;
 
             // Area scripts
-            SetAreaScript(area, root, "OnEnter", ScriptEvent.OnEnter);
-            SetAreaScript(area, root, "OnExit", ScriptEvent.OnExit);
-            SetAreaScript(area, root, "OnHeartbeat", ScriptEvent.OnHeartbeat);
-            SetAreaScript(area, root, "OnUserDefined", ScriptEvent.OnUserDefined);
-
-            return area;
+            LoadAreaScripts(root, area);
         }
 
-        private void SetAreaScript(RuntimeArea area, GFFStruct root, string fieldName, ScriptEvent eventType)
+        /// <summary>
+        /// Loads area scripts from ARE.
+        /// </summary>
+        private void LoadAreaScripts(GFFStruct root, RuntimeArea area)
         {
-            var script = root.GetResRef(fieldName);
-            if (script != null && !string.IsNullOrEmpty(script.Value))
+            var scriptMappings = new Dictionary<string, ScriptEvent>
             {
-                area.SetScript(eventType, script.Value);
+                { "OnEnter", ScriptEvent.OnEnter },
+                { "OnExit", ScriptEvent.OnExit },
+                { "OnHeartbeat", ScriptEvent.OnHeartbeat },
+                { "OnUserDefined", ScriptEvent.OnUserDefined }
+            };
+
+            foreach (var mapping in scriptMappings)
+            {
+                if (root.Exists(mapping.Key))
+                {
+                    var scriptRef = root.GetResRef(mapping.Key);
+                    if (scriptRef != null && !string.IsNullOrEmpty(scriptRef.ToString()))
+                    {
+                        area.SetScript(mapping.Value, scriptRef.ToString());
+                    }
+                }
             }
         }
 
-        #endregion
-
-        #region LYT/VIS Parsing
-
-        private void ParseLayout(RuntimeArea area, LYT lyt)
+        /// <summary>
+        /// Loads room layout from LYT.
+        /// </summary>
+        private void LoadLayout(ModuleResource lytResource, RuntimeArea area)
         {
-            area.Rooms.Clear();
-
-            for (int i = 0; i < lyt.Rooms.Count; i++)
+            object lytData = lytResource.Resource();
+            if (lytData == null)
             {
-                var lytRoom = lyt.Rooms[i];
+                return;
+            }
+
+            LYT lyt = lytData as LYT;
+            if (lyt == null)
+            {
+                return;
+            }
+
+            area.Rooms = new List<RoomInfo>();
+
+            foreach (var room in lyt.Rooms)
+            {
                 var roomInfo = new RoomInfo
                 {
-                    ModelName = lytRoom.Model,
-                    Position = new Vector3(lytRoom.Position.X, lytRoom.Position.Y, lytRoom.Position.Z),
-                    Rotation = 0f // LYT doesn't store rotation
+                    ModelName = room.Model,
+                    Position = new Vector3(room.Position.X, room.Position.Y, room.Position.Z)
                 };
                 area.Rooms.Add(roomInfo);
             }
         }
 
-        private void ParseVisibility(RuntimeArea area, VIS vis)
+        /// <summary>
+        /// Loads visibility info from VIS.
+        /// </summary>
+        private void LoadVisibility(ModuleResource visResource, RuntimeArea area)
         {
-            // Build visibility groups from VIS data
-            var roomNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < area.Rooms.Count; i++)
+            object visData = visResource.Resource();
+            if (visData == null)
             {
-                roomNames[area.Rooms[i].ModelName] = i;
+                return;
             }
 
-            foreach (var entry in vis.GetEnumerator())
+            VIS vis = visData as VIS;
+            if (vis == null)
             {
-                string whenInside = entry.Item1;
-                HashSet<string> visibleRooms = entry.Item2;
+                return;
+            }
 
-                int roomIndex;
-                if (roomNames.TryGetValue(whenInside, out roomIndex))
+            // Map visibility to rooms
+            for (int i = 0; i < area.Rooms.Count && i < vis.RoomNames.Count; i++)
+            {
+                var roomVis = vis.GetVisibleRooms(vis.RoomNames[i]);
+                if (roomVis != null)
                 {
-                    var roomInfo = area.Rooms[roomIndex];
-                    roomInfo.VisibleRooms.Clear();
-
-                    foreach (string visibleRoom in visibleRooms)
+                    area.Rooms[i].VisibleRooms = new List<int>();
+                    foreach (var visibleRoomName in roomVis)
                     {
-                        int visibleIndex;
-                        if (roomNames.TryGetValue(visibleRoom, out visibleIndex))
+                        // Find index of visible room
+                        int idx = vis.RoomNames.IndexOf(visibleRoomName);
+                        if (idx >= 0)
                         {
-                            roomInfo.VisibleRooms.Add(visibleIndex);
+                            area.Rooms[i].VisibleRooms.Add(idx);
                         }
                     }
                 }
             }
         }
 
-        #endregion
-
-        #region GIT Parsing and Entity Spawning
-
-        private void SpawnEntities(RuntimeArea area, GFF git)
+        /// <summary>
+        /// Loads dynamic objects from GIT.
+        /// </summary>
+        private void LoadGitObjects(ModuleResource gitResource, RuntimeArea area, Module module)
         {
-            var root = git.Root;
-
-            // Spawn creatures
-            GFFList creatureList;
-            if (root.TryGetList("Creature List", out creatureList))
+            object gitData = gitResource.Resource();
+            if (gitData == null)
             {
-                foreach (var instance in creatureList)
+                return;
+            }
+
+            GFF gitGff = gitData as GFF;
+            if (gitGff == null)
+            {
+                return;
+            }
+
+            GFFStruct root = gitGff.Root;
+
+            // Load creatures
+            if (root.Exists("Creature List"))
+            {
+                var creatureList = root.GetList("Creature List");
+                if (creatureList != null)
                 {
-                    var entity = _entityFactory.SpawnCreature(instance);
-                    if (entity != null)
+                    foreach (var creatureStruct in creatureList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateCreatureFromGit(creatureStruct, module);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn placeables
-            GFFList placeableList;
-            if (root.TryGetList("Placeable List", out placeableList))
+            // Load doors
+            if (root.Exists("Door List"))
             {
-                foreach (var instance in placeableList)
+                var doorList = root.GetList("Door List");
+                if (doorList != null)
                 {
-                    var entity = _entityFactory.SpawnPlaceable(instance);
-                    if (entity != null)
+                    foreach (var doorStruct in doorList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateDoorFromGit(doorStruct, module);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn doors
-            GFFList doorList;
-            if (root.TryGetList("Door List", out doorList))
+            // Load placeables
+            if (root.Exists("Placeable List"))
             {
-                foreach (var instance in doorList)
+                var placeableList = root.GetList("Placeable List");
+                if (placeableList != null)
                 {
-                    var entity = _entityFactory.SpawnDoor(instance);
-                    if (entity != null)
+                    foreach (var placeableStruct in placeableList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreatePlaceableFromGit(placeableStruct, module);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn triggers
-            GFFList triggerList;
-            if (root.TryGetList("TriggerList", out triggerList))
+            // Load triggers
+            if (root.Exists("TriggerList"))
             {
-                foreach (var instance in triggerList)
+                var triggerList = root.GetList("TriggerList");
+                if (triggerList != null)
                 {
-                    var entity = _entityFactory.SpawnTrigger(instance);
-                    if (entity != null)
+                    foreach (var triggerStruct in triggerList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateTriggerFromGit(triggerStruct);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn waypoints
-            GFFList waypointList;
-            if (root.TryGetList("WaypointList", out waypointList))
+            // Load waypoints
+            if (root.Exists("WaypointList"))
             {
-                foreach (var instance in waypointList)
+                var waypointList = root.GetList("WaypointList");
+                if (waypointList != null)
                 {
-                    var entity = _entityFactory.SpawnWaypoint(instance);
-                    if (entity != null)
+                    foreach (var waypointStruct in waypointList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateWaypointFromGit(waypointStruct);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn sounds
-            GFFList soundList;
-            if (root.TryGetList("SoundList", out soundList))
+            // Load sounds
+            if (root.Exists("SoundList"))
             {
-                foreach (var instance in soundList)
+                var soundList = root.GetList("SoundList");
+                if (soundList != null)
                 {
-                    var entity = _entityFactory.SpawnSound(instance);
-                    if (entity != null)
+                    foreach (var soundStruct in soundList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateSoundFromGit(soundStruct);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn stores
-            GFFList storeList;
-            if (root.TryGetList("StoreList", out storeList))
+            // Load stores
+            if (root.Exists("StoreList"))
             {
-                foreach (var instance in storeList)
+                var storeList = root.GetList("StoreList");
+                if (storeList != null)
                 {
-                    var entity = _entityFactory.SpawnStore(instance);
-                    if (entity != null)
+                    foreach (var storeStruct in storeList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateStoreFromGit(storeStruct);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
 
-            // Spawn encounters
-            GFFList encounterList;
-            if (root.TryGetList("Encounter List", out encounterList))
+            // Load encounters
+            if (root.Exists("Encounter List"))
             {
-                foreach (var instance in encounterList)
+                var encounterList = root.GetList("Encounter List");
+                if (encounterList != null)
                 {
-                    var entity = _entityFactory.SpawnEncounter(instance);
-                    if (entity != null)
+                    foreach (var encounterStruct in encounterList)
                     {
-                        area.AddEntity(entity);
+                        var entity = _entityFactory.CreateEncounterFromGit(encounterStruct);
+                        if (entity != null)
+                        {
+                            area.AddEntity(entity);
+                        }
                     }
                 }
             }
         }
 
-        #endregion
-
-        #region Resource Loading Helpers
-
-        private GFF LoadGff(string moduleResRef, string resRef, string extension)
+        /// <summary>
+        /// Loads navigation mesh from BWM files.
+        /// </summary>
+        private void LoadNavigationMesh(Module module, RuntimeArea area)
         {
-            try
-            {
-                // Resource loading would use the provider
-                // For now, return null - actual implementation needs async resource loading
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
+            // For each room, load its walkmesh and combine
+            var combinedNavMesh = _navMeshFactory.CreateFromModule(module, area.Rooms);
+            area.NavigationMesh = combinedNavMesh;
         }
 
-        private LYT LoadLyt(string moduleResRef, string areaResRef)
+        #region Helper Methods
+
+        private static string GetStringField(GFFStruct root, string fieldName)
         {
-            try
+            if (root.Exists(fieldName))
             {
-                return null;
+                var resRef = root.GetResRef(fieldName);
+                if (resRef != null)
+                {
+                    return resRef.ToString();
+                }
+                // Try as string
+                return root.GetString(fieldName) ?? string.Empty;
             }
-            catch
-            {
-                return null;
-            }
+            return string.Empty;
         }
 
-        private VIS LoadVis(string moduleResRef, string areaResRef)
+        private static int GetIntField(GFFStruct root, string fieldName, int defaultValue = 0)
         {
-            try
+            if (root.Exists(fieldName))
             {
-                return null;
+                return root.GetInt32(fieldName);
             }
-            catch
-            {
-                return null;
-            }
+            return defaultValue;
         }
 
         #endregion

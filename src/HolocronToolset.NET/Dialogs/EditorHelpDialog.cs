@@ -14,6 +14,9 @@ namespace HolocronToolset.NET.Dialogs
     {
         private TextBox _textBrowser;
 
+        // Expose TextBrowser for testing
+        public TextBox TextBrowser => _textBrowser;
+
         // Public parameterless constructor for XAML
         public EditorHelpDialog() : this(null, "")
         {
@@ -77,22 +80,44 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:19-43
         // Original: def get_wiki_path() -> Path:
-        private static string GetWikiPath()
+        public static string GetWikiPath()
         {
-            // TODO: Implement frozen check when available
-            // For now, check common locations
-            var toolsetWiki = Path.Combine("wiki");
-            if (Directory.Exists(toolsetWiki))
+            // Check if frozen (EXE mode)
+            // When frozen, wiki should be bundled in the same directory as the executable
+            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            if (!string.IsNullOrEmpty(exePath))
             {
-                return toolsetWiki;
+                string exeDir = Path.GetDirectoryName(exePath);
+                string wikiPath = Path.Combine(exeDir, "wiki");
+                if (Directory.Exists(wikiPath))
+                {
+                    return wikiPath;
+                }
             }
 
-            var rootWiki = Path.Combine("..", "wiki");
-            if (Directory.Exists(rootWiki))
+            // Development mode: check toolset/wiki first, then root wiki
+            // Get the directory where EditorHelpDialog.cs is located
+            string currentDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(currentDir))
             {
-                return rootWiki;
+                // Navigate up from bin/Debug/net9/ to src/HolocronToolset.NET/Dialogs/ then up to root
+                var toolsetWiki = Path.Combine(currentDir, "..", "..", "..", "..", "wiki");
+                toolsetWiki = Path.GetFullPath(toolsetWiki);
+                if (Directory.Exists(toolsetWiki))
+                {
+                    return toolsetWiki;
+                }
+
+                // Check root wiki (one more level up)
+                var rootWiki = Path.Combine(currentDir, "..", "..", "..", "..", "..", "wiki");
+                rootWiki = Path.GetFullPath(rootWiki);
+                if (Directory.Exists(rootWiki))
+                {
+                    return rootWiki;
+                }
             }
 
+            // Fallback
             return "./wiki";
         }
 

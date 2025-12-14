@@ -8,6 +8,47 @@ Create a 100% faithful recreation of the Odyssey engine (KotOR 1/2), with future
 
 ## Architecture Overview
 
+### Engine Family Abstraction
+
+```
+Odyssey Engine Family
+├── Aurora Engine (NWN)
+├── Odyssey Engine (KotOR 1/2)
+├── Eclipse Engine (Jade Empire)
+└── Unreal 3 Aurora (Mass Effect)
+```
+
+### Project Structure
+
+```
+src/OdysseyRuntime/
+├── Odyssey.Core/          # Pure domain, no Stride dependency
+│   ├── Entities/          # Entity/component system
+│   ├── Actions/           # Action queue, delay scheduler
+│   ├── Navigation/        # Walkmesh pathfinding
+│   ├── Module/            # Runtime area/module abstractions
+│   └── Interfaces/        # Core contracts
+├── Odyssey.Content/       # Asset conversion/caching pipeline
+│   ├── Cache/             # Content caching with hash keys
+│   ├── Converters/        # TPC, MDL, BWM converters
+│   └── ResourceProviders/ # Virtual file system
+├── Odyssey.Scripting/     # NCS VM + NWScript engine API
+│   ├── VM/                # Stack-based bytecode VM
+│   ├── EngineApi/         # Engine function dispatch
+│   └── Interfaces/        # Script contracts
+├── Odyssey.Kotor/         # K1/K2 rule modules, gameplay systems
+│   ├── Rules/             # D20 combat, feats, force powers
+│   ├── Dialogue/          # DLG traversal, TLK lookup
+│   └── Save/              # Save/load system
+├── Odyssey.Stride/        # Stride adapters (rendering, physics, audio, UI)
+│   ├── Rendering/         # Scene assembly, materials
+│   ├── Materials/         # Lightmaps, transparency
+│   └── Lighting/          # Dynamic lights, effects
+├── Odyssey.Game/          # Stride executable/launcher
+├── Odyssey.Tests/         # Deterministic tests
+└── Odyssey.Tooling/       # Headless import/validation commands
+```
+
 ### Layered Architecture
 
 1. **Data/Formats Layer (CSharpKOTOR)**: File format parsing, installation scanning, resource management
@@ -17,7 +58,7 @@ Create a 100% faithful recreation of the Odyssey engine (KotOR 1/2), with future
 5. **Stride Integration Layer (Odyssey.Stride)**: Rendering, physics, audio, UI adapters
 6. **Game Rules Layer (Odyssey.Kotor)**: K1/K2-specific rulesets, 2DA-driven data
 
-### Project Structure
+---
 
 ```
 src/OdysseyRuntime/
@@ -60,6 +101,10 @@ src/OdysseyRuntime/
 - [x] Action system (ActionQueue, ActionBase, concrete actions)
 - [x] Event bus for inter-system communication
 - [x] Time manager for game time tracking
+- [x] Core interfaces defined (IWorld, IEntity, INavigationMesh)
+- [x] Entity/component system basics (Entity, World, EventBus)
+- [x] Action system (ActionQueue, ActionBase, DelayScheduler)
+- [x] Basic Stride project scaffolding
 
 ### Phase 1: NCS Virtual Machine ✅ COMPLETE
 
@@ -68,29 +113,48 @@ src/OdysseyRuntime/
 - [x] All core opcodes implemented:
   - [x] Stack operations (RSADD*, CONST*, CPTOPSP, CPDOWNSP)
   - [x] Arithmetic (ADD/SUB/MUL/DIV/MOD for II/IF/FI/FF/VV/VF/FV)
+  - Base pointer (SAVEBP/RESTOREBP/CPTOPBP/CPDOWNBP)
+  - Bitwise (INCOR/EXCOR/BOOLAND/SHLEFT/SHRIGHT)
   - [x] Comparisons (EQ/NEQ/GT/LT/GEQ/LEQ for II/FF/SS/OO)
+  - Constants (CONSTI/CONSTF/CONSTS/CONSTO)
+  - Flow control (JMP/JSR/JZ/JNZ/RETN)
   - [x] Logical (LOGAND, LOGOR, INCOR, EXCOR, BOOLAND, NOT)
   - [x] Jumps (JMP, JSR, JZ, JNZ, RETN)
+  - Reserve space (RSADDI/RSADDF/RSADDS/RSADDO)
   - [x] Stack frame (SAVEBP, RESTOREBP, MOVSP, DESTRUCT)
+  - Stack operations (CPDOWNSP/CPTOPSP/MOVSP/DESTRUCT)
   - [x] Variables (CPDOWNBP, CPTOPBP, DECISP, INCISP, DECIBP, INCIBP)
   - [x] STORE_STATE for deferred actions
 - [x] Engine function dispatch interface (ACTION opcode)
+- [x] Base engine API structure (K1EngineApi)
 - [ ] Complete engine function surface (~850 K1, ~950 K2)
 - [ ] Script globals/locals persistence
 - [ ] Action queue integration with STORE_STATE
 
-### Phase 2: Resource System 🔄 IN PROGRESS
+### Phase 2: Navigation & Walkmesh ✅ COMPLETE
 
 - [x] Resource provider interface (IGameResourceProvider)
 - [x] Resource identifier system
 - [x] GameResourceProvider implementation
-- [ ] Full precedence chain: override → module → save → chitin
-- [ ] Async resource streaming
-- [ ] Resource caching with LRU eviction
-- [ ] Texture pack integration (swpc_tex_*.erf)
+- [x] NavigationMesh with full A* pathfinding
+- [x] AABB tree for spatial queries
+- [x] Adjacency-based pathfinding (face index * 3 + edge encoding)
+- [x] Surface material walkability rules (from surfacemat.2da semantics)
+- [x] Raycast for click-to-move
+- [x] Line-of-sight testing
+- [x] Surface projection (height interpolation)
+- [x] Path smoothing
+- [ ] Integration with CSharpKOTOR BWM parser
 
 ### Phase 3: Navigation & Walkmesh ✅ COMPLETE
 
+- [x] Resource provider interface (IGameResourceProvider)
+- [x] Resource identifier system
+- [x] Content cache structure
+- [ ] Full precedence chain: override → module → save → chitin
+- [ ] Async resource streaming with cancellation
+- [ ] Resource caching with LRU eviction
+- [ ] Texture pack integration (swpc_tex_*.erf)
 - [x] INavigationMesh interface defined
 - [x] NavigationMesh implementation with:
   - [x] A* pathfinding over adjacency graph
@@ -267,20 +331,146 @@ src/OdysseyRuntime/
 | genericdoors.2da | Door models |
 | ambientmusic.2da | Music tracks |
 | ambientsound.2da | Ambient sounds |
+=======
+
+- [ ] Save overlay integration
+
+### Phase 4: Module Loading 📋 PLANNED
+
+- [ ] IFO parsing (module metadata, scripts, variables)
+- [ ] ARE parsing (area properties, lighting, weather)
+- [ ] GIT parsing (instance spawning: creatures, placeables, doors, triggers)
+- [ ] LYT parsing (room layout, doorhooks)
+- [ ] VIS parsing (room visibility culling)
+- [ ] PTH parsing (path network for AI)
+- [ ] Module transition system
+
+### Phase 5: Entity System 📋 PLANNED
+
+**Object Type Hierarchy**:
+
+```
+Object (abstract base)
+├── Creature
+│   ├── PC (player-controlled)
+│   └── NPC (AI-controlled)
+├── Door
+├── Placeable
+├── Trigger (invisible volume)
+├── Waypoint (invisible marker)
+├── Sound (ambient emitter)
+├── Store (merchant)
+├── Encounter (spawn point)
+├── Item (world-dropped or inventory)
+└── AreaOfEffect (spell zones)
+```
+
+**GFF Template Loading**:
+
+- [ ] UTC → Creature (Appearance_Type, Faction, HP, Attributes, Feats, Scripts)
+- [ ] UTP → Placeable (Appearance, Useable, Locked, OnUsed)
+- [ ] UTD → Door (GenericType, Locked, OnOpen, OnClose)
+- [ ] UTT → Trigger (Geometry polygon, OnEnter, OnExit)
+- [ ] UTW → Waypoint (Tag, position)
+- [ ] UTS → Sound (Active, Looping, Positional, ResRef)
+- [ ] UTE → Encounter (Creature list, spawn conditions)
+- [ ] UTI → Item (BaseItem, Properties, Charges)
+
+### Phase 6: Rendering 📋 PLANNED
+
+- [ ] MDL/MDX model loading and conversion to Stride
+- [ ] TPC/TGA texture loading with alpha handling
+- [ ] TXI material metadata parsing
+- [ ] Room scene assembly from LYT
+- [ ] VIS-based culling groups
+- [ ] Material system (Opaque, AlphaCutout, AlphaBlend, Additive, Lightmapped)
+- [ ] Transparency sorting
+- [ ] Skeletal animation
+- [ ] Attachment nodes (weapons, effects)
+- [ ] Environment mapping
+
+### Phase 7: NWScript Engine API 📋 PLANNED
+
+**Coverage Tiers**:
+
+- **Tier 0**: Boot + area + movement + interaction + dialogue entry
+- **Tier 1**: Combat core + inventory + party management essentials
+- **Tier 2**: Quests, journals, influence, minigames, full AI
+- **Tier 3**: Edge features and obscure calls
+
+**Core Function Groups** (implement in order):
+
+1. Object functions (GetObjectByTag, GetNearestCreature, etc.)
+2. Position/location functions (GetPosition, Location, etc.)
+3. Area/module functions (GetArea, GetModule, etc.)
+4. Action functions (ActionMoveToLocation, ActionAttack, etc.)
+5. Effect functions (EffectDamage, ApplyEffectToObject, etc.)
+6. Conversation functions (ActionStartConversation, etc.)
+7. Combat functions (GetAttackTarget, etc.)
+8. Variable functions (GetLocalInt, SetGlobalBoolean, etc.)
+9. Party functions (GetPartyMemberByIndex, etc.)
+10. Utility functions (PrintString, Random, etc.)
+
+### Phase 8: Dialogue System 📋 PLANNED
+
+- [ ] DLG file traversal (entries, replies, conditions)
+- [ ] TLK localized text lookup
+- [ ] Conditional script evaluation
+- [ ] VO playback with timing
+- [ ] LIP sync (phoneme shapes to facial animation)
+- [ ] Dialogue camera positioning
+- [ ] Script hooks (OnEntry, OnReply)
+
+### Phase 9: Combat System 📋 PLANNED
+
+**Round-Based Combat (~3 second rounds)**:
+
+```
+Starting     → 0.0s - init animations
+FirstAttack  → ~0.5s - primary attack
+SecondAttack → ~1.5s - offhand/counter (if duel)
+Cooldown     → ~2.5s - return to ready
+Finished     → 3.0s - complete
+```
+
+- [ ] D20 attack resolution (roll + modifiers vs AC)
+- [ ] Damage calculation with resistances
+- [ ] Critical hits (threat range, confirmation)
+- [ ] Effect system (~60+ effect types)
+- [ ] Perception system (sight/hearing ranges)
+- [ ] Faction hostility checks
+- [ ] AI behavior (action queue population)
+
+### Phase 10: Save/Load System 📋 PLANNED
+
+- [ ] SaveModel definition (globals, party, inventory, quests)
+- [ ] Module state serialization (positions, door states, triggers)
+- [ ] Save file packaging (ERF/SAV compatible)
+- [ ] Load with state restoration
+- [ ] Module transition state preservation
+
+---
+>>>>>>> origin/cursor/odyssey-engine-documentation-integration-cc03
 
 ## Game Loop Architecture
 
 The engine operates on a **fixed-timestep game loop** with the following per-frame phases:
 
 ```
-1. Input Phase     → Collect input, update camera, handle click-to-move
-2. Script Phase    → Process delay wheel, fire heartbeats, execute actions
-3. Simulation Phase → Update positions, perception checks, combat rounds
-4. Animation Phase  → Skeletal animations, particles, lip sync
-5. Scene Sync Phase → Sync runtime transforms → Stride scene graph
-6. Render Phase     → VIS culling, transparency sort, draw calls
-7. Audio Phase      → Spatial audio, trigger one-shots
+┌─────────────────────────────────────────────────────────────────┐
+│                       Fixed-Timestep Game Loop                  │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Input Phase     │ Collect input, update camera, click-to-move │
+│ 2. Script Phase    │ Process delay wheel, heartbeats, actions    │
+│ 3. Simulation      │ Update positions, perception, combat rounds │
+│ 4. Animation       │ Skeletal animations, particles, lip sync    │
+│ 5. Scene Sync      │ Sync runtime transforms → Stride scene      │
+│ 6. Render Phase    │ VIS culling, transparency sort, draw calls  │
+│ 7. Audio Phase     │ Spatial audio, trigger one-shots            │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## Recent Progress
 
@@ -369,9 +559,9 @@ The architecture is designed to support future Aurora/Eclipse engine variants:
 | Engine | Games | Status |
 |--------|-------|--------|
 | Odyssey | KotOR 1, KotOR 2: TSL | 🔄 Active Development |
-| Aurora | NWN | 📋 Future |
-| Electron | Jade Empire | 📋 Future |
-| Eclipse | Dragon Age: Origins | 📋 Future |
+| Aurora  | NWN                   | 📋 Future             |
+| Electron| Jade Empire           | 📋 Future             |
+| Eclipse | Dragon Age: Origins   | 📋 Future             |
 
 ### Abstraction Strategy
 

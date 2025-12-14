@@ -28,6 +28,7 @@ namespace HolocronToolset.NET.Editors
             SetupUI();
             MinWidth = 400;
             MinHeight = 600;
+            AddHelpAction(); // Auto-detects "GFF-ARE.md" for ARE
             New();
         }
 
