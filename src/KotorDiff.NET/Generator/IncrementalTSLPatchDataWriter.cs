@@ -787,8 +787,8 @@ namespace CSharpKOTOR.TSLPatcher
                 string twodaResname = pendingRef.TwodaFilename.ToLowerInvariant().Replace(".2da", "");
                 var relevantFieldNames = new List<string>();
                 
-                // Get GFF field to 2DA mapping from ReferenceCache
-                var gffFieldTo2daMapping = CSharpKOTOR.Tools.ReferenceCache.GffFieldTo2daMapping();
+                // Get GFF field to 2DA mapping from ReferenceCacheHelpers
+                var gffFieldTo2daMapping = CSharpKOTOR.Tools.ReferenceCacheHelpers.GffFieldTo2daMapping();
                 foreach (var kvp in gffFieldTo2daMapping)
                 {
                     string fieldName = kvp.Key;

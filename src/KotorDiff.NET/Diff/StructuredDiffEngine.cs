@@ -460,24 +460,46 @@ namespace KotorDiff.NET.Diff
                     };
                 }
 
+                // Get field values first
+                var leftValue = GetGffFieldValue(leftStruct, fieldLabel, leftType);
+                var rightValue = GetGffFieldValue(rightStruct, fieldLabel, rightType);
+
                 // Handle nested structures
                 if (leftType == GFFFieldType.Struct)
                 {
                     // Compare nested structs recursively using existing CompareGffStructs method
-                    var leftStruct = leftValue as GFFStruct;
-                    var rightStruct = rightValue as GFFStruct;
-                    if (leftStruct != null && rightStruct != null)
+                    var leftStructValue = leftValue as GFFStruct;
+                    var rightStructValue = rightValue as GFFStruct;
+                    if (leftStructValue != null && rightStructValue != null)
                     {
-                        var (fieldDiffs, structDiffs) = CompareGffStructs(leftStruct, rightStruct, "");
-                        // Return false if there are any differences
-                        return fieldDiffs.Count == 0 && structDiffs.Count == 0;
+                        var (fieldDiffs, structDiffs) = CompareGffStructs(leftStructValue, rightStructValue, "");
+                        // Return null if identical, otherwise return a diff indicating nested differences
+                        if (fieldDiffs.Count == 0 && structDiffs.Count == 0)
+                        {
+                            return null;
+                        }
+                        return new FieldDiff
+                        {
+                            FieldPath = fieldPath,
+                            DiffType = DiffType.Modified,
+                            LeftValue = leftStructValue,
+                            RightValue = rightStructValue,
+                            FieldType = leftType.ToString()
+                        };
                     }
-                    return leftStruct == rightStruct;
+                    if (leftStructValue != rightStructValue)
+                    {
+                        return new FieldDiff
+                        {
+                            FieldPath = fieldPath,
+                            DiffType = DiffType.Modified,
+                            LeftValue = leftStructValue,
+                            RightValue = rightStructValue,
+                            FieldType = leftType.ToString()
+                        };
+                    }
+                    return null;
                 }
-
-                // Scalar comparison
-                var leftValue = GetGffFieldValue(leftStruct, fieldLabel, leftType);
-                var rightValue = GetGffFieldValue(rightStruct, fieldLabel, rightType);
 
                 if (!GffValuesEqual(leftValue, rightValue))
                 {

@@ -275,7 +275,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(2);
             byte[] bytes = new byte[2];
-            _stream.Read(bytes, 0, 2);
+            int read = _stream.Read(bytes, 0, 2);
+            if (read != 2)
+            {
+                throw new EndOfStreamException($"Expected to read 2 bytes, but only read {read}");
+            }
             _position += 2;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -290,7 +294,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(2);
             byte[] bytes = new byte[2];
-            _stream.Read(bytes, 0, 2);
+            int read = _stream.Read(bytes, 0, 2);
+            if (read != 2)
+            {
+                throw new EndOfStreamException($"Expected to read 2 bytes, but only read {read}");
+            }
             _position += 2;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -305,7 +313,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(4);
             byte[] bytes = new byte[4];
-            _stream.Read(bytes, 0, 4);
+            int read = _stream.Read(bytes, 0, 4);
+            if (read != 4)
+            {
+                throw new EndOfStreamException($"Expected to read 4 bytes, but only read {read}");
+            }
             _position += 4;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -342,7 +354,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(8);
             byte[] bytes = new byte[8];
-            _stream.Read(bytes, 0, 8);
+            int read = _stream.Read(bytes, 0, 8);
+            if (read != 8)
+            {
+                throw new EndOfStreamException($"Expected to read 8 bytes, but only read {read}");
+            }
             _position += 8;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -357,7 +373,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(8);
             byte[] bytes = new byte[8];
-            _stream.Read(bytes, 0, 8);
+            int read = _stream.Read(bytes, 0, 8);
+            if (read != 8)
+            {
+                throw new EndOfStreamException($"Expected to read 8 bytes, but only read {read}");
+            }
             _position += 8;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -372,7 +392,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(4);
             byte[] bytes = new byte[4];
-            _stream.Read(bytes, 0, 4);
+            int read = _stream.Read(bytes, 0, 4);
+            if (read != 4)
+            {
+                throw new EndOfStreamException($"Expected to read 4 bytes, but only read {read}");
+            }
             _position += 4;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -387,7 +411,11 @@ namespace CSharpKOTOR.Common
         {
             ExceedCheck(8);
             byte[] bytes = new byte[8];
-            _stream.Read(bytes, 0, 8);
+            int read = _stream.Read(bytes, 0, 8);
+            if (read != 8)
+            {
+                throw new EndOfStreamException($"Expected to read 8 bytes, but only read {read}");
+            }
             _position += 8;
 
             if (bigEndian == BitConverter.IsLittleEndian)
@@ -433,7 +461,21 @@ namespace CSharpKOTOR.Common
             ExceedCheck(length);
             byte[] bytes = new byte[length];
             int read = _stream.Read(bytes, 0, length);
+            if (read != length)
+            {
+                throw new EndOfStreamException($"Expected to read {length} bytes, but only read {read}");
+            }
             _position += read;
+
+            // Ensure CodePages encoding provider is registered before accessing encodings
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            }
+            catch
+            {
+                // Already registered, ignore
+            }
 
             Encoding enc;
             if (encoding == null)
@@ -506,15 +548,20 @@ namespace CSharpKOTOR.Common
                 {
                     throw;
                 }
+                // Use replacement fallback for non-strict mode
                 text = enc.GetString(bytes, 0, read);
             }
 
+            // Matching PyKotor implementation: trim null bytes and everything after first null
+            // Python: if "\0" in string: string = string[: string.index("\0")].rstrip("\0"); string = string.replace("\0", "")
             int nullIndex = text.IndexOf('\0');
             if (nullIndex >= 0)
             {
-                text = text.Substring(0, nullIndex).TrimEnd('\0');
+                text = text.Substring(0, nullIndex);
+                text = text.TrimEnd('\0');
                 text = text.Replace("\0", string.Empty);
             }
+            // Python doesn't trim if no null found, so we don't either
 
             return text;
         }

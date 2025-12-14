@@ -1469,7 +1469,7 @@ namespace KotorDiff.NET.Diff
                 installationLogger.Log($"Processing resource: {resourceName}.{resourceType.Extension}");
                 installationLogger.Log($"Resolving resource '{resourceName}.{resourceType.Extension}' in installation...");
 
-                var resourceResult = installation.Resource(resourceName, resourceType, moduleRoot: moduleRoot, logger: installationLogger);
+                var resourceResult = installation.Resource(resourceName, resourceType, moduleRoot: moduleRoot);
 
                 if (resourceResult != null)
                 {
@@ -1513,8 +1513,8 @@ namespace KotorDiff.NET.Diff
             Action<string> logFunc,
             Func<byte[], byte[], DiffContext, bool?> diffDataFunc)
         {
-            string resname = resource.ResName();
-            ResourceType restype = resource.ResType();
+            string resname = resource.ResName;
+            ResourceType restype = resource.ResType;
             string resourceIdentifier = $"{resname}.{restype.Extension}";
 
             // Get resource data from container
@@ -1621,7 +1621,7 @@ namespace KotorDiff.NET.Diff
             {
                 try
                 {
-                    containerCapsule = new CompositeModuleCapsule(new FileInfo(containerPath));
+                    containerCapsule = new CompositeModuleCapsule(containerPath);
                 }
                 catch (Exception e)
                 {
@@ -1666,36 +1666,74 @@ namespace KotorDiff.NET.Diff
                 }
             }
 
-            IEnumerable<FileResource> resources = useComposite ? containerCapsule : singleCapsule;
-            foreach (var resource in resources)
+            if (useComposite)
             {
-                totalResources++;
-
-                var processResult = ProcessContainerResource(
-                    resource,
-                    containerPath,
-                    installation,
-                    containerFirst: containerFirst,
-                    moduleRoot: resolutionModuleRoot,
-                    installationLogger: installationLogger,
-                    logFunc: logFunc,
-                    diffDataFunc: diffDataFunc);
-
-                bool? result = processResult.Item1;
-                bool shouldContinue = processResult.Item2;
-
-                if (result == null)
+                foreach (var capsuleRes in containerCapsule)
                 {
-                    isSameResult = null;
+                    var resource = new FileResource(capsuleRes.ResName, capsuleRes.ResType, capsuleRes.Size, capsuleRes.Offset, capsuleRes.FilePath);
+                    totalResources++;
+
+                    var processResult = ProcessContainerResource(
+                        resource,
+                        containerPath,
+                        installation,
+                        containerFirst: containerFirst,
+                        moduleRoot: resolutionModuleRoot,
+                        installationLogger: installationLogger,
+                        logFunc: logFunc,
+                        diffDataFunc: diffDataFunc);
+
+                    bool? result = processResult.Item1;
+                    bool shouldContinue = processResult.Item2;
+
+                    if (result == null)
+                    {
+                        isSameResult = null;
+                    }
+                    else if (result == false)
+                    {
+                        isSameResult = false;
+                    }
+
+                    if (shouldContinue)
+                    {
+                        comparedResources++;
+                    }
                 }
-                else if (result == false)
+            }
+            else
+            {
+                foreach (var capsuleRes in singleCapsule)
                 {
-                    isSameResult = false;
-                }
+                    var resource = new FileResource(capsuleRes.ResName, capsuleRes.ResType, capsuleRes.Size, capsuleRes.Offset, capsuleRes.FilePath);
+                    totalResources++;
 
-                if (shouldContinue)
-                {
-                    comparedResources++;
+                    var processResult = ProcessContainerResource(
+                        resource,
+                        containerPath,
+                        installation,
+                        containerFirst: containerFirst,
+                        moduleRoot: resolutionModuleRoot,
+                        installationLogger: installationLogger,
+                        logFunc: logFunc,
+                        diffDataFunc: diffDataFunc);
+
+                    bool? result = processResult.Item1;
+                    bool shouldContinue = processResult.Item2;
+
+                    if (result == null)
+                    {
+                        isSameResult = null;
+                    }
+                    else if (result == false)
+                    {
+                        isSameResult = false;
+                    }
+
+                    if (shouldContinue)
+                    {
+                        comparedResources++;
+                    }
                 }
             }
 
@@ -1820,21 +1858,21 @@ namespace KotorDiff.NET.Diff
             // Handle container vs installation comparison
             if (mineInfo.Exists && DiffEngineUtils.IsCapsuleFile(mineInfo.Name) && installation2 != null)
             {
-                return diffContainerVsInstallationFunc(mine, installation2, containerFirst: true, logFunc: null, diffDataFunc: null);
+                return diffContainerVsInstallationFunc(mine, installation2, true, null, null);
             }
             if (installation1 != null && olderInfo.Exists && DiffEngineUtils.IsCapsuleFile(olderInfo.Name))
             {
-                return diffContainerVsInstallationFunc(older, installation1, containerFirst: false, logFunc: null, diffDataFunc: null);
+                return diffContainerVsInstallationFunc(older, installation1, false, null, null);
             }
 
             // Handle single resource vs installation comparison
             if (mineInfo.Exists && !DiffEngineUtils.IsCapsuleFile(mineInfo.Name) && installation2 != null)
             {
-                return diffResourceVsInstallationFunc(mine, installation2, resourceFirst: true, logFunc: null, diffDataFunc: null);
+                return diffResourceVsInstallationFunc(mine, installation2, true, null, null);
             }
             if (installation1 != null && olderInfo.Exists && !DiffEngineUtils.IsCapsuleFile(olderInfo.Name))
             {
-                return diffResourceVsInstallationFunc(older, installation1, resourceFirst: false, logFunc: null, diffDataFunc: null);
+                return diffResourceVsInstallationFunc(older, installation1, false, null, null);
             }
 
             // Handle installation vs installation comparison

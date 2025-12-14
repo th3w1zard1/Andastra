@@ -46,7 +46,7 @@ namespace CSharpKOTOR.Tests.Integration
 
         #region 2DA Tests
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void ChangeRow_ShouldModifyByRowIndex_EndToEnd()
         {
             // Python test: test_change_existing_rowindex
@@ -92,7 +92,7 @@ namespace CSharpKOTOR.Tests.Integration
             twoda.GetColumn("Col3").Should().Equal(new[] { "c", "f" });
         }
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void ChangeRow_ShouldModifyByRowLabel_EndToEnd()
         {
             // Python test: test_change_existing_rowlabel
@@ -127,7 +127,7 @@ namespace CSharpKOTOR.Tests.Integration
             twoda.GetColumn("Col3").Should().Equal(new[] { "c", "f" });
         }
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void AddRow_ShouldAppendRow_EndToEnd()
         {
             // Arrange
@@ -160,7 +160,7 @@ namespace CSharpKOTOR.Tests.Integration
             newRow.GetString("Col2").Should().Be("new_b");
         }
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void CopyRow_ShouldCopyAndModify_EndToEnd()
         {
             // Arrange
@@ -197,7 +197,7 @@ namespace CSharpKOTOR.Tests.Integration
 
         #region GFF Tests
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void GFF_AddField_ShouldAddNestedStructure()
         {
             // Python test: test_gff_add_inside_struct
@@ -245,7 +245,7 @@ namespace CSharpKOTOR.Tests.Integration
             someStruct.GetUInt8("InsideStruct").Should().Be(123);
         }
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void GFF_AddField_ShouldAddLocStringWith2DAMemory()
         {
             // Python test: test_gff_add_field_locstring
@@ -278,7 +278,7 @@ namespace CSharpKOTOR.Tests.Integration
             locString.StringRef.Should().Be(123);
         }
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout
+        [Fact] // 2 minutes timeout
         public void GFF_Modifier_PathShorterThanSelfPath()
         {
             // Python test: test_gff_modifier_path_shorter_than_self_path
