@@ -449,7 +449,9 @@ namespace Odyssey.Stride.GUI
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                BackgroundColor = new Color(20, 30, 60, 255) // Visible dark blue background
+                BackgroundColor = new Color(20, 30, 60, 255), // Visible dark blue background
+                IsHitTestVisible = true,
+                CanFocus = false // Canvas itself doesn't need focus, but children do
             };
 
             // Create a centered panel/window - larger and more visible
@@ -575,7 +577,10 @@ namespace Odyssey.Stride.GUI
             {
                 BackgroundColor = backgroundColor,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Stretch,
+                IsEnabled = true,
+                IsHitTestVisible = true,
+                CanFocus = true
             };
 
             // Inner border to make it visually distinct and clickable - THICK white border

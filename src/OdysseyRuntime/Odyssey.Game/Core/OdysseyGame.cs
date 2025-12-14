@@ -945,6 +945,13 @@ namespace Odyssey.Game.Core
                 ProcessMainMenuInput();
             }
 
+            // Update UI component for input handling
+            // In Stride, UI input is processed by the UI system, but Update() may be needed for event processing
+            if (_uiComponent != null && _uiComponent.Page != null)
+            {
+                _uiComponent.Update(gameTime);
+            }
+
             if (_isPaused)
             {
                 return;
