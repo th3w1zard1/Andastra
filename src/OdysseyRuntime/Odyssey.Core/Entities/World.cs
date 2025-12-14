@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Actions;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Templates;
@@ -27,6 +28,7 @@ namespace Odyssey.Core.Entities
             TimeManager = new TimeManager();
             EventBus = new EventBus();
             DelayScheduler = new DelayScheduler();
+            EffectSystem = new EffectSystem(this);
         }
 
         public IArea CurrentArea { get; set; }
@@ -50,6 +52,7 @@ namespace Odyssey.Core.Entities
         public ITimeManager TimeManager { get; }
         public IEventBus EventBus { get; }
         public IDelayScheduler DelayScheduler { get; }
+        public EffectSystem EffectSystem { get; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
         {

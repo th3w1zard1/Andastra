@@ -1327,12 +1327,15 @@ namespace Odyssey.Scripting.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                // TODO: Implement inventory component interface and slot-based item retrieval
-                // For now, return OBJECT_INVALID
-                // This would require:
-                // 1. IInventoryComponent interface with GetItemInSlot(int slot) method
-                // 2. Inventory slot constants (INVENTORY_SLOT_HEAD, INVENTORY_SLOT_BODY, etc.)
-                // 3. Item entity references stored in inventory component
+                Core.Interfaces.Components.IInventoryComponent inventory = entity.GetComponent<Core.Interfaces.Components.IInventoryComponent>();
+                if (inventory != null)
+                {
+                    IEntity item = inventory.GetItemInSlot(inventorySlot);
+                    if (item != null)
+                    {
+                        return Variable.FromObject(item.ObjectId);
+                    }
+                }
             }
             return Variable.FromObject(ObjectInvalid);
         }
@@ -1399,14 +1402,11 @@ namespace Odyssey.Scripting.EngineApi
 
             effect.DurationType = effectDurationType;
 
-            // TODO: Access EffectSystem from world or game session
-            // EffectSystem needs to be accessible through IWorld or GameSession
-            // For now, this is a placeholder
-            // var effectSystem = GetEffectSystem(ctx.World);
-            // if (effectSystem != null)
-            // {
-            //     effectSystem.ApplyEffect(target, effect, ctx.Caller);
-            // }
+            // Apply effect using EffectSystem from world
+            if (ctx.World != null && ctx.World.EffectSystem != null)
+            {
+                ctx.World.EffectSystem.ApplyEffect(target, effect, ctx.Caller);
+            }
 
             return Variable.Void();
         }

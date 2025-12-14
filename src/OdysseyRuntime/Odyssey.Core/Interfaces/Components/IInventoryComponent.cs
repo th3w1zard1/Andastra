@@ -1,0 +1,52 @@
+using Odyssey.Core.Interfaces;
+
+namespace Odyssey.Core.Interfaces.Components
+{
+    /// <summary>
+    /// Component for managing entity inventory and equipped items.
+    /// </summary>
+    public interface IInventoryComponent : IComponent
+    {
+        /// <summary>
+        /// Gets the item in the specified inventory slot.
+        /// </summary>
+        /// <param name="slot">Inventory slot index (INVENTORY_SLOT_* constants).</param>
+        /// <returns>The item entity in the slot, or null if empty.</returns>
+        IEntity GetItemInSlot(int slot);
+
+        /// <summary>
+        /// Sets an item in the specified inventory slot.
+        /// </summary>
+        /// <param name="slot">Inventory slot index.</param>
+        /// <param name="item">The item entity to place in the slot, or null to clear.</param>
+        void SetItemInSlot(int slot, IEntity item);
+
+        /// <summary>
+        /// Adds an item to the inventory (finds first available slot).
+        /// </summary>
+        /// <param name="item">The item entity to add.</param>
+        /// <returns>True if the item was added, false if inventory is full.</returns>
+        bool AddItem(IEntity item);
+
+        /// <summary>
+        /// Removes an item from the inventory.
+        /// </summary>
+        /// <param name="item">The item entity to remove.</param>
+        /// <returns>True if the item was removed, false if not found.</returns>
+        bool RemoveItem(IEntity item);
+
+        /// <summary>
+        /// Checks if the entity has an item with the specified tag.
+        /// </summary>
+        /// <param name="tag">The tag to search for.</param>
+        /// <returns>True if the item is found, false otherwise.</returns>
+        bool HasItemByTag(string tag);
+
+        /// <summary>
+        /// Gets all items in the inventory.
+        /// </summary>
+        /// <returns>Collection of item entities.</returns>
+        System.Collections.Generic.IEnumerable<IEntity> GetAllItems();
+    }
+}
+

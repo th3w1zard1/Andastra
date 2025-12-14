@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Templates;
 
@@ -75,6 +76,11 @@ namespace Odyssey.Core.Interfaces
         /// The delay scheduler for delayed actions (DelayCommand).
         /// </summary>
         IDelayScheduler DelayScheduler { get; }
+
+        /// <summary>
+        /// The effect system for managing entity effects.
+        /// </summary>
+        Combat.EffectSystem EffectSystem { get; }
 
         /// <summary>
         /// Registers an entity with the world.
