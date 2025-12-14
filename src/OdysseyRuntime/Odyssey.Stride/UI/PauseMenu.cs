@@ -86,6 +86,9 @@ namespace Odyssey.Stride.UI
             {
                 Width = float.NaN,
                 Height = float.NaN,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color(byte r, byte g, byte b, byte a) constructor creates a color from RGBA byte values (0-255)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BackgroundColor = new Color(0, 0, 0, 180),
                 Visibility = Visibility.Collapsed
             };
@@ -98,6 +101,9 @@ namespace Odyssey.Stride.UI
             var centerPanel = new Border
             {
                 BackgroundColor = new Color(20, 20, 40, 220),
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Gold is a static property representing gold color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BorderColor = Color.Gold,
                 BorderThickness = new Thickness(2, 2, 2, 2),
                 Width = 300,
@@ -119,6 +125,8 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 28,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Gold static property - same as above
                 TextColor = Color.Gold,
                 Text = "PAUSED",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -161,6 +169,9 @@ namespace Odyssey.Stride.UI
                 {
                     Font = _font,
                     TextSize = 20,
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                    // Color.White is a static property representing white color (R=255, G=255, B=255, A=255)
+                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                     TextColor = Color.White,
                     Text = text,
                     HorizontalAlignment = HorizontalAlignment.Center

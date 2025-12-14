@@ -84,6 +84,9 @@ namespace Odyssey.Stride.UI
             {
                 Width = float.NaN,
                 Height = float.NaN,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Black is a static property representing black color (R=0, G=0, B=0, A=255)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BackgroundColor = Color.Black,
                 Visibility = Visibility.Collapsed
             };
@@ -105,6 +108,9 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 32,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Gold is a static property representing gold color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.Gold,
                 Text = "LOADING",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -117,6 +123,9 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 16,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.LightGray is a static property representing light gray color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.LightGray,
                 Text = "Please wait...",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -134,7 +143,11 @@ namespace Odyssey.Stride.UI
 
             _progressBarBackground = new Border
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color(byte r, byte g, byte b, byte a) constructor - same as documented above
                 BackgroundColor = new Color(40, 40, 60, 255),
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.DarkGoldenrod static property - same as documented above
                 BorderColor = Color.DarkGoldenrod,
                 BorderThickness = new Thickness(2, 2, 2, 2),
                 Width = 350,

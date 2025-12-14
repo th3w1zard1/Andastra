@@ -91,6 +91,9 @@ namespace Odyssey.Stride.UI
                 Width = float.NaN, // Fill
                 Height = 280,
                 VerticalAlignment = VerticalAlignment.Bottom,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color(byte r, byte g, byte b, byte a) constructor creates a color from RGBA byte values (0-255)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BackgroundColor = new Color(0, 0, 0, 200)
             };
 
@@ -127,6 +130,9 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 20,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Gold is a static property representing gold color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.Gold,
                 Margin = new Thickness(10, 5, 10, 5),
                 HorizontalAlignment = HorizontalAlignment.Left
@@ -138,6 +144,9 @@ namespace Odyssey.Stride.UI
             _dialogueBackground = new Border
             {
                 BackgroundColor = new Color(20, 20, 40, 180),
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.DarkGoldenrod is a static property representing dark goldenrod color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BorderColor = Color.DarkGoldenrod,
                 BorderThickness = new Thickness(1, 1, 1, 1),
                 Margin = new Thickness(10, 5, 10, 5)
@@ -148,6 +157,8 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 16,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.White static property - same as documented above
                 TextColor = Color.White,
                 Margin = new Thickness(10, 10, 10, 10),
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -253,6 +264,9 @@ namespace Odyssey.Stride.UI
                     {
                         Font = _font,
                         TextSize = 14,
+                        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                        // Color.LightGoldenrodYellow is a static property representing light goldenrod yellow color
+                        // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                         TextColor = Color.LightGoldenrodYellow,
                         Text = displayText,
                         Margin = new Thickness(5, 2, 5, 2)
