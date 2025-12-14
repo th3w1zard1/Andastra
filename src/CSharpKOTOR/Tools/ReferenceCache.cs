@@ -5,6 +5,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Extract;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.SSF;
+using CSharpKOTOR.Formats;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Logger;
@@ -151,10 +152,11 @@ namespace CSharpKOTOR.Tools
                 {
                     try
                     {
-                        var gffObj = GFFAuto.ReadGff(data);
+                        var reader = new GFFBinaryReader(data);
+                        var gffObj = reader.Load();
                         if (gffObj != null)
                         {
-                            ScanGFF(identifier, gffObj.Root);
+                            ScanGFF(identifier, gffObj.TopLevelStruct);
                         }
                     }
                     catch
@@ -188,7 +190,7 @@ namespace CSharpKOTOR.Tools
                         continue;
                     }
 
-                    string cell = twodaObj.GetCell(rowIdx, columnName);
+                    string cell = twodaObj.GetCellString(rowIdx, columnName);
                     if (!string.IsNullOrEmpty(cell) && cell.Trim().All(char.IsDigit))
                     {
                         int strref = int.Parse(cell.Trim());
@@ -204,7 +206,8 @@ namespace CSharpKOTOR.Tools
         // Original: def _scan_ssf(self, identifier: ResourceIdentifier, data: bytes) -> None:
         private void ScanSSF(ResourceIdentifier identifier, byte[] data)
         {
-            var ssfObj = SSFAuto.ReadSsf(data);
+                        var reader = new SSFBinaryReader(data);
+                        var ssfObj = reader.Load();
             string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
 
             foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
@@ -226,10 +229,10 @@ namespace CSharpKOTOR.Tools
             foreach (var field in gffStruct)
             {
                 // Build field path
-                string fieldPath = string.IsNullOrEmpty(currentPath) ? field.Label : $"{currentPath}.{field.Label}";
+                string fieldPath = string.IsNullOrEmpty(currentPath) ? field.label : $"{currentPath}.{field.label}";
 
                 // LocalizedString fields
-                if (field.Type == GFFFieldType.LocalizedString && field.Value is LocalizedString locstring)
+                if (field.fieldType == GFFFieldType.LocalizedString && field.value is LocalizedString locstring)
                 {
                     if (locstring.StringRef != -1)
                     {
@@ -240,13 +243,13 @@ namespace CSharpKOTOR.Tools
                 }
 
                 // Nested structs
-                if (field.Type == GFFFieldType.Struct && field.Value is GFFStruct nestedStruct)
+                if (field.fieldType == GFFFieldType.Struct && field.value is GFFStruct nestedStruct)
                 {
                     ScanGFF(identifier, nestedStruct, fieldPath);
                 }
 
                 // Lists
-                if (field.Type == GFFFieldType.List && field.Value is GFFList list)
+                if (field.fieldType == GFFFieldType.List && field.value is GFFList list)
                 {
                     for (int idx = 0; idx < list.Count; idx++)
                     {
@@ -456,10 +459,11 @@ namespace CSharpKOTOR.Tools
                 {
                     try
                     {
-                        var gffObj = GFFAuto.ReadGff(data);
+                        var reader = new GFFBinaryReader(data);
+                        var gffObj = reader.Load();
                         if (gffObj != null)
                         {
-                            ScanGFF(identifier, gffObj.Root);
+                            ScanGFF(identifier, gffObj.TopLevelStruct);
                         }
                     }
                     catch
@@ -484,30 +488,30 @@ namespace CSharpKOTOR.Tools
             foreach (var field in gffStruct)
             {
                 // Build field path
-                string fieldPath = string.IsNullOrEmpty(currentPath) ? field.Label : $"{currentPath}.{field.Label}";
+                string fieldPath = string.IsNullOrEmpty(currentPath) ? field.label : $"{currentPath}.{field.label}";
 
                 // Check if this field references a 2DA
-                if (gffFieldTo2daMapping.TryGetValue(field.Label, out ResourceIdentifier twodaIdentifier))
+                if (gffFieldTo2daMapping.TryGetValue(field.label, out ResourceIdentifier twodaIdentifier))
                 {
                     // This field references a 2DA file
                     string twodaFilename = $"{twodaIdentifier.ResName}.{twodaIdentifier.ResType.Extension}";
 
                     // Extract the numeric value (row index)
                     int? rowIndex = null;
-                    if (field.Type == GFFFieldType.Int8 || field.Type == GFFFieldType.Int16 || field.Type == GFFFieldType.Int32 || field.Type == GFFFieldType.Int64)
+                    if (field.fieldType == GFFFieldType.Int8 || field.fieldType == GFFFieldType.Int16 || field.fieldType == GFFFieldType.Int32 || field.fieldType == GFFFieldType.Int64)
                     {
-                        if (field.Value is int intVal)
+                        if (field.value is int intVal)
                         {
                             rowIndex = intVal;
                         }
                     }
-                    else if (field.Type == GFFFieldType.UInt8 || field.Type == GFFFieldType.UInt16 || field.Type == GFFFieldType.UInt32 || field.Type == GFFFieldType.UInt64)
+                    else if (field.fieldType == GFFFieldType.UInt8 || field.fieldType == GFFFieldType.UInt16 || field.fieldType == GFFFieldType.UInt32 || field.fieldType == GFFFieldType.UInt64)
                     {
-                        if (field.Value is uint uintVal)
+                        if (field.value is uint uintVal)
                         {
                             rowIndex = (int)uintVal;
                         }
-                        else if (field.Value is int intVal)
+                        else if (field.value is int intVal)
                         {
                             rowIndex = intVal;
                         }
@@ -520,11 +524,11 @@ namespace CSharpKOTOR.Tools
                 }
 
                 // Recurse into nested structures
-                if (field.Type == GFFFieldType.Struct && field.Value is GFFStruct nestedStruct)
+                if (field.fieldType == GFFFieldType.Struct && field.value is GFFStruct nestedStruct)
                 {
                     ScanGFF(identifier, nestedStruct, fieldPath);
                 }
-                else if (field.Type == GFFFieldType.List && field.Value is GFFList list)
+                else if (field.fieldType == GFFFieldType.List && field.value is GFFList list)
                 {
                     for (int idx = 0; idx < list.Count; idx++)
                     {
@@ -719,3 +723,4 @@ namespace CSharpKOTOR.Tools
         }
     }
 }
+

@@ -1683,7 +1683,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     JavaSystem.@out.Println("DEBUG decompileNcs: starting decode for " + file.Name);
                     using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
                     using (var bufferedStream = new BufferedStream(fileStream))
-                    using (var binaryReader = new BinaryReader(bufferedStream))
+                    using (var binaryReader = new System.IO.BinaryReader(bufferedStream))
                     {
                         commands = new Decoder(binaryReader, this.actions).Decode();
                     }
