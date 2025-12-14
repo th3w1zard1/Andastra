@@ -139,6 +139,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget)
                         {
                             subroutineStarts.Add(jumpIdx);
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found subroutine start at {jumpIdx} (JSR at {i} targets {jumpIdx})");
+                        }
+                        else
+                        {
+                            if (jumpIdx <= globalsAndStubEnd)
+                            {
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} (in globals/stub range, ends at {globalsAndStubEnd})");
+                            }
+                            else if (jumpIdx == entryJsrTarget)
+                            {
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} (is entry JSR target)");
+                            }
                         }
                     }
                     catch (Exception)
@@ -285,7 +297,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             else
             {
-                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - mainStart={mainStart}, mainEnd={mainEnd}, globalsEnd={globalsEndForMain}");
+                if (mainWouldBeEmpty)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - would be empty (only MOVSP/RETN)");
+                }
+                else
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - mainStart={mainStart}, mainEnd={mainEnd}, globalsEnd={globalsEndForMain}");
+                }
             }
 
             List<int> sortedStarts = new List<int>(subroutineStarts);
