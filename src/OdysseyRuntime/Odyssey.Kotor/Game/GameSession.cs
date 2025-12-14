@@ -38,6 +38,7 @@ namespace Odyssey.Kotor.Game
         public DialogueManager DialogueManager { get; set; }
         public IEntity PlayerEntity { get; set; }
         public CombatManager CombatManager { get; set; }
+        public PartyManager PartyManager { get; set; }
     }
 
     /// <summary>
@@ -369,7 +370,8 @@ namespace Odyssey.Kotor.Game
                 {
                     DialogueManager = _dialogueManager,
                     PlayerEntity = _playerEntity,
-                    CombatManager = _combatManager
+                    CombatManager = _combatManager,
+                    PartyManager = _partyManager
                 };
                 ctx.AdditionalContext = gameServices;
 
