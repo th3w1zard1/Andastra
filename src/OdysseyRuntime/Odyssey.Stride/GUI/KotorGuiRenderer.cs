@@ -423,10 +423,13 @@ namespace Odyssey.Stride.GUI
             // Apply position and size (scaled from 640x480 base)
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
             // UIElement.Width/Height properties set element dimensions
-            // Margin property sets spacing around the element (Thickness: left, top, right, bottom)
+            // Margin property sets spacing around the element
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             element.Width = control.Size.X * _scaleX;
             element.Height = control.Size.Y * _scaleY;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float left, float top, float right, float bottom) constructor creates a thickness with left, top, right, bottom values
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             element.Margin = new Thickness(
                 control.Position.X * _scaleX,
                 control.Position.Y * _scaleY,
