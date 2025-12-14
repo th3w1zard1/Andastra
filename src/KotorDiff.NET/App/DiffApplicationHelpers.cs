@@ -317,6 +317,16 @@ namespace KotorDiff.NET.App
         /// </summary>
         public static (bool? comparison, int? exitCode) HandleDiff(KotorDiffConfig config)
         {
+            // Store config in global config (matching Python line 556: _global_config.config = config)
+            GlobalConfig.Instance.Config = config;
+            GlobalConfig.Instance.LoggingEnabled = config.LoggingEnabled;
+
+            // Set up output log path
+            if (config.OutputLogPath != null)
+            {
+                GlobalConfig.Instance.OutputLog = config.OutputLogPath;
+            }
+
             // Create modifications collection
             var modifications = new ModificationsByType();
             GlobalConfig.Instance.ModificationsByType = modifications;
