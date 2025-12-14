@@ -7,6 +7,7 @@ using Stride.Games;
 using Stride.Core;
 using Stride.Core.Mathematics;
 using RenderContext = Stride.Rendering.RenderContext;
+using Myra.Graphics2D;
 
 using Myra;
 using Myra.Graphics2D.UI;
@@ -25,13 +26,27 @@ namespace Odyssey.Stride.GUI
         // Menu action callback
         public event EventHandler<int> MenuItemSelected;
 
+        // Initialize renderer resources
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
+        // InitializeCore() - Called once during initialization to set up renderer resources
+        // Must call base.InitializeCore() to initialize base class functionality
         protected override void InitializeCore()
         {
+            // Call base initialization to set up SceneRendererBase
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
+            // base.InitializeCore() initializes the base SceneRendererBase class
+            // This sets up GraphicsDevice and other base class resources
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
             base.InitializeCore();
 
             // Initialize Myra environment
             // Based on Myra API: MyraEnvironment.Game must be set to the Stride Game instance
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.IServiceRegistry.html
+            // Services.GetService<T>() retrieves a service from the service registry
+            // Method signature: T GetService<T>() where T : class
+            // IGame interface represents the game instance
             // Source: https://github.com/rds1983/Myra/wiki/Using-Myra-in-Stride-Engine-Tutorial
+            // Source: https://doc.stride3d.net/latest/en/manual/engine/services-and-dependency-injection.html
             MyraEnvironment.Game = (Game)this.Services.GetService<IGame>();
 
             // Create main menu grid layout
@@ -135,14 +150,28 @@ namespace Odyssey.Stride.GUI
             Console.WriteLine("[MyraMenuRenderer] Myra UI menu initialized with text buttons");
         }
 
+        // Render the menu using Myra UI
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
+        // DrawCore(RenderContext, RenderDrawContext) - Called each frame to render the scene
+        // Method signature: protected virtual void DrawCore(RenderContext context, RenderDrawContext drawContext)
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.RenderContext.html
+        // RenderContext contains scene information and rendering state
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.RenderDrawContext.html
+        // RenderDrawContext provides graphics context and command list for drawing operations
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
         protected override void DrawCore(RenderContext context, RenderDrawContext drawContext)
         {
             if (!_isVisible)
                 return;
 
             // Clear depth buffer
-            // Based on Stride API: CommandList.Clear clears render targets
-            // DepthStencilClearOptions.DepthBuffer clears only the depth buffer
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.CommandList.html
+            // CommandList.Clear(Texture, ClearOptions) clears render targets and buffers
+            // Method signature: void Clear(Texture texture, ClearOptions options)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsPresenter.html
+            // GraphicsPresenter.DepthStencilBuffer property gets the depth-stencil buffer texture
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.ClearOptions.html
+            // DepthStencilClearOptions.DepthBuffer clears only the depth buffer (not stencil)
             // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
             drawContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
 
