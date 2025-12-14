@@ -120,6 +120,9 @@ namespace Odyssey.Stride.UI
             _healthPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));
 
             // Health bar
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.Red is a static property representing red color
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
             var healthRow = CreateStatBar(
                 "HP",
                 Color.Red,
@@ -130,6 +133,9 @@ namespace Odyssey.Stride.UI
             _healthPanel.Children.Add(healthRow);
 
             // Force bar
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.Blue is a static property representing blue color
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
             var forceRow = CreateStatBar(
                 "FP",
                 Color.Blue,
@@ -149,6 +155,8 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 12,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Yellow static property - same as documented above
                 TextColor = Color.Yellow,
                 Margin = new Thickness(0, 20, 20, 0),
                 HorizontalAlignment = HorizontalAlignment.Right,

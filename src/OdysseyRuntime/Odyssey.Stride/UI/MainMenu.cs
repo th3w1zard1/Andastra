@@ -171,6 +171,9 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 14,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.LightGray is a static property representing light gray color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.LightGray,
                 Text = "No path selected",
                 Margin = new Thickness(20, 5, 10, 5),
