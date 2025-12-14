@@ -9,6 +9,7 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Resources;
 using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
 using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
 using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
