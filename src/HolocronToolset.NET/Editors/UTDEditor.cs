@@ -60,6 +60,36 @@ namespace HolocronToolset.NET.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        // Matching PyKotor implementation: Expose UI controls for testing
+        public TextBox NameEdit => _nameEdit;
+        public TextBox TagEdit => _tagEdit;
+        public Button TagGenerateBtn => _tagGenerateBtn;
+        public TextBox ResrefEdit => _resrefEdit;
+        public Button ResrefGenerateBtn => _resrefGenerateBtn;
+        public ComboBox AppearanceSelect => _appearanceSelect;
+        public TextBox ConversationEdit => _conversationEdit;
+        public CheckBox Min1HpCheckbox => _min1HpCheckbox;
+        public CheckBox PlotCheckbox => _plotCheckbox;
+        public CheckBox StaticCheckbox => _staticCheckbox;
+        public CheckBox NotBlastableCheckbox => _notBlastableCheckbox;
+        public ComboBox FactionSelect => _factionSelect;
+        public NumericUpDown AnimationStateSpin => _animationStateSpin;
+        public NumericUpDown CurrentHpSpin => _currentHpSpin;
+        public NumericUpDown MaxHpSpin => _maxHpSpin;
+        public NumericUpDown HardnessSpin => _hardnessSpin;
+        public NumericUpDown FortitudeSpin => _fortitudeSpin;
+        public NumericUpDown ReflexSpin => _reflexSpin;
+        public NumericUpDown WillSpin => _willSpin;
+        public CheckBox NeedKeyCheckbox => _needKeyCheckbox;
+        public CheckBox RemoveKeyCheckbox => _removeKeyCheckbox;
+        public TextBox KeyEdit => _keyEdit;
+        public CheckBox LockedCheckbox => _lockedCheckbox;
+        public NumericUpDown OpenLockSpin => _openLockSpin;
+        public NumericUpDown DifficultySpin => _difficultySpin;
+        public NumericUpDown DifficultyModSpin => _difficultyModSpin;
+        public Dictionary<string, TextBox> ScriptFields => _scriptFields;
+        public TextBox CommentsEdit => _commentsEdit;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:33-82
         // Original: def __init__(self, parent, installation):
         public UTDEditor(Window parent = null, HTInstallation installation = null)

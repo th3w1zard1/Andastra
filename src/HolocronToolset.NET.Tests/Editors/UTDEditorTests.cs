@@ -19,10 +19,109 @@ namespace HolocronToolset.NET.Tests.Editors
     public class UTDEditorTests : IClassFixture<AvaloniaTestFixture>
     {
         private readonly AvaloniaTestFixture _fixture;
+        private static HTInstallation _installation;
 
         public UTDEditorTests(AvaloniaTestFixture fixture)
         {
             _fixture = fixture;
+        }
+
+        static UTDEditorTests()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            if (!string.IsNullOrEmpty(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                _installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (!string.IsNullOrEmpty(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    _installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+        }
+
+        private static (string utdFile, HTInstallation installation) GetTestFileAndInstallation()
+        {
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string utdFile = System.IO.Path.Combine(testFilesDir, "naldoor001.utd");
+            if (!System.IO.File.Exists(utdFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utdFile = System.IO.Path.Combine(testFilesDir, "naldoor001.utd");
+            }
+
+            return (utdFile, _installation);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:57-81
+        // Original: def test_utd_editor_manipulate_tag(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtdEditorManipulateTag()
+        {
+            var (utdFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utdFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTDEditor(None, installation)
+            var editor = new UTDEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utd_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utdFile);
+
+            // Matching PyKotor implementation: editor.load(utd_file, "naldoor001", ResourceType.UTD, original_data)
+            editor.Load(utdFile, "naldoor001", ResourceType.UTD, originalData);
+            
+            // Matching PyKotor implementation: original_utd = read_utd(original_data)
+            var originalUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
+
+            // Modify tag
+            // Matching PyKotor implementation: editor.ui.tagEdit.setText("modified_tag")
+            editor.TagEdit.Text = "modified_tag";
+
+            // Save and verify
+            // Matching PyKotor implementation: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            
+            // Matching PyKotor implementation: modified_utd = read_utd(data)
+            var modifiedUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            
+            // Matching PyKotor implementation: assert modified_utd.tag == "modified_tag"
+            // Matching PyKotor implementation: assert modified_utd.tag != original_utd.tag
+            modifiedUtd.Tag.Should().Be("modified_tag");
+            modifiedUtd.Tag.Should().NotBe(originalUtd.Tag);
+
+            // Load back and verify
+            // Matching PyKotor implementation: editor.load(utd_file, "naldoor001", ResourceType.UTD, data)
+            // Matching PyKotor implementation: assert editor.ui.tagEdit.text() == "modified_tag"
+            editor.Load(utdFile, "naldoor001", ResourceType.UTD, data);
+            editor.TagEdit.Text.Should().Be("modified_tag");
         }
 
         [Fact]
