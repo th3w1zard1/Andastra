@@ -89,17 +89,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     {
                     }
                 }
-                // Pattern 2: JSR, RESTOREBP, RETN (entry stub with RESTOREBP)
-                else if (instructions.Count >= entryStubStart + 3 &&
+                // Pattern 2: JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+                else if (instructions.Count >= entryStubStart + 2 &&
                          instructions[entryStubStart].InsType == NCSInstructionType.JSR && 
                          instructions[entryStubStart].Jump != null &&
-                         instructions[entryStubStart + 1].InsType == NCSInstructionType.RESTOREBP &&
-                         instructions[entryStubStart + 2].InsType == NCSInstructionType.RETN)
+                         instructions[entryStubStart + 1].InsType == NCSInstructionType.RESTOREBP)
                 {
                     try
                     {
                         entryJsrTarget = ncs.GetInstructionIndex(instructions[entryStubStart].Jump);
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Detected entry stub pattern (JSR+RESTOREBP+RETN) - JSR at {entryStubStart} targets {entryJsrTarget} (main)");
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Detected entry stub pattern (JSR+RESTOREBP) - JSR at {entryStubStart} targets {entryJsrTarget} (main)");
                     }
                     catch (Exception)
                     {
