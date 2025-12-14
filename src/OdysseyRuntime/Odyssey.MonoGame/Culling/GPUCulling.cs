@@ -19,9 +19,9 @@ namespace Odyssey.MonoGame.Culling
     public class GPUCulling : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
-        private Buffer _instanceBuffer;
-        private Buffer _cullResultBuffer;
-        private Buffer _indirectDrawBuffer;
+        private object _instanceBuffer;
+        private object _cullResultBuffer;
+        private object _indirectDrawBuffer;
         private bool _enabled;
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Odyssey.MonoGame.Culling
         /// Performs GPU-based culling on a set of instances.
         /// </summary>
         public void CullInstances(
-            Buffer instanceBuffer,
+            object instanceBuffer,
             int instanceCount,
             Microsoft.Xna.Framework.Matrix viewProjectionMatrix,
             Microsoft.Xna.Framework.Vector3 cameraPosition,
@@ -72,16 +72,26 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Gets the indirect draw buffer with culled draw commands.
         /// </summary>
-        public Buffer GetIndirectDrawBuffer()
+        public object GetIndirectDrawBuffer()
         {
             return _indirectDrawBuffer;
         }
 
         public void Dispose()
         {
-            _instanceBuffer?.Dispose();
-            _cullResultBuffer?.Dispose();
-            _indirectDrawBuffer?.Dispose();
+            // Dispose buffers if they implement IDisposable
+            if (_instanceBuffer is IDisposable instanceDisposable)
+            {
+                instanceDisposable.Dispose();
+            }
+            if (_cullResultBuffer is IDisposable cullDisposable)
+            {
+                cullDisposable.Dispose();
+            }
+            if (_indirectDrawBuffer is IDisposable indirectDisposable)
+            {
+                indirectDisposable.Dispose();
+            }
         }
     }
 }
