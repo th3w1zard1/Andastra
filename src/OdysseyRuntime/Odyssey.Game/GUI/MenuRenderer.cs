@@ -284,14 +284,20 @@ namespace Odyssey.Game.GUI
             int screenWidth = graphicsDevice.Viewport.Width;
             int screenHeight = graphicsDevice.Viewport.Height;
 
-            // Always recalculate layout in Draw to ensure buttons are positioned
-            // (Update might not have been called yet, or screen size might have changed)
+            // Always ensure layout is calculated - buttons must be positioned for click detection
             // Only recalculate if dimensions changed to avoid excessive logging
             if (screenWidth != _lastScreenWidth || screenHeight != _lastScreenHeight || _lastScreenWidth == 0)
             {
                 CalculateLayout(screenWidth, screenHeight);
                 _lastScreenWidth = screenWidth;
                 _lastScreenHeight = screenHeight;
+            }
+            
+            // Verify buttons are initialized (safety check)
+            if (_menuButtons == null || _menuButtons.Length == 0)
+            {
+                Console.WriteLine("[MenuRenderer] ERROR: Menu buttons array is null or empty in Draw!");
+                return;
             }
 
             // Begin sprite batch rendering
