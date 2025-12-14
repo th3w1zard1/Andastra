@@ -37,7 +37,10 @@ namespace Odyssey.Core.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR Combat System Overview:
-    /// - 3-second combat rounds (approximately)
+    /// - Based on swkotor2.exe combat system
+    /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
+    /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management)
+    /// - Original implementation: 3-second combat rounds with timer-based attack scheduling
     /// - D20 attack roll + attack bonus vs defense
     /// - Critical hits on natural 20 (threatened), confirm with second roll
     /// - Damage = weapon damage + modifiers - damage reduction
@@ -132,7 +135,7 @@ namespace Odyssey.Core.Combat
             }
 
             // Update ongoing combat encounters
-            foreach (var encounter in _encounters.Values)
+            foreach (CombatEncounter encounter in _encounters.Values)
             {
                 UpdateEncounter(encounter, deltaTime);
             }
@@ -264,8 +267,8 @@ namespace Odyssey.Core.Combat
             }
 
             // Get attacker and target stats
-            var attackerStats = GetCombatStats(attacker);
-            var targetStats = GetCombatStats(target);
+            CombatStats attackerStats = GetCombatStats(attacker);
+            CombatStats targetStats = GetCombatStats(target);
 
             // Calculate total attack bonus
             int totalAttackBonus = attackBonus + attackerStats.AttackBonus;
@@ -327,7 +330,7 @@ namespace Odyssey.Core.Combat
                 return result;
             }
 
-            var targetStats = GetCombatStats(target);
+            CombatStats targetStats = GetCombatStats(target);
 
             // Calculate damage reduction
             int damageReduction = GetDamageReduction(target, damageType);
@@ -349,7 +352,7 @@ namespace Odyssey.Core.Combat
             }
 
             // Check for death
-            var stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null && stats.CurrentHP <= 0)
             {
                 HandleDeath(source, target);
@@ -368,7 +371,7 @@ namespace Odyssey.Core.Combat
                 return;
             }
 
-            var stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 stats.CurrentHP -= damage;
@@ -385,7 +388,7 @@ namespace Odyssey.Core.Combat
                 return;
             }
 
-            var stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 stats.CurrentHP = Math.Min(stats.CurrentHP + amount, stats.MaxHP);
@@ -408,7 +411,7 @@ namespace Odyssey.Core.Combat
                 return result;
             }
 
-            var stats = GetCombatStats(entity);
+            CombatStats stats = GetCombatStats(entity);
 
             // Get base save
             int baseSave = 0;
@@ -450,7 +453,7 @@ namespace Odyssey.Core.Combat
 
         private void ProcessCombatRound()
         {
-            foreach (var encounter in _encounters.Values)
+            foreach (CombatEncounter encounter in _encounters.Values)
             {
                 ProcessEncounterRound(encounter);
             }
@@ -464,7 +467,7 @@ namespace Odyssey.Core.Combat
             }
 
             // Perform attack if in range
-            var attackResult = PerformMeleeAttack(encounter.Combatant, encounter.CurrentTarget);
+            AttackResult attackResult = PerformMeleeAttack(encounter.Combatant, encounter.CurrentTarget);
 
             if (attackResult.Success)
             {
@@ -488,9 +491,9 @@ namespace Odyssey.Core.Combat
         {
             var toRemove = new List<uint>();
 
-            foreach (var kvp in _encounters)
+            foreach (KeyValuePair<uint, CombatEncounter> kvp in _encounters)
             {
-                var encounter = kvp.Value;
+                CombatEncounter encounter = kvp.Value;
 
                 // Remove if combatant is dead or invalid
                 if (!encounter.Combatant.IsValid)
@@ -499,7 +502,7 @@ namespace Odyssey.Core.Combat
                     continue;
                 }
 
-                var stats = encounter.Combatant.GetComponent<Interfaces.Components.IStatsComponent>();
+                Interfaces.Components.IStatsComponent stats = encounter.Combatant.GetComponent<Interfaces.Components.IStatsComponent>();
                 if (stats != null && stats.CurrentHP <= 0)
                 {
                     toRemove.Add(kvp.Key);
@@ -520,7 +523,7 @@ namespace Odyssey.Core.Combat
                 }
             }
 
-            foreach (var id in toRemove)
+            foreach (uint id in toRemove)
             {
                 CombatEncounter encounter;
                 if (_encounters.TryGetValue(id, out encounter))
@@ -553,7 +556,7 @@ namespace Odyssey.Core.Combat
                 return stats;
             }
 
-            var statsComponent = entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent statsComponent = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (statsComponent != null)
             {
                 stats.AttackBonus = statsComponent.GetAbility(Ability.Strength); // Simplified
@@ -593,7 +596,7 @@ namespace Odyssey.Core.Combat
                 return false;
             }
 
-            var stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             return stats != null && stats.CurrentHP > 0;
         }
 

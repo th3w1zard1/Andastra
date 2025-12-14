@@ -9,6 +9,9 @@ namespace Odyssey.Core.Camera
     /// </summary>
     /// <remarks>
     /// KOTOR Camera System:
+    /// - Based on swkotor2.exe camera system
+    /// - Located via string references: Camera functions handle view matrix, chase camera, cinematic camera
+    /// - Original implementation: Chase camera follows player, controllable pitch/yaw/zoom, collision detection
     /// - Chase camera follows player from behind
     /// - Controllable pitch and yaw (rotation around target)
     /// - Zoom in/out (distance from target)
@@ -304,13 +307,13 @@ namespace Odyssey.Core.Camera
             }
 
             // Get target position
-            var targetTransform = Target.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent targetTransform = Target.GetComponent<Interfaces.Components.ITransformComponent>();
             if (targetTransform == null)
             {
                 return;
             }
 
-            var targetPos = targetTransform.Position;
+            Vector3 targetPos = targetTransform.Position;
             targetPos.Z += HeightOffset;
 
             // Calculate ideal camera position
@@ -348,8 +351,8 @@ namespace Odyssey.Core.Camera
             }
 
             // Get speaker and listener positions
-            var speakerPos = GetEntityHeadPosition(_dialogueSpeaker);
-            var listenerPos = GetEntityHeadPosition(_dialogueListener);
+            Vector3 speakerPos = GetEntityHeadPosition(_dialogueSpeaker);
+            Vector3 listenerPos = GetEntityHeadPosition(_dialogueListener);
 
             // Calculate camera position based on current angle
             Vector3 idealPosition;
@@ -418,14 +421,14 @@ namespace Odyssey.Core.Camera
         /// </summary>
         public void SwapDialogueFocus()
         {
-            var temp = _dialogueSpeaker;
+            IEntity temp = _dialogueSpeaker;
             _dialogueSpeaker = _dialogueListener;
             _dialogueListener = temp;
         }
 
         private Vector3 GetEntityHeadPosition(IEntity entity)
         {
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform == null)
             {
                 return Vector3.Zero;
@@ -455,7 +458,7 @@ namespace Odyssey.Core.Camera
 
         private Vector3 CalculateWideShotPosition(Vector3 pos1, Vector3 pos2)
         {
-            var center = (pos1 + pos2) * 0.5f;
+            Vector3 center = (pos1 + pos2) * 0.5f;
             var direction = Vector3.Normalize(pos2 - pos1);
             var perpendicular = new Vector3(-direction.Y, direction.X, 0);
 

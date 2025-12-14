@@ -88,6 +88,16 @@ namespace Odyssey.Core.Combat
     /// <summary>
     /// Manages active effects on entities.
     /// </summary>
+    /// <remarks>
+    /// Effect System:
+    /// - Based on swkotor2.exe effect system
+    /// - Located via string references: Effect application functions handle status effects, modifiers, visual effects
+    /// - Original implementation: Effects applied to entities with duration tracking, stacking rules, removal on expiration
+    /// - Effect types: Attribute modifiers (ability, attack, damage, AC, saves), status effects (paralysis, stun, etc.),
+    ///   damage effects (resistance, immunity, reduction), Force effects, visual effects
+    /// - Effects have duration in rounds or permanent, some are instantaneous
+    /// - Effect stacking: Some effects stack, others override
+    /// </remarks>
     public class EffectSystem
     {
         private readonly Dictionary<uint, List<ActiveEffect>> _entityEffects;
@@ -167,7 +177,7 @@ namespace Odyssey.Core.Combat
             if (_entityEffects.TryGetValue(target.ObjectId, out effects))
             {
                 var toRemove = new List<ActiveEffect>();
-                foreach (var effect in effects)
+                foreach (ActiveEffect effect in effects)
                 {
                     if (effect.Effect.Type == type)
                     {
@@ -175,7 +185,7 @@ namespace Odyssey.Core.Combat
                     }
                 }
 
-                foreach (var effect in toRemove)
+                foreach (ActiveEffect effect in toRemove)
                 {
                     effects.Remove(effect);
                     ApplyEffectModifiers(target, effect.Effect, false);
@@ -196,7 +206,7 @@ namespace Odyssey.Core.Combat
             List<ActiveEffect> effects;
             if (_entityEffects.TryGetValue(target.ObjectId, out effects))
             {
-                foreach (var effect in effects)
+                foreach (ActiveEffect effect in effects)
                 {
                     ApplyEffectModifiers(target, effect.Effect, false);
                 }
@@ -217,7 +227,7 @@ namespace Odyssey.Core.Combat
             List<ActiveEffect> effects;
             if (_entityEffects.TryGetValue(entity.ObjectId, out effects))
             {
-                foreach (var effect in effects)
+                foreach (ActiveEffect effect in effects)
                 {
                     yield return effect;
                 }
@@ -237,7 +247,7 @@ namespace Odyssey.Core.Combat
             List<ActiveEffect> effects;
             if (_entityEffects.TryGetValue(entity.ObjectId, out effects))
             {
-                foreach (var effect in effects)
+                foreach (ActiveEffect effect in effects)
                 {
                     if (effect.Effect.Type == type)
                     {
@@ -256,9 +266,9 @@ namespace Odyssey.Core.Combat
         {
             var toRemove = new List<KeyValuePair<uint, ActiveEffect>>();
 
-            foreach (var kvp in _entityEffects)
+            foreach (KeyValuePair<uint, List<ActiveEffect>> kvp in _entityEffects)
             {
-                foreach (var effect in kvp.Value)
+                foreach (ActiveEffect effect in kvp.Value)
                 {
                     if (effect.Effect.DurationType == EffectDurationType.Temporary)
                     {
@@ -273,9 +283,9 @@ namespace Odyssey.Core.Combat
             }
 
             // Remove expired effects
-            foreach (var removal in toRemove)
+            foreach (KeyValuePair<uint, ActiveEffect> removal in toRemove)
             {
-                var entity = _world.GetEntity(removal.Key);
+                IEntity entity = _world.GetEntity(removal.Key);
                 if (entity != null)
                 {
                     RemoveEffect(entity, removal.Value);
@@ -288,7 +298,7 @@ namespace Odyssey.Core.Combat
             switch (effect.Type)
             {
                 case EffectType.Heal:
-                    var stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
+                    Interfaces.Components.IStatsComponent stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
                     if (stats != null)
                     {
                         stats.CurrentHP = Math.Min(stats.CurrentHP + effect.Amount, stats.MaxHP);
@@ -296,7 +306,7 @@ namespace Odyssey.Core.Combat
                     break;
 
                 case EffectType.Death:
-                    var deathStats = target.GetComponent<Interfaces.Components.IStatsComponent>();
+                    Interfaces.Components.IStatsComponent deathStats = target.GetComponent<Interfaces.Components.IStatsComponent>();
                     if (deathStats != null)
                     {
                         deathStats.CurrentHP = 0;
@@ -401,7 +411,7 @@ namespace Odyssey.Core.Combat
         /// </summary>
         public static Effect AbilityModifier(Enums.Ability ability, int amount, int rounds = 0)
         {
-            var type = amount >= 0 ? EffectType.AbilityIncrease : EffectType.AbilityDecrease;
+            EffectType type = amount >= 0 ? EffectType.AbilityIncrease : EffectType.AbilityDecrease;
             var effect = new Effect(type);
             effect.SubType = (int)ability;
             effect.Amount = Math.Abs(amount);
