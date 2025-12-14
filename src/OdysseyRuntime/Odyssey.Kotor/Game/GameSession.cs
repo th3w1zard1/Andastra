@@ -238,7 +238,7 @@ namespace Odyssey.Kotor.Game
             // Create module transition system
             _moduleTransitionSystem = new ModuleTransitionSystem(
                 LoadModuleAsync,
-                PositionPlayerAtWaypoint
+                waypointTag => PositionPlayerAtWaypoint(_playerEntity, waypointTag)
             );
 
             // Subscribe to door events for module transitions
@@ -262,6 +262,18 @@ namespace Odyssey.Kotor.Game
         /// Handles door opened events and triggers module transitions if needed.
         /// </summary>
         private void OnDoorOpened(DoorOpenedEvent evt)
+        {
+            if (evt == null || evt.Door == null)
+            {
+                return;
+            }
+
+            // Check if door triggers a module transition
+            if (_moduleTransitionSystem != null && _moduleTransitionSystem.CanDoorTransition(evt.Door))
+            {
+                _moduleTransitionSystem.TransitionThroughDoor(evt.Door, evt.Actor);
+            }
+        }
         {
             if (evt == null || evt.Door == null)
             {

@@ -33,7 +33,7 @@ namespace Odyssey.Kotor.Game
     public class ModuleTransitionSystem
     {
         private readonly Func<string, Task<bool>> _loadModuleAsync;
-        private readonly Action<IEntity, string> _positionPlayerAtWaypoint;
+        private readonly Action<string> _positionPlayerAtWaypoint;
 
         private bool _isTransitioning;
         private string _currentModule;
@@ -73,10 +73,10 @@ namespace Odyssey.Kotor.Game
         /// Creates a new module transition system.
         /// </summary>
         /// <param name="loadModuleAsync">Function to load a module asynchronously.</param>
-        /// <param name="positionPlayerAtWaypoint">Action to position player at waypoint.</param>
+        /// <param name="positionPlayerAtWaypoint">Action to position player at waypoint by tag.</param>
         public ModuleTransitionSystem(
             [NotNull] Func<string, Task<bool>> loadModuleAsync,
-            Action<IEntity, string> positionPlayerAtWaypoint)
+            Action<string> positionPlayerAtWaypoint)
         {
             _loadModuleAsync = loadModuleAsync ?? throw new ArgumentNullException("loadModuleAsync");
             _positionPlayerAtWaypoint = positionPlayerAtWaypoint;
@@ -146,8 +146,7 @@ namespace Odyssey.Kotor.Game
                     // Position player at waypoint if specified
                     if (!string.IsNullOrEmpty(targetWaypoint) && _positionPlayerAtWaypoint != null)
                     {
-                        // The caller needs to pass the player entity
-                        // This will be called from GameSession
+                        _positionPlayerAtWaypoint(targetWaypoint);
                     }
 
                     OnTransitionComplete?.Invoke(this, args);
