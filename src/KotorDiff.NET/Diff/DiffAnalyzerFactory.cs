@@ -37,7 +37,7 @@ namespace KotorDiff.NET.Diff
             }
 
             // GFF analyzer
-            if (resourceTypeLower == "gff" || 
+            if (resourceTypeLower == "gff" ||
                 resourceTypeLower == "utc" || resourceTypeLower == "uti" || resourceTypeLower == "utp" ||
                 resourceTypeLower == "ute" || resourceTypeLower == "utm" || resourceTypeLower == "utd" ||
                 resourceTypeLower == "utw" || resourceTypeLower == "dlg" || resourceTypeLower == "are" ||

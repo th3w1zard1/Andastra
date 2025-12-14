@@ -8,6 +8,7 @@ using CSharpKOTOR.Mods;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using KotorDiff.NET.Generator;
+using KotorDiff.NET.Resolution;
 
 namespace KotorDiff.NET.Diff
 {
@@ -61,6 +62,25 @@ namespace KotorDiff.NET.Diff
                 logFunc("[DEBUG] Loading installations...");
                 var pathInfos = LoadInstallations(filesAndFoldersAndInstallations, logFunc);
                 logFunc($"[DEBUG] Loaded {pathInfos.Count} PathInfo objects");
+
+                // For Installation-to-Installation comparison, use resolution-aware comparison
+                var allInstallations = filesAndFoldersAndInstallations.OfType<Installation>().ToList();
+                logFunc($"[DEBUG] Found {allInstallations.Count} Installation objects");
+
+                if (allInstallations.Count >= 2)
+                {
+                    logFunc("Detected multiple installations - using resolution-aware comparison...");
+                    return Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                        filesAndFoldersAndInstallations,
+                        filters: filters,
+                        logFunc: logFunc,
+                        compareHashes: compareHashes,
+                        modificationsByType: modificationsByType,
+                        incrementalWriter: incrementalWriter);
+                }
+
+                // Mixed path types or non-Installation comparison
+                logFunc("[DEBUG] Using non-Installation comparison (folder/file diffing)...");
 
                 // Collect all resources from all paths
                 logFunc("[DEBUG] Collecting resources...");
@@ -495,7 +515,7 @@ namespace KotorDiff.NET.Diff
                             modGff.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
                             modGff.SourceFile = resourceName;
                             modGff.SaveAs = resourceName;
-                            
+
                             if (incrementalWriter != null)
                             {
                                 incrementalWriter.AddModification(modGff);
@@ -504,7 +524,7 @@ namespace KotorDiff.NET.Diff
                             {
                                 modificationsByType?.Gff.Add(modGff);
                             }
-                            
+
                             logFunc($"\n[PATCH] {context.Where}");
                             logFunc("  |-- !ReplaceFile: 0 (patch existing file, don't replace)");
                             logFunc($"  |-- Modifications: {modGff.Modifiers.Count} field/struct changes");
@@ -547,7 +567,7 @@ namespace KotorDiff.NET.Diff
                             string resourceName = Path.GetFileName(context.Where);
                             mod2da.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
                             mod2da.SourceFile = resourceName;
-                            
+
                             if (incrementalWriter != null)
                             {
                                 incrementalWriter.AddModification(mod2da);
@@ -602,7 +622,7 @@ namespace KotorDiff.NET.Diff
                         if (result is ValueTuple<CSharpKOTOR.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
                         {
                             var modTlk = tuple.Item1;
-                            
+
                             if (incrementalWriter != null)
                             {
                                 incrementalWriter.AddModification(modTlk);
@@ -654,7 +674,7 @@ namespace KotorDiff.NET.Diff
                             string resourceName = Path.GetFileName(context.Where);
                             modSsf.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
                             modSsf.SourceFile = resourceName;
-                            
+
                             if (incrementalWriter != null)
                             {
                                 incrementalWriter.AddModification(modSsf);

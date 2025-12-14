@@ -569,6 +569,19 @@ namespace KotorDiff.NET.Generator
             _logFunc?.Invoke($"  Install folders: {_installFolders.Count}");
         }
 
+        /// <summary>
+        /// Write pending TLK modifications to INI.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py
+        /// </summary>
+        public void WritePendingTlkModifications()
+        {
+            // Flush any pending TLK writes
+            if (_pendingIniWrites.Contains("tlk"))
+            {
+                FlushPendingWrites();
+            }
+        }
+
         // Expose install folders for summary
         public Dictionary<string, List<string>> InstallFolders => _installFolders;
     }

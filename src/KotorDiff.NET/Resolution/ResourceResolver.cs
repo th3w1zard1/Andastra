@@ -318,6 +318,7 @@ namespace KotorDiff.NET.Resolution
 
         // Helper method to get all FileResources from an installation
         // In Python, Installation is iterable, but in C# we need to combine different sources
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:431-446
         private static List<FileResource> GetAllFileResources(Installation installation)
         {
             var allResources = new List<FileResource>();
