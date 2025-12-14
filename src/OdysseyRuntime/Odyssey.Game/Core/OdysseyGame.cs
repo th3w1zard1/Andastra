@@ -1866,6 +1866,10 @@ namespace Odyssey.Game.Core
             // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
             if (GraphicsDevice?.Presenter?.BackBuffer != null && GraphicsDevice?.Presenter?.DepthStencilBuffer != null)
             {
+                // Set render target and viewport for rendering
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+                // Game.GraphicsContext property provides access to the graphics context for rendering operations
+                // GraphicsContext.CommandList property provides access to the command list for GPU operations
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.CommandList.html
                 // CommandList.SetRenderTargetAndViewport(Texture, Texture) sets render target and viewport
                 // Method signature: void SetRenderTargetAndViewport(Texture depthStencilBuffer, Texture renderTarget)
@@ -1878,15 +1882,18 @@ namespace Odyssey.Game.Core
                 // This ensures we ALWAYS have a visible background, not transparent/black
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.CommandList.html
                 // CommandList.Clear(Texture, Color4) clears a render target with a color
-                // CommandList.Clear(Texture, DepthStencilClearOptions) clears depth/stencil buffer
-                // Method signatures: void Clear(Texture renderTarget, Color4 color), void Clear(Texture depthStencilBuffer, DepthStencilClearOptions options)
+                // Method signature: void Clear(Texture renderTarget, Color4 color)
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
                 // Color4(float r, float g, float b, float a) constructor creates a color from RGBA float values (0-1)
                 // Method signature: Color4(float r, float g, float b, float a)
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
+                // Clear depth buffer
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.CommandList.html
+                // CommandList.Clear(Texture, DepthStencilClearOptions) clears depth/stencil buffer
+                // Method signature: void Clear(Texture depthStencilBuffer, DepthStencilClearOptions options)
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.DepthStencilClearOptions.html
-                // DepthStencilClearOptions.DepthBuffer clears only the depth buffer
+                // DepthStencilClearOptions.DepthBuffer clears only the depth buffer (not stencil)
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
             }
