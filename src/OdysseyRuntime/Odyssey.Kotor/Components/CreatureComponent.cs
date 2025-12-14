@@ -7,8 +7,15 @@ namespace Odyssey.Kotor.Components
     /// Component for creature entities (NPCs and PCs).
     /// </summary>
     /// <remarks>
-    /// Based on UTC file format documentation.
-    /// Stores creature-specific data: stats, appearance, equipment, etc.
+    /// Creature Component:
+    /// - Based on swkotor2.exe creature system
+    /// - Located via string references: "Creature" @ 0x007bc544, "Creature List" @ 0x007bd01c
+    /// - "CreatureSize" @ 0x007bf680, "CreatureSpeed" @ 0x007c4b8c
+    /// - Error: "Creature template '%s' doesn't exist." @ 0x007bf78c
+    /// - "Cannot set creature %s to faction %d because faction does not exist!" @ 0x007bf2a8
+    /// - Original implementation: Creatures have appearance, stats, equipment, classes, feats, force powers
+    /// - Based on UTC file format (GFF with "UTC " signature)
+    /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, etc.
     /// </remarks>
     public class CreatureComponent : IComponent
     {
@@ -166,7 +173,7 @@ namespace Odyssey.Kotor.Components
         public int GetTotalLevel()
         {
             int total = 0;
-            foreach (var cls in ClassList)
+            foreach (CreatureClass cls in ClassList)
             {
                 total += cls.Level;
             }
@@ -179,7 +186,7 @@ namespace Odyssey.Kotor.Components
         public int GetBaseAttackBonus()
         {
             int bab = 0;
-            foreach (var cls in ClassList)
+            foreach (CreatureClass cls in ClassList)
             {
                 // Simplified BAB calculation based on class type
                 // Full implementation would use classes.2da

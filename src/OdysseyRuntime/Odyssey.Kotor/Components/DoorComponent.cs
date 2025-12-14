@@ -6,8 +6,14 @@ namespace Odyssey.Kotor.Components
     /// Component for door entities.
     /// </summary>
     /// <remarks>
-    /// Based on UTD file format documentation.
-    /// Doors can be locked, trapped, and used for module transitions.
+    /// Door Component:
+    /// - Based on swkotor2.exe door system
+    /// - Located via string references: "Door List" @ 0x007bd248, "GenericDoors" @ 0x007c4ba8
+    /// - "DoorTypes" @ 0x007c4b9c, "SecretDoorDC" @ 0x007c1acc
+    /// - Original implementation: Doors have open/closed states, locks, traps, module transitions
+    /// - Based on UTD file format (GFF with "UTD " signature)
+    /// - Script events: OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// - Module transitions: LinkedToModule + LinkedToFlags bit 1 = module transition
     /// </remarks>
     public class DoorComponent : IComponent
     {
