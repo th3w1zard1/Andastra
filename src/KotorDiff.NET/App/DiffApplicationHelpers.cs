@@ -5,11 +5,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Mods;
+using CSharpKOTOR.Tools;
+using CSharpKOTOR.Utility;
 using KotorDiff.NET.Diff;
 using CSharpKOTOR.TSLPatcher;
 using Tuple = System.Tuple;
+using SystemTextEncoding = System.Text.Encoding;
 
 namespace KotorDiff.NET.App
 {
@@ -334,44 +338,151 @@ namespace KotorDiff.NET.App
             GlobalConfig.Instance.ModificationsByType = modifications;
 
             // Create incremental writer if requested
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:431-474
+            // Original: if config.tslpatchdata_path: ... incremental_writer = IncrementalTSLPatchDataWriter(...)
             IncrementalTSLPatchDataWriter incrementalWriter = null;
+            object basePath = null;
             if (config.TslPatchDataPath != null)
             {
-                // Extract base data path from first path if it's a directory
-                string baseDataPath = null;
-                string moddedDataPath = null;
+                // Find first valid directory path
                 if (config.Paths != null && config.Paths.Count > 0)
                 {
-                    object firstPath = config.Paths[0];
-                    if (firstPath is string pathStr && Directory.Exists(pathStr))
+                    foreach (var candidatePath in config.Paths)
                     {
-                        baseDataPath = pathStr;
-                    }
-                    else if (firstPath is DirectoryInfo dirInfo)
-                    {
-                        baseDataPath = dirInfo.FullName;
-                    }
-                    
-                    // Extract modded data path from second path if available
-                    if (config.Paths.Count > 1)
-                    {
-                        object secondPath = config.Paths[1];
-                        if (secondPath is string pathStr2 && Directory.Exists(pathStr2))
+                        if (candidatePath is Installation installation)
                         {
-                            moddedDataPath = pathStr2;
+                            basePath = installation;
+                            break;
                         }
-                        else if (secondPath is DirectoryInfo dirInfo2)
+                        else if (candidatePath is string pathStr && Directory.Exists(pathStr))
                         {
-                            moddedDataPath = dirInfo2.FullName;
+                            basePath = pathStr;
+                            break;
+                        }
+                        else if (candidatePath is DirectoryInfo dirInfo)
+                        {
+                            basePath = dirInfo;
+                            break;
                         }
                     }
                 }
 
-                incrementalWriter = new IncrementalTSLPatchDataWriter(
-                    config.TslPatchDataPath.FullName,
-                    config.IniFilename ?? "changes.ini",
-                    baseDataPath,
-                    moddedDataPath);
+                if (config.UseIncrementalWriter)
+                {
+                    // Determine game from first valid directory path
+                    // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:441-450
+                    Game? game = null;
+                    if (basePath != null)
+                    {
+                        try
+                        {
+                            if (basePath is Installation installation)
+                            {
+                                game = installation.Game;
+                            }
+                            else
+                            {
+                                // Default to K1 for directory paths
+                                game = Game.K1;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            LogOutput($"[Warning] Could not determine game: {e.GetType().Name}: {e.Message}");
+                            LogOutput("Full traceback:");
+                            LogOutput($"  {e.StackTrace}");
+                        }
+                    }
+
+                    // Create StrRef cache if we have a valid game
+                    // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:452-453
+                    StrRefReferenceCache strrefCache = game.HasValue ? new StrRefReferenceCache(game.Value) : null;
+
+                    // Create 2DA memory caches if we have a valid game
+                    // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:455-464
+                    // Structure: {installation_index: CaseInsensitiveDict<TwoDAMemoryReferenceCache>}
+                    Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> twodaCaches = null;
+                    if (game.HasValue && config.Paths != null)
+                    {
+                        twodaCaches = new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
+                        // Initialize caches for each path index
+                        for (int idx = 0; idx < config.Paths.Count; idx++)
+                        {
+                            twodaCaches[idx] = new CaseInsensitiveDict<TwoDAMemoryReferenceCache>();
+                        }
+                    }
+
+                    // Extract base data path string for writer
+                    string baseDataPathStr = null;
+                    if (basePath is string pathStr)
+                    {
+                        baseDataPathStr = pathStr;
+                    }
+                    else if (basePath is DirectoryInfo dirInfo)
+                    {
+                        baseDataPathStr = dirInfo.FullName;
+                    }
+                    else if (basePath is Installation installation)
+                    {
+                        baseDataPathStr = installation.Path;
+                    }
+
+                    incrementalWriter = new IncrementalTSLPatchDataWriter(
+                        config.TslPatchDataPath.FullName,
+                        config.IniFilename ?? "changes.ini",
+                        baseDataPathStr,
+                        null, // moddedDataPath
+                        strrefCache,
+                        twodaCaches,
+                        (string msg) => LogOutput(msg));
+                    LogOutput($"Using incremental writer for tslpatchdata: {config.TslPatchDataPath.FullName}");
+                }
+                else
+                {
+                    // Extract base data path from first path if it's a directory (for non-incremental)
+                    string baseDataPath = null;
+                    string moddedDataPath = null;
+                    if (config.Paths != null && config.Paths.Count > 0)
+                    {
+                        object firstPath = config.Paths[0];
+                        if (firstPath is string pathStr && Directory.Exists(pathStr))
+                        {
+                            baseDataPath = pathStr;
+                        }
+                        else if (firstPath is DirectoryInfo dirInfo)
+                        {
+                            baseDataPath = dirInfo.FullName;
+                        }
+                        else if (firstPath is Installation installation)
+                        {
+                            baseDataPath = installation.Path;
+                        }
+                        
+                        // Extract modded data path from second path if available
+                        if (config.Paths.Count > 1)
+                        {
+                            object secondPath = config.Paths[1];
+                            if (secondPath is string pathStr2 && Directory.Exists(pathStr2))
+                            {
+                                moddedDataPath = pathStr2;
+                            }
+                            else if (secondPath is DirectoryInfo dirInfo2)
+                            {
+                                moddedDataPath = dirInfo2.FullName;
+                            }
+                            else if (secondPath is Installation installation2)
+                            {
+                                moddedDataPath = installation2.Path;
+                            }
+                        }
+                    }
+
+                    incrementalWriter = new IncrementalTSLPatchDataWriter(
+                        config.TslPatchDataPath.FullName,
+                        config.IniFilename ?? "changes.ini",
+                        baseDataPath,
+                        moddedDataPath);
+                }
             }
 
             // Call handle_diff_internal
@@ -381,18 +492,58 @@ namespace KotorDiff.NET.App
                 incrementalWriter: incrementalWriter);
 
             // Finalize TSLPatcher data if requested
-            if (incrementalWriter != null)
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:482-525
+            // Original: if config.tslpatchdata_path: ... if config.use_incremental_writer and incremental_writer: ...
+            if (config.TslPatchDataPath != null)
             {
-                incrementalWriter.FinalizeWriter();
-            }
-            else if (config.TslPatchDataPath != null && HasModifications(modifications))
-            {
-                // Use batch generation if not using incremental writer
-                GenerateTSLPatcherData(
-                    config.TslPatchDataPath,
-                    config.IniFilename ?? "changes.ini",
-                    modifications,
-                    config.Paths);
+                if (config.UseIncrementalWriter && incrementalWriter != null)
+                {
+                    try
+                    {
+                        // Finalize INI by writing InstallList section
+                        incrementalWriter.FinalizeWriter();
+
+                        // Summary
+                        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:489-500
+                        LogOutput("\nTSLPatcher data generation complete:");
+                        LogOutput($"  Location: {config.TslPatchDataPath.FullName}");
+                        LogOutput($"  INI file: {config.IniFilename ?? "changes.ini"}");
+                        LogOutput($"  TLK modifications: {incrementalWriter.AllModifications.Tlk?.Count ?? 0}");
+                        LogOutput($"  2DA modifications: {incrementalWriter.AllModifications.Twoda?.Count ?? 0}");
+                        LogOutput($"  GFF modifications: {incrementalWriter.AllModifications.Gff?.Count ?? 0}");
+                        LogOutput($"  SSF modifications: {incrementalWriter.AllModifications.Ssf?.Count ?? 0}");
+                        LogOutput($"  NCS modifications: {incrementalWriter.AllModifications.Ncs?.Count ?? 0}");
+                        int totalInstallFiles = incrementalWriter.InstallFolders?.Values.Sum(files => files?.Count ?? 0) ?? 0;
+                        LogOutput($"  Install files: {totalInstallFiles}");
+                        LogOutput($"  Install folders: {incrementalWriter.InstallFolders?.Count ?? 0}");
+                    }
+                    catch (Exception genError)
+                    {
+                        LogOutput($"[Error] Failed to finalize TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
+                        LogOutput("Full traceback:");
+                        LogOutput($"  {genError.StackTrace}");
+                        return (null, 1);
+                    }
+                }
+                else if (!config.UseIncrementalWriter && HasModifications(modifications))
+                {
+                    try
+                    {
+                        // Use batch generation if not using incremental writer
+                        GenerateTSLPatcherData(
+                            config.TslPatchDataPath,
+                            config.IniFilename ?? "changes.ini",
+                            modifications,
+                            config.Paths);
+                    }
+                    catch (Exception genError)
+                    {
+                        LogOutput($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
+                        LogOutput("Full traceback:");
+                        LogOutput($"  {genError.StackTrace}");
+                        return (null, 1);
+                    }
+                }
             }
 
             return result;
@@ -498,7 +649,7 @@ namespace KotorDiff.NET.App
             // Use TSLPatcher INI serializer
             var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
-            File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
+                File.WriteAllText(iniPath, iniContent, SystemTextEncoding.UTF8);
 
             // Summary
             LogOutput("\nTSLPatcher data generation complete:");
