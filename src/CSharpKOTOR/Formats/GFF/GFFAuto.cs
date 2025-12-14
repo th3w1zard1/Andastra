@@ -19,6 +19,12 @@ namespace CSharpKOTOR.Formats.GFF
         {
             if (fileFormat.IsGff())
             {
+                // Set content type from filename if not already set
+                if (gff.Content == GFFContent.GFF && !string.IsNullOrEmpty(target))
+                {
+                    gff.Content = GFFContentExtensions.FromResName(target);
+                }
+                
                 var writer = new GFFBinaryWriter(gff);
                 byte[] data = writer.Write();
                 File.WriteAllBytes(target, data);

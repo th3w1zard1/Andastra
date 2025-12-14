@@ -136,7 +136,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Formats\NCS\NCSDecomp\lexer.dat" />
-    <EmbeddedResource Include="Formats\NCS\NCSDecomp\parser.dat" />
+    <EmbeddedResource Include="Formats\NCS\NCSDecomp\parser.dat">
+      <LogicalName>CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

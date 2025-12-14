@@ -49,12 +49,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
                 try
                 {
                     System.Reflection.Assembly assembly = typeof(Parser).Assembly;
+                    // Try multiple possible resource names (embedded resources use namespace + path)
                     System.IO.Stream stream = assembly.GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat") ??
                                               assembly.GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.Parser.parser.dat") ??
                                               assembly.GetManifestResourceStream("parser.dat");
                     if (stream == null)
                     {
-                        throw new Exception("The file \"parser.dat\" is either missing or corrupted.");
+                        // Debug: List all available manifest resources
+                        string[] resources = assembly.GetManifestResourceNames();
+                        string availableResources = string.Join(", ", resources);
+                        System.Console.Error.WriteLine("DEBUG Parser: parser.dat not found. Available resources: " + availableResources);
+                        throw new Exception("The file \"parser.dat\" is either missing or corrupted. Available resources: " + availableResources);
                     }
                     System.IO.BinaryReader s = new System.IO.BinaryReader(stream);
                     int length = s.ReadInt32();
