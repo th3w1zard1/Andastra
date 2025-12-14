@@ -909,7 +909,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                this.current.AddChild(jsr);
+                // Wrap expression in AExpressionStatement so it's a valid statement
+                AExpressionStatement stmt = new AExpressionStatement(jsr);
+                this.current.AddChild(stmt);
             }
 
             this.CheckEnd(node);
@@ -943,7 +945,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                this.current.AddChild(act);
+                // Wrap expression in AExpressionStatement so it's a valid statement
+                AExpressionStatement stmt = new AExpressionStatement(act);
+                this.current.AddChild(stmt);
             }
 
             this.CheckEnd(node);
@@ -1135,7 +1139,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             Const theconst = (Const)this.stack.Get(1);
             AConst constdec = new AConst(theconst);
-            this.current.AddChild(constdec);
+            // Wrap expression in AExpressionStatement so it's a valid statement
+            AExpressionStatement stmt = new AExpressionStatement(constdec);
+            this.current.AddChild(stmt);
             this.CheckEnd(node);
         }
 
