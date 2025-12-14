@@ -583,12 +583,165 @@ namespace HolocronToolset.NET.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:679-699
         // Original: def is_save_corrupted(self, save_path: Path) -> bool:
         public bool IsSaveCorrupted(string savePath)
         {
-            // TODO: Implement save corruption detection
-            return false;
+            try
+            {
+                return CheckSaveCorruptionLightweight(savePath);
+            }
+            catch
+            {
+                // If we can't check the save, assume it's not corrupted (safer than false positives)
+                return false;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:701-751
+        // Original: def _check_save_corruption_lightweight(self, save_path: Path) -> bool:
+        private bool CheckSaveCorruptionLightweight(string savePath)
+        {
+            string savegameSav = System.IO.Path.Combine(savePath, "SAVEGAME.sav");
+            if (!File.Exists(savegameSav))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Read the outer ERF (SAVEGAME.sav)
+                var outerErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(savegameSav);
+
+                // Check each .sav resource (cached modules) for EventQueue corruption
+                foreach (var resource in outerErf)
+                {
+                    if (resource.ResType != ResourceType.SAV)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        // Read the nested module ERF
+                        var innerErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(resource.Data);
+
+                        // Look for module.ifo in this cached module
+                        foreach (var innerResource in innerErf)
+                        {
+                            if (innerResource.ResRef.ToString().ToLowerInvariant() == "module" && innerResource.ResType == ResourceType.IFO)
+                            {
+                                // Check for EventQueue
+                                var ifoGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(innerResource.Data);
+                                if (ifoGff.Root.HasField("EventQueue"))
+                                {
+                                    var eventQueue = ifoGff.Root.GetList("EventQueue");
+                                    if (eventQueue != null && eventQueue.Count > 0)
+                                    {
+                                        return true; // Corrupted!
+                                    }
+                                }
+                                break; // Only one module.ifo per cached module
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        continue; // Skip malformed nested ERFs
+                    }
+                }
+
+                return false; // No corruption found
+            }
+            catch
+            {
+                return false; // If we can't parse, assume not corrupted
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:753-825
+        // Original: def fix_save_corruption(self, save_path: Path) -> bool:
+        public bool FixSaveCorruption(string savePath)
+        {
+            string savegameSav = System.IO.Path.Combine(savePath, "SAVEGAME.sav");
+            if (!File.Exists(savegameSav))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Read the outer ERF (SAVEGAME.sav)
+                var outerErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(savegameSav);
+                bool anyFixed = false;
+
+                // Process each .sav resource (cached modules)
+                foreach (var resource in outerErf)
+                {
+                    if (resource.ResType != ResourceType.SAV)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var innerErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(resource.Data);
+                        bool innerModified = false;
+
+                        // Look for module.ifo in this cached module
+                        foreach (var innerResource in innerErf)
+                        {
+                            if (innerResource.ResRef.ToString().ToLowerInvariant() == "module" && innerResource.ResType == ResourceType.IFO)
+                            {
+                                // Check and clear EventQueue
+                                var ifoGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(innerResource.Data);
+                                if (ifoGff.Root.HasField("EventQueue"))
+                                {
+                                    var eventQueue = ifoGff.Root.GetList("EventQueue");
+                                    if (eventQueue != null && eventQueue.Count > 0)
+                                    {
+                                        // Clear the EventQueue
+                                        ifoGff.Root.SetList("EventQueue", new CSharpKOTOR.Formats.GFF.GFFList());
+                                        // Update the resource data
+                                        byte[] ifoData = CSharpKOTOR.Formats.GFF.GFFAuto.BytesGff(ifoGff, ResourceType.IFO);
+                                        innerErf.SetData(innerResource.ResRef.ToString(), innerResource.ResType, ifoData);
+                                        innerModified = true;
+                                        anyFixed = true;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+
+                        if (innerModified)
+                        {
+                            // Update the outer ERF with the modified inner ERF
+                            byte[] innerErfData = CSharpKOTOR.Formats.ERF.ERFAuto.BytesErf(innerErf, ResourceType.SAV);
+                            outerErf.SetData(resource.ResRef.ToString(), resource.ResType, innerErfData);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Failed to process cached module {resource.ResRef}: {ex}");
+                        continue;
+                    }
+                }
+
+                if (anyFixed)
+                {
+                    // Write the fixed outer ERF back to disk
+                    CSharpKOTOR.Formats.ERF.ERFAuto.WriteErf(outerErf, savegameSav, ResourceType.SAV);
+                    System.Console.WriteLine($"Fixed EventQueue corruption in save: {System.IO.Path.GetFileName(savePath)}");
+                    return true;
+                }
+
+                return false; // No corruption to fix
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to fix corruption for save at '{savePath}': {ex}");
+                return false;
+            }
         }
     }
 }
