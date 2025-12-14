@@ -113,6 +113,134 @@ namespace KotorDiff.NET.Diff
             }
             return Path.GetExtension(otherFile.Name).ToLowerInvariant() == ".mod";
         }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2015-2106
+        // Original: def apply_folder_resolution_order(...): ...
+        /// <summary>
+        /// Apply folder-level resolution order to module files.
+        /// When both .mod and .rim/_s.rim/_dlg.erf files exist for the same module, .mod takes priority.
+        /// </summary>
+        public static HashSet<string> ApplyFolderResolutionOrder(HashSet<string> files, Action<string> logFunc)
+        {
+            var moduleGroups = new Dictionary<string, List<string>>();
+            var nonModuleFiles = new List<string>();
+
+            string FileExtMatch(string name)
+            {
+                string nameLower = name.ToLowerInvariant();
+                if (nameLower.EndsWith(".mod"))
+                {
+                    return ".mod";
+                }
+                if (nameLower.EndsWith("_dlg.erf"))
+                {
+                    return "_dlg.erf";
+                }
+                if (nameLower.EndsWith("_s.rim"))
+                {
+                    return "_s.rim";
+                }
+                if (nameLower.EndsWith(".rim"))
+                {
+                    return ".rim";
+                }
+                return null;
+            }
+
+            foreach (string filePath in files)
+            {
+                string fileName = Path.GetFileName(filePath);
+                string ext = FileExtMatch(fileName);
+                if (ext != null)
+                {
+                    try
+                    {
+                        string root = GetModuleRoot(filePath);
+                        if (!moduleGroups.ContainsKey(root))
+                        {
+                            moduleGroups[root] = new List<string>();
+                        }
+                        moduleGroups[root].Add(filePath);
+                    }
+                    catch (Exception e)
+                    {
+                        logFunc($"Warning: Could not determine module root for '{filePath}': {e.GetType().Name}: {e.Message}");
+                        nonModuleFiles.Add(filePath);
+                    }
+                }
+                else
+                {
+                    nonModuleFiles.Add(filePath);
+                }
+            }
+
+            var resolvedFiles = new HashSet<string>(nonModuleFiles, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kvp in moduleGroups)
+            {
+                string root = kvp.Key;
+                List<string> groupFiles = kvp.Value;
+
+                // Partition into .mod (highest priority) and rim group (exclusively .rim, _s.rim, _dlg.erf)
+                var modFiles = groupFiles.Where(f => Path.GetFileName(f).ToLowerInvariant().EndsWith(".mod")).ToList();
+                var rimlikeFiles = groupFiles.Where(f =>
+                {
+                    string fname = Path.GetFileName(f).ToLowerInvariant();
+                    return (fname.EndsWith(".rim") && !fname.EndsWith("_s.rim")) ||
+                           fname.EndsWith("_s.rim") ||
+                           fname.EndsWith("_dlg.erf");
+                }).ToList();
+
+                if (modFiles.Count > 0 || rimlikeFiles.Count > 0)
+                {
+                    logFunc($"\nFolder resolution for module '{root}':");
+                    logFunc("  Files found:");
+                    foreach (string rimFile in rimlikeFiles)
+                    {
+                        logFunc($"    - {Path.GetFileName(rimFile)} (.rim/_s.rim/_dlg.erf)");
+                    }
+                    foreach (string modFile in modFiles)
+                    {
+                        logFunc($"    - {Path.GetFileName(modFile)} (.mod)");
+                    }
+                }
+
+                if (modFiles.Count > 0)
+                {
+                    // .mod exists - use it, ignore rimlike group
+                    if (modFiles.Count > 1)
+                    {
+                        logFunc($"  Warning: Multiple .mod files for module '{root}'");
+                    }
+
+                    if (rimlikeFiles.Count > 0)
+                    {
+                        logFunc($"  Resolution: .mod takes priority -> Using '{Path.GetFileName(modFiles[0])}'");
+                        logFunc($"              (ignoring {rimlikeFiles.Count} .rim/_s.rim/_dlg.erf files)");
+                    }
+                    else
+                    {
+                        logFunc($"  Resolution: Using '{Path.GetFileName(modFiles[0])}' (.mod file)");
+                    }
+
+                    resolvedFiles.Add(modFiles[0]);
+                }
+                else
+                {
+                    // No .mod - use all .rim/_s.rim/_dlg.erf files
+                    if (rimlikeFiles.Count > 0)
+                    {
+                        logFunc($"  Resolution: No .mod found -> Using {rimlikeFiles.Count} .rim/_s.rim/_dlg.erf file(s)");
+                    }
+                    foreach (string filePath in rimlikeFiles)
+                    {
+                        resolvedFiles.Add(filePath);
+                    }
+                }
+            }
+
+            return resolvedFiles;
+        }
     }
 }
 
