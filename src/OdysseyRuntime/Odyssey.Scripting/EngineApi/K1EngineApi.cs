@@ -36,12 +36,17 @@ namespace Odyssey.Scripting.EngineApi
         // Iteration state for GetFirstObjectInArea/GetNextObjectInArea
         // Key: caller entity ID, Value: list of area objects and current index
         private readonly Dictionary<uint, AreaObjectIteration> _areaObjectIterations;
+        
+        // Iteration state for GetFirstEffect/GetNextEffect
+        // Key: caller entity ID, Value: list of effects and current index
+        private readonly Dictionary<uint, EffectIteration> _effectIterations;
 
         public K1EngineApi()
         {
             _vm = new NcsVm();
             _factionMemberIterations = new Dictionary<uint, FactionMemberIteration>();
             _areaObjectIterations = new Dictionary<uint, AreaObjectIteration>();
+            _effectIterations = new Dictionary<uint, EffectIteration>();
         }
         
         private class FactionMemberIteration
@@ -53,6 +58,12 @@ namespace Odyssey.Scripting.EngineApi
         private class AreaObjectIteration
         {
             public List<IEntity> Objects { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        private class EffectIteration
+        {
+            public List<Combat.ActiveEffect> Effects { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -240,6 +251,11 @@ namespace Odyssey.Scripting.EngineApi
                 case 316: return Func_GetAttackTarget(args, ctx);
                 case 319: return Func_GetDistanceBetween2D(args, ctx);
                 case 320: return Func_GetIsInCombat(args, ctx);
+
+                // Dialogue functions
+                case 445: return Func_GetIsInConversation(args, ctx);
+                case 701: return Func_GetIsConversationActive(args, ctx);
+                case 711: return Func_GetLastConversation(args, ctx);
                 
                 // Object type checks
                 case 217: return Func_GetIsPC(args, ctx);
@@ -2207,38 +2223,224 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(1);
         }
 
+        /// <summary>
+        /// GetFirstEffect(object oCreature=OBJECT_SELF) - starts iteration over effects on creature
+        /// </summary>
         private Variable Func_GetFirstEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            
+            if (ctx.Caller == null || ctx.World == null || ctx.World.EffectSystem == null)
+            {
+                return Variable.FromEffect(null);
+            }
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.FromEffect(null);
+            }
+
+            // Get all effects from EffectSystem
+            List<Combat.ActiveEffect> effects = new List<Combat.ActiveEffect>();
+            foreach (Combat.ActiveEffect effect in ctx.World.EffectSystem.GetEffects(entity))
+            {
+                effects.Add(effect);
+            }
+
+            // Store iteration state
+            _effectIterations[ctx.Caller.ObjectId] = new EffectIteration
+            {
+                Effects = effects,
+                CurrentIndex = 0
+            };
+
+            // Return first effect (convert ActiveEffect to Effect)
+            if (effects.Count > 0)
+            {
+                return Variable.FromEffect(effects[0].Effect);
+            }
+
             return Variable.FromEffect(null);
         }
 
+        /// <summary>
+        /// GetNextEffect(object oCreature=OBJECT_SELF) - continues iteration over effects on creature
+        /// </summary>
         private Variable Func_GetNextEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.FromEffect(null);
+            }
+
+            // Get iteration state
+            if (!_effectIterations.TryGetValue(ctx.Caller.ObjectId, out EffectIteration iteration))
+            {
+                return Variable.FromEffect(null);
+            }
+
+            // Advance index
+            iteration.CurrentIndex++;
+
+            // Return next effect
+            if (iteration.CurrentIndex < iteration.Effects.Count)
+            {
+                return Variable.FromEffect(iteration.Effects[iteration.CurrentIndex].Effect);
+            }
+
+            // End of iteration - clear state
+            _effectIterations.Remove(ctx.Caller.ObjectId);
             return Variable.FromEffect(null);
         }
 
+        /// <summary>
+        /// RemoveEffect(effect eEffect, object oCreature=OBJECT_SELF) - removes an effect from creature
+        /// </summary>
         private Variable Func_RemoveEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            if (effectObj == null || ctx.World == null || ctx.World.EffectSystem == null)
+            {
+                return Variable.Void();
+            }
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.Void();
+            }
+
+            // Convert effect object to Effect
+            Combat.Effect effect = null;
+            if (effectObj is Combat.Effect directEffect)
+            {
+                effect = directEffect;
+            }
+            else if (effectObj != null)
+            {
+                // Try to extract from Variable wrapper
+                Console.WriteLine($"[K1EngineApi] RemoveEffect: Invalid effect type: {effectObj.GetType().Name}");
+                return Variable.Void();
+            }
+            else
+            {
+                return Variable.Void();
+            }
+
+            // Find and remove matching effect from entity
+            foreach (Combat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
+            {
+                if (activeEffect.Effect == effect)
+                {
+                    ctx.World.EffectSystem.RemoveEffect(entity, activeEffect);
+                    break;
+                }
+            }
+
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetIsEffectValid(effect eEffect) - returns TRUE if effect is valid
+        /// </summary>
         private Variable Func_GetIsEffectValid(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
+            
+            if (effectObj == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Check if effect is a valid Effect object
+            if (effectObj is Combat.Effect)
+            {
+                return Variable.FromInt(1);
+            }
+
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetEffectDurationType(effect eEffect) - returns duration type of effect
+        /// </summary>
         private Variable Func_GetEffectDurationType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
+            
+            if (effectObj is Combat.Effect effect)
+            {
+                // Map EffectDurationType to NWScript constants
+                // DURATION_TYPE_INSTANT = 0, DURATION_TYPE_TEMPORARY = 1, DURATION_TYPE_PERMANENT = 2
+                switch (effect.DurationType)
+                {
+                    case Combat.EffectDurationType.Instant:
+                        return Variable.FromInt(0);
+                    case Combat.EffectDurationType.Temporary:
+                        return Variable.FromInt(1);
+                    case Combat.EffectDurationType.Permanent:
+                        return Variable.FromInt(2);
+                }
+            }
+
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetEffectSubType(effect eEffect) - returns subtype of effect
+        /// </summary>
         private Variable Func_GetEffectSubType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
+            
+            if (effectObj is Combat.Effect effect)
+            {
+                return Variable.FromInt(effect.SubType);
+            }
+
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetEffectCreator(effect eEffect) - returns creator of effect
+        /// </summary>
         private Variable Func_GetEffectCreator(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            if (effectObj == null || ctx.World == null || ctx.World.EffectSystem == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Find matching effect and return creator
+            if (effectObj is Combat.Effect effect)
+            {
+                foreach (Combat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
+                {
+                    if (activeEffect.Effect == effect)
+                    {
+                        if (activeEffect.Creator != null)
+                        {
+                            return Variable.FromObject(activeEffect.Creator.ObjectId);
+                        }
+                        break;
+                    }
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
