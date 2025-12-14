@@ -106,8 +106,9 @@ namespace KotorDiff.NET.Cli
             };
 
             // Run the application
-            var result = KotorDiff.NET.App.DiffApplicationHelpers.HandleDiff(config);
-            int exitCode = KotorDiff.NET.App.DiffApplicationHelpers.FormatComparisonOutput(result.comparison, config);
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/cli.py:218
+            // Original: exit_code: int = run_application(config); sys.exit(exit_code)
+            int exitCode = KotorDiff.NET.App.AppRunner.RunApplication(config);
             Environment.Exit(exitCode);
         }
     }
