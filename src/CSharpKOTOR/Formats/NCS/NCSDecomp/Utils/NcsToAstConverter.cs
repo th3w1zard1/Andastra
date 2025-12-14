@@ -516,7 +516,30 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             constCommand.SetConst(new TConst(pos, 0));
             constCommand.SetPos(new TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
 
-            int typeVal = GetQualifier(inst.InsType);
+            // For constant instructions, the type should match the instruction type, not the qualifier
+            // CONSTI = 3 (int), CONSTF = 4 (float), CONSTS = 5 (string), CONSTO = 6 (object)
+            int typeVal;
+            if (inst.InsType == NCSInstructionType.CONSTI)
+            {
+                typeVal = 3; // VT_INTEGER
+            }
+            else if (inst.InsType == NCSInstructionType.CONSTF)
+            {
+                typeVal = 4; // VT_FLOAT
+            }
+            else if (inst.InsType == NCSInstructionType.CONSTS)
+            {
+                typeVal = 5; // VT_STRING
+            }
+            else if (inst.InsType == NCSInstructionType.CONSTO)
+            {
+                typeVal = 6; // VT_OBJECT
+            }
+            else
+            {
+                // Fallback to qualifier for unknown constant types
+                typeVal = GetQualifier(inst.InsType);
+            }
             constCommand.SetType(new TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
 
             if (inst.Args != null && inst.Args.Count > 0)

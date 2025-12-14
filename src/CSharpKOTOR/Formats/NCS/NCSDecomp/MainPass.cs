@@ -230,7 +230,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                             throw new Exception("Invalid const type " + type);
                     }
                     this.stack.Push(aconst);
-                    JavaSystem.@out.Println($"DEBUG MainPass.OutAConstCommand: type={type.ByteValue()}, value={NodeUtils.GetIntConstValue(node)}, stack size={this.stack.Size()}");
+                    // Debug output - safely get value based on type
+                    string debugValue = "?";
+                    try
+                    {
+                        switch (type.ByteValue())
+                        {
+                            case 3:
+                                debugValue = NodeUtils.GetIntConstValue(node).ToString();
+                                break;
+                            case 4:
+                                debugValue = NodeUtils.GetFloatConstValue(node).ToString();
+                                break;
+                            case 5:
+                                debugValue = "\"" + NodeUtils.GetStringConstValue(node) + "\"";
+                                break;
+                            case 6:
+                                debugValue = NodeUtils.GetObjectConstValue(node).ToString();
+                                break;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        debugValue = "error";
+                    }
+                    JavaSystem.@out.Println($"DEBUG MainPass.OutAConstCommand: type={type.ByteValue()}, value={debugValue}, stack size={this.stack.Size()}");
                     this.state.TransformConst(node);
                 });
             }
