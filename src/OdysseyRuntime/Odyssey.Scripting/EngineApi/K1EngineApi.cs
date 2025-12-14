@@ -252,6 +252,8 @@ namespace Odyssey.Scripting.EngineApi
                 case 168: return Func_GetTag(args, ctx);
                 case 197: return Func_GetWaypointByTag(args, ctx);
                 case 200: return Func_GetObjectByTag(args, ctx);
+                case 226: return Func_GetNearestCreatureToLocation(args, ctx);
+                case 227: return Func_GetNearestObject(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
                 case 239: return Func_GetStringByStrRef(args, ctx);
                 case 240: return Func_ActionSpeakStringByStrRef(args, ctx);
@@ -3781,6 +3783,146 @@ namespace Odyssey.Scripting.EngineApi
             // TODO: Implement appear animation if bUseAppearAnimation is TRUE
             
             return Variable.FromObject(entity.ObjectId);
+        }
+
+        #endregion
+
+        #region Nearest Object Functions
+
+        /// <summary>
+        /// GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1) - Get the Nth object nearest to oTarget that is of the specified type
+        /// </summary>
+        private Variable Func_GetNearestObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int objectType = args.Count > 0 ? args[0].AsInt() : 32767; // OBJECT_TYPE_ALL
+            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            int nth = args.Count > 2 ? args[2].AsInt() : 1;
+            
+            if (ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
+            if (targetTransform == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Convert object type constant to ObjectType enum
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            if (objectType != 32767) // Not OBJECT_TYPE_ALL
+            {
+                // Map NWScript object type constants
+                typeMask = (Core.Enums.ObjectType)objectType;
+            }
+            
+            // Get all entities of the specified type
+            var candidates = new List<(IEntity entity, float distance)>();
+            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
+            {
+                if (entity.ObjectId == target.ObjectId)
+                {
+                    continue; // Skip target itself
+                }
+                
+                ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
+                if (entityTransform != null)
+                {
+                    float distance = Vector3.DistanceSquared(targetTransform.Position, entityTransform.Position);
+                    candidates.Add((entity, distance));
+                }
+            }
+            
+            // Sort by distance
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+            
+            // Return Nth nearest (1-indexed)
+            if (nth > 0 && nth <= candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue, location lLocation, int nNth=1, ...) - Get the creature nearest to lLocation, subject to all the criteria specified
+        /// </summary>
+        private Variable Func_GetNearestCreatureToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 3 || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            int firstCriteriaType = args[0].AsInt();
+            int firstCriteriaValue = args[1].AsInt();
+            object locObj = args[2].AsLocation();
+            int nth = args.Count > 3 ? args[3].AsInt() : 1;
+            int secondCriteriaType = args.Count > 4 ? args[4].AsInt() : -1;
+            int secondCriteriaValue = args.Count > 5 ? args[5].AsInt() : -1;
+            int thirdCriteriaType = args.Count > 6 ? args[6].AsInt() : -1;
+            int thirdCriteriaValue = args.Count > 7 ? args[7].AsInt() : -1;
+            
+            // Extract position from location
+            Vector3 locationPos = Vector3.Zero;
+            if (locObj != null && locObj is Location location)
+            {
+                locationPos = location.Position;
+            }
+            
+            // Get all creatures
+            var candidates = new List<(IEntity entity, float distance)>();
+            foreach (IEntity entity in ctx.World.GetEntitiesOfType(Core.Enums.ObjectType.Creature))
+            {
+                // Apply criteria filters (simplified - full implementation would check all criteria types)
+                bool matches = true;
+                
+                // Check first criteria
+                if (firstCriteriaType != -1)
+                {
+                    // Simplified criteria checking - full implementation would handle all CREATURE_TYPE_* constants
+                    // For now, just check if it's a valid creature
+                    if (firstCriteriaType == 1) // CREATURE_TYPE_PLAYER_CHAR
+                    {
+                        // Check if creature is PC
+                        if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                        {
+                            bool isPC = services.PlayerEntity != null && services.PlayerEntity.ObjectId == entity.ObjectId;
+                            if (firstCriteriaValue == 1 && !isPC) matches = false; // PLAYER_CHAR_IS_PC
+                            if (firstCriteriaValue == 0 && isPC) matches = false; // PLAYER_CHAR_NOT_PC
+                        }
+                    }
+                }
+                
+                if (!matches) continue;
+                
+                // Calculate distance
+                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    float distance = Vector3.DistanceSquared(locationPos, transform.Position);
+                    candidates.Add((entity, distance));
+                }
+            }
+            
+            // Sort by distance
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+            
+            // Return Nth nearest (1-indexed)
+            if (nth > 0 && nth <= candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
         }
 
         #endregion
