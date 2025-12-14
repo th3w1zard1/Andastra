@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
+using CSharpKOTOR.Formats.MDL;
 using Game = Microsoft.Xna.Framework.Game;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Vector4 = Microsoft.Xna.Framework.Vector4;
@@ -800,9 +801,8 @@ namespace Odyssey.Game.Core
                     return null;
                 }
 
-                // Load MDL using ResourceAuto
-                var mdlData = ResourceAuto.LoadResource(activePath, ResourceType.MDL);
-                return mdlData as CSharpKOTOR.Formats.MDLData.MDL;
+                // Load MDL directly using MDLAuto for better performance
+                return MDLAuto.ReadMdl(activePath);
             }
             catch (Exception ex)
             {
@@ -872,12 +872,20 @@ namespace Odyssey.Game.Core
                 _previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
             {
                 // Only trigger on click (not hold)
-                if (hasNavMesh)
+                // First check if we clicked on an entity
+                Vector3 rayOrigin = GetCameraPosition();
+                Vector3 rayDirection = GetMouseRayDirection(mouseState.X, mouseState.Y);
+                
+                Odyssey.Core.Interfaces.IEntity clickedEntity = FindEntityAtRay(rayOrigin, rayDirection);
+                
+                if (clickedEntity != null)
                 {
-                    // Raycast from camera through mouse position to walkmesh
-                    Vector3 rayOrigin = GetCameraPosition();
-                    Vector3 rayDirection = GetMouseRayDirection(mouseState.X, mouseState.Y);
-
+                    // Clicked on an entity - interact with it
+                    HandleEntityClick(clickedEntity);
+                }
+                else if (hasNavMesh)
+                {
+                    // No entity clicked - move to clicked position
                     System.Numerics.Vector3 hitPoint;
                     if (navMesh.Raycast(
                         new System.Numerics.Vector3(rayOrigin.X, rayOrigin.Y, rayOrigin.Z),
