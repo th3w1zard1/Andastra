@@ -394,5 +394,17 @@ namespace CSharpKOTOR.Resource.Generics
 
             return gff;
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:1585-1594
+        // Original: def bytes_git(git: GIT, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesGit(GIT git, Game game = Game.K2, ResourceType fileFormat = null)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.GIT;
+            }
+            GFF gff = DismantleGit(git, game);
+            return GFFAuto.BytesGff(gff, fileFormat);
+        }
     }
 }

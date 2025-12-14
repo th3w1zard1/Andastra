@@ -1,9 +1,11 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -11,6 +13,8 @@ namespace HolocronToolset.NET.Editors
     // Original: class GITEditor(Editor):
     public class GITEditor : Editor
     {
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
+        // Original: self.git: GIT = GIT()
         private GIT _git;
 
         public GITEditor(Window parent = null, HTInstallation installation = null)
@@ -19,6 +23,7 @@ namespace HolocronToolset.NET.Editors
                 new[] { ResourceType.GIT },
                 installation)
         {
+            _git = new GIT();
             InitializeComponent();
             SetupUI();
             New();
@@ -38,25 +43,33 @@ namespace HolocronToolset.NET.Editors
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
+        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            // GIT conversion will be implemented when GIT conversion methods are available
-            _git = new GIT();
+
+            _git = ResourceAutoHelpers.ReadGit(data);
             LoadGIT(_git);
         }
 
         private void LoadGIT(GIT git)
         {
             // Load GIT data into UI
+            // This will be expanded when full UI is implemented
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
+        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // GIT conversion will be implemented when GIT conversion methods are available
-            return Tuple.Create(new byte[0], new byte[0]);
+            Game gameToUse = _installation?.Game ?? Game.K2;
+            byte[] data = GITHelpers.BytesGit(_git, gameToUse, ResourceType.GIT);
+            return Tuple.Create(data, new byte[0]);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
+        // Original: def new(self):
         public override void New()
         {
             base.New();
