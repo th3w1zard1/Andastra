@@ -166,7 +166,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             // Original: public String toStringGlobals() { return this.root.getBody(); }
             return this.root.GetBody();
         }
-        
+
         // Removed MergeGlobalInitializers - not present in Java version
         // The Java version simply returns root.getBody() without post-processing
         private string MergeGlobalInitializers(string code)
@@ -175,34 +175,34 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             {
                 return code;
             }
-            
+
             // Split into lines
             string[] lines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             System.Text.StringBuilder result = new System.Text.StringBuilder();
-            
+
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
                 string trimmed = line.Trim();
-                
+
                 // Check if this is a variable declaration (e.g., "int intGLOB_1;")
                 // Pattern: type name;
                 System.Text.RegularExpressions.Regex declPattern = new System.Text.RegularExpressions.Regex(
                     @"^\s*(int|float|string|object|vector|location|effect|itemproperty|talent|action|event)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;\s*$");
                 var declMatch = declPattern.Match(trimmed);
-                
+
                 if (declMatch.Success && i + 1 < lines.Length)
                 {
                     string type = declMatch.Groups[1].Value;
                     string varName = declMatch.Groups[2].Value;
-                    
+
                     // Look ahead for assignment to this variable
                     int nextLineIdx = i + 1;
                     while (nextLineIdx < lines.Length && string.IsNullOrWhiteSpace(lines[nextLineIdx]))
                     {
                         nextLineIdx++;
                     }
-                    
+
                     if (nextLineIdx < lines.Length)
                     {
                         string nextLine = lines[nextLineIdx].Trim();
@@ -210,7 +210,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         System.Text.RegularExpressions.Regex assignPattern = new System.Text.RegularExpressions.Regex(
                             @"^\s*" + System.Text.RegularExpressions.Regex.Escape(varName) + @"\s*=\s*(.+?)\s*;\s*$");
                         var assignMatch = assignPattern.Match(nextLine);
-                        
+
                         if (assignMatch.Success)
                         {
                             // Merge into initialization
@@ -222,7 +222,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
                 }
-                
+
                 // Not a mergeable declaration, output as-is
                 result.Append(line);
                 if (i < lines.Length - 1)
@@ -230,7 +230,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     result.Append("\n");
                 }
             }
-            
+
             return result.ToString();
         }
 
@@ -939,6 +939,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             this.CheckStart(node);
             int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
+            Console.Error.WriteLine("DEBUG transformAction: pos=" + nodePos + ", current=" + this.current.GetType().Name +
+                  ", hasChildren=" + this.current.HasChildren());
             JavaSystem.@out.Println("DEBUG transformAction: pos=" + nodePos + ", current=" + this.current.GetType().Name +
                   ", hasChildren=" + this.current.HasChildren());
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:881
@@ -972,30 +974,61 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Action metadata missing or invalid - assume void return
                 type = new UtilsType((byte)0);
             }
-            if (!type.Equals((byte)0))
+            bool isVoid = type != null && type.Equals((byte)0);
+            Console.Error.WriteLine($"DEBUG transformAction: actionName={actionName}, actionId={NodeUtils.GetActionId(node)}, returnType={(type != null ? type.ToString() : "null")}, typeByte={(type != null ? type.ByteValue().ToString() : "null")}, equalsVoid={isVoid}");
+            if (!isVoid)
             {
-                Variable var = (Variable)this.stack.Get(1);
-                if (type.Equals(unchecked((byte)(-16))))
+                // Check if return value is being discarded (MOVSP immediately follows that pops exactly the return size)
+                bool returnValueDiscarded = false;
+                if (this.nodedata != null)
                 {
-                    var = var.Varstruct();
+                    try
+                    {
+                        Node nextCmd = NodeUtils.GetNextCommand(node, this.nodedata);
+                        if (nextCmd != null && typeof(AMoveSpCommand).IsInstanceOfType(nextCmd))
+                        {
+                            AMoveSpCommand movesp = (AMoveSpCommand)nextCmd;
+                            int popSize = NodeUtils.StackOffsetToPos(movesp.GetOffset());
+                            int returnSize = type.Size();
+                            // If the MOVSP pops exactly the return type size, the value is being discarded
+                            if (popSize == returnSize)
+                            {
+                                returnValueDiscarded = true;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // If we can't determine, default to assigning to variable
+                    }
                 }
 
-                act.Stackentry(var);
-                AVarDecl vardec = new AVarDecl(var);
-                vardec.SetIsFcnReturn(true);
-                vardec.InitializeExp(act);
-                this.UpdateVarCount(var);
-                this.current.AddChild(vardec);
-                this.vardecs.Put(var, vardec);
+                if (returnValueDiscarded)
+                {
+                    // Return value is discarded - emit as statement expression without variable assignment
+                    this.current.AddChild(act);
+                }
+                else
+                {
+                    Variable var = (Variable)this.stack.Get(1);
+                    if (type.Equals(unchecked((byte)(-16))))
+                    {
+                        var = var.Varstruct();
+                    }
+
+                    act.Stackentry(var);
+                    AVarDecl vardec = new AVarDecl(var);
+                    vardec.SetIsFcnReturn(true);
+                    vardec.InitializeExp(act);
+                    this.UpdateVarCount(var);
+                    this.current.AddChild(vardec);
+                    this.vardecs.Put(var, vardec);
+                }
             }
             else
             {
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:962-963
-                // Original: } else { this.current.addChild(act); }
-                // Java adds AActionExp directly - ASub.getBody() will handle converting it to a statement
-                JavaSystem.@out.Println("DEBUG transformAction: adding AActionExp directly to current, action=" + actionName + ", params=" + @params.Count);
+                // Void return - emit as statement expression
                 this.current.AddChild(act);
-                JavaSystem.@out.Println("DEBUG transformAction: after adding, current hasChildren=" + this.current.HasChildren() + ", childrenCount=" + this.current.Size());
             }
 
             this.CheckEnd(node);
@@ -1013,10 +1046,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
             bool isRet = this.IsReturn(node);
             JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: pos={nodePos}, isReturn={isRet}, current={this.current.GetType().Name}, hasChildren={this.current.HasChildren()}");
-            
+
             AExpression exp = this.RemoveLastExp(false);
             JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: extracted exp={exp?.GetType().Name ?? "null"}, current hasChildren={this.current.HasChildren()}");
-            
+
             if (isRet)
             {
                 AReturnStatement ret = new AReturnStatement(exp);
@@ -1029,7 +1062,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Java version casts directly to AVarRef, so GetVarToAssignTo should always return AVarRef for assignments
                 AExpression target = this.GetVarToAssignTo(node);
                 JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: GetVarToAssignTo returned type={target?.GetType().Name ?? "null"}");
-                
+
                 if (target == null)
                 {
                     JavaSystem.@out.Println("ERROR TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (nodePos >= 0 ? nodePos.ToString() : "unknown"));
@@ -2302,7 +2335,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
             JavaSystem.@out.Println("DEBUG removeActionParams: pos=" + nodePos + ", current=" + this.current.GetType().Name +
                   ", hasChildren=" + this.current.HasChildren() + ", childrenCount=" + (this.current.HasChildren() ? this.current.Size() : 0));
-            
+
             List<object> paramtypes;
             try
             {
