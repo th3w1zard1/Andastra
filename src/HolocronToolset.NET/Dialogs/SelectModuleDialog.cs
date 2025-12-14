@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using CSharpKOTOR.Common;
 using HolocronToolset.NET.Data;
 
@@ -181,11 +183,78 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:100-111
         // Original: def browse(self):
-        private void Browse()
+        //          filepath, _ = QFileDialog.getOpenFileName(
+        //              self,
+        //              "Select module to open",
+        //              str(self._installation.module_path()),
+        //              "Module File (*.mod *.rim *.erf)",
+        //          )
+        //          if not filepath or not filepath.strip():
+        //              return
+        //          self.module = Module.filepath_to_root(filepath)
+        //          self.accept()
+        private async void Browse()
         {
-            // TODO: Implement file dialog when available
-            // For now, just close
-            System.Console.WriteLine("Browse not yet implemented");
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Get the top-level window for file dialog
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            // Create file picker options
+            var fileType = new FilePickerFileType("Module Files")
+            {
+                Patterns = new[] { "*.mod", "*.rim", "*.erf" }
+            };
+
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Select module to open",
+                FileTypeFilter = new[] { fileType },
+                AllowMultiple = false
+            };
+
+            // Set initial directory to module path if available
+            try
+            {
+                string modulePath = _installation.ModulePath();
+                if (!string.IsNullOrEmpty(modulePath) && Directory.Exists(modulePath))
+                {
+                    var storageFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(modulePath);
+                    if (storageFolder != null)
+                    {
+                        options.SuggestedStartLocation = storageFolder;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors setting initial directory
+            }
+
+            // Show file dialog
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+            if (files == null || files.Count == 0)
+            {
+                return;
+            }
+
+            string filepath = files[0].Path.LocalPath;
+            if (string.IsNullOrWhiteSpace(filepath))
+            {
+                return;
+            }
+
+            // Matching Python: Module.filepath_to_root(filepath)
+            string moduleRoot = CSharpKOTOR.Installation.Installation.GetModuleRoot(filepath);
+            _selectedModule = moduleRoot;
+            Confirm();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:113-127
