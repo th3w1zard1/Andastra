@@ -18,12 +18,16 @@
     <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
     <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
     <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
-    <ProjectReference Include="..\Odyssey.Stride\Odyssey.Stride.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude old Stride-based OdysseyGame.cs from compilation -->
+    <Compile Remove="Core\OdysseyGame.cs" />
   </ItemGroup>
 
 </Project>

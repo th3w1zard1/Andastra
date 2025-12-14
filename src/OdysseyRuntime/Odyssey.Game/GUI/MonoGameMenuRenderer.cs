@@ -66,6 +66,11 @@ namespace Odyssey.Game.GUI
 
         public MonoGameMenuRenderer(GraphicsDevice graphicsDevice, SpriteFont font)
         {
+            if (graphicsDevice == null)
+            {
+                throw new ArgumentNullException(nameof(graphicsDevice));
+            }
+
             _spriteBatch = new SpriteBatch(graphicsDevice);
             _font = font; // Can be null - we'll handle it in rendering
 
@@ -79,6 +84,9 @@ namespace Odyssey.Game.GUI
             // Initialize input states
             _previousKeyboardState = Keyboard.GetState();
             _previousMouseState = Mouse.GetState();
+
+            Console.WriteLine("[MonoGameMenuRenderer] Initialized successfully");
+            Console.WriteLine($"[MonoGameMenuRenderer] Font available: {_font != null}");
         }
 
         private void CalculateLayout(int screenWidth, int screenHeight)
@@ -214,7 +222,16 @@ namespace Odyssey.Game.GUI
         public void Draw(GameTime gameTime, GraphicsDevice graphicsDevice)
         {
             if (!_isVisible)
+            {
+                Console.WriteLine("[MonoGameMenuRenderer] Draw called but menu is not visible");
                 return;
+            }
+
+            if (graphicsDevice == null)
+            {
+                Console.WriteLine("[MonoGameMenuRenderer] ERROR: GraphicsDevice is null in Draw!");
+                return;
+            }
 
             // Calculate layout based on current screen size
             CalculateLayout(graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);

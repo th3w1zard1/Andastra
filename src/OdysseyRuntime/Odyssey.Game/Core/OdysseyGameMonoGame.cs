@@ -89,6 +89,7 @@ namespace Odyssey.Game.Core
             _menuRenderer.MenuItemSelected += OnMenuItemSelected;
             _menuRenderer.SetVisible(true);
 
+            Console.WriteLine("[Odyssey] Menu renderer created and event handler connected");
             Console.WriteLine("[Odyssey] Content loaded");
         }
 
@@ -133,9 +134,16 @@ namespace Odyssey.Game.Core
             GraphicsDevice.Clear(new Color(20, 30, 60, 255)); // Dark blue background
 
             // Draw menu if in main menu state
-            if (_currentState == GameState.MainMenu && _menuRenderer != null)
+            if (_currentState == GameState.MainMenu)
             {
-                _menuRenderer.Draw(gameTime, GraphicsDevice);
+                if (_menuRenderer != null)
+                {
+                    _menuRenderer.Draw(gameTime, GraphicsDevice);
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] WARNING: Menu renderer is null in Draw!");
+                }
             }
 
             // Draw game if in game state
@@ -153,18 +161,25 @@ namespace Odyssey.Game.Core
 
         private void OnMenuItemSelected(object sender, int menuIndex)
         {
+            Console.WriteLine($"[Odyssey] ====== OnMenuItemSelected CALLED ======");
             Console.WriteLine($"[Odyssey] Menu item {menuIndex} selected");
+            Console.WriteLine($"[Odyssey] Current game state: {_currentState}");
 
             switch (menuIndex)
             {
                 case 0: // Start Game
+                    Console.WriteLine("[Odyssey] Calling StartGame()...");
                     StartGame();
                     break;
                 case 1: // Options
                     Console.WriteLine("[Odyssey] Options menu not implemented");
                     break;
                 case 2: // Exit
+                    Console.WriteLine("[Odyssey] Exiting game...");
                     Exit();
+                    break;
+                default:
+                    Console.WriteLine($"[Odyssey] WARNING: Unknown menu index: {menuIndex}");
                     break;
             }
         }
