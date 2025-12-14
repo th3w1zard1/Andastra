@@ -27,6 +27,13 @@ namespace Odyssey.Scripting.EngineApi
                 _functionNames[idx] = func.Name;
                 idx++;
             }
+
+            // Mark implemented functions
+            _implementedFunctions.Add(0);   // Random
+            _implementedFunctions.Add(1);   // PrintString
+            _implementedFunctions.Add(168); // GetTag
+            // Note: GetLocalInt/SetLocalInt are handled by the KOTOR-specific local variable functions
+            // which use different IDs (679-682 for boolean/number locals)
         }
         
         public override Variable CallEngineFunction(int routineId, IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -197,7 +204,69 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.Void();
             }
         }
-        
+
+        #region Basic Utility Functions
+
+        private Variable Func_Random(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Random(int nMaxInteger) - returns 0 to nMaxInteger-1
+            int maxValue = args.Count > 0 ? args[0].AsInt() : 0;
+            if (maxValue <= 0)
+            {
+                return Variable.FromInt(0);
+            }
+            return Variable.FromInt(_random.Next(maxValue));
+        }
+
+        private Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // PrintString(string sString) - outputs to console/log
+            string message = args.Count > 0 ? args[0].AsString() : "";
+            Console.WriteLine("[SCRIPT] " + message);
+            return Variable.Void();
+        }
+
+        private Variable Func_GetTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetTag(object oObject) - returns the tag string
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            var entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                return Variable.FromString(entity.Tag ?? "");
+            }
+            return Variable.FromString("");
+        }
+
+        private Variable Func_GetLocalInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetLocalInt(object oObject, string sVarName) - get local integer variable
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            string varName = args.Count > 1 ? args[1].AsString() : "";
+            var entity = ResolveObject(objectId, ctx);
+            if (entity != null && !string.IsNullOrEmpty(varName))
+            {
+                return Variable.FromInt(ctx.Globals.GetLocalInt(entity, varName));
+            }
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_SetLocalInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // SetLocalInt(object oObject, string sVarName, int nValue) - set local integer variable
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            string varName = args.Count > 1 ? args[1].AsString() : "";
+            int value = args.Count > 2 ? args[2].AsInt() : 0;
+            var entity = ResolveObject(objectId, ctx);
+            if (entity != null && !string.IsNullOrEmpty(varName))
+            {
+                ctx.Globals.SetLocalInt(entity, varName, value);
+            }
+            return Variable.Void();
+        }
+
+        #endregion
+
         #region Action Functions
         
         private Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
