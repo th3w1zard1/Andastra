@@ -16,8 +16,8 @@ namespace HolocronToolset.NET.Dialogs
     public partial class IndoorMapSettingsDialog : Window
     {
         private HTInstallation _installation;
-        private object _indoorMap; // TODO: Use IndoorMap type when available
-        private List<object> _kits; // TODO: Use List<Kit> when available
+        private IndoorMap _indoorMap;
+        private List<Kit> _kits;
         private LocalizedStringEdit _nameEdit;
         private ColorEdit _colorEdit;
         private TextBox _warpCodeEdit;
@@ -32,12 +32,12 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:17-95
         // Original: def __init__(self, parent, installation, indoor_map, kits):
-        public IndoorMapSettingsDialog(Window parent, HTInstallation installation, object indoorMap, List<object> kits)
+        public IndoorMapSettingsDialog(Window parent, HTInstallation installation, IndoorMap indoorMap, List<Kit> kits)
         {
             InitializeComponent();
             _installation = installation;
             _indoorMap = indoorMap;
-            _kits = kits ?? new List<object>();
+            _kits = kits ?? new List<Kit>();
             SetupUI();
             LoadIndoorMapData();
         }
@@ -163,15 +163,66 @@ namespace HolocronToolset.NET.Dialogs
                 return;
             }
 
-            // TODO: Load data when IndoorMap type is available
-            // For now, just populate skybox selector
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:63-85
+            // Original: self.ui.nameEdit.set_locstring(indoor_map.name)
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetLocString(_indoorMap.Name);
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:64
+            // Original: self.ui.colorEdit.set_color(indoor_map.lighting)
+            if (_colorEdit != null)
+            {
+                _colorEdit.SetColor(_indoorMap.Lighting);
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:65
+            // Original: self.ui.warpCodeEdit.setText(indoor_map.module_id)
+            if (_warpCodeEdit != null)
+            {
+                _warpCodeEdit.Text = _indoorMap.ModuleId;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:68-85
+            // Original: Populate skybox selector
             if (_skyboxSelect != null)
             {
                 _skyboxSelect.Items.Clear();
                 _skyboxSelect.Items.Add("[None]");
 
                 // Add skyboxes from kits
-                // TODO: Implement when Kit type is available
+                if (_kits != null)
+                {
+                    foreach (var kit in _kits)
+                    {
+                        if (kit?.Skyboxes != null)
+                        {
+                            foreach (var skybox in kit.Skyboxes.Keys)
+                            {
+                                _skyboxSelect.Items.Add(skybox);
+                            }
+                        }
+                    }
+                }
+
+                // Set current skybox
+                if (!string.IsNullOrEmpty(_indoorMap.Skybox))
+                {
+                    for (int i = 0; i < _skyboxSelect.Items.Count; i++)
+                    {
+                        var item = _skyboxSelect.Items[i];
+                        if (item != null && item.ToString() == _indoorMap.Skybox)
+                        {
+                            _skyboxSelect.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    _skyboxSelect.SelectedIndex = 0; // Default to [None]
+                }
             }
         }
 
@@ -179,14 +230,37 @@ namespace HolocronToolset.NET.Dialogs
         // Original: def accept(self):
         private void Accept()
         {
-            // TODO: Save data when IndoorMap type is available
-            // if (_indoorMap != null)
-            // {
-            //     _indoorMap.Name = _nameEdit?.GetLocString();
-            //     _indoorMap.Lighting = _colorEdit?.GetColor();
-            //     _indoorMap.ModuleId = _warpCodeEdit?.Text ?? "";
-            //     _indoorMap.Skybox = _skyboxSelect?.SelectedItem?.ToString() ?? "";
-            // }
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:92-95
+            // Original: self._indoorMap.name = self.ui.nameEdit.locstring()
+            if (_indoorMap != null)
+            {
+                if (_nameEdit != null)
+                {
+                    _indoorMap.Name = _nameEdit.GetLocString();
+                }
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:93
+                // Original: self._indoorMap.lighting = self.ui.colorEdit.color()
+                if (_colorEdit != null)
+                {
+                    _indoorMap.Lighting = _colorEdit.GetColor();
+                }
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:94
+                // Original: self._indoorMap.module_id = self.ui.warpCodeEdit.text()
+                if (_warpCodeEdit != null)
+                {
+                    _indoorMap.ModuleId = _warpCodeEdit.Text ?? "";
+                }
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:95
+                // Original: self._indoorMap.skybox = self.ui.skyboxSelect.currentData()
+                if (_skyboxSelect != null && _skyboxSelect.SelectedIndex >= 0)
+                {
+                    var selectedItem = _skyboxSelect.Items[_skyboxSelect.SelectedIndex];
+                    _indoorMap.Skybox = selectedItem?.ToString() ?? "";
+                }
+            }
 
             Close();
         }

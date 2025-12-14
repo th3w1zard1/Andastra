@@ -134,15 +134,17 @@ namespace HolocronToolset.NET.Tests.Dialogs
             }
 
             var parent = new Window();
-            // Create empty indoor map and kits for testing
-            object indoorMap = null; // TODO: Use IndoorMap type when available
-            var kits = new List<object>(); // TODO: Use List<Kit> when available
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:119
+            // Original: indoor_map = IndoorMap()
+            var indoorMap = new IndoorMap();
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:120
+            // Original: kits: list[Kit] = []
+            var kits = new List<Kit>();
             var dialog = new IndoorMapSettingsDialog(parent, _installation, indoorMap, kits);
             dialog.Show();
 
             dialog.IsVisible.Should().BeTrue();
             // Test generic settings widgets
-            // Note: Full testing requires IndoorMap and Kit types
 
             dialog.Close();
         }
