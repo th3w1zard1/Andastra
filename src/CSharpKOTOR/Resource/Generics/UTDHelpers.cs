@@ -20,33 +20,63 @@ namespace CSharpKOTOR.Resource.Generics
             utd.Tag = root.Acquire<string>("Tag", "");
             utd.Name = root.Acquire<LocalizedString>("LocName", LocalizedString.FromInvalid());
             utd.ResRef = root.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
-            utd.AutoRemoveKey = root.Acquire<int>("AutoRemoveKey", 0) != 0;
+            // AutoRemoveKey, Plot, Min1HP, KeyRequired, Lockable, Locked, Static, NotBlastable are stored as UInt8 (boolean flags)
+            byte? autoRemoveKeyNullable = root.GetUInt8("AutoRemoveKey");
+            utd.AutoRemoveKey = (autoRemoveKeyNullable ?? 0) != 0;
             utd.Conversation = root.Acquire<ResRef>("Conversation", ResRef.FromBlank());
-            utd.FactionId = root.Acquire<int>("Faction", 0);
-            utd.Plot = root.Acquire<int>("Plot", 0) != 0;
-            utd.Min1Hp = root.Acquire<int>("Min1HP", 0) != 0;
-            utd.KeyRequired = root.Acquire<int>("KeyRequired", 0) != 0;
-            utd.Lockable = root.Acquire<int>("Lockable", 0) != 0;
-            utd.Locked = root.Acquire<int>("Locked", 0) != 0;
-            utd.UnlockDc = root.Acquire<int>("OpenLockDC", 0);
+            // Faction is stored as UInt32, so we need to read it as uint, not int
+            uint? factionNullable = root.GetUInt32("Faction");
+            utd.FactionId = factionNullable.HasValue ? (int)factionNullable.Value : 0;
+            byte? plotNullable = root.GetUInt8("Plot");
+            utd.Plot = (plotNullable ?? 0) != 0;
+            byte? min1HpNullable = root.GetUInt8("Min1HP");
+            utd.Min1Hp = (min1HpNullable ?? 0) != 0;
+            byte? keyRequiredNullable = root.GetUInt8("KeyRequired");
+            utd.KeyRequired = (keyRequiredNullable ?? 0) != 0;
+            byte? lockableNullable = root.GetUInt8("Lockable");
+            utd.Lockable = (lockableNullable ?? 0) != 0;
+            byte? lockedNullable = root.GetUInt8("Locked");
+            utd.Locked = (lockedNullable ?? 0) != 0;
+            // OpenLockDC is stored as UInt8, so we need to read it as byte, not int
+            byte? unlockDcNullable = root.GetUInt8("OpenLockDC");
+            utd.UnlockDc = unlockDcNullable ?? 0;
             utd.KeyName = root.Acquire<string>("KeyName", "");
-            utd.AnimationState = root.Acquire<int>("AnimationState", 0);
-            utd.MaximumHp = root.Acquire<int>("HP", 0);
-            utd.CurrentHp = root.Acquire<int>("CurrentHP", 0);
-            utd.Hardness = root.Acquire<int>("Hardness", 0);
-            utd.Fortitude = root.Acquire<int>("Fort", 0);
-            utd.AppearanceId = root.Acquire<int>("GenericType", 0);
-            utd.Static = root.Acquire<int>("Static", 0) != 0;
+            // AnimationState is stored as UInt8, so we need to read it as byte, not int
+            byte? animationStateNullable = root.GetUInt8("AnimationState");
+            utd.AnimationState = animationStateNullable ?? 0;
+            // HP and CurrentHP are stored as Int16, so we need to read them as short, not int
+            short? maximumHpNullable = root.GetInt16("HP");
+            utd.MaximumHp = maximumHpNullable ?? 0;
+            short? currentHpNullable = root.GetInt16("CurrentHP");
+            utd.CurrentHp = currentHpNullable ?? 0;
+            // Hardness, Fort, GenericType are stored as UInt8, so we need to read them as byte, not int
+            byte? hardnessNullable = root.GetUInt8("Hardness");
+            utd.Hardness = hardnessNullable ?? 0;
+            byte? fortNullable = root.GetUInt8("Fort");
+            utd.Fortitude = fortNullable ?? 0;
+            byte? genericTypeNullable = root.GetUInt8("GenericType");
+            utd.AppearanceId = genericTypeNullable ?? 0;
+            byte? staticNullable = root.GetUInt8("Static");
+            utd.Static = (staticNullable ?? 0) != 0;
             utd.OnClick = root.Acquire<ResRef>("OnClick", ResRef.FromBlank());
             utd.OnOpenFailed = root.Acquire<ResRef>("OnFailToOpen", ResRef.FromBlank());
             utd.Comment = root.Acquire<string>("Comment", "");
-            utd.UnlockDiff = root.Acquire<int>("OpenLockDiff", 0);
-            utd.UnlockDiffMod = root.Acquire<int>("OpenLockDiffMod", 0);
+            // OpenLockDiff and OpenState are stored as UInt8 (K2 only), so we need to read them as byte, not int
+            byte? unlockDiffNullable = root.GetUInt8("OpenLockDiff");
+            utd.UnlockDiff = unlockDiffNullable ?? 0;
+            // OpenLockDiffMod is stored as Int8 (K2 only), so we need to read it as sbyte, not int
+            sbyte? unlockDiffModNullable = root.GetInt8("OpenLockDiffMod");
+            utd.UnlockDiffMod = unlockDiffModNullable ?? 0;
             utd.Description = root.Acquire<LocalizedString>("Description", LocalizedString.FromInvalid());
-            utd.Reflex = root.Acquire<int>("Ref", 0);
-            utd.Willpower = root.Acquire<int>("Will", 0);
-            utd.OpenState = root.Acquire<int>("OpenState", 0);
-            utd.NotBlastable = root.Acquire<int>("NotBlastable", 0) != 0;
+            // Ref and Will are stored as UInt8 (deprecated), so we need to read them as byte, not int
+            byte? reflexNullable = root.GetUInt8("Ref");
+            utd.Reflex = reflexNullable ?? 0;
+            byte? willpowerNullable = root.GetUInt8("Will");
+            utd.Willpower = willpowerNullable ?? 0;
+            byte? openStateNullable = root.GetUInt8("OpenState");
+            utd.OpenState = openStateNullable ?? 0;
+            byte? notBlastableNullable = root.GetUInt8("NotBlastable");
+            utd.NotBlastable = (notBlastableNullable ?? 0) != 0;
 
             // Extract script hooks
             utd.OnClosed = root.Acquire<ResRef>("OnClosed", ResRef.FromBlank());
