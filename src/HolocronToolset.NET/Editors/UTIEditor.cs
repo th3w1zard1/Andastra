@@ -76,15 +76,47 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
+                
+                // Try to find controls from XAML
+                _nameEdit = this.FindControl<TextBox>("nameEdit");
+                _nameEditBtn = this.FindControl<Button>("nameEditBtn");
+                _descEdit = this.FindControl<TextBox>("descEdit");
+                _descEditBtn = this.FindControl<Button>("descEditBtn");
+                _tagEdit = this.FindControl<TextBox>("tagEdit");
+                _tagGenerateBtn = this.FindControl<Button>("tagGenerateBtn");
+                _resrefEdit = this.FindControl<TextBox>("resrefEdit");
+                _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateBtn");
+                _baseSelect = this.FindControl<ComboBox>("baseSelect");
+                _costSpin = this.FindControl<NumericUpDown>("costSpin");
+                _additionalCostSpin = this.FindControl<NumericUpDown>("additionalCostSpin");
+                _upgradeSpin = this.FindControl<NumericUpDown>("upgradeSpin");
+                _plotCheckbox = this.FindControl<CheckBox>("plotCheckbox");
+                _chargesSpin = this.FindControl<NumericUpDown>("chargesSpin");
+                _stackSpin = this.FindControl<NumericUpDown>("stackSpin");
+                _modelVarSpin = this.FindControl<NumericUpDown>("modelVarSpin");
+                _bodyVarSpin = this.FindControl<NumericUpDown>("bodyVarSpin");
+                _textureVarSpin = this.FindControl<NumericUpDown>("textureVarSpin");
+                _availablePropertyList = this.FindControl<TreeView>("availablePropertyList");
+                _assignedPropertiesList = this.FindControl<ListBox>("assignedPropertiesList");
+                _addPropertyBtn = this.FindControl<Button>("addPropertyBtn");
+                _removePropertyBtn = this.FindControl<Button>("removePropertyBtn");
+                _editPropertyBtn = this.FindControl<Button>("editPropertyBtn");
+                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
             }
             catch
             {
-                // XAML not available - will use programmatic UI
+                // XAML not available or controls not found - will use programmatic UI
+                xamlLoaded = false;
             }
 
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
+            }
+            else
+            {
+                // XAML loaded, set up signals
+                SetupSignals();
             }
         }
 
@@ -251,6 +283,56 @@ namespace HolocronToolset.NET.Editors
             LoadUTI(_uti);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:89-105
+        // Original: def _setup_signals(self):
+        private void SetupSignals()
+        {
+            if (_tagGenerateBtn != null)
+            {
+                _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            }
+            if (_resrefGenerateBtn != null)
+            {
+                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            }
+            if (_editPropertyBtn != null)
+            {
+                _editPropertyBtn.Click += (s, e) => EditSelectedProperty();
+            }
+            if (_removePropertyBtn != null)
+            {
+                _removePropertyBtn.Click += (s, e) => RemoveSelectedProperty();
+            }
+            if (_addPropertyBtn != null)
+            {
+                _addPropertyBtn.Click += (s, e) => AddSelectedProperty();
+            }
+            if (_modelVarSpin != null)
+            {
+                _modelVarSpin.ValueChanged += (s, e) => UpdateIcon();
+            }
+            if (_bodyVarSpin != null)
+            {
+                _bodyVarSpin.ValueChanged += (s, e) => UpdateIcon();
+            }
+            if (_textureVarSpin != null)
+            {
+                _textureVarSpin.ValueChanged += (s, e) => UpdateIcon();
+            }
+            if (_baseSelect != null)
+            {
+                _baseSelect.SelectionChanged += (s, e) => UpdateIcon();
+            }
+            if (_nameEditBtn != null)
+            {
+                _nameEditBtn.Click += (s, e) => EditName();
+            }
+            if (_descEditBtn != null)
+            {
+                _descEditBtn.Click += (s, e) => EditDescription();
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:167-196
         // Original: def _loadUTI(self, uti):
         private void LoadUTI(UTI uti)
@@ -338,45 +420,145 @@ namespace HolocronToolset.NET.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:197-230
         // Original: def build(self) -> tuple[bytes, bytes]:
+        // Original: uti: UTI = deepcopy(self._uti)
         public override Tuple<byte[], byte[]> Build()
         {
-            // Basic
-            _uti.Name = _uti.Name ?? LocalizedString.FromInvalid();
-            _uti.Description = _uti.Description ?? LocalizedString.FromInvalid();
-            _uti.Tag = _tagEdit?.Text ?? "";
-            _uti.ResRef = new ResRef(_resrefEdit?.Text ?? "");
-            _uti.BaseItem = _baseSelect?.SelectedIndex ?? 0;
-            _uti.Cost = (int)(_costSpin?.Value ?? 0);
-            _uti.AddCost = (int)(_additionalCostSpin?.Value ?? 0);
-            _uti.UpgradeLevel = (int)(_upgradeSpin?.Value ?? 0);
-            _uti.Plot = (_plotCheckbox?.IsChecked ?? false) ? 1 : 0;
-            _uti.Charges = (int)(_chargesSpin?.Value ?? 0);
-            _uti.StackSize = (int)(_stackSpin?.Value ?? 0);
-            _uti.ModelVariation = (int)(_modelVarSpin?.Value ?? 0);
-            _uti.BodyVariation = (int)(_bodyVarSpin?.Value ?? 0);
-            _uti.TextureVariation = (int)(_textureVarSpin?.Value ?? 0);
+            // Matching PyKotor implementation: deepcopy(self._uti) to preserve original values
+            // Since C# 7.3 doesn't have deepcopy, manually copy the UTI
+            var uti = CopyUTI(_uti);
 
-            // Properties
-            _uti.Properties.Clear();
+            // Basic - read from UI controls (matching Python which always reads from UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:201-214
+            // Note: Python reads from LocalizedString widgets (locstring()), but we use TextBox
+            // Since we can't reconstruct LocalizedString from text, preserve original from copy
+            // In a full implementation, this would read from a LocalizedString widget
+            uti.Name = uti.Name ?? LocalizedString.FromInvalid();
+            uti.Description = uti.Description ?? LocalizedString.FromInvalid();
+            uti.Tag = _tagEdit?.Text ?? uti.Tag ?? "";
+            uti.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text) 
+                ? new ResRef(_resrefEdit.Text) 
+                : uti.ResRef;
+            uti.BaseItem = _baseSelect?.SelectedIndex ?? uti.BaseItem;
+            uti.Cost = _costSpin?.Value != null ? (int)_costSpin.Value : uti.Cost;
+            uti.AddCost = _additionalCostSpin?.Value != null ? (int)_additionalCostSpin.Value : uti.AddCost;
+            uti.UpgradeLevel = _upgradeSpin?.Value != null ? (int)_upgradeSpin.Value : uti.UpgradeLevel;
+            uti.Plot = (_plotCheckbox?.IsChecked ?? (uti.Plot != 0)) ? 1 : 0;
+            uti.Charges = _chargesSpin?.Value != null ? (int)_chargesSpin.Value : uti.Charges;
+            uti.StackSize = _stackSpin?.Value != null ? (int)_stackSpin.Value : uti.StackSize;
+            uti.ModelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : uti.ModelVariation;
+            uti.BodyVariation = _bodyVarSpin?.Value != null ? (int)_bodyVarSpin.Value : uti.BodyVariation;
+            uti.TextureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : uti.TextureVariation;
+
+            // Properties - read from UI list
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:215-221
+            uti.Properties.Clear();
             if (_assignedPropertiesList?.Items != null)
             {
                 foreach (var item in _assignedPropertiesList.Items)
                 {
                     if (item is PropertyListItem propItem && propItem.Property != null)
                     {
-                        _uti.Properties.Add(propItem.Property);
+                        uti.Properties.Add(propItem.Property);
                     }
                 }
             }
 
             // Comments
-            _uti.Comment = _commentsEdit?.Text ?? "";
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:224
+            uti.Comment = _commentsEdit?.Text ?? "";
 
             // Build GFF
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:226-230
             Game game = _installation?.Game ?? Game.K2;
-            var gff = UTIHelpers.DismantleUti(_uti, game);
+            var gff = UTIHelpers.DismantleUti(uti, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTI);
             return Tuple.Create(data, new byte[0]);
+        }
+
+
+        // Matching PyKotor implementation: deepcopy equivalent for C# 7.3
+        // Original: uti: UTI = deepcopy(self._uti)
+        private UTI CopyUTI(UTI source)
+        {
+            // Deep copy LocalizedString objects (they're reference types)
+            LocalizedString copyName = source.Name != null
+                ? new LocalizedString(source.Name.StringRef, new Dictionary<int, string>(GetSubstringsDict(source.Name)))
+                : null;
+            LocalizedString copyDesc = source.Description != null
+                ? new LocalizedString(source.Description.StringRef, new Dictionary<int, string>(GetSubstringsDict(source.Description)))
+                : null;
+            LocalizedString copyDescUnid = source.DescriptionUnidentified != null
+                ? new LocalizedString(source.DescriptionUnidentified.StringRef, new Dictionary<int, string>(GetSubstringsDict(source.DescriptionUnidentified)))
+                : null;
+
+            var copy = new UTI
+            {
+                ResRef = source.ResRef,
+                BaseItem = source.BaseItem,
+                Name = copyName,
+                Description = copyDesc,
+                DescriptionUnidentified = copyDescUnid,
+                Cost = source.Cost,
+                StackSize = source.StackSize,
+                Charges = source.Charges,
+                Plot = source.Plot,
+                AddCost = source.AddCost,
+                Stolen = source.Stolen,
+                Identified = source.Identified,
+                ItemType = source.ItemType,
+                BaseItemType = source.BaseItemType,
+                UpgradeLevel = source.UpgradeLevel,
+                BodyVariation = source.BodyVariation,
+                TextureVariation = source.TextureVariation,
+                ModelVariation = source.ModelVariation,
+                PaletteId = source.PaletteId,
+                Comment = source.Comment,
+                Tag = source.Tag
+            };
+
+            // Copy properties
+            foreach (var prop in source.Properties)
+            {
+                copy.Properties.Add(new UTIProperty
+                {
+                    PropertyName = prop.PropertyName,
+                    Subtype = prop.Subtype,
+                    CostTable = prop.CostTable,
+                    CostValue = prop.CostValue,
+                    Param1 = prop.Param1,
+                    Param1Value = prop.Param1Value,
+                    ChanceAppear = prop.ChanceAppear,
+                    UpgradeType = prop.UpgradeType
+                });
+            }
+
+            // Copy upgrades
+            foreach (var upgrade in source.Upgrades)
+            {
+                copy.Upgrades.Add(new UTIUpgrade
+                {
+                    Upgrade = upgrade.Upgrade,
+                    Name = upgrade.Name,
+                    Description = upgrade.Description
+                });
+            }
+
+            return copy;
+        }
+
+        // Helper to extract substrings dictionary from LocalizedString for copying
+        private Dictionary<int, string> GetSubstringsDict(LocalizedString locString)
+        {
+            var dict = new Dictionary<int, string>();
+            if (locString != null)
+            {
+                foreach ((Language lang, Gender gender, string text) in locString)
+                {
+                    int substringId = LocalizedString.SubstringId(lang, gender);
+                    dict[substringId] = text;
+                }
+            }
+            return dict;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:232-234
