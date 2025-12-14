@@ -13,18 +13,18 @@ namespace Odyssey.Stride.Rendering
 
         /// <summary>
         /// Preferred graphics backend.
+        /// NOTE: Currently only OpenGL is supported. Other backends will be added later.
         /// </summary>
-        public GraphicsBackend PreferredBackend { get; set; } = GraphicsBackend.Auto;
+        public GraphicsBackend PreferredBackend { get; set; } = GraphicsBackend.OpenGL;
 
         /// <summary>
         /// Fallback backends in order of preference.
+        /// NOTE: Currently only OpenGL is supported. Other backends will be added later.
         /// </summary>
         public GraphicsBackend[] FallbackBackends { get; set; } = new GraphicsBackend[]
         {
-            GraphicsBackend.Vulkan,
-            GraphicsBackend.Direct3D12,
-            GraphicsBackend.Direct3D11,
             GraphicsBackend.OpenGL
+            // Vulkan, Direct3D12, Direct3D11 will be added later
         };
 
         /// <summary>
@@ -191,12 +191,14 @@ namespace Odyssey.Stride.Rendering
 
         /// <summary>
         /// Enable NVIDIA RTX Remix compatibility mode.
-        /// When enabled, uses DX9 wrapper for Remix path tracing injection.
+        /// NOTE: Remix is disabled in OpenGL-only mode. It requires DirectX 9.
+        /// This will be supported when DirectX backends are implemented.
         /// </summary>
         public bool RemixCompatibility { get; set; } = false;
 
         /// <summary>
         /// Path to NVIDIA RTX Remix runtime DLLs (d3d9.dll, etc).
+        /// NOTE: Remix is disabled in OpenGL-only mode.
         /// </summary>
         public string RemixRuntimePath { get; set; } = "";
 

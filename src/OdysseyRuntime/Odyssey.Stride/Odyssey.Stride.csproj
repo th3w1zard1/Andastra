@@ -4,11 +4,14 @@
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
+    <OutputType>Library</OutputType>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>Odyssey.Stride</RootNamespace>
     <AssemblyName>Odyssey.Stride</AssemblyName>
-    <Description>Stride Game Engine adapters for Odyssey Engine - multi-backend rendering (Vulkan, DX12, DX11), PBR materials, dynamic lighting, raytracing, NVIDIA RTX Remix support</Description>
+    <Description>Stride Game Engine adapters for Odyssey Engine - OpenGL rendering with PBR materials and dynamic lighting. Other backends (Vulkan, DX12) will be added later.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Use OpenGL exclusively for maximum compatibility -->
+    <StrideGraphicsApi>OpenGL</StrideGraphicsApi>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,13 +30,14 @@
     <PackageReference Include="Stride.Rendering" Version="4.2.0.2122" />
     <PackageReference Include="Stride.Graphics" Version="4.2.0.2122" />
     <PackageReference Include="Stride.Shaders" Version="4.2.0.2122" />
-    <!-- Vulkan interop -->
-    <PackageReference Include="Silk.NET.Vulkan" Version="2.21.0" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.21.0" />
-    <!-- DirectX interop -->
-    <PackageReference Include="Vortice.D3DCompiler" Version="3.8.1" />
-    <PackageReference Include="Vortice.Direct3D12" Version="3.8.1" />
-    <PackageReference Include="Vortice.DXGI" Version="3.8.1" />
+    <!-- NOTE: Vulkan and DirectX packages removed - we use OpenGL exclusively for now.
+         These will be re-added when implementing multi-backend support later:
+         - Silk.NET.Vulkan
+         - Silk.NET.Vulkan.Extensions.KHR
+         - Vortice.D3DCompiler
+         - Vortice.Direct3D12
+         - Vortice.DXGI
+    -->
   </ItemGroup>
 
 </Project>

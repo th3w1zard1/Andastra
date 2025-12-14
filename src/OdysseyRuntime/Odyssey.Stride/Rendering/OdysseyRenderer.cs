@@ -9,7 +9,7 @@ namespace Odyssey.Stride.Rendering
 {
     /// <summary>
     /// Main Odyssey renderer coordinating all graphics systems.
-    /// 
+    ///
     /// Features:
     /// - Multi-backend support (Vulkan, DX12, DX11, OpenGL)
     /// - PBR rendering with dynamic lighting
@@ -25,11 +25,11 @@ namespace Odyssey.Stride.Rendering
         private ILightingSystem _lighting;
         private IPbrMaterialFactory _materialFactory;
         private RemixBridge _remixBridge;
-        
+
         private RenderSettings _settings;
         private bool _initialized;
         private int _frameNumber;
-        
+
         /// <summary>
         /// Active graphics backend.
         /// </summary>
@@ -37,7 +37,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _backend; }
         }
-        
+
         /// <summary>
         /// Raytracing system.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _raytracing; }
         }
-        
+
         /// <summary>
         /// Lighting system.
         /// </summary>
@@ -53,7 +53,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _lighting; }
         }
-        
+
         /// <summary>
         /// Material factory.
         /// </summary>
@@ -61,7 +61,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _materialFactory; }
         }
-        
+
         /// <summary>
         /// RTX Remix bridge.
         /// </summary>
@@ -69,7 +69,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _remixBridge; }
         }
-        
+
         /// <summary>
         /// Current render settings.
         /// </summary>
@@ -77,7 +77,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _settings; }
         }
-        
+
         /// <summary>
         /// Whether the renderer is initialized.
         /// </summary>
@@ -85,7 +85,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _initialized; }
         }
-        
+
         /// <summary>
         /// Hardware capabilities.
         /// </summary>
@@ -93,7 +93,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _backend?.Capabilities ?? default(GraphicsCapabilities); }
         }
-        
+
         /// <summary>
         /// Whether raytracing is active.
         /// </summary>
@@ -101,7 +101,7 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _raytracing != null && _raytracing.IsEnabled; }
         }
-        
+
         /// <summary>
         /// Whether RTX Remix is active.
         /// </summary>
@@ -109,9 +109,11 @@ namespace Odyssey.Stride.Rendering
         {
             get { return _remixBridge != null && _remixBridge.IsActive; }
         }
-        
+
         /// <summary>
         /// Initializes the renderer with the specified settings.
+        /// NOTE: Currently, Stride handles all rendering through its built-in OpenGL pipeline.
+        /// This custom renderer is stubbed out and will be expanded for multi-backend support later.
         /// </summary>
         public bool Initialize(RenderSettings settings, IntPtr windowHandle)
         {
@@ -119,77 +121,37 @@ namespace Odyssey.Stride.Rendering
             {
                 return true;
             }
-            
+
             _settings = settings;
-            
-            // Select and initialize graphics backend
+
+            // NOTE: We rely on Stride's built-in OpenGL rendering, not custom backends.
+            // The SelectBackend call returns null intentionally - Stride handles rendering.
             _backend = SelectBackend(settings);
-            if (_backend == null)
-            {
-                Console.WriteLine("[OdysseyRenderer] No suitable graphics backend found");
-                return false;
-            }
-            
-            if (!_backend.Initialize(settings))
-            {
-                Console.WriteLine("[OdysseyRenderer] Failed to initialize graphics backend");
-                _backend.Dispose();
-                _backend = null;
-                return false;
-            }
-            
-            // Initialize RTX Remix if requested
+
+            // No custom backend is needed - Stride's GraphicsCompositor handles everything
+            // This is intentional and not an error.
+            Console.WriteLine("[OdysseyRenderer] Using Stride's built-in OpenGL rendering pipeline");
+
+            // RTX Remix is disabled in OpenGL-only mode
             if (settings.RemixCompatibility)
             {
-                _remixBridge = new RemixBridge();
-                var remixSettings = new RemixSettings
-                {
-                    RuntimePath = settings.RemixRuntimePath,
-                    EnablePathTracing = true,
-                    MaxBounces = settings.RaytracingMaxBounces,
-                    EnableDenoiser = settings.RaytracingDenoiser,
-                    EnableDlss = settings.DlssMode != DlssMode.Off,
-                    EnableReflex = settings.NvidiaReflex
-                };
-                
-                if (_remixBridge.Initialize(windowHandle, remixSettings))
-                {
-                    Console.WriteLine("[OdysseyRenderer] RTX Remix initialized");
-                }
-                else
-                {
-                    Console.WriteLine("[OdysseyRenderer] RTX Remix not available");
-                    _remixBridge.Dispose();
-                    _remixBridge = null;
-                }
+                Console.WriteLine("[OdysseyRenderer] RTX Remix disabled (OpenGL only mode - Remix requires DirectX 9)");
             }
-            
-            // Initialize raytracing if available and not using Remix
-            if (!IsRemixActive && _backend.Capabilities.SupportsRaytracing && 
-                settings.Raytracing != RaytracingLevel.Disabled)
+
+            // Raytracing is disabled in OpenGL-only mode
+            if (settings.Raytracing != RaytracingLevel.Disabled)
             {
-                // Initialize native raytracing system
-                // _raytracing = new NativeRaytracingSystem(_backend);
+                Console.WriteLine("[OdysseyRenderer] Raytracing disabled (OpenGL only mode - requires Vulkan RT or DXR)");
             }
-            
-            // Initialize lighting system
-            // _lighting = new ClusteredLightingSystem(_backend);
-            
-            // Initialize material factory
-            // _materialFactory = new PbrMaterialFactory(_backend);
-            
+
             _initialized = true;
             _frameNumber = 0;
-            
-            Console.WriteLine("[OdysseyRenderer] Initialized successfully");
-            Console.WriteLine("[OdysseyRenderer] Backend: " + _backend.BackendType);
-            Console.WriteLine("[OdysseyRenderer] Device: " + _backend.Capabilities.DeviceName);
-            Console.WriteLine("[OdysseyRenderer] Raytracing: " + (_backend.Capabilities.SupportsRaytracing ? "supported" : "not supported"));
-            Console.WriteLine("[OdysseyRenderer] Remix: " + (IsRemixActive ? "active" : "inactive"));
-            
+
+            Console.WriteLine("[OdysseyRenderer] Initialized successfully (OpenGL mode)");
+
             return true;
         }
-        
+
         /// <summary>
         /// Shuts down the renderer.
         /// </summary>
@@ -199,23 +161,23 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             _remixBridge?.Dispose();
             _remixBridge = null;
-            
+
             _raytracing?.Dispose();
             _raytracing = null;
-            
+
             _lighting?.Dispose();
             _lighting = null;
-            
+
             _backend?.Dispose();
             _backend = null;
-            
+
             _initialized = false;
             Console.WriteLine("[OdysseyRenderer] Shutdown complete");
         }
-        
+
         /// <summary>
         /// Begins a new frame.
         /// </summary>
@@ -225,16 +187,16 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             if (IsRemixActive)
             {
                 _remixBridge.BeginFrame();
             }
-            
+
             _backend.BeginFrame();
             _frameNumber++;
         }
-        
+
         /// <summary>
         /// Ends the current frame and presents.
         /// </summary>
@@ -244,15 +206,15 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             if (IsRemixActive)
             {
                 _remixBridge.EndFrame();
             }
-            
+
             _backend.EndFrame();
         }
-        
+
         /// <summary>
         /// Resizes the render targets.
         /// </summary>
@@ -262,13 +224,13 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             _settings.Width = width;
             _settings.Height = height;
-            
+
             _backend.Resize(width, height);
         }
-        
+
         /// <summary>
         /// Updates render settings.
         /// </summary>
@@ -278,19 +240,19 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             _settings = settings;
-            
+
             // Update raytracing level
             if (_raytracing != null)
             {
                 _raytracing.SetLevel(settings.Raytracing);
             }
-            
+
             // Update backend settings
             _backend.SetRaytracingLevel(settings.Raytracing);
         }
-        
+
         /// <summary>
         /// Sets the camera for rendering.
         /// </summary>
@@ -300,7 +262,7 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             if (IsRemixActive)
             {
                 var camera = new RemixCamera
@@ -320,7 +282,7 @@ namespace Odyssey.Stride.Rendering
                 _remixBridge.SetCamera(camera);
             }
         }
-        
+
         /// <summary>
         /// Submits a mesh for rendering.
         /// </summary>
@@ -330,7 +292,7 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             if (IsRemixActive)
             {
                 // Convert to Remix geometry
@@ -351,7 +313,7 @@ namespace Odyssey.Stride.Rendering
                 // Draw mesh
             }
         }
-        
+
         /// <summary>
         /// Submits a light for rendering.
         /// </summary>
@@ -361,7 +323,7 @@ namespace Odyssey.Stride.Rendering
             {
                 return;
             }
-            
+
             if (IsRemixActive)
             {
                 var remixLight = new RemixLight
@@ -377,10 +339,10 @@ namespace Odyssey.Stride.Rendering
                 };
                 _remixBridge.SubmitLight(remixLight);
             }
-            
+
             // Standard lighting path handled by lighting system
         }
-        
+
         /// <summary>
         /// Gets frame statistics.
         /// </summary>
@@ -390,79 +352,55 @@ namespace Odyssey.Stride.Rendering
             {
                 return default(FrameStatistics);
             }
-            
+
             return _backend.GetFrameStatistics();
         }
-        
+
         private IGraphicsBackend SelectBackend(RenderSettings settings)
         {
-            // If Remix compatibility is enabled, we need DX9 wrapper mode
-            if (settings.RemixCompatibility)
-            {
-                // For Remix, we use a special DX9 compatibility mode
-                // The actual rendering is done by Remix's path tracer
-                Console.WriteLine("[OdysseyRenderer] Remix mode - using DX9 compatibility layer");
-            }
-            
-            // Try preferred backend first
-            var backend = TryCreateBackend(settings.PreferredBackend);
-            if (backend != null)
-            {
-                return backend;
-            }
-            
-            // Try fallbacks
-            foreach (var fallback in settings.FallbackBackends)
-            {
-                backend = TryCreateBackend(fallback);
-                if (backend != null)
-                {
-                    return backend;
-                }
-            }
-            
+            // TODO: We currently use OpenGL exclusively through Stride's built-in rendering.
+            // The custom backend system is disabled for now. Vulkan/DirectX/Remix support
+            // will be added in a future update.
+            //
+            // Stride handles all rendering through its GraphicsCompositor system, which
+            // uses OpenGL on all platforms (as configured in the .csproj files).
+
+            Console.WriteLine("[OdysseyRenderer] Using Stride's built-in OpenGL rendering (custom backends disabled)");
+
+            // Return null - we rely on Stride's rendering, not our custom backends
             return null;
         }
-        
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
         private IGraphicsBackend TryCreateBackend(GraphicsBackend type)
         {
+            // All custom backends are disabled - we use Stride's OpenGL rendering exclusively.
+            // This method is kept for future multi-backend support.
             switch (type)
             {
-                case GraphicsBackend.Vulkan:
-                    var vulkan = new VulkanBackend();
-                    Console.WriteLine("[OdysseyRenderer] Trying Vulkan backend...");
-                    return vulkan;
-                    
-                case GraphicsBackend.Direct3D12:
-                    var dx12 = new Direct3D12Backend();
-                    Console.WriteLine("[OdysseyRenderer] Trying DirectX 12 backend...");
-                    return dx12;
-                    
-                case GraphicsBackend.Direct3D11:
-                    Console.WriteLine("[OdysseyRenderer] DirectX 11 backend not yet implemented");
-                    return null;
-                    
                 case GraphicsBackend.OpenGL:
-                    Console.WriteLine("[OdysseyRenderer] OpenGL backend not yet implemented");
-                    return null;
-                    
                 case GraphicsBackend.Auto:
-                    // Try DX12 first on Windows, Vulkan on Linux
-                    if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                    {
-                        return TryCreateBackend(GraphicsBackend.Direct3D12) ??
-                               TryCreateBackend(GraphicsBackend.Vulkan);
-                    }
-                    else
-                    {
-                        return TryCreateBackend(GraphicsBackend.Vulkan);
-                    }
-                    
+                    // OpenGL is handled by Stride natively - no custom backend needed
+                    Console.WriteLine("[OdysseyRenderer] OpenGL handled by Stride natively");
+                    return null;
+
+                case GraphicsBackend.Vulkan:
+                    // Vulkan backend disabled - will be implemented later
+                    Console.WriteLine("[OdysseyRenderer] Vulkan backend disabled (OpenGL only mode)");
+                    return null;
+
+                case GraphicsBackend.Direct3D12:
+                case GraphicsBackend.Direct3D11:
+                case GraphicsBackend.Direct3D9Remix:
+                    // DirectX backends disabled - will be implemented later
+                    Console.WriteLine("[OdysseyRenderer] DirectX backends disabled (OpenGL only mode)");
+                    return null;
+
                 default:
                     return null;
             }
         }
-        
+
         public void Dispose()
         {
             Shutdown();

@@ -430,7 +430,7 @@ namespace Odyssey.Stride.Scene
                     break;
                 }
             }
-            
+
             if (visibleRooms.Count == 0)
             {
                 // No visibility data - show all
