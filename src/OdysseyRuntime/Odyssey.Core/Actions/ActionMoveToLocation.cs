@@ -10,6 +10,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to move an entity to a location via pathfinding.
     /// </summary>
+    /// <remarks>
+    /// Move To Location Action:
+    /// - Based on swkotor2.exe movement action system
+    /// - Original implementation: Uses walkmesh pathfinding to find path to destination
+    /// - Follows path waypoints, facing movement direction
+    /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
+    /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
+    /// </remarks>
     public class ActionMoveToLocation : ActionBase
     {
         private readonly Vector3 _destination;
@@ -27,8 +35,8 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            var transform = actor.GetComponent<ITransformComponent>();
-            var stats = actor.GetComponent<IStatsComponent>();
+            ITransformComponent transform = actor.GetComponent<ITransformComponent>();
+            IStatsComponent stats = actor.GetComponent<IStatsComponent>();
 
             if (transform == null)
             {
@@ -38,7 +46,7 @@ namespace Odyssey.Core.Actions
             // Try to find path if we don't have one
             if (_path == null)
             {
-                var area = actor.World.CurrentArea;
+                IArea area = actor.World.CurrentArea;
                 if (area != null && area.NavigationMesh != null)
                 {
                     _path = area.NavigationMesh.FindPath(transform.Position, _destination);

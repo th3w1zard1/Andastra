@@ -10,6 +10,14 @@ namespace Odyssey.Core.Actions
     /// Action to move an entity to another object.
     /// Based on NWScript ActionMoveToObject semantics.
     /// </summary>
+    /// <remarks>
+    /// Move To Object Action:
+    /// - Based on swkotor2.exe movement action system
+    /// - Original implementation: Moves actor towards target object within specified range
+    /// - Uses direct movement (no pathfinding) - follows target if it moves
+    /// - Faces target when within range
+    /// - Walk/run speed determined by entity stats
+    /// </remarks>
     public class ActionMoveToObject : ActionBase
     {
         private readonly uint _targetObjectId;

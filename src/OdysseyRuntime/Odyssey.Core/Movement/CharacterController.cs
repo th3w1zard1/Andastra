@@ -10,13 +10,18 @@ namespace Odyssey.Core.Movement
     /// Controls character movement in the game world.
     /// </summary>
     /// <remarks>
-    /// KOTOR Character Movement:
-    /// - Point-and-click movement (click destination, character walks/runs)
-    /// - Walkmesh-constrained movement
-    /// - Automatic pathfinding around obstacles
-    /// - Smooth turning towards movement direction
-    /// - Speed transitions (walk/run based on distance)
-    /// - Door and trigger interaction detection
+    /// Character Movement System:
+    /// - Based on swkotor2.exe character movement system
+    /// - Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
+    /// - "Combat Movement" @ 0x007c8670
+    /// - Original implementation: Point-and-click movement with walkmesh pathfinding
+    /// - KOTOR Character Movement:
+    ///   - Point-and-click movement (click destination, character walks/runs)
+    ///   - Walkmesh-constrained movement
+    ///   - Automatic pathfinding around obstacles
+    ///   - Smooth turning towards movement direction
+    ///   - Speed transitions (walk/run based on distance)
+    ///   - Door and trigger interaction detection
     /// </remarks>
     public class CharacterController
     {
@@ -135,7 +140,7 @@ namespace Odyssey.Core.Movement
         /// <returns>True if path found.</returns>
         public bool MoveTo(Vector3 destination, bool run = true)
         {
-            var currentPos = GetCurrentPosition();
+            Vector3 currentPos = GetCurrentPosition();
 
             // Check if destination is valid
             if (_navMesh != null)
@@ -143,7 +148,7 @@ namespace Odyssey.Core.Movement
                 if (!_navMesh.IsPointOnMesh(destination))
                 {
                     // Try to find nearest valid point
-                    var nearestPoint = _navMesh.GetNearestPoint(destination);
+                    Vector3? nearestPoint = _navMesh.GetNearestPoint(destination);
                     if (nearestPoint.HasValue)
                     {
                         destination = nearestPoint.Value;
@@ -155,7 +160,7 @@ namespace Odyssey.Core.Movement
                 }
 
                 // Find path
-                var path = _navMesh.FindPath(currentPos, destination);
+                IList<Vector3> path = _navMesh.FindPath(currentPos, destination);
                 if (path == null || path.Count == 0)
                 {
                     if (OnMovementBlocked != null)
@@ -200,18 +205,18 @@ namespace Odyssey.Core.Movement
                 return false;
             }
 
-            var targetTransform = target.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Interfaces.Components.ITransformComponent>();
             if (targetTransform == null)
             {
                 return false;
             }
 
             // Calculate position offset by stopping distance
-            var targetPos = targetTransform.Position;
-            var currentPos = GetCurrentPosition();
+            Vector3 targetPos = targetTransform.Position;
+            Vector3 currentPos = GetCurrentPosition();
             var direction = Vector3.Normalize(currentPos - targetPos);
 
-            var destination = targetPos + direction * stoppingDistance;
+            Vector3 destination = targetPos + direction * stoppingDistance;
 
             return MoveTo(destination, run);
         }
@@ -244,9 +249,9 @@ namespace Odyssey.Core.Movement
         /// </summary>
         public void FaceTowards(Vector3 targetPosition)
         {
-            var currentPos = GetCurrentPosition();
-            var direction = targetPosition - currentPos;
-            var facing = (float)Math.Atan2(direction.Y, direction.X);
+            Vector3 currentPos = GetCurrentPosition();
+            Vector3 direction = targetPosition - currentPos;
+            float facing = (float)Math.Atan2(direction.Y, direction.X);
             FaceTo(facing);
         }
 
@@ -260,7 +265,7 @@ namespace Odyssey.Core.Movement
                 return;
             }
 
-            var targetTransform = target.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Interfaces.Components.ITransformComponent>();
             if (targetTransform != null)
             {
                 FaceTowards(targetTransform.Position);
@@ -295,11 +300,11 @@ namespace Odyssey.Core.Movement
                 return;
             }
 
-            var currentPos = GetCurrentPosition();
-            var targetWaypoint = _currentPath[_currentPathIndex];
+            Vector3 currentPos = GetCurrentPosition();
+            Vector3 targetWaypoint = _currentPath[_currentPathIndex];
 
             // Calculate direction and distance
-            var direction = targetWaypoint - currentPos;
+            Vector3 direction = targetWaypoint - currentPos;
             direction.Z = 0; // Keep movement on XY plane
             float distanceToWaypoint = direction.Length();
 
@@ -325,7 +330,7 @@ namespace Odyssey.Core.Movement
             float targetFacing = (float)Math.Atan2(direction.Y, direction.X);
 
             // Update facing (smooth turn)
-            var transform = _entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = _entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 float currentFacing = transform.Facing;
@@ -342,7 +347,7 @@ namespace Odyssey.Core.Movement
             }
 
             // Calculate speed
-            var stats = _entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = _entity.GetComponent<Interfaces.Components.IStatsComponent>();
             float baseSpeed = stats != null ? (_isRunning ? stats.RunSpeed : stats.WalkSpeed) : 3.5f;
 
             // Switch to walking when close to destination
@@ -362,7 +367,7 @@ namespace Odyssey.Core.Movement
             }
 
             var normalizedDir = Vector3.Normalize(direction);
-            var newPosition = currentPos + normalizedDir * moveDistance;
+            Vector3 newPosition = currentPos + normalizedDir * moveDistance;
 
             // Validate position on navmesh
             if (_navMesh != null)
@@ -370,7 +375,7 @@ namespace Odyssey.Core.Movement
                 if (!_navMesh.IsPointOnMesh(newPosition))
                 {
                     // Try to project onto mesh
-                    var projectedPoint = _navMesh.GetNearestPoint(newPosition);
+                    Vector3? projectedPoint = _navMesh.GetNearestPoint(newPosition);
                     if (projectedPoint.HasValue)
                     {
                         newPosition = projectedPoint.Value;
@@ -399,7 +404,7 @@ namespace Odyssey.Core.Movement
 
         private void UpdateTurning(float deltaTime)
         {
-            var transform = _entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = _entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform == null)
             {
                 State = MovementState.Idle;
@@ -443,7 +448,7 @@ namespace Odyssey.Core.Movement
 
         private void CheckTriggerIntersections(Vector3 oldPos, Vector3 newPos)
         {
-            var area = _world.CurrentArea;
+            IArea area = _world.CurrentArea;
             if (area == null)
             {
                 return;
@@ -451,9 +456,9 @@ namespace Odyssey.Core.Movement
 
             var currentTriggers = new HashSet<uint>();
 
-            foreach (var trigger in area.Triggers)
+            foreach (IEntity trigger in area.Triggers)
             {
-                var triggerComp = trigger.GetComponent<Interfaces.Components.ITriggerComponent>();
+                Interfaces.Components.ITriggerComponent triggerComp = trigger.GetComponent<Interfaces.Components.ITriggerComponent>();
                 if (triggerComp == null)
                 {
                     continue;
@@ -476,12 +481,12 @@ namespace Odyssey.Core.Movement
             }
 
             // Check for trigger exits
-            foreach (var triggerId in _activeTriggers)
+            foreach (uint triggerId in _activeTriggers)
             {
                 if (!currentTriggers.Contains(triggerId))
                 {
                     // Find the trigger entity and fire exit event
-                    foreach (var trigger in area.Triggers)
+                    foreach (IEntity trigger in area.Triggers)
                     {
                         if (trigger.ObjectId == triggerId)
                         {
@@ -496,7 +501,7 @@ namespace Odyssey.Core.Movement
             }
 
             _activeTriggers.Clear();
-            foreach (var id in currentTriggers)
+            foreach (uint id in currentTriggers)
             {
                 _activeTriggers.Add(id);
             }
@@ -511,7 +516,7 @@ namespace Odyssey.Core.Movement
             }
 
             // Fallback to simple point-in-polygon test for trigger geometry
-            var geometry = trigger.Geometry;
+            IList<Vector3> geometry = trigger.Geometry;
             if (geometry == null || geometry.Count < 3)
             {
                 return false;
@@ -521,8 +526,8 @@ namespace Odyssey.Core.Movement
             int crossings = 0;
             for (int i = 0; i < geometry.Count; i++)
             {
-                var p1 = geometry[i];
-                var p2 = geometry[(i + 1) % geometry.Count];
+                Vector3 p1 = geometry[i];
+                Vector3 p2 = geometry[(i + 1) % geometry.Count];
 
                 if ((p1.Y <= position.Y && p2.Y > position.Y) ||
                     (p2.Y <= position.Y && p1.Y > position.Y))
@@ -544,7 +549,7 @@ namespace Odyssey.Core.Movement
 
         private Vector3 GetCurrentPosition()
         {
-            var transform = _entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = _entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 return transform.Position;
