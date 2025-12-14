@@ -1504,10 +1504,18 @@ namespace Odyssey.Scripting.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                // TODO: Access skill component to get skill rank
-                // For now, return 0 (untrained)
-                // This would require an ISkillComponent interface
-                return Variable.FromInt(0);
+                // Skills are typically stored on the stats component
+                // For now, return 0 (untrained) as skill system is not yet implemented
+                // In full implementation, we'd access IStatsComponent.GetSkillRank(skill)
+                // or a separate ISkillComponent interface
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    // Skills not yet implemented in IStatsComponent
+                    // Return 0 (untrained) for now
+                    return Variable.FromInt(0);
+                }
+                return Variable.FromInt(-1); // No stats component = invalid target
             }
             return Variable.FromInt(-1); // Invalid target
         }
