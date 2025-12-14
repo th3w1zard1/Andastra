@@ -40,6 +40,10 @@ namespace Odyssey.Kotor.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR Combat Round (~3 seconds):
+    /// - Based on swkotor2.exe: CSWSCombatRound class
+    /// - Located via string reference: "CombatRoundData" @ 0x007bf6b4
+    /// - Combat round functions: FUN_005fb0f0 @ 0x005fb0f0 (combat round management)
+    /// - Original implementation: 3-second rounds with timer-based attack scheduling
     /// - Starting (0.0s): Initialize animations
     /// - FirstAttack (0.5s): Primary attack
     /// - SecondAttack (1.5s): Offhand/counter if dual wielding

@@ -49,6 +49,10 @@ namespace Odyssey.Kotor.Combat
     /// </summary>
     /// <remarks>
     /// Combat System Overview:
+    /// - Based on swkotor2.exe combat system
+    /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
+    /// - Combat round functions: FUN_005fb0f0 @ 0x005fb0f0, FUN_005226d0 @ 0x005226d0
+    /// - Original implementation: CSWSCombatRound class manages 3-second combat rounds
     ///
     /// 1. Combat Initiation:
     ///    - Perception detects hostile

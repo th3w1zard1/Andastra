@@ -337,6 +337,12 @@ namespace Odyssey.Kotor.Game
         /// <summary>
         /// Fires a script event for an entity.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe script event system
+        /// Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_*" @ 0x007bc594+
+        /// Original implementation: Looks up script ResRef from entity's script hooks component,
+        /// executes script with entity as OBJECT_SELF, triggerer as GetEnteringObject/GetExitingObject
+        /// </remarks>
         private void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer)
         {
             if (entity == null)
