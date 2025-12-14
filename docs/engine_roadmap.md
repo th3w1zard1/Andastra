@@ -293,9 +293,9 @@ Current focus for achieving first playable module.
 
 #### 10.2 Menus
 - [ ] Pause menu
-- [ ] Inventory
+- [ ] Inventory UI (data layer: `PartyInventory` ✓)
 - [ ] Character sheet
-- [ ] Journal
+- [x] Journal (`JournalSystem` with quest tracking)
 - [ ] Map
 - [ ] Options
 
