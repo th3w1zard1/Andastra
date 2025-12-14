@@ -3,9 +3,11 @@ using System.IO;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Navigation;
+using Odyssey.Core.Enums;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Dialogue;
+using Odyssey.Kotor.Components;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Resource.Generics.DLG;
 
@@ -245,14 +247,64 @@ namespace Odyssey.Kotor.Game
 
         private void CreateDefaultPlayer()
         {
-            // TODO: Create proper player entity from template
-            Console.WriteLine("[GameSession] FIXME: Creating placeholder player entity");
+            Console.WriteLine("[GameSession] Creating player entity...");
 
-            // Create a basic player entity
-            _playerEntity = _world.CreateEntity(Core.Enums.ObjectType.Creature, System.Numerics.Vector3.Zero, 0);
+            // Get entry position from module
+            System.Numerics.Vector3 entryPos = System.Numerics.Vector3.Zero;
+            float entryFacing = 0f;
+
+            if (_moduleLoader != null)
+            {
+                entryPos = _moduleLoader.GetEntryPosition();
+                entryFacing = _moduleLoader.GetEntryFacing();
+            }
+
+            // Create player entity
+            _playerEntity = _world.CreateEntity(Core.Enums.ObjectType.Creature, entryPos, entryFacing);
             _playerEntity.Tag = "Player";
 
-            // TODO: Add components (stats, inventory, etc.)
+            // Add transform component
+            var transformComponent = new TransformComponent();
+            transformComponent.Position = entryPos;
+            transformComponent.Facing = entryFacing;
+            _playerEntity.AddComponent(transformComponent);
+
+            // Add stats component with default KOTOR starting stats
+            var statsComponent = new StatsComponent();
+            statsComponent.SetAbility(Ability.Strength, 12);
+            statsComponent.SetAbility(Ability.Dexterity, 12);
+            statsComponent.SetAbility(Ability.Constitution, 12);
+            statsComponent.SetAbility(Ability.Intelligence, 12);
+            statsComponent.SetAbility(Ability.Wisdom, 12);
+            statsComponent.SetAbility(Ability.Charisma, 12);
+            statsComponent.SetMaxHP(30); // Level 1 Soldier base HP
+            statsComponent.CurrentHP = 30;
+            statsComponent.MaxFP = 0; // No force powers at start
+            statsComponent.CurrentFP = 0;
+            statsComponent.Level = 1;
+            statsComponent.Experience = 0;
+            statsComponent.SetBaseAttackBonus(1); // Level 1 BAB
+            statsComponent.SetBaseSaves(2, 0, 0); // Level 1 Soldier saves
+            _playerEntity.AddComponent(statsComponent);
+
+            // Add creature component
+            var creatureComponent = new CreatureComponent();
+            creatureComponent.AppearanceType = 1; // Default human male
+            creatureComponent.BodyVariation = 0;
+            creatureComponent.TextureVar = 0;
+            _playerEntity.AddComponent(creatureComponent);
+
+            // Add script hooks component
+            var scriptHooksComponent = new ScriptHooksComponent();
+            _playerEntity.AddComponent(scriptHooksComponent);
+
+            // Register entity in world
+            if (_playerEntity is Odyssey.Core.Entities.Entity concreteEntity)
+            {
+                _world.RegisterEntity(concreteEntity);
+            }
+
+            Console.WriteLine("[GameSession] Player entity created at " + entryPos + " with facing " + entryFacing);
         }
 
         /// <summary>
