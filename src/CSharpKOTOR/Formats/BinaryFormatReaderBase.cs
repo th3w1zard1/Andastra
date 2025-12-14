@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using CSharpKOTOR.Common;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Formats
@@ -11,22 +12,18 @@ namespace CSharpKOTOR.Formats
     public abstract class BinaryFormatReaderBase
     {
         protected readonly byte[] Data;
-        protected readonly BinaryReader Reader;
+        protected readonly CSharpKOTOR.Common.BinaryReader Reader;
 
         protected BinaryFormatReaderBase(byte[] data, [CanBeNull] Encoding encoding = null)
         {
             Data = data;
-            Reader = encoding != null
-                ? new BinaryReader(new MemoryStream(data), encoding)
-                : new BinaryReader(new MemoryStream(data));
+            Reader = CSharpKOTOR.Common.BinaryReader.FromBytes(data, 0, null);
         }
 
         protected BinaryFormatReaderBase(string filepath, [CanBeNull] Encoding encoding = null)
         {
             Data = File.ReadAllBytes(filepath);
-            Reader = encoding != null
-                ? new BinaryReader(new MemoryStream(Data), encoding)
-                : new BinaryReader(new MemoryStream(Data));
+            Reader = CSharpKOTOR.Common.BinaryReader.FromBytes(Data, 0, null);
         }
 
         protected BinaryFormatReaderBase(Stream source, [CanBeNull] Encoding encoding = null)
@@ -35,9 +32,7 @@ namespace CSharpKOTOR.Formats
             {
                 source.CopyTo(ms);
                 Data = ms.ToArray();
-                Reader = encoding != null
-                    ? new BinaryReader(new MemoryStream(Data), encoding)
-                    : new BinaryReader(new MemoryStream(Data));
+                Reader = CSharpKOTOR.Common.BinaryReader.FromBytes(Data, 0, null);
             }
         }
     }

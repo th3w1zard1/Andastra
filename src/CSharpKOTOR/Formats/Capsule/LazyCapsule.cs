@@ -80,7 +80,7 @@ namespace CSharpKOTOR.Formats.Capsule
         {
             if (_capsuleType == CapsuleType.RIM)
             {
-                using (var writer = new BinaryWriter(File.Create(_filepath)))
+                using (var writer = new System.IO.BinaryWriter(File.Create(_filepath)))
                 {
                     writer.Write(System.Text.Encoding.ASCII.GetBytes("RIM "));
                     writer.Write(System.Text.Encoding.ASCII.GetBytes("V1.0"));
@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.Capsule
             }
             else
             {
-                using (var writer = new BinaryWriter(File.Create(_filepath)))
+                using (var writer = new System.IO.BinaryWriter(File.Create(_filepath)))
                 {
                     string fourCC = _capsuleType == CapsuleType.MOD ? "MOD " : "ERF ";
                     writer.Write(System.Text.Encoding.ASCII.GetBytes(fourCC));

@@ -55,7 +55,7 @@ namespace CSharpKOTOR.Extract.SaveData
             byte[] valLoc = root.GetBinary("ValLocation");
             if (catLoc != null && valLoc != null)
             {
-                using (var br = new BinaryReader(new MemoryStream(valLoc)))
+                using (var br = new System.IO.BinaryReader(new MemoryStream(valLoc)))
                 {
                     foreach (var cat in catLoc)
                     {
@@ -78,7 +78,7 @@ namespace CSharpKOTOR.Extract.SaveData
             byte[] valNum = root.GetBinary("ValNumber");
             if (catNum != null && valNum != null)
             {
-                using (var br = new BinaryReader(new MemoryStream(valNum)))
+                using (var br = new System.IO.BinaryReader(new MemoryStream(valNum)))
                 {
                     foreach (var cat in catNum)
                     {
@@ -136,7 +136,7 @@ namespace CSharpKOTOR.Extract.SaveData
             {
                 GFFList catLoc = new GFFList();
                 using (var ms = new MemoryStream())
-                using (var bw = new BinaryWriter(ms))
+                using (var bw = new System.IO.BinaryWriter(ms))
                 {
                     foreach (var entry in GlobalLocations)
                     {

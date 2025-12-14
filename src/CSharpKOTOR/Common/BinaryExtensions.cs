@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Common
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        public static Vector3 ReadVector3(this BinaryReader reader)
+        public static Vector3 ReadVector3(this CSharpKOTOR.Common.BinaryReader reader)
         {
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
@@ -23,14 +23,14 @@ namespace CSharpKOTOR.Common
             return new Vector3(x, y, z);
         }
 
-        public static void WriteVector3(this BinaryWriter writer, Vector3 value)
+        public static void WriteVector3(this CSharpKOTOR.Common.BinaryWriter writer, Vector3 value)
         {
-            writer.Write(value.X);
-            writer.Write(value.Y);
-            writer.Write(value.Z);
+            writer.WriteSingle(value.X);
+            writer.WriteSingle(value.Y);
+            writer.WriteSingle(value.Z);
         }
 
-        public static Vector4 ReadVector4(this BinaryReader reader)
+        public static Vector4 ReadVector4(this CSharpKOTOR.Common.BinaryReader reader)
         {
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
@@ -39,18 +39,18 @@ namespace CSharpKOTOR.Common
             return new Vector4(x, y, z, w);
         }
 
-        public static void WriteVector4(this BinaryWriter writer, Vector4 value)
+        public static void WriteVector4(this CSharpKOTOR.Common.BinaryWriter writer, Vector4 value)
         {
-            writer.Write(value.X);
-            writer.Write(value.Y);
-            writer.Write(value.Z);
-            writer.Write(value.W);
+            writer.WriteSingle(value.X);
+            writer.WriteSingle(value.Y);
+            writer.WriteSingle(value.Z);
+            writer.WriteSingle(value.W);
         }
 
         /// <summary>
         /// Reads a LocalizedString following the GFF format specification.
         /// </summary>
-        public static LocalizedString ReadLocalizedString(this BinaryReader reader)
+        public static LocalizedString ReadLocalizedString(this CSharpKOTOR.Common.BinaryReader reader)
         {
             var locString = LocalizedString.FromInvalid();
 
@@ -81,35 +81,34 @@ namespace CSharpKOTOR.Common
         /// <summary>
         /// Writes a LocalizedString following the GFF format specification.
         /// </summary>
-        public static void WriteLocalizedString(this BinaryWriter writer, LocalizedString value)
+        public static void WriteLocalizedString(this CSharpKOTOR.Common.BinaryWriter writer, LocalizedString value)
         {
             // Build the locstring data first to calculate total length
-            using (var ms = new MemoryStream())
-            using (var tempWriter = new BinaryWriter(ms))
+            using (var tempWriter = CSharpKOTOR.Common.BinaryWriter.ToByteArray())
             {
                 // Write StringRef
                 uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
-                tempWriter.Write(stringref);
+                tempWriter.WriteUInt32(stringref);
 
                 // Write string count
-                tempWriter.Write((uint)value.Count);
+                tempWriter.WriteUInt32((uint)value.Count);
 
                 // Write all substrings
                 foreach ((Language language, Gender gender, string text) in value)
                 {
                     int stringId = LocalizedString.SubstringId(language, gender);
-                    tempWriter.Write((uint)stringId);
+                    tempWriter.WriteUInt32((uint)stringId);
 
                     var encoding = Encoding.GetEncoding(LanguageExtensions.GetEncoding(language));
                     byte[] textBytes = encoding.GetBytes(text);
-                    tempWriter.Write((uint)textBytes.Length);
-                    tempWriter.Write(textBytes);
+                    tempWriter.WriteUInt32((uint)textBytes.Length);
+                    tempWriter.WriteBytes(textBytes);
                 }
 
                 // Write total length + data
-                byte[] locstringData = ms.ToArray();
-                writer.Write((uint)locstringData.Length);
-                writer.Write(locstringData);
+                byte[] locstringData = tempWriter.Data();
+                writer.WriteUInt32((uint)locstringData.Length);
+                writer.WriteBytes(locstringData);
             }
         }
     }

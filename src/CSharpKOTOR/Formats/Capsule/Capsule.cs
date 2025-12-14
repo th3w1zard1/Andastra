@@ -69,7 +69,7 @@ namespace CSharpKOTOR.Formats.Capsule
             if (_capsuleType == CapsuleType.RIM)
             {
                 // Write empty RIM
-                using (var writer = new BinaryWriter(File.Create(_path.GetResolvedPath())))
+                using (var writer = new System.IO.BinaryWriter(File.Create(_path.GetResolvedPath())))
                 {
                     writer.Write(System.Text.Encoding.ASCII.GetBytes("RIM "));
                     writer.Write(System.Text.Encoding.ASCII.GetBytes("V1.0"));
@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Formats.Capsule
             else
             {
                 // Write empty ERF
-                using (var writer = new BinaryWriter(File.Create(_path.GetResolvedPath())))
+                using (var writer = new System.IO.BinaryWriter(File.Create(_path.GetResolvedPath())))
                 {
                     string fourCC = _capsuleType == CapsuleType.ERF ? "ERF " : "MOD ";
                     writer.Write(System.Text.Encoding.ASCII.GetBytes(fourCC));
@@ -113,7 +113,7 @@ namespace CSharpKOTOR.Formats.Capsule
                 return;
             }
 
-            using (var reader = new BinaryReader(File.OpenRead(_path.GetResolvedPath())))
+            using (var reader = new System.IO.BinaryReader(File.OpenRead(_path.GetResolvedPath())))
             {
 
                 string fileType = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4));
@@ -139,7 +139,7 @@ namespace CSharpKOTOR.Formats.Capsule
             }
         }
 
-        private void LoadRIM(BinaryReader reader)
+        private void LoadRIM(System.IO.BinaryReader reader)
         {
             reader.BaseStream.Seek(8, SeekOrigin.Begin); // Skip header
             reader.ReadInt32(); // reserved
@@ -168,7 +168,7 @@ namespace CSharpKOTOR.Formats.Capsule
             }
         }
 
-        private void LoadERF(BinaryReader reader)
+        private void LoadERF(System.IO.BinaryReader reader)
         {
             reader.BaseStream.Seek(8, SeekOrigin.Begin); // Skip header already read
             reader.ReadUInt32(); // language count

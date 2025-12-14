@@ -15,11 +15,11 @@ namespace CSharpKOTOR.Formats.GFF
     public class GFFBinaryWriter
     {
         private readonly GFF _gff;
-        private readonly BinaryWriter _structWriter;
-        private readonly BinaryWriter _fieldWriter;
-        private readonly BinaryWriter _fieldDataWriter;
-        private readonly BinaryWriter _fieldIndicesWriter;
-        private readonly BinaryWriter _listIndicesWriter;
+        private readonly CSharpKOTOR.Common.RawBinaryWriter _structWriter;
+        private readonly CSharpKOTOR.Common.RawBinaryWriter _fieldWriter;
+        private readonly CSharpKOTOR.Common.RawBinaryWriter _fieldDataWriter;
+        private readonly CSharpKOTOR.Common.RawBinaryWriter _fieldIndicesWriter;
+        private readonly CSharpKOTOR.Common.RawBinaryWriter _listIndicesWriter;
         private readonly List<string> _labels = new List<string>();
         private int _structCount = 0;
         private int _fieldCount = 0;
@@ -41,11 +41,11 @@ namespace CSharpKOTOR.Formats.GFF
         public GFFBinaryWriter(GFF gff)
         {
             _gff = gff;
-            _structWriter = new BinaryWriter(new MemoryStream());
-            _fieldWriter = new BinaryWriter(new MemoryStream());
-            _fieldDataWriter = new BinaryWriter(new MemoryStream());
-            _fieldIndicesWriter = new BinaryWriter(new MemoryStream());
-            _listIndicesWriter = new BinaryWriter(new MemoryStream());
+            _structWriter = CSharpKOTOR.Common.RawBinaryWriter.ToByteArray();
+            _fieldWriter = CSharpKOTOR.Common.RawBinaryWriter.ToByteArray();
+            _fieldDataWriter = CSharpKOTOR.Common.RawBinaryWriter.ToByteArray();
+            _fieldIndicesWriter = CSharpKOTOR.Common.RawBinaryWriter.ToByteArray();
+            _listIndicesWriter = CSharpKOTOR.Common.RawBinaryWriter.ToByteArray();
         }
 
         public byte[] Write()
@@ -55,17 +55,17 @@ namespace CSharpKOTOR.Formats.GFF
 
             // Calculate offsets
             int structOffset = 56; // Header size
-            int structCount = (int)_structWriter.BaseStream.Length / 12;
-            int fieldOffset = structOffset + (int)_structWriter.BaseStream.Length;
-            int fieldCount = (int)_fieldWriter.BaseStream.Length / 12;
-            int labelOffset = fieldOffset + (int)_fieldWriter.BaseStream.Length;
+            int structCount = _structWriter.Size() / 12;
+            int fieldOffset = structOffset + _structWriter.Size();
+            int fieldCount = _fieldWriter.Size() / 12;
+            int labelOffset = fieldOffset + _fieldWriter.Size();
             int labelCount = _labels.Count;
             int fieldDataOffset = labelOffset + _labels.Count * 16;
-            int fieldDataCount = (int)_fieldDataWriter.BaseStream.Length;
-            int fieldIndicesOffset = fieldDataOffset + (int)_fieldDataWriter.BaseStream.Length;
-            int fieldIndicesCount = (int)_fieldIndicesWriter.BaseStream.Length;
-            int listIndicesOffset = fieldIndicesOffset + (int)_fieldIndicesWriter.BaseStream.Length;
-            int listIndicesCount = (int)_listIndicesWriter.BaseStream.Length;
+            int fieldDataCount = _fieldDataWriter.Size();
+            int fieldIndicesOffset = fieldDataOffset + _fieldDataWriter.Size();
+            int fieldIndicesCount = _fieldIndicesWriter.Size();
+            int listIndicesOffset = fieldIndicesOffset + _fieldIndicesWriter.Size();
+            int listIndicesCount = _listIndicesWriter.Size();
 
             // Write the file
             using (var ms = new MemoryStream())
@@ -88,11 +88,11 @@ namespace CSharpKOTOR.Formats.GFF
                 writer.Write((uint)listIndicesCount);
 
                 // Write all sections
-                _structWriter.BaseStream.Seek(0, SeekOrigin.Begin);
-                _structWriter.BaseStream.CopyTo(ms);
+                byte[] structData = _structWriter.Data();
+                writer.Write(structData);
 
-                _fieldWriter.BaseStream.Seek(0, SeekOrigin.Begin);
-                _fieldWriter.BaseStream.CopyTo(ms);
+                byte[] fieldData = _fieldWriter.Data();
+                writer.Write(fieldData);
 
                 // Write labels (16 bytes each)
                 foreach (string label in _labels)
@@ -101,14 +101,14 @@ namespace CSharpKOTOR.Formats.GFF
                     writer.Write(labelBytes, 0, 16);
                 }
 
-                _fieldDataWriter.BaseStream.Seek(0, SeekOrigin.Begin);
-                _fieldDataWriter.BaseStream.CopyTo(ms);
+                byte[] fieldDataSection = _fieldDataWriter.Data();
+                writer.Write(fieldDataSection);
 
-                _fieldIndicesWriter.BaseStream.Seek(0, SeekOrigin.Begin);
-                _fieldIndicesWriter.BaseStream.CopyTo(ms);
+                byte[] fieldIndicesData = _fieldIndicesWriter.Data();
+                writer.Write(fieldIndicesData);
 
-                _listIndicesWriter.BaseStream.Seek(0, SeekOrigin.Begin);
-                _listIndicesWriter.BaseStream.CopyTo(ms);
+                byte[] listIndicesData = _listIndicesWriter.Data();
+                writer.Write(listIndicesData);
 
                 return ms.ToArray();
             }
@@ -153,11 +153,11 @@ namespace CSharpKOTOR.Formats.GFF
 
         private void WriteLargeStruct(int fieldCount, GFFStruct gffStruct)
         {
-            _structWriter.Write((uint)_fieldIndicesWriter.BaseStream.Length);
+            _structWriter.Write((uint)_fieldIndicesWriter.Size());
             _structWriter.Write((uint)fieldCount);
 
-            long pos = _fieldIndicesWriter.BaseStream.Position;
-            _fieldIndicesWriter.BaseStream.Position = _fieldIndicesWriter.BaseStream.Length;
+            int pos = _fieldIndicesWriter.Position();
+            _fieldIndicesWriter.Seek(_fieldIndicesWriter.Size());
 
             // Reserve space for field indices
             for (int i = 0; i < fieldCount; i++)
@@ -168,10 +168,10 @@ namespace CSharpKOTOR.Formats.GFF
             int index = 0;
             foreach ((string label, GFFFieldType fieldType, object value) in gffStruct)
             {
-                long currentPos = _fieldIndicesWriter.BaseStream.Position;
-                _fieldIndicesWriter.BaseStream.Seek(pos + index * 4, SeekOrigin.Begin);
+                int currentPos = _fieldIndicesWriter.Position();
+                _fieldIndicesWriter.Seek(pos + index * 4);
                 _fieldIndicesWriter.Write((uint)_fieldCount);
-                _fieldIndicesWriter.BaseStream.Seek(currentPos, SeekOrigin.Begin);
+                _fieldIndicesWriter.Seek(currentPos);
                 BuildField(label, value, fieldType);
                 index++;
             }
@@ -179,11 +179,11 @@ namespace CSharpKOTOR.Formats.GFF
 
         private void BuildList(GFFList gffList)
         {
-            long pos = _listIndicesWriter.BaseStream.Position;
-            _listIndicesWriter.BaseStream.Position = _listIndicesWriter.BaseStream.Length;
+            int pos = _listIndicesWriter.Position();
+            _listIndicesWriter.Seek(_listIndicesWriter.Size());
 
             _listIndicesWriter.Write((uint)gffList.Count);
-            long indexStartPos = _listIndicesWriter.BaseStream.Position;
+            int indexStartPos = _listIndicesWriter.Position();
 
             // Reserve space for struct indices
             for (int i = 0; i < gffList.Count; i++)
@@ -194,10 +194,10 @@ namespace CSharpKOTOR.Formats.GFF
             int index = 0;
             foreach (GFFStruct gffStruct in gffList)
             {
-                long currentPos = _listIndicesWriter.BaseStream.Position;
-                _listIndicesWriter.BaseStream.Seek(indexStartPos + index * 4, SeekOrigin.Begin);
+                int currentPos = _listIndicesWriter.Position();
+                _listIndicesWriter.Seek(indexStartPos + index * 4);
                 _listIndicesWriter.Write((uint)_structCount);
-                _listIndicesWriter.BaseStream.Seek(currentPos, SeekOrigin.Begin);
+                _listIndicesWriter.Seek(currentPos);
                 BuildStruct(gffStruct);
                 index++;
             }
@@ -214,8 +214,8 @@ namespace CSharpKOTOR.Formats.GFF
 
             if (_complexFields.Contains(fieldType))
             {
-                _fieldWriter.Write((uint)_fieldDataWriter.BaseStream.Length);
-                _fieldDataWriter.BaseStream.Position = _fieldDataWriter.BaseStream.Length;
+                _fieldWriter.Write((uint)_fieldDataWriter.Size());
+                _fieldDataWriter.Seek(_fieldDataWriter.Size());
 
                 switch (fieldType)
                 {
@@ -263,7 +263,7 @@ namespace CSharpKOTOR.Formats.GFF
             }
             else if (fieldType == GFFFieldType.List)
             {
-                _fieldWriter.Write((uint)_listIndicesWriter.BaseStream.Length);
+                _fieldWriter.Write((uint)_listIndicesWriter.Size());
                 BuildList((GFFList)value);
             }
             else

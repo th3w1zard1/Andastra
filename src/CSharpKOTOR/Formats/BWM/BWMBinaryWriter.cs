@@ -134,7 +134,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildVertexData(List<Vector3> vertices)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var vertex in vertices)
                 {
@@ -149,7 +149,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildIndicesData(List<BWMFace> faces, List<Vector3> vertices)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var face in faces)
                 {
@@ -180,7 +180,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildMaterialData(List<BWMFace> faces)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var face in faces)
                 {
@@ -193,7 +193,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildNormalData(List<BWMFace> faces)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var face in faces)
                 {
@@ -209,7 +209,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildCoefficientData(List<BWMFace> faces)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var face in faces)
                 {
@@ -222,7 +222,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildAabbData(List<BWMNodeAABB> aabbs, List<BWMFace> faces)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var aabb in aabbs)
                 {
@@ -274,7 +274,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildAdjacencyData(List<BWMFace> walkable, List<BWMFace> faces)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var face in walkable)
                 {
@@ -317,7 +317,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildEdgeData(List<BWMEdge> edges, List<BWMFace> faces)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var edge in edges)
                 {
@@ -347,7 +347,7 @@ namespace CSharpKOTOR.Formats.BWM
         private byte[] BuildPerimeterData(List<int> perimeters)
         {
             using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            using (var bw = new System.IO.BinaryWriter(ms))
             {
                 foreach (var perimeter in perimeters)
                 {

@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Formats.ERF
 
         public void Write(Stream stream)
         {
-            using (var writer = new BinaryWriter(stream, Encoding.ASCII, true))
+            using (var writer = new System.IO.BinaryWriter(stream, Encoding.ASCII, true))
             {
 
                 string fourCC = _erf.ErfType == ERFType.MOD ? "MOD " : "ERF ";

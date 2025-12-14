@@ -79,7 +79,7 @@ namespace CSharpKOTOR.Mods.NCS
         ///     logger: PatchLogger for logging operations
         ///     sourcefile: Name of the source file being modified (for logging)
         /// </summary>
-        public void Apply(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        public void Apply(System.IO.BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
             logger.AddVerbose($"HACKList {sourcefile}: seeking to offset {Offset:#X}");
             writer.Seek(Offset, SeekOrigin.Begin);
@@ -113,7 +113,7 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write a 16-bit unsigned TLK string reference.</summary>
-        private void WriteStrRef(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        private void WriteStrRef(System.IO.BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
             if (!memory.MemoryStr.TryGetValue(TokenIdOrValue, out int memoryStrval))
             {
@@ -125,7 +125,7 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write a 32-bit signed TLK string reference (CONSTI instruction).</summary>
-        private void WriteStrRef32(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        private void WriteStrRef32(System.IO.BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
             if (!memory.MemoryStr.TryGetValue(TokenIdOrValue, out int memoryStrval))
             {
@@ -137,7 +137,7 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write a 16-bit unsigned 2DA memory reference.</summary>
-        private void Write2DAMemory(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        private void Write2DAMemory(System.IO.BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
             // Can be null if not found
             if (!memory.Memory2DA.TryGetValue(TokenIdOrValue, out string memoryVal))
@@ -154,7 +154,7 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write a 32-bit signed 2DA memory reference (CONSTI instruction).</summary>
-        private void Write2DAMemory32(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        private void Write2DAMemory32(System.IO.BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
             // Can be null if not found
             if (!memory.Memory2DA.TryGetValue(TokenIdOrValue, out string memoryVal))
@@ -171,7 +171,7 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write a 32-bit unsigned integer literal.</summary>
-        private void WriteUInt32(BinaryWriter writer, PatchLogger logger, string sourcefile)
+        private void WriteUInt32(System.IO.BinaryWriter writer, PatchLogger logger, string sourcefile)
         {
             int value = TokenIdOrValue;
             logger.AddVerbose($"HACKList {sourcefile}: writing unsigned DWORD (32-bit) {value} at offset {Offset:#X}");
@@ -179,7 +179,7 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write a 16-bit unsigned integer literal.</summary>
-        private void WriteUInt16(BinaryWriter writer, PatchLogger logger, string sourcefile)
+        private void WriteUInt16(System.IO.BinaryWriter writer, PatchLogger logger, string sourcefile)
         {
             int value = TokenIdOrValue;
             logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
@@ -187,20 +187,20 @@ namespace CSharpKOTOR.Mods.NCS
         }
 
         /// <summary>Write an 8-bit unsigned integer literal.</summary>
-        private void WriteUInt8(BinaryWriter writer, PatchLogger logger, string sourcefile)
+        private void WriteUInt8(System.IO.BinaryWriter writer, PatchLogger logger, string sourcefile)
         {
             int value = TokenIdOrValue;
             logger.AddVerbose($"HACKList {sourcefile}: writing unsigned BYTE (8-bit) {value} at offset {Offset:#X}");
             writer.Write((byte)value);
         }
 
-        private static void WriteUInt16BigEndian(BinaryWriter writer, ushort value)
+        private static void WriteUInt16BigEndian(System.IO.BinaryWriter writer, ushort value)
         {
             writer.Write((byte)((value >> 8) & 0xFF));
             writer.Write((byte)(value & 0xFF));
         }
 
-        private static void WriteUInt32BigEndian(BinaryWriter writer, uint value)
+        private static void WriteUInt32BigEndian(System.IO.BinaryWriter writer, uint value)
         {
             writer.Write((byte)((value >> 24) & 0xFF));
             writer.Write((byte)((value >> 16) & 0xFF));
@@ -208,7 +208,7 @@ namespace CSharpKOTOR.Mods.NCS
             writer.Write((byte)(value & 0xFF));
         }
 
-        private static void WriteInt32BigEndian(BinaryWriter writer, int value)
+        private static void WriteInt32BigEndian(System.IO.BinaryWriter writer, int value)
         {
             writer.Write((byte)((value >> 24) & 0xFF));
             writer.Write((byte)((value >> 16) & 0xFF));
@@ -262,7 +262,7 @@ namespace CSharpKOTOR.Mods.NCS
             if (mutableData is byte[] ncsBytearray)
             {
                 using (var stream = new MemoryStream(ncsBytearray))
-                using (var writer = new BinaryWriter(stream))
+                using (var writer = new System.IO.BinaryWriter(stream))
                 {
                     foreach (ModifyNCS modifier in Modifiers)
                     {
