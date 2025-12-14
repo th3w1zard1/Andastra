@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Odyssey.Content.Interfaces;
+using CSharpKOTOR.Resources;
 
 namespace Odyssey.MonoGame.Loading
 {
@@ -78,41 +79,59 @@ namespace Odyssey.MonoGame.Loading
             }
 
             // Create new load task
-            var task = Task.Run(() =>
+            var task = Task.Run(async () =>
             {
                 try
                 {
-                    // Resolve file location using resource provider
-                    // TODO: Implement texture path resolution using IGameResourceProvider
-                    // For now, use a placeholder - actual implementation would use ResourceIdentifier
-                    string filePath = null; // _resourceProvider.LocateAsync(...)
-                    if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                    // Resolve resource using IGameResourceProvider
+                    using (var resourceId = new ResourceIdentifier(
+                        textureName,
+                        ResourceType.TPC))
                     {
+                        // Check if resource exists
+                        bool exists = await _resourceProvider.ExistsAsync(resourceId, _cancellationTokenSource.Token);
+                        if (!exists)
+                        {
+                            return new TextureLoadResult
+                            {
+                                TextureName = textureName,
+                                Success = false,
+                                ErrorMessage = $"Texture resource not found: {textureName}"
+                            };
+                        }
+
+                        // Load resource bytes asynchronously (IO operation off main thread)
+                        byte[] fileData = await _resourceProvider.GetResourceBytesAsync(resourceId, _cancellationTokenSource.Token);
+                        
+                        if (fileData == null || fileData.Length == 0)
+                        {
+                            return new TextureLoadResult
+                            {
+                                TextureName = textureName,
+                                Success = false,
+                                ErrorMessage = $"Texture resource is empty: {textureName}"
+                            };
+                        }
+
+                        // Return raw data - actual parsing happens on main thread with graphics context
+                        // This matches PyKotor's pattern where IO+parsing happens in child process,
+                        // but GPU object creation happens on main thread
                         return new TextureLoadResult
                         {
                             TextureName = textureName,
-                            Success = false,
-                            ErrorMessage = $"Texture file not found: {textureName}"
+                            Success = true,
+                            FilePath = null, // Path not needed since we have bytes
+                            FileData = fileData
                         };
                     }
-
-                    // Read file bytes (IO operation)
-                    byte[] fileData;
-                    using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        fileData = new byte[fs.Length];
-                        fs.Read(fileData, 0, fileData.Length);
-                    }
-
-                    // Parse texture data (CPU-bound parsing)
-                    // This would call into CSharpKOTOR texture parsing
-                    // For now, return raw data - actual parsing happens on main thread with OpenGL context
+                }
+                catch (OperationCanceledException)
+                {
                     return new TextureLoadResult
                     {
                         TextureName = textureName,
-                        Success = true,
-                        FilePath = filePath,
-                        FileData = fileData
+                        Success = false,
+                        ErrorMessage = $"Texture load cancelled: {textureName}"
                     };
                 }
                 catch (Exception ex)
@@ -132,8 +151,7 @@ namespace Odyssey.MonoGame.Loading
             task.ContinueWith(t =>
             {
                 TextureLoadResult result;
-                Task<TextureLoadResult> removed;
-                _pendingTextures.TryRemove(textureName, out removed);
+                _pendingTextures.TryRemove(textureName, out Task<TextureLoadResult> removed);
                 if (t.IsCompletedSuccessfully)
                 {
                     result = t.Result;
@@ -158,60 +176,78 @@ namespace Odyssey.MonoGame.Loading
             }
 
             // Return existing task if already loading
-            Task<ModelLoadResult> existingTask;
-            if (_pendingModels.TryGetValue(modelName, out existingTask))
+            if (_pendingModels.TryGetValue(modelName, out Task<ModelLoadResult> existingTask))
             {
                 return existingTask;
             }
 
             // Create new load task
-            var task = Task.Run(() =>
+            var task = Task.Run(async () =>
             {
                 try
                 {
-                    // Resolve file locations using resource provider
-                    // TODO: Implement model path resolution using IGameResourceProvider
-                    // For now, use placeholders - actual implementation would use ResourceIdentifier
-                    string mdlPath = null; // _resourceProvider.LocateAsync(...)
-                    string mdxPath = null; // _resourceProvider.LocateAsync(...)
+                    // Load MDL resource using IGameResourceProvider
+                    var mdlResourceId = new ResourceIdentifier(
+                        modelName,
+                        ResourceType.MDL);
 
-                    if (string.IsNullOrEmpty(mdlPath) || !File.Exists(mdlPath))
+                    // Check if MDL exists
+                    bool mdlExists = await _resourceProvider.ExistsAsync(mdlResourceId, _cancellationTokenSource.Token);
+                    if (!mdlExists)
                     {
                         return new ModelLoadResult
                         {
                             ModelName = modelName,
                             Success = false,
-                            ErrorMessage = $"MDL file not found: {modelName}"
+                            ErrorMessage = $"MDL resource not found: {modelName}"
                         };
                     }
 
-                    // Read MDL file bytes
-                    byte[] mdlData;
-                    using (FileStream fs = new FileStream(mdlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        mdlData = new byte[fs.Length];
-                        fs.Read(mdlData, 0, mdlData.Length);
-                    }
+                    // Load MDL bytes asynchronously (IO operation off main thread)
+                    byte[] mdlData = await _resourceProvider.GetResourceBytesAsync(mdlResourceId, _cancellationTokenSource.Token);
 
-                    // Read MDX file bytes if available
-                    byte[] mdxData = null;
-                    if (!string.IsNullOrEmpty(mdxPath) && File.Exists(mdxPath))
+                    if (mdlData == null || mdlData.Length == 0)
                     {
-                        using (FileStream fs = new FileStream(mdxPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        return new ModelLoadResult
                         {
-                            mdxData = new byte[fs.Length];
-                            fs.Read(mdxData, 0, mdxData.Length);
-                        }
+                            ModelName = modelName,
+                            Success = false,
+                            ErrorMessage = $"MDL resource is empty: {modelName}"
+                        };
                     }
 
+                    // Load MDX resource (same name, different extension)
+                    byte[] mdxData = null;
+                    var mdxResourceId = new ResourceIdentifier(
+                        modelName,
+                        ResourceType.MDX);
+
+                    bool mdxExists = await _resourceProvider.ExistsAsync(mdxResourceId, _cancellationTokenSource.Token);
+                    if (mdxExists)
+                    {
+                        mdxData = await _resourceProvider.GetResourceBytesAsync(mdxResourceId, _cancellationTokenSource.Token);
+                    }
+
+                    // Return raw data - actual parsing happens on main thread with graphics context
+                    // This matches PyKotor's pattern where IO+parsing happens in child process,
+                    // but GPU object creation happens on main thread
                     return new ModelLoadResult
                     {
                         ModelName = modelName,
                         Success = true,
-                        MdlFilePath = mdlPath,
-                        MdxFilePath = mdxPath,
+                        MdlFilePath = null, // Path not needed since we have bytes
+                        MdxFilePath = null, // Path not needed since we have bytes
                         MdlData = mdlData,
                         MdxData = mdxData
+                    };
+                }
+                catch (OperationCanceledException)
+                {
+                    return new ModelLoadResult
+                    {
+                        ModelName = modelName,
+                        Success = false,
+                        ErrorMessage = $"Model load cancelled: {modelName}"
                     };
                 }
                 catch (Exception ex)

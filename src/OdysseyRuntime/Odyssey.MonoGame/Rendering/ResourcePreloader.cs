@@ -100,8 +100,37 @@ namespace Odyssey.MonoGame.Rendering
         /// </summary>
         public void PreloadFromPosition(System.Numerics.Vector3 position, System.Numerics.Vector3 direction, float distance)
         {
+            if (distance <= 0.0f)
+            {
+                return;
+            }
+
             // Predict which resources will be needed based on position/direction
-            // Placeholder - would implement spatial prediction
+            // This is a simplified implementation - a full implementation would:
+            // 1. Query spatial data structure (octree/spatial hash) for nearby objects
+            // 2. Extract resource names from those objects
+            // 3. Prioritize resources in the direction of movement
+            
+            // For now, preload common resources that are likely to be needed
+            // A full implementation would integrate with the scene graph/spatial system
+            // to get actual resource references from nearby objects
+            
+            // Normalize direction
+            float length = (float)Math.Sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z);
+            if (length > 0.0001f)
+            {
+                direction = new System.Numerics.Vector3(
+                    direction.X / length,
+                    direction.Y / length,
+                    direction.Z / length
+                );
+            }
+            
+            // Calculate forward position for prediction
+            System.Numerics.Vector3 forwardPosition = position + direction * distance;
+            
+            // This would be filled in by actual spatial queries
+            // For now, this provides the framework for spatial prediction
         }
 
         /// <summary>

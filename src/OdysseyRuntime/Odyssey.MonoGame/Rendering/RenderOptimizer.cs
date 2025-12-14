@@ -30,6 +30,7 @@ namespace Odyssey.MonoGame.Rendering
         }
 
         private readonly List<OptimizationParameter> _parameters;
+        private readonly Dictionary<string, int> _parameterIndices;
         private readonly Dictionary<string, float> _performanceHistory;
         private float _targetFrameTime;
         private float _currentFrameTime;
@@ -49,6 +50,7 @@ namespace Odyssey.MonoGame.Rendering
         public RenderOptimizer(float targetFrameTime = 16.67f)
         {
             _parameters = new List<OptimizationParameter>();
+            _parameterIndices = new Dictionary<string, int>();
             _performanceHistory = new Dictionary<string, float>();
             _targetFrameTime = targetFrameTime;
             _currentFrameTime = targetFrameTime;
@@ -59,6 +61,24 @@ namespace Odyssey.MonoGame.Rendering
         /// </summary>
         public void RegisterParameter(string name, float minValue, float maxValue, float initialValue, float stepSize)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Parameter name cannot be null or empty.", "name");
+            }
+            if (minValue >= maxValue)
+            {
+                throw new ArgumentException("MinValue must be less than MaxValue.", "minValue");
+            }
+            if (initialValue < minValue || initialValue > maxValue)
+            {
+                throw new ArgumentException("InitialValue must be between MinValue and MaxValue.", "initialValue");
+            }
+            if (stepSize <= 0.0f)
+            {
+                throw new ArgumentException("StepSize must be greater than zero.", "stepSize");
+            }
+
+            int index = _parameters.Count;
             _parameters.Add(new OptimizationParameter
             {
                 Name = name,
@@ -67,6 +87,7 @@ namespace Odyssey.MonoGame.Rendering
                 CurrentValue = initialValue,
                 StepSize = stepSize
             });
+            _parameterIndices[name] = index;
         }
 
         /// <summary>
@@ -119,13 +140,15 @@ namespace Odyssey.MonoGame.Rendering
         private void OptimizeParameters()
         {
             // Reduce quality parameters to improve performance
-            foreach (OptimizationParameter param in _parameters)
+            for (int i = 0; i < _parameters.Count; i++)
             {
+                OptimizationParameter param = _parameters[i];
                 float newValue = param.CurrentValue - param.StepSize;
                 if (newValue >= param.MinValue)
                 {
-                    // Would update parameter value
-                    // Placeholder - would actually modify parameter
+                    // Update parameter value
+                    param.CurrentValue = newValue;
+                    _parameters[i] = param;
                 }
             }
         }
@@ -133,15 +156,49 @@ namespace Odyssey.MonoGame.Rendering
         private void IncreaseQuality()
         {
             // Increase quality parameters if performance allows
-            foreach (OptimizationParameter param in _parameters)
+            for (int i = 0; i < _parameters.Count; i++)
             {
+                OptimizationParameter param = _parameters[i];
                 float newValue = param.CurrentValue + param.StepSize;
                 if (newValue <= param.MaxValue)
                 {
-                    // Would update parameter value
-                    // Placeholder - would actually modify parameter
+                    // Update parameter value
+                    param.CurrentValue = newValue;
+                    _parameters[i] = param;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets a parameter value by name.
+        /// </summary>
+        public float? GetParameterValue(string name)
+        {
+            int index;
+            if (_parameterIndices.TryGetValue(name, out index) && index >= 0 && index < _parameters.Count)
+            {
+                return _parameters[index].CurrentValue;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Sets a parameter value by name.
+        /// </summary>
+        public bool SetParameterValue(string name, float value)
+        {
+            int index;
+            if (_parameterIndices.TryGetValue(name, out index) && index >= 0 && index < _parameters.Count)
+            {
+                OptimizationParameter param = _parameters[index];
+                if (value >= param.MinValue && value <= param.MaxValue)
+                {
+                    param.CurrentValue = value;
+                    _parameters[index] = param;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

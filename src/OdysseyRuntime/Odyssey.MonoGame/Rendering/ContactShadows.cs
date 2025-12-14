@@ -18,11 +18,13 @@ namespace Odyssey.MonoGame.Rendering
     public class ContactShadows : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly RenderTarget2D _contactShadowTarget;
+        private RenderTarget2D _contactShadowTarget;
         private float _shadowDistance;
         private float _shadowThickness;
         private int _sampleCount;
         private bool _enabled;
+        private int _lastWidth;
+        private int _lastHeight;
 
         /// <summary>
         /// Gets or sets whether contact shadows are enabled.
@@ -75,20 +77,68 @@ namespace Odyssey.MonoGame.Rendering
             _shadowThickness = 0.5f;
             _sampleCount = 8;
             _enabled = true;
+            _lastWidth = 0;
+            _lastHeight = 0;
         }
 
         /// <summary>
         /// Renders contact shadows using screen-space depth.
         /// </summary>
+        /// <param name="depthBuffer">Depth buffer for depth testing.</param>
+        /// <param name="normalBuffer">Normal buffer for surface orientation.</param>
+        /// <param name="effect">Effect/shader for contact shadow rendering.</param>
+        /// <returns>Render target containing contact shadows, or null if disabled or invalid input.</returns>
         public RenderTarget2D Render(RenderTarget2D depthBuffer, RenderTarget2D normalBuffer, Effect effect)
         {
-            if (!_enabled || depthBuffer == null)
+            if (!_enabled || depthBuffer == null || effect == null)
             {
                 return null;
             }
 
+            // Create or resize render target if needed
+            int width = depthBuffer.Width;
+            int height = depthBuffer.Height;
+            if (_contactShadowTarget == null || _lastWidth != width || _lastHeight != height)
+            {
+                _contactShadowTarget?.Dispose();
+                _contactShadowTarget = new RenderTarget2D(
+                    _graphicsDevice,
+                    width,
+                    height,
+                    false,
+                    Microsoft.Xna.Framework.Graphics.SurfaceFormat.Single,
+                    Microsoft.Xna.Framework.Graphics.DepthFormat.None
+                );
+                _lastWidth = width;
+                _lastHeight = height;
+            }
+
+            // Set render target
+            RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0 
+                ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D 
+                : null;
+            _graphicsDevice.SetRenderTarget(_contactShadowTarget);
+            _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.White); // White = no shadow
+
             // Render contact shadows using ray-marching in screen space
-            // Placeholder - would implement full shader pipeline
+            // Full implementation would:
+            // 1. Set shader parameters (depthBuffer, normalBuffer, shadowDistance, shadowThickness, sampleCount)
+            // 2. Render full-screen quad with contact shadow shader
+            // 3. The shader performs screen-space ray-marching to detect contact shadows
+            // For now, this provides the framework and resource management
+            
+            if (effect != null)
+            {
+                // effect.Parameters["DepthTexture"].SetValue(depthBuffer);
+                // effect.Parameters["NormalTexture"].SetValue(normalBuffer);
+                // effect.Parameters["ShadowDistance"].SetValue(_shadowDistance);
+                // effect.Parameters["ShadowThickness"].SetValue(_shadowThickness);
+                // effect.Parameters["SampleCount"].SetValue(_sampleCount);
+                // Render full-screen quad here
+            }
+
+            // Restore previous render target
+            _graphicsDevice.SetRenderTarget(previousTarget);
 
             return _contactShadowTarget;
         }
