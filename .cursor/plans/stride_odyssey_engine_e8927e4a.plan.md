@@ -8,7 +8,7 @@ todos: []
 
 ## Constraints (must not break)
 
-- **Clean-room**: xoreos/reone/KotOR.js/NorthernLights are *behavior/spec references only*. No code copying/translation.
+- **Clean-room**: implementation is derived from behavioral observation, specification documents, and in-game testing. No code copying or translation from other implementations.
 - **Commercial/closed-source-friendly**: avoid GPL/LGPL/AGPL dependencies in the shipped runtime; prefer permissive (MIT/BSD/Apache) and vetted commercial-friendly third parties.
 - **Use CSharpKOTOR** as the **source-of-truth** for KOTOR file formats, installation scanning, and game data parsing.
 - **Do not ship game assets**. The runtime must load from a user-provided KOTOR/TSL installation.
@@ -26,16 +26,17 @@ A playable, faithful KOTOR1/KOTOR2 runtime built on **Stride**, with modular lib
 - **Save/Load**: functional K1/K2 saves (at least core state; expand to full parity).
 - **Mod compatibility**: override/module precedence consistent with KOTOR.
 
-## What we keep from the 4 reference engines (without merging code)
+## Feature catalog and behavioral reference (clean-room process)
 
-We treat the four projects as “feature catalogs” and verification aids:
+To ensure comprehensive coverage, we maintain a behavioral feature catalog derived from in-game observation and documented specifications:
 
-- **xoreos**: broad Aurora/Odyssey-family scope, resource systems, scene graph patterns, script VM insights.
-- **reone**: KOTOR-focused rendering/material/shader behaviors; NCS/NWScript handling patterns.
-- **KotOR.js**: rapid iteration of rendering, interaction, and UI flows; modern engine architecture ideas.
-- **NorthernLights**: practical mod/workflow conventions and scripting integration expectations.
+- **Resource system patterns**: module archive precedence, save overlays, streaming strategies.
+- **Rendering behaviors**: material properties, lightmap application, transparency ordering, shader variants.
+- **Script execution**: NCS VM semantics, action queue patterns, event timing, engine call dispatch.
+- **Scene assembly**: room hierarchy, doorhook placement, VIS culling, entity spawning from GIT.
+- **Gameplay systems**: dialogue flow, combat resolution, AI behaviors, save/load state management.
 
-Deliverable from this phase: a **Feature Matrix** (spreadsheet or internal doc outside repo if license-sensitive) mapping: subsystem → behavior expectations → testable acceptance criteria.
+Deliverable from this phase: a **Feature Matrix** (spreadsheet or internal doc outside repo) mapping: subsystem → behavior expectations → testable acceptance criteria. This matrix is derived from in-game observation and specification documents, not from code analysis.
 
 ## Primary specifications (authoritative docs to implement against)
 
@@ -84,22 +85,69 @@ Optional but recommended tooling (kept separate from runtime):
 
 ```mermaid
 flowchart TD
+  %% Resource Layer
   userInstall[UserProvidedInstallPath] --> installScan[CSharpKOTOR.Installation]
-  installScan --> resLookup[ResourceLookupPrecedence]
-  resLookup --> moduleLoad[CSharpKOTOR.Common.Module]
-
-  moduleLoad --> worldBuild[Odyssey.Kotor.WorldBuilder]
-  worldBuild --> runtimeWorld[Odyssey.Core.World]
-
-  runtimeWorld --> strideBridge[Odyssey.Stride.SceneBridge]
-  strideBridge --> strideScene[StrideScene]
-
-  runtimeWorld --> scriptHost[Odyssey.Scripting.NcsVm]
-  scriptHost --> engineApi[Odyssey.Scripting.IEngineApi]
+  installScan --> resProvider[IGameResourceProvider<br/>Virtual File System]
+  resProvider --> resCache[Resource Cache<br/>Async Streaming]
+  
+  %% Module Loading
+  resProvider --> moduleLoad[CSharpKOTOR.Common.Module]
+  moduleLoad --> moduleData[IFO/ARE/GIT/LYT/VIS]
+  
+  %% Content Pipeline
+  resCache --> contentCache[Odyssey.Content.Cache<br/>Hash-keyed Storage]
+  contentCache --> textureConv[TPC/TGA → Stride.Texture]
+  contentCache --> modelConv[MDL/MDX → Stride.Model]
+  contentCache --> walkmeshConv[BWM → Nav/Collision Mesh]
+  contentCache --> audioConv[WAV → Stride.Audio]
+  
+  %% World Construction
+  moduleData --> worldBuilder[Odyssey.Kotor.WorldBuilder]
+  worldBuilder --> entitySpawn[Entity Spawning<br/>GIT → Runtime Entities]
+  entitySpawn --> runtimeWorld[Odyssey.Core.World<br/>Entity Container]
+  
+  %% Scene Graph
+  runtimeWorld --> sceneGraph[Scene Graph Manager<br/>Hierarchy + Transforms]
+  sceneGraph --> entityRegistry[Entity Registry<br/>ID → Entity Mapping]
+  
+  %% Rendering Pipeline
+  sceneGraph --> renderBridge[Odyssey.Stride.SceneBridge]
+  textureConv --> renderBridge
+  modelConv --> renderBridge
+  renderBridge --> strideScene[Stride Scene Graph]
+  strideScene --> renderQueue[Render Queue<br/>VIS Culling + Batching]
+  renderQueue --> gpu[GPU Rendering]
+  
+  %% Scripting System
+  runtimeWorld --> scriptScheduler[Odyssey.Scripting.Scheduler<br/>Per-Entity Queues]
+  scriptScheduler --> ncsVm[Odyssey.Scripting.NcsVm<br/>Stack-Based Execution]
+  ncsVm --> engineApi[Odyssey.Scripting.IEngineApi<br/>NWScript Dispatch]
   engineApi --> runtimeWorld
-
-  runtimeWorld --> saveSys[Odyssey.Kotor.SaveSystem]
-  saveSys --> saveFiles[SaveGameFiles]
+  engineApi --> actionQueue[Action Queue System<br/>AssignCommand/DelayCommand]
+  actionQueue --> runtimeWorld
+  
+  %% Game Systems
+  runtimeWorld --> dialogueSys[Odyssey.Kotor.DialogueSystem<br/>DLG/TLK/VO/LIP]
+  runtimeWorld --> combatSys[Odyssey.Kotor.CombatSystem<br/>D20 Rules + AI]
+  runtimeWorld --> saveSys[Odyssey.Kotor.SaveSystem<br/>State Serialization]
+  saveSys --> saveFiles[SaveGameFiles<br/>ERF/SAV Format]
+  
+  %% Input & UI
+  inputSys[Input System] --> runtimeWorld
+  inputSys --> uiSys[Odyssey.Stride.UI<br/>Dialogue + HUD + Menus]
+  uiSys --> strideScene
+  
+  %% Audio
+  audioConv --> audioBridge[Odyssey.Stride.AudioBridge<br/>Spatial Audio]
+  dialogueSys --> audioBridge
+  combatSys --> audioBridge
+  audioBridge --> strideAudio[Stride Audio System]
+  
+  %% Feedback Loops
+  renderQueue -.-> sceneGraph
+  actionQueue -.-> sceneGraph
+  combatSys -.-> scriptScheduler
+  dialogueSys -.-> scriptScheduler
 ```
 
 ## Clean-room process (industry standard)
@@ -146,10 +194,20 @@ Leverage `CSharpKOTOR.Installation.Installation` and `Module` to implement:
 Resource order note (Odyssey/Aurora behavior target, per `vendor/PyKotor/wiki/Home.md`):
 
 - Once a save is loaded, it becomes a **resource overlay** (lookups may resolve to save-contained resources before chitin).
-- Module archives must be treated as a **stack**: the “current module” plus any explicitly loaded capsules.
-- This must remain compatible with mod expectations and KOTOR’s resource resolution rules.
+- Module archives must be treated as a **stack**: the "current module" plus any explicitly loaded capsules.
+- This must remain compatible with mod expectations and KOTOR's resource resolution rules.
 
-**Acceptance**: can enumerate modules, load `module.ifo`, `*.are`, `*.git`, `*.lyt`, `*.vis`, `*.pth`, `*.dlg` for a chosen module.
+**Implementation patterns**:
+
+- **Resource provider interface**: `IGameResourceProvider` with methods:
+  - `Task<Stream> OpenResourceAsync(ResourceIdentifier, CancellationToken)` — async stream access
+  - `Task<bool> ResourceExistsAsync(ResourceIdentifier, CancellationToken)` — existence check without opening
+  - `Task<List<LocationResult>> LocateResourceAsync(ResourceIdentifier, SearchLocation[], CancellationToken)` — multi-location lookup
+- **Archive caching**: keep recently accessed ERF/RIM/BIF handles open with LRU eviction; close on module unload.
+- **Resource metadata cache**: maintain a lightweight index of (resref, restype) → (location, size, offset) for fast existence checks.
+- **Save overlay integration**: when a save is active, inject a `SaveResourceProvider` into the precedence chain that queries save ERF contents before falling back to installation.
+
+**Acceptance**: can enumerate modules, load `module.ifo`, `*.are`, `*.git`, `*.lyt`, `*.vis`, `*.pth`, `*.dlg` for a chosen module. Async reads complete without blocking the main thread. Resource existence checks are fast (< 1ms for cache hits).
 
 ### 2) Asset pipeline (KOTOR → Stride runtime assets)
 
@@ -162,7 +220,19 @@ Create `Odyssey.Content` responsible for converting on demand:
 - **Walkmesh**: `BWM → navigation + collision mesh`.
 - **Caching**: content cache directory keyed by (game, module, resref, hash-of-source-bytes, converter-version).
 
-**Acceptance**: can render a static model + texture in Stride; cache hit rate measurable; no stutter for repeated loads.
+**Implementation patterns**:
+
+- **Content converter interface**: `IContentConverter<TInput, TOutput>` with:
+  - `Task<TOutput> ConvertAsync(TInput input, ConversionContext ctx, CancellationToken ct)`
+  - `bool CanConvert(ResourceIdentifier ident)`
+- **Conversion context**: provides `IGameResourceProvider`, `ContentCache`, `GameProfile`, and metadata (module ID, game version).
+- **Progressive loading**: for models, support loading geometry first, then textures, then animations (allows early rendering with placeholder materials).
+- **Cache key generation**: deterministic hash of (game, resref, restype, source bytes, converter version, platform GPU vendor) ensures cache consistency.
+- **Background conversion**: queue conversion tasks on a thread pool; main thread can request with timeout/fallback to placeholder.
+- **Dependency tracking**: if a model references textures, cache the dependency graph to invalidate downstream assets when source changes.
+- **Memory management**: cache entries have size limits; evict least-recently-used entries when memory pressure is high.
+
+**Acceptance**: can render a static model + texture in Stride; cache hit rate measurable; no stutter for repeated loads. Background conversion doesn't block main thread. Cache invalidation works correctly on converter updates.
 
 ### 3) Rendering: area scene assembly (first playable slice)
 
@@ -171,6 +241,14 @@ Implement `Odyssey.Stride` scene assembly:
 - Read module layout (`LYT`) and visibility (`VIS`) to:
   - instantiate room meshes
   - apply VIS culling groups
+
+**Scene graph architecture**:
+
+- **Room hierarchy**: each room becomes a Stride `Entity` with a `ModelComponent`; rooms are children of the area root entity.
+- **Doorhook placement**: LYT doorhooks create placeholder entities at specified transforms; actual door models attach when GIT spawns doors.
+- **VIS culling groups**: maintain a `VisibilityGroup` component per room; `VIS` file defines which groups are visible from each room; update on room transitions.
+- **Material assignment**: room meshes reference materials with lightmaps; material instances are shared across rooms using the same texture set.
+- **LOD support**: (phase 2) implement distance-based LOD for large areas; phase 1 uses full detail.
 
 LYT specifics to implement (see `vendor/PyKotor/wiki/LYT-File-Format.md`):
 
@@ -241,7 +319,19 @@ Click-to-move depends on these primitives:
   - `GIT` spawns (creatures/placeables/doors/triggers/waypoints)
   - templates `UTC/UTP/UTD/...`
 
-**Acceptance**: entities spawn from GIT and show in scene; click-to-select; interact with doors/placeables (even if stubbed).
+**Implementation patterns**:
+
+- **Entity registry**: maintain a bidirectional map `EntityId ↔ Entity` with fast lookup by ID, tag, and type.
+- **Component storage**: use a sparse set or archetype-based storage for efficient iteration over component types (e.g., all `Transform` components, all `Renderable` components).
+- **Entity lifecycle**:
+  - Spawn: create entity → attach components from template → register in world → trigger `OnSpawn` script.
+  - Update: per-frame component updates (transform sync, animation, AI) → event dispatch.
+  - Despawn: trigger `OnDestroy` script → remove from registry → detach from scene graph → dispose components.
+- **Template system**: `EntityTemplate` loads from GFF (UTC/UTP/UTD/etc.) and provides a factory method `Entity Spawn(World, Vector3, float)` that instantiates with default values.
+- **Hierarchical entities**: support parent-child relationships for attachments (weapons on creatures, placeables on rooms).
+- **Event routing**: entity-scoped events (OnUse, OnHeartbeat) route to the entity's script hooks; world-scoped events (OnModuleLoad) broadcast globally.
+
+**Acceptance**: entities spawn from GIT and show in scene; click-to-select; interact with doors/placeables (even if stubbed). Entity registry lookups are O(1) by ID. Component iteration is efficient for rendering/AI updates.
 
 ### 6) Scripting: NCS
 
@@ -288,6 +378,17 @@ Build `Odyssey.Scripting` as a standalone, deterministic **stack-based VM** that
   - `IGameObjectResolver`: object-id ↔ runtime entity mapping, area scoping, module scoping.
   - `IScriptGlobals`: global vars, campaign DB, local vars per object, persistent storage (ties into Save/Load).
 
+**VM implementation patterns**:
+
+- **Script instance**: each running script is a `ScriptInstance` with its own stack, call stack, locals, and instruction pointer.
+- **Execution context**: `ExecutionContext` holds the current script instance, object context (who owns the script), and engine API reference.
+- **Instruction dispatch**: use a jump table or switch statement for opcodes; qualifier byte determines operand decoding (II/FF/SS/OO/VV/TT patterns).
+- **Stack management**: maintain a 4-byte-aligned stack with bounds checking; vectors are 12 bytes (3 floats); structures are multiples of 4 bytes.
+- **Call stack**: track return addresses and saved base pointers for function calls (`JSR`/`JMP`/`RSRSUB`).
+- **Object reference handling**: object IDs are stored as integers; `IGameObjectResolver` maps to runtime entities; invalid IDs return `OBJECT_INVALID`.
+- **String interning**: intern frequently used strings (empty string, common constants) to reduce allocations.
+- **Deterministic RNG**: use a seeded RNG per script instance or per-object to ensure reproducible behavior.
+
 > Note: `CSharpKOTOR` already has NCS representation + NWScript defs (`ScriptDefs`) and compiler pieces; the missing piece for runtime is an **execution VM** + **engine API**.
 
 #### 6.2 Engine-call surface (ACTION)
@@ -317,9 +418,19 @@ Implement Odyssey-like action queues:
   - `AssignCommand(oSubject, action)` pushes action into subject queue.
   - `DelayCommand(t, action)` schedules action in a time wheel / priority queue.
   - `Action` parameters in NWScript compile into stored sub-states (`STORE_STATE`) + return later; mirror KOTOR semantics.
-- Provide “heartbeats”:
+- Provide "heartbeats":
   - On heartbeat tick, process queued actions (bounded).
   - Standard script events: OnSpawn, OnHeartbeat, OnPerception, OnDamaged, OnDeath, OnConversation, OnUsed, OnEnter/Exit, etc.
+
+**Action queue implementation**:
+
+- **Action types**: `MoveToLocation`, `Attack`, `UseObject`, `SpeakString`, `PlayAnimation`, `Wait`, `ActionQueue` (nested), etc.
+- **Queue structure**: FIFO queue per entity; current action executes until complete or interrupted; queued actions wait.
+- **Action state**: each action has `Execute(Entity, float deltaTime) → ActionStatus` (Running/Complete/Interrupted).
+- **Delay wheel**: use a time-ordered priority queue (min-heap) keyed by `(currentTime + delay)`; on each frame, pop actions whose time has arrived and push to entity queues.
+- **STORE_STATE handling**: when an action parameter is compiled, the VM stores stack bytes and locals bytes; on action execution, restore the script state and continue from the stored instruction pointer.
+- **Interruption**: combat, dialogue, or script-driven actions can interrupt the current action; interrupted actions are discarded (not resumed).
+- **Heartbeat timing**: heartbeat events fire on a fixed interval (typically 6 seconds); each entity's heartbeat script runs independently.
 
 #### 6.4 Script debugging & determinism
 
@@ -690,11 +801,27 @@ This is the “execution checklist” that teams can parallelize without steppin
 
 #### `Odyssey.Core`
 
-- Entity/component model and world container
-- Time system (fixed tick, frame delta separation)
-- Event bus + routing (entity-scoped and world-scoped)
-- SaveModel (engine-neutral)
-- Diagnostics contracts (logging categories, trace events)
+- Entity/component model and world container:
+  - Entity registry (ID/tag/type lookup)
+  - Component storage (sparse sets or archetypes)
+  - Entity lifecycle (spawn/update/despawn)
+  - Hierarchical transforms (parent-child relationships)
+- Time system (fixed tick, frame delta separation):
+  - Simulation time (fixed step, deterministic)
+  - Render time (variable step, for interpolation)
+  - Time scaling (pause, slow-motion)
+- Event bus + routing (entity-scoped and world-scoped):
+  - Event types (OnSpawn, OnDestroy, OnUse, OnEnter, etc.)
+  - Subscriber management (subscribe/unsubscribe)
+  - Event queuing (deferred dispatch for frame boundaries)
+- SaveModel (engine-neutral):
+  - Serializable state (entities, globals, campaign vars)
+  - Versioning (save format version for migration)
+  - Compression (optional, for large saves)
+- Diagnostics contracts (logging categories, trace events):
+  - Structured logging (category, level, entity context)
+  - Performance counters (frame time, script time, render time)
+  - Debug visualization hooks
 
 #### `Odyssey.Content`
 
@@ -752,20 +879,31 @@ This is the “execution checklist” that teams can parallelize without steppin
 #### `Odyssey.Stride`
 
 - Scene bridge:
-  - entity ↔ Stride Entity mapping
-  - transform sync and attachment nodes.
+  - entity ↔ Stride Entity mapping (bidirectional registry)
+  - transform sync (runtime → Stride on update)
+  - attachment nodes (weapons, placeables, effects)
+  - component synchronization (Renderable → ModelComponent, etc.)
 - Rendering:
-  - room instantiation from LYT
-  - VIS-driven culling groups
-  - lightmap support and transparency ordering
-  - debug visualizations (walkmesh overlay, triggers).
+  - room instantiation from LYT (hierarchical scene graph)
+  - VIS-driven culling groups (per-room visibility)
+  - lightmap support and transparency ordering (material variants)
+  - render queue batching (group by material/shader)
+  - debug visualizations (walkmesh overlay, triggers, bounding boxes)
 - Input:
-  - click-to-move, camera
-  - debug controls.
+  - click-to-move (raycast → walkmesh → pathfind)
+  - camera (chase camera, free camera, dialogue camera)
+  - input mapping (keyboard/mouse → game actions)
+  - debug controls (console, entity inspector)
 - Audio bridge:
-  - VO + SFX playback; spatialization.
+  - VO + SFX playback (streaming, one-shot)
+  - spatialization (3D positional audio)
+  - audio groups (VO, SFX, music, ambient)
+  - distance attenuation and reverb zones
 - UI:
-  - dialogue UI and menus.
+  - dialogue UI (text, replies, speaker name)
+  - HUD (health, party, minimap placeholder)
+  - menus (pause, settings, inventory placeholder)
+  - loading screens (progress bar, tips)
 
 #### `Odyssey.Game`
 
