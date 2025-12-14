@@ -305,7 +305,27 @@ namespace Odyssey.Game.Core
                 // Initialize basic 3D effect
                 _basicEffect = new BasicEffect(GraphicsDevice);
                 _basicEffect.VertexColorEnabled = true;
-                _basicEffect.LightingEnabled = false;
+                
+                // Enable basic lighting for better visuals
+                _basicEffect.LightingEnabled = true;
+                _basicEffect.PreferPerPixelLighting = false;
+                
+                // Set up ambient light (base illumination)
+                _basicEffect.AmbientLightColor = new Vector3(0.3f, 0.3f, 0.3f);
+                
+                // Set up directional light (simulating sun/moon)
+                _basicEffect.DirectionalLight0.Enabled = true;
+                _basicEffect.DirectionalLight0.Direction = new Vector3(-0.5f, -1.0f, -0.3f); // Light from above and slightly behind
+                _basicEffect.DirectionalLight0.DiffuseColor = new Vector3(0.8f, 0.8f, 0.7f); // Slightly warm white
+                _basicEffect.DirectionalLight0.SpecularColor = new Vector3(0.2f, 0.2f, 0.2f);
+                
+                // Enable a second directional light for fill lighting
+                _basicEffect.DirectionalLight1.Enabled = true;
+                _basicEffect.DirectionalLight1.Direction = new Vector3(0.5f, -0.5f, 0.5f); // Fill light from opposite side
+                _basicEffect.DirectionalLight1.DiffuseColor = new Vector3(0.3f, 0.3f, 0.4f); // Cooler fill light
+                
+                // Disable third light (not needed for basic demo)
+                _basicEffect.DirectionalLight2.Enabled = false;
 
                 // Create a simple ground plane
                 CreateGroundPlane();
