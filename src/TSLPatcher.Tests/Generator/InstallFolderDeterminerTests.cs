@@ -38,7 +38,9 @@ namespace CSharpKOTOR.Tests.Generator
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
             var tlkMod = new ModificationsTLK("dialog.tlk");
-            tlkMod.Modifiers.Add(new ModifyTLK(0, "Test", null, false)); // Append
+            var appendMod = new ModifyTLK(0, false); // Append
+            appendMod.Text = "Test";
+            tlkMod.Modifiers.Add(appendMod);
             modifications.Tlk.Add(tlkMod);
 
             // Act
@@ -54,7 +56,9 @@ namespace CSharpKOTOR.Tests.Generator
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
             var tlkMod = new ModificationsTLK("dialog.tlk");
-            tlkMod.Modifiers.Add(new ModifyTLK(0, "Test", null, true)); // Replacement
+            var replaceMod = new ModifyTLK(0, true); // Replacement
+            replaceMod.Text = "Test";
+            tlkMod.Modifiers.Add(replaceMod);
             modifications.Tlk.Add(tlkMod);
 
             // Act
@@ -69,7 +73,8 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var mod2DA = new Modifications2DA("test.2da", "Override");
+            var mod2DA = new Modifications2DA("test.2da");
+            mod2DA.Destination = "Override";
             modifications.Twoda.Add(mod2DA);
 
             // Act
@@ -99,7 +104,9 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var modGFF = new ModificationsGFF("test.utc", "Override", "test.utc", false);
+            var modGFF = new ModificationsGFF("test.utc", false);
+            modGFF.Destination = "Override";
+            modGFF.SaveAs = "test.utc";
             modifications.Gff.Add(modGFF);
 
             // Act
@@ -114,7 +121,7 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var modGFF = new ModificationsGFF("source.utc", "Override", "saved.utc", false);
+            var modGFF = new ModificationsGFF("source.utc", false);
             modifications.Gff.Add(modGFF);
 
             // Act
@@ -129,7 +136,8 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var modSSF = new ModificationsSSF("test.ssf", "Override");
+            var modSSF = new ModificationsSSF("test.ssf", false);
+            modSSF.Destination = "Override";
             modifications.Ssf.Add(modSSF);
 
             // Act
@@ -144,7 +152,7 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var installFile = new InstallFile("existing.txt", "existing.txt", "Override");
+            var installFile = new InstallFile("existing.txt", null, "Override");
             modifications.Install.Add(installFile);
 
             // Act
@@ -162,19 +170,25 @@ namespace CSharpKOTOR.Tests.Generator
             
             // TLK
             var tlkMod = new ModificationsTLK("dialog.tlk");
-            tlkMod.Modifiers.Add(new ModifyTLK(0, "Test", null, false));
+            var tlkModifier = new ModifyTLK(0, false);
+            tlkModifier.Text = "Test";
+            tlkMod.Modifiers.Add(tlkModifier);
             modifications.Tlk.Add(tlkMod);
             
             // 2DA
-            var mod2DA = new Modifications2DA("test.2da", "Override");
+            var mod2DA = new Modifications2DA("test.2da");
+            mod2DA.Destination = "Override";
             modifications.Twoda.Add(mod2DA);
             
             // GFF
-            var modGFF = new ModificationsGFF("test.utc", "Override", "test.utc", false);
+            var modGFF = new ModificationsGFF("test.utc", false);
+            modGFF.Destination = "Override";
+            modGFF.SaveAs = "test.utc";
             modifications.Gff.Add(modGFF);
             
             // SSF
-            var modSSF = new ModificationsSSF("test.ssf", "Override");
+            var modSSF = new ModificationsSSF("test.ssf", false);
+            modSSF.Destination = "Override";
             modifications.Ssf.Add(modSSF);
 
             // Act
@@ -195,8 +209,10 @@ namespace CSharpKOTOR.Tests.Generator
             var modifications = ModificationsByType.CreateEmpty();
             
             // Add same file multiple times
-            var mod2DA1 = new Modifications2DA("test.2da", "Override");
-            var mod2DA2 = new Modifications2DA("test.2da", "Override");
+            var mod2DA1 = new Modifications2DA("test.2da");
+            mod2DA1.Destination = "Override";
+            var mod2DA2 = new Modifications2DA("test.2da");
+            mod2DA2.Destination = "Override";
             modifications.Twoda.Add(mod2DA1);
             modifications.Twoda.Add(mod2DA2);
 
@@ -213,7 +229,7 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var installFile = new InstallFile("test.txt", "test.txt", ".");
+            var installFile = new InstallFile("test.txt", null, ".");
             modifications.Install.Add(installFile);
 
             // Act

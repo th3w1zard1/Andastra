@@ -14,6 +14,7 @@ using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
+using CSharpKOTOR.Memory;
 using CSharpKOTOR.TSLPatcher;
 using FluentAssertions;
 using Xunit;
@@ -92,7 +93,8 @@ namespace CSharpKOTOR.Tests.Generator
             var modifications = ModificationsByType.CreateEmpty();
             
             var tlkMod = new ModificationsTLK("dialog.tlk");
-            var appendMod = new ModifyTLK(0, "Test Text", null, false);
+            var appendMod = new ModifyTLK(0, false);
+            appendMod.Text = "Test Text";
             tlkMod.Modifiers.Add(appendMod);
             modifications.Tlk.Add(tlkMod);
 
@@ -121,9 +123,10 @@ namespace CSharpKOTOR.Tests.Generator
             var base2DAPath = Path.Combine(_tempDir, "test.2da");
             var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
             twoda.AddRow(new Dictionary<string, string> { { "Col1", "Value1" }, { "Col2", "Value2" } });
-            new TwoDABinaryWriter(base2DAPath).Write(twoda);
+            byte[] twodaBytes = new TwoDABinaryWriter(twoda).Write();
+            File.WriteAllBytes(base2DAPath, twodaBytes);
 
-            var mod2DA = new Modifications2DA("test.2da", "Override");
+            var mod2DA = new Modifications2DA("test.2da");
             modifications.Twoda.Add(mod2DA);
 
             // Act
@@ -148,8 +151,8 @@ namespace CSharpKOTOR.Tests.Generator
             var generator = new TSLPatchDataGenerator(_tslpatchdataPath);
             var modifications = ModificationsByType.CreateEmpty();
             
-            var modGFF = new ModificationsGFF("test.utc", "Override", "test.utc", false);
-            var addField = new AddFieldGFF("Tag", GFFFieldType.Int32, 42);
+            var modGFF = new ModificationsGFF("test.utc", false);
+            var addField = new AddFieldGFF("Tag", "Tag", GFFFieldType.Int32, new FieldValueConstant(42), "");
             modGFF.Modifiers.Add(addField);
             modifications.Gff.Add(modGFF);
 
@@ -173,8 +176,8 @@ namespace CSharpKOTOR.Tests.Generator
             var generator = new TSLPatchDataGenerator(_tslpatchdataPath);
             var modifications = ModificationsByType.CreateEmpty();
             
-            var modSSF = new ModificationsSSF("test.ssf", "Override");
-            var modifySSF = new ModifySSF(SSFSound.BATTLE_CRY_1, "new_sound");
+            var modSSF = new ModificationsSSF("test.ssf", false);
+            var modifySSF = new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage("new_sound"));
             modSSF.Modifiers.Add(modifySSF);
             modifications.Ssf.Add(modSSF);
 
@@ -196,15 +199,17 @@ namespace CSharpKOTOR.Tests.Generator
             
             // Add TLK modification
             var tlkMod = new ModificationsTLK("dialog.tlk");
-            tlkMod.Modifiers.Add(new ModifyTLK(0, "Test", null, false));
+            var tlkModifier = new ModifyTLK(0, false);
+            tlkModifier.Text = "Test";
+            tlkMod.Modifiers.Add(tlkModifier);
             modifications.Tlk.Add(tlkMod);
             
             // Add 2DA modification
-            var mod2DA = new Modifications2DA("test.2da", "Override");
+            var mod2DA = new Modifications2DA("test.2da");
             modifications.Twoda.Add(mod2DA);
             
             // Add GFF modification
-            var modGFF = new ModificationsGFF("test.utc", "Override", "test.utc", false);
+            var modGFF = new ModificationsGFF("test.utc", false);
             modifications.Gff.Add(modGFF);
 
             // Act
@@ -226,7 +231,7 @@ namespace CSharpKOTOR.Tests.Generator
             var testFile = Path.Combine(_tempDir, "test_file.txt");
             File.WriteAllText(testFile, "Test content");
             
-            var installFile = new InstallFile("test_file.txt", "test_file.txt", "Override");
+            var installFile = new InstallFile("test_file.txt", null, "Override");
             modifications.Install.Add(installFile);
 
             // Act
@@ -254,9 +259,10 @@ namespace CSharpKOTOR.Tests.Generator
             
             var twoda = new TwoDA(new List<string> { "Col1" });
             twoda.AddRow(new Dictionary<string, string> { { "Col1", "Value1" } });
-            new TwoDABinaryWriter(base2DAPath).Write(twoda);
+            byte[] twodaBytes2 = new TwoDABinaryWriter(twoda).Write();
+            File.WriteAllBytes(base2DAPath, twodaBytes2);
             
-            var mod2DA = new Modifications2DA("test.2da", "Override");
+            var mod2DA = new Modifications2DA("test.2da");
             modifications.Twoda.Add(mod2DA);
 
             // Act
@@ -274,7 +280,7 @@ namespace CSharpKOTOR.Tests.Generator
             var generator = new TSLPatchDataGenerator(_tslpatchdataPath);
             var modifications = ModificationsByType.CreateEmpty();
             
-            var modGFF = new ModificationsGFF("new.utc", "Override", "new.utc", false);
+            var modGFF = new ModificationsGFF("new.utc", false);
             modifications.Gff.Add(modGFF);
 
             // Act
