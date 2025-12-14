@@ -121,7 +121,7 @@ namespace HolocronToolset.NET.Dialogs.Edit
                 string stuntText = _stuntEdit.Text ?? "";
                 if (ResRef.IsValid(stuntText))
                 {
-                    stunt.StuntModel = ResRef.FromString(stuntText);
+                    stunt.StuntModel = new ResRef(stuntText);
                 }
             }
             return stunt;

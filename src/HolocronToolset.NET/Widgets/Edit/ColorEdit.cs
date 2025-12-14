@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using CSharpKOTOR.Common;
+using KotorColor = CSharpKOTOR.Common.Color;
 
 namespace HolocronToolset.NET.Widgets.Edit
 {
@@ -10,7 +11,7 @@ namespace HolocronToolset.NET.Widgets.Edit
     // Original: class ColorEdit(QWidget):
     public partial class ColorEdit : UserControl
     {
-        private Color _color;
+        private KotorColor _color;
         private bool _allowAlpha;
         private Button _editButton;
         private NumericUpDown _colorSpin;
@@ -26,7 +27,7 @@ namespace HolocronToolset.NET.Widgets.Edit
         public ColorEdit(Control parent)
         {
             InitializeComponent();
-            _color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+            _color = new KotorColor(1.0f, 1.0f, 1.0f, 0.0f);
             _allowAlpha = false;
             SetupUI();
         }
@@ -94,7 +95,7 @@ namespace HolocronToolset.NET.Widgets.Edit
         // Original: def _on_color_change(self, value: int):
         private void OnColorChange(int value)
         {
-            _color = Color.FromRgbaInteger(value);
+            _color = KotorColor.FromRgbaInteger(value);
             if (!_allowAlpha)
             {
                 _color.A = 0.0f;
@@ -113,18 +114,18 @@ namespace HolocronToolset.NET.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:52-54
         // Original: def set_color(self, color: Color):
-        public void SetColor(Color color)
+        public void SetColor(KotorColor color)
         {
             _color = color;
             if (_colorSpin != null)
             {
-                _colorSpin.Value = _allowAlpha ? color.RgbaInteger() : color.RgbInteger();
+                _colorSpin.Value = _allowAlpha ? color.ToRgbaInteger() : color.ToRgbInteger();
             }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:56-57
         // Original: def color(self) -> Color:
-        public Color GetColor()
+        public KotorColor GetColor()
         {
             return _color;
         }

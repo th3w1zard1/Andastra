@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using CSharpKOTOR.Common;
 using HolocronToolset.NET.Data;
+using HolocronToolset.NET.Widgets;
 using HolocronToolset.NET.Widgets.Edit;
 
 namespace HolocronToolset.NET.Dialogs
@@ -69,7 +70,13 @@ namespace HolocronToolset.NET.Dialogs
             var mainPanel = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 10 };
 
             // Form layout
-            var formPanel = new Grid { ColumnDefinitions = "Auto,*", RowDefinitions = "Auto,Auto,Auto,Auto" };
+            var formPanel = new Grid();
+            formPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            formPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             
             var nameLabel = new TextBlock { Text = "Name:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _nameEdit = new LocalizedStringEdit();
