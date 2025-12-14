@@ -128,11 +128,11 @@ src/OdysseyRuntime/
 
 ## Phase 5: Entity System
 
-### 5.1 Object Spawning
+### 5.1 Object Spawning ⏳
 - [ ] GIT parsing (instance spawning)
-- [ ] Template loaders: UTC, UTP, UTD, UTT, UTW, UTS, UTE
-- [ ] Entity factory from templates
-- [ ] Entity registry integration
+- [x] Template loaders: UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTM (`TemplateLoader`)
+- [x] Entity factory from templates (`EntityFactory`)
+- [x] Entity registry integration (via `World.AddEntity`)
 
 ### 5.2 Object Types (all must implement)
 ```
