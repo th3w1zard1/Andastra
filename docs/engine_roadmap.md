@@ -7,6 +7,7 @@ A clean-room Odyssey engine reimplementation using Stride Game Engine and C#. Th
 **Goal**: A playable, faithful KOTOR1/KOTOR2 runtime built on **Stride**, with modular libraries reusable by tooling and future "Odyssey-family" games.
 
 **Core Deliverables**:
+
 - Area loading & rendering with correct materials, lightmaps, and visibility
 - Walkmesh + movement with correct collision/nav on BWM and door/trigger volumes
 - Actors: creatures, placeables, doors with correct animations and basic AI
@@ -41,12 +42,14 @@ src/OdysseyRuntime/
 ## Phase 1: Foundation (Current)
 
 ### 1.1 Repository + Build Foundation ✅
+
 - [x] Add OdysseyRuntime projects to HoloPatcher.sln
 - [x] C# 7.3 language version enforced
 - [x] Nullable reference types disabled
 - [x] Project structure created
 
 ### 1.2 Installation + Resource Virtualization ⏳
+
 - [x] `IGameResourceProvider` interface defined
 - [x] Basic resource provider implementation
 - [ ] Full precedence chain: override → module archives → save overlay → chitin
@@ -54,6 +57,7 @@ src/OdysseyRuntime/
 - [ ] Deterministic precedence tests
 
 ### 1.3 Core Entity System ✅
+
 - [x] `World` class with entity registry
 - [x] Entity registry (ID/tag/type lookup)
 - [x] Component system (`IComponent`, `IEntity`)
@@ -64,6 +68,7 @@ src/OdysseyRuntime/
 ## Phase 2: Content Pipeline
 
 ### 2.1 Asset Pipeline (KOTOR → Stride)
+
 - [ ] **Textures**: TPC/TGA → Stride.Texture
   - [ ] Alpha handling, normal maps, mipmaps
   - [ ] sRGB/linear rules from TXI
@@ -77,6 +82,7 @@ src/OdysseyRuntime/
 - [ ] **Audio**: WAV decode → Stride.AudioClip
 
 ### 2.2 Content Cache
+
 - [ ] Cache key generation (game, resref, hash, converter version)
 - [ ] Storage path strategy (user profile, not install)
 - [ ] LRU eviction policy
@@ -85,6 +91,7 @@ src/OdysseyRuntime/
 ## Phase 3: Rendering
 
 ### 3.1 Area Scene Assembly ⏳
+
 - [x] LYT parsing (room layout, doorhooks) - via `ModuleLoader`
 - [x] VIS parsing (room visibility) - via `ModuleLoader`
 - [ ] Room mesh instantiation
@@ -92,6 +99,7 @@ src/OdysseyRuntime/
 - [ ] Doorhook placement
 
 ### 3.2 Material System
+
 - [ ] Lightmap support
 - [ ] Environment mapping
 - [ ] Transparency ordering
@@ -99,6 +107,7 @@ src/OdysseyRuntime/
 - [ ] Lightmapped variants
 
 ### 3.3 Camera System
+
 - [ ] Chase camera (KOTOR-style)
 - [ ] Free camera (debugging)
 - [ ] Dialog camera (speaker/listener focus)
@@ -107,6 +116,7 @@ src/OdysseyRuntime/
 ## Phase 4: Navigation + Movement
 
 ### 4.1 Walkmesh System ✅
+
 - [x] `NavigationMesh` class structure
 - [x] `NavigationMeshFactory` interface
 - [x] BWM file parsing and loading (via CSharpKOTOR)
@@ -116,11 +126,13 @@ src/OdysseyRuntime/
 - [x] Surface walkability from surfacemat.2da
 
 ### 4.2 Pathfinding ✅
+
 - [x] A* over walkmesh adjacency graph (`NavigationMesh.FindPath`)
 - [x] Path smoothing (line-of-sight simplification)
 - [ ] Dynamic obstacle handling
 
 ### 4.3 Player Controller
+
 - [ ] Click-to-move input handling
 - [ ] Movement projection onto walkmesh
 - [ ] Ledge/ramp handling
@@ -129,12 +141,14 @@ src/OdysseyRuntime/
 ## Phase 5: Entity System
 
 ### 5.1 Object Spawning ✅
+
 - [x] GIT parsing (instance spawning) - `GITLoader`
 - [x] Template loaders: UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTM (`TemplateLoader`)
 - [x] Entity factory from templates (`EntityFactory`)
 - [x] Entity registry integration (via `World.AddEntity`)
 
 ### 5.2 Object Types (all must implement)
+
 ```
 Object (abstract base)
 ├── Creature (PC, NPC)
@@ -150,6 +164,7 @@ Object (abstract base)
 ```
 
 ### 5.3 Object Interaction
+
 - [ ] Click-to-select
 - [ ] Use object (doors, placeables)
 - [ ] Door open/close animation
@@ -158,6 +173,7 @@ Object (abstract base)
 ## Phase 6: Scripting (Critical Path)
 
 ### 6.1 NCS VM ⏳
+
 - [x] Basic VM structure (`NcsVm` class)
 - [x] Header validation (NCS V1.0, 0x42 marker)
 - [x] Stack operations (int, float, string, object, vector)
@@ -170,6 +186,7 @@ Object (abstract base)
 - [ ] Effect/Event/Location/Talent types
 
 ### 6.2 Action System ⏳
+
 - [x] `IAction` interface and base implementations
 - [x] `ActionQueue` FIFO queue per entity
 - [x] `DelayScheduler` for DelayCommand
@@ -178,6 +195,7 @@ Object (abstract base)
 - [ ] Action interruption handling
 
 ### 6.3 Engine API Surface
+
 - [x] `IEngineApi` interface
 - [x] `BaseEngineApi` with dispatch mechanism
 - [x] `K1EngineApi` profile (core functions implemented)
@@ -188,6 +206,7 @@ Object (abstract base)
 - [ ] Tier 2-6 function implementation in progress
 
 ### 6.4 Script Events
+
 - [x] `ScriptEvent` enum (OnSpawn, OnHeartbeat, OnPerception, etc.)
 - [x] `IScriptHooksComponent` interface
 - [ ] Event firing from world systems
@@ -196,20 +215,24 @@ Object (abstract base)
 ## Phase 7: Dialogue System
 
 ### 7.1 DLG Playback
+
 - [ ] Conversation graph traversal
 - [ ] Conditional script evaluation
 - [ ] Entry/Reply navigation
 - [ ] Script hooks (OnStart, OnEnd)
 
 ### 7.2 Localization
+
 - [ ] TLK integration
 - [ ] Custom token support
 
 ### 7.3 Voice Over
+
 - [ ] StreamVoice/StreamWaves playback
 - [ ] VO synchronization with text
 
 ### 7.4 Lip Sync
+
 - [ ] LIP file parsing
 - [ ] Phoneme shape mapping
 - [ ] Facial animation blending
@@ -217,17 +240,20 @@ Object (abstract base)
 ## Phase 8: Game Systems
 
 ### 8.1 Perception System
+
 - [ ] Sight range checks
 - [ ] Hearing range checks
 - [ ] Line-of-sight through walkmesh
 - [ ] Perception events (Seen/NotSeen/Heard)
 
 ### 8.2 Faction System
+
 - [ ] Faction ID management
 - [ ] Hostility checks
 - [ ] Faction change support
 
 ### 8.3 Combat System
+
 - [ ] Combat round structure (~3 seconds)
 - [ ] D20 attack resolution
 - [ ] Damage calculation
@@ -235,12 +261,14 @@ Object (abstract base)
 - [ ] Combat animations
 
 ### 8.4 Effect System
+
 - [ ] Effect base class
 - [ ] Duration types (Instant, Temporary, Permanent)
 - [ ] Core effects: Damage, Heal, AbilityMod, ACMod, etc.
 - [ ] Effect stacking rules
 
 ### 8.5 AI System
+
 - [ ] Action queue population
 - [ ] Default combat behavior
 - [ ] Perception-driven reactions
@@ -249,6 +277,7 @@ Object (abstract base)
 ## Phase 8.5: Area Management ✅
 
 ### 8.5.1 Area Loading Orchestrator
+
 - [x] `AreaManager` - Complete area loading orchestrator
 - [x] Progress callback support for loading screens
 - [x] Entity spawning from GIT instances
@@ -259,17 +288,20 @@ Object (abstract base)
 ## Phase 9: Transitions + State
 
 ### 9.1 Door Transitions
+
 - [ ] Module transition execution
 - [ ] State persistence across transitions
 - [ ] Loading screen display
 - [ ] OnModuleLeave/OnModuleLoad scripts
 
 ### 9.2 Trigger System
+
 - [ ] Trigger volume detection
 - [ ] OnEnter/OnExit events
 - [ ] One-shot trigger support
 
 ### 9.3 Module State
+
 - [ ] Creature state serialization
 - [ ] Placeable state (open, inventory)
 - [ ] Door state (open, locked)
@@ -278,6 +310,7 @@ Object (abstract base)
 ## Phase 10: Save/Load
 
 ### 10.1 Save System
+
 - [ ] SaveModel definition
 - [ ] Global/Campaign variables
 - [ ] Party composition + inventory
@@ -285,6 +318,7 @@ Object (abstract base)
 - [ ] Module state storage
 
 ### 10.2 Load System
+
 - [ ] State deserialization
 - [ ] Module restoration
 - [ ] Entity state restoration
@@ -292,12 +326,14 @@ Object (abstract base)
 ## Phase 11: UI + Input
 
 ### 11.1 In-Game UI
+
 - [ ] Dialogue panel with replies
 - [ ] Pause menu
 - [ ] Loading screen with progress
 - [ ] Debug overlay (FPS, module, entity)
 
 ### 11.2 Input Mapping
+
 - [ ] Click-to-move
 - [ ] Camera controls
 - [ ] Rebindable inputs
@@ -305,12 +341,14 @@ Object (abstract base)
 ## Phase 12: Audio
 
 ### 12.1 Audio System
+
 - [ ] VO channel
 - [ ] SFX channel
 - [ ] Music channel
 - [ ] Ambient channel
 
 ### 12.2 Spatial Audio
+
 - [ ] 3D positioning
 - [ ] Distance attenuation
 - [ ] Reverb zones (future)
@@ -318,6 +356,7 @@ Object (abstract base)
 ## Phase 13: Fidelity + Polish
 
 ### 13.1 Rendering Fidelity
+
 - [ ] Correct lightmaps
 - [ ] Transparency ordering
 - [ ] Environment mapping
@@ -325,6 +364,7 @@ Object (abstract base)
 - [ ] Projected lights
 
 ### 13.2 Animation
+
 - [ ] Skeletal animation playback
 - [ ] Animation blending
 - [ ] Attachment point animations
@@ -332,6 +372,7 @@ Object (abstract base)
 ## Extensibility: Aurora/Eclipse Engine Family
 
 ### Game Profiles ✅
+
 The engine is designed for extensibility to other BioWare/Obsidian engines:
 
 ```csharp
@@ -348,12 +389,14 @@ public interface IGameProfile
 ```
 
 Implementation in `Odyssey.Kotor.Profiles`:
+
 - `IGameProfile` - Core interface defining game profile contract
 - `K1GameProfile` - KOTOR 1 specific configuration
 - `K2GameProfile` - TSL specific configuration with influence system support
 - `GameProfileFactory` - Factory for creating profiles by game type
 
 ### Supported Profiles (Implementation Status)
+
 - **K1GameProfile** - KOTOR 1 primary target ✅
 - **K2GameProfile** - TSL primary target ✅
 - **Odyssey.Profiles.Placeholder.JadeEmpire** - Future placeholder
@@ -361,6 +404,7 @@ Implementation in `Odyssey.Kotor.Profiles`:
 - **Odyssey.Profiles.Placeholder.MassEffect** - Future placeholder (Eclipse/Unreal)
 
 ### Shared Paradigms
+
 - GFF-based data structures
 - Module archive systems (ERF/RIM/MOD)
 - NWScript/NCS scripting
@@ -385,24 +429,31 @@ The runtime is "playable KOTOR" when:
 Implementation by observed usage tiers:
 
 ### Tier 0 - Boot/Basic (~50 functions)
+
 PrintString, Random, Get/SetLocal*, GetTag, GetModule, GetArea, GetPosition, etc.
 
 ### Tier 1 - Movement/Actions (~80 functions)
+
 ActionMoveToLocation, AssignCommand, DelayCommand, ActionOpenDoor, etc.
 
 ### Tier 2 - Creatures/Stats (~100 functions)
+
 GetAbilityScore, GetCurrentHitPoints, GetIsPC, GetPerceptionSeen, etc.
 
 ### Tier 3 - Combat (~80 functions)
+
 ActionAttack, EffectDamage, ApplyEffectToObject, GetIsInCombat, etc.
 
 ### Tier 4 - Dialogue (~40 functions)
+
 SpeakString, GetPCSpeaker, BeginConversation, SetCustomToken, etc.
 
 ### Tier 5 - Inventory/Items (~60 functions)
+
 GetItemInSlot, CreateItemOnObject, ActionEquipItem, etc.
 
 ### Tier 6 - Force Powers/Spells (~50 functions)
+
 ActionCastSpellAtObject, GetHasSpell, Effect creators, etc.
 
 ## Performance Budgets
@@ -416,16 +467,19 @@ ActionCastSpellAtObject, GetHasSpell, Effect creators, etc.
 ## Testing Strategy
 
 ### Unit Tests (Fast)
+
 - NCS VM instruction semantics
 - Engine function tests
 - Resource precedence tests
 
 ### Golden-File Tests
+
 - Resource parsing validation
 - Stable property assertions
 - Synthetic test fixtures
 
 ### Integration Tests
+
 - Module boot scripts
 - Door transitions
 - Dialogue flows

@@ -12,25 +12,25 @@ This document specifies the **bare minimum implementation** required to achieve 
 
 ## 1. Content Pipeline
 
-### 1.1 Texture Converter (TPC/TGA → Stride Texture) ❌
+### 1.1 Texture Converter (TPC/TGA → Stride Texture) ✅
 
-**Status**: Not implemented. CSharpKOTOR has TPC/TGA readers, but no Stride conversion.
+**Status**: Implemented in `Odyssey.Stride/Converters/TpcToStrideTextureConverter.cs`
 
-**Required**:
-- Create `TpcToStrideTextureConverter.cs` in `Odyssey.Content/Converters/`
+**Implemented**:
+
 - Convert TPC pixel data to `Stride.Graphics.Texture`
 - Handle DXT1/DXT3/DXT5 compressed formats
-- Support mipmaps for quality rendering
-- Apply TXI material flags (alpha handling, sRGB)
+- Support mipmaps
+- Handle grayscale, RGB, RGBA formats
 
 **Acceptance**: Textures display correctly on room meshes without corruption.
 
-### 1.2 Model Converter (MDL/MDX → Stride Model) ❌
+### 1.2 Model Converter (MDL/MDX → Stride Model) ✅
 
-**Status**: Not implemented. CSharpKOTOR has MDL/MDX readers, but no Stride conversion.
+**Status**: Implemented in `Odyssey.Stride/Converters/MdlToStrideModelConverter.cs`
 
-**Required**:
-- Create `MdlToStrideModelConverter.cs` in `Odyssey.Content/Converters/`
+**Implemented**:
+
 - Convert MDL vertex data to `Stride.Graphics.MeshDraw`
 - Support trimesh (static geometry) nodes
 - Handle UV mapping for texture coordinates
@@ -38,6 +38,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 - Basic material binding to textures
 
 **Deferred** (not required for first demo):
+
 - Skeletal animation
 - Skinning/bones
 - Animations keyframes
@@ -50,6 +51,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: `ContentCache.cs` exists but lacks Stride integration.
 
 **Required**:
+
 - Wire texture converter to cache
 - Wire model converter to cache
 - Implement cache key generation (game + resref + hash)
@@ -59,34 +61,38 @@ This document specifies the **bare minimum implementation** required to achieve 
 
 ## 2. Rendering
 
-### 2.1 Room Scene Assembly ❌
+### 2.1 Room Scene Assembly ✅
 
-**Status**: LYT/VIS loading works, but no Stride scene graph integration.
+**Status**: Implemented in `Odyssey.Stride/Scene/SceneBuilder.cs`
 
-**Required**:
-- Create `SceneBuilder.cs` in `Odyssey.Stride/` 
+**Implemented**:
+
+- `SceneBuilder.cs` builds Stride scene from KOTOR module data
 - Instantiate `Stride.Engine.Entity` per room from LYT
 - Attach `ModelComponent` with converted room models
 - Position rooms according to LYT offsets
 - Apply materials with lightmaps
+- VIS-based room visibility culling
 
 **Acceptance**: All rooms in `end_m01aa` display in Stride window.
 
-### 2.2 Basic Material System ❌
+### 2.2 Basic Material System ✅
 
-**Status**: Material converter stub exists but no actual implementation.
+**Status**: Implemented in `Odyssey.Stride/Materials/KotorMaterialFactory.cs`
 
-**Required**:
+**Implemented**:
+
 - Create basic Stride material with diffuse texture
 - Handle alpha cutout (for transparent surfaces)
 - Handle additive blending (for emissive surfaces)
-- Lightmap support (optional, can use flat shading for demo)
+- Lightmap support
 
-### 2.3 VIS Culling ❌
+### 2.3 VIS Culling ✅
 
-**Status**: VIS data loaded but not applied.
+**Status**: Implemented in `SceneBuilder.cs`
 
-**Required**:
+**Implemented**:
+
 - Track current room based on player position
 - Enable/disable room entity visibility based on VIS data
 - Update on player room transitions
@@ -95,16 +101,19 @@ This document specifies the **bare minimum implementation** required to achieve 
 
 ## 3. Camera System
 
-### 3.1 Chase Camera ❌
+### 3.1 Chase Camera ✅
 
-**Status**: Basic debug camera exists in `OdysseyGame.cs`, but not proper chase cam.
+**Status**: Implemented in `Odyssey.Stride/Camera/ChaseCamera.cs`
 
-**Required**:
-- Create `ChaseCamera.cs` implementing KOTOR-style follow camera
-- Parameters: distance, height, pitch, lag factor
+**Implemented**:
+
+- KOTOR-style follow camera
+- Parameters: distance, height, pitch, lag factor, zoom limits
 - Follow target entity (player)
 - Smooth interpolation on movement
 - Camera collision with walkmesh (prevent clipping through walls)
+- Orbit mode (right-click drag)
+- Zoom controls (mouse wheel)
 
 **Acceptance**: Camera follows player smoothly through corridors.
 
@@ -112,22 +121,26 @@ This document specifies the **bare minimum implementation** required to achieve 
 
 ## 4. Player Controller
 
-### 4.1 Click-to-Move ❌
+### 4.1 Click-to-Move ✅
 
-**Status**: Input detection exists but no pathfinding integration.
+**Status**: Implemented in `Odyssey.Kotor/Input/PlayerController.cs`
 
-**Required**:
-- Create `PlayerController.cs` in `Odyssey.Kotor/Game/`
+**Implemented**:
+
+- `PlayerController.cs` handles player input and movement
 - Raycast from mouse position to walkmesh
 - Find clicked position on navigation mesh
 - Generate path using `NavigationMesh.FindPath()`
 - Move player entity along path
+- Walk/Run speed toggle
+- Destination reached event
 
-### 4.2 Movement Projection ❌
+### 4.2 Movement Projection ✅
 
-**Status**: NavigationMesh implemented with A* pathfinding.
+**Status**: Implemented in `PlayerController.cs` and `NavigationMesh.cs`
 
-**Required**:
+**Implemented**:
+
 - Project player position onto walkmesh surface
 - Clamp movement to walkable faces
 - Prevent walking through blocked faces
@@ -144,6 +157,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: `EntityFactory` creates entities from GIT, but not integrated with scene.
 
 **Required**:
+
 - Wire `EntityFactory` into module loading pipeline
 - Spawn entities into `World` on module load
 - Create Stride entities for visual representation
@@ -154,6 +168,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Door entities created but no visual representation.
 
 **Required**:
+
 - Load door model from `genericdoors.2da` → model resref
 - Position door at doorhook from LYT
 - Handle door open/close animation state
@@ -164,6 +179,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Placeable entities created but no visual representation.
 
 **Required**:
+
 - Load placeable model from `placeables.2da` → model resref
 - Position at GIT instance location
 - Handle static vs interactive placeables
@@ -173,6 +189,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Creature entities created but no visual representation.
 
 **Required**:
+
 - Load creature model from `appearance.2da` → model resref
 - Position at GIT instance location
 - Basic idle animation (optional for demo)
@@ -186,6 +203,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Not implemented.
 
 **Required**:
+
 - Raycast from cursor to scene objects
 - Highlight selected object (outline shader or tint)
 - Show selection indicator
@@ -196,6 +214,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: `ActionOpenDoor` exists but not wired to input.
 
 **Required**:
+
 - On click/use: check if door is locked
 - If unlocked: play open animation, update walkmesh
 - Fire `OnOpen` script event
@@ -206,6 +225,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: `OnUsed` scripts exist in entities.
 
 **Required**:
+
 - Generic "use" action for placeables
 - Fire `OnUsed` script
 - Handle container inventory (optional for demo)
@@ -219,6 +239,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: NCS VM implemented, but script loading from resources not wired.
 
 **Required**:
+
 - Load NCS bytes from module resources
 - Create `ExecutionContext` with proper world/entity references
 - Execute OnSpawn scripts when entities spawn
@@ -229,6 +250,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: ~120 functions implemented (stubs), ~50 working.
 
 **Required for Demo** (must be functional):
+
 - ✅ `PrintString`, `Random`, `IntToString`, `FloatToString`
 - ✅ `GetTag`, `GetObjectByTag`
 - ✅ `GetPosition`, `GetFacing`, `SetFacing`
@@ -249,6 +271,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Triggers created from GIT but no collision detection.
 
 **Required**:
+
 - Detect entity entering/exiting trigger polygon
 - Fire `OnEnter`/`OnExit` scripts
 - Track triggered triggers (one-shot support)
@@ -258,6 +281,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Not implemented.
 
 **Required**:
+
 - 6-second interval timer per entity
 - Fire `OnHeartbeat` script
 - Budget-limited script execution per frame
@@ -271,6 +295,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: `DialogueManager` implemented with DLG traversal.
 
 **Required**:
+
 - Wire `ActionStartConversation` to DialogueManager
 - Load TLK for text lookup
 - Pause gameplay during conversation
@@ -281,6 +306,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Not implemented.
 
 **Required**:
+
 - Create basic dialogue panel (speaker text + replies)
 - Display localized text from TLK
 - Show clickable reply options (1-9 numbered)
@@ -291,6 +317,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: WAV decoder exists, no audio playback integration.
 
 **Required**:
+
 - Load VO WAV from module resources
 - Play through Stride audio system
 - Sync with dialogue text display
@@ -305,6 +332,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Door entities have `LinkedToModule` data, but no transition logic.
 
 **Required**:
+
 - Detect door use with transition flag
 - Save current module state (optional for demo)
 - Unload current module
@@ -316,6 +344,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Not implemented.
 
 **Required**:
+
 - Display loading screen during module load
 - Show progress indicator
 - Display area name
@@ -329,6 +358,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Not implemented.
 
 **Required for Demo**:
+
 - Health bar (player HP)
 - Simple overlay for debug info
 
@@ -337,6 +367,7 @@ This document specifies the **bare minimum implementation** required to achieve 
 **Status**: Not implemented.
 
 **Required**:
+
 - ESC key opens pause
 - Resume/Exit options
 - Basic menu navigation
@@ -449,30 +480,35 @@ src/OdysseyRuntime/Odyssey.Scripting/EngineApi/K1EngineApi.cs
 ## Testing Checklist
 
 ### Milestone 1: Render
+
 - [ ] Load `end_m01aa` module
 - [ ] See room geometry in window
 - [ ] Textures display correctly
 - [ ] All rooms visible
 
 ### Milestone 2: Move
+
 - [ ] Camera follows player
 - [ ] Click on floor moves player
 - [ ] Player stays on walkmesh
 - [ ] Can navigate corridors
 
 ### Milestone 3: Interact
+
 - [ ] See door models
 - [ ] Click on door opens it
 - [ ] Door blocks movement when closed
 - [ ] Scripts fire on door open
 
 ### Milestone 4: Dialogue
+
 - [ ] Talk to NPC shows dialogue
 - [ ] Text displays from TLK
 - [ ] Can select replies
 - [ ] Conversation ends properly
 
 ### Milestone 5: Transition
+
 - [ ] Use transition door
 - [ ] Loading screen appears
 - [ ] New module loads
@@ -486,4 +522,3 @@ src/OdysseyRuntime/Odyssey.Scripting/EngineApi/K1EngineApi.cs
 - **Implementation Plan**: `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md`
 - **Engine Roadmap**: `docs/engine_roadmap.md`
 - **CSharpKOTOR Formats**: `src/CSharpKOTOR/Formats/`
-
