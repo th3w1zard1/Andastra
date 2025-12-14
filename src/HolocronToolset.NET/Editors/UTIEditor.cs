@@ -51,6 +51,30 @@ namespace HolocronToolset.NET.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        // Matching PyKotor implementation: Expose UI controls for testing
+        public TextBox NameEdit => _nameEdit;
+        public TextBox DescEdit => _descEdit;
+        public TextBox TagEdit => _tagEdit;
+        public TextBox ResrefEdit => _resrefEdit;
+        public ComboBox BaseSelect => _baseSelect;
+        public NumericUpDown CostSpin => _costSpin;
+        public NumericUpDown AdditionalCostSpin => _additionalCostSpin;
+        public NumericUpDown UpgradeSpin => _upgradeSpin;
+        public CheckBox PlotCheckbox => _plotCheckbox;
+        public NumericUpDown ChargesSpin => _chargesSpin;
+        public NumericUpDown StackSpin => _stackSpin;
+        public NumericUpDown ModelVarSpin => _modelVarSpin;
+        public NumericUpDown BodyVarSpin => _bodyVarSpin;
+        public NumericUpDown TextureVarSpin => _textureVarSpin;
+        public Button TagGenerateBtn => _tagGenerateBtn;
+        public Button ResrefGenerateBtn => _resrefGenerateBtn;
+        public TreeView AvailablePropertyList => _availablePropertyList;
+        public ListBox AssignedPropertiesList => _assignedPropertiesList;
+        public Button AddPropertyBtn => _addPropertyBtn;
+        public Button RemovePropertyBtn => _removePropertyBtn;
+        public Button EditPropertyBtn => _editPropertyBtn;
+        public TextBox CommentsEdit => _commentsEdit;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:46-87
         // Original: def __init__(self, parent, installation):
         public UTIEditor(Window parent = null, HTInstallation installation = null)

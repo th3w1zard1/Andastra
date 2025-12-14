@@ -17,10 +17,87 @@ namespace HolocronToolset.NET.Tests.Editors
     public class UTIEditorTests : IClassFixture<AvaloniaTestFixture>
     {
         private readonly AvaloniaTestFixture _fixture;
+        private static HTInstallation _installation;
 
         public UTIEditorTests(AvaloniaTestFixture fixture)
         {
             _fixture = fixture;
+        }
+
+        static UTIEditorTests()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            if (!string.IsNullOrEmpty(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                _installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (!string.IsNullOrEmpty(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    _installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:147-180
+        // Original: def test_uti_editor_all_widgets_exist(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUtiEditorAllWidgetsExist()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching Python: editor = UTIEditor(None, installation)
+            var editor = new UTIEditor(null, _installation);
+            editor.Show();
+
+            // Basic tab widgets
+            // Matching Python: assert hasattr(editor.ui, 'nameEdit')
+            editor.NameEdit.Should().NotBeNull();
+            editor.DescEdit.Should().NotBeNull();
+            editor.TagEdit.Should().NotBeNull();
+            editor.ResrefEdit.Should().NotBeNull();
+            editor.BaseSelect.Should().NotBeNull();
+            editor.CostSpin.Should().NotBeNull();
+            editor.AdditionalCostSpin.Should().NotBeNull();
+            editor.UpgradeSpin.Should().NotBeNull();
+            editor.PlotCheckbox.Should().NotBeNull();
+            editor.ChargesSpin.Should().NotBeNull();
+            editor.StackSpin.Should().NotBeNull();
+            editor.ModelVarSpin.Should().NotBeNull();
+            editor.BodyVarSpin.Should().NotBeNull();
+            editor.TextureVarSpin.Should().NotBeNull();
+            editor.TagGenerateBtn.Should().NotBeNull();
+            editor.ResrefGenerateBtn.Should().NotBeNull();
+
+            // Properties tab widgets
+            // Matching Python: assert hasattr(editor.ui, 'availablePropertyList')
+            editor.AvailablePropertyList.Should().NotBeNull();
+            editor.AssignedPropertiesList.Should().NotBeNull();
+            editor.AddPropertyBtn.Should().NotBeNull();
+            editor.RemovePropertyBtn.Should().NotBeNull();
+            editor.EditPropertyBtn.Should().NotBeNull();
+
+            // Comments tab widgets
+            // Matching Python: assert hasattr(editor.ui, 'commentsEdit')
+            editor.CommentsEdit.Should().NotBeNull();
+
+            editor.Close();
         }
 
         [Fact]
