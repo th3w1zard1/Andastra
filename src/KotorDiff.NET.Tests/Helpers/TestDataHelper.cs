@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.GFF.GFFAuto;
+using static CSharpKOTOR.Formats.GFF.GFFAuto;
 using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.SSF.SSFAuto;
+using static CSharpKOTOR.Formats.SSF.SSFAuto;
 using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
+using static CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
 using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TLK.TLKAuto;
+using static CSharpKOTOR.Formats.TLK.TLKAuto;
 using CSharpKOTOR.Resources;
 using KotorDiff.NET.App;
 
@@ -68,7 +68,12 @@ namespace KotorDiff.NET.Tests.Helpers
             var twoda = new TwoDA(headers);
             foreach (var (label, cells) in rows)
             {
-                twoda.AddRow(label, cells);
+                var cellsObj = new Dictionary<string, object>();
+                foreach (var kvp in cells)
+                {
+                    cellsObj[kvp.Key] = kvp.Value;
+                }
+                twoda.AddRow(label, cellsObj);
             }
             return twoda;
         }
@@ -121,7 +126,7 @@ namespace KotorDiff.NET.Tests.Helpers
                         gff.Root.SetResRef(fieldName, (ResRef)value);
                         break;
                     case GFFFieldType.LocalizedString:
-                        gff.Root.SetLocalizedString(fieldName, (LocalizedString)value);
+                        gff.Root.SetLocString(fieldName, (LocalizedString)value);
                         break;
                     case GFFFieldType.Vector3:
                         gff.Root.SetVector3(fieldName, (Vector3)value);
@@ -191,7 +196,8 @@ namespace KotorDiff.NET.Tests.Helpers
                 UseIncrementalWriter = true
             };
 
-            AppRunner.RunApplication(config);
+            var result = KotorDiff.NET.App.DiffApplicationHelpers.HandleDiff(config);
+            int exitCode = KotorDiff.NET.App.DiffApplicationHelpers.FormatComparisonOutput(result.comparison, config);
 
             var iniPath = Path.Combine(tslpatchdataDir.FullName, iniFilename);
             if (File.Exists(iniPath))
