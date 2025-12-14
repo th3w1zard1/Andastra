@@ -116,7 +116,7 @@ namespace Odyssey.Game.Core
             // Update menu if visible
             if (_currentState == GameState.MainMenu && _menuRenderer != null)
             {
-                _menuRenderer.Update(gameTime);
+                _menuRenderer.Update(gameTime, GraphicsDevice);
             }
             
             // Update game systems if in game
@@ -223,6 +223,7 @@ namespace Odyssey.Game.Core
         {
             // Create a simple default font if none is loaded
             // This is a fallback - ideally we'd have a proper font file
+            // For now, return null - text won't display but menu is still functional
             return null;
         }
     }

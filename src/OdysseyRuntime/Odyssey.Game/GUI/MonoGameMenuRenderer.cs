@@ -28,6 +28,8 @@ namespace Odyssey.Game.GUI
         private Vector2 _screenCenter;
         private Rectangle _mainPanelRect;
         private Rectangle _headerRect;
+        private int _lastScreenWidth = 0;
+        private int _lastScreenHeight = 0;
 
         // Colors
         private readonly Color _backgroundColor = new Color(20, 30, 60, 255); // Dark blue background
@@ -126,10 +128,26 @@ namespace Odyssey.Game.GUI
             );
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, GraphicsDevice graphicsDevice)
         {
             if (!_isVisible)
                 return;
+
+            // Ensure layout is calculated before handling input
+            // Layout needs to be up-to-date for click detection to work
+            if (graphicsDevice != null)
+            {
+                int screenWidth = graphicsDevice.Viewport.Width;
+                int screenHeight = graphicsDevice.Viewport.Height;
+                
+                // Recalculate layout if screen size changed or if not yet calculated
+                if (screenWidth != _lastScreenWidth || screenHeight != _lastScreenHeight || _lastScreenWidth == 0)
+                {
+                    CalculateLayout(screenWidth, screenHeight);
+                    _lastScreenWidth = screenWidth;
+                    _lastScreenHeight = screenHeight;
+                }
+            }
 
             KeyboardState currentKeyboardState = Keyboard.GetState();
             MouseState currentMouseState = Mouse.GetState();
@@ -160,16 +178,27 @@ namespace Odyssey.Game.GUI
                 _previousMouseState.LeftButton == ButtonState.Released)
             {
                 Point mousePos = currentMouseState.Position;
+                Console.WriteLine($"[MonoGameMenuRenderer] Mouse clicked at: {mousePos.X}, {mousePos.Y}");
+                
+                bool clicked = false;
                 for (int i = 0; i < _menuButtons.Length; i++)
                 {
                     var button = _menuButtons[i];
+                    Console.WriteLine($"[MonoGameMenuRenderer] Button {i} ({button.Label}) rect: X={button.Rect.X}, Y={button.Rect.Y}, W={button.Rect.Width}, H={button.Rect.Height}");
+                    
                     if (button.Rect.Contains(mousePos))
                     {
                         _selectedIndex = i;
                         Console.WriteLine($"[MonoGameMenuRenderer] Mouse clicked on: {_menuButtons[_selectedIndex].Label}");
                         MenuItemSelected?.Invoke(this, _selectedIndex);
+                        clicked = true;
                         break;
                     }
+                }
+                
+                if (!clicked)
+                {
+                    Console.WriteLine($"[MonoGameMenuRenderer] Mouse click not on any button");
                 }
             }
 
