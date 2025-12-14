@@ -36,7 +36,7 @@ namespace KotorDiff.NET.App
             // Log configuration
             LogConfiguration(config, logger);
 
-            // Run with optional profiler
+            // Run with optional profiler (matching Python lines 605-615)
             System.Diagnostics.Stopwatch profiler = null;
             if (config.UseProfiler)
             {
@@ -49,8 +49,7 @@ namespace KotorDiff.NET.App
 
                 if (profiler != null)
                 {
-                    profiler.Stop();
-                    DiffLogger.GetLogger()?.Info($"Profiler output: Elapsed time {profiler.Elapsed.TotalSeconds} seconds");
+                    StopProfiler(profiler);
                 }
 
                 // Format and return final output
@@ -66,7 +65,7 @@ namespace KotorDiff.NET.App
                 DiffLogger.GetLogger()?.Info("KeyboardInterrupt - KotorDiff was cancelled by user.");
                 if (profiler != null)
                 {
-                    profiler.Stop();
+                    StopProfiler(profiler);
                 }
                 return 1;
             }
@@ -76,7 +75,7 @@ namespace KotorDiff.NET.App
                 DiffLogger.GetLogger()?.Critical(e.ToString());
                 if (profiler != null)
                 {
-                    profiler.Stop();
+                    StopProfiler(profiler);
                 }
                 return 1;
             }
@@ -341,6 +340,30 @@ namespace KotorDiff.NET.App
             DiffLogger.GetLogger()?.Info($"  SSF modifications: {modifications.Ssf?.Count ?? 0}");
             DiffLogger.GetLogger()?.Info($"  NCS modifications: {modifications.Ncs?.Count ?? 0}");
             DiffLogger.GetLogger()?.Info($"  Install folders: {modifications.Install?.Count ?? 0}");
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:197-202
+        // Original: def stop_profiler(profiler: cProfile.Profile): ...
+        /// <summary>
+        /// Stop and save profiler output.
+        /// Note: C# uses Stopwatch instead of cProfile, so we save elapsed time to a text file.
+        /// </summary>
+        private static void StopProfiler(System.Diagnostics.Stopwatch profiler)
+        {
+            profiler.Stop();
+            string profilerOutputFile = "profiler_output.txt";
+            try
+            {
+                string output = $"Profiler output - Elapsed time: {profiler.Elapsed.TotalSeconds} seconds\n";
+                output += $"Total milliseconds: {profiler.Elapsed.TotalMilliseconds}\n";
+                output += $"Ticks: {profiler.Elapsed.Ticks}\n";
+                File.WriteAllText(profilerOutputFile, output, Encoding.UTF8);
+                DiffLogger.GetLogger()?.Info($"Profiler output saved to: {profilerOutputFile}");
+            }
+            catch (Exception e)
+            {
+                DiffLogger.GetLogger()?.Warning($"Failed to save profiler output: {e.Message}");
+            }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:271-289

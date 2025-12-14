@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Installation;
 using KotorDiff.NET.App;
 
 namespace KotorDiff.NET.Cli
@@ -61,7 +62,7 @@ namespace KotorDiff.NET.Cli
                 Environment.Exit(1);
             }
 
-            // Convert string paths to Path/Installation objects
+            // Convert string paths to Path/Installation objects (matching Python lines 188-200)
             var resolvedPaths = new List<object>();
             foreach (string pathStr in rawPathInputs)
             {
@@ -70,26 +71,18 @@ namespace KotorDiff.NET.Cli
                     continue;
                 }
 
-                var pathObj = new DirectoryInfo(pathStr);
                 try
                 {
                     // Try to create an Installation object (for KOTOR installations)
-                    // TODO: Implement Installation loading
-                    if (CliUtils.IsKotorInstallDir(pathStr))
-                    {
-                        // For now, just use the path
-                        resolvedPaths.Add(pathStr);
-                        Console.WriteLine($"[DEBUG] Loaded Installation for: {pathStr}");
-                    }
-                    else
-                    {
-                        resolvedPaths.Add(pathStr);
-                        Console.WriteLine($"[DEBUG] Using Path (not Installation) for: {pathStr}");
-                    }
+                    // Matching Python: installation = Installation(path_obj)
+                    var installation = new CSharpKOTOR.Installation.Installation(pathStr);
+                    resolvedPaths.Add(installation);
+                    Console.WriteLine($"[DEBUG] Loaded Installation for: {pathStr}");
                 }
                 catch (Exception e)
                 {
                     // Fall back to Path object (for folders/files)
+                    // Matching Python: resolved_paths.append(path_obj)
                     resolvedPaths.Add(pathStr);
                     Console.WriteLine($"[DEBUG] Using Path (not Installation) for: {pathStr}");
                     Console.WriteLine($"[DEBUG] Installation load failed: {e.GetType().Name}: {e.Message}");
