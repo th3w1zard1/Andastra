@@ -102,6 +102,7 @@ namespace KotorDiff.NET.Diff
             else
             {
                 // Use regular single capsule loading
+                var results = new List<ComparableResource>();
                 try
                 {
                     var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(filePath.FullName);
@@ -109,13 +110,17 @@ namespace KotorDiff.NET.Diff
                     {
                         string ext = res.ResType.Extension.ToLowerInvariant();
                         string identifier = $"{filePath.Name}/{res.ResName}.{ext}";
-                        yield return new ComparableResource(identifier, ext, res.Data);
+                        results.Add(new ComparableResource(identifier, ext, res.Data));
                     }
                 }
                 catch (Exception)
                 {
                     // Return empty on error
-                    yield break;
+                }
+
+                foreach (var result in results)
+                {
+                    yield return result;
                 }
             }
         }

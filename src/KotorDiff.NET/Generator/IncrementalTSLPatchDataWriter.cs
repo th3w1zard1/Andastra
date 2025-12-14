@@ -22,6 +22,7 @@ using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
 using CSharpKOTOR.Memory;
 using CSharpKOTOR.Installation;
+using KotorDiff.NET.Diff;
 using CSharpKOTOR.Tools;
 using CSharpKOTOR.Utility;
 using SystemTextEncoding = System.Text.Encoding;
@@ -298,7 +299,7 @@ namespace CSharpKOTOR.TSLPatcher
         /// </summary>
         public void RegisterTlkModificationWithSource(ModificationsTLK tlkMod, object sourcePath, int sourceIndex)
         {
-            bool isInstallation = sourcePath is Installation;
+            bool isInstallation = sourcePath is CSharpKOTOR.Installation.Installation;
 
             var wrapped = new TLKModificationWithSource
             {
@@ -538,7 +539,7 @@ namespace CSharpKOTOR.TSLPatcher
                 }
 
                 // Check if paths match exactly
-                if (pendingRef.SourcePath is Installation pendingInstall && sourcePath is Installation sourceInstall)
+                if (pendingRef.SourcePath is CSharpKOTOR.Installation.Installation pendingInstall && sourcePath is CSharpKOTOR.Installation.Installation sourceInstall)
                 {
                     shouldApply = pendingInstall.Path == sourceInstall.Path;
                 }
@@ -632,7 +633,7 @@ namespace CSharpKOTOR.TSLPatcher
                 }
 
                 // Check if paths match exactly
-                if (pendingRef.SourcePath is Installation pendingInstall && sourcePath is Installation sourceInstall)
+                if (pendingRef.SourcePath is CSharpKOTOR.Installation.Installation pendingInstall && sourcePath is CSharpKOTOR.Installation.Installation sourceInstall)
                 {
                     shouldApply = pendingInstall.Path == sourceInstall.Path;
                 }

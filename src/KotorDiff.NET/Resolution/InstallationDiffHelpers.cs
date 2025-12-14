@@ -286,7 +286,21 @@ namespace KotorDiff.NET.Resolution
                     return;
                 }
 
-                int modifiersCount = modifications.Modifiers != null ? modifications.Modifiers.Count : 0;
+                // Get modifier count based on type
+                int modifiersCount = 0;
+                if (modifications is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
+                {
+                    modifiersCount = mod2da.Modifiers != null ? mod2da.Modifiers.Count : 0;
+                }
+                else if (modifications is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff2)
+                {
+                    modifiersCount = modGff2.Modifiers != null ? modGff2.Modifiers.Count : 0;
+                }
+                else if (modifications is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf2)
+                {
+                    modifiersCount = modSsf2.Modifiers != null ? modSsf2.Modifiers.Count : 0;
+                }
+
                 if (modifiersCount > 0)
                 {
                     logFunc($"  |-- Modifications: {modifiersCount} changes");

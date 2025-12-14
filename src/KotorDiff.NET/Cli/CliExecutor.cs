@@ -106,7 +106,7 @@ namespace KotorDiff.NET.Cli
             };
 
             // Run the application
-            int exitCode = AppRunner.RunApplication(config);
+            int exitCode = KotorDiff.NET.App.AppRunner.RunApplication(config);
             Environment.Exit(exitCode);
         }
     }
