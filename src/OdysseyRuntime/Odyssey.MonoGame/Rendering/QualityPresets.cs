@@ -1,4 +1,5 @@
 using System;
+using Odyssey.MonoGame.Interfaces;
 
 namespace Odyssey.MonoGame.Rendering
 {
@@ -154,21 +155,6 @@ namespace Odyssey.MonoGame.Rendering
                 return QualityLevel.Low;
             }
         }
-    }
-
-    /// <summary>
-    /// Graphics capabilities structure.
-    /// </summary>
-    public struct GraphicsCapabilities
-    {
-        public int MaxTextureSize;
-        public int MaxAnisotropy;
-        public bool SupportsDXT;
-        public bool SupportsBC7;
-        public bool SupportsASTC;
-        public bool SupportsComputeShaders;
-        public bool SupportsGeometryShaders;
-        public bool SupportsTessellation;
     }
 }
 
