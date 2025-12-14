@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Odyssey.Scripting.Interfaces;
 
 namespace Odyssey.Scripting.EngineApi
@@ -235,6 +236,143 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             // Area is a special object - return a placeholder ID
             return Variable.FromObject(0x7F000003);
+        }
+        
+        protected Variable Func_GetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string name = args.Count > 0 ? args[0].AsString() : string.Empty;
+            return Variable.FromInt(ctx.Globals.GetGlobalInt(name));
+        }
+        
+        protected Variable Func_SetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string name = args.Count > 0 ? args[0].AsString() : string.Empty;
+            int value = args.Count > 1 ? args[1].AsInt() : 0;
+            ctx.Globals.SetGlobalInt(name, value);
+            return Variable.Void();
+        }
+        
+        protected Variable Func_GetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string name = args.Count > 0 ? args[0].AsString() : string.Empty;
+            return Variable.FromInt(ctx.Globals.GetGlobalInt(name));
+        }
+        
+        protected Variable Func_SetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string name = args.Count > 0 ? args[0].AsString() : string.Empty;
+            int value = args.Count > 1 ? args[1].AsInt() : 0;
+            ctx.Globals.SetGlobalInt(name, value);
+            return Variable.Void();
+        }
+        
+        protected Variable Func_GetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string name = args.Count > 0 ? args[0].AsString() : string.Empty;
+            return Variable.FromString(ctx.Globals.GetGlobalString(name));
+        }
+        
+        protected Variable Func_SetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string name = args.Count > 0 ? args[0].AsString() : string.Empty;
+            string value = args.Count > 1 ? args[1].AsString() : string.Empty;
+            ctx.Globals.SetGlobalString(name, value);
+            return Variable.Void();
+        }
+        
+        protected Variable Func_GetNearestObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string tag = args.Count > 0 ? args[0].AsString() : string.Empty;
+            uint target = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            int nth = args.Count > 2 ? args[2].AsInt() : 0;
+            
+            var targetEntity = ResolveObject(target, ctx);
+            if (targetEntity == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            var transform = targetEntity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            if (transform == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Get all entities with this tag
+            var candidates = new List<Core.Interfaces.IEntity>();
+            int index = 0;
+            Core.Interfaces.IEntity candidate;
+            while ((candidate = ctx.World.GetEntityByTag(tag, index)) != null)
+            {
+                if (candidate.ObjectId != targetEntity.ObjectId)
+                {
+                    candidates.Add(candidate);
+                }
+                index++;
+            }
+            
+            // Sort by distance
+            candidates.Sort((a, b) =>
+            {
+                var ta = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                var tb = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                if (ta == null || tb == null) return 0;
+                
+                float distA = (ta.Position - transform.Position).Length();
+                float distB = (tb.Position - transform.Position).Length();
+                return distA.CompareTo(distB);
+            });
+            
+            if (nth < candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth].ObjectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+        
+        protected Variable Func_ObjectToString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            return Variable.FromString("0x" + objectId.ToString("X8"));
+        }
+        
+        protected Variable Func_StringToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string s = args.Count > 0 ? args[0].AsString() : string.Empty;
+            
+            // Parse hex string like "0x7F000001"
+            if (s.StartsWith("0x") || s.StartsWith("0X"))
+            {
+                s = s.Substring(2);
+            }
+            
+            if (uint.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out uint objectId))
+            {
+                return Variable.FromObject(objectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+        
+        protected Variable Func_PrintVector(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count > 0)
+            {
+                var vec = args[0].AsVector();
+                Console.WriteLine("[Script] Vector(" + vec.X + ", " + vec.Y + ", " + vec.Z + ")");
+            }
+            return Variable.Void();
+        }
+        
+        protected Variable Func_VectorToString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count > 0)
+            {
+                var vec = args[0].AsVector();
+                return Variable.FromString("(" + vec.X + ", " + vec.Y + ", " + vec.Z + ")");
+            }
+            return Variable.FromString("(0, 0, 0)");
         }
         
         protected Core.Interfaces.IEntity ResolveObject(uint objectId, IExecutionContext ctx)

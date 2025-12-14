@@ -158,6 +158,9 @@ namespace Odyssey.Scripting.EngineApi
                 case 120: return Func_EffectDamageIncrease(args, ctx);
                 // ... more functions
                 
+                // PrintVector
+                case 141: return Func_PrintVector(args, ctx);
+                
                 // Global string (restricted functions)
                 case 160: return Func_SetGlobalString(args, ctx);
                 case 194: return Func_GetGlobalString(args, ctx);
@@ -165,9 +168,11 @@ namespace Odyssey.Scripting.EngineApi
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);
                 case 200: return Func_GetObjectByTag(args, ctx);
+                case 229: return Func_GetNearestObjectByTag(args, ctx);
                 
                 // Module
                 case 242: return Func_GetModule(args, ctx);
+                case 272: return Func_ObjectToString(args, ctx);
                 
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
