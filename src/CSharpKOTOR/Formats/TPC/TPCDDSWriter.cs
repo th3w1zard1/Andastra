@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Formats.TPC
         public TPCDDSWriter(TPC tpc)
         {
             _tpc = tpc ?? throw new ArgumentNullException(nameof(tpc));
-            _writer = RawBinaryWriter.ToByteArray();
+            _writer = RawBinaryWriter.ToByteArray(null);
         }
 
         public void Write(bool autoClose = true)
@@ -235,11 +235,7 @@ namespace CSharpKOTOR.Formats.TPC
 
         public byte[] GetBytes()
         {
-            if (_writer is RawBinaryWriterMemory memoryWriter)
-            {
-                return memoryWriter.Data();
-            }
-            throw new InvalidOperationException("Writer is not a memory writer");
+            return _writer.Data();
         }
 
         public void Dispose()
