@@ -158,28 +158,32 @@ namespace Odyssey.Scripting.EngineApi
                 case 120: return Func_EffectDamageIncrease(args, ctx);
                 // ... more functions
                 
-                // Core object functions
-                case 200: return Func_GetTag(args, ctx);
-                case 201: return Func_GetLocalInt(args, ctx);
-                case 202: return Func_SetLocalInt(args, ctx);
-                case 203: return Func_GetLocalFloat(args, ctx);
-                case 204: return Func_SetLocalFloat(args, ctx);
-                case 205: return Func_GetLocalString(args, ctx);
-                case 206: return Func_SetLocalString(args, ctx);
-                case 207: return Func_GetLocalObject(args, ctx);
-                case 208: return Func_SetLocalObject(args, ctx);
-                case 226: return Func_GetObjectByTag(args, ctx);
+                // Global string (restricted functions)
+                case 160: return Func_SetGlobalString(args, ctx);
+                case 194: return Func_GetGlobalString(args, ctx);
                 
-                // Global variables
-                case 501: return Func_GetGlobalNumber(args, ctx);
-                case 502: return Func_SetGlobalNumber(args, ctx);
-                case 503: return Func_GetGlobalBoolean(args, ctx);
-                case 504: return Func_SetGlobalBoolean(args, ctx);
-                case 516: return Func_GetGlobalString(args, ctx);
-                case 517: return Func_SetGlobalString(args, ctx);
+                // Core object functions (correct IDs from nwscript.nss)
+                case 168: return Func_GetTag(args, ctx);
+                case 200: return Func_GetObjectByTag(args, ctx);
                 
                 // Module
-                case 552: return Func_GetModule(args, ctx);
+                case 242: return Func_GetModule(args, ctx);
+                
+                // Global variables (KOTOR specific - different from standard NWN)
+                case 578: return Func_GetGlobalBoolean(args, ctx);
+                case 579: return Func_SetGlobalBoolean(args, ctx);
+                case 580: return Func_GetGlobalNumber(args, ctx);
+                case 581: return Func_SetGlobalNumber(args, ctx);
+                
+                // Local variables (KOTOR uses index-based, not name-based like NWN)
+                // 679: GetLocalBoolean(object, int index) - index 0-63
+                // 680: SetLocalBoolean(object, int index, int value)
+                // 681: GetLocalNumber(object, int index) - index 0
+                // 682: SetLocalNumber(object, int index, int value)
+                case 679: return Func_GetLocalBoolean(args, ctx);
+                case 680: return Func_SetLocalBoolean(args, ctx);
+                case 681: return Func_GetLocalNumber(args, ctx);
+                case 682: return Func_SetLocalNumber(args, ctx);
                 
                 default:
                     // Return default value for unimplemented functions
@@ -556,17 +560,68 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
         
-        private Variable Func_SetLocalObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        // KOTOR Local Boolean/Number functions (index-based, not name-based like NWN)
+        private Variable Func_GetLocalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // GetLocalBoolean(object oObject, int nIndex)
+            // Index range: 0-63
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            string name = args.Count > 1 ? args[1].AsString() : string.Empty;
-            uint valueId = args.Count > 2 ? args[2].AsObjectId() : ObjectInvalid;
+            int index = args.Count > 1 ? args[1].AsInt() : 0;
             
             var entity = ResolveObject(objectId, ctx);
-            var value = ResolveObject(valueId, ctx);
-            if (entity != null)
+            if (entity != null && index >= 0 && index < 64)
             {
-                ctx.Globals.SetLocalObject(entity, name, value);
+                // Store as local int with index-based key
+                return Variable.FromInt(ctx.Globals.GetLocalInt(entity, "_LB_" + index));
+            }
+            return Variable.FromInt(0);
+        }
+        
+        private Variable Func_SetLocalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // SetLocalBoolean(object oObject, int nIndex, int nValue)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            int index = args.Count > 1 ? args[1].AsInt() : 0;
+            int value = args.Count > 2 ? args[2].AsInt() : 0;
+            
+            var entity = ResolveObject(objectId, ctx);
+            if (entity != null && index >= 0 && index < 64)
+            {
+                ctx.Globals.SetLocalInt(entity, "_LB_" + index, value != 0 ? 1 : 0);
+            }
+            return Variable.Void();
+        }
+        
+        private Variable Func_GetLocalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetLocalNumber(object oObject, int nIndex)
+            // Index range: 0 only
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            int index = args.Count > 1 ? args[1].AsInt() : 0;
+            
+            var entity = ResolveObject(objectId, ctx);
+            if (entity != null && index == 0)
+            {
+                return Variable.FromInt(ctx.Globals.GetLocalInt(entity, "_LN_" + index));
+            }
+            return Variable.FromInt(0);
+        }
+        
+        private Variable Func_SetLocalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // SetLocalNumber(object oObject, int nIndex, int nValue)
+            // Value range: -128 to +127
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            int index = args.Count > 1 ? args[1].AsInt() : 0;
+            int value = args.Count > 2 ? args[2].AsInt() : 0;
+            
+            var entity = ResolveObject(objectId, ctx);
+            if (entity != null && index == 0)
+            {
+                // Clamp to -128 to 127
+                if (value > 127) value = 127;
+                if (value < -128) value = -128;
+                ctx.Globals.SetLocalInt(entity, "_LN_" + index, value);
             }
             return Variable.Void();
         }
