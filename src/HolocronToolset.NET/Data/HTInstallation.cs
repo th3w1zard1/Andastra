@@ -64,6 +64,7 @@ namespace HolocronToolset.NET.Data
 
         private readonly Installation _installation;
         private readonly Dictionary<string, TwoDA> _cache2da = new Dictionary<string, TwoDA>();
+        private readonly Dictionary<string, CSharpKOTOR.Formats.TPC.TPC> _cacheTpc = new Dictionary<string, CSharpKOTOR.Formats.TPC.TPC>();
         private bool? _tsl;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:93-120
@@ -110,6 +111,46 @@ namespace HolocronToolset.NET.Data
             return _cache2da[resname];
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:520-547
+        // Original: def ht_batch_cache_2da(self, resnames: list[str], *, reload: bool = False):
+        public void HtBatchCache2DA(List<string> resnames, bool reload = false)
+        {
+            var queries = new List<ResourceIdentifier>();
+            if (reload)
+            {
+                queries.AddRange(resnames.Select(resname => new ResourceIdentifier(resname, ResourceType.TwoDA)));
+            }
+            else
+            {
+                queries.AddRange(resnames.Where(resname => !_cache2da.ContainsKey(resname.ToLowerInvariant()))
+                    .Select(resname => new ResourceIdentifier(resname, ResourceType.TwoDA)));
+            }
+
+            if (queries.Count == 0)
+            {
+                return;
+            }
+
+            var resources = _installation.Locations(queries, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+            foreach (var kvp in resources)
+            {
+                var locations = kvp.Value;
+                if (locations == null || locations.Count == 0)
+                {
+                    continue;
+                }
+
+                // Get the first location result
+                var location = locations[0];
+                var resource = _installation.Resource(kvp.Key.ResName, kvp.Key.ResType, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+                if (resource != null)
+                {
+                    var reader = new TwoDABinaryReader(resource.Data);
+                    _cache2da[kvp.Key.ResName.ToLowerInvariant()] = reader.Load();
+                }
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:673-677
         // Original: @property def tsl(self) -> bool:
         public bool Tsl
@@ -136,7 +177,57 @@ namespace HolocronToolset.NET.Data
         public void ClearAllCaches()
         {
             _cache2da.Clear();
+            _cacheTpc.Clear();
             _installation.ClearCache();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:554-567
+        // Original: def ht_get_cache_tpc(self, resname: str) -> TPC | None:
+        [CanBeNull]
+        public CSharpKOTOR.Formats.TPC.TPC HtGetCacheTpc(string resname)
+        {
+            resname = resname.ToLowerInvariant();
+            if (!_cacheTpc.ContainsKey(resname))
+            {
+                var tex = _installation.Texture(
+                    resname,
+                    new[] { SearchLocation.OVERRIDE, SearchLocation.TEXTURES_TPA, SearchLocation.TEXTURES_GUI });
+                if (tex != null)
+                {
+                    _cacheTpc[resname] = tex;
+                }
+            }
+            return _cacheTpc.ContainsKey(resname) ? _cacheTpc[resname] : null;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:569-584
+        // Original: def ht_batch_cache_tpc(self, names: list[str], *, reload: bool = False):
+        public void HtBatchCacheTpc(List<string> names, bool reload = false)
+        {
+            var queries = reload ? names.ToList() : names.Where(name => !_cacheTpc.ContainsKey(name.ToLowerInvariant())).ToList();
+
+            if (queries.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var resname in queries)
+            {
+                var tex = _installation.Texture(
+                    resname,
+                    new[] { SearchLocation.TEXTURES_TPA, SearchLocation.TEXTURES_GUI });
+                if (tex != null)
+                {
+                    _cacheTpc[resname.ToLowerInvariant()] = tex;
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:586-587
+        // Original: def ht_clear_cache_tpc(self):
+        public void HtClearCacheTpc()
+        {
+            _cacheTpc.Clear();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
