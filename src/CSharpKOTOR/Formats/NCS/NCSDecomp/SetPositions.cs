@@ -1,5 +1,7 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:14-39
 // Original: public class SetPositions extends PrunedReversedDepthFirstAdapter
+using System;
+using System;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
