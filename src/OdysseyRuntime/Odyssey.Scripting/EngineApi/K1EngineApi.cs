@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using CSharpKOTOR.Common.Script;
 using Odyssey.Core.Actions;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -174,8 +175,14 @@ namespace Odyssey.Scripting.EngineApi
                 // GetAbilityScore (routine 139)
                 case 139: return Func_GetAbilityScore(args, ctx);
                 
+                // GetItemInSlot (routine 155)
+                case 155: return Func_GetItemInSlot(args, ctx);
+                
                 // PrintVector
                 case 141: return Func_PrintVector(args, ctx);
+                
+                // ApplyEffectToObject (routine 220)
+                case 220: return Func_ApplyEffectToObject(args, ctx);
 
                 // Global string (restricted functions)
                 case 160: return Func_SetGlobalString(args, ctx);
@@ -190,6 +197,9 @@ namespace Odyssey.Scripting.EngineApi
                 case 242: return Func_GetModule(args, ctx);
                 case 272: return Func_ObjectToString(args, ctx);
 
+                // GetAbilityModifier (routine 331)
+                case 331: return Func_GetAbilityModifier(args, ctx);
+                
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
                 case 579: return Func_SetGlobalBoolean(args, ctx);
@@ -1281,6 +1291,124 @@ namespace Odyssey.Scripting.EngineApi
                 }
             }
             return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetAbilityModifier(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetAbilityModifier(int nAbility, object oCreature=OBJECT_SELF)
+            // nAbility: ABILITY_STRENGTH (0), ABILITY_DEXTERITY (1), ABILITY_CONSTITUTION (2),
+            //          ABILITY_INTELLIGENCE (3), ABILITY_WISDOM (4), ABILITY_CHARISMA (5)
+            int abilityType = args.Count > 0 ? args[0].AsInt() : 0;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    // Map ability type to Ability enum
+                    if (abilityType >= 0 && abilityType <= 5)
+                    {
+                        Ability ability = (Ability)abilityType;
+                        return Variable.FromInt(stats.GetAbilityModifier(ability));
+                    }
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetItemInSlot(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetItemInSlot(int nInventorySlot, object oCreature=OBJECT_SELF)
+            int inventorySlot = args.Count > 0 ? args[0].AsInt() : 0;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                // TODO: Implement inventory component interface and slot-based item retrieval
+                // For now, return OBJECT_INVALID
+                // This would require:
+                // 1. IInventoryComponent interface with GetItemInSlot(int slot) method
+                // 2. Inventory slot constants (INVENTORY_SLOT_HEAD, INVENTORY_SLOT_BODY, etc.)
+                // 3. Item entity references stored in inventory component
+            }
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        private Variable Func_ApplyEffectToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // ApplyEffectToObject(int nDurationType, effect eEffect, object oTarget, float fDuration=0.0f)
+            // nDurationType: DURATION_TYPE_INSTANT (0), DURATION_TYPE_TEMPORARY (1), DURATION_TYPE_PERMANENT (2)
+            int durationType = args.Count > 0 ? args[0].AsInt() : 0;
+            object effectObj = args.Count > 1 ? args[1].ComplexValue : null;
+            uint targetId = args.Count > 2 ? args[2].AsObjectId() : ObjectSelf;
+            float duration = args.Count > 3 ? args[3].AsFloat() : 0f;
+
+            if (effectObj == null || ctx.World == null)
+            {
+                return Variable.Void();
+            }
+
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                target = ctx.Caller;
+            }
+
+            if (target == null)
+            {
+                return Variable.Void();
+            }
+
+            // Convert effect object to Effect
+            Effect effect = null;
+            if (effectObj is Effect directEffect)
+            {
+                effect = directEffect;
+            }
+            else
+            {
+                // TODO: Convert from script effect type to Effect
+                // For now, return void
+                return Variable.Void();
+            }
+
+            // Map duration type
+            EffectDurationType effectDurationType;
+            switch (durationType)
+            {
+                case 0: // DURATION_TYPE_INSTANT
+                    effectDurationType = EffectDurationType.Instant;
+                    break;
+                case 1: // DURATION_TYPE_TEMPORARY
+                    effectDurationType = EffectDurationType.Temporary;
+                    if (duration > 0f)
+                    {
+                        // Convert seconds to rounds (assuming 6 seconds per round)
+                        effect.DurationRounds = (int)Math.Ceiling(duration / 6f);
+                    }
+                    break;
+                case 2: // DURATION_TYPE_PERMANENT
+                    effectDurationType = EffectDurationType.Permanent;
+                    break;
+                default:
+                    return Variable.Void();
+            }
+
+            effect.DurationType = effectDurationType;
+
+            // TODO: Access EffectSystem from world or game session
+            // EffectSystem needs to be accessible through IWorld or GameSession
+            // For now, this is a placeholder
+            // var effectSystem = GetEffectSystem(ctx.World);
+            // if (effectSystem != null)
+            // {
+            //     effectSystem.ApplyEffect(target, effect, ctx.Caller);
+            // }
+
+            return Variable.Void();
         }
 
         // Effect placeholders
