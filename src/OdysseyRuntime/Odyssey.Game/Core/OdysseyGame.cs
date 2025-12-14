@@ -452,19 +452,26 @@ namespace Odyssey.Game.Core
             }
             else
             {
-                // Fallback: draw title as a large visual indicator
-                // Draw a stylized "O" symbol for Odyssey using rectangles
-                int titleSize = 80;
+                // Fallback: draw professional title logo
+                // Draw a stylized "O" symbol for Odyssey with smooth rendering
+                int titleSize = 100;
                 int titleX = centerX - titleSize / 2;
-                int titleY = startY - titleOffset - 60;
+                int titleY = startY - titleOffset - 80;
 
-                // Outer ring (gold)
+                // Add subtle glow effect (outermost, semi-transparent)
+                Rectangle glowRing = new Rectangle(titleX - 4, titleY - 4, titleSize + 8, titleSize + 8);
+                DrawFilledCircle(_spriteBatch, glowRing, new Color(255, 215, 0, 40));
+
+                // Outer ring (gold) - filled circle with border
                 Rectangle outerRing = new Rectangle(titleX, titleY, titleSize, titleSize);
-                DrawRectangleBorder(_spriteBatch, outerRing, 6, new Color(255, 215, 0, 255));
+                DrawFilledCircle(_spriteBatch, outerRing, new Color(255, 215, 0, 255));
+                DrawRoundedRectangle(_spriteBatch, outerRing, 6, new Color(255, 200, 0, 255));
 
-                // Inner circle (hollow)
-                Rectangle innerRing = new Rectangle(titleX + 15, titleY + 15, titleSize - 30, titleSize - 30);
-                DrawRectangleBorder(_spriteBatch, innerRing, 4, new Color(255, 215, 0, 180));
+                // Inner ring (hollow) - creates elegant "O" shape by clearing center
+                int innerSize = titleSize - 32;
+                Rectangle innerRing = new Rectangle(titleX + 16, titleY + 16, innerSize, innerSize);
+                DrawFilledCircle(_spriteBatch, innerRing, new Color(15, 15, 25, 255)); // Clear with background color
+                DrawRoundedRectangle(_spriteBatch, innerRing, 4, new Color(255, 215, 0, 220));
 
                 Console.WriteLine("[Odyssey] WARNING: Font not available - using visual fallback indicators");
             }
@@ -533,40 +540,55 @@ namespace Odyssey.Game.Core
                 }
                 else
                 {
-                    // Fallback: draw clear visual indicators for each button
-                    int iconSize = 30;
+                    // Fallback: draw professional icons for each button
+                    int iconSize = 36;
                     int iconX = scaledButtonRect.X + (scaledButtonRect.Width - iconSize) / 2;
                     int iconY = scaledButtonRect.Y + (scaledButtonRect.Height - iconSize) / 2;
                     Rectangle iconRect = new Rectangle(iconX, iconY, iconSize, iconSize);
 
-                    Color iconColor = isSelected ? Color.White : new Color(200, 200, 200, 255);
+                    Color iconColor = isSelected ? Color.White : new Color(220, 220, 220, 255);
 
                     if (i == 0)
                     {
-                        // Start Game: Play triangle (right-pointing)
-                        int[] triangleX = { iconRect.X + 8, iconRect.X + 8, iconRect.X + iconSize - 8 };
-                        int[] triangleY = { iconRect.Y + 8, iconRect.Y + iconSize - 8, iconRect.Y + iconSize / 2 };
-                        DrawTriangle(_spriteBatch, triangleX, triangleY, iconColor);
+                        // Start Game: Professional play triangle (right-pointing, centered)
+                        int padding = 10;
+                        int[] triangleX = { iconRect.X + padding, iconRect.X + padding, iconRect.X + iconSize - padding };
+                        int[] triangleY = { iconRect.Y + padding, iconRect.Y + iconSize - padding, iconRect.Y + iconSize / 2 };
+                        DrawFilledTriangle(_spriteBatch, triangleX, triangleY, iconColor);
+                        // Add subtle border for definition
+                        DrawTriangleOutline(_spriteBatch, triangleX, triangleY, new Color(iconColor.R / 2, iconColor.G / 2, iconColor.B / 2, iconColor.A));
                     }
                     else if (i == 1)
                     {
-                        // Options: Gear icon (square with diagonal lines)
-                        DrawRectangleBorder(_spriteBatch, iconRect, 3, iconColor);
-                        // Draw X through center
-                        int margin = 8;
-                        _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + margin, iconRect.Y + iconSize / 2 - 2, iconSize - margin * 2, 4), iconColor);
-                        _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + iconSize / 2 - 2, iconRect.Y + margin, 4, iconSize - margin * 2), iconColor);
+                        // Options: Professional gear/settings icon (rounded square with plus)
+                        int padding = 8;
+                        Rectangle gearRect = new Rectangle(iconRect.X + padding, iconRect.Y + padding, iconSize - padding * 2, iconSize - padding * 2);
+                        DrawRoundedRectangle(_spriteBatch, gearRect, 3, iconColor);
+                        // Draw plus sign in center
+                        int plusThickness = 3;
+                        int plusSize = iconSize / 3;
+                        int plusX = iconRect.X + (iconSize - plusThickness) / 2;
+                        int plusY = iconRect.Y + (iconSize - plusSize) / 2;
+                        // Horizontal bar
+                        _spriteBatch.Draw(_menuTexture, new Rectangle(plusX - plusSize / 2, plusY + plusSize / 2 - plusThickness / 2, plusSize, plusThickness), iconColor);
+                        // Vertical bar
+                        _spriteBatch.Draw(_menuTexture, new Rectangle(plusX - plusThickness / 2, plusY, plusThickness, plusSize), iconColor);
                     }
                     else if (i == 2)
                     {
-                        // Exit: X symbol
+                        // Exit: Professional X/close icon (diagonal lines)
+                        int padding = 10;
                         int thickness = 4;
-                        // Diagonal lines
-                        for (int offset = -2; offset <= 2; offset++)
-                        {
-                            _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + offset, iconRect.Y, thickness, iconSize), iconColor);
-                            _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + iconSize - offset - thickness, iconRect.Y, thickness, iconSize), iconColor);
-                        }
+                        // Top-left to bottom-right
+                        DrawDiagonalLine(_spriteBatch, 
+                            iconRect.X + padding, iconRect.Y + padding,
+                            iconRect.X + iconSize - padding, iconRect.Y + iconSize - padding,
+                            thickness, iconColor);
+                        // Top-right to bottom-left
+                        DrawDiagonalLine(_spriteBatch,
+                            iconRect.X + iconSize - padding, iconRect.Y + padding,
+                            iconRect.X + padding, iconRect.Y + iconSize - padding,
+                            thickness, iconColor);
                     }
                 }
             }
@@ -667,23 +689,39 @@ namespace Odyssey.Game.Core
                 }
                 else
                 {
-                    // Fallback: draw simple visual instruction indicators
-                    int indicatorY = viewportHeight - 40;
-                    int indicatorSize = 8;
+                    // Fallback: draw professional instruction indicators (minimal, clean design)
+                    int indicatorY = viewportHeight - 50;
+                    int indicatorSize = 12;
+                    Color indicatorColor = new Color(180, 180, 200, 200);
 
-                    // Arrow keys indicator (up arrow)
-                    int arrowX = centerX - 100;
-                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX, indicatorY - 5, indicatorSize, indicatorSize * 2), new Color(150, 150, 170, 255));
-                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX - 4, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
-                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX + indicatorSize - indicatorSize / 2, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
+                    // Draw subtle separator line
+                    int lineWidth = 300;
+                    int lineX = centerX - lineWidth / 2;
+                    _spriteBatch.Draw(_menuTexture, new Rectangle(lineX, indicatorY - 15, lineWidth, 2), new Color(100, 100, 120, 100));
 
-                    // Mouse indicator (circle)
+                    // Arrow keys indicator (up arrow) - clean design
+                    int arrowX = centerX - 120;
+                    int arrowY = indicatorY;
+                    // Arrow shaft
+                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX + indicatorSize / 2 - 1, arrowY, 2, indicatorSize), indicatorColor);
+                    // Arrow head (triangle)
+                    int[] arrowHeadX = { arrowX, arrowX + indicatorSize, arrowX + indicatorSize / 2 };
+                    int[] arrowHeadY = { arrowY + indicatorSize / 2, arrowY + indicatorSize / 2, arrowY };
+                    DrawFilledTriangle(_spriteBatch, arrowHeadX, arrowHeadY, indicatorColor);
+
+                    // Mouse indicator (rounded square)
                     int mouseX = centerX;
-                    DrawRectangleBorder(_spriteBatch, new Rectangle(mouseX - indicatorSize / 2, indicatorY - indicatorSize / 2, indicatorSize, indicatorSize), 2, new Color(150, 150, 170, 255));
+                    Rectangle mouseRect = new Rectangle(mouseX - indicatorSize / 2, arrowY - indicatorSize / 2, indicatorSize, indicatorSize);
+                    DrawRoundedRectangle(_spriteBatch, mouseRect, 2, indicatorColor);
 
-                    // Enter key indicator (rectangle)
-                    int enterX = centerX + 100;
-                    _spriteBatch.Draw(_menuTexture, new Rectangle(enterX, indicatorY - 5, indicatorSize * 2, indicatorSize), new Color(150, 150, 170, 255));
+                    // Enter key indicator (rounded rectangle with arrow)
+                    int enterX = centerX + 120;
+                    Rectangle enterRect = new Rectangle(enterX - indicatorSize, arrowY - indicatorSize / 2, indicatorSize * 2, indicatorSize);
+                    DrawRoundedRectangle(_spriteBatch, enterRect, 2, indicatorColor);
+                    // Small arrow inside
+                    int[] enterArrowX = { enterX + indicatorSize - 6, enterX + indicatorSize - 6, enterX + indicatorSize - 2 };
+                    int[] enterArrowY = { arrowY - 3, arrowY + 3, arrowY };
+                    DrawFilledTriangle(_spriteBatch, enterArrowX, enterArrowY, new Color(100, 100, 120, 255));
                 }
             }
 
@@ -737,6 +775,144 @@ namespace Odyssey.Game.Core
                     int minX = Math.Min(intersections[0], intersections[1]);
                     int maxX = Math.Max(intersections[0], intersections[1]);
                     spriteBatch.Draw(_menuTexture, new Rectangle(minX, py, maxX - minX, 1), color);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws a filled triangle with smooth rendering.
+        /// </summary>
+        private void DrawFilledTriangle(SpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        {
+            DrawTriangle(spriteBatch, x, y, color);
+        }
+
+        /// <summary>
+        /// Draws a triangle outline (border only).
+        /// </summary>
+        private void DrawTriangleOutline(SpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        {
+            int thickness = 2;
+            // Draw three edges of the triangle
+            DrawLine(spriteBatch, x[0], y[0], x[1], y[1], thickness, color);
+            DrawLine(spriteBatch, x[1], y[1], x[2], y[2], thickness, color);
+            DrawLine(spriteBatch, x[2], y[2], x[0], y[0], thickness, color);
+        }
+
+        /// <summary>
+        /// Draws a line between two points.
+        /// </summary>
+        private void DrawLine(SpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        {
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float length = (float)Math.Sqrt(dx * dx + dy * dy);
+            if (length < 0.1f) return;
+
+            float angle = (float)Math.Atan2(dy, dx);
+            float halfThickness = thickness / 2.0f;
+
+            // Draw line as a rotated rectangle
+            for (int i = 0; i < thickness; i++)
+            {
+                float offset = i - halfThickness;
+                float perpX = (float)(-Math.Sin(angle) * offset);
+                float perpY = (float)(Math.Cos(angle) * offset);
+
+                int startX = (int)(x1 + perpX);
+                int startY = (int)(y1 + perpY);
+                int endX = (int)(x2 + perpX);
+                int endY = (int)(y2 + perpY);
+
+                // Draw line segment
+                int lineLength = (int)Math.Ceiling(length);
+                for (int j = 0; j <= lineLength; j++)
+                {
+                    float t = (float)j / lineLength;
+                    int px = (int)(startX + (endX - startX) * t);
+                    int py = (int)(startY + (endY - startY) * t);
+                    spriteBatch.Draw(_menuTexture, new Rectangle(px, py, 1, 1), color);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws a diagonal line between two points.
+        /// </summary>
+        private void DrawDiagonalLine(SpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        {
+            DrawLine(spriteBatch, x1, y1, x2, y2, thickness, color);
+        }
+
+        /// <summary>
+        /// Draws a rounded rectangle border with smooth corners.
+        /// Creates the appearance of rounded corners using border lines with corner arcs.
+        /// </summary>
+        private void DrawRoundedRectangle(SpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
+        {
+            int cornerRadius = borderThickness * 2;
+            int cornerGap = cornerRadius;
+
+            // Draw border edges (with gaps at corners for rounded effect)
+            // Top edge
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X + cornerGap, rect.Y, rect.Width - cornerGap * 2, borderThickness), color);
+            // Bottom edge
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X + cornerGap, rect.Y + rect.Height - borderThickness, rect.Width - cornerGap * 2, borderThickness), color);
+            // Left edge
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y + cornerGap, borderThickness, rect.Height - cornerGap * 2), color);
+            // Right edge
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X + rect.Width - borderThickness, rect.Y + cornerGap, borderThickness, rect.Height - cornerGap * 2), color);
+
+            // Draw corner arcs for smooth rounded appearance
+            DrawCornerArc(spriteBatch, rect.X + cornerRadius, rect.Y + cornerRadius, cornerRadius, borderThickness, color, true, true);
+            DrawCornerArc(spriteBatch, rect.X + rect.Width - cornerRadius, rect.Y + cornerRadius, cornerRadius, borderThickness, color, false, true);
+            DrawCornerArc(spriteBatch, rect.X + cornerRadius, rect.Y + rect.Height - cornerRadius, cornerRadius, borderThickness, color, true, false);
+            DrawCornerArc(spriteBatch, rect.X + rect.Width - cornerRadius, rect.Y + rect.Height - cornerRadius, cornerRadius, borderThickness, color, false, false);
+        }
+
+        /// <summary>
+        /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
+        /// </summary>
+        private void DrawCornerArc(SpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
+        {
+            // Draw quarter circle arc using border approach
+            for (int y = -radius; y <= 0; y++)
+            {
+                for (int x = -radius; x <= 0; x++)
+                {
+                    float dist = (float)Math.Sqrt(x * x + y * y);
+                    // Draw border pixels (within thickness range from edge)
+                    if (dist <= radius && dist >= radius - thickness)
+                    {
+                        int drawX = leftSide ? centerX + x : centerX - x;
+                        int drawY = topSide ? centerY + y : centerY - y;
+                        spriteBatch.Draw(_menuTexture, new Rectangle(drawX, drawY, 1, 1), color);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws a filled circle (approximated with rectangle).
+        /// </summary>
+        private void DrawFilledCircle(SpriteBatch spriteBatch, Rectangle bounds, Color color)
+        {
+            int centerX = bounds.X + bounds.Width / 2;
+            int centerY = bounds.Y + bounds.Height / 2;
+            int radius = Math.Min(bounds.Width, bounds.Height) / 2;
+
+            // Draw filled circle by checking each pixel
+            for (int y = bounds.Y; y < bounds.Y + bounds.Height; y++)
+            {
+                for (int x = bounds.X; x < bounds.X + bounds.Width; x++)
+                {
+                    float dx = x - centerX;
+                    float dy = y - centerY;
+                    float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                    if (dist <= radius)
+                    {
+                        spriteBatch.Draw(_menuTexture, new Rectangle(x, y, 1, 1), color);
+                    }
                 }
             }
         }
@@ -1018,8 +1194,21 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            // Load and render room meshes
-            foreach (var room in area.Rooms)
+            // Determine which room the player is in for VIS culling
+            int currentRoomIndex = -1;
+            if (_session != null && _session.PlayerEntity != null)
+            {
+                var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                if (transform != null)
+                {
+                    currentRoomIndex = FindPlayerRoom(area, transform.Position);
+                }
+            }
+
+            // Load and render room meshes (with VIS culling if possible)
+            for (int i = 0; i < area.Rooms.Count; i++)
+            {
+                var room = area.Rooms[i];
             {
                 if (string.IsNullOrEmpty(room.ModelName))
                 {
