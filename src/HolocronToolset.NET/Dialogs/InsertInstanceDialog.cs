@@ -158,7 +158,7 @@ namespace HolocronToolset.NET.Dialogs
 
             _locationSelect.Items.Clear();
             _locationSelect.Items.Add(_installation.OverridePath());
-            
+
             // Add module capsules
             // TODO: Implement when Module.capsules() is available
         }
@@ -191,7 +191,7 @@ namespace HolocronToolset.NET.Dialogs
         private void Accept()
         {
             bool newResource = true;
-            
+
             if (_resourceList?.SelectedItem == null)
             {
                 // TODO: Show MessageBox when available
@@ -291,7 +291,7 @@ namespace HolocronToolset.NET.Dialogs
             {
                 // Update dynamic text label
                 // TODO: Implement when UI controls are available
-                
+
                 // Update preview
                 // TODO: Implement when preview renderer is available
             }
@@ -312,7 +312,7 @@ namespace HolocronToolset.NET.Dialogs
         private void OnResourceFilterChanged()
         {
             string filterText = _resourceFilter?.Text?.ToLowerInvariant() ?? "";
-            
+
             if (_resourceList != null)
             {
                 foreach (var item in _resourceList.Items)

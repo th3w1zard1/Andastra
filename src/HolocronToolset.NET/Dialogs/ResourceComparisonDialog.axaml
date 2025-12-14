@@ -20,11 +20,11 @@
         <!-- Comparison View -->
         <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="0,0,0,10">
             <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <TextBox Name="leftText" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="False" 
+                <TextBox Name="leftText" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="False"
                          TextWrapping="NoWrap" FontFamily="Consolas" />
             </ScrollViewer>
             <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <TextBox Name="rightText" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="False" 
+                <TextBox Name="rightText" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="False"
                          TextWrapping="NoWrap" FontFamily="Consolas" />
             </ScrollViewer>
         </Grid>

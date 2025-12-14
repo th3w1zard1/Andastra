@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.SelectModuleDialog"
+        Title="Open Module"
+        Width="336" Height="373"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="10" Spacing="10">
+        <TextBox Name="filterEdit" Watermark="filter..." />
+        <ListBox Name="moduleList" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="5">
+            <Button Name="cancelButton" Content="Cancel" Width="75" />
+            <Button Name="browseButton" Content="Browse" Width="75" />
+            <Button Name="openButton" Content="Open" Width="75" IsEnabled="False" />
+        </StackPanel>
+    </StackPanel>
+</Window>

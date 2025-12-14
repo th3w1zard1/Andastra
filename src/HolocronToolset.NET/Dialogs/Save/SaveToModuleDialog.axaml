@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.Save.SaveToModuleDialog"
+        Title="Save to Module"
+        Width="300" Height="150"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="10" Spacing="10">
+        <TextBlock Text="ResRef:" />
+        <TextBox Name="resrefEdit" />
+        <TextBlock Text="Type:" />
+        <ComboBox Name="typeCombo" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="5">
+            <Button Name="okButton" Content="OK" Width="75" />
+            <Button Name="cancelButton" Content="Cancel" Width="75" />
+        </StackPanel>
+    </StackPanel>
+</Window>
