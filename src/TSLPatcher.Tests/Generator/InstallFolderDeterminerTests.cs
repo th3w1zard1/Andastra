@@ -122,6 +122,8 @@ namespace CSharpKOTOR.Tests.Generator
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
             var modGFF = new ModificationsGFF("source.utc", false);
+            modGFF.Destination = "Override";
+            modGFF.SaveAs = "saved.utc";
             modifications.Gff.Add(modGFF);
 
             // Act
