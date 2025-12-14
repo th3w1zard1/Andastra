@@ -2123,6 +2123,108 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromEffect(effect);
         }
 
+        /// <summary>
+        /// GetPartyMemberCount() - returns number of active party members
+        /// </summary>
+        private Variable Func_GetPartyMemberCount(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Get PartyManager from AdditionalContext (GameSession)
+            GameSession gameSession = ctx.AdditionalContext as GameSession;
+            if (gameSession != null && gameSession.PartyManager != null)
+            {
+                return Variable.FromInt(gameSession.PartyManager.ActiveMemberCount);
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetPartyMemberByIndex(int nIndex) - returns party member at index (0 = leader)
+        /// </summary>
+        private Variable Func_GetPartyMemberByIndex(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int index = args.Count > 0 ? args[0].AsInt() : 0;
+            
+            GameSession gameSession = ctx.AdditionalContext as GameSession;
+            if (gameSession != null && gameSession.PartyManager != null)
+            {
+                IEntity member = gameSession.PartyManager.GetMemberAtSlot(index);
+                if (member != null)
+                {
+                    return Variable.FromObject(member.ObjectId);
+                }
+            }
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// IsObjectPartyMember(object oCreature) - returns TRUE if creature is in party
+        /// </summary>
+        private Variable Func_IsObjectPartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity != null)
+            {
+                GameSession gameSession = ctx.AdditionalContext as GameSession;
+                if (gameSession != null && gameSession.PartyManager != null)
+                {
+                    return Variable.FromInt(gameSession.PartyManager.IsInParty(entity) ? 1 : 0);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// AddPartyMember(int nNPC, object oCreature) - adds creature to party by NPC index
+        /// </summary>
+        private Variable Func_AddPartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity != null && npcIndex >= 0)
+            {
+                GameSession gameSession = ctx.AdditionalContext as GameSession;
+                if (gameSession != null && gameSession.PartyManager != null)
+                {
+                    // Add to available members if not already available
+                    if (!gameSession.PartyManager.IsAvailable(npcIndex))
+                    {
+                        gameSession.PartyManager.AddAvailableMember(npcIndex, entity);
+                    }
+                    
+                    // Select member for active party
+                    bool success = gameSession.PartyManager.SelectMember(npcIndex);
+                    return Variable.FromInt(success ? 1 : 0);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// RemovePartyMember(int nNPC) - removes party member by NPC index
+        /// </summary>
+        private Variable Func_RemovePartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
+            
+            if (npcIndex >= 0)
+            {
+                GameSession gameSession = ctx.AdditionalContext as GameSession;
+                if (gameSession != null && gameSession.PartyManager != null)
+                {
+                    if (gameSession.PartyManager.IsSelected(npcIndex))
+                    {
+                        gameSession.PartyManager.DeselectMember(npcIndex);
+                        return Variable.FromInt(1);
+                    }
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
         #endregion
     }
 }
