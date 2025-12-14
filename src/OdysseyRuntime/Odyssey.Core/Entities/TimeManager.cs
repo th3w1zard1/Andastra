@@ -6,6 +6,15 @@ namespace Odyssey.Core.Entities
     /// <summary>
     /// Manages simulation and render time for deterministic gameplay.
     /// </summary>
+    /// <remarks>
+    /// Time Manager:
+    /// - Based on swkotor2.exe time management system
+    /// - Located via string references: Time functions handle game time, day/night cycles, time-based events
+    /// - Original implementation: Fixed timestep simulation for deterministic gameplay (60 Hz)
+    /// - Game time tracking: Day, month, year, time of day (hours, minutes, seconds)
+    /// - Fixed timestep ensures consistent simulation regardless of frame rate
+    /// - Time scale allows for pause, slow-motion, fast-forward effects
+    /// </remarks>
     public class TimeManager : ITimeManager
     {
         private const float DefaultFixedTimestep = 1f / 60f;

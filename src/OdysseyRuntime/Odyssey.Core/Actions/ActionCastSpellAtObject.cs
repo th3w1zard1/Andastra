@@ -9,6 +9,15 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to cast a spell at a target object.
     /// </summary>
+    /// <remarks>
+    /// Cast Spell Action:
+    /// - Based on swkotor2.exe spell casting system
+    /// - Located via string references: Spell casting functions handle Force powers and spells
+    /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
+    /// - Spell casting range: ~10.0 units (CastRange)
+    /// - Checks Force points, spell knowledge, applies effects via EffectSystem
+    /// - Spell effects applied to target based on spell ID (lookup via spells.2da)
+    /// </remarks>
     public class ActionCastSpellAtObject : ActionBase
     {
         private readonly int _spellId;

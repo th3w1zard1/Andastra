@@ -8,6 +8,15 @@ namespace Odyssey.Core.Entities
     /// <summary>
     /// Event bus implementation for routing entity and world events.
     /// </summary>
+    /// <remarks>
+    /// Event Bus System:
+    /// - Based on swkotor2.exe event system
+    /// - Located via string references: Event firing functions handle script events and game events
+    /// - Original implementation: Events fire for various game state changes (damage, death, perception, etc.)
+    /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, etc. (see ScriptEvent enum)
+    /// - Game events: Damage, death, door opened/closed, combat events, etc.
+    /// - Events are routed to subscribed handlers and can trigger script execution
+    /// </remarks>
     public class EventBus : IEventBus
     {
         private readonly Dictionary<Type, List<Delegate>> _subscribers;
