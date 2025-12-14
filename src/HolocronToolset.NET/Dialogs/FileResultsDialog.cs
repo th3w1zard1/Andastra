@@ -151,7 +151,7 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:254-271
         // Original: def accept(self):
-        private void Accept()
+        public void Accept()
         {
             if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
             {

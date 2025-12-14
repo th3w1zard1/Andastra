@@ -80,11 +80,19 @@ namespace HolocronToolset.NET.Tests.Dialogs
             // Double-click should select and accept - verify signal was called or item is selected
             dialog.Ui.ResultList.SelectedIndex.Should().Be(0);
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_search.py:433-437
+            // Original: dialog.ui.resultList.setCurrentRow(1)
+            //          dialog.accept()
+            //          assert len(signal_called) >= 1
+            //          assert isinstance(signal_called[0], FileResource)
             // Test accept button
             dialog.Ui.ResultList.SelectedIndex = 1;
-            dialog.Ui.OkButton.Command?.Execute(null);
+            // Call Accept() directly to match Python test behavior
+            dialog.Accept();
             // Signal should be called when Accept is triggered
-            // Note: In headless test mode, we verify the button exists and is connected
+            (signalCalled.Count >= 1).Should().BeTrue();
+            signalCalled[0].Should().NotBeNull();
+            signalCalled[0].Should().BeOfType<FileResource>();
 
             dialog.Close();
         }
@@ -132,13 +140,20 @@ namespace HolocronToolset.NET.Tests.Dialogs
             dialog.Ui.ResultList.Items.Count.Should().Be(1);
             dialog.Ui.ResultList.SelectedIndex = 0;
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_search.py:472-477
+            // Original: signal_called: list[FileResource] = []
+            //          dialog.sig_searchresults_selected.connect(lambda r: signal_called.append(r))
+            //          dialog.accept()
+            //          assert len(signal_called) == 1
+            //          assert signal_called[0].resname() == "single"
             var signalCalled = new List<FileResource>();
             dialog.SearchResultsSelected += (r) => signalCalled.Add(r);
 
             // Trigger accept
-            dialog.Ui.OkButton.Command?.Execute(null);
-            // In headless mode, we verify the event is connected
-            // The actual signal emission happens in Accept() method
+            dialog.Accept();
+            // Signal should be called with the selected resource
+            signalCalled.Count.Should().Be(1);
+            signalCalled[0].ResName.Should().Be("single");
 
             dialog.Close();
         }
