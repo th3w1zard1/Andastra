@@ -130,30 +130,6 @@ namespace CSharpKOTOR.Formats.GFF
             uint data = Reader.ReadUInt32();
             uint fieldCount = Reader.ReadUInt32();
 
-            // Workaround for byte order issue: fieldCount being read as 16777216 (0x01000000) instead of 1
-            // This happens when bytes are [0x00, 0x00, 0x00, 0x01] (big-endian 1) but we read as little-endian
-            // The value 16777216 = 0x01000000 means the bytes are in the wrong order
-            // When fieldCount is byte-swapped, data (field index) is likely also byte-swapped
-            if (fieldCount == 0x01000000)
-            {
-                // Bytes are [0x00, 0x00, 0x00, 0x01] read as little-endian = 0x01000000
-                // This is actually big-endian 1, so fix it
-                fieldCount = 1;
-                // data should be 0 for the first field, but if it's byte-swapped, it might be 0x00000000 (which is still 0)
-                // or it might be something else. For single-field structs, data should always be 0 (the field index)
-                data = 0;
-            }
-            else if (fieldCount > 1000000 && fieldCount < 0xFFFFFFFF)
-            {
-                // Other suspicious values that might be byte-swapped
-                if (fieldCount == 0x00010000 || fieldCount == 0x00000100)
-                {
-                    fieldCount = 1;
-                    // For single-field structs, data should be 0 (the field index)
-                    data = 0;
-                }
-            }
-
             gffStruct.StructId = structId;
 
             if (fieldCount == 1)
