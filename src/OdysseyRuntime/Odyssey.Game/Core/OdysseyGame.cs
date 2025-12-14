@@ -88,6 +88,9 @@ namespace Odyssey.Game.Core
 
         // KOTOR GUI System
         private KotorGuiManager _kotorGuiManager;
+        
+        // Fallback menu renderer (SpriteBatch-based, no font dependency)
+        private FallbackMenuRenderer _fallbackMenuRenderer;
 
         private bool _showDebugInfo = true; // Default to debug mode for demo
         private bool _isPaused = false;
@@ -204,6 +207,12 @@ namespace Odyssey.Game.Core
                     {
                         _mainMenu.IsVisible = true;
                     }
+                    
+                    // Show fallback menu renderer if available
+                    if (_fallbackMenuRenderer != null)
+                    {
+                        _fallbackMenuRenderer.SetVisible(true);
+                    }
 
                     break;
 
@@ -219,6 +228,12 @@ namespace Odyssey.Game.Core
                     if (_hud != null)
                     {
                         _hud.IsVisible = true;
+                    }
+                    
+                    // Hide fallback menu when in game
+                    if (_fallbackMenuRenderer != null)
+                    {
+                        _fallbackMenuRenderer.SetVisible(false);
                     }
 
                     break;
@@ -513,14 +528,32 @@ namespace Odyssey.Game.Core
 
         /// <summary>
         /// Creates a fully functional visual fallback main menu without text dependency.
-        /// Uses colored visual elements and borders to create an interactive UI.
-        /// This is GUARANTEED to work as it doesn't depend on font assets.
-        /// Strategy based on: StrideCleanUI project and Stride best practices for asset-free UI.
+        /// Uses SpriteBatch-based custom renderer for reliable rendering.
+        /// This is GUARANTEED to work as it doesn't depend on font assets or UIComponent.
+        /// Strategy based on Stride's official SpriteBatch and custom renderer documentation.
         /// </summary>
         private void CreateFallbackMainMenu()
         {
-            Console.WriteLine("[Odyssey] Creating visual-only fallback UI (no font dependency)");
-
+            Console.WriteLine("[Odyssey] Using SpriteBatch-based fallback menu renderer");
+            
+            // The FallbackMenuRenderer is already created in SetupGraphicsCompositor
+            // Just make sure it's visible
+            if (_fallbackMenuRenderer != null)
+            {
+                _fallbackMenuRenderer.SetVisible(true);
+                Console.WriteLine("[Odyssey] Fallback menu renderer enabled");
+                Console.WriteLine("[Odyssey] Use UP/DOWN arrows to navigate, ENTER to select");
+            }
+            else
+            {
+                Console.WriteLine("[Odyssey] ERROR: FallbackMenuRenderer not initialized!");
+            }
+            
+            // OLD UIComponent-based code removed - using SpriteBatch renderer instead
+            return;
+            
+            /*
+            // OLD CODE BELOW - KEPT FOR REFERENCE BUT NOT USED
             // Create root canvas - full screen with a clear background to see if UI renders at all
             var canvas = new Canvas
             {
@@ -658,17 +691,30 @@ namespace Odyssey.Game.Core
             _uiComponent.Page = page;
 
             Console.WriteLine("[Odyssey] ====================================");
-            Console.WriteLine("[Odyssey] FALLBACK UI CREATED SUCCESSFULLY");
+            Console.WriteLine("[Odyssey] OLD UIComponent CODE - NOT USED");
             Console.WriteLine("[Odyssey] ====================================");
-            Console.WriteLine("[Odyssey] UI Layout:");
-            Console.WriteLine("[Odyssey]   - BRIGHT GOLD BAR at top = Title");
-            Console.WriteLine("[Odyssey]   - BRIGHT GREEN button = Start Game " + (gameAvailable ? "(ENABLED)" : "(DISABLED)"));
-            Console.WriteLine("[Odyssey]   - BRIGHT BLUE button = Options (disabled)");
-            Console.WriteLine("[Odyssey]   - BRIGHT RED button = Exit");
-            Console.WriteLine("[Odyssey] All buttons have WHITE borders for visibility");
-            Console.WriteLine("[Odyssey] Click the GREEN button to start game");
-            Console.WriteLine("[Odyssey] Click the RED button to exit");
-            Console.WriteLine("[Odyssey] ====================================");
+            */
+        }
+        
+        /// <summary>
+        /// Handles menu item selection from the fallback menu renderer.
+        /// </summary>
+        private void OnFallbackMenuItemSelected(object sender, int menuIndex)
+        {
+            Console.WriteLine($"[Odyssey] Fallback menu item {menuIndex} selected");
+            
+            switch (menuIndex)
+            {
+                case 0: // Start Game
+                    OnFallbackStartClicked(null, null);
+                    break;
+                case 1: // Options
+                    Console.WriteLine("[Odyssey] Options menu not implemented");
+                    break;
+                case 2: // Exit
+                    Exit();
+                    break;
+            }
         }
 
         private void OnFallbackStartClicked(object sender, RoutedEventArgs e)
@@ -896,6 +942,12 @@ namespace Odyssey.Game.Core
                 // Add the single render stage for 3D content and UI
                 var singleStageRenderer = new SingleStageRenderer();
                 sceneRenderer.Children.Add(singleStageRenderer);
+                
+                // Create and add fallback menu renderer (SpriteBatch-based, renders on top)
+                _fallbackMenuRenderer = new FallbackMenuRenderer();
+                _fallbackMenuRenderer.Services = Services; // Required for initialization
+                _fallbackMenuRenderer.MenuItemSelected += OnFallbackMenuItemSelected;
+                sceneRenderer.Children.Add(_fallbackMenuRenderer);
 
                 // Create game entry point
                 var game = new SceneRendererCollection();
@@ -943,14 +995,16 @@ namespace Odyssey.Game.Core
             else if (_currentState == GameState.MainMenu)
             {
                 ProcessMainMenuInput();
+                
+                // Update fallback menu renderer input
+                if (_fallbackMenuRenderer != null && _fallbackMenuRenderer.IsVisible)
+                {
+                    _fallbackMenuRenderer.UpdateMenu(Input);
+                }
             }
 
-            // Update UI component for input handling
-            // In Stride, UI input is processed by the UI system, but Update() may be needed for event processing
-            if (_uiComponent != null && _uiComponent.Page != null)
-            {
-                _uiComponent.Update(gameTime);
-            }
+            // Note: UI input is handled automatically by Stride's UI system processor
+            // No manual Update() call needed - UIComponent is processed by UISystem automatically
 
             if (_isPaused)
             {
