@@ -341,6 +341,71 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Close();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:347-398
+        // Original: def test_uti_editor_all_widgets_build_verification(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUtiEditorAllWidgetsBuildVerification()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching Python: editor = UTIEditor(None, installation)
+            var editor = new UTIEditor(null, _installation);
+            editor.Show();
+            editor.New();
+
+            // Set ALL basic values
+            // Matching Python: editor.ui.tagEdit.setText("test_tag")
+            editor.TagEdit.Text = "test_tag";
+            editor.ResrefEdit.Text = "test_resref";
+
+            if (editor.BaseSelect != null && editor.BaseSelect.ItemCount > 0)
+            {
+                editor.BaseSelect.SelectedIndex = 1;
+            }
+
+            // Matching Python: editor.ui.costSpin.setValue(500)
+            editor.CostSpin.Value = 500;
+            editor.AdditionalCostSpin.Value = 100;
+            editor.UpgradeSpin.Value = 2;
+            editor.PlotCheckbox.IsChecked = true;
+            editor.ChargesSpin.Value = 10;
+            editor.StackSpin.Value = 5;
+            editor.ModelVarSpin.Value = 3;
+            editor.BodyVarSpin.Value = 2;
+            editor.TextureVarSpin.Value = 1;
+
+            // Set comments
+            // Matching Python: editor.ui.commentsEdit.setPlainText("Test comment")
+            editor.CommentsEdit.Text = "Test comment";
+
+            // Build and verify
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            
+            // Matching Python: uti = read_uti(data)
+            var uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+            // Verify all values were saved correctly
+            // Matching Python: assert uti.tag == "test_tag"
+            uti.Tag.Should().Be("test_tag");
+            uti.ResRef.ToString().Should().Be("test_resref");
+            uti.Cost.Should().Be(500);
+            uti.AddCost.Should().Be(100);
+            uti.UpgradeLevel.Should().Be(2);
+            uti.Plot.Should().Be(1);
+            uti.Charges.Should().Be(10);
+            uti.StackSize.Should().Be(5);
+            uti.ModelVariation.Should().Be(3);
+            uti.BodyVariation.Should().Be(2);
+            uti.TextureVariation.Should().Be(1);
+            uti.Comment.Should().Be("Test comment");
+
+            editor.Close();
+        }
+
         [Fact]
         public void TestUtiEditorNewFileCreation()
         {
