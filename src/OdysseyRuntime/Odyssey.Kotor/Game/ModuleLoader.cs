@@ -587,6 +587,13 @@ namespace Odyssey.Kotor.Game
                 count++;
             }
 
+            // Spawn encounters
+            foreach (GITEncounter encounter in git.Encounters)
+            {
+                SpawnEncounter(encounter, area);
+                count++;
+            }
+
             Console.WriteLine("[ModuleLoader] Spawned " + count + " entities");
         }
 
@@ -751,6 +758,118 @@ namespace Odyssey.Kotor.Game
             catch (Exception ex)
             {
                 Console.WriteLine("[ModuleLoader] Failed to load UTM template " + utmResRef + ": " + ex.Message);
+            }
+        }
+
+        private void SpawnEncounter(GITEncounter encounter, RuntimeArea area)
+        {
+            IEntity entity = _world.CreateEntity(OdyObjectType.Encounter, ToSysVector3(encounter.Position), 0);
+
+            // Load encounter template (UTE)
+            if (!string.IsNullOrEmpty(encounter.ResRef?.ToString()))
+            {
+                LoadEncounterTemplate(entity, encounter.ResRef.ToString());
+            }
+
+            // Set encounter geometry from GIT
+            EncounterComponent encounterComponent = entity.GetComponent<EncounterComponent>();
+            if (encounterComponent != null)
+            {
+                // Set geometry vertices
+                encounterComponent.Vertices = new List<SysVector3>();
+                foreach (KotorVector3 vertex in encounter.Geometry)
+                {
+                    encounterComponent.Vertices.Add(ToSysVector3(vertex));
+                }
+
+                // Set spawn points
+                encounterComponent.SpawnPoints = new List<EncounterSpawnPoint>();
+                foreach (GITEncounterSpawnPoint spawnPoint in encounter.SpawnPoints)
+                {
+                    var point = new EncounterSpawnPoint
+                    {
+                        Position = new SysVector3(spawnPoint.X, spawnPoint.Y, spawnPoint.Z),
+                        Orientation = spawnPoint.Orientation
+                    };
+                    encounterComponent.SpawnPoints.Add(point);
+                }
+            }
+
+            area.AddEntity(entity);
+        }
+
+        /// <summary>
+        /// Loads UTE encounter template and applies properties to entity.
+        /// </summary>
+        private void LoadEncounterTemplate(IEntity entity, string uteResRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(uteResRef, ResourceType.UTE, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    var gff = GFF.FromBytes(result.Data);
+                    UTE ute = UTEHelpers.ConstructUte(gff);
+
+                    // Apply UTE properties to encounter component
+                    EncounterComponent encounterComponent = entity.GetComponent<EncounterComponent>();
+                    if (encounterComponent != null)
+                    {
+                        encounterComponent.TemplateResRef = uteResRef;
+                        encounterComponent.Active = ute.Active;
+                        encounterComponent.Difficulty = ute.DifficultyId;
+                        encounterComponent.DifficultyIndex = ute.DifficultyIndex;
+                        encounterComponent.MaxCreatures = ute.MaxCreatures;
+                        encounterComponent.RecCreatures = ute.RecCreatures;
+                        encounterComponent.Reset = ute.Reset != 0;
+                        encounterComponent.ResetTime = ute.ResetTime;
+                        encounterComponent.SpawnOption = ute.SingleSpawn; // SpawnOption maps to SingleSpawn
+                        encounterComponent.PlayerOnly = ute.PlayerOnly != 0;
+                        encounterComponent.Faction = ute.Faction;
+
+                        // Load creature templates
+                        encounterComponent.CreatureTemplates = new List<EncounterCreature>();
+                        foreach (UTECreature uteCreature in ute.Creatures)
+                        {
+                            var creature = new EncounterCreature
+                            {
+                                ResRef = uteCreature.ResRef.ToString(),
+                                Appearance = uteCreature.Appearance,
+                                CR = uteCreature.CR,
+                                SingleSpawn = uteCreature.SingleSpawn != 0
+                            };
+                            encounterComponent.CreatureTemplates.Add(creature);
+                        }
+
+                        // Set script hooks
+                        IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                        if (scriptsComponent != null)
+                        {
+                            if (!string.IsNullOrEmpty(ute.OnEntered.ToString()))
+                            {
+                                scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnEnter, ute.OnEntered.ToString());
+                            }
+                            if (!string.IsNullOrEmpty(ute.OnExit.ToString()))
+                            {
+                                scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnExit, ute.OnExit.ToString());
+                            }
+                            if (!string.IsNullOrEmpty(ute.OnHeartbeat.ToString()))
+                            {
+                                scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, ute.OnHeartbeat.ToString());
+                            }
+                        }
+                    }
+
+                    // Set entity tag
+                    if (!string.IsNullOrEmpty(ute.Tag))
+                    {
+                        entity.Tag = ute.Tag;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTE template " + uteResRef + ": " + ex.Message);
             }
         }
 

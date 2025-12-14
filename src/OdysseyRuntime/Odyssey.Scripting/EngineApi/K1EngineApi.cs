@@ -205,6 +205,11 @@ namespace Odyssey.Scripting.EngineApi
                 case 242: return Func_GetModule(args, ctx);
                 case 272: return Func_ObjectToString(args, ctx);
 
+                // Combat functions
+                case 316: return Func_GetAttackTarget(args, ctx);
+                case 319: return Func_GetDistanceBetween2D(args, ctx);
+                case 320: return Func_GetIsInCombat(args, ctx);
+
                 // GetAbilityModifier (routine 331)
                 case 331: return Func_GetAbilityModifier(args, ctx);
                 
@@ -2005,6 +2010,124 @@ namespace Odyssey.Scripting.EngineApi
                 DurationType = EffectDurationType.Permanent
             };
             return Variable.FromEffect(effect);
+        }
+
+        /// <summary>
+        /// GetHitDice(object oCreature) - returns total character level (hit dice)
+        /// </summary>
+        private Variable Func_GetHitDice(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.Level);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetClassByPosition(int nClassPosition, object oCreature=OBJECT_SELF) - returns class ID at position (1-3)
+        /// </summary>
+        private Variable Func_GetClassByPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int classPosition = args.Count > 0 ? args[0].AsInt() : 1;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            
+            if (classPosition < 1 || classPosition > 3)
+            {
+                return Variable.FromInt(0); // CLASS_TYPE_INVALID
+            }
+            
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                CreatureComponent creatureComp = entity.GetComponent<CreatureComponent>();
+                if (creatureComp != null && creatureComp.ClassList != null && creatureComp.ClassList.Count >= classPosition)
+                {
+                    // ClassList is 0-indexed, classPosition is 1-indexed
+                    CreatureClass cls = creatureComp.ClassList[classPosition - 1];
+                    return Variable.FromInt(cls.ClassId);
+                }
+            }
+            return Variable.FromInt(0); // CLASS_TYPE_INVALID
+        }
+
+        /// <summary>
+        /// GetLevelByPosition(int nClassPosition, object oCreature=OBJECT_SELF) - returns level at position (1-3)
+        /// </summary>
+        private Variable Func_GetLevelByPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int classPosition = args.Count > 0 ? args[0].AsInt() : 1;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            
+            if (classPosition < 1 || classPosition > 3)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                CreatureComponent creatureComp = entity.GetComponent<CreatureComponent>();
+                if (creatureComp != null && creatureComp.ClassList != null && creatureComp.ClassList.Count >= classPosition)
+                {
+                    // ClassList is 0-indexed, classPosition is 1-indexed
+                    CreatureClass cls = creatureComp.ClassList[classPosition - 1];
+                    return Variable.FromInt(cls.Level);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetLevelByClass(int nClassType, object oCreature=OBJECT_SELF) - returns level for specific class type
+        /// </summary>
+        private Variable Func_GetLevelByClass(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int classType = args.Count > 0 ? args[0].AsInt() : 0;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                CreatureComponent creatureComp = entity.GetComponent<CreatureComponent>();
+                if (creatureComp != null && creatureComp.ClassList != null)
+                {
+                    int totalLevel = 0;
+                    foreach (CreatureClass cls in creatureComp.ClassList)
+                    {
+                        if (cls.ClassId == classType)
+                        {
+                            totalLevel += cls.Level;
+                        }
+                    }
+                    return Variable.FromInt(totalLevel);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetXP(object oCreature) - returns experience points
+        /// </summary>
+        private Variable Func_GetXP(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.Experience);
+                }
+            }
+            return Variable.FromInt(0);
         }
 
         #endregion
