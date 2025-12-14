@@ -224,11 +224,11 @@ namespace Odyssey.Content.MDL
         {
             if (mdlData == null)
             {
-                throw new ArgumentNullException("mdlData");
+                throw new ArgumentNullException(nameof(mdlData));
             }
             if (mdxData == null)
             {
-                throw new ArgumentNullException("mdxData");
+                throw new ArgumentNullException(nameof(mdxData));
             }
 
             using (var reader = new MDLBulkReader(mdlData, mdxData))
@@ -249,11 +249,11 @@ namespace Odyssey.Content.MDL
         {
             if (mdlStream == null)
             {
-                throw new ArgumentNullException("mdlStream");
+                throw new ArgumentNullException(nameof(mdlStream));
             }
             if (mdxStream == null)
             {
-                throw new ArgumentNullException("mdxStream");
+                throw new ArgumentNullException(nameof(mdxStream));
             }
 
             try

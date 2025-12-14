@@ -137,7 +137,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                _nodeNames = new string[0];
+                _nodeNames = Array.Empty<string>();
             }
 
             // Phase 5: Read animations (bulk read offsets first)
@@ -154,7 +154,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                model.Animations = new MDLAnimationData[0];
+                model.Animations = Array.Empty<MDLAnimationData>();
             }
 
             // Phase 6: Read node hierarchy
@@ -210,7 +210,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                anim.Events = new MDLEventData[0];
+                anim.Events = Array.Empty<MDLEventData>();
             }
 
             // Read animation nodes
@@ -287,7 +287,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                node.Controllers = new MDLControllerData[0];
+                node.Controllers = Array.Empty<MDLControllerData>();
             }
 
             // Bulk read child offsets, then read children
@@ -304,7 +304,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                node.Children = new MDLNodeData[0];
+                node.Children = Array.Empty<MDLNodeData>();
             }
 
             return node;
@@ -378,8 +378,8 @@ namespace Odyssey.Content.MDL
                 }
                 else
                 {
-                    ctrl.TimeKeys = new float[0];
-                    ctrl.Values = new float[0];
+                    ctrl.TimeKeys = Array.Empty<float>();
+                    ctrl.Values = Array.Empty<float>();
                 }
 
                 controllers[i] = ctrl;
@@ -538,7 +538,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                mesh.Faces = new MDLFaceData[0];
+                mesh.Faces = Array.Empty<MDLFaceData>();
             }
 
             // Read vertex indices
@@ -553,7 +553,7 @@ namespace Odyssey.Content.MDL
                 }
                 else
                 {
-                    mesh.Indices = new ushort[0];
+                    mesh.Indices = Array.Empty<ushort>();
                 }
             }
             else
@@ -576,10 +576,10 @@ namespace Odyssey.Content.MDL
         {
             if (mesh.VertexCount == 0 || mesh.MDXVertexSize == 0)
             {
-                mesh.Positions = new Vector3Data[0];
-                mesh.Normals = new Vector3Data[0];
-                mesh.TexCoords0 = new Vector2Data[0];
-                mesh.TexCoords1 = new Vector2Data[0];
+                mesh.Positions = Array.Empty<Vector3Data>();
+                mesh.Normals = Array.Empty<Vector3Data>();
+                mesh.TexCoords0 = Array.Empty<Vector2Data>();
+                mesh.TexCoords1 = Array.Empty<Vector2Data>();
                 return;
             }
 
@@ -731,7 +731,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                skin.BoneMap = new int[0];
+                skin.BoneMap = Array.Empty<int>();
             }
 
             // Read QBones (quaternion bind poses)
@@ -751,7 +751,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                skin.QBones = new Vector4Data[0];
+                skin.QBones = Array.Empty<Vector4Data>();
             }
 
             // Read TBones (translation bind poses)
@@ -770,7 +770,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                skin.TBones = new Vector3Data[0];
+                skin.TBones = Array.Empty<Vector3Data>();
             }
 
             return skin;
