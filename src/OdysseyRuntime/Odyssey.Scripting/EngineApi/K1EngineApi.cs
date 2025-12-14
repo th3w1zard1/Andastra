@@ -28,10 +28,21 @@ namespace Odyssey.Scripting.EngineApi
     public class K1EngineApi : BaseEngineApi
     {
         private readonly NcsVm _vm;
+        
+        // Iteration state for GetFirstFactionMember/GetNextFactionMember
+        // Key: caller entity ID, Value: list of faction members and current index
+        private readonly Dictionary<uint, FactionMemberIteration> _factionMemberIterations;
 
         public K1EngineApi()
         {
             _vm = new NcsVm();
+            _factionMemberIterations = new Dictionary<uint, FactionMemberIteration>();
+        }
+        
+        private class FactionMemberIteration
+        {
+            public List<IEntity> Members { get; set; }
+            public int CurrentIndex { get; set; }
         }
 
         protected override void RegisterFunctions()
@@ -231,8 +242,12 @@ namespace Odyssey.Scripting.EngineApi
                 
                 // Faction functions
                 case 172: return Func_GetFactionEqual(args, ctx);
+                case 181: return Func_GetFactionWeakestMember(args, ctx);
+                case 182: return Func_GetFactionStrongestMember(args, ctx);
                 case 235: return Func_GetIsEnemy(args, ctx);
                 case 236: return Func_GetIsFriend(args, ctx);
+                case 380: return Func_GetFirstFactionMember(args, ctx);
+                case 381: return Func_GetNextFactionMember(args, ctx);
                 
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
@@ -2447,6 +2462,226 @@ namespace Odyssey.Scripting.EngineApi
                 }
             }
             return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetFactionWeakestMember(int nFactionId, int nPlayerOnly=0) - returns the weakest member of a faction
+        /// </summary>
+        private Variable Func_GetFactionWeakestMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int factionId = args.Count > 0 ? args[0].AsInt() : 0;
+            bool playerOnly = args.Count > 1 && args[1].AsInt() != 0;
+
+            if (ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            IEntity weakest = null;
+            int weakestHP = int.MaxValue;
+
+            // Iterate through all entities in the world
+            foreach (IEntity entity in ctx.World.GetAllEntities())
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Check if player only
+                if (playerOnly)
+                {
+                    if (ctx.AdditionalContext is GameSession.GameServicesContext services)
+                    {
+                        if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                // Check faction
+                IFactionComponent faction = entity.GetComponent<IFactionComponent>();
+                if (faction == null || faction.FactionId != factionId)
+                {
+                    continue;
+                }
+
+                // Get HP
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    int currentHP = stats.CurrentHP;
+                    if (currentHP < weakestHP)
+                    {
+                        weakestHP = currentHP;
+                        weakest = entity;
+                    }
+                }
+            }
+
+            return Variable.FromObject(weakest?.ObjectId ?? ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetFactionStrongestMember(int nFactionId, int nPlayerOnly=0) - returns the strongest member of a faction
+        /// </summary>
+        private Variable Func_GetFactionStrongestMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int factionId = args.Count > 0 ? args[0].AsInt() : 0;
+            bool playerOnly = args.Count > 1 && args[1].AsInt() != 0;
+
+            if (ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            IEntity strongest = null;
+            int strongestHP = -1;
+
+            // Iterate through all entities in the world
+            foreach (IEntity entity in ctx.World.GetAllEntities())
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Check if player only
+                if (playerOnly)
+                {
+                    if (ctx.AdditionalContext is GameSession.GameServicesContext services)
+                    {
+                        if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                // Check faction
+                IFactionComponent faction = entity.GetComponent<IFactionComponent>();
+                if (faction == null || faction.FactionId != factionId)
+                {
+                    continue;
+                }
+
+                // Get HP
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    int currentHP = stats.CurrentHP;
+                    if (currentHP > strongestHP)
+                    {
+                        strongestHP = currentHP;
+                        strongest = entity;
+                    }
+                }
+            }
+
+            return Variable.FromObject(strongest?.ObjectId ?? ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetFirstFactionMember(int nFactionId, int nPlayerOnly=0) - starts iteration over faction members
+        /// </summary>
+        private Variable Func_GetFirstFactionMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int factionId = args.Count > 0 ? args[0].AsInt() : 0;
+            bool playerOnly = args.Count > 1 && args[1].AsInt() != 0;
+
+            if (ctx.Caller == null || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Collect all faction members
+            List<IEntity> members = new List<IEntity>();
+            foreach (IEntity entity in ctx.World.GetAllEntities())
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Check if player only
+                if (playerOnly)
+                {
+                    if (ctx.AdditionalContext is GameSession.GameServicesContext services)
+                    {
+                        if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                // Check faction
+                IFactionComponent faction = entity.GetComponent<IFactionComponent>();
+                if (faction != null && faction.FactionId == factionId)
+                {
+                    members.Add(entity);
+                }
+            }
+
+            // Store iteration state
+            _factionMemberIterations[ctx.Caller.ObjectId] = new FactionMemberIteration
+            {
+                Members = members,
+                CurrentIndex = 0
+            };
+
+            // Return first member
+            if (members.Count > 0)
+            {
+                return Variable.FromObject(members[0].ObjectId);
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetNextFactionMember(int nFactionId) - continues iteration over faction members
+        /// </summary>
+        private Variable Func_GetNextFactionMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int factionId = args.Count > 0 ? args[0].AsInt() : 0;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get iteration state
+            if (!_factionMemberIterations.TryGetValue(ctx.Caller.ObjectId, out FactionMemberIteration iteration))
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Advance index
+            iteration.CurrentIndex++;
+
+            // Return next member
+            if (iteration.CurrentIndex < iteration.Members.Count)
+            {
+                return Variable.FromObject(iteration.Members[iteration.CurrentIndex].ObjectId);
+            }
+
+            // End of iteration - clear state
+            _factionMemberIterations.Remove(ctx.Caller.ObjectId);
+            return Variable.FromObject(ObjectInvalid);
         }
 
         /// <summary>
