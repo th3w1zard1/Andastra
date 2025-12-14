@@ -96,6 +96,11 @@ namespace Odyssey.Content.MDL
         /// </summary>
         public MDLModel Load()
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(MDLOptimizedReader));
+            }
+
             fixed (byte* mdlPtr = _mdlData)
             {
                 return LoadInternal(mdlPtr);
@@ -1042,6 +1047,21 @@ namespace Odyssey.Content.MDL
 
         private MDLFaceData[] ReadFaces(byte* mdlPtr, int offset, int count)
         {
+            if (count <= 0)
+            {
+                return new MDLFaceData[0];
+            }
+
+            // Validate bounds - each face is 32 bytes (3*float + float + int + 6*short = 12+4+4+12 = 32)
+            int requiredBytes = count * 32;
+            if (offset < 0 || offset + requiredBytes > _mdlData.Length)
+            {
+                throw new InvalidOperationException(
+                    $"Face array read out of bounds: offset={offset}, count={count}, " +
+                    $"requiredBytes={requiredBytes}, dataLength={_mdlData.Length}"
+                );
+            }
+
             var faces = new MDLFaceData[count];
             int pos = offset;
 
@@ -1249,15 +1269,32 @@ namespace Odyssey.Content.MDL
             return result;
         }
 
-        private static string ReadNullTerminatedString(byte* ptr, int offset)
+        /// <summary>
+        /// Reads a null-terminated ASCII string from the MDL data.
+        /// Includes bounds checking to prevent reading beyond data limits.
+        /// </summary>
+        private string ReadNullTerminatedString(byte* ptr, int offset)
         {
+            if (offset < 0 || offset >= _mdlData.Length)
+            {
+                return string.Empty;
+            }
+
             int start = offset;
             int end = start;
+            int maxEnd = Math.Min(_mdlData.Length, start + 256); // Max 256 chars for safety, but also respect data bounds
 
             // Find null terminator (with bounds check)
-            while (end < start + 256 && ptr[end] != 0) // Max 256 chars for safety
+            while (end < maxEnd && ptr[end] != 0)
             {
                 end++;
+            }
+
+            // If we hit the max length without finding a null terminator, use empty string
+            // (this indicates malformed data)
+            if (end >= maxEnd && ptr[end - 1] != 0)
+            {
+                return string.Empty;
             }
 
             return end > start ? Encoding.ASCII.GetString(ptr + start, end - start) : string.Empty;
@@ -1265,8 +1302,23 @@ namespace Odyssey.Content.MDL
 
         // Bulk array reading using unsafe pointers - key optimization
         // Uses direct pointer copying for maximum performance
-        private static int[] ReadInt32Array(byte* ptr, int offset, int count)
+        private int[] ReadInt32Array(byte* ptr, int offset, int count)
         {
+            if (count <= 0)
+            {
+                return new int[0];
+            }
+
+            // Validate bounds
+            int requiredBytes = count * sizeof(int);
+            if (offset < 0 || offset + requiredBytes > _mdlData.Length)
+            {
+                throw new InvalidOperationException(
+                    $"Int32 array read out of bounds: offset={offset}, count={count}, " +
+                    $"requiredBytes={requiredBytes}, dataLength={_mdlData.Length}"
+                );
+            }
+
             int[] result = new int[count];
             fixed (int* resultPtr = result)
             {
@@ -1280,8 +1332,53 @@ namespace Odyssey.Content.MDL
             return result;
         }
 
-        private static float[] ReadFloatArray(byte* ptr, int offset, int count)
+        private int[] ReadInt32Array(byte* ptr, int offset, int count, int dataLength)
         {
+            if (count <= 0)
+            {
+                return new int[0];
+            }
+
+            // Validate bounds with explicit data length parameter (for MDX data)
+            int requiredBytes = count * sizeof(int);
+            if (offset < 0 || offset + requiredBytes > dataLength)
+            {
+                throw new InvalidOperationException(
+                    $"Int32 array read out of bounds: offset={offset}, count={count}, " +
+                    $"requiredBytes={requiredBytes}, dataLength={dataLength}"
+                );
+            }
+
+            int[] result = new int[count];
+            fixed (int* resultPtr = result)
+            {
+                int* src = (int*)(ptr + offset);
+                int* dst = resultPtr;
+                for (int i = 0; i < count; i++)
+                {
+                    dst[i] = src[i];
+                }
+            }
+            return result;
+        }
+
+        private float[] ReadFloatArray(byte* ptr, int offset, int count)
+        {
+            if (count <= 0)
+            {
+                return new float[0];
+            }
+
+            // Validate bounds
+            int requiredBytes = count * sizeof(float);
+            if (offset < 0 || offset + requiredBytes > _mdlData.Length)
+            {
+                throw new InvalidOperationException(
+                    $"Float array read out of bounds: offset={offset}, count={count}, " +
+                    $"requiredBytes={requiredBytes}, dataLength={_mdlData.Length}"
+                );
+            }
+
             float[] result = new float[count];
             fixed (float* resultPtr = result)
             {
@@ -1295,8 +1392,23 @@ namespace Odyssey.Content.MDL
             return result;
         }
 
-        private static ushort[] ReadUInt16Array(byte* ptr, int offset, int count)
+        private ushort[] ReadUInt16Array(byte* ptr, int offset, int count)
         {
+            if (count <= 0)
+            {
+                return new ushort[0];
+            }
+
+            // Validate bounds
+            int requiredBytes = count * sizeof(ushort);
+            if (offset < 0 || offset + requiredBytes > _mdlData.Length)
+            {
+                throw new InvalidOperationException(
+                    $"UInt16 array read out of bounds: offset={offset}, count={count}, " +
+                    $"requiredBytes={requiredBytes}, dataLength={_mdlData.Length}"
+                );
+            }
+
             ushort[] result = new ushort[count];
             fixed (ushort* resultPtr = result)
             {
@@ -1314,8 +1426,13 @@ namespace Odyssey.Content.MDL
         /// Reads an array of strings stored as offsets to null-terminated strings.
         /// Reference: vendor/Kotor.NET/Kotor.NET/Formats/BinaryMDL/MDLBinaryLight.cs:44-54
         /// </summary>
-        private static string[] ReadStringArray(byte* ptr, int offsetArrayOffset, int count)
+        private string[] ReadStringArray(byte* ptr, int offsetArrayOffset, int count)
         {
+            if (count <= 0)
+            {
+                return new string[0];
+            }
+
             string[] result = new string[count];
             
             // First read the array of offsets (int32 array)
@@ -1325,8 +1442,25 @@ namespace Odyssey.Content.MDL
             for (int i = 0; i < count; i++)
             {
                 // Offset is relative to FILE_HEADER_SIZE (0x0C)
-                int stringOffset = MDLConstants.FILE_HEADER_SIZE + offsets[i];
-                result[i] = ReadNullTerminatedString(ptr, stringOffset);
+                // Validate offset is non-negative (negative offsets indicate invalid data)
+                if (offsets[i] >= 0)
+                {
+                    int stringOffset = MDLConstants.FILE_HEADER_SIZE + offsets[i];
+                    // Validate offset is within MDL data bounds
+                    if (stringOffset >= 0 && stringOffset < _mdlData.Length)
+                    {
+                        result[i] = ReadNullTerminatedString(ptr, stringOffset);
+                    }
+                    else
+                    {
+                        // Invalid offset - use empty string
+                        result[i] = string.Empty;
+                    }
+                }
+                else
+                {
+                    result[i] = string.Empty;
+                }
             }
             
             return result;
