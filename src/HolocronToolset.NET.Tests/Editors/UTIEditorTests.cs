@@ -228,10 +228,19 @@ namespace HolocronToolset.NET.Tests.Editors
                     editor.AddPropertyBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
 
                     // Property should be added if item has no children (leaf node)
-                    // Note: In simplified implementation, we expect count to increase
                     // Matching Python: if first_item.childCount() == 0: assert editor.ui.assignedPropertiesList.count() == initial_count + 1
-                    // For now, just verify the button doesn't crash
-                    editor.AssignedPropertiesList.ItemCount.Should().BeGreaterThanOrEqualTo(0);
+                    // Check if the selected item is a leaf (no children) by checking if it has no ItemsSource or empty ItemsSource
+                    bool isLeafNode = false;
+                    if (firstItem is Avalonia.Controls.TreeViewItem treeItem)
+                    {
+                        isLeafNode = treeItem.ItemsSource == null || ((System.Collections.IList)treeItem.ItemsSource).Count == 0;
+                    }
+
+                    if (isLeafNode)
+                    {
+                        // Matching Python: assert editor.ui.assignedPropertiesList.count() == initial_count + 1
+                        editor.AssignedPropertiesList.ItemCount.Should().Be(initialCount + 1, "Property should be added when leaf node is selected");
+                    }
                 }
             }
 

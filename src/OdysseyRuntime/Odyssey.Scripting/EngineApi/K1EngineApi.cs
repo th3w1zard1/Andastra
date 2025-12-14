@@ -1522,21 +1522,103 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_ActionEquipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ActionEquipItem(object oItem, int nInventorySlot)
+            uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            int inventorySlot = args.Count > 1 ? args[1].AsInt() : 0;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
+            var action = new ActionEquipItem(itemId, inventorySlot);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+
             return Variable.Void();
         }
 
         private Variable Func_ActionUnequipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ActionUnequipItem(int nInventorySlot)
+            int inventorySlot = args.Count > 0 ? args[0].AsInt() : 0;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
+            var action = new ActionUnequipItem(inventorySlot);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+
             return Variable.Void();
         }
 
         private Variable Func_ActionPickUpItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ActionPickUpItem(object oItem)
+            uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
+            var action = new ActionPickUpItem(itemId);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+
             return Variable.Void();
         }
 
         private Variable Func_ActionPutDownItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ActionPutDownItem(object oItem, location lTargetLocation)
+            uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            object locationObj = args.Count > 1 ? args[1].ComplexValue : null;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
+            // Extract position from location object
+            Vector3 dropLocation = Vector3.Zero;
+            if (locationObj is Location location)
+            {
+                dropLocation = location.Position;
+            }
+            else if (locationObj is Vector3 vector)
+            {
+                dropLocation = vector;
+            }
+            else
+            {
+                // Default to actor's position
+                Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                if (transform != null)
+                {
+                    dropLocation = transform.Position;
+                }
+            }
+
+            var action = new ActionPutDownItem(itemId, dropLocation);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+
             return Variable.Void();
         }
 
@@ -1900,6 +1982,26 @@ namespace Odyssey.Scripting.EngineApi
                 }
             }
             return Variable.FromObject(ObjectInvalid);
+        }
+
+        private Variable Func_GetItemStackSize(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetItemStackSize(object oItem)
+            uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            IEntity item = ResolveObject(itemId, ctx);
+
+            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            {
+                return Variable.FromInt(0);
+            }
+
+            Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
+            if (itemComponent != null)
+            {
+                return Variable.FromInt(itemComponent.StackSize);
+            }
+
+            return Variable.FromInt(1); // Default stack size
         }
 
         private Variable Func_ApplyEffectToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)

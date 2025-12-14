@@ -686,9 +686,75 @@ namespace HolocronToolset.NET.Editors
         // Original: def add_selected_property(self):
         private void AddSelectedProperty()
         {
-            // Placeholder for adding properties
-            // Will be implemented when property management is fully available
-            System.Console.WriteLine("Add property not yet fully implemented");
+            // Matching PyKotor implementation: if not self.ui.availablePropertyList.selectedItems(): return
+            if (_availablePropertyList?.SelectedItem == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: item: QTreeWidgetItem = self.ui.availablePropertyList.selectedItems()[0]
+            // Matching PyKotor implementation: property_id: int = item.data(0, Qt.ItemDataRole.UserRole)
+            // Matching PyKotor implementation: subtype_id: int = item.data(0, Qt.ItemDataRole.UserRole + 1)
+            if (_availablePropertyList.SelectedItem is TreeViewItem selectedItem && selectedItem.Tag is PropertyTreeItemData itemData)
+            {
+                int propertyId = itemData.PropertyIndex;
+                int subtypeId = itemData.SubPropertyIndex;
+                AddPropertyMain(propertyId, subtypeId);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:280-301
+        // Original: def _add_property_main(self, property_id: int, subtype_id: int):
+        private void AddPropertyMain(int propertyId, int subtypeId)
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: itemprops: TwoDA | None = self._installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
+            TwoDA itemProps = _installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            if (itemProps == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: uti_property = UTIProperty()
+            var utiProperty = new UTIProperty();
+            // Matching PyKotor implementation: uti_property.property_name = property_id
+            utiProperty.PropertyName = propertyId;
+            // Matching PyKotor implementation: uti_property.subtype = subtype_id
+            utiProperty.Subtype = subtypeId;
+
+            // Matching PyKotor implementation: uti_property.cost_table = itemprops.get_row(property_id).get_integer("costtableresref", 255)
+            TwoDARow propertyRow = itemProps.GetRow(propertyId);
+            int? costTableNullable = propertyRow.GetInteger("costtableresref", 255);
+            utiProperty.CostTable = costTableNullable ?? 255;
+            
+            // Matching PyKotor implementation: uti_property.cost_value = 0
+            utiProperty.CostValue = 0;
+            
+            // Matching PyKotor implementation: uti_property.param1 = itemprops.get_row(property_id).get_integer("param1resref", 255)
+            int? param1Nullable = propertyRow.GetInteger("param1resref", 255);
+            utiProperty.Param1 = param1Nullable ?? 255;
+            
+            // Matching PyKotor implementation: uti_property.param1_value = 0
+            utiProperty.Param1Value = 0;
+            
+            // Matching PyKotor implementation: uti_property.chance_appear = 100
+            utiProperty.ChanceAppear = 100;
+
+            // Matching PyKotor implementation: text: str = self.property_summary(uti_property)
+            string text = PropertySummary(utiProperty);
+            
+            // Matching PyKotor implementation: item = QListWidgetItem(text)
+            // Matching PyKotor implementation: item.setData(Qt.ItemDataRole.UserRole, uti_property)
+            // Matching PyKotor implementation: self.ui.assignedPropertiesList.addItem(item)
+            var listItem = new PropertyListItem { Text = text, Property = utiProperty };
+            if (_assignedPropertiesList != null)
+            {
+                _assignedPropertiesList.Items.Add(listItem);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:303-307
