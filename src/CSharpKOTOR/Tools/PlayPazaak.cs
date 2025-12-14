@@ -29,20 +29,20 @@ namespace CSharpKOTOR.Tools
 
         public override string ToString()
         {
-            if (CardType == CardType.YellowSpecial)
+            if (CardType == CSharpKOTOR.Tools.CardType.YellowSpecial)
             {
                 return $"Yellow {Value}";
             }
             string valueStr = Value.ToString();
-            if (CardType == CardType.Positive)
+            if (CardType == CSharpKOTOR.Tools.CardType.Positive)
             {
                 return $"+{valueStr}";
             }
-            if (CardType == CardType.Negative)
+            if (CardType == CSharpKOTOR.Tools.CardType.Negative)
             {
                 return $"-{valueStr}";
             }
-            if (CardType == CardType.PosOrNeg)
+            if (CardType == CSharpKOTOR.Tools.CardType.PosOrNeg)
             {
                 return $"+/-{valueStr}";
             }
@@ -53,19 +53,19 @@ namespace CSharpKOTOR.Tools
         // Original: def get_value(self, choice: str | None = None) -> int:
         public int GetValue(string choice = null)
         {
-            if (CardType == CardType.Positive)
+            if (CardType == CSharpKOTOR.Tools.CardType.Positive)
             {
                 return (int)Value;
             }
-            if (CardType == CardType.Negative)
+            if (CardType == CSharpKOTOR.Tools.CardType.Negative)
             {
                 return -(int)Value;
             }
-            if (CardType == CardType.PosOrNeg)
+            if (CardType == CSharpKOTOR.Tools.CardType.PosOrNeg)
             {
                 return choice == "+" ? (int)Value : -(int)Value;
             }
-            if (CardType == CardType.YellowSpecial)
+            if (CardType == CSharpKOTOR.Tools.CardType.YellowSpecial)
             {
                 if (Value is List<int> list && list.Count > 0)
                 {

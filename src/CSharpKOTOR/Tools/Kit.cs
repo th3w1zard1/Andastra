@@ -48,7 +48,7 @@ namespace CSharpKOTOR.Tools
                 return 3;
             }
             // Files directly in installation root treated as Override priority
-            if (Path.GetDirectoryName(filepath) == installation.Path())
+            if (Path.GetDirectoryName(filepath) == installation.Path)
             {
                 return 0;
             }
@@ -60,7 +60,7 @@ namespace CSharpKOTOR.Tools
         // Original: def find_module_file(installation: Installation, module_name: str) -> Path | None:
         public static string FindModuleFile(Installation.Installation installation, string moduleName)
         {
-            string rimsPath = installation.RimsPath();
+            string rimsPath = CSharpKOTOR.Installation.Installation.GetRimsPath(installation.Path);
             string modulesPath = installation.ModulePath();
 
             // Check rimsPath first, then modulesPath

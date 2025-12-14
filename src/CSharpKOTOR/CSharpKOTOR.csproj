@@ -121,6 +121,7 @@
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="sly" Version="3.7.6" />
     <PackageReference Include="System.Collections.Immutable" Version="10.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />
