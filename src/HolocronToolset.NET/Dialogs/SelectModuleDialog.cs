@@ -20,6 +20,7 @@ namespace HolocronToolset.NET.Dialogs
         private Button _openButton;
         private Button _cancelButton;
         private Button _browseButton;
+        private List<ModuleListItem> _allModuleItems; // Store all items for filtering
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:50-52
         // Original: self.ui = Ui_Dialog()
@@ -137,6 +138,7 @@ namespace HolocronToolset.NET.Dialogs
             }
 
             _moduleList.Items.Clear();
+            _allModuleItems = new List<ModuleListItem>();
             var moduleNames = _installation.ModuleNames();
             var modulesList = _installation.ModulesList();
             var listedModules = new HashSet<string>();
@@ -160,6 +162,7 @@ namespace HolocronToolset.NET.Dialogs
                 // Add to list with display text and data
                 string displayText = $"{moduleName}  [{casefoldModuleFileName}]";
                 var listItem = new ModuleListItem { Text = displayText, Data = casefoldModuleFileName };
+                _allModuleItems.Add(listItem);
                 _moduleList.Items.Add(listItem);
             }
         }
@@ -211,19 +214,24 @@ namespace HolocronToolset.NET.Dialogs
         private void OnFilterEdited()
         {
             string filterText = _filterEdit?.Text?.ToLowerInvariant() ?? "";
-            if (_moduleList == null)
+            if (_moduleList == null || _allModuleItems == null)
             {
                 return;
             }
 
-            // Filter modules based on text
-            foreach (var item in _moduleList.Items)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:144-150
+            // Original: text = self.ui.filterEdit.text()
+            // Original: for row in range(self.ui.moduleList.count()):
+            // Original:     item: QListWidgetItem | None = self.ui.moduleList.item(row)
+            // Original:     if item is None: continue
+            // Original:     item.setHidden(text.lower() not in item.text().lower())
+            // In Avalonia, we filter by rebuilding the list from _allModuleItems
+            _moduleList.Items.Clear();
+            foreach (var item in _allModuleItems)
             {
-                if (item is ModuleListItem listItem)
+                if (string.IsNullOrEmpty(filterText) || item.Text.ToLowerInvariant().Contains(filterText))
                 {
-                    // In Avalonia, we can't easily hide items, so we'll filter by removing/adding
-                    // For now, we'll just track visibility in a custom way
-                    // This is a simplified version - full implementation would require custom ListBox behavior
+                    _moduleList.Items.Add(item);
                 }
             }
         }

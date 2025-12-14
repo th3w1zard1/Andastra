@@ -90,37 +90,67 @@ namespace HolocronToolset.NET.Tests.Dialogs
 
             var parent = new Window();
 
-            // Create mock module paths that will work with the dialog's logic
-            // The dialog uses the module path as a key to lookup in module_names
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:66-68
+            // Original: test_module_path_1 = str(installation.path() / "modules" / "test_mod.mod")
             string testModulePath1 = System.IO.Path.Combine(_installation.Path, "modules", "test_mod.mod");
             string testModulePath2 = System.IO.Path.Combine(_installation.Path, "modules", "other_mod.mod");
             var testModulePaths = new List<string> { testModulePath1, testModulePath2 };
 
-            // Mock module_names to return names for the module paths
-            // The dialog uses the full module path (as returned by modules_list) as the key
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:72-76
+            // Original: def mock_module_names(use_hardcoded=True):
             var mockModuleNames = new Dictionary<string, string>
             {
                 { testModulePath1, "Test Module" },
                 { testModulePath2, "Other Module" }
             };
 
-            // Mock modules_list to return our test paths
-            // We'll need to use reflection or modify HTInstallation to support this
-            // For now, we'll test with actual installation data if available
-            var dialog = new SelectModuleDialog(parent, _installation);
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:89-91
+            // Original: installation.modules_list = lambda: test_module_paths
+            // Create a test installation that overrides ModulesList and ModuleNames
+            var testInstallation = new TestHTInstallation(_installation, testModulePaths, mockModuleNames);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:95
+            // Original: dialog = SelectModuleDialog(parent, installation)
+            var dialog = new SelectModuleDialog(parent, testInstallation);
             dialog.Show();
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:99-101
+            // Original: assert dialog.isVisible()
+            // Original: assert dialog.ui.moduleList.count() == 2
             dialog.IsVisible.Should().BeTrue();
-            // With actual installation data, we should have modules
-            dialog.Ui.ModuleList.Items.Count.Should().BeGreaterThanOrEqualTo(0);
+            dialog.Ui.ModuleList.Items.Count.Should().Be(2);
 
-            // Filter functionality
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:104
+            // Original: dialog.ui.filterEdit.setText("Other")
             dialog.Ui.FilterEdit.Text = "Other";
             System.Threading.Thread.Sleep(10); // Ensure Avalonia processes the filter text change
-            // Check if list filtered (if implemented)
-            // Note: Filtering may not be fully implemented yet
+            // Note: Filtering implementation in OnFilterEdited() needs to be completed
 
             dialog.Close();
+        }
+
+        // Test helper class to mock HTInstallation methods
+        private class TestHTInstallation : HTInstallation
+        {
+            private readonly List<string> _mockModulesList;
+            private readonly Dictionary<string, string> _mockModuleNames;
+
+            public TestHTInstallation(HTInstallation baseInstallation, List<string> mockModulesList, Dictionary<string, string> mockModuleNames)
+                : base(baseInstallation.Path, baseInstallation.Name)
+            {
+                _mockModulesList = mockModulesList;
+                _mockModuleNames = mockModuleNames;
+            }
+
+            public override List<string> ModulesList()
+            {
+                return _mockModulesList;
+            }
+
+            public override Dictionary<string, string> ModuleNames()
+            {
+                return _mockModuleNames;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:113-126

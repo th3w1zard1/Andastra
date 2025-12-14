@@ -376,7 +376,7 @@ namespace HolocronToolset.NET.Data
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: def modules_list(self) -> list[str]:
-        public List<string> ModulesList()
+        public virtual List<string> ModulesList()
         {
             var modules = new List<string>();
             string modulesPath = ModulePath();
@@ -398,7 +398,7 @@ namespace HolocronToolset.NET.Data
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: def module_names(self) -> dict[str, str | None]:
-        public Dictionary<string, string> ModuleNames()
+        public virtual Dictionary<string, string> ModuleNames()
         {
             var moduleNames = new Dictionary<string, string>();
             string modulesPath = ModulePath();
