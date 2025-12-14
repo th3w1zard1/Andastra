@@ -118,6 +118,25 @@ namespace Odyssey.Content.MDL
             int mdlSize = ReadInt32(mdlPtr, ref pos);
             int mdxSize = ReadInt32(mdlPtr, ref pos);
 
+            // Validate header size fields against actual file sizes
+            // This prevents reading beyond file bounds if header is corrupted
+            if (mdlSize < 0 || mdlSize > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"MDL header size field ({mdlSize}) is invalid. " +
+                    $"Expected value between 0 and {_mdlData.Length} (actual file size). " +
+                    "File may be corrupted or truncated."
+                );
+            }
+            if (mdxSize < 0 || mdxSize > _mdxData.Length)
+            {
+                throw new InvalidDataException(
+                    $"MDX header size field ({mdxSize}) is invalid. " +
+                    $"Expected value between 0 and {_mdxData.Length} (actual file size). " +
+                    "File may be corrupted or truncated."
+                );
+            }
+
             // Phase 2: Read geometry header (80 bytes at offset 12)
             // Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Geometry Header
             uint funcPtr0 = ReadUInt32(mdlPtr, ref pos);
