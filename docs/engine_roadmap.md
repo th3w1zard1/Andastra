@@ -4,7 +4,7 @@ This document tracks the implementation progress of the Odyssey engine reimpleme
 
 ## Primary Goal
 
-Create a 100% faithful recreation of the Odyssey engine (KotOR 1/2), with future extensibility for Aurora/Eclipse engines (unified abstraction similar to xoreos).
+Create a 100% faithful recreation of the Odyssey engine (KotOR 1/2), with future extensibility for other Aurora/Eclipse engines (unified abstraction similar to xoreos).
 
 ## Architecture Overview
 
@@ -12,125 +12,340 @@ Create a 100% faithful recreation of the Odyssey engine (KotOR 1/2), with future
 
 1. **Data/Formats Layer (CSharpKOTOR)**: File format parsing, installation scanning, resource management
 2. **Runtime Domain Layer (Odyssey.Core)**: Game-agnostic runtime concepts (entities, components, world state, events)
-3. **Stride Integration Layer (Odyssey.Stride)**: Rendering, physics, audio, UI adapters
-4. **Game Rules Layer (Odyssey.Kotor)**: K1/K2-specific rulesets, 2DA-driven data
+3. **Content Pipeline Layer (Odyssey.Content)**: Asset conversion/caching for runtime
+4. **Scripting Layer (Odyssey.Scripting)**: NCS VM + NWScript engine API
+5. **Stride Integration Layer (Odyssey.Stride)**: Rendering, physics, audio, UI adapters
+6. **Game Rules Layer (Odyssey.Kotor)**: K1/K2-specific rulesets, 2DA-driven data
 
 ### Project Structure
 
 ```
 src/OdysseyRuntime/
 ├── Odyssey.Core/          # Pure domain, no Stride dependency
+│   ├── Actions/           # Action queue implementations
+│   ├── Entities/          # Entity, World, EventBus, TimeManager
+│   ├── Enums/             # ActionType, ObjectType, ScriptEvent, etc.
+│   ├── Interfaces/        # IWorld, IEntity, IAction, INavigationMesh
+│   ├── Module/            # RuntimeModule, RuntimeArea
+│   └── Navigation/        # NavigationMesh, pathfinding
 ├── Odyssey.Content/       # Asset conversion/caching pipeline
+│   ├── Cache/             # ContentCache
+│   ├── Interfaces/        # IContentConverter, IResourceProvider
+│   └── ResourceProviders/ # GameResourceProvider
 ├── Odyssey.Scripting/     # NCS VM + NWScript engine API
+│   ├── EngineApi/         # BaseEngineApi, K1EngineApi, K2EngineApi
+│   ├── Interfaces/        # INcsVm, IEngineApi, IExecutionContext
+│   └── VM/                # NcsVm, ExecutionContext, ScriptGlobals
 ├── Odyssey.Kotor/         # K1/K2 rule modules, gameplay systems
 ├── Odyssey.Stride/        # Stride adapters (rendering, physics, audio, UI)
+│   ├── Backends/          # Direct3D12, Vulkan backends
+│   ├── Lighting/          # Clustered lighting, dynamic lights
+│   ├── Materials/         # KOTOR material conversion
+│   ├── Raytracing/        # RTX effects (optional)
+│   ├── Remix/             # RTX Remix integration (optional)
+│   └── Rendering/         # OdysseyRenderer, RenderSettings
 ├── Odyssey.Game/          # Stride executable/launcher
 ├── Odyssey.Tests/         # Deterministic tests
 └── Odyssey.Tooling/       # Headless import/validation commands
 ```
 
-## Implementation Status
+## Implementation Phases
 
-### Phase 0: Foundation ✅
+### Phase 0: Foundation ✅ COMPLETE
+
 - [x] Project structure created
 - [x] C# 7.3 language version enforced
 - [x] Core interfaces defined (IWorld, IEntity, INavigationMesh, etc.)
 - [x] Entity/component system basics
+- [x] Action system (ActionQueue, ActionBase, concrete actions)
+- [x] Event bus for inter-system communication
+- [x] Time manager for game time tracking
 
-### Phase 1: NCS Virtual Machine 🔄
-- [x] NCS bytecode parser with header validation
-- [x] Stack-based VM with 4-byte alignment
-- [x] All core opcodes implemented (arithmetic, comparisons, jumps, calls)
+### Phase 1: NCS Virtual Machine ✅ COMPLETE
+
+- [x] NCS bytecode parser with header validation (`"NCS V1.0"`, `0x42` marker)
+- [x] Stack-based VM with 4-byte alignment (big-endian)
+- [x] All core opcodes implemented:
+  - [x] Stack operations (RSADD*, CONST*, CPTOPSP, CPDOWNSP)
+  - [x] Arithmetic (ADD/SUB/MUL/DIV/MOD for II/IF/FI/FF/VV/VF/FV)
+  - [x] Comparisons (EQ/NEQ/GT/LT/GEQ/LEQ for II/FF/SS/OO)
+  - [x] Logical (LOGAND, LOGOR, INCOR, EXCOR, BOOLAND, NOT)
+  - [x] Jumps (JMP, JSR, JZ, JNZ, RETN)
+  - [x] Stack frame (SAVEBP, RESTOREBP, MOVSP, DESTRUCT)
+  - [x] Variables (CPDOWNBP, CPTOPBP, DECISP, INCISP, DECIBP, INCIBP)
+  - [x] STORE_STATE for deferred actions
 - [x] Engine function dispatch interface (ACTION opcode)
 - [ ] Complete engine function surface (~850 K1, ~950 K2)
 - [ ] Script globals/locals persistence
-- [ ] Action queue integration
+- [ ] Action queue integration with STORE_STATE
 
-### Phase 2: Resource System 🔄
+### Phase 2: Resource System 🔄 IN PROGRESS
+
 - [x] Resource provider interface (IGameResourceProvider)
 - [x] Resource identifier system
+- [x] GameResourceProvider implementation
 - [ ] Full precedence chain: override → module → save → chitin
 - [ ] Async resource streaming
 - [ ] Resource caching with LRU eviction
+- [ ] Texture pack integration (swpc_tex_*.erf)
 
-### Phase 3: Navigation & Walkmesh 📋
+### Phase 3: Navigation & Walkmesh ✅ COMPLETE
+
 - [x] INavigationMesh interface defined
-- [ ] BWM file parsing integration (from CSharpKOTOR)
-- [ ] AABB tree for spatial queries
-- [ ] Adjacency-based A* pathfinding
-- [ ] Surface material walkability rules
-- [ ] Raycast for click-to-move
+- [x] NavigationMesh implementation with:
+  - [x] A* pathfinding over adjacency graph
+  - [x] Surface material walkability rules
+  - [x] AABB tree for spatial queries
+  - [x] Raycasting for click-to-move
+  - [x] Line-of-sight testing
+  - [x] Surface projection
+- [x] NavigationMeshFactory for building from BWM data
+- [ ] Integration with BWM parsing from CSharpKOTOR
+- [ ] Door/placeable walkmesh (DWK/PWK) handling
 
-### Phase 4: World & Areas 📋
-- [ ] Module loading (IFO/ARE/GIT parsing)
-- [ ] Room layout from LYT files
-- [ ] Visibility culling from VIS files
-- [ ] Entity spawning from GIT templates
-- [ ] Area transitions
+### Phase 4: World & Module Loading ✅ COMPLETE
 
-### Phase 5: Rendering 📋
+- [x] Module loading pipeline:
+  - [x] IFO parsing (module metadata)
+  - [x] ARE parsing (area properties)
+  - [x] GIT parsing (instance spawning)
+- [x] Room layout from LYT files
+- [x] Visibility culling from VIS files
+- [x] Entity spawning from GIT templates:
+  - [x] UTC → Creature (CreatureComponent)
+  - [x] UTP → Placeable (PlaceableComponent)
+  - [x] UTD → Door (DoorComponent)
+  - [x] UTT → Trigger (TriggerComponent)
+  - [x] UTW → Waypoint (WaypointComponent)
+  - [x] UTS → Sound (SoundComponent)
+  - [x] UTE → Encounter (EncounterComponent)
+  - [x] Store → Store (StoreComponent)
+- [ ] Area transitions between modules
+- [ ] Save overlay integration
+
+### Phase 5: Rendering 📋 PLANNED
+
 - [ ] MDL/MDX model loading and conversion to Stride
 - [ ] TPC/TGA texture loading
-- [ ] TXI material metadata
-- [ ] Lightmap application
+- [ ] TXI material metadata interpretation
+- [ ] Material system:
+  - [ ] Lightmap application
+  - [ ] Environment maps
+  - [ ] Transparency (alpha/additive)
+  - [ ] Self-illumination
+  - [ ] Cutout (alpha test)
 - [ ] Transparency sorting
 - [ ] Skeletal animation
+- [ ] Particle systems
+- [ ] VIS-based room culling
 
-### Phase 6: Gameplay Systems 📋
-- [ ] Dialogue system (DLG traversal)
-- [ ] Combat system (D20 resolution)
-- [ ] Party management
-- [ ] Faction/hostility system
-- [ ] Save/load system
+### Phase 6: Dialogue System 🔄 IN PROGRESS
 
-## Key Resources
+- [x] DLG file structure support
+- [x] Entry/reply node navigation
+- [x] Conditional script evaluation (framework)
+- [ ] TLK text lookup integration
+- [ ] Voice-over playback
+- [ ] LIP sync animation
+- [ ] Camera cuts/shots
+- [x] Skippable entries
+- [x] Paused conversations
 
-### Documentation
-- `vendor/PyKotor/wiki/` - Comprehensive file format documentation
-- `vendor/PyKotor/vendor/xoreos-docs/` - Official BioWare specifications
-- `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` - Detailed implementation plan
+### Phase 7: Combat System 🔄 IN PROGRESS
 
-### Ghidra MCP Integration
-Engine-related code MUST use Ghidra MCP server with `swkotor2.exe` loaded for:
-- Understanding original engine mechanics
-- Verifying faithful recreation
-- Discovering undocumented behavior
+- [x] Combat round structure (~3 second rounds)
+- [x] D20 attack resolution:
+  - [x] Attack roll (d20 + modifiers vs AC)
+  - [x] Critical hit confirmation
+  - [x] Damage calculation
+- [x] Two-weapon fighting support
+- [ ] Force powers
+- [ ] Combat animations
+- [ ] Effect system (60+ effect types)
 
-### Reference Implementations
-- `vendor/PyKotor/` - Python reference for format parsing
-- `vendor/reone/` - C++ engine reimplementation
-- `vendor/KotOR.js/` - TypeScript engine reimplementation
-- `vendor/xoreos/` - Multi-Aurora engine project
+### Phase 8: AI & Perception ✅ COMPLETE
 
-## Design Principles
+- [x] Perception system:
+  - [x] Sight range checks
+  - [x] Hearing range checks
+  - [x] Line-of-sight queries
+  - [x] OnPerception events
+- [x] Faction system:
+  - [x] Hostility checks
+  - [x] Reputation tracking (faction + personal)
+- [ ] AI behavior:
+  - [ ] Heartbeat scripts
+  - [ ] Combat AI
+  - [ ] Follow behavior
 
-1. **Faithfulness**: Match original engine behavior exactly
-2. **Modernization**: Fix bugs, improve performance where safe
-3. **Modularity**: Clean separation for future Aurora/Eclipse support
-4. **Clean-Room**: Behavioral specs, not code copying
-5. **C# 7.3**: Maintain .NET Framework 4.x compatibility
+### Phase 9: Save/Load System 📋 PLANNED
+
+- [ ] SAV file format reading/writing
+- [ ] State serialization:
+  - [ ] Script globals
+  - [ ] Party state
+  - [ ] Inventory
+  - [ ] Module state
+- [ ] Resource overlay from saves
+
+### Phase 10: UI & Input 📋 PLANNED
+
+- [ ] Stride UI integration
+- [ ] Dialogue panel
+- [ ] HUD (health, party)
+- [ ] Pause menu
+- [ ] Loading screens
+- [ ] Click-to-move controls
+- [ ] Camera controllers (chase, free, dialogue)
+
+### Phase 11: Audio 📋 PLANNED
+
+- [ ] WAV decoding
+- [ ] Voice-over playback
+- [ ] Sound effects
+- [ ] Music with combat transitions
+- [ ] Spatial audio
+- [ ] Ambient sounds
+
+## File Format Support Matrix
+
+### Fully Supported in CSharpKOTOR ✅
+
+| Format | Description | Status |
+|--------|-------------|--------|
+| GFF | Generic File Format (templates) | ✅ Read/Write |
+| ERF | Encapsulated Resource File | ✅ Read/Write |
+| RIM | Resource Image File | ✅ Read/Write |
+| KEY | Key index file (chitin.key) | ✅ Read/Write |
+| BIF | Resource archive | ✅ Read |
+| TLK | Talk table (localization) | ✅ Read/Write |
+| 2DA | Two-dimensional array (tables) | ✅ Read/Write |
+| NCS | Compiled NWScript | ✅ Read/Write |
+| TPC | Texture (DXT compressed) | ✅ Read/Write |
+| TGA | Texture (Targa) | ✅ Read/Write |
+| TXI | Texture info (material flags) | ✅ Read/Write |
+| MDL/MDX | Model/Geometry | ✅ Read/Write |
+| BWM | Binary Walkmesh | ✅ Read/Write |
+| LYT | Layout (room positioning) | ✅ Read/Write |
+| VIS | Visibility groups | ✅ Read/Write |
+| LIP | Lip sync animation | ✅ Read/Write |
+| LTR | Letter tree (name generation) | ✅ Read/Write |
+| SSF | Sound set file | ✅ Read/Write |
+| WAV | Audio (obfuscated in KOTOR) | ✅ Read/Write |
+
+### GFF Template Types
+
+| Extension | Object Type | Key Fields |
+|-----------|-------------|------------|
+| IFO | Module Info | Module name, entry points, scripts |
+| ARE | Area | Tileset, lighting, weather |
+| GIT | Game Instance | Creature/placeable/door/trigger instances |
+| UTC | Creature | Appearance, faction, HP, attributes, scripts |
+| UTP | Placeable | Appearance, useable, locked, scripts |
+| UTD | Door | Generic type, locked, transition, scripts |
+| UTT | Trigger | Geometry (polygon), scripts |
+| UTW | Waypoint | Tag, position |
+| UTS | Sound | Active, looping, positional, resref |
+| UTE | Encounter | Creature list, spawn conditions |
+| UTI | Item | Base item, properties, charges |
+| DLG | Dialogue | Entries, replies, conditions, scripts |
+
+## Key 2DA Tables
+
+| Table | Purpose |
+|-------|---------|
+| appearance.2da | Model resref, walk/run speed, body type |
+| heads.2da | Head model by race/gender |
+| baseitems.2da | Item categories, damage, properties |
+| feat.2da | Feat definitions, prerequisites |
+| spells.2da | Force powers, ranges, effects |
+| classes.2da | Class progression, hit dice, saves |
+| skills.2da | Skill definitions |
+| surfacemat.2da | Surface walkability, footstep sounds |
+| portraits.2da | Portrait images |
+| placeables.2da | Placeable appearance |
+| genericdoors.2da | Door models |
+| ambientmusic.2da | Music tracks |
+| ambientsound.2da | Ambient sounds |
 
 ## Game Loop Architecture
 
+The engine operates on a **fixed-timestep game loop** with the following per-frame phases:
+
 ```
-Input Phase     → Collect input, update camera, handle click-to-move
-Script Phase    → Process delay wheel, fire heartbeats, execute actions
-Simulation Phase → Update positions, perception checks, combat rounds
-Animation Phase  → Skeletal animations, particles, lip sync
-Scene Sync Phase → Sync runtime transforms → Stride scene graph
-Render Phase     → VIS culling, transparency sort, draw calls
-Audio Phase      → Spatial audio, trigger one-shots
+1. Input Phase     → Collect input, update camera, handle click-to-move
+2. Script Phase    → Process delay wheel, fire heartbeats, execute actions
+3. Simulation Phase → Update positions, perception checks, combat rounds
+4. Animation Phase  → Skeletal animations, particles, lip sync
+5. Scene Sync Phase → Sync runtime transforms → Stride scene graph
+6. Render Phase     → VIS culling, transparency sort, draw calls
+7. Audio Phase      → Spatial audio, trigger one-shots
 ```
 
-## Next Steps
+## Engine API Function Categories
 
-1. Complete NavigationMesh implementation with AABB tree
-2. Integrate BWM parsing from CSharpKOTOR
-3. Implement pathfinding A* algorithm
-4. Add Area/Module loading pipeline
-5. Connect to Stride for visual rendering
+The NWScript engine API is divided into functional categories:
+
+| Category | K1 Functions | K2 Functions | Description |
+|----------|-------------|-------------|-------------|
+| Core | ~100 | ~100 | Object access, variables, math |
+| Actions | ~50 | ~55 | Movement, combat, interaction |
+| Effects | ~60 | ~65 | Buffs, debuffs, visual effects |
+| Events | ~30 | ~35 | Script events, triggers |
+| Dialogue | ~20 | ~25 | Conversation control |
+| Combat | ~40 | ~45 | Attack, damage, hit points |
+| Items | ~30 | ~35 | Inventory, equipment |
+| Spells | ~25 | ~30 | Force powers |
+| Party | ~15 | ~20 | Party management |
+| Game | ~20 | ~25 | Module, save, GUI |
+| **Total** | **~850** | **~950** | |
+
+## Future Engine Support (Aurora Family)
+
+The architecture is designed to support future Aurora/Eclipse engine variants:
+
+| Engine | Games | Status |
+|--------|-------|--------|
+| Odyssey | KotOR 1, KotOR 2: TSL | 🔄 Active Development |
+| Aurora | NWN | 📋 Future |
+| Electron | Jade Empire | 📋 Future |
+| Eclipse | Dragon Age: Origins | 📋 Future |
+
+### Abstraction Strategy
+
+Following xoreos patterns:
+- **Common**: Shared resource loading, GFF parsing, base VM
+- **Game-specific**: Engine API implementations, 2DA interpretations, gameplay rules
+- **Platform-specific**: Rendering backends, audio backends, input handling
+
+## Design Principles
+
+1. **Faithfulness**: Match original engine behavior exactly where documented
+2. **Modernization**: Fix bugs, improve performance where safe
+3. **Modularity**: Clean separation for future Aurora/Eclipse support
+4. **Clean-Room**: Derive from behavioral specs and observation, not code copying
+5. **C# 7.3**: Maintain .NET Framework 4.x compatibility
+
+## Development Resources
+
+### Documentation
+
+- Primary: Spec documents derived from game behavior observation
+- Secondary: Format documentation in wiki-style specs
+- Implementation: `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md`
+
+### Verification Tools
+
+- Ghidra MCP server with `swkotor2.exe` loaded for engine behavior verification
+- In-game testing for behavioral acceptance criteria
+
+### Reference Projects (behavioral observation only)
+
+- xoreos - Multi-Aurora engine project (behavioral reference)
+- reone - C++ reimplementation (behavioral reference)
+- KotOR.js - TypeScript reimplementation (behavioral reference)
 
 ---
 
-*Last updated: Dec 2024*
-
+*Document Version: 2.0*
+*Last Updated: December 2024*
