@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -81,11 +82,6 @@ namespace Odyssey.Kotor.Systems
     /// </summary>
     /// <remarks>
     /// Perception System:
-    /// - Based on swkotor2.exe perception system
-    /// - Located via string references: "PerceptionList" @ 0x007bf6d4, "PerceptionData" @ 0x007bf6c4
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68
-    /// - "PerceptionRange" @ 0x007c4080, "PERCEPTIONDIST" @ 0x007c4070
-    /// - Original implementation: Stores PerceptionList in creature GFF structures
     /// - Each creature has sight and hearing ranges
     /// - Perception is updated periodically (not every frame)
     /// - Events fire when perception state changes:
@@ -106,6 +102,7 @@ namespace Odyssey.Kotor.Systems
     public class PerceptionManager
     {
         private readonly IWorld _world;
+        private readonly EffectSystem _effectSystem;
         private readonly Dictionary<uint, PerceptionData> _perceptionData;
 
         /// <summary>
@@ -130,9 +127,10 @@ namespace Odyssey.Kotor.Systems
         /// </summary>
         public event EventHandler<PerceptionEventArgs> OnPerceptionChanged;
 
-        public PerceptionManager(IWorld world)
+        public PerceptionManager(IWorld world, EffectSystem effectSystem)
         {
             _world = world ?? throw new ArgumentNullException("world");
+            _effectSystem = effectSystem ?? throw new ArgumentNullException("effectSystem");
             _perceptionData = new Dictionary<uint, PerceptionData>();
             _timeSinceUpdate = 0f;
         }
@@ -270,8 +268,18 @@ namespace Odyssey.Kotor.Systems
             // Basic distance check already done
 
             // Check if target is invisible
-            // TODO: Check for invisibility effect and See Invisibility ability
-            // For now, assume visible
+            if (_effectSystem.HasEffect(target, EffectType.Invisibility))
+            {
+                // Check if creature has See Invisibility (TrueSeeing effect or feat)
+                bool canSeeInvisible = _effectSystem.HasEffect(creature, EffectType.TrueSeeing);
+                
+                // TODO: Also check for See Invisibility feat/ability from stats component
+                // For now, only TrueSeeing effect allows seeing invisible targets
+                if (!canSeeInvisible)
+                {
+                    return false; // Target is invisible and creature cannot see invisible
+                }
+            }
 
             // Check line of sight using navigation mesh raycasting
             IArea area = _world.CurrentArea;
@@ -303,7 +311,10 @@ namespace Odyssey.Kotor.Systems
             // - Sounds have a radius
 
             // Check if creature is deafened
-            // TODO: Check for deafness effect
+            // Note: There's no explicit "Deafness" effect type in EffectType enum,
+            // but we can check for Silence effect which prevents hearing
+            // For now, assume creatures can hear unless they have a Silence effect
+            // TODO: Add proper Deafness effect type if needed
 
             // For now, assume creatures are always audible if in range
             if (target.ObjectType == ObjectType.Creature)

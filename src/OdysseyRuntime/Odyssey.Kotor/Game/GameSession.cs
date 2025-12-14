@@ -65,6 +65,7 @@ namespace Odyssey.Kotor.Game
         private readonly HeartbeatSystem _heartbeatSystem;
         private readonly FactionManager _factionManager;
         private readonly CombatManager _combatManager;
+        private readonly Odyssey.Core.Combat.EffectSystem _effectSystem;
         private readonly PerceptionManager _perceptionManager;
         private readonly ModuleTransitionSystem _moduleTransitionSystem;
         private readonly SaveSystem _saveSystem;
@@ -212,11 +213,14 @@ namespace Odyssey.Kotor.Game
             // Create faction manager
             _factionManager = new FactionManager(world);
 
+            // Create effect system
+            _effectSystem = new Odyssey.Core.Combat.EffectSystem(world);
+
             // Create combat manager
             _combatManager = new CombatManager(world, _factionManager);
 
             // Create perception manager
-            _perceptionManager = new PerceptionManager(world);
+            _perceptionManager = new PerceptionManager(world, _effectSystem);
 
             // Create party manager
             _partyManager = new PartyManager(world);
