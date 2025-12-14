@@ -94,11 +94,12 @@ Current focus for achieving first playable module.
 - [ ] Ledge and ramp handling
 
 #### 2.2 Camera System
-- [ ] Chase camera (KOTOR-style)
-- [ ] Free camera (debug)
-- [ ] Dialogue camera
-- [ ] Camera collision avoidance
-- [ ] Cinematic camera scripting
+- [x] `CameraController` with mode switching
+- [x] Chase camera (KOTOR-style) with smooth follow
+- [x] Free camera (debug)
+- [x] Dialogue camera with multiple angles
+- [x] Cinematic camera scripting with interpolation
+- [ ] Camera collision avoidance (integration pending)
 
 #### 2.3 Object Interaction
 - [x] Click-to-select entities
