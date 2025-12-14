@@ -89,14 +89,16 @@ namespace Odyssey.Stride.GUI
             // Method signature: SpriteBatch(GraphicsDevice device)
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Create 1x1 white texture for drawing rectangles
+            // Create 1x1 WHITE texture for drawing rectangles
+            // IMPORTANT: This MUST contain an actual white pixel (1,1,1,1).
+            // If the texture is left uninitialized (all zeros), SpriteBatch tinting multiplies against 0,
+            // which results in everything rendering as black/transparent (appearing as "nothing drawn").
+            //
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, TextureFlags) - Creates a new 2D texture
-            // Method signature: New2D(GraphicsDevice device, int width, int height, PixelFormat format, TextureFlags textureFlags)
-            // PixelFormat.R8G8B8A8_UNorm: 8-bit RGBA format, normalized to [0,1] range
-            // TextureFlags.ShaderResource: Texture can be bound as a shader resource for rendering
-            // No initial data provided - SpriteBatch.Draw will handle color tinting via Color parameter
-            _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, TextureFlags.ShaderResource);
+            // Texture.New2D<T>(GraphicsDevice, int, int, PixelFormat, T[], TextureFlags, GraphicsResourceUsage, TextureOptions)
+            // Method signature: New2D<T>(GraphicsDevice device, int width, int height, PixelFormat format, T[] textureData, ...)
+            // Each value in textureData is a pixel in the destination texture.
+            _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, new[] { Color.White });
 
             Console.WriteLine("[FallbackMenuRenderer] SpriteBatch and white texture created successfully");
         }

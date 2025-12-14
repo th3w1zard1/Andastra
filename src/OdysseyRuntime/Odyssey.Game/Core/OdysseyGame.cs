@@ -998,55 +998,59 @@ namespace Odyssey.Game.Core
                 DebugLog("E", "SetupGraphicsCompositor:camera_slot", "Camera slot created", cameraSlot.Id.ToString());
                 // #endregion
 
-                // Create a simple game with just a scene renderer for UI
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
-                // SceneRendererCollection is a container for multiple renderers
-                // Children collection contains child renderers executed in order
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-                var sceneRenderer = new SceneRendererCollection();
+                // IMPORTANT: Stride currently requires renderers to have a camera (or be a child of a renderer that has a camera).
+                // This applies even to renderers that don't necessarily use cameras.
+                // Based on Stride documentation: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
+                //
+                // Our previous compositor created a camera slot but never used SceneCameraRenderer. This prevented the
+                // UI system and custom renderers from being executed correctly (symptom: only clear color visible).
 
-                // Add a clear renderer to clear the background - THIS IS CRITICAL
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.ClearRenderer.html
-                // ClearRenderer clears the render target with a specified color
-                // Color property sets the clear color (Color4: R, G, B, A)
-                // ClearFlags specifies what to clear (ColorAndDepth clears both color and depth buffers)
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-                var clearRenderer = new ClearRenderer
+                // Create the forward renderer (Stride standard renderer; also where UI is rendered by default)
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.ForwardRenderer.html
+                // ForwardRenderer should use the current RenderView and the current camera.
+                var forwardRenderer = new ForwardRenderer
                 {
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
-                    // Color4(float r, float g, float b, float a) creates a color from RGBA float values (0.0-1.0)
-                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
-                    Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
-                    ClearFlags = ClearRendererFlags.ColorAndDepth
+                    // Clear renderer used by ForwardRenderer
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.ClearRenderer.html
+                    Clear = new ClearRenderer
+                    {
+                        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
+                        // Color4(float r, float g, float b, float a)
+                        Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
+                        ClearFlags = ClearRendererFlags.ColorAndDepth
+                    }
                 };
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
-                // Children.Add(ISceneRenderer) adds a renderer to the collection
-                sceneRenderer.Children.Add(clearRenderer);
 
                 // #region agent log
-                DebugLog("E", "SetupGraphicsCompositor:clear_added", "ClearRenderer added", clearRenderer.Color.ToString());
+                DebugLog("E", "SetupGraphicsCompositor:clear_added", "ClearRenderer added", forwardRenderer.Clear.Color.ToString());
                 // #endregion
 
-                // Add the single render stage for 3D content and UI
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SingleStageRenderer.html
-                // SingleStageRenderer renders the scene in a single render stage
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-                var singleStageRenderer = new SingleStageRenderer();
-                sceneRenderer.Children.Add(singleStageRenderer);
+                // Combine forward rendering + our fallback SpriteBatch overlay.
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
+                var sceneRenderer = new SceneRendererCollection();
+                sceneRenderer.Children.Add(forwardRenderer);
 
                 // Create and add fallback menu renderer (SpriteBatch-based, renders on top)
                 _fallbackMenuRenderer = new FallbackMenuRenderer();
                 _fallbackMenuRenderer.MenuItemSelected += OnFallbackMenuItemSelected;
                 sceneRenderer.Children.Add(_fallbackMenuRenderer);
 
+                // Bind the render pipeline to our camera slot
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraRenderer.html
+                // Camera property type: SceneCameraSlot
+                // Child property type: ISceneRenderer
+                var cameraRenderer = new SceneCameraRenderer
+                {
+                    Camera = cameraSlot,
+                    Child = sceneRenderer
+                };
+
                 // Create game entry point
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.GraphicsCompositor.html
                 // GraphicsCompositor.Game property sets the root renderer for game rendering
                 // Method signature: ISceneRenderer Game { get; set; }
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-                var game = new SceneRendererCollection();
-                game.Children.Add(sceneRenderer);
-                compositor.Game = game;
+                compositor.Game = cameraRenderer;
 
                 // Update our camera component to use this slot
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
