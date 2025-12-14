@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CSharpKOTOR.Formats.MDL;
+using CSharpKOTOR.Formats.MDLData;
 using CSharpKOTOR.Formats.TPC;
 using CSharpKOTOR.Formats.WAV;
 using CSharpKOTOR.Resources;
@@ -78,7 +79,7 @@ namespace CSharpKOTOR.Tools
                 mdx = null;
             }
 
-            MDLData.MDL mdl = MDLAuto.ReadMdl(inputPath, sourceExt: mdx);
+            var mdl = MDLAuto.ReadMdl(inputPath, sourceExt: mdx);
             MDLAuto.WriteMdl(mdl, outputPath, ResourceType.MDL_ASCII);
         }
 
@@ -86,7 +87,7 @@ namespace CSharpKOTOR.Tools
         // Original: def convert_ascii_to_mdl(input_path: Path, output_mdl_path: Path, *, output_mdx_path: Path | None = None) -> None:
         public static void ConvertAsciiToMdl(string inputPath, string outputMdlPath, string outputMdxPath = null)
         {
-            MDLData.MDL mdl = MDLAuto.ReadMdl(inputPath);
+            MDL mdl = MDLAuto.ReadMdl(inputPath);
 
             if (string.IsNullOrEmpty(outputMdxPath))
             {
@@ -111,3 +112,4 @@ namespace CSharpKOTOR.Tools
         }
     }
 }
+
