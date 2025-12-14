@@ -19,6 +19,13 @@ namespace Odyssey.Stride.Converters
         /// <param name="device">The graphics device.</param>
         /// <param name="generateMipmaps">Whether to generate mipmaps if not present.</param>
         /// <returns>A Stride Texture ready for rendering.</returns>
+        // Convert TPC texture format to Stride Texture
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+        // Texture represents image data for rendering, static method creates new texture instance
+        // Method signature: static Texture Convert(TPC tpc, GraphicsDevice device, bool generateMipmaps)
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // GraphicsDevice parameter provides access to graphics hardware for texture creation
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
         public static Texture Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true)
         {
             if (tpc == null)
@@ -42,12 +49,18 @@ namespace Odyssey.Stride.Converters
             TPCTextureFormat format = tpc.Format();
 
             // Handle cube maps
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // Cube maps require 6 faces (layers), handled separately from 2D textures
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
             if (tpc.IsCubeMap && tpc.Layers.Count == 6)
             {
                 return ConvertCubeMap(tpc, device);
             }
 
             // Convert standard 2D texture
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // 2D textures are the most common format, created via Texture.New2D
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
             return Convert2DTexture(tpc, device, generateMipmaps);
         }
 
@@ -79,9 +92,16 @@ namespace Odyssey.Stride.Converters
             TPCTextureFormat format = tpc.Format();
 
             // Determine Stride pixel format
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+            // PixelFormat enum defines texture pixel formats (BC1_UNorm for DXT1, R8G8B8A8_UNorm for RGBA, etc.)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
             PixelFormat strideFormat = GetStridePixelFormat(format);
 
             // Check if we can use compressed format directly
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+            // GraphicsDevice capabilities determine if compressed formats are supported
+            // Compressed formats (DXT/BC) require hardware support
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
             if (format.IsDxt() && SupportsCompressedFormat(device, strideFormat))
             {
                 return CreateCompressedTexture(tpc, device, strideFormat);
@@ -167,7 +187,10 @@ namespace Odyssey.Stride.Converters
             // Create compressed texture description
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
             // TextureDescription.New2D(int, int, int, PixelFormat, TextureFlags) - Creates description for compressed texture
+            // Method signature: static TextureDescription New2D(int width, int height, int mipLevels, PixelFormat format, TextureFlags flags)
             // format: Compressed format (BC1_UNorm for DXT1, BC2_UNorm for DXT3, BC3_UNorm for DXT5)
+            // TextureFlags.ShaderResource: Texture can be bound as a shader resource
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
             var desc = TextureDescription.New2D(
                 width,
                 height,
@@ -175,10 +198,13 @@ namespace Odyssey.Stride.Converters
                 format,
                 TextureFlags.ShaderResource);
 
-            // TODO: Compressed texture upload needs proper CommandList handling  
+            // TODO: Compressed texture upload needs proper CommandList handling
             // FIXME: Currently decompresses instead of using compressed format directly
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, byte[]) - Creates uncompressed texture as workaround
+            // Method signature: static Texture New2D(GraphicsDevice device, int width, int height, PixelFormat format, byte[] data)
             // For now, decompress base mipmap to RGBA and create uncompressed texture
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
             byte[] rgbaData = ConvertMipmapToRgba(baseMipmap);
             return Texture.New2D(device, width, height, PixelFormat.R8G8B8A8_UNorm, rgbaData);
         }
@@ -573,36 +599,72 @@ namespace Odyssey.Stride.Converters
 
         #endregion
 
+        // Convert KOTOR TPC texture format to Stride PixelFormat enum
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+        // PixelFormat enum defines texture pixel formats for Stride rendering
+        // BC1_UNorm: DXT1 compressed format (4 bits per pixel, no alpha)
+        // BC2_UNorm: DXT3 compressed format (8 bits per pixel, explicit alpha)
+        // BC3_UNorm: DXT5 compressed format (8 bits per pixel, interpolated alpha)
+        // R8G8B8A8_UNorm: 32-bit RGBA uncompressed format (8 bits per channel)
+        // R8_UNorm: 8-bit grayscale format
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
         private static PixelFormat GetStridePixelFormat(TPCTextureFormat format)
         {
             switch (format)
             {
                 case TPCTextureFormat.DXT1:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // PixelFormat.BC1_UNorm: Block-compressed format, equivalent to DXT1
                     return PixelFormat.BC1_UNorm;
                 case TPCTextureFormat.DXT3:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // PixelFormat.BC2_UNorm: Block-compressed format, equivalent to DXT3
                     return PixelFormat.BC2_UNorm;
                 case TPCTextureFormat.DXT5:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // PixelFormat.BC3_UNorm: Block-compressed format, equivalent to DXT5
                     return PixelFormat.BC3_UNorm;
                 case TPCTextureFormat.RGBA:
                 case TPCTextureFormat.BGRA:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // PixelFormat.R8G8B8A8_UNorm: 32-bit RGBA format, normalized to [0,1] range
                     return PixelFormat.R8G8B8A8_UNorm;
                 case TPCTextureFormat.RGB:
                 case TPCTextureFormat.BGR:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // PixelFormat.R8G8B8A8_UNorm: RGB/BGR converted to RGBA (alpha set to 255)
                     return PixelFormat.R8G8B8A8_UNorm;
                 case TPCTextureFormat.Greyscale:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // PixelFormat.R8_UNorm: 8-bit single-channel format for grayscale
                     return PixelFormat.R8_UNorm;
                 default:
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
+                    // Default to RGBA format for unknown formats
                     return PixelFormat.R8G8B8A8_UNorm;
             }
         }
 
+        // Check if graphics device supports compressed texture format
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // GraphicsDevice.Capabilities property provides device feature information
+        // Can check for compressed format support via capabilities
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
         private static bool SupportsCompressedFormat(GraphicsDevice device, PixelFormat format)
         {
             // For now, always decompress to ensure compatibility
             // Can be extended to check device capabilities
+            // FIXME: Should check GraphicsDevice.Capabilities for compressed format support
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsCapabilities.html
+            // GraphicsCapabilities provides information about supported features
             return false;
         }
 
+        // Calculate number of mipmap levels for a texture
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
+        // Mipmap count is calculated by repeatedly halving dimensions until reaching 1x1
+        // Each level is half the size of the previous level
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
         private static int CalculateMipmapCount(int width, int height)
         {
             int count = 1;

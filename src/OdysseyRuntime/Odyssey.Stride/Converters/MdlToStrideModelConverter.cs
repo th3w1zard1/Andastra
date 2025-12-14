@@ -137,6 +137,12 @@ namespace Odyssey.Stride.Converters
         /// </summary>
         /// <param name="device">Graphics device for creating GPU resources.</param>
         /// <param name="materialResolver">Optional function to resolve texture names to materials.</param>
+        // Initialize model converter with graphics device
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // GraphicsDevice provides access to graphics hardware for creating buffers and resources
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
+        // Material represents a rendering material with shaders and properties
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
         public MdlToStrideModelConverter([NotNull] GraphicsDevice device, Func<string, Material> materialResolver = null)
         {
             _device = device ?? throw new ArgumentNullException("device");
@@ -148,6 +154,11 @@ namespace Odyssey.Stride.Converters
         /// </summary>
         /// <param name="mdl">The source MDL model.</param>
         /// <returns>Conversion result with all mesh data.</returns>
+        // Convert KOTOR MDL model format to Stride mesh data
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+        // Vector3(float x, float y, float z) constructor creates a 3D vector
+        // BoundsMin/BoundsMax define the axis-aligned bounding box of the model
+        // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
         public ConversionResult Convert([NotNull] MDL mdl)
         {
             if (mdl == null)
@@ -158,7 +169,11 @@ namespace Odyssey.Stride.Converters
             var result = new ConversionResult
             {
                 Name = mdl.Name,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3 constructor creates bounding box minimum corner
                 BoundsMin = new Vector3(mdl.BMin.X, mdl.BMin.Y, mdl.BMin.Z),
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3 constructor creates bounding box maximum corner
                 BoundsMax = new Vector3(mdl.BMax.X, mdl.BMax.Y, mdl.BMax.Z)
             };
 
@@ -176,7 +191,14 @@ namespace Odyssey.Stride.Converters
             var meshData = new MeshData
             {
                 Name = node.Name,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3(float x, float y, float z) constructor creates node position
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 Position = new Vector3(node.Position.X, node.Position.Y, node.Position.Z),
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+                // Quaternion(float x, float y, float z, float w) constructor creates node rotation
+                // X, Y, Z are imaginary parts, W is real part
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 Orientation = new Quaternion(
                     node.Orientation.X,
                     node.Orientation.Y,
@@ -357,18 +379,32 @@ namespace Odyssey.Stride.Converters
             }
 
             // Get position
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3(float x, float y, float z) constructor creates vertex position
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             var pos = mesh.Vertices[originalIndex];
             var position = new Vector3(pos.X, pos.Y, pos.Z);
 
             // Get normal (if available)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3.UnitY is a static property representing the up vector (0, 1, 0)
+            // Used as default normal if mesh doesn't provide normals
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             Vector3 normal = Vector3.UnitY;
             if (mesh.Normals.Count > originalIndex)
             {
                 var n = mesh.Normals[originalIndex];
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3 constructor creates normal vector from mesh data
                 normal = new Vector3(n.X, n.Y, n.Z);
             }
 
             // Get UV (if available)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+            // Vector2.Zero is a static property representing (0, 0)
+            // Vector2(float x, float y) constructor creates texture coordinate
+            // V coordinate is flipped (1f - t.Y) to convert from OpenGL to DirectX/Stride coordinate system
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             Vector2 uv = Vector2.Zero;
             if (mesh.UV1.Count > originalIndex)
             {
@@ -405,13 +441,16 @@ namespace Odyssey.Stride.Converters
         public Vector3 Normal;
         public Vector2 TextureCoordinate;
 
-        // Define vertex layout declaration
+        // Define vertex layout declaration for position, normal, and texture coordinate
         // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.VertexDeclaration.html
-        // VertexDeclaration - Defines the structure of vertex data in the vertex buffer
-        // VertexElement.Position<Vector3>() - 3D position element (12 bytes)
-        // VertexElement.Normal<Vector3>() - 3D normal vector element (12 bytes)
-        // VertexElement.TextureCoordinate<Vector2>() - 2D texture coordinate element (8 bytes)
+        // VertexDeclaration(VertexElement[]) - Defines the structure of vertex data in the vertex buffer
+        // Constructor signature: VertexDeclaration(params VertexElement[] elements)
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.VertexElement.html
+        // VertexElement.Position<Vector3>() - 3D position element (12 bytes, offset 0)
+        // VertexElement.Normal<Vector3>() - 3D normal vector element (12 bytes, offset 12)
+        // VertexElement.TextureCoordinate<Vector2>() - 2D texture coordinate element (8 bytes, offset 24)
         // Total vertex size: 32 bytes
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/vertex-buffers.html
         public static readonly VertexDeclaration Layout = new VertexDeclaration(
             VertexElement.Position<Vector3>(),
             VertexElement.Normal<Vector3>(),
