@@ -508,19 +508,31 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void CreateFallbackMainMenu()
         {
-            // Create or load a system font for text rendering
+            // Try to load a font from content if available
+            // In Stride, fonts are typically loaded from content assets
             SpriteFont fallbackFont = null;
             try
             {
-                // Try to create a system font - Stride supports creating fonts from system fonts
-                // Use Arial as a reliable fallback font available on most systems
-                fallbackFont = SpriteFont.FromSystemFont(GraphicsDevice, "Arial", 16, FontStyle.Regular);
-                Console.WriteLine("[Odyssey] Created system font for fallback UI");
+                // Try to load a default font from content if available
+                if (Content != null)
+                {
+                    try
+                    {
+                        // Try common font asset paths
+                        fallbackFont = Content.Load<SpriteFont>("Fonts/Arial");
+                        Console.WriteLine("[Odyssey] Loaded font from content for fallback UI");
+                    }
+                    catch
+                    {
+                        // Font not found in content, continue without it
+                        Console.WriteLine("[Odyssey] No font asset found in content, UI will work without text rendering");
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Odyssey] WARNING: Failed to create system font: {ex.Message}");
-                Console.WriteLine("[Odyssey] Text may not render properly in fallback UI");
+                Console.WriteLine($"[Odyssey] WARNING: Font loading error: {ex.Message}");
+                Console.WriteLine("[Odyssey] UI will still be functional but text may not render");
             }
 
             // Create root canvas with full screen background
@@ -609,8 +621,8 @@ namespace Odyssey.Game.Core
             {
                 gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
             }
-            string moduleInfo = string.IsNullOrEmpty(gamePath) 
-                ? "No game path detected" 
+            string moduleInfo = string.IsNullOrEmpty(gamePath)
+                ? "No game path detected"
                 : $"Game Path: {gamePath}";
             var infoText2 = new TextBlock
             {
