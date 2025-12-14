@@ -297,14 +297,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             else
             {
-                if (mainWouldBeEmpty)
-                {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - would be empty (only MOVSP/RETN)");
-                }
-                else
-                {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - mainStart={mainStart}, mainEnd={mainEnd}, globalsEnd={globalsEndForMain}");
-                }
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - mainStart={mainStart}, mainEnd={mainEnd}, globalsEnd={globalsEndForMain}");
             }
 
             List<int> sortedStarts = new List<int>(subroutineStarts);
