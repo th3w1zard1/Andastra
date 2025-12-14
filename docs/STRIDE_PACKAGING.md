@@ -139,7 +139,8 @@ Builds the game project for specified platforms and architectures with comprehen
 .\Build-StrideGame.ps1 [-ProjectPath <path>] [-Configuration Release] `
     [-Platforms Windows,Linux,macOS] [-Architectures x64,x86,arm64] `
     [-SelfContained] [-SingleFile] [-Trimmed] [-ReadyToRun] `
-    [-OutputPath dist] [-Clean] [-Restore] [-Verbose]
+    [-OutputPath dist] [-Clean] [-Restore] [-Verbose] `
+    [-RetryCount <n>] [-RetryDelaySeconds <n>] [-ClearNuGetCache]
 ```
 
 **Key Features:**
@@ -148,7 +149,10 @@ Builds the game project for specified platforms and architectures with comprehen
 - Cross-platform support (Windows/Linux/macOS)
 - ReadyToRun compilation for faster startup
 - Optional code trimming for smaller deployments
-- Comprehensive error reporting
+- Retry logic for transient build failures
+- NuGet cache clearing option
+- Comprehensive error reporting with context
+- Robust input validation
 
 **Examples:**
 ```powershell
@@ -166,6 +170,12 @@ Builds the game project for specified platforms and architectures with comprehen
 
 # Framework-dependent build (requires .NET on target machine)
 .\Build-StrideGame.ps1 -SelfContained $false
+
+# Build with retry logic for transient failures
+.\Build-StrideGame.ps1 -RetryCount 3 -RetryDelaySeconds 10
+
+# Build with NuGet cache clearing (helps with corrupted packages)
+.\Build-StrideGame.ps1 -ClearNuGetCache
 ```
 
 ### Package-StrideGame.ps1
