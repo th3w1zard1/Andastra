@@ -144,9 +144,12 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction mainStart = FirstNonNop(FunctionMap["main"].Instruction, ncs);
                 FunctionMap["main"] = new FunctionReference(mainStart, FunctionMap["main"].Definition);
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:410-415
+                // Original: ncs.add(NCSInstructionType.RETN, args=[], index=entry_index) then ncs.add(NCSInstructionType.JSR, ..., index=entry_index)
+                // Adding RETN first, then JSR at the same index, so JSR comes first in the final order
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex);
                 NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, stubInsertIndex);
                 entryJsr.Jump = mainStart;
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex + 1);
 
                 if (debug)
                 {
@@ -164,10 +167,13 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction scStart = FirstNonNop(FunctionMap["StartingConditional"].Instruction, ncs);
                 FunctionMap["StartingConditional"] = new FunctionReference(scStart, FunctionMap["StartingConditional"].Definition);
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:417-423
+                // Original: ncs.add(NCSInstructionType.RETN, args=[], index=entry_index) then JSR then RSADDI, all at entry_index
+                // Adding RETN first, then JSR, then RSADDI at the same index, so final order is RSADDI, JSR, RETN
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex);
                 NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, stubInsertIndex);
                 entryJsr.Jump = scStart;
-                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, stubInsertIndex + 1);
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex + 2);
+                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, stubInsertIndex);
 
                 if (debug)
                 {
