@@ -1079,8 +1079,19 @@ namespace Odyssey.Content.MDL
             }
 
             int vertexCount = mesh.VertexCount;
-            mesh.Skin.BoneWeights = new float[vertexCount * 4];
-            mesh.Skin.BoneIndices = new int[vertexCount * 4];
+            
+            // Check for potential integer overflow in array size calculations
+            long boneWeightsCountLong = (long)vertexCount * 4;
+            long boneIndicesCountLong = (long)vertexCount * 4;
+            if (boneWeightsCountLong > int.MaxValue || boneIndicesCountLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"Skin bone arrays size calculation overflow: vertexCount={vertexCount}"
+                );
+            }
+            
+            mesh.Skin.BoneWeights = new float[(int)boneWeightsCountLong];
+            mesh.Skin.BoneIndices = new int[(int)boneIndicesCountLong];
 
             for (int i = 0; i < vertexCount; i++)
             {
