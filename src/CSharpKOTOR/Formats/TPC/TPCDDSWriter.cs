@@ -235,11 +235,11 @@ namespace CSharpKOTOR.Formats.TPC
 
         public byte[] GetBytes()
         {
-            if (_writer is RawBinaryWriterBytearray byteArrayWriter)
+            if (_writer is RawBinaryWriterMemory memoryWriter)
             {
-                return byteArrayWriter.GetBytes();
+                return memoryWriter.Data();
             }
-            throw new InvalidOperationException("Writer is not a byte array writer");
+            throw new InvalidOperationException("Writer is not a memory writer");
         }
 
         public void Dispose()
