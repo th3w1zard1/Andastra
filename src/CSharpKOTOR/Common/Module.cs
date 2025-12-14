@@ -820,6 +820,64 @@ namespace CSharpKOTOR.Common
             return Resource(resname, ResourceType.UTD);
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1033-1056
+        // Original: def info(self) -> ModuleResource[IFO] | None:
+        /// <summary>
+        /// Returns the ModuleResource with type IFO if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Info()
+        {
+            return Resource("module", ResourceType.IFO);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:951-973
+        // Original: def are(self) -> ModuleResource[ARE] | None:
+        /// <summary>
+        /// Returns the ARE resource with the given ID if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Are()
+        {
+            ResRef modId = ModuleId();
+            return modId != null ? Resource(modId.ToString(), ResourceType.ARE) : null;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1007-1028
+        // Original: def pth(self) -> ModuleResource[PTH] | None:
+        /// <summary>
+        /// Finds the PTH resource with matching ID.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Pth()
+        {
+            ResRef modId = ModuleId();
+            return modId != null ? Resource(modId.ToString(), ResourceType.PTH) : null;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1560-1577
+        // Original: def sound(self, resname: str) -> ModuleResource[UTS] | None:
+        /// <summary>
+        /// Returns a UTS resource by name if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Sound(string resname)
+        {
+            return Resource(resname, ResourceType.UTS);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:933-949
+        // Original: def vis(self) -> ModuleResource[VIS] | None:
+        /// <summary>
+        /// Finds the VIS resource with matching ID.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Vis()
+        {
+            ResRef modId = ModuleId();
+            return modId != null ? Resource(modId.ToString(), ResourceType.VIS) : null;
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1470-1488
         // Original: def models(self) -> list[ModuleResource[MDL]]:
         /// <summary>
