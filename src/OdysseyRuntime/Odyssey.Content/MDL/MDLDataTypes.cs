@@ -7,11 +7,28 @@ namespace Odyssey.Content.MDL
     /// Lightweight vector types for MDL data without external dependencies.
     /// These are used for intermediate parsing before conversion to rendering-specific types.
     /// </summary>
+    
+    /// <summary>
+    /// Represents a 2D vector with X and Y components.
+    /// Used for texture coordinates in MDL mesh data.
+    /// </summary>
     public struct Vector2Data
     {
+        /// <summary>
+        /// X component of the vector.
+        /// </summary>
         public float X;
+        
+        /// <summary>
+        /// Y component of the vector.
+        /// </summary>
         public float Y;
 
+        /// <summary>
+        /// Initializes a new instance of Vector2Data.
+        /// </summary>
+        /// <param name="x">X component</param>
+        /// <param name="y">Y component</param>
         public Vector2Data(float x, float y)
         {
             X = x;
@@ -19,12 +36,33 @@ namespace Odyssey.Content.MDL
         }
     }
 
+    /// <summary>
+    /// Represents a 3D vector with X, Y, and Z components.
+    /// Used for positions, normals, colors, and other 3D data in MDL mesh data.
+    /// </summary>
     public struct Vector3Data
     {
+        /// <summary>
+        /// X component of the vector.
+        /// </summary>
         public float X;
+        
+        /// <summary>
+        /// Y component of the vector.
+        /// </summary>
         public float Y;
+        
+        /// <summary>
+        /// Z component of the vector.
+        /// </summary>
         public float Z;
 
+        /// <summary>
+        /// Initializes a new instance of Vector3Data.
+        /// </summary>
+        /// <param name="x">X component</param>
+        /// <param name="y">Y component</param>
+        /// <param name="z">Z component</param>
         public Vector3Data(float x, float y, float z)
         {
             X = x;
@@ -33,13 +71,39 @@ namespace Odyssey.Content.MDL
         }
     }
 
+    /// <summary>
+    /// Represents a 4D vector with X, Y, Z, and W components.
+    /// Used for quaternions (rotations) in MDL animation and node data.
+    /// </summary>
     public struct Vector4Data
     {
+        /// <summary>
+        /// X component of the vector.
+        /// </summary>
         public float X;
+        
+        /// <summary>
+        /// Y component of the vector.
+        /// </summary>
         public float Y;
+        
+        /// <summary>
+        /// Z component of the vector.
+        /// </summary>
         public float Z;
+        
+        /// <summary>
+        /// W component of the vector.
+        /// </summary>
         public float W;
 
+        /// <summary>
+        /// Initializes a new instance of Vector4Data.
+        /// </summary>
+        /// <param name="x">X component</param>
+        /// <param name="y">Y component</param>
+        /// <param name="z">Z component</param>
+        /// <param name="w">W component</param>
         public Vector4Data(float x, float y, float z, float w)
         {
             X = x;
@@ -85,6 +149,7 @@ namespace Odyssey.Content.MDL
 
     /// <summary>
     /// Animation event data.
+    /// Events are triggered at specific times during animation playback.
     /// </summary>
     public struct MDLEventData
     {
@@ -206,7 +271,8 @@ namespace Odyssey.Content.MDL
     }
 
     /// <summary>
-    /// Face data structure.
+    /// Face data structure representing a single triangle face in the mesh.
+    /// Contains face normal, plane distance, material index, adjacency information, and vertex indices.
     /// </summary>
     public struct MDLFaceData
     {
