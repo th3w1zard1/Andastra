@@ -33,7 +33,7 @@ namespace CSharpKOTOR.Extract
         public List<BIFResource> GetResources()
         {
             var result = new List<BIFResource>();
-            foreach (var entry in _key.Entries)
+            foreach (var entry in _key.KeyEntries)
             {
                 result.Add(new BIFResource
                 {
