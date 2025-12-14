@@ -279,3 +279,141 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - `Odyssey.Game` - Executable launcher
 
 5. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
+
+### Engine Architecture Principles
+
+**Layered Architecture** (strict separation):
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Odyssey.Game (Executable)                │
+├─────────────────────────────────────────────────────────────┤
+│  Odyssey.Stride     │  Odyssey.Kotor      │  Odyssey.Content│
+│  (Rendering)        │  (Game Rules)       │  (Asset Pipeline)│
+├─────────────────────────────────────────────────────────────┤
+│                    Odyssey.Scripting (NCS VM)               │
+├─────────────────────────────────────────────────────────────┤
+│                    Odyssey.Core (Domain)                    │
+├─────────────────────────────────────────────────────────────┤
+│                    CSharpKOTOR (File Formats)               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Dependency Rules**:
+- `Odyssey.Core` MUST NOT reference Stride, CSharpKOTOR.Formats, or game-specific code
+- `Odyssey.Scripting` MUST NOT reference Stride
+- `Odyssey.Content` may reference CSharpKOTOR for format parsing
+- `Odyssey.Stride` may reference Stride and Odyssey.Core
+- `Odyssey.Kotor` may reference all Odyssey.* except Odyssey.Game
+
+### Game Loop Implementation
+
+Follow this fixed-timestep game loop pattern:
+
+```csharp
+// Per-frame phases (execute in order)
+1. Input Phase      // Collect input, update camera, click-to-move
+2. Script Phase     // Process delay wheel, heartbeats, action queues
+3. Simulation Phase // Entity positions, perception, combat rounds
+4. Animation Phase  // Skeletal animations, particles, lip sync
+5. Scene Sync Phase // Runtime transforms → Stride scene graph
+6. Render Phase     // VIS culling, transparency sort, draw calls
+7. Audio Phase      // Spatial audio positions, trigger one-shots
+```
+
+### NCS VM Implementation Requirements
+
+When implementing NCS VM features:
+
+- **Header validation**: `"NCS "` + `"V1.0"` signature, `0x42` marker at offset 8
+- **Endianness**: All multi-byte values are **big-endian**
+- **Stack alignment**: 4-byte aligned, vectors are 12 bytes (3 floats)
+- **Jump offsets**: Relative to **instruction start**, not next instruction
+- **ACTION arguments**: `uint16 routineId` + `uint8 argCount` (stack elements, not bytes)
+- **STORE_STATE**: Stores stack/locals bytes for DelayCommand semantics
+
+### Engine API Implementation
+
+When implementing NWScript engine functions:
+
+1. **Use ScriptDefs**: Reference `CSharpKOTOR.Common.Script.ScriptDefs` for function signatures
+2. **Profile separation**: K1 has ~850 functions, K2 has ~950 functions
+3. **Incremental coverage**: Start with minimal set for boot/movement, expand by feature
+4. **Return conventions**: Follow exact return type semantics (void, int, float, object, etc.)
+
+### Entity/Component System
+
+Follow these patterns for entity implementation:
+
+```csharp
+// Object type hierarchy
+Object (abstract base)
+├── Creature (PC, NPC)
+├── Door
+├── Placeable
+├── Trigger (invisible volume)
+├── Waypoint (invisible marker)
+├── Sound (ambient emitter)
+├── Store (merchant)
+├── Encounter (spawn point)
+├── Item (world-dropped or inventory)
+└── AreaOfEffect (spell zones)
+```
+
+**GFF Template Loading**:
+- UTC → Creature entity + components
+- UTP → Placeable entity + components
+- UTD → Door entity + components
+- UTT → Trigger entity + components (polygon geometry)
+- UTW → Waypoint entity
+- UTS → Sound emitter entity
+- UTE → Encounter spawner entity
+
+### Walkmesh Implementation
+
+BWM format requirements:
+- Type 1 (WOK): Area walkmesh with AABB tree, adjacency, perimeter edges
+- Type 0 (PWK/DWK): Placeable/door walkmesh with hook vectors
+- Adjacency encoding: `adjacency = faceIndex * 3 + edgeIndex`, `-1` = no neighbor
+- Surface materials: Lookup via `surfacemat.2da` for walkability
+
+### Combat System
+
+Combat follows round-based model (~3 second rounds):
+
+```
+Round States:
+Starting    (0.0s)  - Init animations
+FirstAttack (~0.5s) - Primary attack
+SecondAttack(~1.5s) - Offhand/counter (if duel)
+Cooldown    (~2.5s) - Return to ready
+Finished    (3.0s)  - Complete
+```
+
+D20 attack resolution:
+- Natural 20 = always hit (check for crit)
+- Natural 1 = always miss
+- Roll + attack bonus >= target AC = hit
+
+### Future Engine Support (Aurora Family)
+
+The architecture supports future engines via abstraction:
+
+| Engine | Games | Notes |
+|--------|-------|-------|
+| Odyssey | KotOR 1/2 | Current focus |
+| Aurora | NWN | Similar NCS, different rendering |
+| Electron | Jade Empire | Modified NCS |
+| Eclipse | Dragon Age | Different script system |
+
+### Key Files to Reference
+
+| Subsystem | Reference Files |
+|-----------|-----------------|
+| VM Implementation | `Odyssey.Scripting/VM/NcsVm.cs` |
+| Navigation | `Odyssey.Core/Navigation/NavigationMesh.cs` |
+| Actions | `Odyssey.Core/Actions/*.cs` |
+| Entity System | `Odyssey.Core/Entities/Entity.cs`, `World.cs` |
+| Format Parsing | `CSharpKOTOR/Formats/*` |
+| Full Plan | `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` |
+| Roadmap | `docs/engine_roadmap.md` |

@@ -21,12 +21,13 @@ namespace Odyssey.Core.Enums
         OnUnacquireItem,
         OnActivateItem,
         OnUserDefined,
-        
+        OnSpawnButtonDown,
+
         // Area events
         OnEnter,
         OnExit,
         OnAreaHeartbeat,
-        
+
         // Creature events
         OnSpawn,
         OnDeath,
@@ -41,30 +42,26 @@ namespace Odyssey.Core.Enums
         OnSpellCastAt,
         OnAttacked,
         OnRested,
-        
+        OnEndDialogue,
+
         // Door events
         OnOpen,
         OnClose,
         OnFailToOpen,
-        OnDoorClick,
-        
+        OnClick,
+        OnLock,
+        OnUnlock,
+        OnDisarm,
+        OnTrapTriggered,
+
         // Placeable events
         OnUsed,
-        OnPlaceableClick,
-        OnPlaceableDisturbed,
-        OnPlaceableLock,
-        OnPlaceableUnlock,
-        
+
         // Trigger events
-        OnTriggerEnter,
-        OnTriggerExit,
-        OnTriggerClick,
-        OnTriggerHeartbeat,
-        
+
         // Encounter events
-        OnEncounterEntered,
-        OnEncounterExhausted,
-        
+        OnExhausted,
+
         // Store events
         OnStoreOpen,
         OnStoreClose
