@@ -633,7 +633,7 @@ namespace HolocronToolset.NET.Data
                             {
                                 // Check for EventQueue
                                 var ifoGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(innerResource.Data);
-                                if (ifoGff.Root.HasField("EventQueue"))
+                                if (ifoGff.Root.Exists("EventQueue"))
                                 {
                                     var eventQueue = ifoGff.Root.GetList("EventQueue");
                                     if (eventQueue != null && eventQueue.Count > 0)
@@ -695,7 +695,7 @@ namespace HolocronToolset.NET.Data
                             {
                                 // Check and clear EventQueue
                                 var ifoGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(innerResource.Data);
-                                if (ifoGff.Root.HasField("EventQueue"))
+                                if (ifoGff.Root.Exists("EventQueue"))
                                 {
                                     var eventQueue = ifoGff.Root.GetList("EventQueue");
                                     if (eventQueue != null && eventQueue.Count > 0)

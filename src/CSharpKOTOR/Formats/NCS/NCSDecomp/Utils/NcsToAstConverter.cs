@@ -175,6 +175,46 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 {
                     program.GetSubroutine().Add(globalsSub);
                 }
+                
+                // Ensure mainStart is after the globals range (including entry stub)
+                // Entry stub is at savebpIndex+1, so main should start after that
+                int globalsEnd = savebpIndex + 1;
+                int entryStubEnd = globalsEnd;
+                
+                // Check for entry stub pattern at savebpIndex+1
+                // Pattern 1: JSR (at savebpIndex+1) + RETN (at savebpIndex+2)
+                if (instructions.Count > entryStubEnd + 1 && 
+                    instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
+                    instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
+                {
+                    entryStubEnd = entryStubEnd + 2; // JSR + RETN
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RETN detected, entry stub ends at {entryStubEnd}");
+                }
+                // Pattern 2: JSR (at savebpIndex+1) + RESTOREBP (at savebpIndex+2)
+                else if (instructions.Count > entryStubEnd + 1 &&
+                         instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
+                         instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
+                {
+                    entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RESTOREBP detected, entry stub ends at {entryStubEnd}");
+                }
+                
+                // If mainStart is within globals range or entry stub, adjust it to after entry stub
+                if (mainStart <= entryStubEnd)
+                {
+                    // If entryJsrTarget is valid and points to after entry stub, use it
+                    // Otherwise, use entryStubEnd as the main start
+                    if (entryJsrTarget > entryStubEnd && entryJsrTarget > 0)
+                    {
+                        mainStart = entryJsrTarget;
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
+                    }
+                    else
+                    {
+                        mainStart = entryStubEnd;
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Adjusted mainStart to {mainStart} (after globals end at {globalsEnd} and entry stub at {entryStubEnd})");
+                    }
+                }
             }
 
             ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);

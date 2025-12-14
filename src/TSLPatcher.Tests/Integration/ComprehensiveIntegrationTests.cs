@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class ComprehensiveIntegrationTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void MultipleFileTypes_WithTokenSharing_ShouldApplyCorrectly()
         {
             string iniText = @"
@@ -83,7 +83,7 @@ IndexField=2DAMEMORY5
             patchedGff.Root.GetInt32("IndexField").Should().Be(0);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDAWithAllOperationTypes_ShouldApplyInOrder()
         {
             string iniText = @"
@@ -148,7 +148,7 @@ I0=special
             twoda.GetCellString(2, "Col3").Should().Be("special");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFWithNestedStructsAndLists_ShouldApplyCorrectly()
         {
             string iniText = @"
@@ -199,7 +199,7 @@ TypeId=200
             memory.Memory2DA[0].Should().Be("0");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSFWithMultipleTokenTypes_ShouldApplyCorrectly()
         {
             string iniText = @"
@@ -226,7 +226,7 @@ Battlecry 3=StrRef7
             patchedSsf.Get(SSFSound.BATTLE_CRY_3).Should().Be(300);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDAWithExclusiveColumns_MultipleScenarios_ShouldHandleCorrectly()
         {
             string iniText = @"
@@ -292,7 +292,7 @@ value=also_conflict
             (row1Id == "200" || row2Id == "200").Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDAWithHighFunction_AcrossColumns_ShouldCalculateCorrectly()
         {
             string iniText = @"
@@ -340,7 +340,7 @@ col1=high()
             twoda.GetCellString(2, "col3").Should().Be("100");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AllFileTypes_InSingleConfiguration_ShouldApplyWithoutConflicts()
         {
             string iniText = @"

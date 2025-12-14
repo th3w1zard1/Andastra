@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Python: test_peek_past_vector (from TestStack)
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPeekPastVector()
         {
             var stack = new Stack();
@@ -34,7 +34,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Python: test_move_negative (from TestStack)
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMoveNegative()
         {
             var stack = new Stack();
@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Python: test_move_zero (from TestStack)
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMoveZero()
         {
             var stack = new Stack();
@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Python: test_copy_down_single (from TestStack)
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCopyDownSingle()
         {
             var stack = new Stack();
@@ -100,7 +100,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Python: test_copy_down_many (from TestStack)
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCopyDownMany()
         {
             var stack = new Stack();

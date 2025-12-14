@@ -10,7 +10,7 @@ namespace CSharpKOTOR.Tests.Namespaces
     /// </summary>
     public class PatcherNamespaceTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Constructor_ShouldInitializeWithDefaults()
         {
             // Act
@@ -25,7 +25,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.Description.Should().BeEmpty();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void NamespaceId_ShouldBeSettable()
         {
             // Arrange
@@ -38,7 +38,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.NamespaceId.Should().Be("mod1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IniFilename_ShouldBeSettable()
         {
             // Arrange
@@ -51,7 +51,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.IniFilename.Should().Be("custom.ini");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void InfoFilename_ShouldBeSettable()
         {
             // Arrange
@@ -64,7 +64,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.InfoFilename.Should().Be("readme.rtf");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void DataFolderPath_ShouldBeSettable()
         {
             // Arrange
@@ -77,7 +77,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.DataFolderPath.Should().Be("C:\\mods\\test");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangesFilePath_ShouldCombineFolderAndIniFilename()
         {
             // Arrange
@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             path.Should().Be("C:\\mods\\test\\changes.ini");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RtfFilePath_ShouldCombineFolderAndInfoFilename()
         {
             // Arrange
@@ -111,7 +111,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             path.Should().Be("C:\\mods\\test\\info.rtf");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Name_ShouldBeSettable()
         {
             // Arrange
@@ -124,7 +124,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.Name.Should().Be("Test Mod");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Description_ShouldBeSettable()
         {
             // Arrange
@@ -137,7 +137,7 @@ namespace CSharpKOTOR.Tests.Namespaces
             ns.Description.Should().Be("This is a test mod");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ToString_ShouldReturnFormattedString()
         {
             // Arrange

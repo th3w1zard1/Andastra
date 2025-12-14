@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Tests.Mods
     {
         #region Modify Field Tests - Integer Types
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt8()
         {
             // Python test: test_modify_field_uint8
@@ -38,7 +38,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt8("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int8()
         {
             // Python test: test_modify_field_int8
@@ -58,7 +58,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt8("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt16()
         {
             // Python test: test_modify_field_uint16
@@ -78,7 +78,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt16("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int16()
         {
             // Python test: test_modify_field_int16
@@ -98,7 +98,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt16("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt32()
         {
             // Python test: test_modify_field_uint32
@@ -118,7 +118,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt32("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int32()
         {
             // Python test: test_modify_field_int32
@@ -138,7 +138,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt32("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt64()
         {
             // Python test: test_modify_field_uint64
@@ -158,7 +158,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt64("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int64()
         {
             // Python test: test_modify_field_int64
@@ -182,7 +182,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Modify Field Tests - Float Types
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Single()
         {
             // Python test: test_modify_field_single
@@ -202,7 +202,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Double()
         {
             // Python test: test_modify_field_double
@@ -226,7 +226,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Modify Field Tests - String and Complex Types
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_String()
         {
             // Python test: test_modify_field_string
@@ -246,7 +246,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetValue("Field1").Should().Be("def");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_LocString()
         {
             // Python test: test_modify_field_locstring
@@ -269,7 +269,7 @@ namespace CSharpKOTOR.Tests.Mods
             locString.Get(Language.English, Gender.Male).Should().Be("test");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Vector3()
         {
             // Python test: test_modify_field_vector3
@@ -289,7 +289,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetVector3("Field1").Should().Be(new Vector3(1, 2, 3));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Vector4()
         {
             // Python test: test_modify_field_vector4
@@ -313,7 +313,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Modify Field Tests - Nested and Memory
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Nested()
         {
             // Python test: test_modify_nested
@@ -338,7 +338,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedStruct.GetValue("String").Should().Be("abc");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_2DAMemory()
         {
             // Python test: test_modify_2damemory
@@ -361,7 +361,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt8("Integer").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_TLKMemory()
         {
             // Python test: test_modify_tlkmemory
@@ -388,7 +388,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Add Field Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_NewNested()
         {
             // Python test: test_add_newnested
@@ -416,7 +416,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetList("List").At(0).GetUInt8("SomeInteger").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_Nested()
         {
             // Python test: test_add_nested
@@ -448,7 +448,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedStruct.GetValue("String").Should().Be("abc");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_Use2DAMemory()
         {
             // Python test: test_add_use_2damemory
@@ -469,7 +469,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt8("Integer").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_UseTLKMemory()
         {
             // Python test: test_add_use_tlkmemory
@@ -490,7 +490,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt8("Integer").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_LocString()
         {
             // Python test: test_add_field_locstring
@@ -525,7 +525,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Add Struct To List Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddList_ListIndex()
         {
             // Python test: test_addlist_listindex
@@ -551,7 +551,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedList.At(2).StructId.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddList_Store2DAMemory()
         {
             // Python test: test_addlist_store_2damemory

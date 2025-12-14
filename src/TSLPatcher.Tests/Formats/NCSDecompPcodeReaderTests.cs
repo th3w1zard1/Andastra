@@ -11,7 +11,7 @@ namespace CSharpKOTOR.Tests.Formats
     /// </summary>
     public class NCSDecompPcodeReaderTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestParseFixedSizeArgs()
         {
             // Test parseFixedSizeArgs directly

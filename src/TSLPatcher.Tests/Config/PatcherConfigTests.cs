@@ -11,7 +11,7 @@ namespace CSharpKOTOR.Tests.Config
     /// </summary>
     public class PatcherConfigTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Constructor_ShouldInitializeWithDefaults()
         {
             // Act
@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Tests.Config
             config.Patches2DA.Should().BeEmpty();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void WindowTitle_ShouldBeSettable()
         {
             // Arrange
@@ -41,7 +41,7 @@ namespace CSharpKOTOR.Tests.Config
             config.WindowTitle.Should().Be("Test Mod Installer");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ConfirmMessage_ShouldBeSettable()
         {
             // Arrange
@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Tests.Config
             config.ConfirmMessage.Should().Be("Install this mod?");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GameNumber_ShouldBeSettable()
         {
             // Arrange
@@ -67,7 +67,7 @@ namespace CSharpKOTOR.Tests.Config
             config.GameNumber.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LogLevel_ShouldBeSettable()
         {
             // Arrange
@@ -80,7 +80,7 @@ namespace CSharpKOTOR.Tests.Config
             config.LogLevel.Should().Be(LogLevel.Full);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RequiredFiles_ShouldBeModifiable()
         {
             // Arrange
@@ -96,7 +96,7 @@ namespace CSharpKOTOR.Tests.Config
             config.RequiredFiles[1].Should().BeEquivalentTo(new[] { "swkotor2.exe" });
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RequiredMessages_ShouldBeModifiable()
         {
             // Arrange
@@ -111,7 +111,7 @@ namespace CSharpKOTOR.Tests.Config
             config.RequiredMessages[0].Should().Be("This file is required!");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SaveProcessedScripts_ShouldBeSettable()
         {
             // Arrange
@@ -124,7 +124,7 @@ namespace CSharpKOTOR.Tests.Config
             config.SaveProcessedScripts.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IgnoreFileExtensions_ShouldBeSettable()
         {
             // Arrange

@@ -10,7 +10,7 @@ namespace CSharpKOTOR.Tests.Formats
     /// </summary>
     public class TwoDaVendorCompareTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnFalse_WhenColumnCountsDiffer()
         {
             var older = new TwoDA(new List<string> { "ABC", "123" });
@@ -24,7 +24,7 @@ namespace CSharpKOTOR.Tests.Formats
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnFalse_WhenRowCountsDiffer()
         {
             var older = new TwoDA(new List<string> { "A", "B" });
@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Tests.Formats
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnFalse_WhenCellsDiffer()
         {
             var older = new TwoDA(new List<string> { "A", "B" });
@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Tests.Formats
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnTrue_WhenTablesMatch()
         {
             var older = new TwoDA(new List<string> { "A", "B" });

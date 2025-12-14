@@ -4,17 +4,17 @@
     <LangVersion>7.3</LangVersion>
     <IsPackable>false</IsPackable>
     <Nullable>disable</Nullable>
-    <!-- Optimize for faster Debug builds -->
-    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-      <EnableNETAnalyzers>false</EnableNETAnalyzers>
-      <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-      <GenerateDocumentationFile>false</GenerateDocumentationFile>
-      <RunCodeAnalysis>false</RunCodeAnalysis>
-      <DebugType>none</DebugType>
-      <DebugSymbols>false</DebugSymbols>
-      <WarningLevel>0</WarningLevel>
-      <Deterministic>false</Deterministic>
-    </PropertyGroup>
+  </PropertyGroup>
+  <!-- Optimize for faster Debug builds -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <WarningLevel>0</WarningLevel>
+    <Deterministic>false</Deterministic>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.14.0" />

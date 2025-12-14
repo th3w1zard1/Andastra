@@ -12,7 +12,7 @@ namespace CSharpKOTOR.Tests.Diff
     /// </summary>
     public class TlkDiffTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectAddedEntries()
         {
             var original = new TLK();
@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Tests.Diff
             result.AddedEntries[1].Text.Should().Be("Text2");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectChangedText()
         {
             var original = new TLK();
@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Tests.Diff
             result.ChangedEntries[0].Sound.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectChangedSound()
         {
             var original = new TLK();

@@ -17,7 +17,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class SSFIntegrationTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Replace_ShouldCreateNewSSF()
         {
             // Arrange
@@ -36,7 +36,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_DirectValue_ShouldUpdateSlot()
         {
             // Arrange
@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(12345);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_TLKMemory_ShouldUseToken()
         {
             // Arrange
@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(67890);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_2DAMemory_ShouldUseToken()
         {
             // Arrange
@@ -96,7 +96,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(99999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_SetMultiple_ShouldUpdateAllSlots()
         {
             // Arrange
@@ -119,7 +119,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_3).Should().Be(333);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_MixedTokenTypes_ShouldHandleCorrectly()
         {
             // Arrange
@@ -152,7 +152,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_3).Should().Be(22222);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_UnsetSlots_ShouldRemainUnchanged()
         {
             // Arrange
@@ -171,7 +171,7 @@ namespace CSharpKOTOR.Tests.Integration
             ssf.Get(SSFSound.BATTLE_CRY_2).Should().Be(200);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AssignInt_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -191,7 +191,7 @@ Battlecry 1=5
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(5);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Assign2DAToken_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -212,7 +212,7 @@ Battlecry 2=2DAMEMORY5
             patchedSsf.Get(SSFSound.BATTLE_CRY_2).Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AssignTLKToken_AppliesPatchCorrectly()
         {
             string iniText = @"

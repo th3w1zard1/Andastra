@@ -344,10 +344,88 @@ namespace KotorDiff.NET.App
             else if (config.TslPatchDataPath != null && modifications.HasModifications())
             {
                 // Use batch generation if not using incremental writer
-                // TODO: Implement generate_tslpatcher_data if needed
+                GenerateTSLPatcherData(
+                    config.TslPatchDataPath,
+                    config.IniFilename ?? "changes.ini",
+                    modifications,
+                    config.Paths);
             }
 
             return result;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:261-343
+        // Original: def generate_tslpatcher_data(...): ...
+        /// <summary>
+        /// Generate TSLPatcher data files using batch generation (non-incremental).
+        /// </summary>
+        private static void GenerateTSLPatcherData(
+            DirectoryInfo tslpatchdataPath,
+            string iniFilename,
+            ModificationsByType modifications,
+            List<object> paths)
+        {
+            if (tslpatchdataPath == null || !modifications.HasModifications())
+            {
+                return;
+            }
+
+            LogOutput($"\nGenerating TSLPatcher data at: {tslpatchdataPath.FullName}");
+
+            // Use TSLPatchDataGenerator for batch generation
+            var generator = new CSharpKOTOR.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
+            
+            // Determine base data path from first path if it's a directory
+            DirectoryInfo baseDataPath = null;
+            if (paths != null && paths.Count > 0)
+            {
+                object firstPath = paths[0];
+                if (firstPath is string pathStr && Directory.Exists(pathStr))
+                {
+                    baseDataPath = new DirectoryInfo(pathStr);
+                }
+                else if (firstPath is DirectoryInfo dirInfo)
+                {
+                    baseDataPath = dirInfo;
+                }
+            }
+
+            var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
+
+            if (generatedFiles != null && generatedFiles.Count > 0)
+            {
+                LogOutput($"Generated {generatedFiles.Count} resource file(s):");
+                foreach (var kvp in generatedFiles)
+                {
+                    LogOutput($"  - {kvp.Key}");
+                }
+            }
+
+            // Generate changes.ini using TSLPatcher serializer
+            var iniPath = Path.Combine(tslpatchdataPath.FullName, iniFilename);
+            LogOutput($"\nGenerating {iniFilename} at: {iniPath}");
+
+            // Use TSLPatcher INI serializer if available, otherwise use INIManager
+            var iniManager = new Generator.INIManager(iniPath);
+            iniManager.Load();
+            
+            // Serialize modifications to INI format
+            // Note: This is a simplified version - full serialization would use TSLPatcherINISerializer
+            // For now, the incremental writer handles most of this, so batch generation is rarely used
+            var serializer = new CSharpKOTOR.TSLPatcher.TSLPatcherINISerializer();
+            string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
+            File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
+
+            // Summary
+            LogOutput("\nTSLPatcher data generation complete:");
+            LogOutput($"  Location: {tslpatchdataPath.FullName}");
+            LogOutput($"  INI file: {iniFilename}");
+            LogOutput($"  TLK modifications: {modifications.TLK?.Count ?? 0}");
+            LogOutput($"  2DA modifications: {modifications.TwoDA?.Count ?? 0}");
+            LogOutput($"  GFF modifications: {modifications.GFF?.Count ?? 0}");
+            LogOutput($"  SSF modifications: {modifications.SSF?.Count ?? 0}");
+            LogOutput($"  NCS modifications: {modifications.NCS?.Count ?? 0}");
+            LogOutput($"  Install folders: {modifications.Install?.Count ?? 0}");
         }
     }
 }

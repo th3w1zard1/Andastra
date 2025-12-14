@@ -13,7 +13,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class TlkModificationTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Append()
         {
             // Arrange
@@ -60,7 +60,7 @@ namespace CSharpKOTOR.Tests.Mods
             // 3        0        1       Append1
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Replace()
         {
             // Arrange

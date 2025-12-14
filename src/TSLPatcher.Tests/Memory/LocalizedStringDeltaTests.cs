@@ -11,7 +11,7 @@ namespace CSharpKOTOR.Tests.Memory
     /// </summary>
     public class LocalizedStringDeltaTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_StringRef_2DAMemory()
         {
             // Arrange
@@ -27,7 +27,7 @@ namespace CSharpKOTOR.Tests.Memory
             Assert.Equal(123, locstring.StringRef);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_StringRef_TLKMemory()
         {
             // Arrange
@@ -43,7 +43,7 @@ namespace CSharpKOTOR.Tests.Memory
             Assert.Equal(123, locstring.StringRef);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_StringRef_Int()
         {
             // Arrange
@@ -58,7 +58,7 @@ namespace CSharpKOTOR.Tests.Memory
             Assert.Equal(123, locstring.StringRef);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_StringRef_None()
         {
             // Arrange
@@ -73,7 +73,7 @@ namespace CSharpKOTOR.Tests.Memory
             Assert.Equal(123, locstring.StringRef);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Substring()
         {
             // Arrange

@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class GFFModsUnitTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt8_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -30,7 +30,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt8("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int8_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt8("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt16_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -60,7 +60,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt16("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int16_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt16("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt32_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -90,7 +90,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt32("Field1").Should().Be(2u);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int32_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt32("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt64_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -120,7 +120,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt64("Field1").Should().Be(2UL);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int64_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -135,7 +135,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetInt64("Field1").Should().Be(2L);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Single_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -150,7 +150,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Double_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -165,7 +165,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetDouble("Field1").Should().BeApproximately(2.345678, 0.000001);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_String_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -180,7 +180,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetValue("Field1").Should().Be("def");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_LocalizedString_ShouldUpdateStringRef()
         {
             var gff = new GFF();
@@ -199,7 +199,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Vector3_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -217,7 +217,7 @@ namespace CSharpKOTOR.Tests.Mods
             vector.Z.Should().BeApproximately(3f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Vector4_ShouldUpdateValue()
         {
             var gff = new GFF();
@@ -236,7 +236,7 @@ namespace CSharpKOTOR.Tests.Mods
             vector.W.Should().BeApproximately(4f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_NestedPath_ShouldModifyNestedField()
         {
             var gff = new GFF();
@@ -257,7 +257,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedStruct.GetValue("String").Should().Be("abc");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_With2DAMemory_ShouldUseMemoryValue()
         {
             var gff = new GFF();
@@ -279,7 +279,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt8("Integer").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_WithTLKMemory_ShouldUseMemoryValue()
         {
             var gff = new GFF();
@@ -296,7 +296,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedGff.Root.GetUInt32("StrRef").Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_MultipleFields_ShouldApplyAll()
         {
             var gff = new GFF();

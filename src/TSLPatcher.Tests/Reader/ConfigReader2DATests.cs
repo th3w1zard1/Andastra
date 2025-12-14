@@ -46,7 +46,7 @@ namespace CSharpKOTOR.Tests.Reader
 
         #region ChangeRow Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ChangeRow_ShouldLoadIdentifier()
         {
             // Python test: test_2da_changerow_identifier
@@ -84,7 +84,7 @@ RowLabel=1
             mod1.Identifier.Should().Be("change_row_1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ChangeRow_ShouldLoadTargets()
         {
             // Python test: test_2da_changerow_targets
@@ -131,7 +131,7 @@ LabelIndex=3
             mod_2da_2.Target.Value.Should().Be("3");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ChangeRow_ShouldLoadStore2DAMemory()
         {
             // Python test: test_2da_changerow_store2da
@@ -171,7 +171,7 @@ RowIndex=0
             store_2da_0c.Column.Should().Be("label");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ChangeRow_ShouldLoadCells()
         {
             // Python test: test_2da_changerow_cells
@@ -217,7 +217,7 @@ appearance=2DAMEMORY5
 
         #region AddRow Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddRow_ShouldLoadIdentifier()
         {
             // Python test: test_2da_addrow_identifier
@@ -252,7 +252,7 @@ AddRow1=add_row_1
             mod_1.Identifier.Should().Be("add_row_1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddRow_ShouldLoadRowLabel()
         {
             // Python test: test_2da_addrow_rowlabel
@@ -292,7 +292,7 @@ RowLabel=123
             mod_1.RowLabel.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddRow_ShouldLoadExclusiveColumn()
         {
             // Python test: test_2da_addrow_exclusivecolumn
@@ -333,7 +333,7 @@ ExclusiveColumn=label
         }
 
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddRow_ShouldLoadStore2DAMemory()
         {
             // Python test: test_2da_addrow_store2da
@@ -372,7 +372,7 @@ AddRow0=add_row_0
             store_0c.Column.Should().Be("label");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddRow_ShouldLoadCells()
         {
             // Python test: test_2da_addrow_cells
@@ -417,7 +417,7 @@ appearance=2DAMEMORY5
 
         #region CopyRow Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_ShouldLoadIdentifier()
         {
             // Python test: test_2da_copyrow_identifier
@@ -454,7 +454,7 @@ RowLabel=1
             mod_1.Identifier.Should().Be("copy_row_1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_ShouldLoadTarget()
         {
             // Python test: test_2da_copyrow_target
@@ -501,7 +501,7 @@ LabelIndex=3
             mod_2.Target.Value.Should().Be("3");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_ShouldLoadExclusiveColumn()
         {
             // Python test: test_2da_copyrow_exclusivecolumn
@@ -543,7 +543,7 @@ RowIndex=0
             mod_1.ExclusiveColumn.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_ShouldLoadRowLabel()
         {
             // Python test: test_2da_copyrow_rowlabel
@@ -585,7 +585,7 @@ RowIndex=0
             mod_1.RowLabel.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_ShouldLoadStore2DAMemory()
         {
             // Python test: test_2da_copyrow_store2da
@@ -625,7 +625,7 @@ RowLabel=0
             store_0c.Column.Should().Be("label");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_ShouldLoadCells()
         {
             // Python test: test_2da_copyrow_cells
@@ -671,7 +671,7 @@ appearance=2DAMEMORY5
 
         #region AddColumn Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddColumn_ShouldLoadColumnName()
         {
             // Arrange
@@ -699,7 +699,7 @@ DefaultValue=
             addColumn.Header.Should().Be("newcolumn");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddColumn_ShouldLoadDefaultValue()
         {
             // Arrange

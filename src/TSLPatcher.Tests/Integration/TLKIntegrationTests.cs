@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class TLKIntegrationTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_Append_ShouldAddNewEntry()
         {
             // Arrange
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Tests.Integration
             tlk[2].Voiceover.ToString().Should().Be("new_vo");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_Replace_ShouldModifyExistingEntry()
         {
             // Arrange
@@ -70,7 +70,7 @@ namespace CSharpKOTOR.Tests.Integration
             tlk[1].Voiceover.ToString().Should().Be("modified_vo");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_AppendMultiple_ShouldAddAllEntries()
         {
             // Arrange
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Tests.Integration
             tlk.String(2).Should().Be("New Entry 2");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_WithMemoryTokens_ShouldStoreStrRef()
         {
             // Arrange
@@ -121,7 +121,7 @@ namespace CSharpKOTOR.Tests.Integration
             Memory.MemoryStr[0].Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_LoadFromFile_ShouldPopulateFromTLK()
         {
             // Arrange
@@ -154,7 +154,7 @@ namespace CSharpKOTOR.Tests.Integration
             targetTlk[1].Voiceover.ToString().Should().Be("src_1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_ReplaceWithNull_ShouldClearText()
         {
             // Arrange
@@ -180,7 +180,7 @@ namespace CSharpKOTOR.Tests.Integration
             tlk.String(0).Should().Be("Entry 0"); // Python preserves old text when text is null/empty
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_ComplexWorkflow_ShouldHandleMixedOperations()
         {
             // Arrange
@@ -215,7 +215,7 @@ namespace CSharpKOTOR.Tests.Integration
             Memory.MemoryStr[1].Should().Be(3); // Only append stores memory
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_ApplyAppend_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -252,7 +252,7 @@ StrRef1=1
             memory.MemoryStr[1].Should().Be(3);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_ApplyReplace_AppliesPatchCorrectly()
         {
             string iniText = @"

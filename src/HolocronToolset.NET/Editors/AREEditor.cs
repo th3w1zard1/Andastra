@@ -1,10 +1,12 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -57,26 +59,31 @@ namespace HolocronToolset.NET.Editors
 
             // ARE is a GFF-based format
             var gff = GFF.FromBytes(data);
-            // ARE conversion will be implemented when ARE conversion methods are available
-            _are = new ARE();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:146
+            // Original: are: ARE = read_are(data)
+            _are = AREHelpers.ConstructAre(gff);
             LoadARE(_are);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:151-248
+        // Original: def _loadARE(self, are: ARE):
         private void LoadARE(ARE are)
         {
             // Load ARE data into UI
             // This will be implemented when UI controls are created
+            // For now, just store the ARE object
+            _are = are;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Build ARE from UI
-            // This will be implemented when UI controls are created
-            // ARE conversion will be implemented when ARE conversion methods are available
-            var gff = new GFF(GFFContent.ARE);
-            byte[] data = gff.ToBytes();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
+            // Original: def build(self) -> tuple[bytes, bytes]:
+            Game game = _installation?.Game ?? Game.K1;
+            var gff = AREHelpers.DismantleAre(_are, game);
+            byte[] data = GFFAuto.BytesGff(gff, ResourceType.ARE);
             return Tuple.Create(data, new byte[0]);
         }
 

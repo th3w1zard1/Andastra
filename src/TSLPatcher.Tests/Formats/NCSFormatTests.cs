@@ -21,7 +21,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Python: test_binary_io
         /// Ensure binary NCS IO produces byte-identical output.
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBinaryIO()
         {
             if (!File.Exists(BinaryTestFile))

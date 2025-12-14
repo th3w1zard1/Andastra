@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class TwoDAMemoryTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeLabelIndex_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -50,7 +50,7 @@ Col2=X
             twoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeAssignTLKMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -91,7 +91,7 @@ Col1=StrRef1
             patchedTwoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeAssign2DAMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -131,7 +131,7 @@ Col1=2DAMEMORY1
             twoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeAssignHigh_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -168,7 +168,7 @@ Col2=high()
             twoda.GetColumn("Col3").Should().Equal("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Set2DAMemoryRowIndex_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -201,7 +201,7 @@ RowIndex=1
             memory.Memory2DA[5].Should().Be("1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Set2DAMemoryRowLabel_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -244,7 +244,7 @@ RowIndex=1
             memory.Memory2DA[5].Should().Be("r1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Set2DAMemoryColumnLabel_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -277,7 +277,7 @@ RowIndex=1
             memory.Memory2DA[5].Should().Be("d");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRowLabelUseMaxRowLabel_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -307,7 +307,7 @@ AddRow1=add_row_1
             twoda.GetLabel(2).Should().Be("2");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRowLabelUseConstant_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -330,7 +330,7 @@ RowLabel=r1
             twoda.GetLabel(0).Should().Be("r1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRowLabelExisting_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -359,7 +359,7 @@ Col2=ABC
             patchedTwoda.GetLabel(0).Should().Be("0");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddExclusiveNotExists_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -388,7 +388,7 @@ Col2=ABC
             twoda.GetCellString(1, "Col2").Should().Be("ABC");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddExclusiveExists_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -417,7 +417,7 @@ Col2=ABC
             twoda.GetCellString(0, "Col2").Should().Be("ABC");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddExclusiveNone_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -449,7 +449,7 @@ Col2=ABC
             twoda.GetCellString(2, "Col2").Should().Be("ABC");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddAssignHigh_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -481,7 +481,7 @@ Col2=high()
             twoda.GetCellString(2, "Col2").Should().Be("5");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddAssignTLKMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -512,7 +512,7 @@ Col2=StrRef6
             twoda.GetCellString(1, "Col2").Should().Be("200");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddAssign2DAMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -543,7 +543,7 @@ Col2=2DAMEMORY6
             twoda.GetCellString(1, "Col2").Should().Be("BBB");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Add2DAMemoryRowIndex_AppliesPatchCorrectly()
         {
             string iniText = @"

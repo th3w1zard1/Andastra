@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Tests.Formats
         private static readonly string TestTwoDAFile = TestFileHelper.GetPath("test.2da");
         private static readonly string CorruptTwoDAFile = TestFileHelper.GetPath("test_corrupted.2da");
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBinaryIO()
         {
             // Read 2DA file
@@ -48,7 +48,7 @@ namespace CSharpKOTOR.Tests.Formats
             twoda.GetCellString(2, "col3").Should().Be("abc");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadRaises()
         {
             // test_read_raises from Python
@@ -65,7 +65,7 @@ namespace CSharpKOTOR.Tests.Formats
             act3.Should().Throw<System.IO.InvalidDataException>();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWriteRaises()
         {
             // test_write_raises from Python
@@ -89,7 +89,7 @@ namespace CSharpKOTOR.Tests.Formats
             act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestRowMax()
         {
             // test_row_max from Python

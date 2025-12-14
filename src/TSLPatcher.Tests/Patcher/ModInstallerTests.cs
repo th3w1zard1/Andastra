@@ -79,7 +79,7 @@ namespace CSharpKOTOR.Tests.Patcher
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_Exists_DestinationDot()
         {
             // Arrange
@@ -100,7 +100,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_Exists_SaveAs_DestinationDot()
         {
             // Arrange
@@ -116,7 +116,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_Exists_DestinationOverride()
         {
             // Arrange
@@ -132,7 +132,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_Exists_SaveAs_DestinationOverride()
         {
             // Arrange
@@ -148,7 +148,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_NotExists_SaveAs_DestinationOverride()
         {
             // Arrange
@@ -164,7 +164,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_NotExists_DestinationOverride()
         {
             // Arrange
@@ -180,7 +180,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_Exists_DestinationCapsule()
         {
             // Arrange
@@ -196,7 +196,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_Exists_SaveAs_DestinationCapsule()
         {
             // Arrange
@@ -212,7 +212,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_NotReplaceFile_Exists_SkipFalse()
         {
             // Arrange
@@ -228,7 +228,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_SkipIfNotReplace_NotReplaceFile_Exists()
         {
             // Arrange
@@ -244,7 +244,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_NotExists_SaveAs_DestinationCapsule()
         {
             // Arrange
@@ -262,7 +262,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFile_NotExists_DestinationCapsule()
         {
             // Arrange
@@ -280,7 +280,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_CapsuleNotExist_ShouldReturnFalse()
         {
             // Arrange
@@ -298,7 +298,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_DefaultBehavior()
         {
             // Arrange
@@ -314,7 +314,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_CapsuleExistsTrue_ShouldReturnNull()
         {
             // Arrange
@@ -331,7 +331,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.Null(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_ReplaceFileTrueNoFile_ShouldReturnNull()
         {
             // Arrange
@@ -347,7 +347,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.Null(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_CapsuleExistsTrueNoFile_ShouldReturnNull()
         {
             // Arrange
@@ -364,7 +364,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.Null(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_NoCapsuleExistsTrueNoFile_ShouldReturnNull()
         {
             // Arrange
@@ -379,7 +379,7 @@ namespace CSharpKOTOR.Tests.Patcher
             Assert.Null(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_NoCapsuleExistsFalseNoFile_ShouldReturnNull()
         {
             // Arrange

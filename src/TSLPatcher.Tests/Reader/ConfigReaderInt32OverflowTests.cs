@@ -47,7 +47,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithHexValueExceedingInt32Max_ShouldThrowOverflowException()
         {
             // Arrange - Hex value 0x80000000 = 2147483648, which exceeds Int32.MaxValue (2147483647)
@@ -82,7 +82,7 @@ test.ncs=test.ncs
                 .WithMessage("*Int32*", "because Int32 overflow currently causes unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithDecimalValueExceedingInt32Max_ShouldThrowOverflowException()
         {
             // Arrange - Decimal value 2147483648 exceeds Int32.MaxValue (2147483647)
@@ -117,7 +117,7 @@ test.ncs=test.ncs
                 .WithMessage("*Int32*", "because Int32 overflow currently causes unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithHexValueInStrRef_ShouldThrowOverflowException()
         {
             // Arrange - StrRef with hex value exceeding Int32.MaxValue
@@ -144,7 +144,7 @@ test.ncs=test.ncs
             act.Should().Throw<OverflowException>("because Int32 overflow in strref currently causes unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithHexValueIn2DAMemory_ShouldThrowOverflowException()
         {
             // Arrange - 2DAMemory with hex value exceeding Int32.MaxValue
@@ -171,7 +171,7 @@ test.ncs=test.ncs
             act.Should().Throw<OverflowException>("because Int32 overflow in 2damemory currently causes unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithHexOffsetExceedingInt32Max_ShouldThrowOverflowException()
         {
             // Arrange - Offset value 0x80000000 exceeds Int32.MaxValue
@@ -198,7 +198,7 @@ test.ncs=test.ncs
             act.Should().Throw<OverflowException>("because Int32 overflow in offset currently causes unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithVeryLargeHexValue_ShouldThrowOverflowException()
         {
             // Arrange - Very large hex value 0xFFFFFFFF = 4294967295 (UInt32.MaxValue)
@@ -225,7 +225,7 @@ test.ncs=test.ncs
             act.Should().Throw<OverflowException>("because very large hex values currently cause unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithNegativeValueBelowInt32Min_ShouldThrowOverflowException()
         {
             // Arrange - Negative value below Int32.MinValue (-2147483648)
@@ -252,7 +252,7 @@ test.ncs=test.ncs
             act.Should().Throw<OverflowException>("because Int32 underflow currently causes unhandled exception");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LoadHackList_WithMultipleOverflowValues_ShouldThrowOverflowException()
         {
             // Arrange - Multiple values that would cause overflow

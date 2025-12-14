@@ -12,7 +12,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class LocalizedStringDeltaTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ApplyStringRef2DAMemory_ShouldSetCorrectValue()
         {
             var locstring = new LocalizedString(0);
@@ -26,7 +26,7 @@ namespace CSharpKOTOR.Tests.Mods
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ApplyStringRefTLKMemory_ShouldSetCorrectValue()
         {
             var locstring = new LocalizedString(0);
@@ -40,7 +40,7 @@ namespace CSharpKOTOR.Tests.Mods
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ApplyStringRefInt_ShouldSetCorrectValue()
         {
             var locstring = new LocalizedString(0);
@@ -53,7 +53,7 @@ namespace CSharpKOTOR.Tests.Mods
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ApplyStringRefNone_ShouldLeaveValueUnchanged()
         {
             var locstring = new LocalizedString(123);
@@ -66,7 +66,7 @@ namespace CSharpKOTOR.Tests.Mods
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ApplySubstring_ShouldMergeCorrectly()
         {
             var locstring = new LocalizedString(0);

@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Tests.Mods
             return twoda;
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ByRowIndex_ShouldModifyCorrectRow()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ByRowLabel_ShouldModifyCorrectRow()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -82,7 +82,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ByLabelIndex_ShouldModifyCorrectRow()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -107,7 +107,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_WithTLKMemory_ShouldUseMemoryValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -141,7 +141,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedTwoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_With2DAMemory_ShouldUseMemoryValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -174,7 +174,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_WithHigh_ShouldCalculateHighestValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -205,7 +205,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryRowIndex_ShouldStoreIndex()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -234,7 +234,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryRowLabel_ShouldStoreLabel()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -263,7 +263,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("r1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryColumnLabel_ShouldStoreValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -292,7 +292,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("d");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_AutoRowLabel_ShouldIncrementFromMax()
         {
             TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" }, ("0", new string[0]));
@@ -312,7 +312,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetLabel(2).Should().Be("2");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExplicitRowLabel_ShouldUseProvidedLabel()
         {
             TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" });
@@ -329,7 +329,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetLabel(0).Should().Be("r1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnNotExists_ShouldAddRow()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -363,7 +363,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("c", "f", "i");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnExists_ShouldUpdateExisting()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -396,7 +396,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().Equal("c", "Y");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_NoExclusiveColumn_ShouldAlwaysAdd()
         {
             TwoDAFile twoda = CreateTestTwoDA(

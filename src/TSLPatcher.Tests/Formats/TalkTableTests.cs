@@ -25,7 +25,7 @@ namespace CSharpKOTOR.Tests.Formats
             _talkTable = new TalkTable(testFile);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestStringsAndResrefsAreCorrect()
         {
             _talkTable.GetString(0).Should().Be("abcdef");
@@ -38,13 +38,13 @@ namespace CSharpKOTOR.Tests.Formats
             _talkTable.GetSound(2).ToString().Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestLanguageIsCorrect()
         {
             _talkTable.GetLanguage().Should().Be(Language.English);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSizeIsCorrect()
         {
             _talkTable.Size().Should().Be(3);

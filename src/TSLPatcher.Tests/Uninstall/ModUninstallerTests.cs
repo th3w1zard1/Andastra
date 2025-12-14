@@ -47,7 +47,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsValidBackupFolder_ValidFormat_ReturnsTrue()
         {
             // Arrange
@@ -61,7 +61,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             result.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsValidBackupFolder_InvalidFormat_ReturnsFalse()
         {
             // Arrange
@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             result.Should().BeFalse();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GetMostRecentBackup_NoBackups_ReturnsNull()
         {
             // Arrange
@@ -93,7 +93,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             errorShown.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GetMostRecentBackup_MultipleBackups_ReturnsNewest()
         {
             // Arrange
@@ -120,7 +120,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             result.Name.Should().Be("2024-01-16_10.20.30");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GetMostRecentBackup_EmptyFolders_ReturnsNull()
         {
             // Arrange
@@ -141,7 +141,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             errorShown.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RestoreBackup_RestoresFilesCorrectly()
         {
             // Arrange
@@ -179,7 +179,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             File.Exists(Path.Combine(_gameDir, "test_file.txt")).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GetBackupInfo_ValidBackup_ReturnsCorrectInfo()
         {
             // Arrange
@@ -210,7 +210,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             filesInBackup.Should().HaveCountGreaterThanOrEqualTo(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void UninstallSelectedMod_WithUserConfirmation_CompletesSuccessfully()
         {
             // Arrange
@@ -245,7 +245,7 @@ namespace CSharpKOTOR.Tests.Uninstall
             File.Exists(Path.Combine(_gameDir, "test_file.txt")).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void UninstallSelectedMod_WithoutUserConfirmation_ReturnsFalse()
         {
             // Arrange

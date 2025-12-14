@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FromFilePath_WithCommentLineLookingLikeSectionHeader_ShouldNotThrow()
         {
             // Arrange - Create INI file with the exact problematic content from the bug report
@@ -60,7 +60,7 @@ ModName=Test Mod
             act.Should().NotThrow("because comment lines starting with ; should be ignored");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FromFilePath_WithCommentLineLookingLikeSectionHeader_ShouldParseSuccessfully()
         {
             // Arrange - Create INI file with comment that looks like section header
@@ -80,7 +80,7 @@ ModName=Test Mod
             reader.Should().NotBeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FromFilePath_WithMultipleCommentLinesLookingLikeSectionHeaders_ShouldNotThrow()
         {
             // Arrange - Multiple comment lines that look like section headers
@@ -100,7 +100,7 @@ ModName=Test Mod
             act.Should().NotThrow("because all comment lines should be ignored");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FromFilePath_WithCommentLineContainingBrackets_ShouldNotThrow()
         {
             // Arrange - Comment line with brackets that could be mistaken for section header
@@ -119,7 +119,7 @@ ModName=Test Mod
             act.Should().NotThrow("because comment lines should be completely ignored");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FromFilePath_WithCommentAfterSectionHeader_ShouldNotThrow()
         {
             // Arrange - Valid section header with comment after it

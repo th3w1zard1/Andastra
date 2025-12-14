@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Tests.Integration
     {
         #region ModifyField Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt8_ShouldUpdateValue()
         {
             // Arrange
@@ -35,7 +35,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetUInt8("TestField").Should().Be(25);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int8_ShouldUpdateValue()
         {
             // Arrange
@@ -51,7 +51,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt8("TestField").Should().Be(-25);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt16_ShouldUpdateValue()
         {
             // Arrange
@@ -67,7 +67,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetUInt16("TestField").Should().Be(500);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int16_ShouldUpdateValue()
         {
             // Arrange
@@ -83,7 +83,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt16("TestField").Should().Be(-500);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt32_ShouldUpdateValue()
         {
             // Arrange
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetUInt32("TestField").Should().Be(5000);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int32_ShouldUpdateValue()
         {
             // Arrange
@@ -115,7 +115,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt32("TestField").Should().Be(-5000);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt64_ShouldUpdateValue()
         {
             // Arrange
@@ -131,7 +131,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetUInt64("TestField").Should().Be(50000);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int64_ShouldUpdateValue()
         {
             // Arrange
@@ -147,7 +147,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt64("TestField").Should().Be(-50000);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Float_ShouldUpdateValue()
         {
             // Arrange
@@ -163,7 +163,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetSingle("TestField").Should().BeApproximately(3.14f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Double_ShouldUpdateValue()
         {
             // Arrange
@@ -179,7 +179,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetDouble("TestField").Should().BeApproximately(3.14159, 0.00001);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_String_ShouldUpdateValue()
         {
             // Arrange
@@ -195,7 +195,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetValue("TestField").Should().Be("NewValue");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Vector3_ShouldUpdateValue()
         {
             // Arrange
@@ -215,7 +215,7 @@ namespace CSharpKOTOR.Tests.Integration
             result.Z.Should().BeApproximately(30, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Vector4_ShouldUpdateValue()
         {
             // Arrange
@@ -234,7 +234,7 @@ namespace CSharpKOTOR.Tests.Integration
             result.Y.Should().BeApproximately(1, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_LocalizedString_ShouldUpdateValue()
         {
             // Python test: test_modify_field_locstring
@@ -254,7 +254,7 @@ namespace CSharpKOTOR.Tests.Integration
             result.StringRef.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_WithTLKMemory_ShouldUseToken()
         {
             // Arrange
@@ -272,7 +272,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt32("NameStrRef").Should().Be(12345);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_With2DAMemory_ShouldUseToken()
         {
             // Arrange
@@ -290,7 +290,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt32("AppearanceType").Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_NestedPath_ShouldModifyCorrectField()
         {
             // Arrange
@@ -313,7 +313,7 @@ namespace CSharpKOTOR.Tests.Integration
 
         #region AddField Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_Int_ShouldAddNewField()
         {
             // Arrange
@@ -329,7 +329,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt32("NewIntField").Should().Be(42);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_String_ShouldAddNewField()
         {
             // Arrange
@@ -345,7 +345,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetValue("NewStringField").Should().Be("TestString");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_Float_ShouldAddNewField()
         {
             // Arrange
@@ -361,7 +361,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetSingle("NewFloatField").Should().BeApproximately(3.14f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_Vector3_ShouldAddNewField()
         {
             // Arrange
@@ -381,7 +381,7 @@ namespace CSharpKOTOR.Tests.Integration
             result.Z.Should().BeApproximately(3, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_InNestedStruct_ShouldAddAtCorrectPath()
         {
             // Arrange
@@ -400,7 +400,7 @@ namespace CSharpKOTOR.Tests.Integration
             result.GetInt32("NewField").Should().Be(100);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_LocalizedString_ShouldAddWithSubstrings()
         {
             // Arrange
@@ -425,7 +425,7 @@ namespace CSharpKOTOR.Tests.Integration
 
         #region AddStruct Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddStruct_ToList_ShouldAddNewStruct()
         {
             // Arrange
@@ -446,7 +446,7 @@ namespace CSharpKOTOR.Tests.Integration
             result[0].GetValue("Tag").Should().Be("item001");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddStruct_WithNestedFields_ShouldAddCompleteStruct()
         {
             // Arrange
@@ -472,7 +472,7 @@ namespace CSharpKOTOR.Tests.Integration
 
         #region Memory2DA Modifier Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Memory2DA_ShouldStoreFieldPath()
         {
             // Arrange
@@ -488,7 +488,7 @@ namespace CSharpKOTOR.Tests.Integration
             Memory.Memory2DA[5].Should().Be("AppearanceType");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Memory2DA_WithSourceToken_ShouldStoreFromToken()
         {
             // Python: When dest_field exists, it assigns ptr_to_src to the field value, not to memory
@@ -508,7 +508,7 @@ namespace CSharpKOTOR.Tests.Integration
             gff.Root.GetInt32("AppearanceType").Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddListListIndex_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -558,7 +558,7 @@ TypeId=1
             list[2].StructId.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddListStore2DAMemory_AppliesPatchCorrectly()
         {
             string iniText = @"

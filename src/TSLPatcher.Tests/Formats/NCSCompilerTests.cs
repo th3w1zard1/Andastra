@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:147
         /// Original: def test_enginecall(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecall()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:149
@@ -76,7 +76,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:165
         /// Original: def test_enginecall_return_value(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallReturnValue()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:167
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:182
         /// Original: def test_enginecall_with_params(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallWithParams()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:184
@@ -140,7 +140,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:202
         /// Original: def test_enginecall_with_default_params(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallWithDefaultParams()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:204
@@ -164,7 +164,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:217
         /// Original: def test_enginecall_with_missing_params(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallWithMissingParams()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:219
@@ -187,7 +187,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:229
         /// Original: def test_enginecall_with_too_many_params(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallWithTooManyParams()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:231
@@ -210,7 +210,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:241
         /// Original: def test_enginecall_delay_command_1(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallDelayCommand1()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:243
@@ -229,7 +229,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:253
         /// Original: def test_enginecall_GetFirstObjectInShape_defaults(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallGetFirstObjectInShapeDefaults()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:255
@@ -250,7 +250,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:267
         /// Original: def test_enginecall_GetFactionEqual(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestEnginecallGetFactionEqual()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:269
@@ -273,7 +273,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:282
         /// Original: def test_addop_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAddopIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:284
@@ -301,7 +301,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:298
         /// Original: def test_addop_float_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAddopFloatFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:300
@@ -329,7 +329,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:314
         /// Original: def test_addop_string_string(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAddopStringString()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:316
@@ -357,7 +357,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:330
         /// Original: def test_subop_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSubopIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:332
@@ -385,7 +385,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:346
         /// Original: def test_subop_float_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSubopFloatFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:348
@@ -413,7 +413,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:362
         /// Original: def test_mulop_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMulopIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:364
@@ -441,7 +441,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:378
         /// Original: def test_mulop_float_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMulopFloatFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:380
@@ -469,7 +469,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:394
         /// Original: def test_divop_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDivopIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:396
@@ -497,7 +497,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:410
         /// Original: def test_divop_float_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDivopFloatFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:412
@@ -525,7 +525,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:426
         /// Original: def test_modop_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestModopIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:428
@@ -553,7 +553,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:442
         /// Original: def test_negop_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestNegopInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:444
@@ -581,7 +581,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:460
         /// Original: def test_negop_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestNegopFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:462
@@ -610,7 +610,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:476
         /// Original: def test_bidmas(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBidmas()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:478
@@ -640,7 +640,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:494
         /// Original: def test_op_with_variables(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestOpWithVariables()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:496
@@ -677,7 +677,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:517
         /// Original: def test_not_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestNotOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:519
@@ -705,7 +705,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:534
         /// Original: def test_logical_and_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestLogicalAndOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:536
@@ -739,7 +739,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:554
         /// Original: def test_logical_or_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestLogicalOrOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:556
@@ -773,7 +773,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:574
         /// Original: def test_logical_equals(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestLogicalEquals()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:576
@@ -804,7 +804,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:592
         /// Original: def test_logical_notequals_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestLogicalNotequalsOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:594
@@ -839,7 +839,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:613
         /// Original: def test_compare_greaterthan_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCompareGreaterthanOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:615
@@ -876,7 +876,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:637
         /// Original: def test_compare_greaterthanorequal_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCompareGreaterthanorequalOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:639
@@ -913,7 +913,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:661
         /// Original: def test_compare_lessthan_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCompareLessthanOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:663
@@ -950,7 +950,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:685
         /// Original: def test_compare_lessthanorequal_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCompareLessthanorequalOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:687
@@ -991,7 +991,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:712
         /// Original: def test_bitwise_or_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseOrOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:714
@@ -1019,7 +1019,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:728
         /// Original: def test_bitwise_xor_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseXorOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:730
@@ -1047,7 +1047,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:744
         /// Original: def test_bitwise_not_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseNotInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:746
@@ -1075,7 +1075,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:760
         /// Original: def test_bitwise_and_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseAndOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:762
@@ -1103,7 +1103,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:776
         /// Original: def test_bitwise_shiftleft_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseShiftleftOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:778
@@ -1131,7 +1131,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:792
         /// Original: def test_bitwise_shiftright_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseShiftrightOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:794
@@ -1163,7 +1163,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:811
         /// Original: def test_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:813
@@ -1194,7 +1194,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:831
         /// Original: def test_assignment_complex(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignmentComplex()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:833
@@ -1225,7 +1225,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:851
         /// Original: def test_assignment_string_constant(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignmentStringConstant()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:853
@@ -1255,7 +1255,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:870
         /// Original: def test_assignment_string_enginecall(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignmentStringEnginecall()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:872
@@ -1285,7 +1285,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:889
         /// Original: def test_addition_assignment_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAdditionAssignmentIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:891
@@ -1318,7 +1318,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:910
         /// Original: def test_addition_assignment_int_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAdditionAssignmentIntFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:912
@@ -1351,7 +1351,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:931
         /// Original: def test_addition_assignment_float_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAdditionAssignmentFloatFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:933
@@ -1381,7 +1381,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:950
         /// Original: def test_addition_assignment_float_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAdditionAssignmentFloatInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:952
@@ -1414,7 +1414,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:971
         /// Original: def test_addition_assignment_string_string(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAdditionAssignmentStringString()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:973
@@ -1447,7 +1447,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:992
         /// Original: def test_subtraction_assignment_int_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSubtractionAssignmentIntInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:994
@@ -1480,7 +1480,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1013
         /// Original: def test_subtraction_assignment_int_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSubtractionAssignmentIntFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1015
@@ -1513,7 +1513,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1034
         /// Original: def test_subtraction_assignment_float_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSubtractionAssignmentFloatFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1036
@@ -1546,7 +1546,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1055
         /// Original: def test_subtraction_assignment_float_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSubtractionAssignmentFloatInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1057
@@ -1576,7 +1576,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1074
         /// Original: def test_multiplication_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMultiplicationAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1076
@@ -1609,7 +1609,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1095
         /// Original: def test_division_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDivisionAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1097
@@ -1642,7 +1642,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1116
         /// Original: def test_bitwise_and_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseAndAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1118
@@ -1675,7 +1675,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1137
         /// Original: def test_bitwise_or_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseOrAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1139
@@ -1708,7 +1708,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1158
         /// Original: def test_bitwise_xor_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseXorAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1160
@@ -1741,7 +1741,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1179
         /// Original: def test_bitwise_left_shift_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseLeftShiftAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1181
@@ -1774,7 +1774,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1200
         /// Original: def test_bitwise_right_shift_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseRightShiftAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1202
@@ -1807,7 +1807,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1221
         /// Original: def test_bitwise_unsigned_right_shift_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseUnsignedRightShiftAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1223
@@ -1841,7 +1841,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1243
         /// Original: def test_bitwise_assignment_with_expression(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseAssignmentWithExpression()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1245
@@ -1874,7 +1874,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1264
         /// Original: def test_global_bitwise_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestGlobalBitwiseAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1266
@@ -1909,7 +1909,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1287
         /// Original: def test_modulo_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestModuloAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1289
@@ -1942,7 +1942,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1308
         /// Original: def test_bitwise_unsigned_right_shift_op(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBitwiseUnsignedRightShiftOp()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1310
@@ -1974,7 +1974,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1327
         /// Original: def test_const_global_declaration(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstGlobalDeclaration()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1329
@@ -2004,7 +2004,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1345
         /// Original: def test_const_global_initialization(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstGlobalInitialization()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1347
@@ -2041,7 +2041,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1366
         /// Original: def test_const_local_declaration(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstLocalDeclaration()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1368
@@ -2070,7 +2070,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1383
         /// Original: def test_const_local_initialization(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstLocalInitialization()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1385
@@ -2100,7 +2100,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1401
         /// Original: def test_const_assignment_error(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstAssignmentError()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1403
@@ -2123,7 +2123,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1414
         /// Original: def test_const_compound_assignment_error(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstCompoundAssignmentError()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1416
@@ -2146,7 +2146,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1427
         /// Original: def test_const_bitwise_assignment_error(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstBitwiseAssignmentError()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1429
@@ -2169,7 +2169,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1440
         /// Original: def test_const_increment_error(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstIncrementError()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1442
@@ -2192,7 +2192,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1453
         /// Original: def test_const_multi_declaration(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestConstMultiDeclaration()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1455
@@ -2233,7 +2233,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1477
         /// Original: def test_ternary_basic(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryBasic()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1479
@@ -2262,7 +2262,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1494
         /// Original: def test_ternary_false_branch(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryFalseBranch()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1496
@@ -2291,7 +2291,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1511
         /// Original: def test_ternary_with_variables(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryWithVariables()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1513
@@ -2321,7 +2321,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1529
         /// Original: def test_ternary_nested(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryNested()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1531
@@ -2352,7 +2352,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1548
         /// Original: def test_ternary_in_expression(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryInExpression()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1550
@@ -2382,7 +2382,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1566
         /// Original: def test_ternary_type_mismatch_error(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryTypeMismatchError()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1568
@@ -2403,7 +2403,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1577
         /// Original: def test_ternary_float_branches(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryFloatBranches()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1579
@@ -2432,7 +2432,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1594
         /// Original: def test_ternary_string_branches(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryStringBranches()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1596
@@ -2461,7 +2461,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1611
         /// Original: def test_ternary_with_function_calls(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryWithFunctionCalls()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1613
@@ -2495,7 +2495,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1633
         /// Original: def test_ternary_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1635
@@ -2526,7 +2526,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1652
         /// Original: def test_ternary_precedence(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestTernaryPrecedence()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1654
@@ -2560,7 +2560,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1673
         /// Original: def test_if(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIf()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1675
@@ -2597,7 +2597,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1698
         /// Original: def test_if_multiple_conditions(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIfMultipleConditions()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1700
@@ -2623,7 +2623,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1715
         /// Original: def test_if_else(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIfElse()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1717
@@ -2658,7 +2658,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1737
         /// Original: def test_if_else_if(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIfElseIf()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1739
@@ -2701,7 +2701,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1766
         /// Original: def test_if_else_if_else(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIfElseIfElse()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1768
@@ -2750,7 +2750,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1800
         /// Original: def test_single_statement_if(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSingleStatementIf()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1802
@@ -2778,7 +2778,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1816
         /// Original: def test_single_statement_else_if_else(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSingleStatementElseIfElse()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1818
@@ -2808,7 +2808,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1834
         /// Original: def test_while_loop(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWhileLoop()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1836
@@ -2846,7 +2846,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1858
         /// Original: def test_while_loop_with_break(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWhileLoopWithBreak()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1860
@@ -2881,7 +2881,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1881
         /// Original: def test_while_loop_with_continue(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWhileLoopWithContinue()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1883
@@ -2921,7 +2921,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1907
         /// Original: def test_while_loop_scope(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWhileLoopScope()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1909
@@ -2963,7 +2963,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1936
         /// Original: def test_do_while_loop(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDoWhileLoop()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1938
@@ -3001,7 +3001,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1960
         /// Original: def test_do_while_loop_with_break(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDoWhileLoopWithBreak()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:1962
@@ -3036,7 +3036,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2036
         /// Original: def test_for_loop(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestForLoop()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2038
@@ -3073,7 +3073,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2059
         /// Original: def test_for_loop_with_break(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestForLoopWithBreak()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2061
@@ -3107,7 +3107,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2081
         /// Original: def test_for_loop_with_continue(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestForLoopWithContinue()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2083
@@ -3146,7 +3146,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2106
         /// Original: def test_for_loop_scope(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestForLoopScope()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2108
@@ -3184,7 +3184,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2131
         /// Original: def test_switch_no_breaks(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSwitchNoBreaks()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2133
@@ -3223,7 +3223,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2157
         /// Original: def test_switch_jump_over(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSwitchJumpOver()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2159
@@ -3258,7 +3258,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2181
         /// Original: def test_switch_with_breaks(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSwitchWithBreaks()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2183
@@ -3301,7 +3301,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2212
         /// Original: def test_switch_with_default(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSwitchWithDefault()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2214
@@ -3344,7 +3344,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2243
         /// Original: def test_switch_scoped_blocks(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSwitchScopedBlocks()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2245
@@ -3393,7 +3393,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2336
         /// Original: def test_scope(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestScope()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2338
@@ -3421,7 +3421,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2355
         /// Original: def test_scoped_block(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestScopedBlock()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2357
@@ -3458,7 +3458,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2378
         /// Original: def test_multi_declarations(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMultiDeclarations()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2380
@@ -3496,7 +3496,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2400
         /// Original: def test_local_declarations(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestLocalDeclarations()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2402
@@ -3526,7 +3526,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2421
         /// Original: def test_global_declarations(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestGlobalDeclarations()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2423
@@ -3571,7 +3571,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2446
         /// Original: def test_global_initializations(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestGlobalInitializations()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2448
@@ -3624,7 +3624,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2472
         /// Original: def test_global_initialization_with_unary(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestGlobalInitializationWithUnary()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2474
@@ -3654,7 +3654,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2490
         /// Original: def test_global_int_addition_assignment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestGlobalIntAdditionAssignment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2492
@@ -3697,7 +3697,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2602
         /// Original: def test_declaration_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDeclarationInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2604
@@ -3726,7 +3726,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2619
         /// Original: def test_declaration_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDeclarationFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2621
@@ -3759,7 +3759,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2656
         /// Original: def test_float_notations(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestFloatNotations()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2658
@@ -3795,7 +3795,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2676
         /// Original: def test_vector(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVector()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2678
@@ -3831,7 +3831,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2696
         /// Original: def test_vector_notation(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorNotation()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2698
@@ -3868,7 +3868,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2717
         /// Original: def test_vector_get_components(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorGetComponents()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2719
@@ -3909,7 +3909,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2739
         /// Original: def test_vector_set_components(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorSetComponents()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2741
@@ -3953,7 +3953,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2764
         /// Original: def test_struct_get_members(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestStructGetMembers()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2766
@@ -3997,7 +3997,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2792
         /// Original: def test_struct_get_invalid_member(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestStructGetInvalidMember()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2794
@@ -4026,7 +4026,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2811
         /// Original: def test_struct_set_members(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestStructSetMembers()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2813
@@ -4103,7 +4103,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2845
         /// Original: def test_prefix_increment_sp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrefixIncrementSpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2847
@@ -4138,7 +4138,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2866
         /// Original: def test_prefix_increment_bp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrefixIncrementBpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2868
@@ -4174,7 +4174,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2888
         /// Original: def test_postfix_increment_sp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPostfixIncrementSpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2890
@@ -4209,7 +4209,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2909
         /// Original: def test_postfix_increment_bp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPostfixIncrementBpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2911
@@ -4245,7 +4245,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2931
         /// Original: def test_prefix_decrement_sp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrefixDecrementSpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2933
@@ -4280,7 +4280,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2952
         /// Original: def test_prefix_decrement_bp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrefixDecrementBpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2954
@@ -4316,7 +4316,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2974
         /// Original: def test_postfix_decrement_sp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPostfixDecrementSpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2976
@@ -4351,7 +4351,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2995
         /// Original: def test_postfix_decrement_bp_int(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPostfixDecrementBpInt()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2997
@@ -4391,7 +4391,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3020
         /// Original: def test_prototype_no_args(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeNoArgs()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3022
@@ -4427,7 +4427,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3044
         /// Original: def test_prototype_with_arg(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeWithArg()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3046
@@ -4463,7 +4463,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3068
         /// Original: def test_prototype_with_three_args(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeWithThreeArgs()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3070
@@ -4505,7 +4505,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3094
         /// Original: def test_prototype_with_many_args(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeWithManyArgs()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3096
@@ -4553,7 +4553,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3124
         /// Original: def test_prototype_with_default_arg(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeWithDefaultArg()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3126
@@ -4589,7 +4589,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3148
         /// Original: def test_prototype_with_default_constant_arg(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeWithDefaultConstantArg()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3150
@@ -4625,7 +4625,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3172
         /// Original: def test_prototype_missing_arg(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeMissingArg()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3174
@@ -4653,7 +4653,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3190
         /// Original: def test_prototype_missing_arg_and_default(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeMissingArgAndDefault()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3192
@@ -4681,7 +4681,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3208
         /// Original: def test_prototype_default_before_required(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeDefaultBeforeRequired()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3210
@@ -4709,7 +4709,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3226
         /// Original: def test_redefine_function(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestRedefineFunction()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3228
@@ -4735,7 +4735,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3241
         /// Original: def test_double_prototype(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestDoublePrototype()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3243
@@ -4754,7 +4754,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3249
         /// Original: def test_prototype_after_definition(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeAfterDefinition()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3251
@@ -4777,7 +4777,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3261
         /// Original: def test_prototype_and_definition_param_mismatch(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeAndDefinitionParamMismatch()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3263
@@ -4800,7 +4800,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3285
         /// Original: def test_prototype_and_definition_return_mismatch(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPrototypeAndDefinitionReturnMismatch()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3287
@@ -4823,7 +4823,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3297
         /// Original: def test_call_undefined(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallUndefined()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3299
@@ -4844,7 +4844,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3308
         /// Original: def test_call_void_with_no_args(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallVoidWithNoArgs()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3310
@@ -4878,7 +4878,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3330
         /// Original: def test_call_void_with_one_arg(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallVoidWithOneArg()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3332
@@ -4912,7 +4912,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3352
         /// Original: def test_call_void_with_two_args(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallVoidWithTwoArgs()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3354
@@ -4949,7 +4949,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3376
         /// Original: def test_call_int_with_no_args(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallIntWithNoArgs()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3378
@@ -4984,7 +4984,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3399
         /// Original: def test_call_int_with_no_args_and_forward_declared(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallIntWithNoArgsAndForwardDeclared()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3401
@@ -5021,7 +5021,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3424
         /// Original: def test_call_param_mismatch(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestCallParamMismatch()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3426
@@ -5051,7 +5051,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3443
         /// Original: def test_return(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReturn()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3445
@@ -5089,7 +5089,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3469
         /// Original: def test_return_parenthesis(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReturnParenthesis()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3471
@@ -5122,7 +5122,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3491
         /// Original: def test_return_parenthesis_constant(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReturnParenthesisConstant()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3493
@@ -5155,7 +5155,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3513
         /// Original: def test_int_parenthesis_declaration(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIntParenthesisDeclaration()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3515
@@ -5188,7 +5188,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3533
         /// Original: def test_include_builtin(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestIncludeBuiltin()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3535
@@ -5225,7 +5225,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3578
         /// Original: def test_nested_include(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestNestedInclude()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3580
@@ -5278,7 +5278,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3611
         /// Original: def test_missing_include(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMissingInclude()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3613
@@ -5303,7 +5303,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3624
         /// Original: def test_imported_global_variable(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestImportedGlobalVariable()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3626
@@ -5348,7 +5348,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3652
         /// Original: def test_comment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestComment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3654
@@ -5372,7 +5372,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3667
         /// Original: def test_multiline_comment(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestMultilineComment()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3669
@@ -5404,7 +5404,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3689
         /// Original: def test_assignmentless_expression(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignmentlessExpression()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3691
@@ -5438,7 +5438,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3711
         /// Original: def test_nop_statement(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestNopStatement()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3713
@@ -5471,7 +5471,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3731
         /// Original: def test_vector_addition(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorAddition()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3733
@@ -5514,7 +5514,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3755
         /// Original: def test_vector_subtraction(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorSubtraction()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3757
@@ -5557,7 +5557,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3779
         /// Original: def test_vector_multiplication_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorMultiplicationFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3781
@@ -5599,7 +5599,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3802
         /// Original: def test_vector_division_float(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorDivisionFloat()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3804
@@ -5641,7 +5641,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3825
         /// Original: def test_vector_compound_assignment_addition(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorCompoundAssignmentAddition()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3827
@@ -5683,7 +5683,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3848
         /// Original: def test_vector_compound_assignment_subtraction(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorCompoundAssignmentSubtraction()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3850
@@ -5725,7 +5725,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3871
         /// Original: def test_vector_compound_assignment_multiplication(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorCompoundAssignmentMultiplication()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3873
@@ -5767,7 +5767,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3894
         /// Original: def test_vector_compound_assignment_division(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestVectorCompoundAssignmentDivision()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3896
@@ -5813,7 +5813,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3920
         /// Original: def test_nested_struct_access(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestNestedStructAccess()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3922
@@ -5863,7 +5863,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3955
         /// Original: def test_complex_expression_precedence(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestComplexExpressionPrecedence()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3957
@@ -5902,7 +5902,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3978
         /// Original: def test_expression_with_all_operators(self):
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestExpressionWithAllOperators()
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3980

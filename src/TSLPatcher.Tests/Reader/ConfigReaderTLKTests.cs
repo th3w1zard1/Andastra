@@ -113,7 +113,7 @@ namespace CSharpKOTOR.Tests.Reader
             tlk.Save(path);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_AppendFile_ShouldLoadCorrectly()
         {
             // Python test: test_tlk_appendfile_functionality
@@ -163,7 +163,7 @@ AppendFile4=tlk_modifications_file.tlk
             modifiersDict[2].Replace.Should().BeFalse();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_ReplaceFile_ShouldMarkAsReplacement()
         {
             // Python test: test_tlk_replacefile_functionality
@@ -218,7 +218,7 @@ Replacenothingafterreplaceischecked=tlk_modifications_file.tlk
             modifiersDict[4].Voiceover.Should().Be("vo_mod_6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_StrRef_ShouldLoadWithDefaultFile()
         {
             // Python test: test_tlk_strref_default_functionality
@@ -280,7 +280,7 @@ StrRef9=2
             modifiersDict[9].Replace.Should().BeFalse();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_ComplexChanges_ShouldLoadAllModifiers()
         {
             // Python test: test_tlk_complex_changes
@@ -446,7 +446,7 @@ StrRef9=2
             modifiersDict2[125863].Voiceover.Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_DirectTextAndSound_ShouldLoadWithoutFile()
         {
             // Arrange
@@ -471,7 +471,7 @@ StrRef9=2
             mod0.TlkFilePath.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_SoundDirective_ShouldSetSound()
         {
             // Arrange
@@ -501,7 +501,7 @@ StrRef9=2
             soundMod.IsReplacement.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TLK_MultipleFiles_ShouldLoadFromCorrectFiles()
         {
             // Arrange - Create test.tlk and append.tlk with the expected content for this test

@@ -13,7 +13,7 @@ namespace CSharpKOTOR.Tests.Diff
     /// </summary>
     public class TwoDaDiffTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectAddedRows()
         {
             var original = new TwoDA(new List<string> { "col1", "col2" });
@@ -31,7 +31,7 @@ namespace CSharpKOTOR.Tests.Diff
             result.AddedRows[0].Cells["col2"].Should().Be("d");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectChangedRows()
         {
             var original = new TwoDA(new List<string> { "col1" });
@@ -46,7 +46,7 @@ namespace CSharpKOTOR.Tests.Diff
             result.ChangedRows[0]["col1"].Should().Be("new");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectAddedColumns()
         {
             var original = new TwoDA(new List<string> { "col1" });

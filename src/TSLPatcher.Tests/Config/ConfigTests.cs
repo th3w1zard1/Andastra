@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Tests.Config
 
         #region Lookup Resource Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_WithReplaceFile_ShouldReadFromModPath()
         {
             // Python test: test_lookup_resource_replace_file_true
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().Equal(testData);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_WithCapsuleExists_ShouldReturnNull()
         {
             // Python test: test_lookup_resource_capsule_exists_true
@@ -130,7 +130,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_NoCapsuleExists_ShouldReadFromOutput()
         {
             // Python test: test_lookup_resource_no_capsule_exists_true
@@ -158,7 +158,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().Equal(testData);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_NoCapsuleNotExists_ShouldReadFromMod()
         {
             // Python test: test_lookup_resource_no_capsule_exists_false
@@ -188,7 +188,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().Equal(testData);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_CapsuleExistsFalse_ShouldReadFromCapsule()
         {
             // Python test: test_lookup_resource_capsule_exists_false (marked as @unittest.skip("broken test"))
@@ -228,7 +228,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().Equal(testData);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_ReplaceFileNoFile_ShouldReturnNull()
         {
             // Python test: test_lookup_resource_replace_file_true_no_file
@@ -251,7 +251,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_CapsuleExistsNoFile_ShouldReturnNull()
         {
             // Python test: test_lookup_resource_capsule_exists_true_no_file
@@ -276,7 +276,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_NoCapsuleExistsTrueNoFile_ShouldReturnNull()
         {
             // Python test: test_lookup_resource_no_capsule_exists_true_no_file
@@ -298,7 +298,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().BeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LookupResource_NoCapsuleExistsFalseNoFile_ShouldReturnNull()
         {
             // Python test: test_lookup_resource_no_capsule_exists_false_no_file
@@ -324,7 +324,7 @@ namespace CSharpKOTOR.Tests.Config
 
         #region Should Patch Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileExistsDestinationDot()
         {
             // Python test: test_replace_file_exists_destination_dot
@@ -350,7 +350,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Patching 'file1' and replacing existing file in the"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileExistsSaveasDestinationDot()
         {
             // Python test: test_replace_file_exists_saveas_destination_dot
@@ -376,7 +376,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Patching 'file1' and replacing existing file 'file2' in the"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileExistsDestinationOverride()
         {
             // Python test: test_replace_file_exists_destination_override
@@ -402,7 +402,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Patching 'file1' and replacing existing file in the 'Override' folder"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileExistsSaveasDestinationOverride()
         {
             // Python test: test_replace_file_exists_saveas_destination_override
@@ -428,7 +428,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Compiling 'file1' and replacing existing file 'file2' in the 'Override' folder"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileNotExistsSaveasDestinationOverride()
         {
             // Python test: test_replace_file_not_exists_saveas_destination_override
@@ -454,7 +454,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Copying 'file1' and saving as 'file2' in the 'Override' folder"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileNotExistsDestinationOverride()
         {
             // Python test: test_replace_file_not_exists_destination_override
@@ -480,7 +480,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Copying 'file1' and saving to the 'Override' folder"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileExistsDestinationCapsule()
         {
             // Python test: test_replace_file_exists_destination_capsule
@@ -509,7 +509,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Patching 'file1' and replacing existing file in the 'capsule.mod' archive"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileExistsSaveasDestinationCapsule()
         {
             // Python test: test_replace_file_exists_saveas_destination_capsule
@@ -538,7 +538,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Patching 'file1' and replacing existing file 'file2' in the 'capsule.mod' archive"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileNotExistsSaveasDestinationCapsule()
         {
             // Python test: test_replace_file_not_exists_saveas_destination_capsule
@@ -567,7 +567,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Copying 'file1' and saving as 'file2' in the 'capsule.mod' archive"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_ReplaceFileNotExistsDestinationCapsule()
         {
             // Python test: test_replace_file_not_exists_destination_capsule
@@ -596,7 +596,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("Copying 'file1' and adding to the 'capsule.mod' archive"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_NotReplaceFileExistsSkipFalse()
         {
             // Python test: test_not_replace_file_exists_skip_false
@@ -622,7 +622,7 @@ namespace CSharpKOTOR.Tests.Config
             result.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_SkipIfNotReplaceExists()
         {
             // Python test: test_skip_if_not_replace_not_replace_file_exists
@@ -649,7 +649,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Notes.Should().Contain(n => n.Message.Contains("already exists in the 'other' folder. Skipping file..."));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_CapsuleNotExist()
         {
             // Python test: test_capsule_not_exist
@@ -683,7 +683,7 @@ namespace CSharpKOTOR.Tests.Config
             _logger.Errors.Should().Contain(e => e.Message.Contains("did not exist when attempting to"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ShouldPatch_DefaultBehavior()
         {
             // Python test: test_default_behavior

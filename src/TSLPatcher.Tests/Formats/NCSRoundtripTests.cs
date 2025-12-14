@@ -2146,7 +2146,7 @@ namespace CSharpKOTOR.Tests.Formats
                 return "";
             }
 
-            string content = File.ReadAllText(normalizedSource, Encoding.UTF8);
+            string content = ReadFileCached(normalizedSource);
             StringBuilder expanded = new StringBuilder();
             Regex includePattern = new Regex(@"#include\s+[""<]([^"">]+)["">]");
 
@@ -2833,7 +2833,7 @@ namespace CSharpKOTOR.Tests.Formats
             Console.WriteLine("═══════════════════════════════════════════════════════════");
         }
 
-        [Fact(Timeout = 120000)] // 2 minutes timeout - test will fail if exceeded
+        [Fact] // Timeout enforced via PerformanceTestHelper
         public void TestRoundTripSuite()
         {
             // Performance monitoring - will generate profile report and fail if exceeds 2 minutes

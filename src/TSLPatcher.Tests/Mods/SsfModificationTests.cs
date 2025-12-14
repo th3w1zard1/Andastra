@@ -14,7 +14,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class SsfModificationTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Assign_Int()
         {
             // Arrange
@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(5, ssf.Get(SSFSound.BATTLE_CRY_1));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Assign_2DAToken()
         {
             // Arrange
@@ -51,7 +51,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(123, ssf.Get(SSFSound.BATTLE_CRY_2));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Assign_TLKToken()
         {
             // Arrange
@@ -70,7 +70,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(321, ssf.Get(SSFSound.BATTLE_CRY_3));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Multiple_Assignments()
         {
             // Arrange

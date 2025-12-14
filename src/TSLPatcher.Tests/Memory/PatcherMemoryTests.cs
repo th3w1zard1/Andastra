@@ -13,7 +13,7 @@ namespace CSharpKOTOR.Tests.Memory
     /// </summary>
     public class PatcherMemoryTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Memory2DA_StoresAndRetrievesValues()
         {
             var memory = new PatcherMemory();
@@ -26,7 +26,7 @@ namespace CSharpKOTOR.Tests.Memory
             memory.Memory2DA.Should().HaveCount(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void MemoryStr_StoresAndRetrievesValues()
         {
             var memory = new PatcherMemory();
@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Tests.Memory
             memory.MemoryStr.Should().HaveCount(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ToString_ReturnsFormattedString()
         {
             var memory = new PatcherMemory();
@@ -52,7 +52,7 @@ namespace CSharpKOTOR.Tests.Memory
             result.Should().Contain("memory_str=1 items");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Memory_SupportsMultipleUpdates()
         {
             var memory = new PatcherMemory();
@@ -68,7 +68,7 @@ namespace CSharpKOTOR.Tests.Memory
 
         #region LocalizedStringDelta Tests - from test_memory.py
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LocalizedStringDelta_ApplyStringref2DAMemory()
         {
             // Python test: test_apply_stringref_2damemory
@@ -84,7 +84,7 @@ namespace CSharpKOTOR.Tests.Memory
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LocalizedStringDelta_ApplyStringrefTLKMemory()
         {
             // Python test: test_apply_stringref_tlkmemory
@@ -100,7 +100,7 @@ namespace CSharpKOTOR.Tests.Memory
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LocalizedStringDelta_ApplyStringrefInt()
         {
             // Python test: test_apply_stringref_int
@@ -115,7 +115,7 @@ namespace CSharpKOTOR.Tests.Memory
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LocalizedStringDelta_ApplyStringrefNone()
         {
             // Python test: test_apply_stringref_none
@@ -130,7 +130,7 @@ namespace CSharpKOTOR.Tests.Memory
             locstring.StringRef.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void LocalizedStringDelta_ApplySubstring()
         {
             // Python test: test_apply_substring

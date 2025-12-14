@@ -12,7 +12,7 @@ namespace CSharpKOTOR.Tests.Diff
     /// </summary>
     public class SsfDiffTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectChangedSounds()
         {
             var original = new SSF();

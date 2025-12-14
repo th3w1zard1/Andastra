@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFModifierPathShorterThanSelfPath_ShouldOverlayCorrectly()
         {
             string iniText = @"
@@ -86,7 +86,7 @@ Value=42
             addField1.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("ChildField");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFModifierPathLongerThanSelfPath_ShouldOverlayCorrectly()
         {
             string iniText = @"
@@ -127,7 +127,7 @@ Value=99
             addField1.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("GrandChildField");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFModifierPathPartialAbsolute_ShouldNotDuplicateSegments()
         {
             string iniText = @"
@@ -168,7 +168,7 @@ Value=7
             addField1.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Count(p => p == "StructA").Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFAddFieldWithSentinelAtStart_ShouldHandleCorrectly()
         {
             string iniText = @"
@@ -209,7 +209,7 @@ Value=55
             addField1.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("InnerField");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFAddFieldWithEmptyPaths_ShouldDefaultToRoot()
         {
             string iniText = @"
@@ -241,7 +241,7 @@ Value=99
             addField.Path.Should().BeEmpty("Path should be empty when Path= is empty and FieldType is not Struct");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFAddInsideStruct_IntegrationTest()
         {
             string iniText = @"
@@ -302,7 +302,7 @@ Value=123
             insideStructValue.Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFFAddFieldLocString_With2DAMemory_IntegrationTest()
         {
             string iniText = @"

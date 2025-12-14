@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
     /// </summary>
     public class TwoDaAddColumnTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Empty()
         {
             // Python test: test_addcolumn_empty
@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "", "" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Default()
         {
             // Python test: test_addcolumn_default
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "X", "X" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowIndex_Constant()
         {
             // Python test: test_addcolumn_rowindex_constant
@@ -87,7 +87,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "X", "" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabel_2DAMemory()
         {
             // Python test: test_addcolumn_rowlabel_2damemory
@@ -112,7 +112,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "", "ABC" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabel_TLKMemory()
         {
             // Python test: test_addcolumn_rowlabel_tlkmemory
@@ -137,7 +137,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "", "123" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_2DAMemory_Index()
         {
             // Python test: test_addcolumn_2damemory_index
@@ -164,7 +164,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("X", memory.Memory2DA[0]);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_2DAMemory_Line()
         {
             // Python test: test_addcolumn_2damemory_line

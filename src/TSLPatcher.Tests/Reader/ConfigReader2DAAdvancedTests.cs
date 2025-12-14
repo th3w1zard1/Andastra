@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddRow_ComplexCells_ShouldParseAllTypes()
         {
             string iniText = @"
@@ -83,7 +83,7 @@ col_rowcell=other_column
             addRow.Cells["col_rowcell"].Should().BeOfType<RowValueConstant>();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyRow_High_ShouldParseAllHighVariants()
         {
             string iniText = @"
@@ -117,7 +117,7 @@ col_b=High()
             highB.Column.Should().Be("col_b");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_MultipleModifications_ShouldParseInOrder()
         {
             string iniText = @"
@@ -166,7 +166,7 @@ DefaultValue=****
             modifiers[4].Should().BeOfType<AddColumn2DA>();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ChangeRow_MultipleTargets_ShouldUseFirst()
         {
             string iniText = @"
@@ -192,7 +192,7 @@ col1=value
             change.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddColumn_WithRowSpecificValues_ShouldParseCorrectly()
         {
             string iniText = @"
@@ -221,7 +221,7 @@ RowLabel(label_test)=labeled_value
             addColumn.Default.Should().Be("default_value");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AllStore2DATypes_ShouldParseCorrectly()
         {
             string iniText = @"
@@ -252,7 +252,7 @@ col1=value
             change.Store2DA.Keys.Should().Contain(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ExclusiveColumn_BothAddAndCopy_ShouldParse()
         {
             string iniText = @"
@@ -289,7 +289,7 @@ unique_id=200
             copy.ExclusiveColumn.Should().Be("unique_id");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_LabelIndex_ShouldParseAsTarget()
         {
             string iniText = @"
@@ -316,7 +316,7 @@ col1=value
             change.Target.Value.Should().Be("5");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_EmptyCells_ShouldParseAsStars()
         {
             string iniText = @"
@@ -351,7 +351,7 @@ col2=****
             col2.String.Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_MultipleTables_ShouldParseIndependently()
         {
             string iniText = @"

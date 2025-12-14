@@ -9,7 +9,7 @@ namespace HolocronToolset.NET.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tpc.py:48
     // Original: class TPCEditor(Editor):
-    public class TPCEditor : Editor
+    public partial class TPCEditor : Editor
     {
         private TPC _tpc;
 

@@ -10,6 +10,7 @@ using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -752,7 +753,7 @@ namespace HolocronToolset.NET.Editors
             // Build GFF
             Game game = _installation?.Game ?? Game.K2;
             var gff = UTCHelpers.DismantleUtc(_utc, game);
-            byte[] data = gff.ToBytes();
+            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTC);
             return Tuple.Create(data, new byte[0]);
         }
 

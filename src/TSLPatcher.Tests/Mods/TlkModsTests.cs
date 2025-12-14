@@ -16,7 +16,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class TlkModsTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestApplyAppend()
         {
             // Python test: test_apply_append
@@ -60,7 +60,7 @@ namespace CSharpKOTOR.Tests.Mods
             // 3        0        1       Append1
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestApplyReplace()
         {
             // Python test: test_apply_replace
@@ -109,7 +109,7 @@ namespace CSharpKOTOR.Tests.Mods
             // 3        -          -       Old4
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPatchResource()
         {
             // Test that PatchResource does a full round-trip through bytes

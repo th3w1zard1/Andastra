@@ -16,7 +16,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class TwoDAAdvancedTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Empty_ShouldFillWithStars()
         {
             // Arrange
@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Tests.Integration
             twoda.GetCellString(1, "NewCol").Should().Be("****");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_WithDefault_ShouldFillAllRows()
         {
             // Arrange
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Tests.Integration
             twoda.GetCellString(2, "NewCol").Should().Be("default");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowIndexConstant_ShouldSetSpecificRow()
         {
             // Arrange
@@ -100,7 +100,7 @@ I1=special_value
             twoda.GetCellString(2, "NewCol").Should().Be("default");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabel2DAMemory_ShouldUseTokenValue()
         {
             // Python test: test_addcolumn_rowlabel_2damemory
@@ -139,7 +139,7 @@ L1=2DAMEMORY5
             twoda.GetColumn("NewCol").Should().Equal("", "ABC");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabelTLKMemory_ShouldUseTokenValue()
         {
             // Arrange
@@ -175,7 +175,7 @@ L1=StrRef5
             twoda.GetCellString("1", "NewCol").Should().Be("12345");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_2DAMemoryIndex_ShouldStoreColumnIndex()
         {
             // Python test: test_addcolumn_2damemory_index
@@ -215,7 +215,7 @@ I1=Y
             twoda.GetColumn("NewCol").Should().Equal("X", "Y");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_2DAMemoryLine_ShouldStoreColumnLabel()
         {
             // Python test: test_addcolumn_2damemory_line
@@ -255,7 +255,7 @@ I1=Y
             twoda.GetColumn("Col3").Should().Equal("X", "Y");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_WithAllRowValueTypes_ShouldApplyCorrectly()
         {
             // Arrange
@@ -288,7 +288,7 @@ I1=Y
             twoda.GetCellString(1, "ref").Should().Be("12345");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithAllCellTypes_ShouldPopulateCorrectly()
         {
             // Arrange
@@ -322,7 +322,7 @@ I1=Y
             twoda.GetCellString("1", "cell").Should().Be("2"); // Value of id column
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_WithOverrides_ShouldMergeProperly()
         {
             // Arrange
@@ -349,7 +349,7 @@ I1=Y
             twoda.GetCellString("copy", "damage").Should().Be("20"); // Copied
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ComplexWorkflow_MultipleOperations_ShouldApplyInOrder()
         {
             // Arrange
@@ -403,7 +403,7 @@ DefaultValue=default
             twoda.GetCellString("2", "name").Should().Be("Copied");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ExclusiveColumn_MultipleAttempts_ShouldOnlyAddOnce()
         {
             // Arrange
@@ -437,7 +437,7 @@ DefaultValue=default
             twoda.GetCellString("3", "unique_id").Should().Be("300");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void HighValue_EmptyColumn_ShouldReturnZero()
         {
             // Arrange
@@ -460,7 +460,7 @@ DefaultValue=default
             twoda.GetCellString("2", "empty_col").Should().Be("0");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RowValueRowCell_ShouldGetValueFromSpecifiedColumn()
         {
             // Arrange

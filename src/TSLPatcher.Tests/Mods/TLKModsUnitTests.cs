@@ -14,7 +14,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class TLKModsUnitTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Append_ShouldAddNewEntries()
         {
             var memory = new PatcherMemory();
@@ -41,7 +41,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.MemoryStr[1].Should().Be(3);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_Replace_ShouldModifyExistingEntries()
         {
             var memory = new PatcherMemory();
@@ -69,7 +69,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.MemoryStr.Should().NotContainKey(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_AppendMultiple_ShouldStoreCorrectTokens()
         {
             var memory = new PatcherMemory();
@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.MemoryStr[4].Should().Be(6);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_WithSoundResRef_ShouldSetSound()
         {
             var memory = new PatcherMemory();
@@ -112,7 +112,7 @@ namespace CSharpKOTOR.Tests.Mods
         }
 
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_MixedAppendAndReplace_ShouldApplyCorrectly()
         {
             var memory = new PatcherMemory();
@@ -139,7 +139,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.MemoryStr[1].Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Apply_EmptyTLK_ShouldAppendCorrectly()
         {
             var memory = new PatcherMemory();

@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Tests.Common
     {
         #region Basic Construction and Validation
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Constructor_ShouldAcceptValidStrings()
         {
             // Python test: test_new_valid_str_argument
@@ -31,7 +31,7 @@ namespace CSharpKOTOR.Tests.Common
             act2.Should().NotThrow();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Constructor_ShouldRejectInvalidTypes()
         {
             // Python test: test_new_invalid_argument
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Hashing and Equality
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Hashing_ShouldBeCaseInsensitive()
         {
             // Python test: test_hashing
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Path Properties
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Name_ShouldReturnFileName()
         {
             // Python test: test_valid_name_property
@@ -77,7 +77,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region EndsWith
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void EndsWith_ShouldBeCaseInsensitive()
         {
             // Python test: test_endswith
@@ -92,7 +92,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Find Closest Match
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FindClosestMatch_ShouldReturnBestCaseMatch()
         {
             // Python test: test_find_closest_match
@@ -112,7 +112,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Get Matching Characters Count
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GetMatchingCharactersCount_ShouldCountCaseMatches()
         {
             // Python test: test_get_matching_characters_count
@@ -124,7 +124,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region RelativeTo
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RelativeTo_ShouldWorkWithRelativePaths()
         {
             // Python test: test_relative_to_relpath
@@ -137,7 +137,7 @@ namespace CSharpKOTOR.Tests.Common
             relativePath.ToString().Should().Be(@"to\something.test");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RelativeTo_ShouldWorkWithAbsolutePaths()
         {
             // Python test: test_relative_to_abspath
@@ -150,7 +150,7 @@ namespace CSharpKOTOR.Tests.Common
             relativePath.ToString().Should().Be(@"to\something.test");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void RelativeTo_ShouldBeCaseSensitiveWhenExactCase()
         {
             // Python test: test_relative_to_relpath_case_sensitive & test_relative_to_abspath_case_sensitive
@@ -163,7 +163,7 @@ namespace CSharpKOTOR.Tests.Common
             filePath2.IsRelativeTo(folderPath2).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsRelativeTo_BasicTest()
         {
             // Python test: test_basic (TestIsRelativeTo)
@@ -172,7 +172,7 @@ namespace CSharpKOTOR.Tests.Common
             p1.IsRelativeTo(p2).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsRelativeTo_DifferentPaths()
         {
             // Python test: test_different_paths
@@ -181,7 +181,7 @@ namespace CSharpKOTOR.Tests.Common
             p1.IsRelativeTo(p2).Should().BeFalse();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsRelativeTo_RelativePaths()
         {
             // Python test: test_relative_paths
@@ -190,7 +190,7 @@ namespace CSharpKOTOR.Tests.Common
             p1.IsRelativeTo(p2).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsRelativeTo_CaseInsensitive()
         {
             // Python test: test_case_insensitive
@@ -199,7 +199,7 @@ namespace CSharpKOTOR.Tests.Common
             p1.IsRelativeTo(p2).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsRelativeTo_NotPathType()
         {
             // Python test: test_not_path
@@ -208,7 +208,7 @@ namespace CSharpKOTOR.Tests.Common
             p1.IsRelativeTo(p2).Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsRelativeTo_SamePath()
         {
             // Python test: test_same_path
@@ -221,7 +221,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Path Normalization
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void StrNorm_ShouldNormalizeSlashes()
         {
             // Python test: test_fix_path_formatting
@@ -237,7 +237,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Split Filename
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SplitFilename_Normal()
         {
             // Python test: test_normal (TestSplitFilename)
@@ -248,7 +248,7 @@ namespace CSharpKOTOR.Tests.Common
             ext.Should().Be("txt");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SplitFilename_MultipleDots()
         {
             // Python test: test_multiple_dots
@@ -263,7 +263,7 @@ namespace CSharpKOTOR.Tests.Common
             ext2.Should().Be("tlk.xml");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SplitFilename_NoDots()
         {
             // Python test: test_no_dots
@@ -274,7 +274,7 @@ namespace CSharpKOTOR.Tests.Common
             ext.Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SplitFilename_NegativeDots()
         {
             // Python test: test_negative_dots
@@ -285,7 +285,7 @@ namespace CSharpKOTOR.Tests.Common
             ext.Should().Be("left");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SplitFilename_MoreDotsThanParts()
         {
             // Python test: test_more_dots_than_parts
@@ -300,7 +300,7 @@ namespace CSharpKOTOR.Tests.Common
             ext2.Should().Be("txt");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SplitFilename_InvalidDots()
         {
             // Python test: test_invalid_dots
@@ -314,7 +314,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Mixed Slash Handling - Edge Cases
 
-        [Theory]
+        [Theory(Timeout = 120000)] // 2 minutes timeout
         [InlineData("C:/", "C:")]
         [InlineData("C:\\", "C:")]
         [InlineData("C:", "C:")]
@@ -330,7 +330,7 @@ namespace CSharpKOTOR.Tests.Common
             normalized.Should().Be(expected);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void PathNormalization_PreservesCase()
         {
             // Python test: Various edge case tests
@@ -349,7 +349,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region TrueDivision Operator
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TrueDivEquivalentToJoinPath()
         {
             // Python test: test_truediv_equivalent_to_joinpath
@@ -363,7 +363,7 @@ namespace CSharpKOTOR.Tests.Common
 
         #region Windows-Specific Path Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         [Trait("Category", "WindowsOnly")]
         public void WindowsPath_HandlesUNCPaths()
         {

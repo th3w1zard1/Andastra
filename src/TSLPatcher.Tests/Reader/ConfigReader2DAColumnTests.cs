@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Basic_ShouldParseCorrectly()
         {
             string iniText = @"
@@ -84,7 +84,7 @@ DefaultValue=0
             mod1.Default.Should().Be("0");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_IndexInsert_ShouldParseCorrectly()
         {
             string iniText = @"
@@ -126,7 +126,7 @@ I2=StrRef5
             value2.TokenId.Should().Be(5);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_LabelInsert_ShouldParseCorrectly()
         {
             string iniText = @"
@@ -168,7 +168,7 @@ L2=StrRef5
             value2.TokenId.Should().Be(5);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_2DAMemory_ShouldParseCorrectly()
         {
             string iniText = @"
@@ -198,7 +198,7 @@ DefaultValue=****
             mod0.Store2DA[1].Should().Be("L0");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_WithMultipleInserts_ShouldParseAllCorrectly()
         {
             string iniText = @"
@@ -234,7 +234,7 @@ L10=val10
             mod0.Store2DA.Should().HaveCount(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_EmptyDefault_ShouldParseAsEmpty()
         {
             string iniText = @"
@@ -259,7 +259,7 @@ DefaultValue=
             mod0.Default.Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_StarsDefault_ShouldParseAsStars()
         {
             string iniText = @"
@@ -284,7 +284,7 @@ DefaultValue=****
             mod0.Default.Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_MixedIndexAndLabel_ShouldNotConflict()
         {
             string iniText = @"
@@ -321,7 +321,7 @@ L5=labelValue
             labelVal.String.Should().Be("labelValue");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_TokensWithDifferentSources_ShouldParseCorrectly()
         {
             string iniText = @"

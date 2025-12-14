@@ -14,7 +14,7 @@ namespace CSharpKOTOR.Tests.Common
     {
         public class Vector2Tests
         {
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestUnpacking()
             {
                 var source = new Vector2(1.2f, 2.3f);
@@ -24,7 +24,7 @@ namespace CSharpKOTOR.Tests.Common
                 y.Should().BeApproximately(2.3f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector2()
             {
                 var source = new Vector2(1.2f, 2.3f);
@@ -33,7 +33,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec2.Y.Should().BeApproximately(2.3f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector3()
             {
                 var source = new Vector3(1.2f, 2.3f, 3.4f);
@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec2.Y.Should().BeApproximately(2.3f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector4()
             {
                 var source = new Vector4(1.2f, 2.3f, 3.4f, 5.6f);
@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Tests.Common
 
         public class Vector3Tests
         {
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestUnpacking()
             {
                 var source = new Vector3(1.2f, 2.3f, 3.4f);
@@ -66,7 +66,7 @@ namespace CSharpKOTOR.Tests.Common
                 z.Should().BeApproximately(3.4f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector2()
             {
                 var source = new Vector2(1.2f, 2.3f);
@@ -76,7 +76,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec3.Z.Should().Be(0.0f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector3()
             {
                 var source = new Vector3(1.2f, 2.3f, 3.4f);
@@ -86,7 +86,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec3.Z.Should().BeApproximately(3.4f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector4()
             {
                 var source = new Vector4(1.2f, 2.3f, 3.4f, 5.6f);
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Tests.Common
 
         public class Vector4Tests
         {
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestUnpacking()
             {
                 var source = new Vector4(1.2f, 2.3f, 3.4f, 4.5f);
@@ -113,7 +113,7 @@ namespace CSharpKOTOR.Tests.Common
                 w.Should().BeApproximately(4.5f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector2()
             {
                 var source = new Vector2(1.2f, 2.3f);
@@ -124,7 +124,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec4.W.Should().Be(0.0f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector3()
             {
                 var source = new Vector3(1.2f, 2.3f, 3.4f);
@@ -135,7 +135,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec4.W.Should().Be(0.0f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromVector4()
             {
                 var source = new Vector4(1.2f, 2.3f, 3.4f, 5.6f);
@@ -146,7 +146,7 @@ namespace CSharpKOTOR.Tests.Common
                 vec4.W.Should().BeApproximately(5.6f, 0.0001f);
             }
 
-            [Fact]
+            [Fact(Timeout = 120000)] // 2 minutes timeout
             public void TestFromEuler()
             {
                 // Converting degrees to radians

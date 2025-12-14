@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Tests.Mods
         /// Python: test_assign_int
         /// Tests assigning constant integer value to SSF sound
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignInt()
         {
             var ssf = new SSF();
@@ -43,7 +43,7 @@ namespace CSharpKOTOR.Tests.Mods
         /// Python: test_assign_2datoken
         /// Tests assigning value from memory_2da using TokenUsage2DA
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssign2DAToken()
         {
             var ssf = new SSF();
@@ -66,7 +66,7 @@ namespace CSharpKOTOR.Tests.Mods
         /// Python: test_assign_tlktoken
         /// Tests assigning value from memory_str using TokenUsageTLK
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestAssignTLKToken()
         {
             var ssf = new SSF();

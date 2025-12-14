@@ -16,7 +16,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class GFFAdvancedTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddInsideStruct_ShouldRegisterModifiersCorrectly()
         {
             // Arrange - test from test_gff_add_inside_struct
@@ -68,7 +68,7 @@ Path=TestStruct
             testStruct.GetUInt8("InnerField").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddFieldWithLocalizedString_ShouldHandleSubstrings()
         {
             // Arrange - test from test_gff_add_field_locstring
@@ -101,7 +101,7 @@ Value(lang2)=French text
             locString.Get(Language.French, Gender.Male).Should().Be("French text");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifierPath_ShorterThanSelfPath_ShouldApplyCorrectly()
         {
             // Arrange - test from test_gff_modifier_path_shorter_than_self_path
@@ -136,7 +136,7 @@ Path=OuterStruct
             outerStruct.GetUInt8("InnerField").Should().Be(42);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifierPath_LongerThanSelfPath_ShouldNavigateCorrectly()
         {
             // Arrange - test from test_gff_modifier_path_longer_than_self_path (Python line 358)
@@ -174,7 +174,7 @@ Value=99
             mod1.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be("GrandChildField");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifierPath_PartialAbsolute_ShouldResolveCorrectly()
         {
             // Arrange - test from test_gff_modifier_path_partial_absolute
@@ -217,7 +217,7 @@ Path=StructA\StructB
             structB.GetUInt8("FieldInB").Should().Be(77);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddFieldWithSentinelAtStart_ShouldHandleCorrectly()
         {
             // Arrange - test from test_gff_add_field_with_sentinel_at_start
@@ -250,7 +250,7 @@ Path=\ExistingStruct
             existingStructResult.GetUInt8("SentinelField").Should().Be(55);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddFieldWithEmptyPaths_ShouldAddToRoot()
         {
             // Arrange - test from test_gff_add_field_with_empty_paths
@@ -278,7 +278,7 @@ Value=88
             gff.Root.GetUInt8("RootField").Should().Be(88);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddStructToList_ShouldHandleListIndex()
         {
             // Arrange
@@ -311,7 +311,7 @@ TypeId=0
             resultList.Count.Should().BeGreaterThan(0);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ComplexNesting_ShouldNavigateDeepStructures()
         {
             // Arrange
@@ -345,7 +345,7 @@ Level1\Level2\Level3\DeepField=999
             level3Result.GetInt32("DeepField").Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyListElement_ShouldAccessByIndex()
         {
             // Arrange
@@ -374,7 +374,7 @@ ItemList\0\Tag=modified_tag
             resultList[0].GetValue("Tag").Should().Be("modified_tag");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_Memory2DA_WithComplexPath_ShouldStoreValue()
         {
             // Arrange
@@ -404,7 +404,7 @@ Path=Nested\\Field
             Memory.Memory2DA[5].Should().Be("Nested\\Field");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddMultipleFieldsToSameStruct_ShouldAddAll()
         {
             // Arrange
@@ -453,7 +453,7 @@ Path=TestStruct
             result.GetUInt8("Field3").Should().Be(3);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_MixedModifyAndAdd_ShouldApplyInOrder()
         {
             // Arrange

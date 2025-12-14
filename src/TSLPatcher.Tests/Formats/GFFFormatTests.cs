@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Tests.Formats
         private static readonly string TestGffFile = TestFileHelper.GetPath("test.gff");
         private static readonly string CorruptGffFile = TestFileHelper.GetPath("test_corrupted.gff");
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBinaryIO()
         {
             // Read GFF file
@@ -64,7 +64,7 @@ namespace CSharpKOTOR.Tests.Formats
             gff.Root.GetList("list").At(1).StructId.Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadRaises()
         {
             // test_read_raises from Python
@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Tests.Formats
             act3.Should().Throw<InvalidDataException>();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWriteRaises()
         {
             // test_write_raises from Python
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Tests.Formats
             act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestToRawDataSimpleReadSizeUnchanged()
         {
             // test_to_raw_data_simple_read_size_unchanged from Python
@@ -122,7 +122,7 @@ namespace CSharpKOTOR.Tests.Formats
             rawData.Length.Should().Be(originalData.Length, "Size of raw data has changed.");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWriteToFileValidPathSizeUnchanged()
         {
             // test_write_to_file_valid_path_size_unchanged from Python

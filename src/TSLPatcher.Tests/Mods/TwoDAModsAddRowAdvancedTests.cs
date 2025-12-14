@@ -26,7 +26,7 @@ namespace CSharpKOTOR.Tests.Mods
             return twoda;
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithHigh_ShouldCalculateHighestValuePlusOne()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -51,7 +51,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col1").Should().Equal("1", "2", "3");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithTLKMemory_ShouldUseTLKMemoryValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
@@ -70,7 +70,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col1").Should().Equal("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_With2DAMemory_ShouldUse2DAMemoryValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
@@ -89,7 +89,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col1").Should().Equal("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Store2DAMemoryRowIndex_WithExclusive_ShouldStoreExistingRowIndex()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -117,7 +117,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("0");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Store2DAMemoryRowIndex_WithoutExclusive_ShouldStoreNewRowIndex()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -145,7 +145,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_MultipleTokensStoredInDifferentMemorySlots()
         {
             TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
@@ -173,7 +173,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[8].Should().Be("1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_StoreRowLabelFromTokenUsage()
         {
             TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
@@ -197,7 +197,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("my_row");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_StoreCellDataFromTokenUsage()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -227,7 +227,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("new_val");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithHighAndTokenStorage_ShouldStoreCalculatedValue()
         {
             TwoDAFile twoda = CreateTestTwoDA(
@@ -255,7 +255,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("11");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveMatchExisting_TokenUsageShouldReferToExistingRow()
         {
             TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1", "Col2" },

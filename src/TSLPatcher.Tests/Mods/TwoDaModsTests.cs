@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Tests.Mods
     {
         #region Change Row Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ExistingRowByIndex()
         {
             // Python test: test_change_existing_rowindex
@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ExistingRowByLabel()
         {
             // Python test: test_change_existing_rowlabel
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ExistingRowByLabelColumn()
         {
             // Python test: test_change_existing_labelindex
@@ -84,7 +84,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_AssignFromTLKMemory()
         {
             // Python test: test_change_assign_tlkmemory
@@ -110,7 +110,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedTwoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_AssignFrom2DAMemory()
         {
             // Python test: test_change_assign_2damemory
@@ -133,7 +133,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_AssignHigh()
         {
             // Python test: test_change_assign_high
@@ -156,7 +156,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryRowIndex()
         {
             // Python test: test_set_2damemory_rowindex
@@ -176,7 +176,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryRowLabel()
         {
             // Python test: test_set_2damemory_rowlabel
@@ -196,7 +196,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[5].Should().Be("r1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryColumnCell()
         {
             // Python test: test_set_2damemory_columnlabel
@@ -220,7 +220,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Add Row Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_UseMaxRowLabel()
         {
             // Python test: test_add_rowlabel_use_maxrowlabel
@@ -241,7 +241,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetLabel(2).Should().Be("2");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_UseConstantLabel()
         {
             // Python test: test_add_rowlabel_use_constant
@@ -258,7 +258,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetLabel(0).Should().Be("r1");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnNotExists()
         {
             // Python test: test_add_exclusive_notexists
@@ -286,7 +286,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f", "i");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnExists()
         {
             // Python test: test_add_exclusive_exists
@@ -314,7 +314,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f", "Y");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnNone()
         {
             // Python test: test_add_exclusive_none
@@ -348,7 +348,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("c", "f", "i", "l");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_AssignHigh()
         {
             // Python test: test_add_assign_high
@@ -367,7 +367,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col1").Should().BeEquivalentTo("1", "2", "3");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_AssignFromTLKMemory()
         {
             // Python test: test_add_assign_tlkmemory
@@ -388,7 +388,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col1").Should().BeEquivalentTo("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_AssignFrom2DAMemory()
         {
             // Python test: test_add_assign_2damemory
@@ -409,7 +409,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col1").Should().BeEquivalentTo("5", "6");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Store2DAMemoryRowIndex()
         {
             // Python test: test_add_2damemory_rowindex
@@ -438,7 +438,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Copy Row Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ByRowIndex()
         {
             // Python test: test_copy_existing_rowindex
@@ -462,7 +462,7 @@ namespace CSharpKOTOR.Tests.Mods
             patchedTwoda.GetColumn("Col2").Should().BeEquivalentTo("b", "d", "X");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ByRowLabel()
         {
             // Python test: test_copy_existing_rowlabel
@@ -483,7 +483,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("b", "d", "X");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ExclusiveColumnNotExists()
         {
             // Python test: test_copy_exclusive_notexists
@@ -508,7 +508,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("b", "d");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ExclusiveColumnExists()
         {
             // Python test: test_copy_exclusive_exists
@@ -533,7 +533,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("X");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ExclusiveColumnNone()
         {
             // Python test: test_copy_exclusive_none
@@ -565,7 +565,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("b", "d", "f");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_SetNewRowLabel()
         {
             // Python test: test_copy_set_newrowlabel
@@ -586,7 +586,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("b", "d", "b");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_AssignHigh()
         {
             // Python test: test_copy_assign_high
@@ -607,7 +607,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("1", "2", "3");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_AssignFromTLKMemory()
         {
             // Python test: test_copy_assign_tlkmemory
@@ -627,7 +627,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("1", "2", "5");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_AssignFrom2DAMemory()
         {
             // Python test: test_copy_assign_2damemory
@@ -647,7 +647,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col2").Should().BeEquivalentTo("1", "2", "5");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_Store2DAMemoryRowIndex()
         {
             // Python test: test_copy_2damemory_rowindex
@@ -673,7 +673,7 @@ namespace CSharpKOTOR.Tests.Mods
 
         #region Add Column Tests
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Empty()
         {
             // Python test: test_addcolumn_empty
@@ -694,7 +694,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("", "");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_WithDefault()
         {
             // Python test: test_addcolumn_default
@@ -715,7 +715,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("X", "X");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowIndexConstant()
         {
             // Python test: test_addcolumn_rowindex_constant
@@ -737,7 +737,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("X", "");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabel2DAMemory()
         {
             // Python test: test_addcolumn_rowlabel_2damemory
@@ -759,7 +759,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("", "ABC");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabelTLKMemory()
         {
             // Python test: test_addcolumn_rowlabel_tlkmemory
@@ -781,7 +781,7 @@ namespace CSharpKOTOR.Tests.Mods
             twoda.GetColumn("Col3").Should().BeEquivalentTo("", "123");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Store2DAMemoryIndex()
         {
             // Python test: test_addcolumn_2damemory_index
@@ -809,7 +809,7 @@ namespace CSharpKOTOR.Tests.Mods
             memory.Memory2DA[0].Should().Be("X");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Store2DAMemoryLine()
         {
             // Python test: test_addcolumn_2damemory_line

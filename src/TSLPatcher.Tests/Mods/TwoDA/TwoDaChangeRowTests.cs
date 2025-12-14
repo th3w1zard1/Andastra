@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
     /// </summary>
     public class TwoDaChangeRowTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Existing_RowIndex()
         {
             // Arrange
@@ -37,7 +37,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Existing_RowLabel()
         {
             // Arrange
@@ -59,7 +59,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Existing_LabelIndex()
         {
             // Arrange
@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Assign_TLKMemory()
         {
             // Arrange
@@ -107,7 +107,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Assign_2DAMemory()
         {
             // Arrange
@@ -133,7 +133,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Assign_High()
         {
             // Arrange
@@ -157,7 +157,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Set2DAMemory_RowIndex()
         {
             // Arrange
@@ -186,7 +186,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("1", memory.Memory2DA[5]);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Set2DAMemory_RowLabel()
         {
             // Arrange
@@ -215,7 +215,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("r1", memory.Memory2DA[5]);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Set2DAMemory_ColumnLabel()
         {
             // Arrange

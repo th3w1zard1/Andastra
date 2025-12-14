@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Replace_ShouldLoadCorrectly()
         {
             // Python test: test_ssf_replace
@@ -70,7 +70,7 @@ Replace0=test2.ssf
             result.PatchesSSF[1].ReplaceFile.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_ShouldLoadDirectAssignment()
         {
             // Python test: test_ssf_stored_constant
@@ -102,7 +102,7 @@ Battlecry 2=456
             ((NoTokenUsage)mod_1.Stringref).Stored.Should().Be("456");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_ShouldLoadTLKMemoryReference()
         {
             // Python test: test_ssf_stored_tlk
@@ -134,7 +134,7 @@ Battlecry 2=StrRef6
             ((TokenUsageTLK)mod_1.Stringref).TokenId.Should().Be(6);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_ShouldLoad2DAMemoryReference()
         {
             // Python test: test_ssf_stored_2da
@@ -166,7 +166,7 @@ Battlecry 2=2DAMEMORY6
             ((TokenUsage2DA)mod_1.Stringref).TokenId.Should().Be(6);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void SSF_Set_ShouldMapAllSounds()
         {
             // Python test: test_ssf_set

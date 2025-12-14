@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Tests.Formats
         private static readonly string DoesNotExistFile = "./thisfiledoesnotexist";
         private static readonly string CorruptBinaryTestFile = TestFileHelper.GetPath("test_corrupted.erf");
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBinaryIO()
         {
             // Python: test_binary_io
@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Tests.Formats
             erf.Get("3", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("ghi"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadRaises()
         {
             // test_read_raises from Python
@@ -83,7 +83,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWriteRaises()
         {
             // test_write_raises from Python

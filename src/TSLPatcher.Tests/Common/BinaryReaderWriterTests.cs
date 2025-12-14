@@ -30,7 +30,7 @@ namespace CSharpKOTOR.Tests.Common
             _data4 = new byte[] { 0x79, 0xe9, 0xf6, 0xc2, 0x68, 0x91, 0xed, 0x7c, 0x3f, 0xdd, 0x5e, 0x40 };
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestRead()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Tests.Common
             reader4.ReadDouble().Should().BeApproximately(123.457, 0.001);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSize()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -73,7 +73,7 @@ namespace CSharpKOTOR.Tests.Common
             reader1c.Size.Should().Be(4);  // Size returns specified size
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPosition()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -92,7 +92,7 @@ namespace CSharpKOTOR.Tests.Common
             reader1c.Position.Should().Be(3);  // Position is relative to offset
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSeek()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -114,7 +114,7 @@ namespace CSharpKOTOR.Tests.Common
             reader1c.ReadUInt16().Should().Be(0);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSkip()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -132,7 +132,7 @@ namespace CSharpKOTOR.Tests.Common
             reader1c.ReadUInt16().Should().Be(0);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestRemaining()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -150,7 +150,7 @@ namespace CSharpKOTOR.Tests.Common
             reader1c.Remaining.Should().Be(10);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestPeek()
         {
             var reader1 = RawBinaryReader.FromBytes(_data1);
@@ -174,7 +174,7 @@ namespace CSharpKOTOR.Tests.Common
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestSeekIgnoreAndTellInLittleEndianStream()
         {
             byte[] inputData = Encoding.ASCII.GetBytes("Hello, world!\0");
@@ -188,7 +188,7 @@ namespace CSharpKOTOR.Tests.Common
             actualPos.Should().Be(expectedPos);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadFromLittleEndianStream()
         {
             var ms = new MemoryStream();
@@ -248,7 +248,7 @@ namespace CSharpKOTOR.Tests.Common
             actualBytes.Should().Equal(expectedBytes);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadFromBigEndianStream()
         {
             var ms = new MemoryStream();

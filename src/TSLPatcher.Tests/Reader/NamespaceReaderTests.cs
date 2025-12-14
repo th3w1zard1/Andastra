@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithK1CPNamespacesFile_ShouldParseSuccessfully()
         {
             // Arrange - Create INI file with the exact content from the user
@@ -126,7 +126,7 @@ Description=Ustanovite russkuyu versiyu K1CP
             translationRussian.Description.Should().Be("Ustanovite russkuyu versiyu K1CP");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void FromFilePath_WithK1CPNamespacesFile_ShouldParseSuccessfully()
         {
             // Arrange - Create INI file with the exact content from the user
@@ -196,7 +196,7 @@ Description=Ustanovite russkuyu versiyu K1CP
             translationRussian.Description.Should().Be("Ustanovite russkuyu versiyu K1CP");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithEmptyDataPath_ShouldParseSuccessfully()
         {
             // Arrange - Test that empty DataPath values are handled correctly
@@ -222,7 +222,7 @@ Description=Test Description
             namespaces[0].DataFolderPath.Should().BeEmpty();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithRelativePaths_ShouldPreservePaths()
         {
             // Arrange - Test that relative paths with ../ are preserved correctly
@@ -249,7 +249,7 @@ Description=Test Description
             namespaces[0].InfoFilename.Should().Be("../tslpatchdata/subfolder/info.rtf");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithCommentsAndBlankLines_ShouldParseSuccessfully()
         {
             // Arrange - Test that comments and blank lines don't break parsing
@@ -283,7 +283,7 @@ Description=Test Description
             namespaces[0].IniFilename.Should().Be("changes.ini");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithCaseInsensitiveKeys_ShouldParseSuccessfully()
         {
             // Arrange - Test case-insensitive key matching
@@ -311,7 +311,7 @@ description=Test Description
             namespaces[0].Name.Should().Be("Test Mod");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithMissingRequiredField_ShouldThrowKeyNotFoundException()
         {
             // Arrange - Missing IniName
@@ -333,7 +333,7 @@ InfoName=info.rtf
                 .WithMessage("*IniName not found*");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Load_WithMissingNamespaceSection_ShouldThrowKeyNotFoundException()
         {
             // Arrange - Missing namespace section referenced in [Namespaces]

@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class EdgeCaseIntegrationTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_EmptyTable_AddFirstRow_ShouldWork()
         {
             string iniText = @"
@@ -44,7 +44,7 @@ Col2=value2
             twoda.GetCellString(0, "Col2").Should().Be("value2");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_MultipleRowsWithSameExclusiveValue_OnlyLastShouldApply()
         {
             string iniText = @"
@@ -85,7 +85,7 @@ value=three
             twoda.GetCellString(0, "value").Should().Be("three");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_RowLabelConflicts_ShouldOverwrite()
         {
             string iniText = @"
@@ -115,7 +115,7 @@ Col1=second
             twoda.GetHeight().Should().BeGreaterThanOrEqualTo(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_CopyNonExistentRow_ShouldHandleGracefully()
         {
             string iniText = @"
@@ -142,7 +142,7 @@ RowLabel=copied
             action.Should().NotThrow();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_ChangeNonExistentColumn_ShouldHandleGracefully()
         {
             string iniText = @"
@@ -168,7 +168,7 @@ NonExistentColumn=value
             action.Should().NotThrow();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_HighFunctionOnEmptyColumn_ShouldReturnOne()
         {
             string iniText = @"
@@ -194,7 +194,7 @@ Col1=high()
             value.Should().BeGreaterThanOrEqualTo(0);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_HighFunctionWithNonNumericValues_ShouldHandleGracefully()
         {
             string iniText = @"
@@ -227,7 +227,7 @@ Col1=high()
             value.Should().NotBeNullOrEmpty();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddFieldToNonExistentPath_ShouldCreatePath()
         {
             string iniText = @"
@@ -255,7 +255,7 @@ Value=42
             action.Should().NotThrow();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyNonExistentField_ShouldHandleGracefully()
         {
             string iniText = @"
@@ -275,7 +275,7 @@ NonExistentField=123
             action.Should().NotThrow();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Memory_TokenReferencedBeforeSet_ShouldUseDefault()
         {
             string iniText = @"
@@ -303,7 +303,7 @@ value=2DAMEMORY99
             value.Should().NotBeNull();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_AddColumnToEmptyTable_ShouldAddToAllRows()
         {
             string iniText = @"
@@ -334,7 +334,7 @@ DefaultValue=X
             twoda.GetColumn("NewCol").Should().AllBe("X");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_LabelIndexTarget_WithNumericLabel_ShouldResolve()
         {
             string iniText = @"
@@ -363,7 +363,7 @@ Col1=changed
             twoda.GetCellString(0, "Col1").Should().Be("changed");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddStructWithNoTypeId_ShouldUseDefaultZero()
         {
             string iniText = @"
@@ -390,7 +390,7 @@ Label=TestStruct
             struct1.StructId.Should().Be(0);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void MultipleModifications_WithCircularTokenDependencies_ShouldResolve()
         {
             string iniText = @"
@@ -428,7 +428,7 @@ value=2DAMEMORY0
             memory.Memory2DA[1].Should().NotBeNullOrEmpty();
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TwoDA_VeryLargeRowLabel_ShouldHandle()
         {
             string iniText = @"

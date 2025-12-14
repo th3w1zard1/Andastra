@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Tests.Reader
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyField_ShouldLoadIntValue()
         {
             // Arrange
@@ -77,7 +77,7 @@ Appearance_Type=123
             value.Value(null, GFFFieldType.Int32).Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyField_ShouldLoadStringValue()
         {
             // Arrange
@@ -103,7 +103,7 @@ FirstName=TestName
             value.Value(null, GFFFieldType.String).Should().Be("TestName");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyField_ShouldLoadFloatValue()
         {
             // Arrange
@@ -129,7 +129,7 @@ ChallengeRating=5.5
             value.Value(null, GFFFieldType.Single).Should().Be(5.5f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyField_ShouldLoadTLKMemoryReference()
         {
             // Arrange
@@ -156,7 +156,7 @@ Description=StrRef5
             value.TokenId.Should().Be(5);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyField_ShouldLoad2DAMemoryReference()
         {
             // Arrange
@@ -183,7 +183,7 @@ Appearance_Type=2DAMEMORY3
             value.TokenId.Should().Be(3);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_ModifyField_ShouldLoadNestedPath()
         {
             // Arrange
@@ -209,7 +209,7 @@ ScriptEndRound\1\ScriptEndRound=k_ai_master
             value.Value(null, GFFFieldType.String).Should().Be("k_ai_master");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddField_ShouldLoadIntField()
         {
             // Arrange
@@ -243,7 +243,7 @@ Value=999
             value.Value(null, GFFFieldType.Int32).Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddField_ShouldLoadStringField()
         {
             // Arrange
@@ -276,7 +276,7 @@ Value=TestString
             value.Value(null, GFFFieldType.String).Should().Be("TestString");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddField_ShouldLoadVector3Field()
         {
             // Arrange
@@ -314,7 +314,7 @@ Value=1.0|2.0|3.0
             vector.Z.Should().BeApproximately(3.0f, 0.0001f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddField_ShouldLoadInNestedStruct()
         {
             // Arrange
@@ -344,7 +344,7 @@ Path=ItemList\0
             addField.Label.Should().Be("CustomInt");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_AddStruct_ShouldLoadToList()
         {
             // Python test: test_gff_add_inside_list
@@ -396,7 +396,7 @@ TypeId=111
             mod_1.IndexToToken.Should().Be(5);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_Memory2DA_ShouldLoadModifier()
         {
             // Arrange
@@ -429,7 +429,7 @@ Value=0
             memory2DA.Path.Should().Be("MyField");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void GFF_MultipleFiles_ShouldLoadSeparately()
         {
             // Arrange

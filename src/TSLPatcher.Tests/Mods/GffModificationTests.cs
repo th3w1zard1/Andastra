@@ -14,7 +14,7 @@ namespace CSharpKOTOR.Tests.Mods
     /// </summary>
     public class GffModificationTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt8()
         {
             // Arrange
@@ -35,7 +35,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(2, gff.Root.GetUInt8("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int8()
         {
             // Arrange
@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(2, gff.Root.GetInt8("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt16()
         {
             // Arrange
@@ -77,7 +77,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(2, gff.Root.GetUInt16("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int16()
         {
             // Arrange
@@ -98,7 +98,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(2, gff.Root.GetInt16("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_UInt32()
         {
             // Arrange
@@ -119,7 +119,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(2u, gff.Root.GetUInt32("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Int32()
         {
             // Arrange
@@ -140,7 +140,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(2, gff.Root.GetInt32("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_String()
         {
             // Arrange
@@ -161,7 +161,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal("new", gff.Root.GetValue("Field1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyField_Float()
         {
             // Arrange
@@ -183,7 +183,7 @@ namespace CSharpKOTOR.Tests.Mods
         }
 
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_NewField()
         {
             // Arrange
@@ -206,7 +206,7 @@ namespace CSharpKOTOR.Tests.Mods
             Assert.Equal(42, gff.Root.GetUInt8("NewField"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddField_NestedStruct()
         {
             // Arrange

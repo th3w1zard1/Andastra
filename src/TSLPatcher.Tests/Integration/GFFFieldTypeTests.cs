@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Tests.Integration
     /// </summary>
     public class GFFFieldTypeTests : IntegrationTestBase
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldUInt8_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -36,7 +36,7 @@ Field1=2
             patchedGff.Root.GetUInt8("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldInt8_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -57,7 +57,7 @@ Field1=2
             patchedGff.Root.GetInt8("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldUInt16_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -78,7 +78,7 @@ Field1=2
             patchedGff.Root.GetUInt16("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldInt16_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -99,7 +99,7 @@ Field1=2
             patchedGff.Root.GetInt16("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldUInt32_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -120,7 +120,7 @@ Field1=2
             patchedGff.Root.GetUInt32("Field1").Should().Be(2u);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldInt32_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -141,7 +141,7 @@ Field1=2
             patchedGff.Root.GetInt32("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldUInt64_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -162,7 +162,7 @@ Field1=2
             patchedGff.Root.GetUInt64("Field1").Should().Be(2ul);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldInt64_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -183,7 +183,7 @@ Field1=2
             patchedGff.Root.GetInt64("Field1").Should().Be(2L);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldSingle_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -204,7 +204,7 @@ Field1=2.345
             patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.01f);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldDouble_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -225,7 +225,7 @@ Field1=2.345678
             patchedGff.Root.GetDouble("Field1").Should().Be(2.345678);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldString_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -246,7 +246,7 @@ Field1=def
             patchedGff.Root.GetValue("Field1").Should().Be("def");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldLocString_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -267,7 +267,7 @@ Field1(strref)=1
             patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(1);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldVector3_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -288,7 +288,7 @@ Field1=1|2|3
             patchedGff.Root.GetVector3("Field1").Should().Be(new Vector3(1, 2, 3));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyFieldVector4_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -309,7 +309,7 @@ Field1=1|2|3|4
             patchedGff.Root.GetVector4("Field1").Should().Be(new Vector4(1, 2, 3, 4));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyNested_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -332,7 +332,7 @@ Struct1\\Field1=2
             patchedGff.Root.GetStruct("Struct1").GetInt32("Field1").Should().Be(2);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Modify2DAMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -355,7 +355,7 @@ Field1=2DAMEMORY5
             patchedGff.Root.GetInt32("Field1").Should().Be(999);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ModifyTLKMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -378,7 +378,7 @@ Field1=StrRef7
             patchedGff.Root.GetInt32("Field1").Should().Be(888);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddNewNested_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -411,7 +411,7 @@ Value=123
             patchedGff.Root.GetStruct("NewStruct").GetInt32("Field1").Should().Be(123);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddNested_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -441,7 +441,7 @@ Value=456
             patchedGff.Root.GetStruct("Struct1").GetInt32("Field2").Should().Be(456);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddUse2DAMemory_AppliesPatchCorrectly()
         {
             string iniText = @"
@@ -469,7 +469,7 @@ Value=2DAMEMORY5
             patchedGff.Root.GetInt32("Field1").Should().Be(777);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddUseTLKMemory_AppliesPatchCorrectly()
         {
             string iniText = @"

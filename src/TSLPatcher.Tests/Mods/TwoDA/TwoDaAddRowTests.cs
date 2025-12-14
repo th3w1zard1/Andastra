@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
     /// </summary>
     public class TwoDaAddRowTests
     {
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_RowLabel_UseMaxRowLabel()
         {
             // Arrange
@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("2", twoda.GetLabel(2));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_RowLabel_UseConstant()
         {
             // Arrange
@@ -59,7 +59,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("r1", twoda.GetLabel(0));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Exclusive_NotExists()
         {
             // Exclusive column is specified and the value in the new row is unique. Add a new row.
@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f", "i" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Exclusive_Exists()
         {
             // Exclusive column is specified but the value in the new row is already used. Edit the existing row.
@@ -129,7 +129,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f", "Y" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Exclusive_None()
         {
             // Arrange
@@ -173,7 +173,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "c", "f", "i", "l" }, twoda.GetColumn("Col3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_RowLabel_Existing()
         {
             // Python test: test_add_rowlabel_existing
@@ -205,7 +205,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("0", patchedTwoda.GetLabel(0));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Assign_High()
         {
             // Python test: test_add_assign_high
@@ -226,7 +226,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "1", "2", "3" }, twoda.GetColumn("Col1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Assign_TLKMemory()
         {
             // Python test: test_add_assign_tlkmemory
@@ -249,7 +249,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Assign_2DAMemory()
         {
             // Python test: test_add_assign_2damemory
@@ -272,7 +272,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col1"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_2DAMemory_RowIndex()
         {
             // Python test: test_add_2damemory_rowindex

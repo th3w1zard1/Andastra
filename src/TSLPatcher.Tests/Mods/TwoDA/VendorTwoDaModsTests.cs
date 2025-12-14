@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             return twoda;
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_ShouldAppendHeader()
         {
             var memory = new PatcherMemory();
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("NewColumn", headers[3]);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_ShouldPopulateDefaultValues()
         {
             var memory = new PatcherMemory();
@@ -58,7 +58,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("xyz", twoda.GetCellString(1, "NewColumn"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ShouldAppendWhenNotExclusive()
         {
             var memory = new PatcherMemory();
@@ -84,7 +84,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("c", twoda.GetCellString(2, "C3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ShouldRespectRowLabel()
         {
             var memory = new PatcherMemory();
@@ -107,7 +107,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("somelabel", twoda.GetLabel(2));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ShouldEditWhenExclusiveValueExists()
         {
             var memory = new PatcherMemory();
@@ -133,7 +133,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("c", twoda.GetCellString(0, "C3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ShouldAddWhenExclusiveValueMissing()
         {
             var memory = new PatcherMemory();
@@ -158,7 +158,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("c", twoda.GetCellString(2, "C3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ShouldStoreRowIndex()
         {
             var memory = new PatcherMemory();
@@ -181,7 +181,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("2", memory.Memory2DA[30]);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ShouldAddCopyWhenExclusiveIsNull()
         {
             var memory = new PatcherMemory();
@@ -204,7 +204,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal(string.Empty, twoda.GetCellString(2, "C3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ShouldEditWhenExclusiveMatchesExistingRow()
         {
             var memory = new PatcherMemory();
@@ -234,7 +234,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("y", twoda.GetCellString(0, "C3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ShouldUpdateCells()
         {
             var memory = new PatcherMemory();
@@ -258,7 +258,7 @@ namespace CSharpKOTOR.Tests.Mods.TwoDA
             Assert.Equal("c", twoda.GetCellString(1, "C3"));
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ShouldStoreRowIndex()
         {
             var memory = new PatcherMemory();

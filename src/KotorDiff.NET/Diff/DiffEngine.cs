@@ -46,7 +46,30 @@ namespace KotorDiff.NET.Diff
                 for (int idx = 0; idx < filesAndFoldersAndInstallations.Count; idx++)
                 {
                     object path = filesAndFoldersAndInstallations[idx];
-                    string pathType = "Path"; // TODO: Determine if Installation, Folder, or File
+                    string pathType = "Path";
+                    if (path is Installation)
+                    {
+                        pathType = "Installation";
+                    }
+                    else if (path is string pathStr)
+                    {
+                        if (File.Exists(pathStr))
+                        {
+                            pathType = "File";
+                        }
+                        else if (Directory.Exists(pathStr))
+                        {
+                            pathType = "Folder";
+                        }
+                    }
+                    else if (path is FileInfo)
+                    {
+                        pathType = "File";
+                    }
+                    else if (path is DirectoryInfo)
+                    {
+                        pathType = "Folder";
+                    }
                     logFunc($"  Path {idx}: {path} ({pathType})");
                 }
                 logFunc("-------------------------------------------");
@@ -298,7 +321,46 @@ namespace KotorDiff.NET.Diff
                     logFunc?.Invoke($"  Only in path {pathIndex} ({pathInfo.Name})");
                     logFunc?.Invoke("  → Creating InstallList entry and patch");
 
-                    // TODO: Generate install patch for unique resource
+                    // Generate install patch for unique resource
+                    string destination = "Override";
+                    var pathObj = pathInfo.GetPath();
+                    if (pathObj is DirectoryInfo dir)
+                    {
+                        var parentNames = new List<string>();
+                        var currentDir = dir;
+                        while (currentDir != null && currentDir.Parent != null)
+                        {
+                            parentNames.Add(currentDir.Name.ToLowerInvariant());
+                            currentDir = currentDir.Parent;
+                        }
+                        if (parentNames.Contains("modules"))
+                        {
+                            destination = "modules";
+                        }
+                        else if (parentNames.Contains("override"))
+                        {
+                            destination = "Override";
+                        }
+                    }
+
+                    if (modificationsByType != null)
+                    {
+                        Resolution.InstallationDiffHelpers.AddToInstallFolder(
+                            modificationsByType,
+                            destination,
+                            resource.Identifier,
+                            logFunc: logFunc,
+                            moddedData: resource.Data,
+                            moddedPath: pathObj is FileInfo file ? file.FullName : null,
+                            context: new DiffContext($"path{pathIndex}/{resource.Identifier}", $"path{pathIndex}/{resource.Identifier}", resource.Ext),
+                            incrementalWriter: incrementalWriter);
+                    }
+
+                    if (incrementalWriter != null && pathObj is FileInfo fileInfo)
+                    {
+                        incrementalWriter.AddInstallFile(destination, resource.Identifier, fileInfo.FullName);
+                    }
+
                     isSameResult = false;
                 }
                 else

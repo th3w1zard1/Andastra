@@ -23,7 +23,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Python: test_binary_io
         /// Tests reading from actual test.ssf file and round-trip through bytes
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBinaryIO()
         {
             // Read from actual test file
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Python: test_read_raises
         /// Tests various error conditions when reading SSF files
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadRaises()
         {
             // Test directory access
@@ -97,7 +97,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// Python: test_write_raises
         /// Tests various error conditions when writing SSF files
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWriteRaises()
         {
             // test_write_raises from Python

@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Tests.Formats
         private static readonly string BinaryTestFile = Path.Combine("..", "..", "..", "test_data", "test.tlk");
         private static readonly string CorruptBinaryTestFile = Path.Combine("..", "..", "..", "test_data", "test_corrupted.tlk");
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestBinaryIO()
         {
             // test_binary_io from Python
@@ -80,7 +80,7 @@ namespace CSharpKOTOR.Tests.Formats
             tlk[2].Voiceover.ToString().Should().Be("");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestResize()
         {
             // Python: test_resize
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Tests.Formats
             tlk.Count.Should().Be(4);
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestReadRaises()
         {
             // test_read_raises from Python
@@ -113,7 +113,7 @@ namespace CSharpKOTOR.Tests.Formats
             act3.Should().Throw<InvalidDataException>().WithMessage("Attempted to load an invalid TLK file.");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout
         public void TestWriteRaises()
         {
             // test_write_raises from Python
