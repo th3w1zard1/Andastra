@@ -875,9 +875,9 @@ namespace Odyssey.Game.Core
                 // First check if we clicked on an entity
                 Vector3 rayOrigin = GetCameraPosition();
                 Vector3 rayDirection = GetMouseRayDirection(mouseState.X, mouseState.Y);
-                
+
                 Odyssey.Core.Interfaces.IEntity clickedEntity = FindEntityAtRay(rayOrigin, rayDirection);
-                
+
                 if (clickedEntity != null)
                 {
                     // Clicked on an entity - interact with it
@@ -990,6 +990,124 @@ namespace Odyssey.Game.Core
             rayDir.Normalize();
 
             return rayDir;
+        }
+
+        /// <summary>
+        /// Finds an entity at the given ray position.
+        /// </summary>
+        private Odyssey.Core.Interfaces.IEntity FindEntityAtRay(Vector3 rayOrigin, Vector3 rayDirection)
+        {
+            if (_session == null || _session.CurrentRuntimeModule == null)
+            {
+                return null;
+            }
+
+            var entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+            if (entryArea == null || !(entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea))
+            {
+                return null;
+            }
+
+            // Simple AABB raycast for entities
+            // For a quick demo, use bounding box intersection
+            float closestDistance = float.MaxValue;
+            Odyssey.Core.Interfaces.IEntity closestEntity = null;
+
+            foreach (var entity in runtimeArea.GetAllEntities())
+            {
+                var transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                if (transform == null)
+                {
+                    continue;
+                }
+
+                // Create a simple bounding box around the entity
+                float entitySize = 1.0f; // Default size
+                switch (entity.ObjectType)
+                {
+                    case Odyssey.Core.Enums.ObjectType.Creature:
+                        entitySize = 1.0f;
+                        break;
+                    case Odyssey.Core.Enums.ObjectType.Door:
+                        entitySize = 1.5f;
+                        break;
+                    case Odyssey.Core.Enums.ObjectType.Placeable:
+                        entitySize = 1.0f;
+                        break;
+                }
+
+                var entityPos = new Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+                var entityMin = entityPos - new Vector3(entitySize, entitySize, entitySize);
+                var entityMax = entityPos + new Vector3(entitySize, entitySize, entitySize);
+
+                // Simple ray-AABB intersection
+                float tmin = 0.0f;
+                float tmax = 1000.0f;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    float invD = 1.0f / rayDirection[i];
+                    float t0 = (entityMin[i] - rayOrigin[i]) * invD;
+                    float t1 = (entityMax[i] - rayOrigin[i]) * invD;
+                    if (invD < 0.0f)
+                    {
+                        float temp = t0;
+                        t0 = t1;
+                        t1 = temp;
+                    }
+                    tmin = t0 > tmin ? t0 : tmin;
+                    tmax = t1 < tmax ? t1 : tmax;
+                    if (tmax < tmin)
+                    {
+                        break;
+                    }
+                }
+
+                if (tmax >= tmin && tmin < closestDistance)
+                {
+                    closestDistance = tmin;
+                    closestEntity = entity;
+                }
+            }
+
+            return closestEntity;
+        }
+
+        /// <summary>
+        /// Handles clicking on an entity.
+        /// </summary>
+        private void HandleEntityClick(Odyssey.Core.Interfaces.IEntity entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            Console.WriteLine($"[Odyssey] Clicked on entity: {entity.ObjectType}");
+
+            // Handle different entity types
+            switch (entity.ObjectType)
+            {
+                case Odyssey.Core.Enums.ObjectType.Creature:
+                    Console.WriteLine("[Odyssey] Creature clicked - would start dialogue or attack");
+                    // TODO: Start dialogue or attack based on creature type
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Door:
+                    Console.WriteLine("[Odyssey] Door clicked - would open/close door");
+                    // TODO: Open/close door
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Placeable:
+                    Console.WriteLine("[Odyssey] Placeable clicked - would interact with placeable");
+                    // TODO: Interact with placeable (container, etc.)
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Trigger:
+                    Console.WriteLine("[Odyssey] Trigger clicked - would activate trigger");
+                    // TODO: Activate trigger
+                    break;
+                default:
+                    Console.WriteLine($"[Odyssey] Unknown entity type clicked: {entity.ObjectType}");
+                    break;
+            }
         }
     }
 }
