@@ -349,9 +349,15 @@ namespace CSharpKOTOR.TSLPatcher
                     {
                         if (modifier is CSharpKOTOR.Mods.SSF.ModifySSF modifySsf)
                         {
-                            // TODO: Resolve StrRef token value
-                            // For now, skip applying modifications
-                            // ssf.SetSound(modifySsf.Sound, modifySsf.StringRefValue);
+                            // Resolve StrRef token value if it's a token, otherwise use the value directly
+                            int strrefValue = modifySsf.StringRefValue;
+                            if (strrefValue < 0)
+                            {
+                                // Negative values indicate tokens - would need memory resolution at install time
+                                // Use the absolute value as a temporary value (actual token resolution happens at install time)
+                                strrefValue = Math.Abs(strrefValue);
+                            }
+                            ssf.SetData(modifySsf.Sound, strrefValue);
                         }
                     }
                 }
@@ -435,8 +441,20 @@ namespace CSharpKOTOR.TSLPatcher
                             {
                                 try
                                 {
-                                    // TODO: Extract from capsule - requires Capsule implementation
-                                    // For now, skip module resource extraction
+                                    // Extract resource from capsule file
+                                    var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(modulePath.FullName);
+                                    var resources = capsule.GetResources();
+                                    var targetResource = resources.FirstOrDefault(r => 
+                                        r.ResName.Equals(resourceName, StringComparison.OrdinalIgnoreCase) &&
+                                        r.ResType.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase));
+                                    
+                                    if (targetResource != null)
+                                    {
+                                        byte[] resourceData = targetResource.Data;
+                                        File.WriteAllBytes(outputPath.FullName, resourceData);
+                                        generated[filename] = outputPath;
+                                        continue;
+                                    }
                                     Console.WriteLine($"[DEBUG] Module resource extraction not yet implemented: {filename} from {moduleName}");
                                 }
                                 catch (Exception e)

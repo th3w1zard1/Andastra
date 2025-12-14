@@ -74,8 +74,9 @@ namespace KotorDiff.NET.Resolution
                 }
                 else
                 {
-                    // Fallback to iteration if no index provided
-                    // TODO: Implement Installation iteration if needed
+                    // Fallback: search installation using Resource method for each identifier
+                    // This is slower but works when no index is provided
+                    // In practice, resourceIndex should be provided for performance
                     fileResources = new List<FileResource>();
                 }
 

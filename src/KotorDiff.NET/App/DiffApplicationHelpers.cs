@@ -1,6 +1,7 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py
 // Original: def log_output(*args, **kwargs): ... def visual_length(...): ... def log_output_with_separator(...): ... def diff_data_wrapper(...): ... def handle_diff_internal(...): ... def run_differ_from_args(...): ...
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using CSharpKOTOR.Installation;
@@ -405,14 +406,8 @@ namespace KotorDiff.NET.App
             var iniPath = Path.Combine(tslpatchdataPath.FullName, iniFilename);
             LogOutput($"\nGenerating {iniFilename} at: {iniPath}");
 
-            // Use TSLPatcher INI serializer if available, otherwise use INIManager
-            var iniManager = new Generator.INIManager(iniPath);
-            iniManager.Load();
-            
-            // Serialize modifications to INI format
-            // Note: This is a simplified version - full serialization would use TSLPatcherINISerializer
-            // For now, the incremental writer handles most of this, so batch generation is rarely used
-            var serializer = new CSharpKOTOR.TSLPatcher.TSLPatcherINISerializer();
+            // Use TSLPatcher INI serializer
+            var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
             File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
 

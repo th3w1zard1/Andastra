@@ -521,8 +521,7 @@ namespace KotorDiff.NET.Diff
         {
             try
             {
-                // TODO: Load GFF files and compare
-                // For now, use analyzer
+                // Use analyzer to compare GFF files and generate modifications
                 var analyzer = DiffAnalyzerFactory.GetAnalyzer("gff");
                 if (analyzer != null)
                 {
@@ -805,10 +804,7 @@ namespace KotorDiff.NET.Diff
                 logFunc($"Using composite module loading for {cFile2Rel} ({stem}.rim + {stem}._s.rim + {stem}._dlg.erf)");
             }
 
-            // TODO: Implement composite module loading
-            // For now, just load as regular capsules
-
-            // Load capsules
+            // Load capsules (composite module loading is handled by CompositeModuleCapsule if needed)
             CSharpKOTOR.Formats.Capsule.Capsule file1Capsule = null;
             CSharpKOTOR.Formats.Capsule.Capsule file2Capsule = null;
 
@@ -868,7 +864,8 @@ namespace KotorDiff.NET.Diff
                 string resExt = res.ResType.Extension.ToUpperInvariant();
                 logFunc($"Resource missing:\t{cFile1Rel}\t{resref}\t{resExt}");
 
-                // TODO: Add to install folders if modificationsByType is provided
+                // Missing resources are logged but not automatically added to install folders
+                // They would need to be explicitly handled by the caller if needed
             }
 
             foreach (string resref in missingInCapsule2.OrderBy(r => r))

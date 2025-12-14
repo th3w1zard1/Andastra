@@ -786,8 +786,18 @@ namespace CSharpKOTOR.TSLPatcher
                 // Get the field names that should reference this 2DA file
                 string twodaResname = pendingRef.TwodaFilename.ToLowerInvariant().Replace(".2da", "");
                 var relevantFieldNames = new List<string>();
-                // TODO: Get GFF_FIELD_TO_2DA_MAPPING from CSharpKOTOR if available
-                // For now, we'll check all field paths directly
+                
+                // Get GFF field to 2DA mapping from ReferenceCache
+                var gffFieldTo2daMapping = CSharpKOTOR.Tools.ReferenceCache.GffFieldTo2daMapping();
+                foreach (var kvp in gffFieldTo2daMapping)
+                {
+                    string fieldName = kvp.Key;
+                    var twodaIdentifier = kvp.Value;
+                    if (twodaIdentifier.ResName.ToLowerInvariant() == twodaResname)
+                    {
+                        relevantFieldNames.Add(fieldName);
+                    }
+                }
                 
                 // Verify all field paths in the pending reference still have the row index
                 foreach (string fieldPath in pendingRef.FieldPaths)

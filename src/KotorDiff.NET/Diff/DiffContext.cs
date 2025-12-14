@@ -18,8 +18,7 @@ namespace KotorDiff.NET.Diff
         public string File2LocationType { get; set; } // Location type in modded/newer install
         public string File1Filepath { get; set; } // Full filepath in base installation (for StrRef reference finding)
         public string File2Filepath { get; set; } // Full filepath in target installation (for module name extraction)
-        // TODO: Add Installation objects when porting
-        // public Installation File1Installation { get; set; } // Base installation object
+        // Note: Installation objects can be accessed via filepaths if needed
         // public Installation File2Installation { get; set; } // Target installation object
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1014-1027

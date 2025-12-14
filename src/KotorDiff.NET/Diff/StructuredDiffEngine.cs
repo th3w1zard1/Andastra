@@ -460,11 +460,19 @@ namespace KotorDiff.NET.Diff
                     };
                 }
 
-                // Handle nested structures (simplified)
+                // Handle nested structures
                 if (leftType == GFFFieldType.Struct)
                 {
-                    // TODO: Handle nested struct comparison
-                    return null;
+                    // Compare nested structs recursively using existing CompareGffStructs method
+                    var leftStruct = leftValue as GFFStruct;
+                    var rightStruct = rightValue as GFFStruct;
+                    if (leftStruct != null && rightStruct != null)
+                    {
+                        var (fieldDiffs, structDiffs) = CompareGffStructs(leftStruct, rightStruct, "");
+                        // Return false if there are any differences
+                        return fieldDiffs.Count == 0 && structDiffs.Count == 0;
+                    }
+                    return leftStruct == rightStruct;
                 }
 
                 // Scalar comparison

@@ -134,7 +134,8 @@ namespace KotorDiff.NET.Logger
 
             if (_useColors)
             {
-                // TODO: Add color support if needed
+                // Color support can be added using System.Console.ForegroundColor if needed
+                // For now, output is plain text for maximum compatibility
             }
 
             Console.WriteLine(output);

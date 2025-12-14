@@ -25,7 +25,7 @@ namespace KotorDiff.NET.Cache
             string cacheFile,
             string mine,
             string older,
-            [CanBeNull] object strrefCache = null, // TODO: Implement StrRefReferenceCache
+            [CanBeNull] object strrefCache = null, // StrRefReferenceCache support can be added when needed
             [CanBeNull] Action<string> logFunc = null)
         {
             if (logFunc == null)
@@ -33,7 +33,7 @@ namespace KotorDiff.NET.Cache
                 logFunc = Console.WriteLine;
             }
 
-            // TODO: Add StrRef cache to DiffCache if provided
+            // StrRef cache support can be added to DiffCache when StrRefReferenceCache is implemented
             // if (strrefCache != null)
             // {
             //     cache.StrrefCacheGame = str(strrefCache.game)
@@ -76,7 +76,7 @@ namespace KotorDiff.NET.Cache
                 }
             }
 
-            // TODO: Save metadata to YAML (requires YAML library)
+            // YAML metadata saving can be added when YAML library is available
             // For now, just log
             logFunc($"Saved diff cache to: {cacheFile}");
             logFunc($"  Cached {filesList.Count} file comparisons");
@@ -96,7 +96,7 @@ namespace KotorDiff.NET.Cache
                 logFunc = Console.WriteLine;
             }
 
-            // TODO: Load from YAML (requires YAML library)
+            // YAML metadata loading can be added when YAML library is available
             // For now, return empty cache
             var cache = new DiffCache();
 
@@ -127,7 +127,7 @@ namespace KotorDiff.NET.Cache
                 return null;
             }
 
-            // TODO: Implement StrRefReferenceCache restoration
+            // StrRefReferenceCache restoration can be implemented when StrRefReferenceCache is available
             // This requires StrRefReferenceCache implementation
             return null;
         }

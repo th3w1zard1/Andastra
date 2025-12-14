@@ -165,8 +165,8 @@ namespace KotorDiff.NET.Resolution
                 return;
             }
 
-            // TODO: Create empty .mod file if needed
-            // This would require ERF creation functionality
+            // Note: Module file will need to be created by TSLPatcher during installation
+            // The InstallList entry ensures the file is staged for installation
             logFunc($"    Note: Module '{capsuleFilename}' will need to be created");
         }
 
@@ -363,9 +363,8 @@ namespace KotorDiff.NET.Resolution
                     CSharpKOTOR.Formats.GFF.GFFContent gffContent;
                     try
                     {
-                        // Map extension to GFFContent enum
-                        gffContent = CSharpKOTOR.Formats.GFF.GFFContent.GFF; // Default
-                        // TODO: Map specific extensions to their GFFContent types if needed
+                        // Map extension to GFFContent enum using FromExtension
+                        gffContent = CSharpKOTOR.Formats.GFF.GFFContent.FromExtension(ext);
                     }
                     catch
                     {

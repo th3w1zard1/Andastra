@@ -5,6 +5,7 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -54,8 +55,13 @@ namespace HolocronToolset.NET.Editors
 
         public override Tuple<byte[], byte[]> Build()
         {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:138-170
+            // Original: def build(self) -> tuple[bytes, bytes]:
+            // TODO: Implement UTMHelpers.DismantleUtm when available
+            // For now, create a minimal valid GFF structure
             var gff = new GFF(GFFContent.UTM);
-            byte[] data = gff.ToBytes();
+            // Build basic structure - full implementation will populate from _utm
+            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTM);
             return Tuple.Create(data, new byte[0]);
         }
 

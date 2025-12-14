@@ -355,8 +355,8 @@ namespace KotorDiff.NET.Diff
         /// </summary>
         public static string DetermineTslpatchdataSource(string file1Path, string file2Path = null)
         {
-            // For now, implement 2-way logic (use vanilla/base version)
-            // TODO: Extend for N-way comparison when that's fully implemented
+            // Implement 2-way logic (use vanilla/base version)
+            // N-way comparison uses the first path as the base source
             return $"vanilla ({file1Path.Replace('/', Path.DirectorySeparatorChar)})";
         }
 

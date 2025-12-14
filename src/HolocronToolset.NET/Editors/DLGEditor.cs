@@ -1,10 +1,12 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics.DLG;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -55,8 +57,13 @@ namespace HolocronToolset.NET.Editors
 
         public override Tuple<byte[], byte[]> Build()
         {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+            // Original: def build(self) -> tuple[bytes, bytes]:
+            // TODO: Implement DLGHelpers.DismantleDlg when available
+            // For now, create a minimal valid GFF structure
             var gff = new GFF(GFFContent.DLG);
-            byte[] data = gff.ToBytes();
+            // Build basic structure - full implementation will populate from _dlg
+            byte[] data = GFFAuto.BytesGff(gff, ResourceType.DLG);
             return Tuple.Create(data, new byte[0]);
         }
 

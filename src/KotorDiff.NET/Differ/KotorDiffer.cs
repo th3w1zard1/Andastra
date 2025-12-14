@@ -440,11 +440,57 @@ namespace KotorDiff.NET.Differ
 
         private string GffToText(GFF gff)
         {
-            // Simplified GFF to text conversion
-            // In a full implementation, would serialize GFF to a text representation
+            // Convert GFF object to text representation for diffing
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/differ.py:381-383
+            // Original: def _gff_to_text(self, gff_obj: gff.GFF) -> str: return str(gff_obj.root)
             var sb = new StringBuilder();
-            // TODO: Implement proper GFF text serialization
+            SerializeGffStruct(gff.Root, sb, 0);
             return sb.ToString();
+        }
+
+        private void SerializeGffStruct(GFFStruct gffStruct, StringBuilder sb, int indent)
+        {
+            string indentStr = new string(' ', indent * 2);
+            foreach (var (label, fieldType, value) in gffStruct)
+            {
+                sb.Append(indentStr);
+                sb.Append(label);
+                sb.Append(" (");
+                sb.Append(fieldType);
+                sb.Append("): ");
+                
+                if (value == null)
+                {
+                    sb.AppendLine("null");
+                }
+                else if (fieldType == GFFFieldType.Struct)
+                {
+                    sb.AppendLine("{");
+                    SerializeGffStruct(value as GFFStruct, sb, indent + 1);
+                    sb.Append(indentStr);
+                    sb.AppendLine("}");
+                }
+                else if (fieldType == GFFFieldType.List)
+                {
+                    var list = value as GFFList;
+                    sb.AppendLine("[");
+                    if (list != null)
+                    {
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            sb.Append(indentStr + "  ");
+                            sb.AppendLine($"Item {i}:");
+                            SerializeGffStruct(list[i], sb, indent + 2);
+                        }
+                    }
+                    sb.Append(indentStr);
+                    sb.AppendLine("]");
+                }
+                else
+                {
+                    sb.AppendLine(value.ToString());
+                }
+            }
         }
 
         private string TwoDaToText(TwoDA twoda)
