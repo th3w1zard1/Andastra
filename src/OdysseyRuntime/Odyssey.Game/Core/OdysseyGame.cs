@@ -7,9 +7,11 @@ using Stride.Input;
 using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Rendering;
+using Stride.Rendering.Compositing;
 using Stride.UI;
 using Stride.UI.Panels;
 using Stride.UI.Controls;
+using Stride.UI.Events;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -168,7 +170,7 @@ namespace Odyssey.Game.Core
                         sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
                         Console.WriteLine("[Odyssey] Camera added to scene (required for rendering)");
                     }
-                    
+
                     // Adjust camera position/rotation based on state if needed
                     // For MainMenu, we can keep a simple default camera position
                     if (state == GameState.MainMenu)
@@ -258,17 +260,14 @@ namespace Odyssey.Game.Core
             _uiComponent = new UIComponent();
             uiEntity.Add(_uiComponent);
 
-            var canvas = new Canvas();
-            var page = new UIPage { RootElement = canvas };
-            _uiComponent.Page = page;
-
-            // Add UI entity to scene
+            // Add UI entity to scene FIRST
             try
             {
                 var sceneSystem = Services.GetService<SceneSystem>();
                 if (sceneSystem != null && sceneSystem.SceneInstance != null)
                 {
                     sceneSystem.SceneInstance.RootScene.Entities.Add(uiEntity);
+                    Console.WriteLine("[Odyssey] UI entity added to scene");
                 }
             }
             catch (Exception ex)
@@ -276,10 +275,19 @@ namespace Odyssey.Game.Core
                 Console.WriteLine("[Odyssey] WARNING: Failed to add UI entity to scene: " + ex.Message);
             }
 
-            // Try to load font
+            // Try to load font - Stride's Content.Load may return null instead of throwing
+            _font = null;
             try
             {
                 _font = Content.Load<SpriteFont>("DefaultFont");
+                if (_font != null)
+                {
+                    Console.WriteLine("[Odyssey] Font loaded successfully");
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] Warning: DefaultFont returned null");
+                }
             }
             catch (Exception ex)
             {
@@ -287,8 +295,17 @@ namespace Odyssey.Game.Core
                 _font = null;
             }
 
+            // ALWAYS use fallback for now - the font system isn't working
+            // TODO: Properly create and include a SpriteFont asset
+            _font = null; // Force fallback mode
+
             if (_font != null)
             {
+                // Full UI with fonts
+                var canvas = new Canvas();
+                var page = new UIPage { RootElement = canvas };
+                _uiComponent.Page = page;
+
                 _uiAvailable = true;
                 _mainMenu = new MainMenu(_uiComponent, _font);
                 _hud = new BasicHUD(_uiComponent, _font);
@@ -306,17 +323,180 @@ namespace Odyssey.Game.Core
             }
             else
             {
-                _uiAvailable = false;
-                Console.WriteLine("[Odyssey] Running without UI (no font available)");
+                // FALLBACK: Create a simple colored UI without fonts
+                // This ensures we always have SOMETHING visible on screen
+                _uiAvailable = true; // Mark as available since we have fallback
+                Console.WriteLine("[Odyssey] Creating fallback UI (no font available)");
+                CreateFallbackMainMenu();
+            }
+        }
 
-                // Create simple debug text without font
-                _debugTextBlock = new TextBlock
-                {
-                    TextSize = 14,
-                    TextColor = Color.Yellow,
-                    Margin = new Thickness(10, 10, 0, 0)
-                };
-                canvas.Children.Add(_debugTextBlock);
+        /// <summary>
+        /// Creates a simple fallback main menu using only colored rectangles.
+        /// This is used when no font is available.
+        /// </summary>
+        private void CreateFallbackMainMenu()
+        {
+            // Create root canvas with full screen dark background
+            var canvas = new Canvas
+            {
+                BackgroundColor = new Color(10, 10, 30, 255), // Dark blue background
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+
+            // Main panel - centered colored rectangle
+            var mainPanel = new Grid
+            {
+                Width = 600,
+                Height = 450,
+                BackgroundColor = new Color(20, 20, 50, 240), // Darker panel
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            // Add row definitions
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Title area
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Info row 1
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Info row 2
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Start button
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Status area
+
+            // Title bar (golden/amber color for Star Wars feel)
+            var titleBar = new Border
+            {
+                BackgroundColor = new Color(200, 150, 50, 255), // Gold
+                Margin = new Thickness(20, 15, 20, 5),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            titleBar.SetGridRow(0);
+            mainPanel.Children.Add(titleBar);
+
+            // Add title text if we can
+            var titleText = new TextBlock
+            {
+                Text = "ODYSSEY ENGINE",
+                TextSize = 28,
+                TextColor = new Color(10, 10, 30, 255), // Dark text on gold
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            titleBar.Content = titleText;
+
+            // Info panel 1 - Game detected
+            var infoPanel1 = new Border
+            {
+                BackgroundColor = new Color(40, 60, 80, 255), // Blue-gray
+                Margin = new Thickness(20, 5, 20, 5),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            var infoText1 = new TextBlock
+            {
+                Text = "KOTOR 1 Detected",
+                TextSize = 16,
+                TextColor = new Color(150, 200, 255, 255), // Light blue
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            infoPanel1.Content = infoText1;
+            infoPanel1.SetGridRow(2);
+            mainPanel.Children.Add(infoPanel1);
+
+            // Info panel 2 - Module
+            var infoPanel2 = new Border
+            {
+                BackgroundColor = new Color(40, 60, 80, 255),
+                Margin = new Thickness(20, 5, 20, 5),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            var infoText2 = new TextBlock
+            {
+                Text = "Module: end_m01aa (Endar Spire)",
+                TextSize = 14,
+                TextColor = new Color(150, 200, 255, 255),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            infoPanel2.Content = infoText2;
+            infoPanel2.SetGridRow(3);
+            mainPanel.Children.Add(infoPanel2);
+
+            // Start button (green)
+            var startButton = new Button
+            {
+                BackgroundColor = new Color(30, 120, 30, 255), // Green
+                Margin = new Thickness(80, 10, 80, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            var startText = new TextBlock
+            {
+                Text = "CLICK TO START",
+                TextSize = 20,
+                TextColor = Color.White,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            startButton.Content = startText;
+            startButton.Click += OnFallbackStartClicked;
+            startButton.SetGridRow(5);
+            mainPanel.Children.Add(startButton);
+
+            // Status text at bottom
+            var statusText = new TextBlock
+            {
+                Text = "Press ESCAPE to exit",
+                TextSize = 12,
+                TextColor = new Color(180, 180, 100, 255), // Yellow-ish
+                Margin = new Thickness(20, 10, 20, 10),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+            statusText.SetGridRow(6);
+            mainPanel.Children.Add(statusText);
+
+            // Outer border for visual polish
+            var outerBorder = new Border
+            {
+                BorderColor = new Color(100, 80, 40, 255), // Bronze border
+                BorderThickness = new Thickness(3, 3, 3, 3),
+                Content = mainPanel,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            canvas.Children.Add(outerBorder);
+
+            // Set the page
+            var page = new UIPage { RootElement = canvas };
+            _uiComponent.Page = page;
+
+            Console.WriteLine("[Odyssey] Fallback main menu created");
+        }
+
+        private void OnFallbackStartClicked(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("[Odyssey] Start button clicked (fallback menu)");
+
+            // Use detected game path
+            string gamePath = _settings.GamePath;
+            if (string.IsNullOrEmpty(gamePath))
+            {
+                gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
+            }
+
+            if (!string.IsNullOrEmpty(gamePath))
+            {
+                OnStartGame(this, new GameStartEventArgs(gamePath, "end_m01aa"));
+            }
+            else
+            {
+                Console.WriteLine("[Odyssey] ERROR: No game path detected!");
             }
         }
 
@@ -391,6 +571,10 @@ namespace Odyssey.Game.Core
         {
             base.BeginRun();
 
+            // CRITICAL: Set up the GraphicsCompositor for rendering
+            // Without a compositor, NOTHING will render to screen
+            SetupGraphicsCompositor();
+
             // CRITICAL: Create SceneInstance if it doesn't exist
             // Without a SceneInstance, nothing will render (purple screen)
             var sceneSystem = Services.GetService<SceneSystem>();
@@ -432,6 +616,59 @@ namespace Odyssey.Game.Core
 
             // Start in main menu state
             SetGameState(GameState.MainMenu);
+        }
+
+        /// <summary>
+        /// Sets up a basic GraphicsCompositor for rendering.
+        /// This is REQUIRED for anything to appear on screen in Stride.
+        /// </summary>
+        private void SetupGraphicsCompositor()
+        {
+            var sceneSystem = Services.GetService<SceneSystem>();
+            if (sceneSystem == null)
+            {
+                Console.WriteLine("[Odyssey] ERROR: SceneSystem not available for compositor setup");
+                return;
+            }
+
+            try
+            {
+                // Create a basic graphics compositor
+                var compositor = new GraphicsCompositor();
+
+                // Create a camera slot
+                var cameraSlot = new SceneCameraSlot();
+                compositor.Cameras.Add(cameraSlot);
+
+                // Create a simple game with just a scene renderer for UI
+                var sceneRenderer = new SceneRendererCollection();
+
+                // Add a clear renderer to clear the background
+                var clearRenderer = new ClearRenderer
+                {
+                    Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
+                    ClearFlags = ClearRendererFlags.ColorAndDepth
+                };
+                sceneRenderer.Children.Add(clearRenderer);
+
+                // Add the single render stage for 3D content and UI
+                var singleStageRenderer = new SingleStageRenderer();
+                sceneRenderer.Children.Add(singleStageRenderer);
+
+                // Create game entry point
+                var game = new SceneRendererCollection();
+                game.Children.Add(sceneRenderer);
+                compositor.Game = game;
+
+                // Set the compositor
+                sceneSystem.GraphicsCompositor = compositor;
+
+                Console.WriteLine("[Odyssey] GraphicsCompositor set up successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] ERROR: Failed to set up GraphicsCompositor: " + ex.Message);
+            }
         }
 
         protected override void Update(GameTime gameTime)
@@ -927,10 +1164,15 @@ namespace Odyssey.Game.Core
 
         protected override void Draw(GameTime gameTime)
         {
-            // Clear with a dark space-ish blue (not purple!)
-            // Purple screen was caused by missing camera/scene, not clear color
-            GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.02f, 0.02f, 0.08f, 1f));
+            // CRITICAL: First set the render target to the back buffer
+            GraphicsContext.CommandList.SetRenderTargetAndViewport(GraphicsDevice.Presenter.DepthStencilBuffer, GraphicsDevice.Presenter.BackBuffer);
+
+            // Clear with a solid dark blue background
+            // This ensures we ALWAYS have a visible background, not transparent/purple
+            GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
             GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
+
+            // Call base to render scene and UI
             base.Draw(gameTime);
         }
 
