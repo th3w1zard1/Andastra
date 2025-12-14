@@ -1152,25 +1152,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         }
 
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1247-1253
+        // Original: public void transformConst(AConstCommand node) { this.checkStart(node); Const theconst = (Const) this.stack.get(1); AConst constdec = new AConst(theconst); this.current.addChild(constdec); this.checkEnd(node); }
         public virtual void TransformConst(AConstCommand node)
         {
             this.CheckStart(node);
             Const theconst = (Const)this.stack.Get(1);
             AConst constdec = new AConst(theconst);
-            // In globals context (varprefix starts with "GLOB_"), constants shouldn't be added as standalone statements
-            // They should only be part of variable initializations. Skip adding them directly.
-            if (this.varprefix != null && this.varprefix.StartsWith("GLOB_"))
-            {
-                // In globals, constants are typically part of variable initializations, not standalone
-                // Don't add as a child - it will be used as part of an expression if needed
-                // If it's truly standalone, it's likely dead code and should be ignored
-            }
-            else
-            {
-                // In function context, wrap expression in AExpressionStatement so it's a valid statement
-                AExpressionStatement stmt = new AExpressionStatement(constdec);
-                this.current.AddChild(stmt);
-            }
+            // Matching Java: add constant directly as expression (not wrapped in AExpressionStatement)
+            // This allows RemoveLastExp to find and remove it when building action parameters
+            this.current.AddChild(constdec);
             this.CheckEnd(node);
         }
 
