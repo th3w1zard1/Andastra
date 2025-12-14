@@ -119,6 +119,29 @@ namespace Odyssey.Kotor.Game
         }
 
         /// <summary>
+        /// Gets the current CSharpKOTOR Module for resource loading.
+        /// </summary>
+        [CanBeNull]
+        public CSharpKOTOR.Common.Module GetCSharpKotorModule()
+        {
+            if (_installation == null || string.IsNullOrEmpty(_currentModuleRoot))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Create a Module instance from the current module root
+                return _installation.Module(_currentModuleRoot);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to get CSharpKOTOR Module: " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Loads a dialogue by ResRef.
         /// </summary>
         [CanBeNull]

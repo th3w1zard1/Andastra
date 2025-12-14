@@ -222,7 +222,14 @@ namespace Odyssey.Kotor.Game
             _partyManager = new PartyManager(world);
 
             // Create encounter system
-            _encounterSystem = new EncounterSystem(world, _factionManager, FireScriptEvent, _moduleLoader);
+            _encounterSystem = new EncounterSystem(
+                world, 
+                _factionManager, 
+                FireScriptEvent, 
+                _moduleLoader,
+                (creature) => creature == _playerEntity, // IsPlayerCheck
+                () => _moduleLoader?.GetCSharpKotorModule() // GetCurrentModule
+            );
 
             // Create module transition system
             _moduleTransitionSystem = new ModuleTransitionSystem(

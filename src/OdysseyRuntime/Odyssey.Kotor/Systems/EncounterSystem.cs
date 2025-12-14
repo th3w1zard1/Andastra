@@ -29,6 +29,8 @@ namespace Odyssey.Kotor.Systems
         private readonly Action<IEntity, ScriptEvent, IEntity> _scriptExecutor;
         private readonly Loading.EntityFactory _entityFactory;
         private readonly Loading.ModuleLoader _moduleLoader;
+        private readonly Func<IEntity, bool> _isPlayerCheck;
+        private readonly Func<CSharpKOTOR.Common.Module> _getCurrentModule;
 
         public EncounterSystem(IWorld world, FactionManager factionManager)
         {
@@ -276,7 +278,7 @@ namespace Odyssey.Kotor.Systems
                 return; // No templates or spawn points
             }
 
-            IArea area = _world?.CurrentArea;
+            IArea area = encounter.Area;
             if (area == null)
             {
                 return;
@@ -301,14 +303,58 @@ namespace Odyssey.Kotor.Systems
                 int spawnPointIndex = random.Next(encounterComp.SpawnPoints.Count);
                 EncounterSpawnPoint spawnPoint = encounterComp.SpawnPoints[spawnPointIndex];
 
-                // Spawn creature
-                // TODO: Use EntityFactory to spawn creature from template
-                // For now, just track that we would spawn
-                Console.WriteLine("[EncounterSystem] Would spawn " + template.ResRef + " at " + spawnPoint.Position);
-                
-                // Track spawned creature (would be actual entity ID)
-                // encounterComp.SpawnedCreatures.Add(creatureId);
-                spawned++;
+                // Spawn creature from template
+                IEntity creature = null;
+                if (_moduleLoader != null && _getCurrentModule != null)
+                {
+                    CSharpKOTOR.Common.Module csharpModule = _getCurrentModule();
+                    if (csharpModule != null)
+                    {
+                        creature = _entityFactory.CreateCreatureFromTemplate(
+                            csharpModule,
+                            template.ResRef,
+                            spawnPoint.Position,
+                            spawnPoint.Orientation
+                        );
+
+                        if (creature != null)
+                        {
+                            // Set encounter faction if specified
+                            if (encounterComp.Faction > 0)
+                            {
+                                Components.FactionComponent factionComp = creature.GetComponent<Components.FactionComponent>();
+                                if (factionComp != null)
+                                {
+                                    factionComp.FactionId = encounterComp.Faction;
+                                }
+                            }
+
+                            // Override appearance if specified
+                            if (template.Appearance > 0)
+                            {
+                                creature.SetData("Appearance_Type", template.Appearance);
+                            }
+
+                            // Register entity with world
+                            _world.RegisterEntity(creature);
+
+                            // Add to area
+                            if (area is Module.RuntimeArea runtimeArea)
+                            {
+                                runtimeArea.AddEntity(creature);
+                            }
+
+                            // Track spawned creature
+                            encounterComp.SpawnedCreatures.Add(creature.ObjectId);
+                            spawned++;
+                        }
+                    }
+                }
+
+                if (creature == null)
+                {
+                    Console.WriteLine("[EncounterSystem] Failed to spawn " + template.ResRef + " at " + spawnPoint.Position);
+                }
             }
 
             // Check if exhausted
@@ -317,14 +363,9 @@ namespace Odyssey.Kotor.Systems
                 encounterComp.IsExhausted = true;
 
                 // Fire OnExhausted script
-                IScriptHooksComponent scripts = encounter.GetComponent<IScriptHooksComponent>();
-                if (scripts != null)
+                if (_scriptExecutor != null)
                 {
-                    string script = scripts.GetScript(ScriptEvent.OnExhausted);
-                    if (!string.IsNullOrEmpty(script))
-                    {
-                        // TODO: Execute script
-                    }
+                    _scriptExecutor(encounter, ScriptEvent.OnExhausted, null);
                 }
             }
         }
