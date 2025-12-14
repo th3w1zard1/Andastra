@@ -503,194 +503,156 @@ namespace Odyssey.Game.Core
         }
 
         /// <summary>
-        /// Creates a fully functional fallback main menu with proper font support and interactive elements.
-        /// This is used when KOTOR GUI files cannot be loaded.
+        /// Creates a fully functional visual fallback main menu without text dependency.
+        /// Uses colored visual elements and borders to create an interactive UI.
+        /// This is GUARANTEED to work as it doesn't depend on font assets.
+        /// Strategy based on: StrideCleanUI project and Stride best practices for asset-free UI.
         /// </summary>
         private void CreateFallbackMainMenu()
         {
-            // Try to load a font from content if available
-            // In Stride, fonts are typically loaded from content assets
-            SpriteFont fallbackFont = null;
-            try
-            {
-                // Try to load a default font from content if available
-                if (Content != null)
-                {
-                    try
-                    {
-                        // Try common font asset paths
-                        fallbackFont = Content.Load<SpriteFont>("Fonts/Arial");
-                        Console.WriteLine("[Odyssey] Loaded font from content for fallback UI");
-                    }
-                    catch
-                    {
-                        // Font not found in content, continue without it
-                        Console.WriteLine("[Odyssey] No font asset found in content, UI will work without text rendering");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Odyssey] WARNING: Font loading error: {ex.Message}");
-                Console.WriteLine("[Odyssey] UI will still be functional but text may not render");
-            }
+            Console.WriteLine("[Odyssey] Creating visual-only fallback UI (no font dependency)");
 
-            // Create root canvas with full screen background
+            // Create root canvas - full screen dark space background
             var canvas = new Canvas
             {
-                BackgroundColor = new Color(10, 10, 30, 255), // Dark blue background
+                BackgroundColor = new Color(5, 5, 15, 255), // Very dark blue/black
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 Width = Window.ClientBounds.Width,
                 Height = Window.ClientBounds.Height
             };
 
-            // Main panel - centered, properly sized
+            // Main panel - centered visual menu
             var mainPanel = new Grid
             {
-                Width = 700,
-                Height = 500,
-                BackgroundColor = new Color(20, 20, 50, 240), // Darker panel
+                Width = 800,
+                Height = 600,
+                BackgroundColor = Color.Transparent,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            // Add row definitions for proper layout
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 90));  // Title area
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Info row 1
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Info row 2
+            // Simple row layout
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 120)); // Title/header
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 50));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 100)); // Main button
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 30));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Start button
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Status area
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 100)); // Options button
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 30));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 100)); // Exit button
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Bottom space
 
-            // Title bar (golden/amber color for Star Wars feel)
-            var titleBar = new Border
+            // HEADER PANEL - Golden bar (represents title)
+            var headerPanel = new Border
             {
-                BackgroundColor = new Color(200, 150, 50, 255), // Gold
-                Margin = new Thickness(20, 15, 20, 5),
+                BackgroundColor = new Color(220, 180, 80, 255), // Gold/amber
+                BorderColor = new Color(180, 140, 40, 255),
+                BorderThickness = new Thickness(3),
+                Margin = new Thickness(50, 20, 50, 10),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
-            titleBar.SetGridRow(0);
-            mainPanel.Children.Add(titleBar);
+            headerPanel.SetGridRow(0);
+            mainPanel.Children.Add(headerPanel);
 
-            // Title text with font
-            var titleText = new TextBlock
-            {
-                Text = "ODYSSEY ENGINE",
-                TextSize = 32,
-                TextColor = new Color(10, 10, 30, 255), // Dark text on gold
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Font = fallbackFont
-            };
-            titleBar.Content = titleText;
-
-            // Info panel 1 - Game detected
-            var infoPanel1 = new Border
-            {
-                BackgroundColor = new Color(40, 60, 80, 255), // Blue-gray
-                Margin = new Thickness(20, 5, 20, 5),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
-            };
-            var infoText1 = new TextBlock
-            {
-                Text = _settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords",
-                TextSize = 18,
-                TextColor = new Color(150, 200, 255, 255), // Light blue
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Font = fallbackFont
-            };
-            infoPanel1.Content = infoText1;
-            infoPanel1.SetGridRow(2);
-            mainPanel.Children.Add(infoPanel1);
-
-            // Info panel 2 - Module info
-            var infoPanel2 = new Border
-            {
-                BackgroundColor = new Color(40, 60, 80, 255),
-                Margin = new Thickness(20, 5, 20, 5),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
-            };
+            // Determine if game path is available
             string gamePath = _settings.GamePath;
             if (string.IsNullOrEmpty(gamePath))
             {
                 gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
             }
-            string moduleInfo = string.IsNullOrEmpty(gamePath)
-                ? "No game path detected"
-                : $"Game Path: {gamePath}";
-            var infoText2 = new TextBlock
-            {
-                Text = moduleInfo,
-                TextSize = 14,
-                TextColor = new Color(150, 200, 255, 255),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Font = fallbackFont
-            };
-            infoPanel2.Content = infoText2;
-            infoPanel2.SetGridRow(3);
-            mainPanel.Children.Add(infoPanel2);
+            bool gameAvailable = !string.IsNullOrEmpty(gamePath) && Directory.Exists(gamePath);
 
-            // Start button (green, properly sized and clickable)
+            // START GAME BUTTON - Green means "go", clickable visual
             var startButton = new Button
             {
-                BackgroundColor = new Color(30, 120, 30, 255), // Green
-                Margin = new Thickness(100, 15, 100, 15),
+                BackgroundColor = gameAvailable ? new Color(40, 180, 40, 255) : new Color(80, 80, 80, 255),
+                Margin = new Thickness(100, 10, 100, 10),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                IsEnabled = !string.IsNullOrEmpty(gamePath) // Enable only if game path is available
+                IsEnabled = gameAvailable
             };
-            var startText = new TextBlock
+            
+            // Inner colored box to make it clear it's interactive
+            var startInner = new Border
             {
-                Text = string.IsNullOrEmpty(gamePath) ? "NO GAME PATH" : "CLICK TO START GAME",
-                TextSize = 22,
-                TextColor = Color.White,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Font = fallbackFont
+                BackgroundColor = gameAvailable ? new Color(60, 220, 60, 255) : new Color(100, 100, 100, 255),
+                Margin = new Thickness(10),
+                BorderColor = Color.White,
+                BorderThickness = new Thickness(3),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
-            startButton.Content = startText;
+            startButton.Content = startInner;
             startButton.Click += OnFallbackStartClicked;
-            startButton.SetGridRow(5);
+            startButton.SetGridRow(2);
             mainPanel.Children.Add(startButton);
 
-            // Status text at bottom
-            var statusText = new TextBlock
+            // OPTIONS BUTTON - Blue panel (disabled for now)
+            var optionsButton = new Button
             {
-                Text = "Press ESCAPE to exit | Click button to start game",
-                TextSize = 14,
-                TextColor = new Color(180, 180, 100, 255), // Yellow-ish
-                Margin = new Thickness(20, 15, 20, 15),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top,
-                Font = fallbackFont
+                BackgroundColor = new Color(40, 80, 160, 255),
+                Margin = new Thickness(100, 10, 100, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                IsEnabled = false // Disabled for minimal UI
             };
-            statusText.SetGridRow(6);
-            mainPanel.Children.Add(statusText);
-
-            // Outer border for visual polish
-            var outerBorder = new Border
+            
+            var optionsInner = new Border
             {
-                BorderColor = new Color(100, 80, 40, 255), // Bronze border
-                BorderThickness = new Thickness(4, 4, 4, 4),
+                BackgroundColor = new Color(60, 100, 180, 255),
+                Margin = new Thickness(10),
+                BorderColor = new Color(100, 100, 100, 255),
+                BorderThickness = new Thickness(2),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            optionsButton.Content = optionsInner;
+            optionsButton.SetGridRow(4);
+            mainPanel.Children.Add(optionsButton);
+
+            // EXIT BUTTON - Red means "stop/exit", clickable visual
+            var exitButton = new Button
+            {
+                BackgroundColor = new Color(180, 40, 40, 255),
+                Margin = new Thickness(100, 10, 100, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            
+            var exitInner = new Border
+            {
+                BackgroundColor = new Color(220, 60, 60, 255),
+                Margin = new Thickness(10),
+                BorderColor = Color.White,
+                BorderThickness = new Thickness(3),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            exitButton.Content = exitInner;
+            exitButton.Click += (s, e) => Exit();
+            exitButton.SetGridRow(6);
+            mainPanel.Children.Add(exitButton);
+
+            // Outer frame border - makes it look like a contained UI
+            var outerFrame = new Border
+            {
+                BorderColor = new Color(120, 100, 60, 255),
+                BorderThickness = new Thickness(5),
                 Content = mainPanel,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            canvas.Children.Add(outerBorder);
+            canvas.Children.Add(outerFrame);
 
-            // Set the page - CRITICAL: This must be set for UI to render
+            // Set the page - CRITICAL for rendering
             var page = new UIPage { RootElement = canvas };
             _uiComponent.Page = page;
 
-            Console.WriteLine("[Odyssey] Fallback main menu created with full functionality");
+            Console.WriteLine("[Odyssey] Visual-only fallback UI created successfully");
+            Console.WriteLine("[Odyssey] UI Layout: Golden header bar, Green=Start, Blue=Options(disabled), Red=Exit");
+            Console.WriteLine("[Odyssey] No font dependency - purely visual elements");
         }
 
         private void OnFallbackStartClicked(object sender, RoutedEventArgs e)
