@@ -151,13 +151,45 @@ Audio Phase      → Spatial audio, trigger one-shots
 - Global variable functions (GetGlobalNumber/Boolean/String)
 - Core functions: GetTag(168), GetObjectByTag(200), GetModule(242)
 
+### Playable Demo Foundation (Dec 2024)
+- **Game Entry Point**: Program.cs with command line parsing (--k1/--k2, --path, --module)
+- **GameSettings**: Configuration class for game/window/debug settings
+- **GamePathDetector**: Automatic KOTOR installation detection (registry, Steam, GOG)
+- **OdysseyGame**: Stride game integration with main loop
+- **GameSession**: Module/save/party management orchestrator
+- **ModuleLoader**: Placeholder module loading (TODO: CSharpKOTOR integration)
+- **PlayerController**: Click-to-move and object interaction system
+- **DialogueManager**: Placeholder dialogue with state machine
+- **IActionQueueComponent**: Interface for entity action queues
+
+## Critical TODOs for First Playable Level
+
+### Module Loading (High Priority)
+- [ ] Integrate CSharpKOTOR KEY/BIF resource loading
+- [ ] Parse IFO file for module metadata
+- [ ] Parse ARE file for area properties
+- [ ] Parse GIT file for entity instances
+- [ ] Load UTC/UTP/UTD templates for entities
+
+### Rendering (High Priority)
+- [ ] MDL model loading to Stride meshes
+- [ ] Basic texture loading (TPC/TGA)
+- [ ] Room rendering from LYT layout
+- [ ] Entity rendering at spawn positions
+
+### Gameplay (Medium Priority)
+- [ ] DLG file parsing for dialogue
+- [ ] Area transition triggers
+- [ ] Door opening/closing mechanics
+- [ ] Basic combat (for Endar Spire)
+
 ## Next Steps
 
-1. Implement VIS file visibility culling
-2. Add area transition handling
-3. Complete dialogue system (DLG traversal)
-4. Connect to Stride for MDL/MDX rendering
-5. Implement combat round resolution
+1. Integrate CSharpKOTOR resource loading into ModuleLoader
+2. Add MDL model conversion to Stride mesh format
+3. Complete dialogue system with actual DLG parsing
+4. Test with Endar Spire (end_m01aa) module
+5. Add basic UI for dialogue display
 
 ---
 
