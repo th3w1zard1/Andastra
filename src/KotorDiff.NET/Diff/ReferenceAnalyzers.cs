@@ -6,8 +6,11 @@ using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Diff;
+using CSharpKOTOR.Extract;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.SSF;
+using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Mods.GFF;
@@ -15,7 +18,9 @@ using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.NCS;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TwoDA;
+using CSharpKOTOR.Memory;
 using CSharpKOTOR.Resources;
+using CSharpKOTOR.Tools;
 using JetBrains.Annotations;
 
 namespace KotorDiff.NET.Diff
@@ -198,9 +203,8 @@ namespace KotorDiff.NET.Diff
             return offsets;
         }
 
-        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1002-1549
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1002-1331
         // Original: def analyze_tlk_strref_references(...): ...
-        // Note: This is a large function - implementing core logic, full implementation would be very extensive
         public static void AnalyzeTlkStrrefReferences(
             Tuple<ModificationsTLK, Dictionary<int, int>> tlkModifications,
             Dictionary<int, int> strrefMappings,
@@ -223,23 +227,427 @@ namespace KotorDiff.NET.Diff
             }
             logFunc($"Analyzing StrRef references: {strrefMappings.Count} mappings");
 
-            // TODO: Full implementation of analyze_tlk_strref_references
-            // This is a very large function (500+ lines) that searches entire installations
-            // for StrRef references and creates patches. Core structure is ported above.
-            // Full implementation would require:
-            // - Installation/folder detection
-            // - Game type detection (K1 vs K2)
-            // - 2DA column definitions lookup
-            // - Comprehensive file searching
-            // - GFF/2DA/SSF/NCS modification creation
-            // This is marked as enhancement feature and can be completed incrementally.
+            try
+            {
+                // Check if this is an installation or just a folder
+                bool isInstallation = false;
+                Installation installation = null;
+                Game game;
+                try
+                {
+                    installation = new Installation(installationOrFolderPath);
+                    isInstallation = true;
+                    game = installation.Game;
+                }
+                catch (Exception)
+                {
+                    // Not an installation, treat as folder
+                    isInstallation = false;
+                    logFunc($"Treating as folder, attempting game detection: path={installationOrFolderPath}");
+                    // Try to detect game from folder structure (look for chitin.key or swkotor.exe)
+                    string chitinKey = Path.Combine(installationOrFolderPath, "chitin.key");
+                    string swkotorExe = Path.Combine(installationOrFolderPath, "swkotor.exe");
+                    string swkotor2Exe = Path.Combine(installationOrFolderPath, "swkotor2.exe");
+
+                    bool chitinExists = File.Exists(chitinKey);
+                    bool swkotorExists = File.Exists(swkotorExe);
+                    bool swkotor2Exists = File.Exists(swkotor2Exe);
+                    logFunc($"Game detection files: chitin_exists={chitinExists}, swkotor_exists={swkotorExists}, swkotor2_exists={swkotor2Exists}, path={installationOrFolderPath}");
+
+                    if (swkotor2Exists)
+                    {
+                        game = Game.K2;
+                        logFunc($"Detected K2 from swkotor2.exe: game={game}, path={installationOrFolderPath}");
+                    }
+                    else if (swkotorExists || chitinExists)
+                    {
+                        game = Game.K1;
+                        logFunc($"Detected K1 from files: game={game}, swkotor_exists={swkotorExists}, chitin_exists={chitinExists}, path={installationOrFolderPath}");
+                    }
+                    else
+                    {
+                        logFunc($"Could not detect game type: path={installationOrFolderPath}, chitin_exists={chitinExists}, swkotor_exists={swkotorExists}, swkotor2_exists={swkotor2Exists}");
+                        logFunc($"Assuming K2 by default: path={installationOrFolderPath}");
+                        game = Game.K2;
+                    }
+                }
+
+                // Get the relevant 2DA column definitions
+                bool isK1 = game.IsK1();
+                bool isK2 = game.IsK2();
+                logFunc($"Determining game-specific 2DA columns: game={game}, is_k1={isK1}, is_k2={isK2}");
+                Dictionary<string, HashSet<string>> relevant2DaFilenames;
+                if (isK1)
+                {
+                    relevant2DaFilenames = TwoDARegistry.ColumnsFor("strref", useK2: false);
+                    logFunc($"Using K1 2DA definitions: game={game}, num_2da_files={relevant2DaFilenames.Count}");
+                }
+                else if (isK2)
+                {
+                    relevant2DaFilenames = TwoDARegistry.ColumnsFor("strref", useK2: true);
+                    logFunc($"Using K2 2DA definitions: game={game}, num_2da_files={relevant2DaFilenames.Count}");
+                }
+                else
+                {
+                    logFunc($"Unknown game type, cannot proceed: game={game}, path={installationOrFolderPath}");
+                    return;
+                }
+
+                string searchType = isInstallation ? "installation" : "folder";
+                int twodaCount = relevant2DaFilenames.Count;
+                logFunc($"Searching for StrRef references: search_type={searchType}, path={installationOrFolderPath}, game={game}, twoda_file_count={twodaCount}");
+
+                // For each modified/new StrRef, find all references in the ENTIRE installation/folder
+                foreach (var kvp in strrefMappings)
+                {
+                    int oldStrref = kvp.Key;
+                    int tokenId = kvp.Value;
+                    logFunc($"Analyzing StrRef {oldStrref} -> token {tokenId}");
+
+                    try
+                    {
+                        HashSet<FileResource> foundResources = new HashSet<FileResource>();
+
+                        if (isInstallation && installation != null)
+                        {
+                            // For installations, we would use a comprehensive search method
+                            // For now, fall back to folder-based search
+                            // TODO: Implement installation-based search using reference cache if available
+                            logFunc($"Installation-based search not yet implemented, using folder search");
+                            isInstallation = false;
+                        }
+
+                        if (!isInstallation)
+                        {
+                            // Search all relevant files in folder
+                            var allFiles = Directory.GetFiles(installationOrFolderPath, "*", SearchOption.AllDirectories);
+
+                            foreach (string filePath in allFiles)
+                            {
+                                if (!File.Exists(filePath))
+                                {
+                                    continue;
+                                }
+
+                                ResourceType restype = ResourceType.FromExtension(Path.GetExtension(filePath));
+                                if (restype == null || !restype.IsValid())
+                                {
+                                    continue;
+                                }
+
+                                FileResource fileRes = FileResource.FromPath(filePath);
+
+                                // Check based on file type
+                                try
+                                {
+                                    string fileNameLower = Path.GetFileName(filePath).ToLowerInvariant();
+                                    if (restype == ResourceType.TwoDA && relevant2DaFilenames.ContainsKey(fileNameLower))
+                                    {
+                                        byte[] fileData = File.ReadAllBytes(filePath);
+                                        TwoDA twodaObj = new TwoDABinaryReader(fileData).Load();
+                                        HashSet<string> columnsWithStrrefs = relevant2DaFilenames[fileNameLower];
+
+                                        for (int rowIdx = 0; rowIdx < twodaObj.GetHeight(); rowIdx++)
+                                        {
+                                            bool found = false;
+                                            foreach (string columnName in columnsWithStrrefs)
+                                            {
+                                                if (columnName == ">>##HEADER##<<")
+                                                {
+                                                    continue;
+                                                }
+                                                string cell = twodaObj.GetCellString(rowIdx, columnName);
+                                                if (!string.IsNullOrEmpty(cell) && cell.Trim().All(char.IsDigit) && int.TryParse(cell.Trim(), out int cellValue) && cellValue == oldStrref)
+                                                {
+                                                    foundResources.Add(fileRes);
+                                                    found = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (found)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else if (restype == ResourceType.SSF)
+                                    {
+                                        byte[] fileData = File.ReadAllBytes(filePath);
+                                        SSF ssfObj = SSFAuto.ReadSsf(fileData);
+                                        foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
+                                        {
+                                            int? soundStrref = ssfObj.Get(sound);
+                                            if (soundStrref.HasValue && soundStrref.Value == oldStrref)
+                                            {
+                                                foundResources.Add(fileRes);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else if (restype == ResourceType.NCS)
+                                    {
+                                        // Just check if it contains the StrRef, actual offset extraction happens later
+                                        byte[] ncsData = File.ReadAllBytes(filePath);
+                                        List<int> offsets = ExtractNcsConstiOffsets(ncsData, oldStrref);
+                                        if (offsets.Count > 0)
+                                        {
+                                            foundResources.Add(fileRes);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Try as GFF
+                                        byte[] fileData = File.ReadAllBytes(filePath);
+                                        GFF gffObj = new GFFBinaryReader(fileData).Load();
+                                        List<PurePath> locations = FindStrrefInGffStruct(gffObj.Root, oldStrref, new PurePath());
+                                        if (locations.Count > 0)
+                                        {
+                                            foundResources.Add(fileRes);
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Failed to process file {filePath}: {e.GetType().Name}: {e.Message}");
+                                    logFunc($"Full traceback: {e.StackTrace}");
+                                    continue;
+                                }
+                            }
+                        }
+
+                        if (foundResources.Count == 0)
+                        {
+                            continue;
+                        }
+
+                        logFunc($"  Found {foundResources.Count} references");
+
+                        // Process each resource that references this StrRef
+                        int idx = 1;
+                        foreach (FileResource resource in foundResources)
+                        {
+                            string filename = resource.Filename().ToLowerInvariant();
+                            ResourceType restype = resource.ResType;
+
+                            logFunc($"  [{idx}/{foundResources.Count}] Patching {filename} (StrRef {oldStrref} → StrRef{tokenId})");
+
+                            // Handle 2DA files
+                            if (relevant2DaFilenames.ContainsKey(filename) && restype == ResourceType.TwoDA)
+                            {
+                                try
+                                {
+                                    byte[] resourceData = resource.GetData();
+                                    TwoDA twodaObj = new TwoDABinaryReader(resourceData).Load();
+                                    HashSet<string> columnsWithStrrefs = relevant2DaFilenames[filename];
+
+                                    // Find all cells containing this StrRef
+                                    for (int rowIdx = 0; rowIdx < twodaObj.GetHeight(); rowIdx++)
+                                    {
+                                        foreach (string columnName in columnsWithStrrefs)
+                                        {
+                                            if (columnName == ">>##HEADER##<<")
+                                            {
+                                                // Special case: header row contains strrefs - skip as we can't patch headers
+                                                continue;
+                                            }
+
+                                            try
+                                            {
+                                                string cellValue = twodaObj.GetCellString(rowIdx, columnName);
+                                                if (!string.IsNullOrEmpty(cellValue) && cellValue.Trim().All(char.IsDigit) && int.TryParse(cellValue.Trim(), out int parsedValue) && parsedValue == oldStrref)
+                                                {
+                                                    // Found a match - create a ChangeRow2DA modification
+                                                    logFunc($"Found StrRef {oldStrref} in {filename} row {rowIdx}, column {columnName}");
+
+                                                    // Check if we already have a modification for this file
+                                                    Modifications2DA existingMod = twodaModifications.FirstOrDefault(m => m.SourceFile.ToLowerInvariant() == filename);
+                                                    if (existingMod == null)
+                                                    {
+                                                        existingMod = new Modifications2DA(filename);
+                                                        twodaModifications.Add(existingMod);
+                                                    }
+
+                                                    string rowLabel = null;
+                                                    try
+                                                    {
+                                                        rowLabel = twodaObj.GetLabel(rowIdx);
+                                                    }
+                                                    catch (Exception)
+                                                    {
+                                                        rowLabel = null;
+                                                    }
+                                                    int targetRowIndex = ResolveRowIndexValue(rowIdx, rowLabel);
+
+                                                    // Create ChangeRow2DA with 2DAMEMORY token
+                                                    var changeRow = new ChangeRow2DA(
+                                                        identifier: $"strref_update_{rowIdx}_{columnName}",
+                                                        target: new Target(TargetType.ROW_INDEX, targetRowIndex),
+                                                        cells: new Dictionary<string, RowValue> { { columnName, new RowValueTLKMemory(tokenId) } });
+                                                    existingMod.Modifiers.Add(changeRow);
+                                                }
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                logFunc($"Full traceback: {e.StackTrace}");
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Failed to process 2DA {filename}: {e.GetType().Name}: {e.Message}");
+                                    logFunc($"Full traceback: {e.StackTrace}");
+                                }
+                            }
+                            // Handle SSF files
+                            else if (restype == ResourceType.SSF)
+                            {
+                                try
+                                {
+                                    byte[] resourceData = resource.GetData();
+                                    SSF ssfObj = SSFAuto.ReadSsf(resourceData);
+
+                                    // Check all SSF sounds for this StrRef
+                                    List<SSFSound> modifiedSounds = new List<SSFSound>();
+                                    foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
+                                    {
+                                        int? soundStrref = ssfObj.Get(sound);
+                                        if (soundStrref.HasValue && soundStrref.Value == oldStrref)
+                                        {
+                                            modifiedSounds.Add(sound);
+                                        }
+                                    }
+
+                                    if (modifiedSounds.Count > 0)
+                                    {
+                                        logFunc($"Found {modifiedSounds.Count} SSF sounds with StrRef {oldStrref} in {filename}");
+
+                                        // Check if we already have a modification for this file
+                                        ModificationsSSF existingSsfMod = ssfModifications.FirstOrDefault(m => m.SourceFile.ToLowerInvariant() == filename);
+                                        if (existingSsfMod == null)
+                                        {
+                                            existingSsfMod = new ModificationsSSF(filename, replace: false, modifiers: new List<ModifySSF>());
+                                            ssfModifications.Add(existingSsfMod);
+                                        }
+
+                                        // Create ModifySSF for each sound
+                                        foreach (SSFSound sound in modifiedSounds)
+                                        {
+                                            var modifySsf = new ModifySSF(sound, new TokenUsageTLK(tokenId));
+                                            existingSsfMod.Modifiers.Add(modifySsf);
+                                            logFunc($"Created SSF patch for {filename} sound {sound}: StrRef {oldStrref} -> StrRef{tokenId}");
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Failed to process SSF {filename}: {e.GetType().Name}: {e.Message}");
+                                    logFunc($"Full traceback: {e.StackTrace}");
+                                }
+                            }
+                            // Handle NCS files (compiled scripts)
+                            else if (restype == ResourceType.NCS)
+                            {
+                                try
+                                {
+                                    byte[] ncsData = resource.GetData();
+                                    List<int> constiOffsets = ExtractNcsConstiOffsets(ncsData, oldStrref);
+
+                                    if (constiOffsets.Count > 0)
+                                    {
+                                        logFunc($"Found {constiOffsets.Count} CONSTI instructions with StrRef {oldStrref} in {filename}");
+
+                                        // Check if we already have a modification for this file
+                                        ModificationsNCS existingNcsMod = ncsModifications.FirstOrDefault(m => m.SourceFile.ToLowerInvariant() == filename);
+                                        if (existingNcsMod == null)
+                                        {
+                                            existingNcsMod = new ModificationsNCS(filename, replace: false, modifiers: new List<ModifyNCS>());
+                                            ncsModifications.Add(existingNcsMod);
+                                        }
+
+                                        // Create HACKList entries for each offset
+                                        foreach (int offset in constiOffsets)
+                                        {
+                                            // Create ModifyNCS with STRREF32 type (32-bit signed int for CONSTI instructions)
+                                            // This writes 32-bit int from memory.memory_str[token_id]
+                                            var modifyNcs = new ModifyNCS(
+                                                tokenType: NCSTokenType.STRREF32,
+                                                offset: offset,
+                                                tokenIdOrValue: tokenId);
+                                            existingNcsMod.Modifiers.Add(modifyNcs);
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Failed to process NCS {filename}: {e.GetType().Name}: {e.Message}");
+                                    logFunc($"Full traceback: {e.StackTrace}");
+                                }
+                            }
+                            // Handle GFF files
+                            else
+                            {
+                                try
+                                {
+                                    byte[] resourceData = resource.GetData();
+                                    GFF gffObj = new GFFBinaryReader(resourceData).Load();
+
+                                    // Search recursively for LocalizedString fields with this StrRef
+                                    List<PurePath> strrefLocations = FindStrrefInGffStruct(gffObj.Root, oldStrref, new PurePath());
+
+                                    if (strrefLocations.Count > 0)
+                                    {
+                                        // Check if we already have a modification for this file
+                                        ModificationsGFF existingGffMod = gffModifications.FirstOrDefault(m => m.SourceFile.ToLowerInvariant() == filename);
+                                        if (existingGffMod == null)
+                                        {
+                                            existingGffMod = new ModificationsGFF(filename, replace: false);
+                                            gffModifications.Add(existingGffMod);
+                                        }
+
+                                        // Create ModifyFieldGFF for each location
+                                        foreach (PurePath fieldPath in strrefLocations)
+                                        {
+                                            // Create LocalizedStringDelta with token
+                                            var locstringDelta = new LocalizedStringDelta(new FieldValueTLKMemory(tokenId));
+
+                                            var modifyField = new ModifyFieldGFF(
+                                                path: fieldPath.ToString().Replace("/", "\\"),
+                                                value: new FieldValueConstant(locstringDelta));
+                                            existingGffMod.Modifiers.Add(modifyField);
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Failed to process GFF {filename}: {e.GetType().Name}: {e.Message}");
+                                    logFunc($"Full traceback: {e.StackTrace}");
+                                }
+                            }
+
+                            idx++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        logFunc($"Failed to analyze StrRef {oldStrref}: {e.GetType().Name}: {e.Message}");
+                        logFunc($"Full traceback: {e.StackTrace}");
+                        continue;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logFunc($"Failed to initialize StrRef analysis: {e.GetType().Name}: {e.Message}");
+                logFunc($"Full traceback: {e.StackTrace}");
+            }
         }
 
-        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1551-1650
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1333-1508
         // Original: def analyze_2da_memory_references(...): ...
-        // Note: This function analyzes 2DA memory references in GFF files
         public static void Analyze2DaMemoryReferences(
-            Dictionary<string, Dictionary<string, int>> twodaCaches,
+            List<Modifications2DA> twodaModifications,
             string installationOrFolderPath,
             List<ModificationsGFF> gffModifications,
             Action<string> logFunc = null)
@@ -249,15 +657,237 @@ namespace KotorDiff.NET.Diff
                 logFunc = Console.WriteLine;
             }
 
-            if (twodaCaches == null || twodaCaches.Count == 0)
+            if (twodaModifications == null || twodaModifications.Count == 0)
             {
-                logFunc("No 2DA memory caches provided");
+                int modsCount = 0;
+                logFunc($"No 2DA modifications to analyze: mods_count={modsCount}, installation_path={installationOrFolderPath}");
                 return;
             }
 
-            // TODO: Full implementation of analyze_2da_memory_references
-            // This function searches GFF files for 2DA memory references and creates patches.
-            // Full implementation would require similar structure to analyze_tlk_strref_references.
+            logFunc($"Analyzing 2DA memory references: {twodaModifications.Count} 2DA files modified");
+
+            // Get the GFF field to 2DA mapping
+            // TODO: ReferenceCacheHelpers.GffFieldTo2daMapping() currently returns empty dict
+            // This needs to be populated from TwoDARegistry when gff_field_mapping() is implemented
+            Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = ReferenceCacheHelpers.GffFieldTo2daMapping();
+
+            // Build reverse mapping: 2da_filename -> list of field names that reference it
+            Dictionary<string, List<string>> twodaToFields = new Dictionary<string, List<string>>();
+            foreach (var kvp in gffFieldTo2daMapping)
+            {
+                string fieldName = kvp.Key;
+                string twodaFilenameLower = kvp.Value.ResName.ToLowerInvariant();
+                if (!twodaToFields.ContainsKey(twodaFilenameLower))
+                {
+                    twodaToFields[twodaFilenameLower] = new List<string>();
+                }
+                twodaToFields[twodaFilenameLower].Add(fieldName);
+            }
+
+            // Build mapping of (2da_filename, row_index) -> token_id from modifications
+            Dictionary<Tuple<string, int>, int> rowToToken = new Dictionary<Tuple<string, int>, int>();
+
+            foreach (Modifications2DA mod2da in twodaModifications)
+            {
+                string twodaFilename = mod2da.SourceFile.ToLowerInvariant();
+
+                // Process each modifier to extract row indices and token IDs
+                foreach (Modify2DA modifier in mod2da.Modifiers)
+                {
+                    if (modifier is AddRow2DA addRow && addRow.Store2DA != null)
+                    {
+                        // AddRow rows have unknown indices until patch-time; we cannot create static mappings for RowIndex storage.
+                        foreach (var kvp in addRow.Store2DA)
+                        {
+                            int tokenId = kvp.Key;
+                            RowValue rowValue = kvp.Value;
+                            if (rowValue is RowValueRowIndex)
+                            {
+                                logFunc($"Skipping AddRow2DA mapping for 2DAMEMORY token {tokenId}: row index is determined at install time");
+                                continue;
+                            }
+                            if (rowValue is RowValueConstant constantValue)
+                            {
+                                try
+                                {
+                                    int rowIdx = int.Parse(constantValue.String);
+                                    rowToToken[Tuple.Create(twodaFilename, rowIdx)] = tokenId;
+                                    logFunc($"Mapped {twodaFilename} row {rowIdx} -> 2DAMEMORY{tokenId}");
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Failed to map {twodaFilename} row {constantValue.String} -> 2DAMEMORY{tokenId}: {e.GetType().Name}: {e.Message}");
+                                    logFunc($"Full traceback: {e.StackTrace}");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    else if (modifier is ChangeRow2DA changeRow && changeRow.Target.TargetType == TargetType.ROW_INDEX)
+                    {
+                        // For ChangeRow, extract the target row index
+                        if (!(changeRow.Target.Value is int rowIdx))
+                        {
+                            continue;
+                        }
+                        if (changeRow.Store2DA == null)
+                        {
+                            continue;
+                        }
+
+                        // Check if we're storing this row's index in a token
+                        foreach (var kvp in changeRow.Store2DA)
+                        {
+                            int tokenId = kvp.Key;
+                            RowValue rowValue = kvp.Value;
+                            if (!(rowValue is RowValueRowIndex))
+                            {
+                                continue;
+                            }
+                            rowToToken[Tuple.Create(twodaFilename, rowIdx)] = tokenId;
+                            logFunc($"Mapped {twodaFilename} row {rowIdx} -> 2DAMEMORY{tokenId}");
+                        }
+                    }
+                }
+            }
+
+            if (rowToToken.Count == 0)
+            {
+                int mappingsCount = 0;
+                logFunc($"No 2DA row->token mappings found: mappings_count={mappingsCount}");
+                return;
+            }
+
+            logFunc($"Found {rowToToken.Count} 2DA row->token mappings");
+
+            // Search for GFF files that reference these 2DA rows
+            try
+            {
+                // Check if this is an installation or just a folder
+                bool isInstallation = false;
+                Installation installation = null;
+                try
+                {
+                    installation = new Installation(installationOrFolderPath);
+                    isInstallation = true;
+                }
+                catch (Exception)
+                {
+                    isInstallation = false;
+                    logFunc($"Treating as folder for 2DA reference search: path={installationOrFolderPath}");
+                }
+
+                // Collect all GFF files to search
+                List<FileResource> allResources = new List<FileResource>();
+                if (isInstallation && installation != null)
+                {
+                    // Search all resources in the installation
+                    // TODO: Implement installation iteration for GFF resources
+                    logFunc($"Installation-based search not yet fully implemented, using folder search");
+                    isInstallation = false;
+                }
+
+                if (!isInstallation)
+                {
+                    // Search all files in folder
+                    var allFiles = Directory.GetFiles(installationOrFolderPath, "*", SearchOption.AllDirectories);
+
+                    foreach (string filePath in allFiles)
+                    {
+                        if (!File.Exists(filePath))
+                        {
+                            continue;
+                        }
+
+                        ResourceType restype = ResourceType.FromExtension(Path.GetExtension(filePath));
+                        if (restype == null || !restype.IsGff())
+                        {
+                            continue;
+                        }
+
+                        FileResource fileRes = FileResource.FromPath(filePath);
+                        allResources.Add(fileRes);
+                    }
+                }
+
+                logFunc($"Searching {allResources.Count} resources for 2DA references");
+
+                // For each modified 2DA row, search for references
+                foreach (var kvp in rowToToken)
+                {
+                    string twodaFilename = kvp.Key.Item1;
+                    int rowIndex = kvp.Key.Item2;
+                    int tokenId = kvp.Value;
+
+                    // Get field names that reference this 2DA
+                    if (!twodaToFields.ContainsKey(twodaFilename))
+                    {
+                        logFunc($"No known field mappings for {twodaFilename}");
+                        continue;
+                    }
+
+                    List<string> fieldNames = twodaToFields[twodaFilename];
+                    logFunc($"Analyzing {twodaFilename} row {rowIndex} -> token {tokenId} (fields: {string.Join(", ", fieldNames)})");
+
+                    int foundCount = 0;
+
+                    // Search each resource
+                    foreach (FileResource resource in allResources)
+                    {
+                        try
+                        {
+                            byte[] data = resource.GetData();
+                            GFF gffObj = new GFFBinaryReader(data).Load();
+
+                            // Search for fields matching this 2DA reference
+                            List<PurePath> fieldPaths = Find2DaRefInGffStruct(
+                                gffObj.Root,
+                                fieldNames,
+                                rowIndex,
+                                new PurePath());
+
+                            if (fieldPaths.Count > 0)
+                            {
+                                foundCount += fieldPaths.Count;
+                                string filename = resource.Filename().ToLowerInvariant();
+
+                                // Check if we already have a modification for this file
+                                ModificationsGFF existingGffMod = gffModifications.FirstOrDefault(m => m.SourceFile.ToLowerInvariant() == filename);
+                                if (existingGffMod == null)
+                                {
+                                    existingGffMod = new ModificationsGFF(filename, replace: false);
+                                    gffModifications.Add(existingGffMod);
+                                }
+
+                                // Create ModifyFieldGFF for each location
+                                foreach (PurePath fieldPath in fieldPaths)
+                                {
+                                    var modifyField = new ModifyFieldGFF(
+                                        path: fieldPath.ToString().Replace("/", "\\"),
+                                        value: new FieldValue2DAMemory(tokenId));
+                                    existingGffMod.Modifiers.Add(modifyField);
+                                    logFunc($"  [{filename}] {fieldPath} -> 2DAMEMORY{tokenId}");
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // Not a GFF file or failed to parse, skip
+                            continue;
+                        }
+                    }
+
+                    if (foundCount > 0)
+                    {
+                        logFunc($"  Found {foundCount} references total");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logFunc($"Failed to analyze 2DA memory references: {e.GetType().Name}: {e.Message}");
+                logFunc($"Full traceback: {e.StackTrace}");
+            }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1510-1549
