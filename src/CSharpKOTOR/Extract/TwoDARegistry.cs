@@ -343,6 +343,92 @@ namespace CSharpKOTOR.Extract
             foreach (var k in resref.Keys) files.Add(k);
             return files;
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/twoda.py:596-599
+        // Original: @classmethod def gff_field_mapping(cls) -> dict[str, ResourceIdentifier]:
+        /// <summary>
+        /// Get the mapping from GFF field names to 2DA ResourceIdentifiers.
+        /// </summary>
+        public static Dictionary<string, Resources.ResourceIdentifier> GffFieldMapping()
+        {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/twoda.py:521-594
+            // Centralize the GFF field mapping here
+            return new Dictionary<string, Resources.ResourceIdentifier>
+            {
+                ["SoundSetFile"] = new Resources.ResourceIdentifier("soundset", Resources.ResourceType.TwoDA),
+                ["PortraitId"] = new Resources.ResourceIdentifier("portraits", Resources.ResourceType.TwoDA),
+                ["Appearance_Type"] = new Resources.ResourceIdentifier("appearance", Resources.ResourceType.TwoDA),
+                ["Phenotype"] = new Resources.ResourceIdentifier("phenotype", Resources.ResourceType.TwoDA),
+                ["FactionID"] = new Resources.ResourceIdentifier("faction", Resources.ResourceType.TwoDA),
+                ["Faction"] = new Resources.ResourceIdentifier("faction", Resources.ResourceType.TwoDA),
+                ["Subrace"] = new Resources.ResourceIdentifier("subrace", Resources.ResourceType.TwoDA),
+                ["SubraceIndex"] = new Resources.ResourceIdentifier("subrace", Resources.ResourceType.TwoDA),
+                ["Race"] = new Resources.ResourceIdentifier("racialtypes", Resources.ResourceType.TwoDA),
+                ["Class"] = new Resources.ResourceIdentifier("classes", Resources.ResourceType.TwoDA),
+                ["Gender"] = new Resources.ResourceIdentifier("gender", Resources.ResourceType.TwoDA),
+                ["PerceptionRange"] = new Resources.ResourceIdentifier("perception", Resources.ResourceType.TwoDA),
+                ["WalkRate"] = new Resources.ResourceIdentifier("walkrate", Resources.ResourceType.TwoDA),
+                ["PaletteID"] = new Resources.ResourceIdentifier("palette", Resources.ResourceType.TwoDA),
+                ["BodyBag"] = new Resources.ResourceIdentifier("bodybag", Resources.ResourceType.TwoDA),
+                ["BaseItem"] = new Resources.ResourceIdentifier("baseitems", Resources.ResourceType.TwoDA),
+                ["ModelVariation"] = new Resources.ResourceIdentifier("baseitems", Resources.ResourceType.TwoDA),
+                ["BodyVariation"] = new Resources.ResourceIdentifier("bodyvariation", Resources.ResourceType.TwoDA),
+                ["TextureVar"] = new Resources.ResourceIdentifier("textures", Resources.ResourceType.TwoDA),
+                ["UpgradeType"] = new Resources.ResourceIdentifier("upcrystals", Resources.ResourceType.TwoDA),
+                ["Appearance"] = new Resources.ResourceIdentifier("placeables", Resources.ResourceType.TwoDA),
+                ["GenericType"] = new Resources.ResourceIdentifier("genericdoors", Resources.ResourceType.TwoDA),
+                ["Cursor"] = new Resources.ResourceIdentifier("cursors", Resources.ResourceType.TwoDA),
+                ["MusicDay"] = new Resources.ResourceIdentifier("ambientmusic", Resources.ResourceType.TwoDA),
+                ["MusicNight"] = new Resources.ResourceIdentifier("ambientmusic", Resources.ResourceType.TwoDA),
+                ["MusicBattle"] = new Resources.ResourceIdentifier("ambientmusic", Resources.ResourceType.TwoDA),
+                ["MusicDelay"] = new Resources.ResourceIdentifier("ambientmusic", Resources.ResourceType.TwoDA),
+                ["LoadScreenID"] = new Resources.ResourceIdentifier("loadscreens", Resources.ResourceType.TwoDA),
+                ["CameraStyle"] = new Resources.ResourceIdentifier("camera", Resources.ResourceType.TwoDA),
+                ["Animation"] = new Resources.ResourceIdentifier("dialoganim", Resources.ResourceType.TwoDA),
+                ["Emotion"] = new Resources.ResourceIdentifier("emotion", Resources.ResourceType.TwoDA),
+                ["FacialAnim"] = new Resources.ResourceIdentifier("facialanim", Resources.ResourceType.TwoDA),
+                ["AlienRaceOwner"] = new Resources.ResourceIdentifier("racialtypes", Resources.ResourceType.TwoDA),
+                ["AlienRaceNode"] = new Resources.ResourceIdentifier("racialtypes", Resources.ResourceType.TwoDA),
+                ["CamVidEffect"] = new Resources.ResourceIdentifier("videoeffects", Resources.ResourceType.TwoDA),
+                ["CameraID"] = new Resources.ResourceIdentifier("camera", Resources.ResourceType.TwoDA),
+                ["Subtype"] = new Resources.ResourceIdentifier("spells", Resources.ResourceType.TwoDA),
+                ["SpellId"] = new Resources.ResourceIdentifier("spells", Resources.ResourceType.TwoDA),
+                ["Spell"] = new Resources.ResourceIdentifier("spells", Resources.ResourceType.TwoDA),
+                ["FeatID"] = new Resources.ResourceIdentifier("feat", Resources.ResourceType.TwoDA),
+                ["Feat"] = new Resources.ResourceIdentifier("feat", Resources.ResourceType.TwoDA),
+                ["SkillID"] = new Resources.ResourceIdentifier("skills", Resources.ResourceType.TwoDA),
+                ["MarkUp"] = new Resources.ResourceIdentifier("merchants", Resources.ResourceType.TwoDA),
+                ["MarkDown"] = new Resources.ResourceIdentifier("merchants", Resources.ResourceType.TwoDA),
+                ["Difficulty"] = new Resources.ResourceIdentifier("encdifficulty", Resources.ResourceType.TwoDA),
+                ["DifficultyIndex"] = new Resources.ResourceIdentifier("encdifficulty", Resources.ResourceType.TwoDA),
+                ["TrapType"] = new Resources.ResourceIdentifier("traps", Resources.ResourceType.TwoDA),
+                ["PlanetID"] = new Resources.ResourceIdentifier("planetary", Resources.ResourceType.TwoDA),
+                ["PlotIndex"] = new Resources.ResourceIdentifier("plot", Resources.ResourceType.TwoDA),
+                ["VideoResRef"] = new Resources.ResourceIdentifier("videoeffects", Resources.ResourceType.TwoDA),
+                ["AIStyle"] = new Resources.ResourceIdentifier("ai_styles", Resources.ResourceType.TwoDA),
+                ["DamageType"] = new Resources.ResourceIdentifier("iprp_damagetype", Resources.ResourceType.TwoDA),
+                ["DamageVsType"] = new Resources.ResourceIdentifier("iprp_damagevs", Resources.ResourceType.TwoDA),
+                ["AttackModifier"] = new Resources.ResourceIdentifier("iprp_attackmod", Resources.ResourceType.TwoDA),
+                ["ACModifierType"] = new Resources.ResourceIdentifier("iprp_acmodtype", Resources.ResourceType.TwoDA),
+                ["BonusFeatID"] = new Resources.ResourceIdentifier("iprp_bonusfeat", Resources.ResourceType.TwoDA),
+                ["CastSpell"] = new Resources.ResourceIdentifier("iprp_spells", Resources.ResourceType.TwoDA),
+                ["LightColor"] = new Resources.ResourceIdentifier("iprp_lightcol", Resources.ResourceType.TwoDA),
+                ["MonsterDamage"] = new Resources.ResourceIdentifier("iprp_monstdam", Resources.ResourceType.TwoDA),
+                ["OnHit"] = new Resources.ResourceIdentifier("iprp_onhit", Resources.ResourceType.TwoDA),
+                ["Param1"] = new Resources.ResourceIdentifier("iprp_paramtable", Resources.ResourceType.TwoDA),
+                ["Param1Value"] = new Resources.ResourceIdentifier("iprp_paramtable", Resources.ResourceType.TwoDA),
+                ["SkillBonus"] = new Resources.ResourceIdentifier("iprp_skillcost", Resources.ResourceType.TwoDA),
+                ["SpecialWalk"] = new Resources.ResourceIdentifier("iprp_walk", Resources.ResourceType.TwoDA),
+                ["WeightIncrease"] = new Resources.ResourceIdentifier("iprp_weightinc", Resources.ResourceType.TwoDA),
+                ["Trap"] = new Resources.ResourceIdentifier("iprp_traptype", Resources.ResourceType.TwoDA),
+                ["DamageReduction"] = new Resources.ResourceIdentifier("iprp_damagered", Resources.ResourceType.TwoDA),
+                ["ImmunityType"] = new Resources.ResourceIdentifier("iprp_immunity", Resources.ResourceType.TwoDA),
+                ["SavedGame"] = new Resources.ResourceIdentifier("saves", Resources.ResourceType.TwoDA),
+                ["SaveType"] = new Resources.ResourceIdentifier("iprp_saveelement", Resources.ResourceType.TwoDA),
+                ["SpellResistance"] = new Resources.ResourceIdentifier("iprp_spellres", Resources.ResourceType.TwoDA),
+                ["VisualType"] = new Resources.ResourceIdentifier("visualeffects", Resources.ResourceType.TwoDA),
+            };
+        }
     }
 }
 
