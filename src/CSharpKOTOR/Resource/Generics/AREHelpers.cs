@@ -1,6 +1,7 @@
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace CSharpKOTOR.Resource.Generics
 {
@@ -110,6 +111,32 @@ namespace CSharpKOTOR.Resource.Generics
             // foreach (var room in are.Rooms) { ... }
 
             return gff;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:685-700
+        // Original: def read_are(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> ARE:
+        public static ARE ReadAre(byte[] data, int offset = 0, int size = -1)
+        {
+            byte[] dataToRead = data;
+            if (size > 0 && offset + size <= data.Length)
+            {
+                dataToRead = new byte[size];
+                System.Array.Copy(data, offset, dataToRead, 0, size);
+            }
+            GFF gff = GFF.FromBytes(dataToRead);
+            return ConstructAre(gff);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:742-757
+        // Original: def bytes_are(are: ARE, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesAre(ARE are, Game game = Game.K2, ResourceType fileFormat = null)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.ARE;
+            }
+            GFF gff = DismantleAre(are, game);
+            return GFFAuto.BytesGff(gff, fileFormat);
         }
     }
 }
