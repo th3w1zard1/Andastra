@@ -103,7 +103,7 @@ namespace KotorDiff.NET.Diff
                     {
                         return offsets;
                     }
-                    byte magicByte = reader.ReadByte();
+                    byte magicByte = reader.ReadUInt8();
                     bool isValidMagic = magicByte == 0x42;
                     if (!isValidMagic)
                     {
