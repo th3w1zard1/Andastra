@@ -965,24 +965,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1022-1026
+                // Original: AVarRef varref = this.getVarToAssignTo(node); AModifyExp modexp = new AModifyExp(varref, exp); this.updateName(varref, exp); this.current.addChild(modexp); this.state = 1;
+                // Java version casts directly to AVarRef, so GetVarToAssignTo should always return AVarRef for assignments
                 AExpression target = this.GetVarToAssignTo(node);
-                if (target == null)
-                {
-                    // If GetVarToAssignTo returns null, log a warning but continue
-                    JavaSystem.@out.Println("WARNING TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
-                    // Still try to create an assignment if we have an expression
-                    if (exp != null)
-                    {
-                        // For globals, we might need to handle this differently
-                        // But for now, just skip creating the assignment
-                    }
-                }
-                else if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
+                if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
                 {
                     ScriptNode.AVarRef varref = (ScriptNode.AVarRef)target;
                     AModifyExp modexp = new AModifyExp(varref, exp);
                     this.UpdateName(varref, exp);
                     this.current.AddChild(modexp);
+                    this.state = 1;
                 }
                 else
                 {
@@ -992,14 +985,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     {
                         AModifyExp modexp = new AModifyExp(targetVarRef, exp);
                         this.current.AddChild(modexp);
+                        this.state = 1;
                     }
                     else
                     {
-                        JavaSystem.@out.Println("WARNING TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null"));
+                        JavaSystem.@out.Println("WARNING TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null") + ", skipping assignment");
                     }
                 }
-
-                this.state = 1;
             }
 
             this.CheckEnd(node);
