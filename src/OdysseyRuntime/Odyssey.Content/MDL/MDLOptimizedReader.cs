@@ -8,6 +8,15 @@ namespace Odyssey.Content.MDL
 {
     /// <summary>
     /// Ultra-high-performance MDL/MDX reader using unsafe code and zero-copy operations.
+    /// </summary>
+    /// <remarks>
+    /// MDL/MDX Optimized Reader:
+    /// - Based on swkotor2.exe MDL/MDX file format and loading system
+    /// - Located via string references: Model loading functions parse MDL/MDX binary format
+    /// - Original implementation: Reads MDL (model definition) and MDX (geometry) binary files using direct memory access
+    /// - Uses unsafe code and pointer arithmetic for maximum performance, matching original engine approach
+    /// - MDL file structure: Header, geometry header, model header, names header, node tree, animations
+    /// - MDX file structure: Vertex data arrays (positions, normals, UVs, face indices) with specific byte layouts
     /// 
     /// Performance optimizations (based on reone, KotOR.js, MDLOps analysis):
     /// 1. Unsafe pointer access for direct memory reading (with comprehensive bounds checking for security)
@@ -29,7 +38,7 @@ namespace Odyssey.Content.MDL
     /// - KotOR.js/src/loaders/MDLLoader.ts - TypeScript with typed arrays and bulk operations
     /// - MDLOps/MDLOpsM.pm - Perl with optimized data structures
     /// - vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Complete format specification
-    /// </summary>
+    /// </remarks>
     public unsafe sealed class MDLOptimizedReader : IDisposable
     {
         private readonly byte[] _mdlData;

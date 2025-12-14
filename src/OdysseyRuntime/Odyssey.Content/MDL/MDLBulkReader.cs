@@ -7,6 +7,15 @@ namespace Odyssey.Content.MDL
 {
     /// <summary>
     /// Ultra-high-performance MDL/MDX binary reader using bulk I/O operations.
+    /// </summary>
+    /// <remarks>
+    /// MDL/MDX Binary Reader:
+    /// - Based on swkotor2.exe MDL/MDX file format and loading system
+    /// - Located via string references: Model loading functions parse MDL/MDX binary format
+    /// - Original implementation: Reads MDL (model definition) and MDX (geometry) binary files
+    /// - MDL file structure: Header, geometry header, model header, names header, node tree, animations
+    /// - MDX file structure: Vertex data arrays (positions, normals, UVs, face indices)
+    /// - File format: Binary format with specific offsets, counts, and pointer structures
     /// 
     /// Optimization strategies (based on reone, KotOR.js, MDLOps analysis):
     /// 1. Bulk array reading - reads large chunks at once instead of individual values
@@ -18,7 +27,7 @@ namespace Odyssey.Content.MDL
     /// 
     /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md
     /// Reference: vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp
-    /// </summary>
+    /// </remarks>
     public sealed class MDLBulkReader : IDisposable
     {
         // Pre-read entire file into memory for fast random access
@@ -32,10 +41,7 @@ namespace Odyssey.Content.MDL
         /// <summary>
         /// True if the model is from KotOR 2: The Sith Lords.
         /// </summary>
-        public bool IsTSL
-        {
-            get { return _isTSL; }
-        }
+        public bool IsTSL => _isTSL;
 
         /// <summary>
         /// Creates a bulk reader from byte arrays (optimal - no additional copy needed).
