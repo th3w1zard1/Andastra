@@ -4,7 +4,6 @@ using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.Mods.Template;
 
 namespace CSharpKOTOR.Diff
 {

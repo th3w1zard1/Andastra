@@ -92,7 +92,7 @@ namespace CSharpKOTOR.Diff
         public static HashSet<ResourceIdentifier> CollectAllResourceIdentifiers(Installation.Installation installation)
         {
             HashSet<ResourceIdentifier> identifiers = new HashSet<ResourceIdentifier>();
-            foreach (FileResource fileResource in installation)
+            foreach (FileResource fileResource in GetAllResources(installation))
             {
                 identifiers.Add(fileResource.Identifier);
             }
@@ -108,7 +108,7 @@ namespace CSharpKOTOR.Diff
         public static Dictionary<ResourceIdentifier, List<FileResource>> BuildResourceIndex(Installation.Installation installation)
         {
             Dictionary<ResourceIdentifier, List<FileResource>> index = new Dictionary<ResourceIdentifier, List<FileResource>>();
-            foreach (FileResource fileResource in installation)
+            foreach (FileResource fileResource in GetAllResources(installation))
             {
                 ResourceIdentifier ident = fileResource.Identifier;
                 if (!index.ContainsKey(ident))
@@ -118,6 +118,19 @@ namespace CSharpKOTOR.Diff
                 index[ident].Add(fileResource);
             }
             return index;
+        }
+
+        /// <summary>
+        /// Get all resources from an installation (chitin, core, override, modules).
+        /// </summary>
+        private static IEnumerable<FileResource> GetAllResources(Installation.Installation installation)
+        {
+            var allResources = new List<FileResource>();
+            allResources.AddRange(installation.ChitinResources());
+            allResources.AddRange(installation.CoreResources());
+            allResources.AddRange(installation.OverrideResources());
+            // TODO: Add module resources when available
+            return allResources;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:496-536
@@ -201,7 +214,7 @@ namespace CSharpKOTOR.Diff
                 else
                 {
                     // Fallback to iteration if no index provided
-                    fileResources = installation.Where(fr => fr.Identifier.Equals(identifier)).ToList();
+                    fileResources = GetAllResources(installation).Where(fr => fr.Identifier.Equals(identifier)).ToList();
                 }
 
                 // Categorize all instances by location
@@ -360,9 +373,9 @@ namespace CSharpKOTOR.Diff
 
                 // Read the data from the chosen location (O(1) lookup with stored instances)
                 byte[] data = null;
-                if (resourceInstances.TryGetValue(chosenFilepath, out FileResource fileResource))
+                if (resourceInstances.TryGetValue(chosenFilepath, out FileResource fileResourceInstance))
                 {
-                    data = fileResource.Data;
+                    data = fileResourceInstance.Data();
                 }
 
                 if (data == null)

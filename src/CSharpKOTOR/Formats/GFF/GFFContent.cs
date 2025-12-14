@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CSharpKOTOR.Formats.GFF
 {
 
@@ -109,6 +111,22 @@ namespace CSharpKOTOR.Formats.GFF
                 case "INV": return GFFContent.INV;
                 default: return GFFContent.GFF;
             }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py
+        // Original: @classmethod def get_extensions(cls) -> list[str]:
+        /// <summary>
+        /// Get all file extensions that represent GFF-based formats.
+        /// </summary>
+        public static HashSet<string> GetExtensions()
+        {
+            return new HashSet<string>
+            {
+                "gff", "utc", "uti", "utp", "ute", "utm", "utd", "utw",
+                "dlg", "are", "git", "ifo", "gui", "jrl", "fac", "pth",
+                "bic", "btc", "btd", "bte", "bti", "btp", "btm", "btt",
+                "itp", "nfo", "pt", "gvt", "inv"
+            };
         }
     }
 }

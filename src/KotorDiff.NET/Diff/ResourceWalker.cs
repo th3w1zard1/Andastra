@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CSharpKOTOR.Extract;
+using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Installation;
 
 namespace KotorDiff.NET.Diff
@@ -83,10 +84,23 @@ namespace KotorDiff.NET.Diff
         // Original: def _from_capsule(self, file_path: Path) -> Iterable[ComparableResource]: ...
         private IEnumerable<ComparableResource> FromCapsule(FileInfo filePath)
         {
-            // TODO: Implement capsule loading
-            // This should use CSharpKOTOR.Extract.Capsule to load ERF/RIM/MOD files
-            // For now, return empty
-            yield break;
+            // TODO: Implement composite module loading for RIM files
+            // For now, use regular single capsule loading
+            try
+            {
+                var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(filePath.FullName);
+                foreach (var res in capsule)
+                {
+                    string ext = res.ResType.Extension.ToLowerInvariant();
+                    string identifier = $"{filePath.Name}/{res.ResName}.{ext}";
+                    yield return new ComparableResource(identifier, ext, res.Data);
+                }
+            }
+            catch (Exception)
+            {
+                // Return empty on error
+                yield break;
+            }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:964-980

@@ -205,7 +205,7 @@ namespace CSharpKOTOR.Tools
                 throw new NotSupportedException("Cannot get or set registry keys on a non-Windows OS.");
             }
 
-            ProcessorArchitecture arch = ProcessorArchitecture.FromOs();
+            ProcessorArchitecture arch = ProcessorArchitectureExtensions.FromOs();
             return KotorRegPaths[game][arch];
         }
 
@@ -336,7 +336,7 @@ namespace CSharpKOTOR.Tools
         /// </summary>
         public static string GetRetailKey(Game game)
         {
-            ProcessorArchitecture arch = ProcessorArchitecture.FromOs();
+            ProcessorArchitecture arch = ProcessorArchitectureExtensions.FromOs();
             if (arch == ProcessorArchitecture.BIT_64)
             {
                 return game.IsK2()
@@ -361,7 +361,7 @@ namespace CSharpKOTOR.Tools
                 string[] parts = fullKeyPath.Split(new[] { '\\' }, 2);
                 if (parts.Length != 2)
                 {
-                    log.Error("Invalid registry path '{0}'.", fullKeyPath);
+                    log.Error(string.Format("Invalid registry path '{0}'.", fullKeyPath));
                     return;
                 }
 
@@ -370,7 +370,7 @@ namespace CSharpKOTOR.Tools
                 RegistryKey hive = GetRegistryHive(hiveName);
                 if (hive == null)
                 {
-                    log.Error("Invalid registry hive '{0}'.", hiveName);
+                    log.Error(string.Format("Invalid registry hive '{0}'.", hiveName));
                     return;
                 }
 
@@ -393,7 +393,7 @@ namespace CSharpKOTOR.Tools
                     if (key != null)
                     {
                         key.SetValue(valueName, valueData, RegistryValueKind.String);
-                        log.Debug("Successfully set {0} to {1} at {2}\\{3}", valueName, valueData, hiveName, subKey);
+                        log.Debug(string.Format("Successfully set {0} to {1} at {2}\\{3}", valueName, valueData, hiveName, subKey));
                     }
                 }
             }
@@ -478,11 +478,12 @@ namespace CSharpKOTOR.Tools
             }
             else
             {
-                determinedGame = Heuristics.DetermineGame(installationPath);
-                if (determinedGame == null)
+                Game? determinedGameNullable = Installation.Installation.DetermineGame(installationPath);
+                if (determinedGameNullable == null)
                 {
                     throw new ArgumentException($"Could not auto-determine the game k1 or k2 from '{installationPath}'. Try sending 'game' enum to prevent auto-detections like this.");
                 }
+                determinedGame = determinedGameNullable.Value;
             }
 
             _registryPath = Registry.GetRetailKey(determinedGame);
