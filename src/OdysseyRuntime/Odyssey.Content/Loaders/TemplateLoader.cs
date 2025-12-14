@@ -478,7 +478,7 @@ namespace Odyssey.Content.Loaders
 
         private string GetString(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.HasField(name))
+            if (gffStruct.Exists(name))
             {
                 return gffStruct.GetString(name) ?? string.Empty;
             }
@@ -487,43 +487,43 @@ namespace Odyssey.Content.Loaders
 
         private int GetInt(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.HasField(name))
+            if (gffStruct.Exists(name))
             {
-                return gffStruct.GetInt(name);
+                return gffStruct.GetInt32(name);
             }
             return 0;
         }
 
         private short GetShort(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.HasField(name))
+            if (gffStruct.Exists(name))
             {
-                return gffStruct.GetShort(name);
+                return gffStruct.GetInt16(name);
             }
             return 0;
         }
 
         private byte GetByte(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.HasField(name))
+            if (gffStruct.Exists(name))
             {
-                return gffStruct.GetByte(name);
+                return gffStruct.GetUInt8(name);
             }
             return 0;
         }
 
         private float GetFloat(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.HasField(name))
+            if (gffStruct.Exists(name))
             {
-                return gffStruct.GetFloat(name);
+                return gffStruct.GetSingle(name);
             }
             return 0f;
         }
 
         private string GetLocalizedString(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.HasField(name))
+            if (gffStruct.Exists(name))
             {
                 // GFF LocalizedString handling - try to get the string reference first
                 // For now, return empty as localization requires TLK lookup
