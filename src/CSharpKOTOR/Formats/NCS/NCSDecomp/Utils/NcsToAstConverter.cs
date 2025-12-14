@@ -176,8 +176,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     program.GetSubroutine().Add(globalsSub);
                 }
                 
-                // Ensure mainStart is after the globals range (including entry stub)
-                // Entry stub is at savebpIndex+1, so main should start after that
+                // Calculate where globals and entry stub end
                 int globalsEnd = savebpIndex + 1;
                 int entryStubEnd = globalsEnd;
                 
@@ -199,21 +198,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RESTOREBP detected, entry stub ends at {entryStubEnd}");
                 }
                 
-                // If mainStart is within globals range or entry stub, adjust it to after entry stub
-                if (mainStart <= entryStubEnd)
+                // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
+                // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
+                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd)
                 {
-                    // If entryJsrTarget is valid and points to after entry stub, use it
-                    // Otherwise, use entryStubEnd as the main start
-                    if (entryJsrTarget > entryStubEnd && entryJsrTarget > 0)
-                    {
-                        mainStart = entryJsrTarget;
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
-                    }
-                    else
-                    {
-                        mainStart = entryStubEnd;
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Adjusted mainStart to {mainStart} (after globals end at {globalsEnd} and entry stub at {entryStubEnd})");
-                    }
+                    // entryJsrTarget is valid and after entry stub - use it
+                    mainStart = entryJsrTarget;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
+                }
+                else
+                {
+                    // entryJsrTarget is invalid or points to globals - use entryStubEnd
+                    mainStart = entryStubEnd;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using entryStubEnd {entryStubEnd} as mainStart");
                 }
             }
 
