@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.ERF;
+using CSharpKOTOR.Formats.RIM;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
@@ -319,33 +321,82 @@ namespace CSharpKOTOR.Formats.Capsule
             return results;
         }
 
-        /// <summary>
-        /// Adds or updates a resource in the capsule.
-        /// </summary>
-        public void Add(string resname, ResourceType restype, byte[] data)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:246-286
+        // Original: def add(self, resname: str, restype: ResourceType, resdata: bytes):
+        public void Add(string resname, ResourceType restype, byte[] resdata)
         {
-            // Need to load all resources, modify, and save
-            Capsule fullCapsule = ToCapsule();
-            fullCapsule.SetResource(resname, restype, data);
-            fullCapsule.Save();
+            string ext = Path.GetExtension(_filepath).ToLowerInvariant();
+            if (ext == ".rim")
+            {
+                var container = new RIM.RIM();
+                container.SetData(resname, restype, resdata);
+                foreach (var resource in Resources())
+                {
+                    container.SetData(resource.ResName, resource.ResType, resource.Data());
+                }
+                RIMAuto.WriteRim(container, _filepath, ResourceType.RIM);
+            }
+            else if (ext == ".erf" || ext == ".mod" || ext == ".sav" || ext == ".hak")
+            {
+                ERFType erfType = ERFTypeExtensions.FromExtension(ext);
+                var container = new ERF.ERF(erfType);
+                container.SetData(resname, restype, resdata);
+                foreach (var resource in Resources())
+                {
+                    container.SetData(resource.ResName, resource.ResType, resource.Data());
+                }
+                ResourceType fileFormat = ext == ".erf" ? ResourceType.ERF : (ext == ".mod" ? ResourceType.MOD : ResourceType.SAV);
+                ERFAuto.WriteErf(container, _filepath, fileFormat);
+            }
+            else
+            {
+                throw new NotImplementedException($"File '{_filepath}' is not a ERF/MOD/SAV/RIM capsule.");
+            }
 
             // Invalidate cache
             _cachedResources = null;
         }
 
-        /// <summary>
-        /// Removes a resource from the capsule.
-        /// </summary>
-        public bool Delete(string resname, ResourceType restype)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:288-327
+        // Original: def delete(self, resname: str, restype: ResourceType):
+        public void Delete(string resname, ResourceType restype)
         {
-            Capsule fullCapsule = ToCapsule();
-            bool removed = fullCapsule.RemoveResource(resname, restype);
-            if (removed)
+            string ext = Path.GetExtension(_filepath).ToLowerInvariant();
+            if (ext == ".rim")
             {
-                fullCapsule.Save();
-                _cachedResources = null;
+                var container = new RIM.RIM();
+                foreach (var resource in Resources())
+                {
+                    if (string.Equals(resource.ResName, resname, StringComparison.OrdinalIgnoreCase) && resource.ResType == restype)
+                    {
+                        continue; // Skip the resource to delete
+                    }
+                    container.SetData(resource.ResName, resource.ResType, resource.Data());
+                }
+                RIMAuto.WriteRim(container, _filepath, ResourceType.RIM);
             }
-            return removed;
+            else if (ext == ".erf" || ext == ".mod" || ext == ".sav" || ext == ".hak")
+            {
+                ERFType erfType = ERFTypeExtensions.FromExtension(ext);
+                var container = new ERF.ERF(erfType);
+                foreach (var resource in Resources())
+                {
+                    if (string.Equals(resource.ResName, resname, StringComparison.OrdinalIgnoreCase) && resource.ResType == restype)
+                    {
+                        continue; // Skip the resource to delete
+                    }
+                    container.SetData(resource.ResName, resource.ResType, resource.Data());
+                }
+                ResourceType fileFormat = ext == ".erf" ? ResourceType.ERF : (ext == ".mod" ? ResourceType.MOD : ResourceType.SAV);
+                ERFAuto.WriteErf(container, _filepath, fileFormat);
+            }
+            else
+            {
+                throw new NotImplementedException($"File '{_filepath}' is not a ERF/MOD/SAV/RIM capsule.");
+            }
+
+            // Invalidate cache
+            _cachedResources = null;
         }
 
         /// <summary>

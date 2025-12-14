@@ -27,7 +27,7 @@ namespace CSharpKOTOR.Extract
 
             // Slow path: walk up the path to find where the filesystem ends and virtual path begins
             string[] parts = filepath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             for (int i = parts.Length; i > 0; i--)
             {
                 string candidate = string.Join(Path.DirectorySeparatorChar.ToString(), parts.Take(i));
@@ -53,7 +53,7 @@ namespace CSharpKOTOR.Extract
             for (int i = 0; i < nestedParts.Count; i++)
             {
                 string part = nestedParts[i];
-                
+
                 // Parse the current data as a capsule to find the next resource
                 using (var reader = RawBinaryReader.FromBytes(currentData))
                 {
@@ -62,7 +62,7 @@ namespace CSharpKOTOR.Extract
 
                     // Determine capsule type and read resource list
                     List<(string resname, ResourceType restype, int offset, int size)> resources;
-                    
+
                     if (fileType == "ERF " || fileType == "MOD " || fileType == "SAV " || fileType == "HAK ")
                     {
                         resources = ReadErfResources(reader, currentData);
@@ -79,7 +79,7 @@ namespace CSharpKOTOR.Extract
                     // Find the requested resource in this capsule
                     ResourceIdentifier resIdent = ResourceIdentifier.FromPath(part);
                     (int offset, int size)? targetResource = null;
-                    
+
                     foreach (var (resname, restype, resOff, resSz) in resources)
                     {
                         if (string.Equals(resname, resIdent.ResName, StringComparison.OrdinalIgnoreCase) && restype == resIdent.ResType)
