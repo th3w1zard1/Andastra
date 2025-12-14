@@ -59,13 +59,13 @@ namespace Odyssey.Kotor.Loading
 
             // Create CSharpKOTOR Module wrapper
             var module = new Module(moduleName, _installation);
-            
+
             // Create runtime module
             var runtimeModule = new RuntimeModule();
-            
+
             // Load IFO (module info)
             LoadModuleInfo(module, runtimeModule);
-            
+
             // Load entry area
             string entryAreaResRef = runtimeModule.EntryArea;
             if (!string.IsNullOrEmpty(entryAreaResRef))
@@ -91,20 +91,29 @@ namespace Odyssey.Kotor.Loading
             var ifoResource = module.Info();
             if (ifoResource == null)
             {
-                throw new InvalidOperationException("Module has no IFO resource");
+                throw new InvalidOperationException($"Module '{module.GetRoot()}' has no IFO resource. Ensure the module archive contains 'module.ifo'.");
             }
 
-            object ifoData = ifoResource.Resource();
+            object ifoData = null;
+            try
+            {
+                ifoData = ifoResource.Resource();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to load module IFO for '{module.GetRoot()}': {ex.Message}", ex);
+            }
+
             if (ifoData == null)
             {
-                throw new InvalidOperationException("Failed to load module IFO");
+                throw new InvalidOperationException($"Failed to load module IFO for '{module.GetRoot()}': Resource() returned null. The IFO file may be corrupted or missing.");
             }
 
             // IFO is a GFF file
             GFF ifoGff = ifoData as GFF;
             if (ifoGff == null)
             {
-                throw new InvalidOperationException("IFO resource is not a valid GFF");
+                throw new InvalidOperationException($"IFO resource for '{module.GetRoot()}' is not a valid GFF. Expected GFF type, got {ifoData.GetType().Name}.");
             }
 
             GFFStruct root = ifoGff.Root;
@@ -310,7 +319,7 @@ namespace Odyssey.Kotor.Loading
             area.HasWeather = (flags & 0x0004) != 0;
 
             // Weather
-            area.WeatherType = GetIntField(root, "ChanceSnow", 0) > 0 ? 2 : 
+            area.WeatherType = GetIntField(root, "ChanceSnow", 0) > 0 ? 2 :
                               GetIntField(root, "ChanceRain", 0) > 0 ? 1 : 0;
 
             // Area scripts
@@ -392,7 +401,7 @@ namespace Odyssey.Kotor.Loading
 
             // Get all room names from VIS
             var allRoomNames = vis.AllRooms().ToList();
-            
+
             // Map visibility to rooms - each room tracks which other rooms are visible from it
             for (int i = 0; i < area.Rooms.Count; i++)
             {
@@ -403,7 +412,7 @@ namespace Odyssey.Kotor.Loading
                 }
 
                 area.Rooms[i].VisibleRooms = new List<int>();
-                
+
                 // Check visibility against all other rooms
                 for (int j = 0; j < area.Rooms.Count; j++)
                 {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Win32;
 
@@ -51,6 +52,114 @@ namespace Odyssey.Game.Core
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Finds all KOTOR installation paths from default locations.
+        /// Similar to FindKotorPathsFromDefault in HoloPatcher.UI/Core.cs.
+        /// </summary>
+        public static List<string> FindKotorPathsFromDefault(KotorGame game)
+        {
+            var paths = new List<string>();
+
+            // Try environment variable first
+            string envPath = TryEnvironmentVariable(game);
+            if (!string.IsNullOrEmpty(envPath) && !paths.Contains(envPath))
+            {
+                paths.Add(envPath);
+            }
+
+            // Try registry paths
+            string registryPath = TryRegistry(game);
+            if (!string.IsNullOrEmpty(registryPath) && !paths.Contains(registryPath))
+            {
+                paths.Add(registryPath);
+            }
+
+            // Try Steam paths (check multiple library locations)
+            string[] steamLibraries = new[]
+            {
+                @"C:\Program Files (x86)\Steam\steamapps\common",
+                @"C:\Program Files\Steam\steamapps\common",
+                @"D:\Steam\steamapps\common",
+                @"D:\SteamLibrary\steamapps\common",
+                @"E:\Steam\steamapps\common",
+                @"E:\SteamLibrary\steamapps\common"
+            };
+
+            string gameName = game == KotorGame.K1 ? "swkotor" : "Knights of the Old Republic II";
+            foreach (string library in steamLibraries)
+            {
+                if (string.IsNullOrEmpty(library)) continue;
+                string path = Path.Combine(library, gameName);
+                if (IsValidInstallation(path, game) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            // Try GOG paths
+            string[] gogPaths;
+            if (game == KotorGame.K1)
+            {
+                gogPaths = new[]
+                {
+                    @"C:\GOG Games\Star Wars - KotOR",
+                    @"C:\Program Files (x86)\GOG Galaxy\Games\Star Wars - KotOR",
+                    @"D:\GOG Games\Star Wars - KotOR"
+                };
+            }
+            else
+            {
+                gogPaths = new[]
+                {
+                    @"C:\GOG Games\Star Wars - KotOR2",
+                    @"C:\Program Files (x86)\GOG Galaxy\Games\Star Wars - KotOR2",
+                    @"D:\GOG Games\Star Wars - KotOR2"
+                };
+            }
+
+            foreach (string path in gogPaths)
+            {
+                if (IsValidInstallation(path, game) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            // Try common paths
+            string[] commonPaths;
+            if (game == KotorGame.K1)
+            {
+                commonPaths = new[]
+                {
+                    @"C:\Program Files (x86)\LucasArts\SWKotOR",
+                    @"C:\Program Files\LucasArts\SWKotOR",
+                    @"C:\Games\KotOR",
+                    @"D:\Games\KotOR"
+                };
+            }
+            else
+            {
+                commonPaths = new[]
+                {
+                    @"C:\Program Files (x86)\LucasArts\SWKotOR2",
+                    @"C:\Program Files (x86)\Obsidian\KotOR2",
+                    @"C:\Program Files\LucasArts\SWKotOR2",
+                    @"C:\Games\KotOR2",
+                    @"D:\Games\KotOR2"
+                };
+            }
+
+            foreach (string path in commonPaths)
+            {
+                if (IsValidInstallation(path, game) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            return paths;
         }
 
         /// <summary>

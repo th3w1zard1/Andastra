@@ -284,7 +284,20 @@ namespace Odyssey.Game.Core
             if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Enter) ||
                 IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Space))
             {
-                HandleMenuSelection(_selectedMenuIndex);
+                if (_isSelectingPath)
+                {
+                    // Confirm path selection
+                    if (_selectedPathIndex >= 0 && _selectedPathIndex < _availablePaths.Count)
+                    {
+                        _settings.GamePath = _availablePaths[_selectedPathIndex];
+                        _isSelectingPath = false;
+                        StartGame();
+                    }
+                }
+                else
+                {
+                    HandleMenuSelection(_selectedMenuIndex);
+                }
             }
 
             // Mouse click
@@ -558,37 +571,120 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            // Draw instructions at bottom with shadow
-            if (_font != null)
+            // Draw installation path selector if in path selection mode
+            if (_isSelectingPath && _availablePaths.Count > 0)
             {
-                string instructions = "Arrow Keys / Mouse: Navigate  |  Enter / Space / Click: Select  |  ESC: Exit";
-                Vector2 instSize = _font.MeasureString(instructions);
-                Vector2 instPos = new Vector2(centerX - instSize.X / 2, viewportHeight - 60);
+                int pathSelectorY = startY - titleOffset - 100;
+                int pathSelectorWidth = 600;
+                int pathSelectorHeight = 40;
+                int pathItemHeight = 35;
+                int maxVisiblePaths = 5;
 
-                // Shadow
-                _spriteBatch.DrawString(_font, instructions, instPos + new Vector2(1, 1), new Color(0, 0, 0, 150));
-                // Main text
-                _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
+                // Draw path selector background
+                Rectangle pathSelectorRect = new Rectangle(centerX - pathSelectorWidth / 2, pathSelectorY, pathSelectorWidth, pathSelectorHeight + (Math.Min(_availablePaths.Count, maxVisiblePaths) * pathItemHeight));
+                _spriteBatch.Draw(_menuTexture, pathSelectorRect, new Color(30, 30, 45, 240));
+                DrawRectangleBorder(_spriteBatch, pathSelectorRect, 2, new Color(100, 120, 150, 255));
+
+                // Draw title
+                if (_font != null)
+                {
+                    string pathTitle = "Select Installation Path:";
+                    Vector2 titleSize = _font.MeasureString(pathTitle);
+                    Vector2 titlePos = new Vector2(centerX - titleSize.X / 2, pathSelectorY + 5);
+                    _spriteBatch.DrawString(_font, pathTitle, titlePos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                    _spriteBatch.DrawString(_font, pathTitle, titlePos, new Color(200, 200, 220, 255));
+                }
+
+                // Draw path items
+                int startIndex = Math.Max(0, _selectedPathIndex - maxVisiblePaths / 2);
+                int endIndex = Math.Min(_availablePaths.Count, startIndex + maxVisiblePaths);
+
+                for (int i = startIndex; i < endIndex; i++)
+                {
+                    int itemY = pathSelectorY + pathSelectorHeight + (i - startIndex) * pathItemHeight;
+                    bool isSelected = (i == _selectedPathIndex);
+
+                    // Draw item background
+                    Rectangle itemRect = new Rectangle(centerX - pathSelectorWidth / 2 + 10, itemY, pathSelectorWidth - 20, pathItemHeight - 5);
+                    Color itemBgColor = isSelected ? new Color(60, 120, 200, 255) : new Color(40, 50, 70, 200);
+                    _spriteBatch.Draw(_menuTexture, itemRect, itemBgColor);
+
+                    if (isSelected)
+                    {
+                        DrawRectangleBorder(_spriteBatch, itemRect, 2, Color.White);
+                    }
+
+                    // Draw path text
+                    if (_font != null)
+                    {
+                        string pathText = _availablePaths[i];
+                        // Truncate if too long
+                        Vector2 textSize = _font.MeasureString(pathText);
+                        if (textSize.X > itemRect.Width - 20)
+                        {
+                            // Truncate with ellipsis
+                            while (textSize.X > itemRect.Width - 40 && pathText.Length > 0)
+                            {
+                                pathText = pathText.Substring(0, pathText.Length - 1);
+                                textSize = _font.MeasureString(pathText + "...");
+                            }
+                            pathText = pathText + "...";
+                        }
+
+                        Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemRect.Height - textSize.Y) / 2);
+                        _spriteBatch.DrawString(_font, pathText, textPos + new Vector2(1, 1), new Color(0, 0, 0, 200));
+                        _spriteBatch.DrawString(_font, pathText, textPos, isSelected ? Color.White : new Color(180, 180, 200, 255));
+                    }
+                }
+
+                // Draw instructions
+                if (_font != null)
+                {
+                    string instructions = "Arrow Keys: Navigate  |  Enter: Select  |  ESC: Cancel";
+                    Vector2 instSize = _font.MeasureString(instructions);
+                    Vector2 instPos = new Vector2(centerX - instSize.X / 2, pathSelectorY + pathSelectorHeight + (Math.Min(_availablePaths.Count, maxVisiblePaths) * pathItemHeight) + 10);
+                    _spriteBatch.DrawString(_font, instructions, instPos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                    _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
+                }
             }
             else
             {
-                // Fallback: draw simple visual instruction indicators
-                int indicatorY = viewportHeight - 40;
-                int indicatorSize = 8;
+                // Draw instructions at bottom with shadow
+                if (_font != null)
+                {
+                    string instructions = "Arrow Keys / Mouse: Navigate  |  Enter / Space / Click: Select  |  ESC: Exit";
+                    if (_availablePaths.Count > 1)
+                    {
+                        instructions += "  |  Select 'Start Game' to choose installation path";
+                    }
+                    Vector2 instSize = _font.MeasureString(instructions);
+                    Vector2 instPos = new Vector2(centerX - instSize.X / 2, viewportHeight - 60);
 
-                // Arrow keys indicator (up arrow)
-                int arrowX = centerX - 100;
-                _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX, indicatorY - 5, indicatorSize, indicatorSize * 2), new Color(150, 150, 170, 255));
-                _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX - 4, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
-                _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX + indicatorSize - indicatorSize / 2, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
+                    // Shadow
+                    _spriteBatch.DrawString(_font, instructions, instPos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                    // Main text
+                    _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
+                }
+                else
+                {
+                    // Fallback: draw simple visual instruction indicators
+                    int indicatorY = viewportHeight - 40;
+                    int indicatorSize = 8;
 
-                // Mouse indicator (circle)
-                int mouseX = centerX;
-                DrawRectangleBorder(_spriteBatch, new Rectangle(mouseX - indicatorSize / 2, indicatorY - indicatorSize / 2, indicatorSize, indicatorSize), 2, new Color(150, 150, 170, 255));
+                    // Arrow keys indicator (up arrow)
+                    int arrowX = centerX - 100;
+                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX, indicatorY - 5, indicatorSize, indicatorSize * 2), new Color(150, 150, 170, 255));
+                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX - 4, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
+                    _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX + indicatorSize - indicatorSize / 2, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
 
-                // Enter key indicator (rectangle)
-                int enterX = centerX + 100;
-                _spriteBatch.Draw(_menuTexture, new Rectangle(enterX, indicatorY - 5, indicatorSize * 2, indicatorSize), new Color(150, 150, 170, 255));
+                    // Mouse indicator (circle)
+                    int mouseX = centerX;
+                    DrawRectangleBorder(_spriteBatch, new Rectangle(mouseX - indicatorSize / 2, indicatorY - indicatorSize / 2, indicatorSize, indicatorSize), 2, new Color(150, 150, 170, 255));
+
+                    // Enter key indicator (rectangle)
+                    int enterX = centerX + 100;
+                    _spriteBatch.Draw(_menuTexture, new Rectangle(enterX, indicatorY - 5, indicatorSize * 2, indicatorSize), new Color(150, 150, 170, 255));
+                }
             }
 
             _spriteBatch.End();
@@ -1617,8 +1713,7 @@ namespace Odyssey.Game.Core
                     StartDialogueWithEntity(entity);
                     break;
                 case Odyssey.Core.Enums.ObjectType.Door:
-                    Console.WriteLine("[Odyssey] Door clicked - would open/close door");
-                    // TODO: Open/close door
+                    HandleDoorInteraction(entity);
                     break;
                 case Odyssey.Core.Enums.ObjectType.Placeable:
                     // Try to start dialogue or interact
@@ -1709,6 +1804,90 @@ namespace Odyssey.Game.Core
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Handles door interaction (open/close).
+        /// </summary>
+        private void HandleDoorInteraction(Odyssey.Core.Interfaces.IEntity doorEntity)
+        {
+            if (doorEntity == null)
+            {
+                return;
+            }
+
+            var doorComponent = doorEntity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
+            if (doorComponent == null)
+            {
+                Console.WriteLine("[Odyssey] Door entity has no DoorComponent");
+                return;
+            }
+
+            // Check if door is locked
+            if (doorComponent.IsLocked)
+            {
+                Console.WriteLine("[Odyssey] Door is locked");
+                // TODO: Check if player has key, attempt lockpicking, etc.
+                return;
+            }
+
+            // Check if door has conversation (some doors have dialogue)
+            if (!string.IsNullOrEmpty(doorComponent.Conversation))
+            {
+                StartDialogueWithEntity(doorEntity);
+                return;
+            }
+
+            // Toggle door state
+            doorComponent.IsOpen = !doorComponent.IsOpen;
+            Console.WriteLine("[Odyssey] Door " + (doorComponent.IsOpen ? "opened" : "closed"));
+
+            // Handle module/area transitions
+            if (doorComponent.IsModuleTransition)
+            {
+                Console.WriteLine("[Odyssey] Door leads to module: " + doorComponent.LinkedToModule);
+                // TODO: Implement module transition
+            }
+            else if (doorComponent.IsAreaTransition)
+            {
+                Console.WriteLine("[Odyssey] Door leads to area: " + doorComponent.LinkedTo);
+                // TODO: Implement area transition
+            }
+        }
+
+        /// <summary>
+        /// Handles trigger activation.
+        /// </summary>
+        private void HandleTriggerActivation(Odyssey.Core.Interfaces.IEntity triggerEntity)
+        {
+            if (triggerEntity == null)
+            {
+                return;
+            }
+
+            var triggerComponent = triggerEntity.GetComponent<Odyssey.Kotor.Components.TriggerComponent>();
+            if (triggerComponent == null)
+            {
+                Console.WriteLine("[Odyssey] Trigger entity has no TriggerComponent");
+                return;
+            }
+
+            Console.WriteLine("[Odyssey] Trigger activated");
+
+            // Handle module/area transitions
+            if (triggerComponent.IsModuleTransition)
+            {
+                Console.WriteLine("[Odyssey] Trigger leads to module: " + triggerComponent.LinkedToModule);
+                // TODO: Implement module transition
+            }
+            else if (triggerComponent.IsAreaTransition)
+            {
+                Console.WriteLine("[Odyssey] Trigger leads to area: " + triggerComponent.LinkedTo);
+                // TODO: Implement area transition
+            }
+
+            // TODO: Execute trigger scripts (OnEnter, OnExit, OnHeartbeat)
+            // TODO: Handle trap triggers
         }
 
         /// <summary>
