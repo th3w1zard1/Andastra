@@ -941,10 +941,33 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:881
             // Original: List<AExpression> params = this.removeActionParams(node);
             List<AExpression> @params = this.RemoveActionParams(node);
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:889
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:930-936
+            // Original: String actionName; try { actionName = NodeUtils.getActionName(node, this.actions); } catch (RuntimeException e) { actionName = "UnknownAction" + NodeUtils.getActionId(node); }
+            string actionName;
+            try
+            {
+                actionName = NodeUtils.GetActionName(node, this.actions);
+            }
+            catch (Exception)
+            {
+                // Action metadata missing - use placeholder name
+                actionName = "UnknownAction" + NodeUtils.GetActionId(node);
+            }
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:937
             // Original: AActionExp act = new AActionExp(actionName, NodeUtils.getActionId(node), params, this.actions);
-            AActionExp act = new AActionExp(NodeUtils.GetActionName(node, this.actions), NodeUtils.GetActionId(node), @params);
-            UtilsType type = NodeUtils.GetReturnType(node, this.actions);
+            AActionExp act = new AActionExp(actionName, NodeUtils.GetActionId(node), @params);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:938-944
+            // Original: Type type; try { type = NodeUtils.getReturnType(node, this.actions); } catch (RuntimeException e) { type = new Type((byte) 0); }
+            UtilsType type;
+            try
+            {
+                type = NodeUtils.GetReturnType(node, this.actions);
+            }
+            catch (Exception)
+            {
+                // Action metadata missing or invalid - assume void return
+                type = new UtilsType((byte)0);
+            }
             if (!type.Equals((byte)0))
             {
                 Variable var = (Variable)this.stack.Get(1);
@@ -963,9 +986,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                // Wrap expression in AExpressionStatement so it's a valid statement
-                AExpressionStatement stmt = new AExpressionStatement(act);
-                this.current.AddChild(stmt);
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:962-963
+                // Original: } else { this.current.addChild(act); }
+                // Java adds AActionExp directly - ASub.getBody() will handle converting it to a statement
+                this.current.AddChild(act);
             }
 
             this.CheckEnd(node);
