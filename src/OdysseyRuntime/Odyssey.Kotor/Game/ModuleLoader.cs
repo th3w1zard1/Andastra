@@ -32,6 +32,15 @@ namespace Odyssey.Kotor.Game
     /// <summary>
     /// Loads modules from KOTOR game files using CSharpKOTOR resource infrastructure.
     /// </summary>
+    /// <remarks>
+    /// Module Loading Process:
+    /// - Based on swkotor2.exe module loading system
+    /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4
+    /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
+    /// - Module loading order: IFO (module info) -> LYT (layout) -> VIS (visibility) -> GIT (instances) -> ARE (area properties)
+    /// - Original engine uses "MODULES:" prefix for module directory access
+    /// - Module resources loaded from: MODULES:\{moduleName}\module.ifo, MODULES:\{moduleName}\{moduleName}.lyt, etc.
+    /// </remarks>
     public class ModuleLoader
     {
         private readonly string _gamePath;
@@ -167,6 +176,19 @@ namespace Odyssey.Kotor.Game
         /// <summary>
         /// Load a module by name.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe module loading system
+        /// Located via string references: "ModuleList" @ 0x007bdd3c, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
+        /// Original implementation:
+        /// 1. Sets up module directory path (MODULES:\{moduleName}\)
+        /// 2. Loads module.ifo (IFO resource)
+        /// 3. Loads {moduleName}.lyt (LYT resource)
+        /// 4. Loads {moduleName}.vis (VIS resource)
+        /// 5. Loads {moduleName}.git (GIT resource)
+        /// 6. Loads walkmesh (WOK files from LYT rooms)
+        /// 7. Spawns entities from GIT
+        /// 8. Triggers ON_MODULE_LOAD and ON_MODULE_START script events
+        /// </remarks>
         public void LoadModule(string moduleName)
         {
             Console.WriteLine("[ModuleLoader] Loading module: " + moduleName);
@@ -228,6 +250,11 @@ namespace Odyssey.Kotor.Game
             }
         }
 
+        // Load module IFO (module info) file
+        // Based on swkotor2.exe module loading
+        // Located via string reference: "Module" @ 0x007bc4e0
+        // Original implementation: Loads "module.ifo" from MODULES:\{moduleName}\ directory
+        // IFO contains: EntryArea, EntryX/Y/Z, ModName, DawnHour, DuskHour, ModuleDescription, etc.
         private void LoadIFO(string moduleName)
         {
             try
@@ -290,6 +317,12 @@ namespace Odyssey.Kotor.Game
             }
         }
 
+        // Load module GIT (game instance template) file
+        // Based on swkotor2.exe module loading
+        // Located via string reference: "tmpgit" @ 0x007be618
+        // Original implementation: Loads "{moduleName}.git" from MODULES:\{moduleName}\ directory
+        // GIT contains: Creatures, Doors, Placeables, Triggers, Waypoints, Sounds, Stores, Encounters, Cameras
+        // Each instance has: Position, Orientation, Tag, Template ResRef, Local variables, Script hooks
         private void LoadGIT(string moduleName)
         {
             try
@@ -533,6 +566,11 @@ namespace Odyssey.Kotor.Game
             }
         }
 
+        // Spawn entities from GIT data
+        // Based on swkotor2.exe entity spawning system
+        // Original implementation: Iterates through GIT lists and creates runtime entities
+        // Spawn order: Waypoints -> Doors -> Placeables -> Creatures -> Triggers -> Sounds -> Stores -> Encounters
+        // Each entity gets: ObjectId, Tag, Position, Orientation, Template data, Local variables, Script hooks
         private void SpawnEntitiesFromGIT(GIT git, RuntimeArea area)
         {
             Console.WriteLine("[ModuleLoader] Spawning entities from GIT...");
