@@ -6,6 +6,22 @@ using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Core.Actions
 {
+namespace Odyssey.Core.Actions
+{
+    /// <summary>
+    /// Skill constants for KOTOR.
+    /// </summary>
+    public static class SkillConstants
+    {
+        public const int SKILL_COMPUTER_USE = 0;
+        public const int SKILL_DEMOLITIONS = 1;
+        public const int SKILL_STEALTH = 2;
+        public const int SKILL_AWARENESS = 3;
+        public const int SKILL_PERSUADE = 4;
+        public const int SKILL_REPAIR = 5;
+        public const int SKILL_SECURITY = 6;
+        public const int SKILL_TREAT_INJURY = 7;
+    }
     /// <summary>
     /// Action to use/interact with an object (door, placeable, etc.).
     /// Based on NWScript ActionUseObject semantics.
@@ -130,9 +146,14 @@ namespace Odyssey.Core.Actions
                             // If lockable by script and has lock DC, attempt to unlock
                             if (door.LockableByScript && door.LockDC > 0)
                             {
-                                // TODO: Roll skill check (Security/Disable Device) vs LockDC
-                                // For now, fail if locked
-                                return ActionStatus.Failed;
+                                // Roll skill check (Security) vs LockDC
+                                if (!PerformSkillCheck(actor, SkillConstants.SKILL_SECURITY, door.LockDC))
+                                {
+                                    // Skill check failed - cannot unlock
+                                    return ActionStatus.Failed;
+                                }
+                                // Skill check succeeded - unlock the door
+                                door.Unlock();
                             }
 
                             // If just locked without key requirement, fail
@@ -171,9 +192,14 @@ namespace Odyssey.Core.Actions
                         // If has lock DC, attempt to unlock
                         if (placeable.LockDC > 0)
                         {
-                            // TODO: Roll skill check (Security/Disable Device) vs LockDC
-                            // For now, fail if locked
-                            return ActionStatus.Failed;
+                            // Roll skill check (Security) vs LockDC
+                            if (!PerformSkillCheck(actor, SkillConstants.SKILL_SECURITY, placeable.LockDC))
+                            {
+                                // Skill check failed - cannot unlock
+                                return ActionStatus.Failed;
+                            }
+                            // Skill check succeeded - unlock the placeable
+                            placeable.Unlock();
                         }
 
                         return ActionStatus.Failed;
@@ -197,6 +223,40 @@ namespace Odyssey.Core.Actions
             }
 
             return ActionStatus.Complete;
+        }
+
+        /// <summary>
+        /// Performs a skill check (d20 + skill rank + ability modifier) vs DC.
+        /// </summary>
+        /// <param name="actor">The entity performing the skill check</param>
+        /// <param name="skill">Skill ID (SKILL_SECURITY, etc.)</param>
+        /// <param name="dc">Difficulty class to beat</param>
+        /// <returns>True if skill check succeeds, false otherwise</returns>
+        private bool PerformSkillCheck(IEntity actor, int skill, int dc)
+        {
+            IStatsComponent stats = actor.GetComponent<IStatsComponent>();
+            if (stats == null)
+            {
+                return false; // No stats component = cannot perform skill check
+            }
+
+            // Get skill rank
+            int skillRank = stats.GetSkillRank(skill);
+            if (skillRank < 0)
+            {
+                return false; // Skill doesn't exist for this entity
+            }
+
+            // Roll d20
+            int roll = _random.Next(1, 21);
+
+            // Calculate total: d20 roll + skill rank
+            // Note: In full implementation, we'd also add ability modifier (DEX for Security)
+            // For now, just use skill rank
+            int total = roll + skillRank;
+
+            // Check if total meets or exceeds DC
+            return total >= dc;
         }
 
         private Vector3 GetUsePoint(IEntity target, ITransformComponent targetTransform)

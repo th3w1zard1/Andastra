@@ -81,6 +81,13 @@ namespace Odyssey.Core.Interfaces.Components
         /// Run speed in meters per second.
         /// </summary>
         float RunSpeed { get; }
+
+        /// <summary>
+        /// Gets the skill rank for a given skill.
+        /// </summary>
+        /// <param name="skill">Skill ID (SKILL_SECURITY = 6, etc.)</param>
+        /// <returns>Skill rank, or 0 if untrained, or -1 if skill doesn't exist</returns>
+        int GetSkillRank(int skill);
     }
 }
 

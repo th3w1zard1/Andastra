@@ -24,6 +24,7 @@ namespace Odyssey.Kotor.Components
     public class StatsComponent : IStatsComponent
     {
         private readonly Dictionary<Ability, int> _abilities;
+        private readonly Dictionary<int, int> _skills; // Skill ID -> Skill Rank
         private int _currentHP;
         private int _maxHP;
         private int _baseLevel;
@@ -38,11 +39,19 @@ namespace Odyssey.Kotor.Components
         public StatsComponent()
         {
             _abilities = new Dictionary<Ability, int>();
+            _skills = new Dictionary<int, int>();
             
             // Default ability scores (10 = average human)
             foreach (Ability ability in Enum.GetValues(typeof(Ability)))
             {
                 _abilities[ability] = 10;
+            }
+            
+            // Initialize all skills to 0 (untrained)
+            // KOTOR has 8 skills: COMPUTER_USE, DEMOLITIONS, STEALTH, AWARENESS, PERSUADE, REPAIR, SECURITY, TREAT_INJURY
+            for (int i = 0; i < 8; i++)
+            {
+                _skills[i] = 0;
             }
             
             _currentHP = 10;
@@ -162,6 +171,34 @@ namespace Odyssey.Kotor.Components
 
         public float WalkSpeed { get; set; }
         public float RunSpeed { get; set; }
+
+        public int GetSkillRank(int skill)
+        {
+            // Returns skill rank, or 0 if untrained, or -1 if skill doesn't exist
+            if (skill < 0 || skill >= 8)
+            {
+                return -1; // Invalid skill ID
+            }
+            
+            int rank;
+            if (_skills.TryGetValue(skill, out rank))
+            {
+                return rank;
+            }
+            
+            return 0; // Untrained (default)
+        }
+
+        /// <summary>
+        /// Sets the skill rank for a given skill.
+        /// </summary>
+        public void SetSkillRank(int skill, int rank)
+        {
+            if (skill >= 0 && skill < 8)
+            {
+                _skills[skill] = Math.Max(0, rank);
+            }
+        }
 
         #endregion
 
