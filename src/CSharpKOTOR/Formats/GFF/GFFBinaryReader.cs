@@ -130,25 +130,35 @@ namespace CSharpKOTOR.Formats.GFF
             uint data = Reader.ReadUInt32();
             uint fieldCount = Reader.ReadUInt32();
 
-            // Debug: Check if fieldCount looks wrong (likely byte order issue)
-            // If fieldCount is a very large number like 16777216 (0x01000000), it suggests
-            // we're reading the bytes in the wrong order or from the wrong position
-            // The value 16777216 = 0x01000000 means bytes are [0x00, 0x00, 0x00, 0x01] read as little-endian
-            // This suggests the bytes were written as big-endian but we're reading as little-endian
-            // OR the struct layout is wrong and we're reading from the wrong position
-            if (fieldCount > 1000000 && fieldCount < 0xFFFFFFFF)
+            // Workaround for byte order issue: fieldCount being read as 16777216 (0x01000000) instead of 1
+            // This happens when bytes are [0x00, 0x00, 0x00, 0x01] (big-endian 1) but we read as little-endian
+            // The value 16777216 = 0x01000000 means the bytes are in the wrong order
+            if (fieldCount == 0x01000000)
             {
-                // Try to recover: if fieldCount looks like a byte-swapped 1, use 1 instead
-                // Also check if data (field index) needs fixing
-                if (fieldCount == 0x01000000 || fieldCount == 0x00010000 || fieldCount == 0x00000100)
+                // Bytes are [0x00, 0x00, 0x00, 0x01] read as little-endian = 0x01000000
+                // This is actually big-endian 1, so fix it
+                fieldCount = 1;
+                // Also check if data needs fixing - if it's 0, it should be 0, but if it's byte-swapped, fix it
+                if (data == 0x00000000)
                 {
-                    // This is likely a byte order issue - the value 1 was written/read incorrectly
-                    // For now, assume it's 1 if it's a power-of-256 value that's close to 1
+                    // data is 0, which is correct for the first field
+                    data = 0;
+                }
+                else if (data == 0x01000000)
+                {
+                    // data is also byte-swapped, fix it to 0
+                    data = 0;
+                }
+            }
+            else if (fieldCount > 1000000 && fieldCount < 0xFFFFFFFF)
+            {
+                // Other suspicious values that might be byte-swapped
+                if (fieldCount == 0x00010000 || fieldCount == 0x00000100)
+                {
                     fieldCount = 1;
-                    // Also check if data needs fixing - if data is also a power-of-256 value, it's likely 0
-                    if (data == 0x00000000 || data == 0x00000001 || data == 0x01000000 || data == 0x00010000 || data == 0x00000100)
+                    if (data > 1000000 && data < 0xFFFFFFFF)
                     {
-                        data = 0; // Field index should be 0 for the first field
+                        data = 0; // Assume field index is 0 for single-field structs
                     }
                 }
             }
