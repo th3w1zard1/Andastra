@@ -32,6 +32,7 @@ namespace Odyssey.Content.MDL
         private readonly IResourceProvider _resourceProvider;
         private bool _useCache;
         private bool _useBulkReader;
+        private bool _useOptimizedReader;
 
         /// <summary>
         /// Gets or sets whether to use the model cache. Default is true.
@@ -53,6 +54,17 @@ namespace Odyssey.Content.MDL
         }
 
         /// <summary>
+        /// Gets or sets whether to use the optimized unsafe reader (fastest). Default is true.
+        /// The optimized reader uses unsafe code and zero-copy operations for maximum performance.
+        /// Requires unsafe code to be enabled in the project.
+        /// </summary>
+        public bool UseOptimizedReader
+        {
+            get { return _useOptimizedReader; }
+            set { _useOptimizedReader = value; }
+        }
+
+        /// <summary>
         /// Creates a new MDL loader using the specified resource provider.
         /// </summary>
         /// <param name="resourceProvider">Resource provider for loading MDL/MDX files</param>
@@ -65,6 +77,7 @@ namespace Odyssey.Content.MDL
             _resourceProvider = resourceProvider;
             _useCache = true;
             _useBulkReader = true;
+            _useOptimizedReader = true;
         }
 
         /// <summary>
@@ -111,7 +124,15 @@ namespace Odyssey.Content.MDL
             {
                 MDLModel model;
 
-                if (_useBulkReader)
+                if (_useOptimizedReader)
+                {
+                    // Use ultra-optimized unsafe reader (fastest)
+                    using (var reader = new MDLOptimizedReader(mdlData, mdxData))
+                    {
+                        model = reader.Load();
+                    }
+                }
+                else if (_useBulkReader)
                 {
                     // Use optimized bulk reader
                     using (var reader = new MDLBulkReader(mdlData, mdxData))
