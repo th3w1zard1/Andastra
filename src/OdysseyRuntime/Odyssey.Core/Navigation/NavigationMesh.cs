@@ -10,8 +10,15 @@ namespace Odyssey.Core.Navigation
     /// Wraps BWM data from CSharpKOTOR with A* pathfinding on walkmesh adjacency.
     /// </summary>
     /// <remarks>
-    /// Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md.
-    /// Adjacency encoding: adjacency_index = face_index * 3 + edge_index
+    /// Navigation/Walkmesh System:
+    /// - Based on swkotor2.exe pathfinding/walkmesh system
+    /// - Located via string references: "walkmesh" (pathfinding functions), "nwsareapathfind.cpp" @ 0x007be3ff
+    /// - Error messages: "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    /// - "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+    /// - Original implementation: BWM (BioWare Walkmesh) files contain triangle mesh with adjacency data
+    /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
+    /// - Adjacency encoding: adjacency_index = face_index * 3 + edge_index
+    /// - Surface materials determine walkability (0-30 range, lookup via surfacemat.2da)
     /// </remarks>
     public class NavigationMesh : INavigationMesh
     {
@@ -210,7 +217,7 @@ namespace Odyssey.Core.Navigation
             while (openSet.Count > 0)
             {
                 // Get face with lowest f-score
-                var currentScore = GetMin(openSet);
+                FaceScore currentScore = GetMin(openSet);
                 openSet.Remove(currentScore);
                 int current = currentScore.FaceIndex;
                 inOpenSet.Remove(current);
@@ -264,7 +271,7 @@ namespace Odyssey.Core.Navigation
 
         private FaceScore GetMin(SortedSet<FaceScore> set)
         {
-            using (var enumerator = set.GetEnumerator())
+            using (SortedSet<FaceScore>.Enumerator enumerator = set.GetEnumerator())
             {
                 if (enumerator.MoveNext())
                 {
