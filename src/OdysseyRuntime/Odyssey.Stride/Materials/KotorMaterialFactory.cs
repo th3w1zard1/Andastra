@@ -247,6 +247,11 @@ namespace Odyssey.Stride.Materials
                 };
             }
 
+            // Create material from descriptor
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
+            // Material.New creates a new Material instance from a MaterialDescriptor
+            // Method signature: Material.New(GraphicsDevice, MaterialDescriptor)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
             return Material.New(_device, desc);
         }
 
@@ -263,6 +268,11 @@ namespace Odyssey.Stride.Materials
                 DiffuseMap = new ComputeColor(new Color4(1f, 0f, 1f, 1f))
             };
 
+            // Create material from descriptor
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
+            // Material.New creates a new Material instance from a MaterialDescriptor
+            // Method signature: Material.New(GraphicsDevice, MaterialDescriptor)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
             return Material.New(_device, desc);
         }
 
