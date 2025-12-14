@@ -709,7 +709,30 @@ namespace Odyssey.Content.MDL
 
                 if (indicesCounts.Length > 0 && indicesOffsets.Length > 0 && indicesCounts[0] > 0)
                 {
-                    mesh.Indices = ReadUInt16Array(mdlPtr, MDLConstants.FILE_HEADER_SIZE + indicesOffsets[0], indicesCounts[0]);
+                    // Validate offset is non-negative (negative offsets indicate invalid data)
+                    if (indicesOffsets[0] >= 0)
+                    {
+                        long absoluteOffsetLong = (long)MDLConstants.FILE_HEADER_SIZE + indicesOffsets[0];
+                        if (absoluteOffsetLong >= 0 && absoluteOffsetLong < _mdlData.Length)
+                        {
+                            mesh.Indices = ReadUInt16Array(mdlPtr, (int)absoluteOffsetLong, indicesCounts[0]);
+                        }
+                        else
+                        {
+                            throw new InvalidDataException(
+                                $"Mesh indices offset is out of bounds: " +
+                                $"FILE_HEADER_SIZE ({MDLConstants.FILE_HEADER_SIZE}) + " +
+                                $"indicesOffsets[0] ({indicesOffsets[0]}) = {absoluteOffsetLong}, " +
+                                $"file length = {_mdlData.Length}"
+                            );
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(
+                            $"Mesh indices offset is negative ({indicesOffsets[0]}), indicating corrupted data."
+                        );
+                    }
                 }
                 else
                 {
