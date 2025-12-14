@@ -18,6 +18,7 @@ using CSharpKOTOR.Mods.NCS;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
+using CSharpKOTOR.Memory;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Tools;
 using CSharpKOTOR.Utility;
@@ -559,7 +560,36 @@ namespace KotorDiff.NET.Generator
                 }
 
                 // Apply the reference to the modification object being written
-                // TODO: Implement immediate patch creation methods
+                if (pendingRef.LocationType == "2da")
+                {
+                    CreateImmediate2DaStrrefPatchSingle(
+                        filename,
+                        pendingRef.OldStrref,
+                        pendingRef.TokenId,
+                        (int)pendingRef.LocationData["row_index"],
+                        (string)pendingRef.LocationData["column_name"],
+                        pendingRef.LocationData.ContainsKey("resource_path") ? (string)pendingRef.LocationData["resource_path"] : null,
+                        modification);
+                }
+                else if (pendingRef.LocationType == "ssf")
+                {
+                    CreateImmediateSsfStrrefPatchSingle(
+                        filename,
+                        pendingRef.OldStrref,
+                        pendingRef.TokenId,
+                        (SSFSound)pendingRef.LocationData["sound"],
+                        modification);
+                }
+                else if (pendingRef.LocationType == "gff")
+                {
+                    CreateImmediateGffStrrefPatchSingle(
+                        filename,
+                        pendingRef.OldStrref,
+                        pendingRef.TokenId,
+                        (string)pendingRef.LocationData["field_path"],
+                        modification);
+                }
+                // NCS reference finding is temporarily disabled in Python too
                 appliedRefs.Add(pendingRef);
             }
 
@@ -624,7 +654,11 @@ namespace KotorDiff.NET.Generator
                 }
 
                 // Apply the reference to the modification object being written
-                // TODO: Implement immediate patch creation methods
+                CreateGff2DaPatch(
+                    filename,
+                    pendingRef.FieldPaths,
+                    pendingRef.TokenId,
+                    modification);
                 appliedRefs.Add(pendingRef);
             }
 
@@ -823,6 +857,246 @@ namespace KotorDiff.NET.Generator
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Create a single 2DA patch for a StrRef reference immediately.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3508-3569
+        /// </summary>
+        private void CreateImmediate2DaStrrefPatchSingle(
+            string filename,
+            int oldStrref,
+            int tokenId,
+            int rowIndex,
+            string columnName,
+            string resourcePath,
+            PatcherModifications modification)
+        {
+            // Use the provided modification if it matches, otherwise find or create one
+            Modifications2DA existingMod;
+            bool isNewMod;
+
+            if (modification != null && modification is Modifications2DA mod2da && 
+                mod2da.SourceFile.ToLowerInvariant() == filename.ToLowerInvariant())
+            {
+                existingMod = mod2da;
+                isNewMod = !_writtenSections.Contains(existingMod.SourceFile);
+            }
+            else
+            {
+                // Get or create 2DA modification from all_modifications
+                var foundMod = AllModifications.Twoda.FirstOrDefault(m => m.SourceFile == filename);
+                isNewMod = foundMod == null;
+
+                if (foundMod == null)
+                {
+                    existingMod = new Modifications2DA(filename);
+                    AllModifications.Twoda.Add(existingMod);
+                }
+                else
+                {
+                    existingMod = foundMod;
+                }
+            }
+
+            // Create the patch
+            var changeRow = new ChangeRow2DA(
+                identifier: $"strref_link_{oldStrref}_{rowIndex}_{columnName}",
+                target: new Target(TargetType.ROW_INDEX, rowIndex),
+                cells: new Dictionary<string, RowValue> { { columnName, new RowValueTLKMemory(tokenId) } });
+
+            existingMod.Modifiers.Add(changeRow);
+
+            // Log the patch being created
+            string pathInfo = resourcePath != null ? $" at {resourcePath}" : "";
+            _logFunc?.Invoke($"    Creating patch: row {rowIndex}, column '{columnName}' -> Token {tokenId}{pathInfo}");
+
+            // Write to INI
+            if (isNewMod)
+            {
+                Write2DaModification(existingMod, null);
+            }
+            else
+            {
+                _writtenSections.Remove(filename);
+                WriteToIni(new List<Modifications2DA> { existingMod }, "2da");
+                _writtenSections.Add(filename);
+            }
+        }
+
+        /// <summary>
+        /// Create a single SSF patch for a StrRef reference immediately.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3571-3618
+        /// </summary>
+        private void CreateImmediateSsfStrrefPatchSingle(
+            string filename,
+            int oldStrref,
+            int tokenId,
+            SSFSound sound,
+            PatcherModifications modification)
+        {
+            // Use the provided modification if it matches, otherwise find or create one
+            ModificationsSSF existingMod;
+            bool isNewMod;
+
+            if (modification != null && modification is ModificationsSSF modSsf && 
+                modSsf.SourceFile.ToLowerInvariant() == filename.ToLowerInvariant())
+            {
+                existingMod = modSsf;
+                isNewMod = !_writtenSections.Contains(existingMod.SourceFile);
+            }
+            else
+            {
+                // Get or create SSF modification from all_modifications
+                var foundMod = AllModifications.Ssf.FirstOrDefault(m => m.SourceFile == filename);
+                isNewMod = foundMod == null;
+
+                if (foundMod == null)
+                {
+                    existingMod = new ModificationsSSF(filename, replace: false, modifiers: null);
+                    AllModifications.Ssf.Add(existingMod);
+                }
+                else
+                {
+                    existingMod = foundMod;
+                }
+            }
+
+            // Create the patch
+            var modifySsf = new ModifySSF(sound, new TokenUsageTLK(tokenId));
+            existingMod.Modifiers.Add(modifySsf);
+
+            _logFunc?.Invoke($"    Creating patch: sound '{sound}' -> Token {tokenId}");
+
+            // Write to INI
+            if (isNewMod)
+            {
+                WriteSsfModification(existingMod, null);
+            }
+            else
+            {
+                _writtenSections.Remove(filename);
+                WriteToIni(new List<ModificationsSSF> { existingMod }, "ssf");
+                _writtenSections.Add(filename);
+            }
+        }
+
+        /// <summary>
+        /// Create a single GFF patch for a StrRef reference immediately.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3620-3667
+        /// </summary>
+        private void CreateImmediateGffStrrefPatchSingle(
+            string filename,
+            int oldStrref,
+            int tokenId,
+            string fieldPath,
+            PatcherModifications modification)
+        {
+            // Use the provided modification if it matches, otherwise find or create one
+            ModificationsGFF existingMod;
+            bool isNewMod;
+
+            if (modification != null && modification is ModificationsGFF modGff && 
+                modGff.SourceFile.ToLowerInvariant() == filename.ToLowerInvariant())
+            {
+                existingMod = modGff;
+                isNewMod = !_writtenSections.Contains(existingMod.SourceFile);
+            }
+            else
+            {
+                // Get or create GFF modification from all_modifications
+                var foundMod = AllModifications.Gff.FirstOrDefault(m => m.SourceFile == filename);
+                isNewMod = foundMod == null;
+
+                if (foundMod == null)
+                {
+                    existingMod = new ModificationsGFF(filename, replace: false, modifiers: null);
+                    AllModifications.Gff.Add(existingMod);
+                }
+                else
+                {
+                    existingMod = foundMod;
+                }
+            }
+
+            // Create the patch
+            var locstringDelta = new LocalizedStringDelta(new FieldValueTLKMemory(tokenId));
+            var modifyField = new ModifyFieldGFF(fieldPath, new FieldValueConstant(locstringDelta));
+            existingMod.Modifiers.Add(modifyField);
+
+            _logFunc?.Invoke($"    Creating patch: field '{fieldPath}' -> Token {tokenId}");
+
+            // Write to INI
+            if (isNewMod)
+            {
+                WriteGffModification(existingMod, null);
+            }
+            else
+            {
+                _writtenSections.Remove(filename);
+                WriteToIni(new List<ModificationsGFF> { existingMod }, "gff");
+                _writtenSections.Add(filename);
+            }
+        }
+
+        /// <summary>
+        /// Create GFF patches that replace 2DA row references with 2DAMEMORY tokens.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3454-3506
+        /// </summary>
+        private void CreateGff2DaPatch(
+            string gffFilename,
+            List<string> fieldPaths,
+            int tokenId,
+            PatcherModifications modification)
+        {
+            // Use the provided modification if it matches, otherwise find or create one
+            ModificationsGFF existingMod;
+            bool isNewMod;
+
+            if (modification != null && modification is ModificationsGFF modGff && 
+                modGff.SourceFile.ToLowerInvariant() == gffFilename.ToLowerInvariant())
+            {
+                existingMod = modGff;
+                isNewMod = !_writtenSections.Contains(existingMod.SourceFile);
+            }
+            else
+            {
+                // Find or create ModificationsGFF from all_modifications
+                var foundMod = AllModifications.Gff.FirstOrDefault(m => m.SourceFile == gffFilename);
+                isNewMod = foundMod == null;
+
+                if (foundMod == null)
+                {
+                    existingMod = new ModificationsGFF(gffFilename, replace: false, modifiers: null);
+                    AllModifications.Gff.Add(existingMod);
+                }
+                else
+                {
+                    existingMod = foundMod;
+                }
+            }
+
+            // Create ModifyFieldGFF entries for each field path
+            foreach (string fieldPath in fieldPaths)
+            {
+                // Create a FieldValue2DAMemory value
+                var fieldValue = new FieldValue2DAMemory(tokenId);
+                var modifier = new ModifyFieldGFF(fieldPath, fieldValue);
+                existingMod.Modifiers.Add(modifier);
+
+                _logFunc?.Invoke($"    Creating patch: {gffFilename} -> {fieldPath} = 2DAMEMORY{tokenId}");
+            }
+
+            // Re-append to update existing section
+            if (existingMod.SourceFile != null && _writtenSections.Contains(existingMod.SourceFile))
+            {
+                _writtenSections.Remove(existingMod.SourceFile);
+            }
+            WriteToIni(new List<ModificationsGFF> { existingMod }, "gff");
+            if (existingMod.SourceFile != null)
+            {
+                _writtenSections.Add(existingMod.SourceFile);
+            }
         }
 
         /// <summary>
