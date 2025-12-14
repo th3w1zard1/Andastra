@@ -136,10 +136,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             
             // If entry stub detected, main starts at the entry JSR target (after the entry stub)
+            // But ensure mainStart is after the globals range (0 to savebpIndex+1)
             if (entryJsrTarget >= 0)
             {
-                mainStart = entryJsrTarget;
-                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entry JSR target: {mainStart}");
+                int globalsEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
+                // Only use entryJsrTarget if it's after the globals range
+                if (entryJsrTarget > globalsEnd)
+                {
+                    mainStart = entryJsrTarget;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entry JSR target: {mainStart} (globals end at {globalsEnd})");
+                }
+                else
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Entry JSR target {entryJsrTarget} is within globals range (0-{globalsEnd}), using {mainStart} instead");
+                }
             }
             
             if (subroutineStarts.Count > 0)
