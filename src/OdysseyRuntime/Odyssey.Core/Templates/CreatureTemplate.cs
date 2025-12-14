@@ -10,6 +10,16 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Creature template implementation for spawning creatures from UTC data.
     /// </summary>
+    /// <remarks>
+    /// Creature Template:
+    /// - Based on swkotor2.exe creature template system
+    /// - Located via string references: "Creature" @ 0x007bc544, "Creature List" @ 0x007bd01c
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references creature templates)
+    /// - Original implementation: UTC (Creature) GFF templates define creature properties, stats, scripts
+    /// - UTC file format: GFF with "UTC " signature containing creature data (Appearance_Type, Faction, HP, Attributes, Feats, Scripts)
+    /// - Templates are loaded and used to spawn runtime entities with instance-specific overrides
+    /// - Based on UTC file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class CreatureTemplate : ICreatureTemplate
     {
         #region Properties
@@ -127,7 +137,7 @@ namespace Odyssey.Core.Templates
             entity.TemplateResRef = ResRef;
 
             // Apply position and facing
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 transform.Position = position;
@@ -135,7 +145,7 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply stats
-            var stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 stats.CurrentHP = CurrentHp > 0 ? CurrentHp : MaxHp;
@@ -143,14 +153,14 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply faction
-            var faction = entity.GetComponent<Interfaces.Components.IFactionComponent>();
+            Interfaces.Components.IFactionComponent faction = entity.GetComponent<Interfaces.Components.IFactionComponent>();
             if (faction != null)
             {
                 faction.FactionId = FactionId;
             }
 
             // Apply script hooks
-            var scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
+            Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
                 if (!string.IsNullOrEmpty(OnSpawn))
