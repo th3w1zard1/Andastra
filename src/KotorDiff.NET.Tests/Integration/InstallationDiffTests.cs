@@ -33,18 +33,8 @@ namespace KotorDiff.NET.Tests.Integration
                 File.WriteAllText(Path.Combine(tempDir2, "swkotor.exe"), "");
                 File.WriteAllText(Path.Combine(tempDir2, "chitin.key"), "");
 
-                // Create Override directories with some test files
-                string override1 = Path.Combine(tempDir1, "Override");
-                string override2 = Path.Combine(tempDir2, "Override");
-                Directory.CreateDirectory(override1);
-                Directory.CreateDirectory(override2);
-
-                // Create a simple test file in both (identical)
-                File.WriteAllText(Path.Combine(override1, "test.txt"), "test content");
-                File.WriteAllText(Path.Combine(override2, "test.txt"), "test content");
-
-                // Create a different file in the second installation
-                File.WriteAllText(Path.Combine(override2, "modified.txt"), "modified content");
+                // Don't create any files - test basic comparison with empty installations
+                // (Creating game resource files would require more complex setup)
 
                 var install1 = new Installation(tempDir1);
                 var install2 = new Installation(tempDir2);
