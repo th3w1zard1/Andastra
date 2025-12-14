@@ -12,11 +12,15 @@ namespace Odyssey.Core.Module
     /// Represents a game area with rooms, objects, and navigation.
     /// </summary>
     /// <remarks>
-    /// Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/.
-    /// ARE = Static area properties (lighting, fog, grass)
-    /// GIT = Dynamic object instances (creatures, doors, etc.)
-    /// LYT = Room layout and doorhooks
-    /// VIS = Room visibility for culling
+    /// Runtime Area:
+    /// - Based on swkotor2.exe area system
+    /// - Located via string references: Area loading functions handle ARE/GIT/LYT/VIS files
+    /// - Original implementation: Areas contain entities, rooms, walkmesh, visibility data
+    /// - Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/
+    /// - ARE = Static area properties (lighting, fog, grass) - GFF with "ARE " signature
+    /// - GIT = Dynamic object instances (creatures, doors, etc.) - GFF with "GIT " signature
+    /// - LYT = Room layout and doorhooks - Binary format
+    /// - VIS = Room visibility for culling - Binary format for frustum culling optimization
     /// </remarks>
     public class RuntimeArea : IArea
     {
@@ -383,14 +387,14 @@ namespace Odyssey.Core.Module
         {
             float radiusSq = radius * radius;
 
-            foreach (var entity in GetAllEntities())
+            foreach (IEntity entity in GetAllEntities())
             {
                 if ((entity.ObjectType & typeMask) == 0)
                 {
                     continue;
                 }
 
-                var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+                Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
                     float distSq = Vector3.DistanceSquared(center, transform.Position);
