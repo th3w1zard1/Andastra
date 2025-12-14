@@ -67,50 +67,44 @@ namespace CSharpKOTOR.Formats.GFF
             int listIndicesOffset = fieldIndicesOffset + _fieldIndicesWriter.Size();
             int listIndicesCount = _listIndicesWriter.Size();
 
-            // Write the file
-            using (var ms = new MemoryStream())
-            using (var writer = new System.IO.BinaryWriter(ms))
+            // Write the file using RawBinaryWriter for consistency
+            using (var fileWriter = CSharpKOTOR.Common.RawBinaryWriter.ToByteArray())
             {
                 // Write header
-                writer.Write(Encoding.ASCII.GetBytes(_gff.Content.ToFourCC()));
-                writer.Write(Encoding.ASCII.GetBytes("V3.2"));
-                writer.Write((uint)structOffset);
-                writer.Write((uint)structCount);
-                writer.Write((uint)fieldOffset);
-                writer.Write((uint)fieldCount);
-                writer.Write((uint)labelOffset);
-                writer.Write((uint)labelCount);
-                writer.Write((uint)fieldDataOffset);
-                writer.Write((uint)fieldDataCount);
-                writer.Write((uint)fieldIndicesOffset);
-                writer.Write((uint)fieldIndicesCount);
-                writer.Write((uint)listIndicesOffset);
-                writer.Write((uint)listIndicesCount);
+                fileWriter.WriteBytes(Encoding.ASCII.GetBytes(_gff.Content.ToFourCC()));
+                fileWriter.WriteBytes(Encoding.ASCII.GetBytes("V3.2"));
+                fileWriter.WriteUInt32((uint)structOffset);
+                fileWriter.WriteUInt32((uint)structCount);
+                fileWriter.WriteUInt32((uint)fieldOffset);
+                fileWriter.WriteUInt32((uint)fieldCount);
+                fileWriter.WriteUInt32((uint)labelOffset);
+                fileWriter.WriteUInt32((uint)labelCount);
+                fileWriter.WriteUInt32((uint)fieldDataOffset);
+                fileWriter.WriteUInt32((uint)fieldDataCount);
+                fileWriter.WriteUInt32((uint)fieldIndicesOffset);
+                fileWriter.WriteUInt32((uint)fieldIndicesCount);
+                fileWriter.WriteUInt32((uint)listIndicesOffset);
+                fileWriter.WriteUInt32((uint)listIndicesCount);
 
                 // Write all sections
                 byte[] structData = _structWriter.Data();
-                writer.Write(structData);
+                fileWriter.WriteBytes(structData);
 
                 byte[] fieldData = _fieldWriter.Data();
-                writer.Write(fieldData);
+                fileWriter.WriteBytes(fieldData);
 
                 // Write labels (16 bytes each)
                 foreach (string label in _labels)
                 {
                     byte[] labelBytes = Encoding.ASCII.GetBytes(label.PadRight(16, '\0'));
-                    writer.Write(labelBytes, 0, 16);
+                    fileWriter.WriteBytes(labelBytes);
                 }
 
-                byte[] fieldDataSection = _fieldDataWriter.Data();
-                writer.Write(fieldDataSection);
+                fileWriter.WriteBytes(_fieldDataWriter.Data());
+                fileWriter.WriteBytes(_fieldIndicesWriter.Data());
+                fileWriter.WriteBytes(_listIndicesWriter.Data());
 
-                byte[] fieldIndicesData = _fieldIndicesWriter.Data();
-                writer.Write(fieldIndicesData);
-
-                byte[] listIndicesData = _listIndicesWriter.Data();
-                writer.Write(listIndicesData);
-
-                return ms.ToArray();
+                return fileWriter.Data();
             }
         }
 

@@ -267,7 +267,7 @@ namespace CSharpKOTOR.Common
         public override void WriteUInt64(ulong value, bool bigEndian = false)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -277,7 +277,7 @@ namespace CSharpKOTOR.Common
         public override void WriteInt64(long value, bool bigEndian = false)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -287,7 +287,7 @@ namespace CSharpKOTOR.Common
         public override void WriteSingle(float value, bool bigEndian = false)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -297,7 +297,7 @@ namespace CSharpKOTOR.Common
         public override void WriteDouble(double value, bool bigEndian = false)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -508,7 +508,12 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(2);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            // Reverse bytes if desired endianness != system endianness
+            // We want big-endian if bigEndian=true, little-endian if bigEndian=false
+            // System is big-endian if !IsLittleEndian, little-endian if IsLittleEndian
+            // Reverse if: (bigEndian && IsLittleEndian) || (!bigEndian && !IsLittleEndian)
+            // = bigEndian == IsLittleEndian
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -520,7 +525,7 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(2);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -537,7 +542,12 @@ namespace CSharpKOTOR.Common
 
             EnsureCapacity(4);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            // Reverse bytes if desired endianness != system endianness
+            // We want big-endian if bigEndian=true, little-endian if bigEndian=false
+            // System is big-endian if !IsLittleEndian, little-endian if IsLittleEndian
+            // Reverse if: (bigEndian && IsLittleEndian) || (!bigEndian && !IsLittleEndian)
+            // = bigEndian == IsLittleEndian
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -549,7 +559,7 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(4);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -561,7 +571,7 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(8);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -573,7 +583,7 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(8);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -585,7 +595,7 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(4);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
@@ -597,7 +607,7 @@ namespace CSharpKOTOR.Common
         {
             EnsureCapacity(8);
             byte[] bytes = BitConverter.GetBytes(value);
-            if (bigEndian != BitConverter.IsLittleEndian)
+            if (bigEndian == BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
