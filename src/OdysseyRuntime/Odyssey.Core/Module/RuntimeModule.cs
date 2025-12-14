@@ -11,17 +11,25 @@ namespace Odyssey.Core.Module
     /// Represents a game module (collection of areas and global state).
     /// </summary>
     /// <remarks>
-    /// Based on IFO file format documentation in vendor/PyKotor/wiki/GFF-IFO.md.
+    /// Module System:
+    /// - Based on swkotor2.exe module system
+    /// - Located via string references: "Mod_" prefix for module fields (Mod_Tag, Mod_Entry_Area, Mod_StartMovie, etc.)
+    /// - IFO file format: GFF with "IFO " signature containing module metadata
+    /// - Module loading: FUN_00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
+    /// - Original implementation stores module data in IFO file, references areas by ResRef
+    /// 
     /// Module Loading Sequence:
-    /// 1. Read IFO - Parse module metadata
+    /// 1. Read IFO - Parse module metadata (IFO file with "IFO " signature)
     /// 2. Check Requirements - Verify Expansion_Pack and MinGameVer
     /// 3. Load HAKs - Mount HAK files in order
     /// 4. Play Movie - Show Mod_StartMovie if set
     /// 5. Load Entry Area - Read ARE + GIT for Mod_Entry_Area
-    /// 6. Spawn Player - Place at Entry position/direction
-    /// 7. Fire OnModLoad - Execute module load script
-    /// 8. Fire OnModStart - Execute module start script
+    /// 6. Spawn Player - Place at Entry position/direction (Mod_Entry_X, Mod_Entry_Y, Mod_Entry_Z, Mod_Entry_Dir)
+    /// 7. Fire OnModLoad - Execute module load script (Mod_OnClientEntrance script)
+    /// 8. Fire OnModStart - Execute module start script (Mod_OnHeartbeat script)
     /// 9. Start Gameplay - Enable player control
+    /// 
+    /// Based on IFO file format documentation in vendor/PyKotor/wiki/GFF-IFO.md.
     /// </remarks>
     public class RuntimeModule : IModule
     {
