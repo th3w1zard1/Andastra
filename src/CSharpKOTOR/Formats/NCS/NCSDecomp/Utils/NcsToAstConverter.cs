@@ -153,6 +153,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
             // But we need to calculate mainStart first, so we'll do this after mainStart is determined
             // For now, just set it to instructions.Count as default
+            // We'll recalculate mainEnd after mainStart is determined
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
             // Then calculate where main should start (after globals and entry stub)
@@ -246,6 +247,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 mainStart = globalsEndForMain;
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final adjustment: mainStart set to {mainStart} (after globals/entry stub at {globalsEndForMain})");
+            }
+
+            // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
+            // This ensures main doesn't include other subroutines
+            if (subroutineStarts.Count > 0)
+            {
+                List<int> sortedSubStarts = new List<int>(subroutineStarts);
+                sortedSubStarts.Sort();
+                foreach (int subStart in sortedSubStarts)
+                {
+                    if (subStart > mainStart)
+                    {
+                        mainEnd = subStart;
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (first subroutine start after mainStart)");
+                        break;
+                    }
+                }
             }
 
             // Only create main if it has valid range
