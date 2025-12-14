@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using CSharpKOTOR.Common;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Formats.GFF
@@ -80,6 +82,73 @@ namespace CSharpKOTOR.Formats.GFF
         {
             var reader = new GFFBinaryReader(data);
             return reader.Load();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:348-388
+        // Original: def compare(self, other: object, log_func: Callable = print, path: PureWindowsPath | None = None, ignore_default_changes: bool = False, comparison_result: GFFComparisonResult | None = None) -> bool:
+        public bool Compare(GFF other, Action<string> logFunc, string path = null, bool ignoreDefaultChanges = false, GFFComparisonResult comparisonResult = null)
+        {
+            if (other == null)
+            {
+                logFunc($"GFF counts have changed at '{path ?? "GFFRoot"}': '<unknown>' --> '<unknown>'");
+                logFunc("");
+                return false;
+            }
+            if (Root.Count != other.Root.Count)
+            {
+                logFunc($"GFF counts have changed at '{path ?? "GFFRoot"}': '{Root.Count}' --> '{other.Root.Count}'");
+                logFunc("");
+                return false;
+            }
+            comparisonResult = comparisonResult ?? new GFFComparisonResult();
+            return Root.Compare(other.Root, logFunc, path ?? "GFFRoot", ignoreDefaultChanges, null, comparisonResult);
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:253-292
+    // Original: class GFFComparisonResult:
+    public class GFFComparisonResult
+    {
+        public Dictionary<string, Dictionary<string, int>> FieldStats { get; } = new Dictionary<string, Dictionary<string, int>>
+        {
+            ["used"] = new Dictionary<string, int>(),
+            ["missing"] = new Dictionary<string, int>(),
+            ["extra"] = new Dictionary<string, int>(),
+            ["mismatched"] = new Dictionary<string, int>()
+        };
+
+        public List<(string Path, int SourceId, int TargetId)> StructIdMismatches { get; } = new List<(string, int, int)>();
+        public List<(string Path, int SourceCount, int TargetCount)> FieldCountMismatches { get; } = new List<(string, int, int)>();
+        public List<(string Path, string FieldType, object SourceVal, object TargetVal)> ValueMismatches { get; } = new List<(string, string, object, object)>();
+
+        public bool IsIdentical => StructIdMismatches.Count == 0 && FieldCountMismatches.Count == 0 && ValueMismatches.Count == 0;
+
+        public void AddFieldStat(string category, string fieldName)
+        {
+            if (!FieldStats.ContainsKey(category))
+            {
+                FieldStats[category] = new Dictionary<string, int>();
+            }
+            if (!FieldStats[category].ContainsKey(fieldName))
+            {
+                FieldStats[category][fieldName] = 0;
+            }
+            FieldStats[category][fieldName]++;
+        }
+
+        public void AddStructIdMismatch(string path, int sourceId, int targetId)
+        {
+            StructIdMismatches.Add((path, sourceId, targetId));
+        }
+
+        public void AddFieldCountMismatch(string path, int sourceCount, int targetCount)
+        {
+            FieldCountMismatches.Add((path, sourceCount, targetCount));
+        }
+
+        public void AddValueMismatch(string path, string fieldType, object sourceVal, object targetVal)
+        {
+            ValueMismatches.Add((path, fieldType, sourceVal, targetVal));
         }
     }
 }
