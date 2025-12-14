@@ -66,8 +66,18 @@ namespace HolocronToolset.NET.Windows
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
                 // Try to find controls from XAML
-                _gameCombo = this.FindControl<ComboBox>("GameCombo");
-                _resourceTabs = this.FindControl<TabControl>("ResourceTabs");
+                _gameCombo = this.FindControl<ComboBox>("gameCombo");
+                _resourceTabs = this.FindControl<TabControl>("resourceTabs");
+                _openButton = this.FindControl<Button>("openButton");
+                _extractButton = this.FindControl<Button>("extractButton");
+                _specialActionButton = this.FindControl<Button>("specialActionButton");
+                
+                // Find resource list widgets
+                _coreWidget = this.FindControl<ResourceList>("coreWidget");
+                _modulesWidget = this.FindControl<ResourceList>("modulesWidget");
+                _overrideWidget = this.FindControl<ResourceList>("overrideWidget");
+                _savesWidget = this.FindControl<ResourceList>("savesWidget");
+                _texturesWidget = this.FindControl<ResourceList>("texturesWidget");
             }
             catch
             {

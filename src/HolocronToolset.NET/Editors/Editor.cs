@@ -53,7 +53,41 @@ namespace HolocronToolset.NET.Editors
         protected void SetupEditorFilters()
         {
             // Setup file filters for open/save dialogs
-            // This will be used when implementing file dialogs
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
+            // Original: Additional formats handling
+            var additionalFormats = new[] { "XML", "JSON", "CSV", "ASCII", "YAML" };
+            var readList = _readSupported.ToList();
+            var writeList = _writeSupported.ToList();
+
+            // Add additional format variants
+            foreach (var format in additionalFormats)
+            {
+                foreach (var restype in _readSupported.ToList())
+                {
+                    var formatName = $"{restype.Name}_{format}";
+                    if (Enum.TryParse<ResourceType>(formatName, out var formatType))
+                    {
+                        if (!readList.Contains(formatType))
+                        {
+                            readList.Add(formatType);
+                        }
+                    }
+                }
+                foreach (var restype in _writeSupported.ToList())
+                {
+                    var formatName = $"{restype.Name}_{format}";
+                    if (Enum.TryParse<ResourceType>(formatName, out var formatType))
+                    {
+                        if (!writeList.Contains(formatType))
+                        {
+                            writeList.Add(formatType);
+                        }
+                    }
+                }
+            }
+
+            _readSupported = readList.ToArray();
+            _writeSupported = writeList.ToArray();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:474-487

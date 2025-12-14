@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HolocronToolset.NET.Widgets.ResourceList">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <!-- Section Combo and Refresh Button -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="5">
+            <ComboBox Name="sectionCombo" Grid.Column="0" Margin="0,0,5,0" />
+            <Button Name="refreshButton" Grid.Column="1" Content="Refresh" Width="70" ToolTip.Tip="Refresh this list." />
+        </Grid>
+        
+        <!-- Search and Reload -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="5,0,5,5">
+            <TextBox Name="searchEdit" Grid.Column="0" Watermark="search..." Margin="0,0,5,0" />
+            <Button Name="reloadButton" Grid.Column="1" Content="Reload" Width="70" ToolTip.Tip="Reload the active module/folder." />
+        </Grid>
+        
+        <!-- Resource Tree -->
+        <TreeView Name="resourceTree" Grid.Row="2" />
+    </Grid>
+</UserControl>
