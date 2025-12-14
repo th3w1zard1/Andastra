@@ -152,7 +152,9 @@ namespace Odyssey.Game.GUI
         public void Update(GameTime gameTime, GraphicsDevice graphicsDevice)
         {
             if (!_isVisible)
+            {
                 return;
+            }
 
             // Ensure layout is calculated before handling input
             // Layout needs to be up-to-date for click detection to work
@@ -168,6 +170,11 @@ namespace Odyssey.Game.GUI
                     _lastScreenWidth = screenWidth;
                     _lastScreenHeight = screenHeight;
                 }
+            }
+            else
+            {
+                Console.WriteLine("[MonoGameMenuRenderer] WARNING: GraphicsDevice is null in Update!");
+                return;
             }
 
             KeyboardState currentKeyboardState = Keyboard.GetState();
@@ -195,23 +202,40 @@ namespace Odyssey.Game.GUI
             }
 
             // Handle mouse input - click detection
-            if (currentMouseState.LeftButton == ButtonState.Pressed &&
-                _previousMouseState.LeftButton == ButtonState.Released)
+            // Check for mouse button press (transition from released to pressed)
+            bool mouseJustPressed = currentMouseState.LeftButton == ButtonState.Pressed &&
+                                    _previousMouseState.LeftButton == ButtonState.Released;
+
+            if (mouseJustPressed)
             {
                 Point mousePos = currentMouseState.Position;
+                Console.WriteLine($"[MonoGameMenuRenderer] ====== MOUSE CLICK DETECTED ======");
                 Console.WriteLine($"[MonoGameMenuRenderer] Mouse clicked at: {mousePos.X}, {mousePos.Y}");
+                Console.WriteLine($"[MonoGameMenuRenderer] Number of buttons: {_menuButtons.Length}");
 
                 bool clicked = false;
                 for (int i = 0; i < _menuButtons.Length; i++)
                 {
                     var button = _menuButtons[i];
-                    Console.WriteLine($"[MonoGameMenuRenderer] Button {i} ({button.Label}) rect: X={button.Rect.X}, Y={button.Rect.Y}, W={button.Rect.Width}, H={button.Rect.Height}");
+                    bool contains = button.Rect.Contains(mousePos);
+                    Console.WriteLine($"[MonoGameMenuRenderer] Button {i} ({button.Label}) rect: X={button.Rect.X}, Y={button.Rect.Y}, W={button.Rect.Width}, H={button.Rect.Height}, Contains={contains}");
 
-                    if (button.Rect.Contains(mousePos))
+                    if (contains)
                     {
                         _selectedIndex = i;
-                        Console.WriteLine($"[MonoGameMenuRenderer] Mouse clicked on: {_menuButtons[_selectedIndex].Label}");
-                        MenuItemSelected?.Invoke(this, _selectedIndex);
+                        Console.WriteLine($"[MonoGameMenuRenderer] ====== BUTTON CLICKED: {_menuButtons[_selectedIndex].Label} ======");
+                        
+                        // Verify event handler is not null before invoking
+                        if (MenuItemSelected != null)
+                        {
+                            Console.WriteLine($"[MonoGameMenuRenderer] Invoking MenuItemSelected event with index {_selectedIndex}");
+                            MenuItemSelected.Invoke(this, _selectedIndex);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[MonoGameMenuRenderer] ERROR: MenuItemSelected event handler is NULL!");
+                        }
+                        
                         clicked = true;
                         break;
                     }
@@ -219,7 +243,7 @@ namespace Odyssey.Game.GUI
 
                 if (!clicked)
                 {
-                    Console.WriteLine($"[MonoGameMenuRenderer] Mouse click not on any button");
+                    Console.WriteLine($"[MonoGameMenuRenderer] Mouse click not on any button - click was outside all button rectangles");
                 }
             }
 
@@ -298,8 +322,8 @@ namespace Odyssey.Game.GUI
                     int indicatorSize = 20;
                     int indicatorX = button.Rect.X + (button.Rect.Width - indicatorSize) / 2;
                     int indicatorY = button.Rect.Y + (button.Rect.Height - indicatorSize) / 2;
-                    _spriteBatch.Draw(_whiteTexture, 
-                        new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 
+                    _spriteBatch.Draw(_whiteTexture,
+                        new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
                         Color.White);
                 }
             }
