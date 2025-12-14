@@ -1,5 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
@@ -9,16 +14,183 @@ using Xunit;
 
 namespace HolocronToolset.NET.Tests.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py
-    // Original: Comprehensive tests for TwoDA Editor
+    // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:59
+    // Original: class TwoDAEditorTest(TestCase):
     [Collection("Avalonia Test Collection")]
     public class TwoDAEditorTests : IClassFixture<AvaloniaTestFixture>
     {
         private readonly AvaloniaTestFixture _fixture;
+        private static HTInstallation _installation;
+        private readonly List<string> _logMessages = new List<string> { Environment.NewLine };
 
         public TwoDAEditorTests(AvaloniaTestFixture fixture)
         {
             _fixture = fixture;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:60-65
+        // Original: @classmethod def setUpClass(cls):
+        static TwoDAEditorTests()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            if (!string.IsNullOrEmpty(k2Path) && File.Exists(Path.Combine(k2Path, "chitin.key")))
+            {
+                _installation = new HTInstallation(k2Path, "", tsl: true);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:77-78
+        // Original: def log_func(self, *args):
+        private void LogFunc(string message)
+        {
+            _logMessages.Add(message);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:80-92
+        // Original: def test_save_and_load(self):
+        [Fact]
+        public void TestSaveAndLoad()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if K2_PATH not set
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:81
+            // Original: filepath = TESTS_FILES_PATH / "appearance.2da"
+            string testFilesPath = GetTestFilesPath();
+            string filepath = Path.Combine(testFilesPath, "appearance.2da");
+
+            // If test file doesn't exist, try to get it from installation
+            if (!File.Exists(filepath))
+            {
+                var resource = _installation.Resource("appearance", ResourceType.TwoDA);
+                if (resource == null || resource.Data == null)
+                {
+                    return; // Skip if appearance.2da not available
+                }
+                // Use the resource data directly
+                byte[] data = resource.Data;
+                var old = new TwoDABinaryReader(data).Load();
+                var editor = new TwoDAEditor(null, _installation);
+                editor.Load("appearance.2da", "appearance", ResourceType.TwoDA, data);
+
+                var (newData, _) = editor.Build();
+                var newTwoda = new TwoDABinaryReader(newData).Load();
+
+                bool diff = old.Compare(newTwoda, LogFunc);
+                diff.Should().BeTrue($"TwoDA comparison failed. Log messages: {string.Join(Environment.NewLine, _logMessages)}");
+                AssertDeepEqual(old, newTwoda);
+            }
+            else
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:83
+                // Original: data = filepath.read_bytes()
+                byte[] data = File.ReadAllBytes(filepath);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:84
+                // Original: old = read_2da(data)
+                var old = new TwoDABinaryReader(data).Load();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:85
+                // Original: self.editor.load(filepath, "appearance", ResourceType.TwoDA, data)
+                var editor = new TwoDAEditor(null, _installation);
+                editor.Load(filepath, "appearance", ResourceType.TwoDA, data);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:87
+                // Original: data, _ = self.editor.build()
+                var (newData, _) = editor.Build();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:88
+                // Original: new = read_2da(data)
+                var newTwoda = new TwoDABinaryReader(newData).Load();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:90
+                // Original: diff = old.compare(new, self.log_func)
+                bool diff = old.Compare(newTwoda, LogFunc);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:91
+                // Original: assert diff
+                diff.Should().BeTrue($"TwoDA comparison failed. Log messages: {string.Join(Environment.NewLine, _logMessages)}");
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:92
+                // Original: self.assertDeepEqual(old, new)
+                AssertDeepEqual(old, newTwoda);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:126-143
+        // Original: def assertDeepEqual(self, obj1, obj2, context=""):
+        private void AssertDeepEqual(TwoDA obj1, TwoDA obj2, string context = "")
+        {
+            // Compare headers
+            var oldHeaders = new HashSet<string>(obj1.GetHeaders());
+            var newHeaders = new HashSet<string>(obj2.GetHeaders());
+            oldHeaders.SetEquals(newHeaders).Should().BeTrue($"Headers mismatch at {context}");
+
+            // Compare row count
+            obj1.GetHeight().Should().Be(obj2.GetHeight(), $"Row count mismatch at {context}");
+
+            // Compare each row
+            for (int i = 0; i < obj1.GetHeight(); i++)
+            {
+                string rowContext = string.IsNullOrEmpty(context) ? $"[{i}]" : $"{context}[{i}]";
+
+                // Compare labels
+                obj1.GetLabel(i).Should().Be(obj2.GetLabel(i), $"Label mismatch at {rowContext}");
+
+                // Compare cell values for each header
+                foreach (string header in oldHeaders)
+                {
+                    string cellContext = $"{rowContext}.{header}";
+                    string oldValue = obj1.GetCellString(i, header);
+                    string newValue = obj2.GetCellString(i, header);
+                    oldValue.Should().Be(newValue, $"Cell value mismatch at {cellContext}");
+                }
+            }
+        }
+
+        private string GetTestFilesPath()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:15-16
+            // Original: absolute_file_path = pathlib.Path(__file__).resolve()
+            // Original: TESTS_FILES_PATH = next(f for f in absolute_file_path.parents if f.name == "tests") / "test_files"
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            string assemblyDir = Path.GetDirectoryName(assemblyLocation);
+
+            // Find the tests directory by going up from the test assembly
+            DirectoryInfo current = new DirectoryInfo(assemblyDir);
+            while (current != null && current.Name != "tests" && current.Name != "HolocronToolset.NET.Tests")
+            {
+                current = current.Parent;
+            }
+
+            if (current != null)
+            {
+                // Look for test_files directory
+                string testFilesPath = Path.Combine(current.FullName, "test_files");
+                if (Directory.Exists(testFilesPath))
+                {
+                    return testFilesPath;
+                }
+
+                // Also check in vendor/PyKotor/Tools/HolocronToolset/tests/test_files
+                string vendorTestFiles = Path.Combine(
+                    current.FullName,
+                    "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                vendorTestFiles = Path.GetFullPath(vendorTestFiles);
+                if (Directory.Exists(vendorTestFiles))
+                {
+                    return vendorTestFiles;
+                }
+            }
+
+            return Path.Combine(assemblyDir, "test_files");
         }
 
         [Fact]
@@ -31,32 +203,6 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.New();
 
             // Verify editor is ready
-            var (data, _) = editor.Build();
-            data.Should().NotBeNull();
-        }
-
-        [Fact]
-        public void TestTwoDAEditorLoadExistingFile()
-        {
-            var editor = new TwoDAEditor(null, null);
-
-            // Create minimal 2DA data (simplified for testing)
-            byte[] testData = new byte[0]; // Will be implemented when 2DA format is fully supported
-
-            editor.Load("test.2da", "test", ResourceType.TwoDA, testData);
-
-            // Verify content loaded (will be implemented when UI is complete)
-            var (data, _) = editor.Build();
-            data.Should().NotBeNull();
-        }
-
-        [Fact]
-        public void TestTwoDAEditorSaveLoadRoundtrip()
-        {
-            var editor = new TwoDAEditor(null, null);
-            editor.New();
-
-            // Test save/load roundtrip (will be implemented when 2DA format is fully supported)
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
         }
