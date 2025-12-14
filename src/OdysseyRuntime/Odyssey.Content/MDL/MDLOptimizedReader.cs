@@ -361,7 +361,30 @@ namespace Odyssey.Content.MDL
             }
 
             // Read animation nodes
-            anim.RootNode = ReadNode(mdlPtr, MDLConstants.FILE_HEADER_SIZE + animRootOffset);
+            // Validate animation root node offset before reading
+            if (animRootOffset >= 0)
+            {
+                long absoluteOffsetLong = (long)MDLConstants.FILE_HEADER_SIZE + animRootOffset;
+                if (absoluteOffsetLong >= 0 && absoluteOffsetLong < _mdlData.Length)
+                {
+                    anim.RootNode = ReadNode(mdlPtr, (int)absoluteOffsetLong);
+                }
+                else
+                {
+                    throw new InvalidDataException(
+                        $"Animation root node offset is out of bounds: " +
+                        $"FILE_HEADER_SIZE ({MDLConstants.FILE_HEADER_SIZE}) + " +
+                        $"animRootOffset ({animRootOffset}) = {absoluteOffsetLong}, " +
+                        $"file length = {_mdlData.Length}"
+                    );
+                }
+            }
+            else
+            {
+                throw new InvalidDataException(
+                    $"Animation root node offset is negative ({animRootOffset}), indicating corrupted data."
+                );
+            }
 
             return anim;
         }
