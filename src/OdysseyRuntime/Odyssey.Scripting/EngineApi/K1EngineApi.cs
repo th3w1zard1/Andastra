@@ -1008,7 +1008,27 @@ namespace Odyssey.Scripting.EngineApi
 
         private new Variable Func_GetArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromObject(0x7F000003);
+            return base.Func_GetArea(args, ctx);
+        }
+
+        private Variable Func_GetObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            return base.Func_GetObjectByTag(args, ctx);
+        }
+
+        private Variable Func_GetNearestObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            return base.Func_GetNearestObjectByTag(args, ctx);
+        }
+
+        private Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            return base.Func_GetModule(args, ctx);
+        }
+
+        private Variable Func_ObjectToString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            return base.Func_ObjectToString(args, ctx);
         }
 
         private Variable Func_GetItemPossessor(IReadOnlyList<Variable> args, IExecutionContext ctx)
