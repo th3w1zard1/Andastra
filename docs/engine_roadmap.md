@@ -115,9 +115,9 @@ src/OdysseyRuntime/
 - [x] AABB tree for spatial queries
 - [x] Surface walkability from surfacemat.2da
 
-### 4.2 Pathfinding
-- [ ] A* over walkmesh adjacency graph
-- [ ] Path smoothing (funnel algorithm)
+### 4.2 Pathfinding ✅
+- [x] A* over walkmesh adjacency graph (`NavigationMesh.FindPath`)
+- [x] Path smoothing (line-of-sight simplification)
 - [ ] Dynamic obstacle handling
 
 ### 4.3 Player Controller
