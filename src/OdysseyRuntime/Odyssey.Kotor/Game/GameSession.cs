@@ -205,7 +205,7 @@ namespace Odyssey.Kotor.Game
             string savesDirectory = Path.Combine(_settings.GamePath, "saves");
             var saveSerializer = new Odyssey.Content.Save.SaveSerializer();
             var saveDataProvider = new SaveDataProvider(savesDirectory, saveSerializer);
-            _saveSystem = new SaveSystem(world, saveDataProvider);
+            _saveSystem = new SaveSystem(world, saveDataProvider, globals);
 
             // Load talk tables
             LoadTalkTables();

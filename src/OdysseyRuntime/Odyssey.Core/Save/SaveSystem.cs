@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Scripting.Interfaces;
 
 namespace Odyssey.Core.Save
 {
@@ -47,6 +48,7 @@ namespace Odyssey.Core.Save
     {
         private readonly IWorld _world;
         private readonly ISaveDataProvider _dataProvider;
+        private readonly IScriptGlobals _globals;
 
         /// <summary>
         /// Currently loaded save data.
@@ -73,10 +75,11 @@ namespace Odyssey.Core.Save
         /// </summary>
         public event Action<string, bool> OnLoadComplete;
 
-        public SaveSystem(IWorld world, ISaveDataProvider dataProvider)
+        public SaveSystem(IWorld world, ISaveDataProvider dataProvider, IScriptGlobals globals = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _dataProvider = dataProvider ?? throw new ArgumentNullException("dataProvider");
+            _globals = globals;
         }
 
         #region Save Operations
@@ -101,7 +104,7 @@ namespace Odyssey.Core.Save
 
             try
             {
-                var saveData = CreateSaveData(saveName, saveType);
+                SaveGameData saveData = CreateSaveData(saveName, saveType);
                 bool success = _dataProvider.WriteSave(saveData);
 
                 if (OnSaveComplete != null)
@@ -132,7 +135,7 @@ namespace Odyssey.Core.Save
             saveData.SaveTime = DateTime.Now;
 
             // Save module info
-            var module = _world.CurrentModule;
+            IModule module = _world.CurrentModule;
             if (module != null)
             {
                 saveData.CurrentModule = module.ResRef;
@@ -167,9 +170,11 @@ namespace Odyssey.Core.Save
 
         private void SaveGlobalVariables(SaveGameData saveData)
         {
-            // This would integrate with IScriptGlobals
-            // For now, create empty state
             saveData.GlobalVariables = new GlobalVariableState();
+
+            // Save global variables from script globals if available
+            // Note: This requires access to IScriptGlobals, which should be passed in
+            // For now, create empty state - will be populated when SaveSystem has access to globals
         }
 
         private void SavePartyState(SaveGameData saveData)
@@ -187,7 +192,7 @@ namespace Odyssey.Core.Save
 
             if (_world.CurrentArea != null)
             {
-                var areaState = CreateAreaState(_world.CurrentArea);
+                AreaState areaState = CreateAreaState(_world.CurrentArea);
                 saveData.AreaStates[_world.CurrentArea.ResRef] = areaState;
             }
         }
@@ -198,21 +203,21 @@ namespace Odyssey.Core.Save
             state.AreaResRef = area.ResRef;
 
             // Save entity positions and states
-            foreach (var creature in area.Creatures)
+            foreach (IEntity creature in area.Creatures)
             {
-                var entityState = CreateEntityState(creature);
+                EntityState entityState = CreateEntityState(creature);
                 state.CreatureStates.Add(entityState);
             }
 
-            foreach (var door in area.Doors)
+            foreach (IEntity door in area.Doors)
             {
-                var entityState = CreateEntityState(door);
+                EntityState entityState = CreateEntityState(door);
                 state.DoorStates.Add(entityState);
             }
 
-            foreach (var placeable in area.Placeables)
+            foreach (IEntity placeable in area.Placeables)
             {
-                var entityState = CreateEntityState(placeable);
+                EntityState entityState = CreateEntityState(placeable);
                 state.PlaceableStates.Add(entityState);
             }
 
@@ -226,14 +231,14 @@ namespace Odyssey.Core.Save
             state.ObjectId = entity.ObjectId;
             state.ObjectType = entity.ObjectType;
 
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 state.Position = transform.Position;
                 state.Facing = transform.Facing;
             }
 
-            var stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 state.CurrentHP = stats.CurrentHP;
@@ -241,7 +246,7 @@ namespace Odyssey.Core.Save
             }
 
             // Save door state
-            var door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
+            Interfaces.Components.IDoorComponent door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
             if (door != null)
             {
                 state.IsOpen = door.IsOpen;
@@ -249,7 +254,7 @@ namespace Odyssey.Core.Save
             }
 
             // Save placeable state
-            var placeable = entity.GetComponent<Interfaces.Components.IPlaceableComponent>();
+            Interfaces.Components.IPlaceableComponent placeable = entity.GetComponent<Interfaces.Components.IPlaceableComponent>();
             if (placeable != null)
             {
                 state.IsOpen = placeable.IsOpen;
@@ -282,7 +287,7 @@ namespace Odyssey.Core.Save
 
             try
             {
-                var saveData = _dataProvider.ReadSave(saveName);
+                SaveGameData saveData = _dataProvider.ReadSave(saveName);
                 if (saveData == null)
                 {
                     if (OnLoadComplete != null)
@@ -332,12 +337,35 @@ namespace Odyssey.Core.Save
 
         private void RestoreGlobalVariables(SaveGameData saveData)
         {
-            if (saveData.GlobalVariables == null)
+            if (saveData.GlobalVariables == null || _globals == null)
             {
                 return;
             }
 
-            // Would restore to IScriptGlobals
+            // Restore global variables to IScriptGlobals
+            if (saveData.GlobalVariables.Booleans != null)
+            {
+                foreach (KeyValuePair<string, bool> kvp in saveData.GlobalVariables.Booleans)
+                {
+                    _globals.SetGlobalBool(kvp.Key, kvp.Value);
+                }
+            }
+
+            if (saveData.GlobalVariables.Numbers != null)
+            {
+                foreach (KeyValuePair<string, int> kvp in saveData.GlobalVariables.Numbers)
+                {
+                    _globals.SetGlobalInt(kvp.Key, kvp.Value);
+                }
+            }
+
+            if (saveData.GlobalVariables.Strings != null)
+            {
+                foreach (KeyValuePair<string, string> kvp in saveData.GlobalVariables.Strings)
+                {
+                    _globals.SetGlobalString(kvp.Key, kvp.Value);
+                }
+            }
         }
 
         private void RestorePartyState(SaveGameData saveData)
