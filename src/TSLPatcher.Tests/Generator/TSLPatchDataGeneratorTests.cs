@@ -9,6 +9,10 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.TwoDA;
+using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
+using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.SSF;
@@ -107,7 +111,7 @@ namespace CSharpKOTOR.Tests.Generator
             appendTlkPath.Exists.Should().BeTrue();
             
             // Verify TLK file can be read
-            var tlk = new TLKBinaryReader(appendTlkPath.FullName).Load();
+            var tlk = TLKAuto.Load(appendTlkPath.FullName);
             tlk.Should().NotBeNull();
             tlk.Count.Should().BeGreaterThan(0);
         }
@@ -123,8 +127,7 @@ namespace CSharpKOTOR.Tests.Generator
             var base2DAPath = Path.Combine(_tempDir, "test.2da");
             var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
             twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" }, { "Col2", "Value2" } });
-            byte[] twodaBytes = new TwoDABinaryWriter(twoda).Write();
-            File.WriteAllBytes(base2DAPath, twodaBytes);
+            twoda.Save(base2DAPath);
 
             var mod2DA = new Modifications2DA("test.2da");
             modifications.Twoda.Add(mod2DA);
@@ -138,7 +141,7 @@ namespace CSharpKOTOR.Tests.Generator
             generated2DAPath.Exists.Should().BeTrue();
             
             // Verify 2DA file can be read
-            var generated2DA = new TwoDABinaryReader(generated2DAPath.FullName).Load();
+            var generated2DA = TwoDAAuto.Load(generated2DAPath.FullName);
             generated2DA.Should().NotBeNull();
             generated2DA.GetHeaders().Should().Contain("Col1");
             generated2DA.GetHeaders().Should().Contain("Col2");
@@ -165,7 +168,7 @@ namespace CSharpKOTOR.Tests.Generator
             generatedGFFPath.Exists.Should().BeTrue();
             
             // Verify GFF file can be read
-            var gff = new GFFBinaryReader(generatedGFFPath.FullName).Load();
+            var gff = GFFAuto.Load(generatedGFFPath.FullName);
             gff.Should().NotBeNull();
         }
 
@@ -259,8 +262,7 @@ namespace CSharpKOTOR.Tests.Generator
             
             var twoda = new TwoDA(new List<string> { "Col1" });
             twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" } });
-            byte[] twodaBytes2 = new TwoDABinaryWriter(twoda).Write();
-            File.WriteAllBytes(base2DAPath, twodaBytes2);
+            twoda.Save(base2DAPath);
             
             var mod2DA = new Modifications2DA("test.2da");
             modifications.Twoda.Add(mod2DA);

@@ -9,6 +9,10 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.TwoDA;
+using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
+using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.SSF;
@@ -97,8 +101,10 @@ namespace CSharpKOTOR.Tests.Generator
             
             // Create test 2DA data
             var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
-            twoda.AddRow(new Dictionary<string, string> { { "Col1", "Value1" }, { "Col2", "Value2" } });
-            var twodaData = new TwoDABinaryWriter(twoda).Write();
+            twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" }, { "Col2", "Value2" } });
+            var twodaPath = Path.Combine(_tempDir, "temp.2da");
+            twoda.Save(twodaPath);
+            var twodaData = File.ReadAllBytes(twodaPath);
 
             // Act
             writer.WriteModification(mod2DA, twodaData);
@@ -119,7 +125,7 @@ namespace CSharpKOTOR.Tests.Generator
             
             // Create test GFF data
             var gff = new GFF(GFFContent.UTC);
-            var gffData = new GFFBinaryWriter(gff).Write();
+            var gffData = gff.ToBytes();
 
             // Act
             writer.WriteModification(modGFF, gffData);
@@ -157,7 +163,9 @@ namespace CSharpKOTOR.Tests.Generator
             
             // Create test SSF data
             var ssf = new SSF();
-            var ssfData = new SSFBinaryWriter(ssf).Write();
+            var ssfPath = Path.Combine(_tempDir, "temp.ssf");
+            SSFAuto.Save(ssf, ssfPath);
+            var ssfData = File.ReadAllBytes(ssfPath);
 
             // Act
             writer.WriteModification(modSSF, ssfData);
@@ -347,7 +355,7 @@ namespace CSharpKOTOR.Tests.Generator
             
             // Create test GFF data
             var gff = new GFF(GFFContent.UTC);
-            var gffData = new GFFBinaryWriter(gff).Write();
+            var gffData = gff.ToBytes();
 
             // Act
             writer.WriteModification(modGFF, gffData);
@@ -366,7 +374,7 @@ namespace CSharpKOTOR.Tests.Generator
             
             // Create test GFF data
             var gff = new GFF(GFFContent.UTC);
-            var gffData = new GFFBinaryWriter(gff).Write();
+            var gffData = gff.ToBytes();
 
             // Act
             writer.WriteModification(modGFF, gffData);
