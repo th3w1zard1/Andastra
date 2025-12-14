@@ -91,6 +91,10 @@ namespace Odyssey.Game.GUI
 
         private void CalculateLayout(int screenWidth, int screenHeight)
         {
+            // Ensure we have valid screen dimensions
+            if (screenWidth <= 0) screenWidth = 1280;
+            if (screenHeight <= 0) screenHeight = 720;
+
             _screenCenter = new Vector2(screenWidth * 0.5f, screenHeight * 0.5f);
 
             // Main panel - 600x400, centered
@@ -99,6 +103,8 @@ namespace Odyssey.Game.GUI
             int panelX = (int)(_screenCenter.X - panelWidth * 0.5f);
             int panelY = (int)(_screenCenter.Y - panelHeight * 0.5f);
             _mainPanelRect = new Rectangle(panelX, panelY, panelWidth, panelHeight);
+
+            Console.WriteLine($"[MonoGameMenuRenderer] Layout calculated: Screen={screenWidth}x{screenHeight}, Panel={panelX},{panelY},{panelWidth}x{panelHeight}");
 
             // Header - golden bar at top of panel
             int headerHeight = 80;
@@ -134,6 +140,13 @@ namespace Odyssey.Game.GUI
                 _buttonExitSelectedColor,
                 "Exit"
             );
+
+            Console.WriteLine($"[MonoGameMenuRenderer] Buttons initialized:");
+            for (int i = 0; i < _menuButtons.Length; i++)
+            {
+                var btn = _menuButtons[i];
+                Console.WriteLine($"  Button {i} ({btn.Label}): X={btn.Rect.X}, Y={btn.Rect.Y}, W={btn.Rect.Width}, H={btn.Rect.Height}");
+            }
         }
 
         public void Update(GameTime gameTime, GraphicsDevice graphicsDevice)
@@ -278,8 +291,17 @@ namespace Odyssey.Game.GUI
                     );
                     _spriteBatch.DrawString(_font, button.Label, textPosition, Color.White);
                 }
-                // Note: If font is null, buttons will still be visible as colored rectangles
-                // and fully functional - just without text labels
+                else
+                {
+                    // Draw simple text indicator using rectangles when font is not available
+                    // Draw a small indicator in the center of each button
+                    int indicatorSize = 20;
+                    int indicatorX = button.Rect.X + (button.Rect.Width - indicatorSize) / 2;
+                    int indicatorY = button.Rect.Y + (button.Rect.Height - indicatorSize) / 2;
+                    _spriteBatch.Draw(_whiteTexture, 
+                        new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 
+                        Color.White);
+                }
             }
 
             // End sprite batch rendering

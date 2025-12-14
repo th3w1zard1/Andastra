@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
     <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
     <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
+    <ProjectReference Include="..\Odyssey.MonoGame\Odyssey.MonoGame.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exclude old Stride-based OdysseyGame.cs from compilation -->
+    <!-- Exclude old Stride-based OdysseyGame.cs from compilation - we use OdysseyGameMonoGame.cs instead -->
     <Compile Remove="Core\OdysseyGame.cs" />
   </ItemGroup>
 
