@@ -12,6 +12,14 @@ namespace Odyssey.Core.Entities
     /// <summary>
     /// Core world implementation - entity container and state manager.
     /// </summary>
+    /// <remarks>
+    /// World/Entity Management:
+    /// - Based on swkotor2.exe world management system
+    /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
+    /// - Original engine maintains entity lists by ObjectId, Tag, and ObjectType
+    /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive)
+    /// - ObjectId is unique 32-bit identifier assigned sequentially
+    /// </remarks>
     public class World : IWorld
     {
         private readonly Dictionary<uint, IEntity> _entitiesById;

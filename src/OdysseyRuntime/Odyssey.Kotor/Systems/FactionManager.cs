@@ -40,15 +40,19 @@ namespace Odyssey.Kotor.Systems
     /// </summary>
     /// <remarks>
     /// Faction system uses:
-    /// - repute.2da: Defines faction relationships
+    /// - Based on swkotor2.exe faction system
+    /// - Located via string references: "FactionRep" @ 0x007c290c, "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
+    /// - "FACTIONREP" @ 0x007bcec8, "FactionList" @ 0x007be604
+    /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
+    /// - repute.2da: Defines faction relationships (FactionID1, FactionID2, FactionRep)
     /// - Personal reputation: Individual entity overrides
     /// - Temporary hostility: Combat-triggered hostility
-    /// 
+    ///
     /// Reputation values:
     /// - 0-10: Hostile
     /// - 11-89: Neutral
     /// - 90-100: Friendly
-    /// 
+    ///
     /// Combat triggers:
     /// - Attacking a creature makes you hostile to their faction
     /// - Can be permanent or temporary
@@ -195,8 +199,8 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Fall back to faction reputation
-            var sourceFaction = source.GetComponent<IFactionComponent>();
-            var targetFaction = target.GetComponent<IFactionComponent>();
+            IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+            IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
 
             int sourceFactionId = sourceFaction != null ? sourceFaction.FactionId : 0;
             int targetFactionId = targetFaction != null ? targetFaction.FactionId : 0;
@@ -343,13 +347,13 @@ namespace Odyssey.Kotor.Systems
             SetTemporaryHostile(target, attacker, true);
 
             // Optionally propagate to faction members
-            var targetFaction = target.GetComponent<IFactionComponent>();
+            IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
             if (targetFaction != null)
             {
                 // Make the entire target faction hostile to attacker
-                foreach (var entity in _world.GetAllEntities())
+                foreach (IEntity entity in _world.GetAllEntities())
                 {
-                    var entityFaction = entity.GetComponent<IFactionComponent>();
+                    IFactionComponent entityFaction = entity.GetComponent<IFactionComponent>();
                     if (entityFaction != null && entityFaction.FactionId == targetFaction.FactionId)
                     {
                         SetTemporaryHostile(entity, attacker, true);
@@ -368,7 +372,7 @@ namespace Odyssey.Kotor.Systems
                 yield break;
             }
 
-            foreach (var other in _world.GetAllEntities())
+            foreach (IEntity other in _world.GetAllEntities())
             {
                 if (other != entity && IsHostile(other, entity))
                 {
@@ -387,7 +391,7 @@ namespace Odyssey.Kotor.Systems
                 yield break;
             }
 
-            foreach (var other in _world.GetAllEntities())
+            foreach (IEntity other in _world.GetAllEntities())
             {
                 if (other != entity && IsFriendly(other, entity))
                 {
@@ -404,7 +408,7 @@ namespace Odyssey.Kotor.Systems
         {
             // Clear existing faction data (keep defaults)
             // repute.2da format: FactionID1, FactionID2, FactionRep
-            foreach (var row in reputeData)
+            foreach (Dictionary<string, string> row in reputeData)
             {
                 string faction1Str, faction2Str, repStr;
                 if (!row.TryGetValue("FactionID1", out faction1Str) ||

@@ -9,6 +9,15 @@ namespace Odyssey.Core.Entities
     /// <summary>
     /// Base entity implementation.
     /// </summary>
+    /// <remarks>
+    /// Entity System:
+    /// - Based on swkotor2.exe entity system
+    /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
+    /// - Original engine: Entities have ObjectId (uint32), Tag (string), ObjectType (enum)
+    /// - Component system: Entities use component-based architecture for stats, transform, inventory, etc.
+    /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
+    /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, etc.
+    /// </remarks>
     public class Entity : IEntity
     {
         private static uint _nextObjectId = 1;
@@ -80,7 +89,7 @@ namespace Odyssey.Core.Entities
             }
 
             // Check for interface implementations
-            foreach (var kvp in _components)
+            foreach (KeyValuePair<Type, IComponent> kvp in _components)
             {
                 if (kvp.Value is T typedComponent)
                 {
@@ -129,7 +138,7 @@ namespace Odyssey.Core.Entities
                 return true;
             }
 
-            foreach (var kvp in _components)
+            foreach (KeyValuePair<Type, IComponent> kvp in _components)
             {
                 if (kvp.Value is T)
                 {
@@ -155,7 +164,7 @@ namespace Odyssey.Core.Entities
                 return;
             }
 
-            foreach (var component in _components.Values)
+            foreach (IComponent component in _components.Values)
             {
                 component.OnDetach();
                 component.Owner = null;

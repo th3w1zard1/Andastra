@@ -7,6 +7,15 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// FIFO action queue for entity actions.
     /// </summary>
+    /// <remarks>
+    /// Action Queue System:
+    /// - Based on swkotor2.exe action system
+    /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
+    /// - Original implementation: Entities maintain action queue with current action and pending actions
+    /// - Actions processed sequentially: Current action executes until complete, then next action dequeued
+    /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc.
+    /// - Action parameters stored in ActionParam1-5, ActionParamStrA/B fields
+    /// </remarks>
     public class ActionQueue : IActionQueue
     {
         private IEntity _owner;
@@ -79,7 +88,7 @@ namespace Odyssey.Core.Actions
                 _current = null;
             }
 
-            foreach (var action in _queue)
+            foreach (IAction action in _queue)
             {
                 action.Dispose();
             }
@@ -94,10 +103,10 @@ namespace Odyssey.Core.Actions
                 _current = null;
             }
 
-            var node = _queue.First;
+            LinkedListNode<IAction> node = _queue.First;
             while (node != null)
             {
-                var next = node.Next;
+                LinkedListNode<IAction> next = node.Next;
                 if (node.Value.GroupId == groupId)
                 {
                     node.Value.Dispose();
@@ -143,7 +152,7 @@ namespace Odyssey.Core.Actions
                 yield return _current;
             }
 
-            foreach (var action in _queue)
+            foreach (IAction action in _queue)
             {
                 yield return action;
             }
