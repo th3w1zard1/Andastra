@@ -603,23 +603,33 @@ namespace Odyssey.Game.Core
 
             // Draw UI overlay
             _spriteBatch.Begin();
-            string statusText = "Game Running - Press ESC to return to menu";
-            if (_session != null && _session.CurrentModuleName != null)
+            
+            // Draw dialogue UI if in conversation
+            if (_session != null && _session.DialogueManager != null && _session.DialogueManager.IsConversationActive)
             {
-                statusText = "Module: " + _session.CurrentModuleName + " - Press ESC to return to menu";
-                var entryArea = _session.CurrentRuntimeModule?.GetArea(_session.CurrentRuntimeModule.EntryArea);
-                if (entryArea != null)
+                DrawDialogueUI();
+            }
+            else
+            {
+                // Draw status text when not in dialogue
+                string statusText = "Game Running - Press ESC to return to menu";
+                if (_session != null && _session.CurrentModuleName != null)
                 {
-                    statusText += " | Area: " + entryArea.DisplayName + " (" + entryArea.ResRef + ")";
-                    if (entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea && runtimeArea.Rooms != null)
+                    statusText = "Module: " + _session.CurrentModuleName + " - Press ESC to return to menu";
+                    var entryArea = _session.CurrentRuntimeModule?.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                    if (entryArea != null)
                     {
-                        statusText += " | Rooms: " + runtimeArea.Rooms.Count;
+                        statusText += " | Area: " + entryArea.DisplayName + " (" + entryArea.ResRef + ")";
+                        if (entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea && runtimeArea.Rooms != null)
+                        {
+                            statusText += " | Rooms: " + runtimeArea.Rooms.Count;
+                        }
                     }
                 }
-            }
-            if (_font != null)
-            {
-                _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10), Color.White);
+                if (_font != null)
+                {
+                    _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10), Color.White);
+                }
             }
             // If no font, we just skip text rendering - the 3D scene is still visible
             _spriteBatch.End();
@@ -1461,6 +1471,73 @@ namespace Odyssey.Game.Core
                 _session.DialogueManager.OnNodeEnter -= OnDialogueNodeEnter;
                 _session.DialogueManager.OnRepliesReady -= OnDialogueRepliesReady;
                 _session.DialogueManager.OnConversationEnd -= OnDialogueEnd;
+            }
+        }
+
+        /// <summary>
+        /// Draws the dialogue UI on screen.
+        /// </summary>
+        private void DrawDialogueUI()
+        {
+            if (_session == null || _session.DialogueManager == null || !_session.DialogueManager.IsConversationActive)
+            {
+                return;
+            }
+
+            if (_font == null)
+            {
+                // No font available - can't draw dialogue UI
+                return;
+            }
+
+            var state = _session.DialogueManager.CurrentState;
+            if (state == null)
+            {
+                return;
+            }
+
+            int screenWidth = GraphicsDevice.Viewport.Width;
+            int screenHeight = GraphicsDevice.Viewport.Height;
+
+            // Draw dialogue box at bottom of screen
+            float dialogueBoxY = screenHeight - 200; // Bottom of screen
+            float dialogueBoxHeight = 180;
+            float padding = 10;
+
+            // Draw current dialogue text
+            if (state.CurrentEntry != null)
+            {
+                string dialogueText = _session.DialogueManager.GetNodeText(state.CurrentEntry);
+                if (!string.IsNullOrEmpty(dialogueText))
+                {
+                    // Word wrap dialogue text (simple implementation)
+                    Vector2 textPos = new Vector2(padding, dialogueBoxY + padding);
+                    _spriteBatch.DrawString(_font, dialogueText, textPos, Color.White);
+                }
+            }
+
+            // Draw available replies
+            if (state.AvailableReplies != null && state.AvailableReplies.Count > 0)
+            {
+                float replyY = dialogueBoxY + 80; // Below dialogue text
+                for (int i = 0; i < state.AvailableReplies.Count && i < 9; i++)
+                {
+                    var reply = state.AvailableReplies[i];
+                    string replyText = _session.DialogueManager.GetNodeText(reply);
+                    if (string.IsNullOrEmpty(replyText))
+                    {
+                        replyText = "[Continue]";
+                    }
+
+                    string replyLabel = $"[{i + 1}] {replyText}";
+                    Vector2 replyPos = new Vector2(padding, replyY + (i * 20));
+                    _spriteBatch.DrawString(_font, replyLabel, replyPos, Color.Yellow);
+                }
+
+                // Draw instruction text
+                string instructionText = "Press 1-9 to select reply, ESC to abort";
+                Vector2 instructionPos = new Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
+                _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
             }
         }
     }
