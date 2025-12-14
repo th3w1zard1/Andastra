@@ -57,191 +57,213 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public static int GetCommandPos(Node node)
         {
+            // Helper to safely get position from a token, returning -1 if null or invalid
+            int SafeGetPosFromToken(object tokenObj)
+            {
+                if (tokenObj == null) return -1;
+                try
+                {
+                    // Token is in AST namespace
+                    if (tokenObj is AST.Token token)
+                    {
+                        string text = token.GetText();
+                        if (text == null || text.Length == 0) return -1;
+                        return Integer.ParseInt(text);
+                    }
+                    return -1;
+                }
+                catch (Exception)
+                {
+                    return -1;
+                }
+            }
+
             // Check root namespace types first
             if (typeof(AConditionalJumpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AConditionalJumpCommand)node).GetPos().GetText());
+                var posToken = ((AConditionalJumpCommand)node).GetPos();
+                return SafeGetPosFromToken(posToken);
             }
 
             if (typeof(AJumpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AJumpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AJumpCommand)node).GetPos());
             }
 
             if (typeof(AJumpToSubroutine).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AJumpToSubroutine)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AJumpToSubroutine)node).GetPos());
             }
 
             if (typeof(AReturn).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AReturn)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AReturn)node).GetPos());
             }
 
             if (typeof(ACopyDownSpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ACopyDownSpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ACopyDownSpCommand)node).GetPos());
             }
 
             if (typeof(ACopyTopSpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ACopyTopSpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ACopyTopSpCommand)node).GetPos());
             }
 
             if (typeof(ACopyDownBpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ACopyDownBpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ACopyDownBpCommand)node).GetPos());
             }
 
             if (typeof(ACopyTopBpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ACopyTopBpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ACopyTopBpCommand)node).GetPos());
             }
 
             if (typeof(AMoveSpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AMoveSpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AMoveSpCommand)node).GetPos());
             }
 
             if (typeof(ARsaddCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ARsaddCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ARsaddCommand)node).GetPos());
             }
 
             if (typeof(AConstCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AConstCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AConstCommand)node).GetPos());
             }
 
             if (typeof(AActionCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AActionCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AActionCommand)node).GetPos());
             }
 
             if (typeof(ALogiiCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ALogiiCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ALogiiCommand)node).GetPos());
             }
 
             if (typeof(ABinaryCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ABinaryCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ABinaryCommand)node).GetPos());
             }
 
             if (typeof(AUnaryCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AUnaryCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AUnaryCommand)node).GetPos());
             }
 
             if (typeof(AStackCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AStackCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AStackCommand)node).GetPos());
             }
 
             if (typeof(ADestructCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ADestructCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ADestructCommand)node).GetPos());
             }
 
             if (typeof(ABpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((ABpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((ABpCommand)node).GetPos());
             }
 
             if (typeof(AStoreStateCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AStoreStateCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AStoreStateCommand)node).GetPos());
             }
 
             // Check AST namespace types (from NcsToAstConverter)
             if (typeof(AST.AConditionalJumpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AConditionalJumpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AConditionalJumpCommand)node).GetPos());
             }
 
             if (typeof(AST.AJumpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AJumpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AJumpCommand)node).GetPos());
             }
 
             if (typeof(AST.AJumpToSubroutine).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AJumpToSubroutine)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AJumpToSubroutine)node).GetPos());
             }
 
             if (typeof(AST.AReturn).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AReturn)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AReturn)node).GetPos());
             }
 
             if (typeof(AST.ACopyDownSpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ACopyDownSpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ACopyDownSpCommand)node).GetPos());
             }
 
             if (typeof(AST.ACopyTopSpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ACopyTopSpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ACopyTopSpCommand)node).GetPos());
             }
 
             if (typeof(AST.ACopyDownBpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ACopyDownBpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ACopyDownBpCommand)node).GetPos());
             }
 
             if (typeof(AST.ACopyTopBpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ACopyTopBpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ACopyTopBpCommand)node).GetPos());
             }
 
             if (typeof(AST.AMoveSpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AMoveSpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AMoveSpCommand)node).GetPos());
             }
 
             if (typeof(AST.ARsaddCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ARsaddCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ARsaddCommand)node).GetPos());
             }
 
             if (typeof(AST.AConstCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AConstCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AConstCommand)node).GetPos());
             }
 
             if (typeof(AST.AActionCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AActionCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AActionCommand)node).GetPos());
             }
 
             if (typeof(AST.ALogiiCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ALogiiCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ALogiiCommand)node).GetPos());
             }
 
             if (typeof(AST.ABinaryCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ABinaryCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ABinaryCommand)node).GetPos());
             }
 
             if (typeof(AST.AUnaryCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AUnaryCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AUnaryCommand)node).GetPos());
             }
 
             if (typeof(AST.ADestructCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ADestructCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ADestructCommand)node).GetPos());
             }
 
             if (typeof(AST.ABpCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.ABpCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.ABpCommand)node).GetPos());
             }
 
             if (typeof(AST.AStoreStateCommand).IsInstanceOfType(node))
             {
-                return Integer.ParseInt(((AST.AStoreStateCommand)node).GetPos().GetText());
+                return SafeGetPosFromToken(((AST.AStoreStateCommand)node).GetPos());
             }
 
             return -1;
