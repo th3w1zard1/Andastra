@@ -2,6 +2,24 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "cleanup",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "tool",
+        "run",
+        "cleanup"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      }
+    },
+    {
       "label": "restore",
       "type": "shell",
       "command": "dotnet",
@@ -19,7 +37,8 @@
         "panel": "shared",
         "focus": false,
         "clear": false
-      }
+      },
+      "dependsOn": "cleanup"
     },
     {
       "label": "build",
@@ -87,6 +106,69 @@
       "dependsOn": "restore"
     },
     {
+      "label": "build-gui",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/HoloPatcher/HoloPatcher.csproj",
+        "/property:Configuration=Debug",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "dependsOn": "restore"
+    },
+    {
+      "label": "build-kncsdecomp",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/NCSDecomp/NCSDecomp.csproj",
+        "/property:Configuration=Debug",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "dependsOn": "restore"
+    },
+    {
+      "label": "build-tests",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/TSLPatcher.Tests/TSLPatcher.Tests.csproj",
+        "/property:Configuration=Debug",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "dependsOn": "restore"
+    },
+    {
       "label": "clean",
       "type": "shell",
       "command": "dotnet",
@@ -103,7 +185,8 @@
         "panel": "shared",
         "focus": false,
         "clear": false
-      }
+      },
+      "dependsOn": "cleanup"
     },
     {
       "label": "rebuild",
