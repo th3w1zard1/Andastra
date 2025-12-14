@@ -225,6 +225,11 @@ namespace Odyssey.Stride.Camera
         private void ProcessInput(float deltaTime, InputManager input)
         {
             // Mouse rotation when right button held
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsMouseButtonDown(MouseButton) checks if a mouse button is currently held down
+            // MouseDelta property gets the mouse movement delta since last frame (X, Y)
+            // Method signatures: bool IsMouseButtonDown(MouseButton button), Vector2 MouseDelta { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (input.IsMouseButtonDown(MouseButton.Right))
             {
                 float sensitivity = 0.2f;
@@ -234,6 +239,10 @@ namespace Odyssey.Stride.Camera
             }
 
             // Scroll wheel for zoom
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // MouseWheelDelta property gets the mouse wheel scroll delta since last frame
+            // Method signature: float MouseWheelDelta { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             float scroll = input.MouseWheelDelta;
             if (Math.Abs(scroll) > 0.01f)
             {
@@ -242,6 +251,11 @@ namespace Odyssey.Stride.Camera
             }
 
             // Keyboard rotation (arrow keys)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsKeyDown(Keys) checks if a key is currently held down (returns true while key is pressed)
+            // Method signature: bool IsKeyDown(Keys key)
+            // Keys enum defines keyboard key codes (Left, Right, Up, Down arrow keys)
+            // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
             float rotateSpeed = 90f * deltaTime; // 90 degrees per second
 
             if (input.IsKeyDown(Keys.Left))
@@ -349,12 +363,24 @@ namespace Odyssey.Stride.Camera
         /// <summary>
         /// Resets the camera to face the same direction as the target.
         /// </summary>
+        // Align camera yaw with target entity's facing direction
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+        // Transform.Rotation property gets the rotation quaternion of the target entity
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+        // Vector3.UnitZ is a static property representing forward vector (0, 0, 1)
+        // Vector3.Transform(Vector3, Quaternion) transforms a vector by a quaternion rotation
+        // Method signature: static Vector3 Transform(Vector3 vector, Quaternion rotation)
+        // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
         public void AlignWithTarget()
         {
             if (_followTarget != null)
             {
                 // Get target's facing direction and set yaw to match
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Rotation gets the target entity's rotation quaternion
                 Quaternion rot = _followTarget.Transform.Rotation;
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3.Transform transforms forward vector by target's rotation to get facing direction
                 Vector3 forward = Vector3.Transform(Vector3.UnitZ, rot);
 
                 _yaw = MathUtil.RadiansToDegrees((float)Math.Atan2(forward.X, forward.Z));
