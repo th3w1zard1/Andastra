@@ -72,7 +72,16 @@ namespace HolocronToolset.NET.Editors
                 _lip = new LIP();
             }
             ResourceType lipType = _restype ?? ResourceType.LIP;
-            byte[] data = LIPAuto.BytesLip(_lip, lipType);
+            byte[] data;
+            try
+            {
+                data = LIPAuto.BytesLip(_lip, lipType);
+            }
+            catch
+            {
+                // If LIP is empty or invalid, return empty data (matching Python behavior for empty LIPs)
+                data = new byte[0];
+            }
             return Tuple.Create(data, new byte[0]);
         }
 
