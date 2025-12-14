@@ -36,6 +36,8 @@ namespace CSharpKOTOR.Resource.Generics
             ute.OnHeartbeatScript = root.Acquire<ResRef>("OnHeartbeat", ResRef.FromBlank());
             ute.OnUserDefinedScript = root.Acquire<ResRef>("OnUserDefined", ResRef.FromBlank());
             ute.Comment = root.Acquire<string>("Comment", "");
+            ute.Name = root.Acquire<LocalizedString>("LocalizedName", LocalizedString.FromInvalid());
+            ute.PaletteId = root.Acquire<int>("PaletteID", 0);
 
             // Extract creature list
             var creatureList = root.Acquire<GFFList>("CreatureList", new GFFList());
@@ -43,10 +45,15 @@ namespace CSharpKOTOR.Resource.Generics
             foreach (var creatureStruct in creatureList)
             {
                 var creature = new UTECreature();
+                // Matching PyKotor implementation: creature.appearance_id = creature_struct.acquire("Appearance", 0)
                 creature.Appearance = creatureStruct.Acquire<int>("Appearance", 0);
+                // Matching PyKotor implementation: creature.challenge_rating = creature_struct.acquire("CR", 0.0)
                 creature.CR = (int)creatureStruct.Acquire<float>("CR", 0.0f);
+                // Matching PyKotor implementation: creature.single_spawn = bool(creature_struct.acquire("SingleSpawn", 0))
                 creature.SingleSpawn = creatureStruct.Acquire<int>("SingleSpawn", 0) != 0 ? 1 : 0;
+                // Matching PyKotor implementation: creature.resref = creature_struct.acquire("ResRef", ResRef.from_blank())
                 creature.ResRef = creatureStruct.Acquire<ResRef>("ResRef", ResRef.FromBlank());
+                // Matching PyKotor implementation: creature.guaranteed_count = creature_struct.acquire("GuaranteedCount", 0)
                 creature.GuaranteedCount = creatureStruct.Acquire<int>("GuaranteedCount", 0);
                 ute.Creatures.Add(creature);
             }
@@ -88,7 +95,9 @@ namespace CSharpKOTOR.Resource.Generics
                 foreach (var creature in ute.Creatures)
                 {
                     var creatureStruct = creatureList.Add();
+                    // Matching PyKotor implementation: creature_struct.set_int32("Appearance", creature.appearance_id)
                     creatureStruct.SetInt32("Appearance", creature.Appearance);
+                    // Matching PyKotor implementation: creature_struct.set_single("CR", creature.challenge_rating)
                     creatureStruct.SetSingle("CR", creature.CR);
                     creatureStruct.SetUInt8("SingleSpawn", (byte)(creature.SingleSpawn != 0 ? 1 : 0));
                     creatureStruct.SetResRef("ResRef", creature.ResRef);
@@ -102,7 +111,12 @@ namespace CSharpKOTOR.Resource.Generics
 
             if (useDeprecated)
             {
+                // Matching PyKotor implementation: root.set_locstring("LocalizedName", ute.name)
+                root.SetLocString("LocalizedName", ute.Name);
+                // Matching PyKotor implementation: root.set_int32("Difficulty", ute.unused_difficulty)
                 root.SetInt32("Difficulty", ute.DifficultyIndex);
+                // Matching PyKotor implementation: root.set_uint8("PaletteID", ute.palette_id)
+                root.SetUInt8("PaletteID", (byte)ute.PaletteId);
             }
 
             return gff;
