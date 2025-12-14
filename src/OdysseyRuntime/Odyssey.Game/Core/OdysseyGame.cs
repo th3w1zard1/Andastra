@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using StrideEngine = Stride.Engine;
 using Stride.Games;
 using Stride.Graphics;
@@ -8,23 +8,27 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Rendering;
 using Stride.UI;
+using Stride.UI.Panels;
+using Stride.UI.Controls;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
+using Odyssey.Core.Enums;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Game;
-using Odyssey.Kotor.Input;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Stride.Camera;
 using Odyssey.Stride.Scene;
 using Odyssey.Stride.UI;
+using Odyssey.Content.Interfaces;
+using CSharpKOTOR.Formats.LYT;
+using CSharpKOTOR.Formats.VIS;
+using CSharpKOTOR.Resources;
 
 namespace Odyssey.Game.Core
 {
-    /// <summary>
-    /// Main game class - Stride integration for Odyssey Engine.
-    /// </summary>
     public class OdysseyGame : StrideEngine.Game
     {
         private readonly GameSettings _settings;
@@ -34,9 +38,13 @@ namespace Odyssey.Game.Core
         private K1EngineApi _engineApi;
         private NcsVm _vm;
 
-        // Systems
+        // Scene rendering
+        private SceneBuilder _sceneBuilder;
+        private StrideEngine.Entity _cameraEntity;
+        private CameraComponent _cameraComponent;
+
         private ChaseCamera _chaseCamera;
-        private PlayerController _playerController;
+        private Odyssey.Kotor.Input.PlayerController _playerController;
         private TriggerSystem _triggerSystem;
         private HeartbeatSystem _heartbeatSystem;
         private ModuleTransitionSystem _transitionSystem;
@@ -47,14 +55,15 @@ namespace Odyssey.Game.Core
         private LoadingScreen _loadingScreen;
         private DialoguePanel _dialoguePanel;
         private UIComponent _uiComponent;
+        private SpriteFont _font;
+        private bool _uiAvailable;
 
-        // Scene
-        private SceneBuilder _sceneBuilder;
-
-        // Debug rendering
-        private bool _showDebugInfo = false;
+        private bool _showDebugInfo = true; // Default to debug mode for demo
         private bool _isPaused = false;
         private bool _inDialogue = false;
+
+        // Debug text overlay
+        private TextBlock _debugTextBlock;
 
         public OdysseyGame(GameSettings settings)
         {
@@ -65,33 +74,46 @@ namespace Odyssey.Game.Core
         {
             base.Initialize();
 
-            // Set window title
             Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
 
-            // Initialize core systems
             _world = new World();
             _globals = new ScriptGlobals();
             _engineApi = new K1EngineApi();
             _vm = new NcsVm();
 
-            // Create game session
             _session = new GameSession(_settings, _world, _vm, _globals);
 
-            // Initialize systems
             InitializeSystems();
+            InitializeCamera();
 
             Console.WriteLine("[Odyssey] Core systems initialized");
         }
 
+        private void InitializeCamera()
+        {
+            // Create main camera entity
+            _cameraEntity = new StrideEngine.Entity("MainCamera");
+            _cameraComponent = new CameraComponent
+            {
+                NearClipPlane = 0.1f,
+                FarClipPlane = 1000f,
+                UseCustomAspectRatio = false
+            };
+            _cameraEntity.Add(_cameraComponent);
+
+            // Position camera at a default viewing position
+            _cameraEntity.Transform.Position = new Vector3(0, 5, 10);
+            _cameraEntity.Transform.Rotation = Quaternion.RotationX(-0.3f);
+
+            SceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
+
+            Console.WriteLine("[Odyssey] Camera initialized at " + _cameraEntity.Transform.Position);
+        }
+
         private void InitializeSystems()
         {
-            // Trigger system
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
-
-            // Heartbeat system
             _heartbeatSystem = new HeartbeatSystem(_world, FireScriptEvent);
-
-            // Module transition system
             _transitionSystem = new ModuleTransitionSystem(
                 async (moduleName) =>
                 {
@@ -112,94 +134,108 @@ namespace Odyssey.Game.Core
             _transitionSystem.OnTransitionComplete += OnTransitionComplete;
             _transitionSystem.OnTransitionFailed += OnTransitionFailed;
 
-            // Subscribe to session events
-            _session.OnModuleLoaded += OnModuleLoaded;
+            _session.OnModuleLoaded += (sender, e) => OnModuleLoaded(e);
         }
 
         private void InitializeUI()
         {
-            // Create UI entity and component
-            var uiEntity = new Entity("UI");
+            var uiEntity = new StrideEngine.Entity("UI");
             _uiComponent = new UIComponent();
             uiEntity.Add(_uiComponent);
 
-            // Create UI page with Canvas root
-            var page = new UIPage { RootElement = new Stride.UI.Panels.Canvas() };
+            var canvas = new Canvas();
+            var page = new UIPage { RootElement = canvas };
             _uiComponent.Page = page;
 
-            // Add to scene
             SceneSystem.SceneInstance.RootScene.Entities.Add(uiEntity);
 
-            // Create font (using default)
-            var font = Content.Load<SpriteFont>("DefaultFont");
-            if (font == null)
+            // Try to load font
+            try
             {
-                Console.WriteLine("[Odyssey] Warning: DefaultFont not found, UI will have limited functionality");
-                return;
+                _font = Content.Load<SpriteFont>("DefaultFont");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] Warning: DefaultFont not found: " + ex.Message);
+                _font = null;
             }
 
-            // Create UI components
-            _hud = new BasicHUD(_uiComponent, font);
-            _pauseMenu = new PauseMenu(_uiComponent, font);
-            _loadingScreen = new LoadingScreen(_uiComponent, font);
-            _dialoguePanel = new DialoguePanel(_uiComponent, font);
+            if (_font != null)
+            {
+                _uiAvailable = true;
+                _hud = new BasicHUD(_uiComponent, _font);
+                _pauseMenu = new PauseMenu(_uiComponent, _font);
+                _loadingScreen = new LoadingScreen(_uiComponent, _font);
+                _dialoguePanel = new DialoguePanel(_uiComponent, _font);
 
-            // Wire up events
-            _pauseMenu.OnResume += OnResumeGame;
-            _pauseMenu.OnExit += OnExitGame;
-            _dialoguePanel.OnReplySelected += OnDialogueReplySelected;
-            _dialoguePanel.OnSkipRequested += OnDialogueSkip;
+                _pauseMenu.OnResume += OnResumeGame;
+                _pauseMenu.OnExit += OnExitGame;
+                _dialoguePanel.OnReplySelected += OnDialogueReplySelected;
+                _dialoguePanel.OnSkipRequested += OnDialogueSkip;
+
+                Console.WriteLine("[Odyssey] UI initialized with font");
+            }
+            else
+            {
+                _uiAvailable = false;
+                Console.WriteLine("[Odyssey] Running without UI (no font available)");
+
+                // Create simple debug text without font
+                _debugTextBlock = new TextBlock
+                {
+                    TextSize = 14,
+                    TextColor = Color.Yellow,
+                    Margin = new Thickness(10, 10, 0, 0)
+                };
+                canvas.Children.Add(_debugTextBlock);
+            }
         }
 
-        private void FireScriptEvent(Core.Interfaces.IEntity entity, Core.Enums.ScriptEvent scriptEvent, Core.Interfaces.IEntity triggeredBy)
+        private void InitializeSceneBuilder()
         {
-            // Get script resref from entity
-            var scriptHooks = entity.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
-            if (scriptHooks == null)
+            if (_sceneBuilder != null)
             {
                 return;
             }
+
+            // Create resource provider wrapper
+            var resourceProvider = new GameResourceProvider(_session, _settings);
+            _sceneBuilder = new SceneBuilder(GraphicsDevice, resourceProvider);
+
+            // Add scene root to Stride scene
+            SceneSystem.SceneInstance.RootScene.Entities.Add(_sceneBuilder.RootEntity);
+
+            Console.WriteLine("[Odyssey] SceneBuilder initialized");
+        }
+
+        private void FireScriptEvent(IEntity entity, ScriptEvent scriptEvent, IEntity triggeredBy)
+        {
+            var scriptHooks = entity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks == null) return;
 
             string scriptResRef = scriptHooks.GetScript(scriptEvent);
-            if (string.IsNullOrEmpty(scriptResRef))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(scriptResRef)) return;
 
-            Console.WriteLine("[Script] Firing " + scriptEvent + " on " + entity.Tag + ": " + scriptResRef);
-
-            // Load and execute script
             try
             {
                 byte[] scriptData = _session.LoadScript(scriptResRef);
                 if (scriptData != null && scriptData.Length > 0)
                 {
-                    // Execute script with entity as caller
                     _vm.Execute(scriptData, null);
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[Script] Error executing " + scriptResRef + ": " + ex.Message);
-            }
+            catch { }
         }
 
-        private void PositionPlayerAtWaypoint(Core.Interfaces.IEntity player, string waypointTag)
+        private void PositionPlayerAtWaypoint(IEntity player, string waypointTag)
         {
-            if (player == null || string.IsNullOrEmpty(waypointTag))
-            {
-                return;
-            }
+            if (player == null || string.IsNullOrEmpty(waypointTag)) return;
 
             var waypoint = _world.GetEntityByTag(waypointTag);
-            if (waypoint == null)
-            {
-                Console.WriteLine("[Odyssey] Waypoint not found: " + waypointTag);
-                return;
-            }
+            if (waypoint == null) return;
 
-            var waypointTransform = waypoint.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-            var playerTransform = player.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            var waypointTransform = waypoint.GetComponent<ITransformComponent>();
+            var playerTransform = player.GetComponent<ITransformComponent>();
 
             if (waypointTransform != null && playerTransform != null)
             {
@@ -212,23 +248,18 @@ namespace Odyssey.Game.Core
         {
             base.BeginRun();
 
-            // Initialize UI (must be after scene is ready)
             InitializeUI();
+            InitializeSceneBuilder();
 
-            // Show loading screen
-            if (_loadingScreen != null)
-            {
-                _loadingScreen.Show("Starting Game");
-            }
+            if (_loadingScreen != null) _loadingScreen.Show("Starting Game");
 
-            // Load initial module
             try
             {
                 _session.StartNewGame();
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("[Odyssey] Failed to start game: " + ex.Message);
+                Console.Error.WriteLine("[Odyssey] Failed to start: " + ex.Message);
                 Console.Error.WriteLine(ex.StackTrace);
             }
         }
@@ -239,99 +270,53 @@ namespace Odyssey.Game.Core
 
             float deltaTime = (float)gameTime.Elapsed.TotalSeconds;
 
-            // Handle input
             ProcessInput(deltaTime);
 
-            // Skip updates if paused (but still process pause menu)
-            if (_isPaused)
-            {
-                return;
-            }
+            if (_isPaused) return;
+            if (_transitionSystem != null && _transitionSystem.IsTransitioning) return;
 
-            // Skip updates during transitions
-            if (_transitionSystem != null && _transitionSystem.IsTransitioning)
-            {
-                return;
-            }
+            _session?.Update(deltaTime);
+            _world?.Update(deltaTime);
+            if (_playerController != null && !_inDialogue) _playerController.Update(deltaTime);
+            _triggerSystem?.Update();
+            _heartbeatSystem?.Update(deltaTime);
+            _session?.DialogueManager?.Update(deltaTime);
 
-            // Update game session
-            if (_session != null)
-            {
-                _session.Update(deltaTime);
-            }
-
-            // Update world
-            if (_world != null)
-            {
-                _world.Update(deltaTime);
-            }
-
-            // Update player controller
-            if (_playerController != null && !_inDialogue)
-            {
-                _playerController.Update(deltaTime);
-            }
-
-            // Update trigger system
-            if (_triggerSystem != null)
-            {
-                _triggerSystem.Update();
-            }
-
-            // Update heartbeat system
-            if (_heartbeatSystem != null)
-            {
-                _heartbeatSystem.Update(deltaTime);
-            }
-
-            // Update dialogue
-            if (_session.DialogueManager != null)
-            {
-                _session.DialogueManager.Update(deltaTime);
-            }
-
-            // Update HUD
-            UpdateHUD();
+            UpdateCamera(deltaTime);
+            UpdateDebugDisplay();
         }
 
         private void ProcessInput(float deltaTime)
         {
-            // Toggle debug info
             if (Input.IsKeyPressed(Keys.F1))
             {
                 _showDebugInfo = !_showDebugInfo;
-                if (_hud != null)
-                {
-                    _hud.ShowDebug = _showDebugInfo;
-                }
+                if (_hud != null) _hud.ShowDebug = _showDebugInfo;
             }
 
-            // Pause/ESC handling
             if (Input.IsKeyPressed(Keys.Escape))
             {
                 if (_inDialogue)
                 {
-                    // Skip dialogue
                     _session.DialogueManager?.SkipNode();
                 }
                 else if (_isPaused)
                 {
-                    // Resume
                     OnResumeGame();
+                }
+                else if (_uiAvailable)
+                {
+                    _isPaused = true;
+                    if (_pauseMenu != null) _pauseMenu.IsVisible = true;
                 }
                 else
                 {
-                    // Show pause menu
-                    _isPaused = true;
-                    if (_pauseMenu != null)
-                    {
-                        _pauseMenu.IsVisible = true;
-                    }
+                    // No UI, just exit
+                    Exit();
                 }
                 return;
             }
 
-            // Handle pause menu input
             if (_isPaused && _pauseMenu != null)
             {
                 _pauseMenu.HandleInput(
@@ -343,7 +328,6 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            // Handle dialogue input
             if (_inDialogue && _dialoguePanel != null)
             {
                 _dialoguePanel.HandleInput(
@@ -353,7 +337,6 @@ namespace Odyssey.Game.Core
                     Input.IsKeyPressed(Keys.Escape)
                 );
 
-                // Number keys for quick reply selection
                 for (int i = 1; i <= 9; i++)
                 {
                     if (Input.IsKeyPressed((Keys)((int)Keys.D1 + i - 1)))
@@ -364,109 +347,141 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            // Camera rotation with mouse (right-click drag)
-            if (_chaseCamera != null)
-            {
-                if (Input.IsMouseButtonDown(MouseButton.Right))
-                {
-                    _chaseCamera.AdjustYaw(-Input.MouseDelta.X * 0.005f);
-                }
+            // Camera controls (WASD + mouse)
+            ProcessCameraInput(deltaTime);
 
-                // Mouse wheel for zoom
-                if (Math.Abs(Input.MouseWheelDelta) > 0.01f)
-                {
-                    _chaseCamera.AdjustDistance(-Input.MouseWheelDelta * 0.5f);
-                }
-
-                // Update camera
-                _chaseCamera.Update(deltaTime);
-            }
-
-            // Player click-to-move
+            // Click to move
             if (Input.IsMouseButtonPressed(MouseButton.Left) && _playerController != null)
             {
-                // Get screen position normalized
-                float screenX = Input.MousePosition.X / Window.ClientBounds.Width;
-                float screenY = Input.MousePosition.Y / Window.ClientBounds.Height;
-
                 System.Numerics.Vector3 worldPos;
                 if (_playerController.ScreenToWorld(
-                    screenX,
-                    screenY,
-                    GetViewMatrix(),
-                    GetProjectionMatrix(),
+                    Input.MousePosition.X / Window.ClientBounds.Width,
+                    Input.MousePosition.Y / Window.ClientBounds.Height,
+                    System.Numerics.Matrix4x4.Identity,
+                    System.Numerics.Matrix4x4.Identity,
                     out worldPos))
                 {
-                    bool run = !Input.IsKeyDown(Keys.LeftShift);
-                    _playerController.MoveToPosition(worldPos, run);
+                    _playerController.MoveToPosition(worldPos, !Input.IsKeyDown(Keys.LeftShift));
                 }
             }
 
-            // Interact key
-            if (Input.IsKeyPressed(Keys.Space))
+            if (Input.IsKeyPressed(Keys.Space)) TryInteractWithNearestObject();
+        }
+
+        private void ProcessCameraInput(float deltaTime)
+        {
+            if (_cameraEntity == null) return;
+
+            float moveSpeed = 20f * deltaTime;
+            float rotateSpeed = 2f * deltaTime;
+
+            // WASD movement
+            Vector3 movement = Vector3.Zero;
+            if (Input.IsKeyDown(Keys.W)) movement.Z -= 1;
+            if (Input.IsKeyDown(Keys.S)) movement.Z += 1;
+            if (Input.IsKeyDown(Keys.A)) movement.X -= 1;
+            if (Input.IsKeyDown(Keys.D)) movement.X += 1;
+            if (Input.IsKeyDown(Keys.Q)) movement.Y -= 1;
+            if (Input.IsKeyDown(Keys.E)) movement.Y += 1;
+
+            if (movement != Vector3.Zero)
             {
-                TryInteractWithNearestObject();
+                // Transform movement by camera rotation
+                var rotation = Matrix.RotationQuaternion(_cameraEntity.Transform.Rotation);
+                movement = Vector3.TransformNormal(movement, rotation);
+                _cameraEntity.Transform.Position += movement * moveSpeed;
+            }
+
+            // Mouse look when right button held
+            if (Input.IsMouseButtonDown(MouseButton.Right))
+            {
+                float yaw = -Input.MouseDelta.X * rotateSpeed;
+                float pitch = -Input.MouseDelta.Y * rotateSpeed;
+
+                var currentRotation = _cameraEntity.Transform.Rotation;
+                var yawRotation = Quaternion.RotationY(yaw);
+                var pitchRotation = Quaternion.RotationX(pitch);
+
+                _cameraEntity.Transform.Rotation = yawRotation * currentRotation * pitchRotation;
+            }
+
+            // Mouse wheel zoom
+            if (Math.Abs(Input.MouseWheelDelta) > 0.01f)
+            {
+                var forward = _cameraEntity.Transform.WorldMatrix.Forward;
+                _cameraEntity.Transform.Position += forward * Input.MouseWheelDelta * 2f;
             }
         }
 
-        private void UpdateHUD()
+        private void UpdateCamera(float deltaTime)
         {
-            if (_hud == null)
+            // Follow player if available
+            var player = _session?.PlayerEntity;
+            if (player != null && _chaseCamera != null)
             {
-                return;
+                var transform = player.GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    // _chaseCamera.Update(deltaTime, Input);
+                }
             }
+        }
 
-            // Get player stats
-            var player = _session.PlayerEntity;
+        private void UpdateDebugDisplay()
+        {
+            if (!_showDebugInfo) return;
+
+            string debug = "=== Odyssey Engine Demo ===\n";
+            debug += "Module: " + (_session?.CurrentModuleName ?? "none") + "\n";
+            debug += "Entities: " + _world.GetAllEntities().Count() + "\n";
+
+            var player = _session?.PlayerEntity;
             if (player != null)
             {
-                var stats = player.GetComponent<Core.Interfaces.Components.IStatsComponent>();
-                if (stats != null)
+                var transform = player.GetComponent<ITransformComponent>();
+                if (transform != null)
                 {
-                    _hud.SetHealth(stats.CurrentHitPoints, stats.MaxHitPoints);
-                    _hud.SetForcePoints(stats.CurrentForcePoints, stats.MaxForcePoints);
+                    debug += "Player: " + transform.Position.ToString() + "\n";
                 }
             }
 
-            // Update debug text
-            if (_showDebugInfo)
+            if (_cameraEntity != null)
             {
-                string debug = "Module: " + (_session.CurrentModuleName ?? "none");
-                debug += "\nEntities: " + _world.EntityCount;
-                if (player != null)
-                {
-                    var transform = player.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                    if (transform != null)
-                    {
-                        debug += "\nPos: " + transform.Position;
-                    }
-                }
+                debug += "Camera: " + _cameraEntity.Transform.Position.ToString() + "\n";
+            }
+
+            debug += "\nControls:\n";
+            debug += "WASD - Move camera\n";
+            debug += "QE - Up/Down\n";
+            debug += "Right mouse - Look around\n";
+            debug += "Scroll - Zoom\n";
+            debug += "F1 - Toggle debug\n";
+            debug += "ESC - Exit\n";
+
+            if (_hud != null)
+            {
                 _hud.SetDebugText(debug);
+            }
+            else if (_debugTextBlock != null)
+            {
+                _debugTextBlock.Text = debug;
             }
         }
 
         private void TryInteractWithNearestObject()
         {
-            // Find nearest interactable
-            var player = _session.PlayerEntity;
-            if (player == null)
-            {
-                return;
-            }
+            var player = _session?.PlayerEntity;
+            if (player == null) return;
 
-            var playerTransform = player.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-            if (playerTransform == null)
-            {
-                return;
-            }
+            var playerTransform = player.GetComponent<ITransformComponent>();
+            if (playerTransform == null) return;
 
-            float nearestDist = 3.0f; // Interaction range
-            Core.Interfaces.IEntity nearestEntity = null;
+            float nearestDist = 3.0f;
+            IEntity nearestEntity = null;
 
-            // Check doors
-            foreach (var door in _world.GetEntitiesByType(Core.Enums.ObjectType.Door) ?? Array.Empty<Core.Interfaces.IEntity>())
+            foreach (var door in _world.GetEntitiesOfType(ObjectType.Door))
             {
-                var doorTransform = door.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                var doorTransform = door.GetComponent<ITransformComponent>();
                 if (doorTransform != null)
                 {
                     float dist = System.Numerics.Vector3.Distance(playerTransform.Position, doorTransform.Position);
@@ -478,10 +493,9 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            // Check placeables
-            foreach (var placeable in _world.GetEntitiesByType(Core.Enums.ObjectType.Placeable) ?? Array.Empty<Core.Interfaces.IEntity>())
+            foreach (var placeable in _world.GetEntitiesOfType(ObjectType.Placeable))
             {
-                var placeableTransform = placeable.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                var placeableTransform = placeable.GetComponent<ITransformComponent>();
                 if (placeableTransform != null)
                 {
                     float dist = System.Numerics.Vector3.Distance(playerTransform.Position, placeableTransform.Position);
@@ -493,15 +507,11 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            // Check creatures (for dialogue)
-            foreach (var creature in _world.GetEntitiesByType(Core.Enums.ObjectType.Creature) ?? Array.Empty<Core.Interfaces.IEntity>())
+            foreach (var creature in _world.GetEntitiesOfType(ObjectType.Creature))
             {
-                if (creature == player)
-                {
-                    continue;
-                }
+                if (creature == player) continue;
 
-                var creatureTransform = creature.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                var creatureTransform = creature.GetComponent<ITransformComponent>();
                 if (creatureTransform != null)
                 {
                     float dist = System.Numerics.Vector3.Distance(playerTransform.Position, creatureTransform.Position);
@@ -513,78 +523,56 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            if (nearestEntity != null)
-            {
-                InteractWith(nearestEntity);
-            }
+            if (nearestEntity != null) InteractWith(nearestEntity);
         }
 
-        private void InteractWith(Core.Interfaces.IEntity entity)
+        private void InteractWith(IEntity entity)
         {
-            Console.WriteLine("[Interact] " + entity.ObjectType + ": " + entity.Tag);
-
             switch (entity.ObjectType)
             {
-                case Core.Enums.ObjectType.Door:
-                    InteractWithDoor(entity);
-                    break;
-
-                case Core.Enums.ObjectType.Placeable:
-                    InteractWithPlaceable(entity);
-                    break;
-
-                case Core.Enums.ObjectType.Creature:
-                    InteractWithCreature(entity);
-                    break;
+                case ObjectType.Door: InteractWithDoor(entity); break;
+                case ObjectType.Placeable: InteractWithPlaceable(entity); break;
+                case ObjectType.Creature: InteractWithCreature(entity); break;
             }
         }
 
-        private void InteractWithDoor(Core.Interfaces.IEntity door)
+        private void InteractWithDoor(IEntity door)
         {
-            var doorComponent = door.GetComponent<Core.Interfaces.Components.IDoorComponent>();
-            if (doorComponent == null)
-            {
-                return;
-            }
+            var doorComponent = door.GetComponent<IDoorComponent>();
+            if (doorComponent == null) return;
 
-            // Check for transition
             if (_transitionSystem != null && _transitionSystem.CanDoorTransition(door))
             {
                 _transitionSystem.TransitionThroughDoor(door, _session.PlayerEntity);
                 return;
             }
 
-            // Check if locked
             if (doorComponent.IsLocked)
             {
-                Console.WriteLine("[Door] Locked!");
-                // TODO: Play locked sound
-                FireScriptEvent(door, Core.Enums.ScriptEvent.OnFailedOpen, _session.PlayerEntity);
+                FireScriptEvent(door, ScriptEvent.OnFailToOpen, _session.PlayerEntity);
                 return;
             }
 
-            // Open/close door
             if (doorComponent.IsOpen)
             {
                 doorComponent.Close();
-                FireScriptEvent(door, Core.Enums.ScriptEvent.OnClose, _session.PlayerEntity);
+                FireScriptEvent(door, ScriptEvent.OnClose, _session.PlayerEntity);
             }
             else
             {
                 doorComponent.Open();
-                FireScriptEvent(door, Core.Enums.ScriptEvent.OnOpen, _session.PlayerEntity);
+                FireScriptEvent(door, ScriptEvent.OnOpen, _session.PlayerEntity);
             }
         }
 
-        private void InteractWithPlaceable(Core.Interfaces.IEntity placeable)
+        private void InteractWithPlaceable(IEntity placeable)
         {
-            FireScriptEvent(placeable, Core.Enums.ScriptEvent.OnUsed, _session.PlayerEntity);
+            FireScriptEvent(placeable, ScriptEvent.OnUsed, _session.PlayerEntity);
         }
 
-        private void InteractWithCreature(Core.Interfaces.IEntity creature)
+        private void InteractWithCreature(IEntity creature)
         {
-            // Try to start conversation
-            var scriptHooks = creature.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
+            var scriptHooks = creature.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
             {
                 string conversation = scriptHooks.GetLocalString("Conversation");
@@ -595,134 +583,141 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            // Fire OnDialogue script
-            FireScriptEvent(creature, Core.Enums.ScriptEvent.OnDialogue, _session.PlayerEntity);
+            FireScriptEvent(creature, ScriptEvent.OnConversation, _session.PlayerEntity);
         }
 
-        private void StartConversation(Core.Interfaces.IEntity npc, string dialogueResRef)
+        private void StartConversation(IEntity npc, string dialogueResRef)
         {
-            if (_session.DialogueManager == null)
-            {
-                return;
-            }
+            if (_session.DialogueManager == null) return;
 
-            bool started = _session.DialogueManager.StartConversation(dialogueResRef, npc, _session.PlayerEntity);
-            if (started)
+            if (_session.DialogueManager.StartConversation(dialogueResRef, npc, _session.PlayerEntity))
             {
                 _inDialogue = true;
-                if (_hud != null)
-                {
-                    _hud.IsVisible = false;
-                }
+                if (_hud != null) _hud.IsVisible = false;
             }
         }
 
-        private System.Numerics.Matrix4x4 GetViewMatrix()
-        {
-            // Get from chase camera or default
-            // Placeholder - would need proper camera integration
-            return System.Numerics.Matrix4x4.Identity;
-        }
-
-        private System.Numerics.Matrix4x4 GetProjectionMatrix()
-        {
-            // Placeholder
-            return System.Numerics.Matrix4x4.Identity;
-        }
-
-        #region Event Handlers
-
-        private void OnModuleLoaded(object sender, ModuleLoadedEventArgs e)
+        private void OnModuleLoaded(Odyssey.Kotor.Game.ModuleLoadedEventArgs e)
         {
             Console.WriteLine("[Odyssey] Module loaded: " + e.ModuleName);
 
-            // Hide loading screen
-            if (_loadingScreen != null)
-            {
-                _loadingScreen.Hide();
-            }
+            if (_loadingScreen != null) _loadingScreen.Hide();
 
-            // Initialize player controller with navmesh
+            // Build scene from LYT
+            BuildSceneFromModule();
+
+            // Setup player controller
             if (_session.PlayerEntity != null && _session.NavigationMesh != null)
             {
-                _playerController = new PlayerController(_session.PlayerEntity, _session.NavigationMesh);
+                _playerController = new Odyssey.Kotor.Input.PlayerController(_session.PlayerEntity, _session.NavigationMesh);
             }
 
-            // Initialize chase camera
-            // Would need camera entity from scene
+            // Position player at entry point
+            if (_session.PlayerEntity != null)
+            {
+                var playerTransform = _session.PlayerEntity.GetComponent<ITransformComponent>();
+                var moduleLoader = GetModuleLoader();
+                if (playerTransform != null && moduleLoader != null)
+                {
+                    playerTransform.Position = moduleLoader.GetEntryPosition();
+                    playerTransform.Facing = moduleLoader.GetEntryFacing();
 
-            // Register entities for heartbeat
+                    // Position camera above player
+                    if (_cameraEntity != null)
+                    {
+                        var playerPos = playerTransform.Position;
+                        _cameraEntity.Transform.Position = new Vector3(playerPos.X, playerPos.Z + 15, playerPos.Y + 15);
+                        _cameraEntity.Transform.Rotation = Quaternion.RotationX(-0.5f);
+                    }
+                }
+            }
+
             if (_heartbeatSystem != null)
             {
                 _heartbeatSystem.Clear();
                 _heartbeatSystem.RegisterAllEntities();
             }
 
-            // Show HUD
-            if (_hud != null)
+            if (_hud != null) _hud.IsVisible = true;
+        }
+
+        private ModuleLoader GetModuleLoader()
+        {
+            // Access module loader through reflection (GameSession wraps it)
+            var sessionType = _session.GetType();
+            var field = sessionType.GetField("_moduleLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (field != null)
             {
-                _hud.IsVisible = true;
+                return field.GetValue(_session) as ModuleLoader;
+            }
+            return null;
+        }
+
+        private void BuildSceneFromModule()
+        {
+            if (_sceneBuilder == null)
+            {
+                Console.WriteLine("[Odyssey] Warning: SceneBuilder not initialized");
+                return;
+            }
+
+            var moduleLoader = GetModuleLoader();
+            if (moduleLoader == null)
+            {
+                Console.WriteLine("[Odyssey] Warning: ModuleLoader not accessible");
+                return;
+            }
+
+            LYT lyt = moduleLoader.CurrentLYT;
+            VIS vis = moduleLoader.CurrentVIS;
+
+            if (lyt == null)
+            {
+                Console.WriteLine("[Odyssey] Warning: No LYT data for scene building");
+                return;
+            }
+
+            Console.WriteLine("[Odyssey] Building scene from LYT with " + lyt.Rooms.Count + " rooms");
+
+            try
+            {
+                _sceneBuilder.BuildScene(
+                    lyt,
+                    vis,
+                    (resref) => moduleLoader.LoadModel(resref),
+                    (resref) => moduleLoader.LoadTexture(resref)
+                );
+                Console.WriteLine("[Odyssey] Scene built successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] Failed to build scene: " + ex.Message);
             }
         }
 
         private void OnTransitionStart(object sender, ModuleTransitionEventArgs e)
         {
-            Console.WriteLine("[Odyssey] Transition starting to: " + e.TargetModule);
-
-            // Show loading screen
-            if (_loadingScreen != null)
-            {
-                _loadingScreen.Show(e.TargetModule);
-            }
-
-            // Hide HUD
-            if (_hud != null)
-            {
-                _hud.IsVisible = false;
-            }
+            if (_loadingScreen != null) _loadingScreen.Show(e.TargetModule);
+            if (_hud != null) _hud.IsVisible = false;
         }
 
         private void OnTransitionComplete(object sender, ModuleTransitionEventArgs e)
         {
-            Console.WriteLine("[Odyssey] Transition complete to: " + e.TargetModule);
-
-            // Position player at waypoint
             if (!string.IsNullOrEmpty(e.TargetWaypoint))
-            {
                 PositionPlayerAtWaypoint(_session.PlayerEntity, e.TargetWaypoint);
-            }
-
-            // Hide loading screen
-            if (_loadingScreen != null)
-            {
-                _loadingScreen.Hide();
-            }
-
-            // Show HUD
-            if (_hud != null)
-            {
-                _hud.IsVisible = true;
-            }
+            if (_loadingScreen != null) _loadingScreen.Hide();
+            if (_hud != null) _hud.IsVisible = true;
         }
 
         private void OnTransitionFailed(object sender, ModuleTransitionEventArgs e)
         {
-            Console.WriteLine("[Odyssey] Transition failed to: " + e.TargetModule);
-
-            // Hide loading screen
-            if (_loadingScreen != null)
-            {
-                _loadingScreen.Hide();
-            }
+            if (_loadingScreen != null) _loadingScreen.Hide();
         }
 
         private void OnResumeGame()
         {
             _isPaused = false;
-            if (_pauseMenu != null)
-            {
-                _pauseMenu.IsVisible = false;
-            }
+            if (_pauseMenu != null) _pauseMenu.IsVisible = false;
             _session?.Resume();
         }
 
@@ -741,36 +736,16 @@ namespace Odyssey.Game.Core
             _session.DialogueManager?.SkipNode();
         }
 
-        private void OnDialogueEnded()
-        {
-            _inDialogue = false;
-            if (_dialoguePanel != null)
-            {
-                _dialoguePanel.Hide();
-            }
-            if (_hud != null)
-            {
-                _hud.IsVisible = true;
-            }
-        }
-
-        #endregion
-
         protected override void Draw(GameTime gameTime)
         {
-            // Clear to dark blue (space/KOTOR feel)
+            // Clear with a dark space-ish blue
             GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.02f, 0.02f, 0.08f, 1f));
             GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
-
-            // Scene rendering is handled by Stride's built-in renderer
-            // Our SceneBuilder adds entities to the scene which Stride renders
-
             base.Draw(gameTime);
         }
 
         protected override void Destroy()
         {
-            // Unsubscribe events
             if (_transitionSystem != null)
             {
                 _transitionSystem.OnTransitionStart -= OnTransitionStart;
@@ -780,9 +755,8 @@ namespace Odyssey.Game.Core
 
             if (_session != null)
             {
-                _session.OnModuleLoaded -= OnModuleLoaded;
+                _session.OnModuleLoaded -= (sender, e) => OnModuleLoaded(e);
                 _session.Dispose();
-                _session = null;
             }
 
             _triggerSystem?.Clear();
@@ -793,11 +767,51 @@ namespace Odyssey.Game.Core
     }
 
     /// <summary>
-    /// Event arguments for module loaded events.
+    /// Simple resource provider that wraps GameSession for SceneBuilder.
     /// </summary>
-    public class ModuleLoadedEventArgs : EventArgs
+    internal class GameResourceProvider : IGameResourceProvider
     {
-        public string ModuleName { get; set; }
+        private readonly GameSession _session;
+        private readonly GameSettings _settings;
+
+        public GameResourceProvider(GameSession session, GameSettings settings)
+        {
+            _session = session;
+            _settings = settings;
+        }
+
+        public GameType GameType
+        {
+            get { return _settings.Game == KotorGame.K1 ? GameType.K1 : GameType.K2; }
+        }
+
+        public System.Threading.Tasks.Task<System.IO.Stream> OpenResourceAsync(ResourceIdentifier id, System.Threading.CancellationToken ct)
+        {
+            return System.Threading.Tasks.Task.FromResult<System.IO.Stream>(null);
+        }
+
+        public System.Threading.Tasks.Task<bool> ExistsAsync(ResourceIdentifier id, System.Threading.CancellationToken ct)
+        {
+            return System.Threading.Tasks.Task.FromResult(false);
+        }
+
+        public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Odyssey.Content.Interfaces.LocationResult>> LocateAsync(
+            ResourceIdentifier id,
+            Odyssey.Content.Interfaces.SearchLocation[] order,
+            System.Threading.CancellationToken ct)
+        {
+            var result = new System.Collections.Generic.List<Odyssey.Content.Interfaces.LocationResult>();
+            return System.Threading.Tasks.Task.FromResult<System.Collections.Generic.IReadOnlyList<Odyssey.Content.Interfaces.LocationResult>>(result);
+        }
+
+        public System.Collections.Generic.IEnumerable<ResourceIdentifier> EnumerateResources(CSharpKOTOR.Resources.ResourceType type)
+        {
+            return new System.Collections.Generic.List<ResourceIdentifier>();
+        }
+
+        public System.Threading.Tasks.Task<byte[]> GetResourceBytesAsync(ResourceIdentifier id, System.Threading.CancellationToken ct)
+        {
+            return System.Threading.Tasks.Task.FromResult<byte[]>(null);
+        }
     }
 }
-
