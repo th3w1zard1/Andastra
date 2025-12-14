@@ -66,7 +66,7 @@ namespace Odyssey.Content.MDL
             }
             if (mdxData == null)
             {
-                throw new ArgumentNullException("mdxData");
+                throw new ArgumentNullException(nameof(mdxData));
             }
 
             _mdlData = mdlData;
@@ -80,11 +80,11 @@ namespace Odyssey.Content.MDL
         {
             if (string.IsNullOrEmpty(mdlPath))
             {
-                throw new ArgumentNullException("mdlPath");
+                throw new ArgumentNullException(nameof(mdlPath));
             }
             if (string.IsNullOrEmpty(mdxPath))
             {
-                throw new ArgumentNullException("mdxPath");
+                throw new ArgumentNullException(nameof(mdxPath));
             }
 
             _mdlData = File.ReadAllBytes(mdlPath);
@@ -1394,44 +1394,6 @@ namespace Odyssey.Content.MDL
                 throw new InvalidOperationException(
                     $"Int32 array read out of bounds: offset={offset}, count={count}, " +
                     $"requiredBytes={requiredBytes}, dataLength={_mdlData.Length}"
-                );
-            }
-
-            int[] result = new int[count];
-            fixed (int* resultPtr = result)
-            {
-                int* src = (int*)(ptr + offset);
-                int* dst = resultPtr;
-                for (int i = 0; i < count; i++)
-                {
-                    dst[i] = src[i];
-                }
-            }
-            return result;
-        }
-
-        private int[] ReadInt32Array(byte* ptr, int offset, int count, int dataLength)
-        {
-            if (count <= 0)
-            {
-                return Array.Empty<int>();
-            }
-
-            // Validate bounds with explicit data length parameter (for MDX data)
-            // Check for potential integer overflow in multiplication
-            long requiredBytesLong = (long)count * sizeof(int);
-            if (requiredBytesLong > int.MaxValue)
-            {
-                throw new InvalidOperationException(
-                    $"Int32 array size calculation overflow: count={count}, sizeof(int)={sizeof(int)}"
-                );
-            }
-            int requiredBytes = (int)requiredBytesLong;
-            if (offset < 0 || offset + requiredBytes > dataLength)
-            {
-                throw new InvalidOperationException(
-                    $"Int32 array read out of bounds: offset={offset}, count={count}, " +
-                    $"requiredBytes={requiredBytes}, dataLength={dataLength}"
                 );
             }
 

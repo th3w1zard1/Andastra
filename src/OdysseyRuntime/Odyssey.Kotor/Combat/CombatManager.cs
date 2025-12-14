@@ -49,23 +49,23 @@ namespace Odyssey.Kotor.Combat
     /// </summary>
     /// <remarks>
     /// Combat System Overview:
-    /// 
+    ///
     /// 1. Combat Initiation:
     ///    - Perception detects hostile
     ///    - Attack action queued
     ///    - Combat state set to InCombat
-    /// 
+    ///
     /// 2. Combat Round (~3 seconds):
     ///    - Schedule attacks based on BAB
     ///    - Execute attacks at appropriate times
     ///    - Fire OnAttacked/OnDamaged scripts
-    /// 
+    ///
     /// 3. Combat Resolution:
     ///    - Apply damage
     ///    - Check for death
     ///    - Fire OnDeath script
     ///    - Award XP
-    /// 
+    ///
     /// 4. Combat End:
     ///    - No hostiles in perception
     ///    - Clear combat state
@@ -240,12 +240,12 @@ namespace Odyssey.Kotor.Combat
             var round = new CombatRound(attacker, target);
 
             // Schedule attacks based on BAB
-            var stats = attacker.GetComponent<IStatsComponent>();
+            IStatsComponent stats = attacker.GetComponent<IStatsComponent>();
             int bab = stats != null ? stats.BaseAttackBonus : 0;
 
-            // TODO: Check for dual wielding
-            bool isDualWielding = false;
-            bool hasTWF = false; // Check for Two-Weapon Fighting feat
+            // Check for dual wielding
+            bool isDualWielding = IsDualWielding(attacker);
+            bool hasTWF = HasFeat(attacker, 2); // FEAT_TWO_WEAPON_FIGHTING = 2
 
             int numAttacks = _damageCalc.CalculateAttacksPerRound(bab, isDualWielding);
 
@@ -319,7 +319,7 @@ namespace Odyssey.Kotor.Combat
                     // Start new round if still in combat
                     if (IsInCombat(attacker) && round.Target != null)
                     {
-                        var targetStats = round.Target.GetComponent<IStatsComponent>();
+                        IStatsComponent targetStats = round.Target.GetComponent<IStatsComponent>();
                         if (targetStats != null && !targetStats.IsDead)
                         {
                             StartNewRound(attacker, round.Target);
@@ -371,7 +371,7 @@ namespace Odyssey.Kotor.Combat
                 });
 
                 // Check for death
-                var targetStats = attack.Target.GetComponent<IStatsComponent>();
+                IStatsComponent targetStats = attack.Target.GetComponent<IStatsComponent>();
                 if (targetStats != null && targetStats.IsDead)
                 {
                     HandleDeath(attack.Target, attack.Attacker);
@@ -397,7 +397,7 @@ namespace Odyssey.Kotor.Combat
             EndCombat(victim);
 
             // Award XP to killer
-            // TODO: Calculate XP based on CR
+            AwardExperience(killer, victim);
         }
 
         #endregion
@@ -409,7 +409,7 @@ namespace Odyssey.Kotor.Combat
         /// </summary>
         public IEnumerable<IEntity> GetEntitiesInCombat()
         {
-            foreach (var kvp in _combatStates)
+            foreach (KeyValuePair<uint, CombatState> kvp in _combatStates)
             {
                 if (kvp.Value == CombatState.InCombat)
                 {
@@ -459,6 +459,86 @@ namespace Odyssey.Kotor.Combat
                     round.Abort();
                 }
                 StartNewRound(attacker, newTarget);
+            }
+        }
+
+        /// <summary>
+        /// Checks if a creature is dual wielding (has weapons in both hands).
+        /// </summary>
+        private bool IsDualWielding(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            IInventoryComponent inventory = creature.GetComponent<IInventoryComponent>();
+            if (inventory == null)
+            {
+                return false;
+            }
+
+            // INVENTORY_SLOT_RIGHTWEAPON = 4, INVENTORY_SLOT_LEFTWEAPON = 5
+            IEntity rightWeapon = inventory.GetItemInSlot(4);
+            IEntity leftWeapon = inventory.GetItemInSlot(5);
+
+            return (rightWeapon != null && leftWeapon != null);
+        }
+
+        /// <summary>
+        /// Checks if a creature has a specific feat.
+        /// </summary>
+        private bool HasFeat(IEntity creature, int featId)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+            if (creatureComp == null || creatureComp.FeatList == null)
+            {
+                return false;
+            }
+
+            return creatureComp.FeatList.Contains(featId);
+        }
+
+        /// <summary>
+        /// Awards experience points to the killer based on victim's Challenge Rating.
+        /// </summary>
+        private void AwardExperience(IEntity killer, IEntity victim)
+        {
+            if (killer == null || victim == null)
+            {
+                return;
+            }
+
+            // Get victim's Challenge Rating
+            CreatureComponent victimComp = victim.GetComponent<CreatureComponent>();
+            if (victimComp == null)
+            {
+                return;
+            }
+
+            float cr = victimComp.ChallengeRating;
+            if (cr <= 0)
+            {
+                return; // No XP for CR 0 or negative
+            }
+
+            // Calculate XP: Base formula is CR * 100, with diminishing returns
+            // KOTOR uses a simplified XP system compared to D&D 3.5
+            int xpAwarded = (int)(cr * 100);
+
+            // Apply party sharing (if killer is in a party, share XP)
+            // For now, just award to the killer
+            IStatsComponent killerStats = killer.GetComponent<IStatsComponent>();
+            if (killerStats != null)
+            {
+                // Award XP (this would typically update the creature's XP and check for level up)
+                Console.WriteLine("[CombatManager] Awarding " + xpAwarded + " XP to " + killer.Tag + " for killing " + victim.Tag + " (CR " + cr + ")");
+                // TODO: Integrate with leveling system to actually add XP and check for level up
             }
         }
 

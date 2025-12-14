@@ -25,6 +25,7 @@ using SysVector3 = System.Numerics.Vector3;
 using KotorVector3 = CSharpKOTOR.Common.Vector3;
 using OdyObjectType = Odyssey.Core.Enums.ObjectType;
 using InstResourceResult = CSharpKOTOR.Installation.ResourceResult;
+using Odyssey.Kotor.Components;
 
 namespace Odyssey.Kotor.Game
 {
@@ -201,10 +202,10 @@ namespace Odyssey.Kotor.Game
             LoadWalkmesh(moduleName);
 
             // Create runtime module and area
-            var runtimeModule = CreateRuntimeModule(moduleName);
+            RuntimeModule runtimeModule = CreateRuntimeModule(moduleName);
             _world.CurrentModule = runtimeModule;
 
-            var runtimeArea = CreateRuntimeArea(moduleName);
+            RuntimeArea runtimeArea = CreateRuntimeArea(moduleName);
             _world.CurrentArea = runtimeArea;
             _currentArea = runtimeArea;
 
@@ -221,7 +222,7 @@ namespace Odyssey.Kotor.Game
         {
             // Get all entities and destroy them
             var entities = new List<IEntity>(_world.GetAllEntities());
-            foreach (var entity in entities)
+            foreach (IEntity entity in entities)
             {
                 _world.DestroyEntity(entity.ObjectId);
             }
@@ -326,7 +327,7 @@ namespace Odyssey.Kotor.Game
                 var allVertices = new List<SysVector3>();
                 var allIndices = new List<int>();
 
-                foreach (var room in _currentLyt.Rooms)
+                foreach (LYTRoom room in _currentLyt.Rooms)
                 {
                     try
                     {
@@ -344,7 +345,7 @@ namespace Odyssey.Kotor.Game
                             List<KotorVector3> bwmVertices = bwm.Vertices();
 
                             // Add vertices with room offset
-                            foreach (var vertex in bwmVertices)
+                            foreach (KotorVector3 vertex in bwmVertices)
                             {
                                 allVertices.Add(new SysVector3(
                                     vertex.X + roomOffset.X,
@@ -354,7 +355,7 @@ namespace Odyssey.Kotor.Game
 
                             // Add face indices (only walkable faces)
                             // BWMFace stores actual vertex positions, so we need to find indices
-                            foreach (var face in bwm.Faces)
+                            foreach (BWMFace face in bwm.Faces)
                             {
                                 // Check if face is walkable (material check)
                                 if (IsFaceWalkable(face))
@@ -462,8 +463,74 @@ namespace Odyssey.Kotor.Game
             area.DisplayName = "Area: " + areaName;
             area.Tag = areaName;
 
-            // TODO: Load ARE file for ambient lighting, fog, etc.
+            // Load ARE file for ambient lighting, fog, etc.
+            LoadAreaProperties(area, areaName);
             return area;
+        }
+
+        /// <summary>
+        /// Loads ARE file properties (lighting, fog, etc.) into the runtime area.
+        /// </summary>
+        private void LoadAreaProperties(RuntimeArea area, string areaResRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(areaResRef, ResourceType.ARE, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    ARE are = AREHelpers.ConstructAre(gff);
+
+                    // Apply ARE properties to runtime area
+                    area.FogEnabled = are.FogEnabled;
+                    area.FogNear = are.FogNear;
+                    area.FogFar = are.FogFar;
+                    
+                    // Convert Color to RGBA uint (ARGB format)
+                    if (are.FogColor != null)
+                    {
+                        area.FogColor = (uint)((are.FogColor.A << 24) | (are.FogColor.R << 16) | (are.FogColor.G << 8) | are.FogColor.B);
+                    }
+                    if (are.SunFogColor != null)
+                    {
+                        area.SunFogColor = (uint)((are.SunFogColor.A << 24) | (are.SunFogColor.R << 16) | (are.SunFogColor.G << 8) | are.SunFogColor.B);
+                    }
+                    if (are.DawnColor1 != null)
+                    {
+                        area.SunAmbientColor = (uint)((are.DawnColor1.A << 24) | (are.DawnColor1.R << 16) | (are.DawnColor1.G << 8) | are.DawnColor1.B);
+                    }
+                    if (are.DayColor1 != null)
+                    {
+                        area.SunDiffuseColor = (uint)((are.DayColor1.A << 24) | (are.DayColor1.R << 16) | (are.DayColor1.G << 8) | are.DayColor1.B);
+                    }
+
+                    // Grass properties
+                    area.GrassEnabled = !string.IsNullOrEmpty(are.GrassTexture.ToString());
+                    area.GrassTexture = are.GrassTexture.ToString();
+                    area.GrassDensity = are.GrassDensity;
+                    area.GrassQuadSize = are.GrassSize;
+
+                    // Script hooks
+                    if (!string.IsNullOrEmpty(are.OnEnter.ToString()))
+                    {
+                        area.SetScript(Core.Enums.ScriptEvent.OnEnter, are.OnEnter.ToString());
+                    }
+                    if (!string.IsNullOrEmpty(are.OnExit.ToString()))
+                    {
+                        area.SetScript(Core.Enums.ScriptEvent.OnExit, are.OnExit.ToString());
+                    }
+                    if (!string.IsNullOrEmpty(are.OnHeartbeat.ToString()))
+                    {
+                        area.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, are.OnHeartbeat.ToString());
+                    }
+
+                    Console.WriteLine("[ModuleLoader] Loaded ARE properties for " + areaResRef);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load ARE file " + areaResRef + ": " + ex.Message);
+            }
         }
 
         private void SpawnEntitiesFromGIT(GIT git, RuntimeArea area)
@@ -472,42 +539,42 @@ namespace Odyssey.Kotor.Game
             int count = 0;
 
             // Spawn waypoints
-            foreach (var waypoint in git.Waypoints)
+            foreach (GITWaypoint waypoint in git.Waypoints)
             {
                 SpawnWaypoint(waypoint, area);
                 count++;
             }
 
             // Spawn doors
-            foreach (var door in git.Doors)
+            foreach (GITDoor door in git.Doors)
             {
                 SpawnDoor(door, area);
                 count++;
             }
 
             // Spawn placeables
-            foreach (var placeable in git.Placeables)
+            foreach (GITPlaceable placeable in git.Placeables)
             {
                 SpawnPlaceable(placeable, area);
                 count++;
             }
 
             // Spawn creatures
-            foreach (var creature in git.Creatures)
+            foreach (GITCreature creature in git.Creatures)
             {
                 SpawnCreature(creature, area);
                 count++;
             }
 
             // Spawn triggers
-            foreach (var trigger in git.Triggers)
+            foreach (GITTrigger trigger in git.Triggers)
             {
                 SpawnTrigger(trigger, area);
                 count++;
             }
 
             // Spawn sounds
-            foreach (var sound in git.Sounds)
+            foreach (GITSound sound in git.Sounds)
             {
                 SpawnSound(sound, area);
                 count++;
@@ -523,14 +590,14 @@ namespace Odyssey.Kotor.Game
 
         private void SpawnWaypoint(GITWaypoint waypoint, RuntimeArea area)
         {
-            var entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
+            IEntity entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
             entity.Tag = waypoint.Tag;
             area.AddEntity(entity);
         }
 
         private void SpawnDoor(GITDoor door, RuntimeArea area)
         {
-            var entity = _world.CreateEntity(OdyObjectType.Door, ToSysVector3(door.Position), door.Bearing);
+            IEntity entity = _world.CreateEntity(OdyObjectType.Door, ToSysVector3(door.Position), door.Bearing);
             entity.Tag = door.Tag;
 
             // Load door template
@@ -540,7 +607,7 @@ namespace Odyssey.Kotor.Game
             }
 
             // Set door-specific properties from GIT
-            var doorComponent = entity.GetComponent<IDoorComponent>();
+            IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
             if (doorComponent != null)
             {
                 doorComponent.LinkedToModule = door.LinkedToModule?.ToString();
@@ -552,7 +619,7 @@ namespace Odyssey.Kotor.Game
 
         private void SpawnPlaceable(GITPlaceable placeable, RuntimeArea area)
         {
-            var entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
+            IEntity entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
 
             // Load placeable template
             if (!string.IsNullOrEmpty(placeable.ResRef?.ToString()))
@@ -565,7 +632,7 @@ namespace Odyssey.Kotor.Game
 
         private void SpawnCreature(GITCreature creature, RuntimeArea area)
         {
-            var entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
+            IEntity entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
 
             // Load creature template
             if (!string.IsNullOrEmpty(creature.ResRef?.ToString()))
@@ -578,15 +645,15 @@ namespace Odyssey.Kotor.Game
 
         private void SpawnTrigger(GITTrigger trigger, RuntimeArea area)
         {
-            var entity = _world.CreateEntity(OdyObjectType.Trigger, ToSysVector3(trigger.Position), 0);
+            IEntity entity = _world.CreateEntity(OdyObjectType.Trigger, ToSysVector3(trigger.Position), 0);
             entity.Tag = trigger.Tag;
 
             // Set trigger geometry
-            var triggerComponent = entity.GetComponent<ITriggerComponent>();
+            ITriggerComponent triggerComponent = entity.GetComponent<ITriggerComponent>();
             if (triggerComponent != null)
             {
                 var geometryList = new List<SysVector3>();
-                foreach (var point in trigger.Geometry)
+                foreach (KotorVector3 point in trigger.Geometry)
                 {
                     geometryList.Add(ToSysVector3(point));
                 }
@@ -600,11 +667,74 @@ namespace Odyssey.Kotor.Game
 
         private void SpawnSound(GITSound sound, RuntimeArea area)
         {
-            var entity = _world.CreateEntity(OdyObjectType.Sound, ToSysVector3(sound.Position), 0);
+            IEntity entity = _world.CreateEntity(OdyObjectType.Sound, ToSysVector3(sound.Position), 0);
 
-            // TODO: Load sound template (UTS)
+            // Load sound template (UTS)
+            if (!string.IsNullOrEmpty(sound.TemplateResRef))
+            {
+                LoadSoundTemplate(entity, sound.TemplateResRef);
+            }
 
             area.AddEntity(entity);
+        }
+
+        /// <summary>
+        /// Loads UTS sound template and applies properties to entity.
+        /// </summary>
+        private void LoadSoundTemplate(IEntity entity, string utsResRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(utsResRef, ResourceType.UTS, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    var gff = GFF.FromBytes(result.Data);
+                    UTS uts = UTSHelpers.ConstructUts(gff);
+
+                    // Apply UTS properties to sound component
+                    SoundComponent soundComponent = entity.GetComponent<SoundComponent>();
+                    if (soundComponent != null)
+                    {
+                        soundComponent.Active = uts.Active;
+                        soundComponent.Continuous = uts.Continuous;
+                        soundComponent.Looping = uts.Looping;
+                        soundComponent.Positional = uts.Positional;
+                        soundComponent.RandomPosition = uts.RandomPosition;
+                        soundComponent.Random = uts.Random;
+                        soundComponent.Volume = uts.Volume;
+                        soundComponent.VolumeVrtn = uts.VolumeVariance;
+                        soundComponent.PitchVariation = uts.PitchVariance;
+                        soundComponent.MinDistance = uts.MinDistance;
+                        soundComponent.MaxDistance = uts.MaxDistance;
+                        soundComponent.Interval = (uint)uts.Interval;
+                        soundComponent.IntervalVrtn = (uint)uts.IntervalVariance;
+                        soundComponent.Hours = (uint)uts.Hours;
+                        soundComponent.TemplateResRef = utsResRef;
+                        soundComponent.SoundFiles = new List<string>();
+                        if (!string.IsNullOrEmpty(uts.Sound.ToString()))
+                        {
+                            soundComponent.SoundFiles.Add(uts.Sound.ToString());
+                        }
+                        foreach (ResRef soundRef in uts.Sounds)
+                        {
+                            if (!string.IsNullOrEmpty(soundRef.ToString()))
+                            {
+                                soundComponent.SoundFiles.Add(soundRef.ToString());
+                            }
+                        }
+                    }
+
+                    // Set entity tag
+                    if (!string.IsNullOrEmpty(uts.Tag))
+                    {
+                        entity.Tag = uts.Tag;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTS template " + utsResRef + ": " + ex.Message);
+            }
         }
 
         private void LoadDoorTemplate(IEntity entity, string resRef)
@@ -620,7 +750,7 @@ namespace Odyssey.Kotor.Game
                     entity.Tag = utd.Tag;
 
                     // Set door component properties
-                    var doorComponent = entity.GetComponent<IDoorComponent>();
+                    IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
                     if (doorComponent != null)
                     {
                         doorComponent.IsLocked = utd.Locked;
@@ -630,7 +760,7 @@ namespace Odyssey.Kotor.Game
                     }
 
                     // Set scripts
-                    var scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                    IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
                     {
                         scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnOpen, utd.OnOpen?.ToString());
@@ -660,7 +790,7 @@ namespace Odyssey.Kotor.Game
                     entity.Tag = utp.Tag;
 
                     // Set scripts
-                    var scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                    IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
                     {
                         scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnUsed, utp.OnUsed?.ToString());
@@ -670,7 +800,7 @@ namespace Odyssey.Kotor.Game
                     }
 
                     // Store appearance for visual creation
-                    var placeableComponent = entity.GetComponent<IPlaceableComponent>();
+                    IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
                     if (placeableComponent != null)
                     {
                         placeableComponent.IsUseable = utp.Useable;
@@ -697,7 +827,7 @@ namespace Odyssey.Kotor.Game
                     entity.Tag = utc.Tag;
 
                     // Set stats
-                    var statsComponent = entity.GetComponent<IStatsComponent>();
+                    IStatsComponent statsComponent = entity.GetComponent<IStatsComponent>();
                     if (statsComponent != null)
                     {
                         statsComponent.CurrentHP = utc.CurrentHp;
@@ -707,7 +837,7 @@ namespace Odyssey.Kotor.Game
                     }
 
                     // Set scripts
-                    var scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                    IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
                     {
                         scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnSpawn, utc.OnSpawn?.ToString());
@@ -815,7 +945,7 @@ namespace Odyssey.Kotor.Game
             _currentArea = runtimeArea;
 
             // Create placeholder waypoint
-            var playerSpawn = _world.CreateEntity(OdyObjectType.Waypoint, SysVector3.Zero, 0);
+            IEntity playerSpawn = _world.CreateEntity(OdyObjectType.Waypoint, SysVector3.Zero, 0);
             playerSpawn.Tag = "wp_player_spawn";
             runtimeArea.AddEntity(playerSpawn);
 
