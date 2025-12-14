@@ -191,21 +191,25 @@ namespace HolocronToolset.NET.Tests.Dialogs
 
             var parent = new Window();
             parent.Show(); // Ensure parent is shown for name scope
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:135-137
+            // Original: capsules = [] # No capsules for now
             var capsules = new List<object>(); // No capsules for now
             var inventory = new List<CSharpKOTOR.Common.InventoryItem>();
             var equipment = new Dictionary<CSharpKOTOR.Common.EquipmentSlot, CSharpKOTOR.Common.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:139
+            // Original: dialog = InventoryEditor(parent, installation, capsules, [], inventory, equipment, droid=False)
             var dialog = new InventoryDialog(parent, _installation, capsules, new List<string>(), inventory, equipment, droid: false);
             dialog.Show();
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:143
+            // Original: assert dialog.isVisible()
             dialog.IsVisible.Should().BeTrue();
-            // Check for inventory table (the UI uses contentsTable, not inventoryList/equipmentList)
-            // Ui may be null if XAML isn't loaded, which is okay for programmatic UI
-            if (dialog.Ui != null)
-            {
-                // If Ui is available, check contentsTable
-                // Note: ContentsTable may be null if using programmatic UI
-            }
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:145
+            // Original: assert hasattr(dialog.ui, "contentsTable")
+            dialog.Ui.Should().NotBeNull();
+            // Note: ContentsTable may be null if using programmatic UI, which is acceptable
+            // The Python test just checks that the attribute exists, not that it's non-null
 
             // Test add/remove logic if possible without heavy data
             // Usually requires drag/drop or button clicks
