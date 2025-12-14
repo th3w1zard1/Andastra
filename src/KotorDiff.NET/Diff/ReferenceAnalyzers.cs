@@ -260,22 +260,109 @@ namespace KotorDiff.NET.Diff
             // Full implementation would require similar structure to analyze_tlk_strref_references.
         }
 
-        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1300-1350
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1510-1549
         // Original: def _find_2da_ref_in_gff_struct(...): ...
         private static List<PurePath> Find2DaRefInGffStruct(
             GFFStruct gffStruct,
-            string twodaFilename,
-            string columnName,
-            string rowLabel,
+            List<string> fieldNames,
+            int targetValue,
             PurePath currentPath)
         {
             var locations = new List<PurePath>();
 
-            // TODO: Implement 2DA reference finding in GFF structs
-            // This would search for ResRef fields that match the 2DA filename
-            // and check if they reference the specific column/row
+            // Iterate over GFFStruct fields using the IEnumerable interface
+            foreach ((string label, GFFFieldType fieldType, object value) in gffStruct)
+            {
+                var fieldPath = currentPath / label;
+
+                // Check if this is one of the fields we're looking for and value matches
+                bool isTargetField = fieldNames.Contains(label);
+                bool isIntValue = value is int;
+                bool matchesTarget = isIntValue && (int)value == targetValue;
+                if (isTargetField && matchesTarget)
+                {
+                    locations.Add(fieldPath);
+                }
+
+                // Recurse into nested structures
+                bool isStruct = fieldType == GFFFieldType.Struct;
+                bool isStructValue = value is GFFStruct;
+                if (isStruct && isStructValue)
+                {
+                    var nestedLocations = Find2DaRefInGffStruct((GFFStruct)value, fieldNames, targetValue, fieldPath);
+                    locations.AddRange(nestedLocations);
+                }
+
+                bool isList = fieldType == GFFFieldType.List;
+                bool isListValue = value is GFFList;
+                if (isList && isListValue)
+                {
+                    var gffList = (GFFList)value;
+                    // GFFList implements IEnumerable<GFFStruct>
+                    int idx = 0;
+                    foreach (GFFStruct item in gffList)
+                    {
+                        if (item != null)
+                        {
+                            var itemPath = fieldPath / idx.ToString();
+                            var itemLocations = Find2DaRefInGffStruct(item, fieldNames, targetValue, itemPath);
+                            locations.AddRange(itemLocations);
+                        }
+                        idx++;
+                    }
+                }
+            }
 
             return locations;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:62-78
+        // Original: def _parse_numeric_row_label(label: str | None) -> int | None: ...
+        private static int? ParseNumericRowLabel(string label)
+        {
+            if (string.IsNullOrEmpty(label))
+            {
+                return null;
+            }
+
+            string stripped = label.Trim();
+            if (string.IsNullOrEmpty(stripped))
+            {
+                return null;
+            }
+
+            if (stripped.Length > 0 && (stripped[0] == '+' || stripped[0] == '-'))
+            {
+                char sign = stripped[0];
+                string digits = stripped.Substring(1);
+                if (int.TryParse(digits, out int numericValue))
+                {
+                    return sign == '-' ? -numericValue : numericValue;
+                }
+                return null;
+            }
+
+            if (int.TryParse(stripped, out int parsedValue))
+            {
+                return parsedValue;
+            }
+
+            return null;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:80-86
+        // Original: def _resolve_row_index_value(fallback_index: int, *labels: str | None) -> int: ...
+        private static int ResolveRowIndexValue(int fallbackIndex, params string[] labels)
+        {
+            foreach (string label in labels)
+            {
+                int? numeric = ParseNumericRowLabel(label);
+                if (numeric.HasValue)
+                {
+                    return numeric.Value;
+                }
+            }
+            return fallbackIndex;
         }
     }
 }
