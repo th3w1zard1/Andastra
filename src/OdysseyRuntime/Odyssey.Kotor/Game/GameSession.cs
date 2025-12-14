@@ -31,6 +31,15 @@ namespace Odyssey.Kotor.Game
     }
 
     /// <summary>
+    /// Container for GameSession services accessible from execution context.
+    /// </summary>
+    public class GameServicesContext
+    {
+        public DialogueManager DialogueManager { get; set; }
+        public IEntity PlayerEntity { get; set; }
+    }
+
+    /// <summary>
     /// Manages the current game session - module loading, saves, party, etc.
     /// </summary>
     public class GameSession : IDisposable
