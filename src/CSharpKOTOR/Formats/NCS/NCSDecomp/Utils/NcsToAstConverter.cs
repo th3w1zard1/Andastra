@@ -217,10 +217,46 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
-            ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
-            if (mainSub != null)
+            // Only create main subroutine if mainStart is valid and after globals
+            // If mainStart is 0 or within globals range, main should be empty
+            int globalsEndForMain = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
+            if (savebpIndex >= 0)
             {
-                program.GetSubroutine().Add(mainSub);
+                // Check for entry stub and adjust globalsEndForMain
+                int entryStubCheck = globalsEndForMain;
+                if (instructions.Count > entryStubCheck + 1 && 
+                    instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
+                    instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
+                {
+                    globalsEndForMain = entryStubCheck + 2; // JSR + RETN
+                }
+                else if (instructions.Count > entryStubCheck + 1 &&
+                         instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
+                         instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
+                {
+                    globalsEndForMain = entryStubCheck + 2; // JSR + RESTOREBP
+                }
+            }
+            
+            // Ensure mainStart is after globals and entry stub
+            if (mainStart <= globalsEndForMain)
+            {
+                mainStart = globalsEndForMain;
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final adjustment: mainStart set to {mainStart} (after globals/entry stub at {globalsEndForMain})");
+            }
+            
+            // Only create main if it has valid range
+            if (mainStart < mainEnd && mainStart >= 0)
+            {
+                ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
+                if (mainSub != null)
+                {
+                    program.GetSubroutine().Add(mainSub);
+                }
+            }
+            else
+            {
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping main subroutine creation - mainStart={mainStart}, mainEnd={mainEnd}, globalsEnd={globalsEndForMain}");
             }
 
             List<int> sortedStarts = new List<int>(subroutineStarts);
