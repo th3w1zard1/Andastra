@@ -10,7 +10,6 @@ using RenderContext = Stride.Rendering.RenderContext;
 
 using Myra;
 using Myra.Graphics2D.UI;
-using Myra.Graphics2D;
 
 namespace Odyssey.Stride.GUI
 {
@@ -37,7 +36,6 @@ namespace Odyssey.Stride.GUI
 
             // Create main menu grid layout
             // Based on Myra API: Grid provides flexible layout system
-            // RowSpacing and ColumnSpacing control spacing between grid cells
             // Source: https://github.com/rds1983/Myra/wiki/Grid
             var grid = new Grid
             {
@@ -58,21 +56,19 @@ namespace Odyssey.Stride.GUI
             grid.RowsProportions.Add(new Proportion(ProportionType.Pixels, 60)); // Options button
             grid.RowsProportions.Add(new Proportion(ProportionType.Pixels, 20)); // Spacing
             grid.RowsProportions.Add(new Proportion(ProportionType.Pixels, 60)); // Exit button
-            grid.RowsProportions.Add(new Proportion(ProportionType.Star, 1)); // Fill remaining space
+            grid.RowsProportions.Add(new Proportion(ProportionType.Fill)); // Fill remaining space
 
             // Title label
-            // Based on Myra API: Label displays text with customizable styling
+            // Based on Myra API: Label displays text
             // Source: https://github.com/rds1983/Myra/wiki/Label
             var titleLabel = new Label
             {
                 Id = "title",
-                Text = "ODYSSEY ENGINE",
-                TextColor = Color.White,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                Text = "ODYSSEY ENGINE"
             };
-            Grid.SetColumn(titleLabel, 1);
-            Grid.SetRow(titleLabel, 1);
+            // Use attached properties via extension methods or direct property access
+            titleLabel.GridColumn = 1;
+            titleLabel.GridRow = 1;
             grid.Widgets.Add(titleLabel);
 
             // Start Game button
@@ -82,13 +78,11 @@ namespace Odyssey.Stride.GUI
             {
                 Content = new Label
                 {
-                    Text = "Start Game",
-                    TextColor = MyraColor.White
-                },
-                Background = new SolidBrush(new Color(100, 150, 255, 255)) // Blue background
+                    Text = "Start Game"
+                }
             };
-            Grid.SetColumn(startButton, 1);
-            Grid.SetRow(startButton, 2);
+            startButton.GridColumn = 1;
+            startButton.GridRow = 2;
             startButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Start Game clicked");
@@ -101,13 +95,11 @@ namespace Odyssey.Stride.GUI
             {
                 Content = new Label
                 {
-                    Text = "Options",
-                    TextColor = MyraColor.White
-                },
-                Background = new SolidBrush(new MyraColor(150, 150, 150, 255)) // Gray background
+                    Text = "Options"
+                }
             };
-            Grid.SetColumn(optionsButton, 1);
-            Grid.SetRow(optionsButton, 4);
+            optionsButton.GridColumn = 1;
+            optionsButton.GridRow = 4;
             optionsButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Options clicked");
@@ -120,13 +112,11 @@ namespace Odyssey.Stride.GUI
             {
                 Content = new Label
                 {
-                    Text = "Exit",
-                    TextColor = MyraColor.White
-                },
-                Background = new SolidBrush(new MyraColor(200, 100, 100, 255)) // Red background
+                    Text = "Exit"
+                }
             };
-            Grid.SetColumn(exitButton, 1);
-            Grid.SetRow(exitButton, 6);
+            exitButton.GridColumn = 1;
+            exitButton.GridRow = 6;
             exitButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Exit clicked");
@@ -171,4 +161,3 @@ namespace Odyssey.Stride.GUI
         public bool IsVisible => _isVisible;
     }
 }
-

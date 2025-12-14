@@ -30,6 +30,8 @@
     <PackageReference Include="Stride.Rendering" Version="4.2.0.2122" />
     <PackageReference Include="Stride.Graphics" Version="4.2.0.2122" />
     <PackageReference Include="Stride.Shaders" Version="4.2.0.2122" />
+    <!-- Myra UI library for functional text-based menus -->
+    <PackageReference Include="Myra.Stride" Version="1.4.0" />
     <!-- NOTE: Vulkan and DirectX packages removed - we use OpenGL exclusively for now.
          These will be re-added when implementing multi-backend support later:
          - Silk.NET.Vulkan

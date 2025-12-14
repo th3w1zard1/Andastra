@@ -1915,7 +1915,7 @@ namespace Odyssey.Game.Core
                 base.Destroy();
             }
             catch (Exception ex) when (ex.Message != null && (
-                ex.Message.Contains("GL driver") || 
+                ex.Message.Contains("GL driver") ||
                 ex.Message.Contains("No GL") ||
                 ex.Message.Contains("OpenGL") ||
                 ex.GetType().Name.Contains("OpenGL") ||
