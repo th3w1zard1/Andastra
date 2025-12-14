@@ -70,18 +70,32 @@ namespace Odyssey.Stride.GUI
             _menuButtons = new MenuButton[3];
         }
 
+        // Initialize renderer resources
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
+        // InitializeCore() - Called once during initialization to set up renderer resources
+        // Must call base.InitializeCore() to initialize base class functionality
         protected override void InitializeCore()
         {
+            // Call base initialization to set up SceneRendererBase
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
             base.InitializeCore();
 
             Console.WriteLine("[FallbackMenuRenderer] Initializing SpriteBatch-based menu renderer");
 
-            // Initialize sprite batch
+            // Initialize sprite batch for 2D rendering
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // SpriteBatch(GraphicsDevice) - Creates a new SpriteBatch instance for the specified graphics device
+            // GraphicsDevice is provided by SceneRendererBase base class
+            // Method signature: SpriteBatch(GraphicsDevice device)
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Create 1x1 white texture for drawing rectangles
-            // Based on Stride documentation: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-            // Texture.New2D creates the texture, no need to set data - SpriteBatch.Draw will handle color tinting
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, TextureFlags) - Creates a new 2D texture
+            // Method signature: New2D(GraphicsDevice device, int width, int height, PixelFormat format, TextureFlags textureFlags)
+            // PixelFormat.R8G8B8A8_UNorm: 8-bit RGBA format, normalized to [0,1] range
+            // TextureFlags.ShaderResource: Texture can be bound as a shader resource for rendering
+            // No initial data provided - SpriteBatch.Draw will handle color tinting via Color parameter
             _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, TextureFlags.ShaderResource);
 
             Console.WriteLine("[FallbackMenuRenderer] SpriteBatch and white texture created successfully");
@@ -138,20 +152,29 @@ namespace Odyssey.Stride.GUI
             Console.WriteLine($"[FallbackMenuRenderer] Layout calculated: Panel=({panelX}, {panelY}, {panelWidth}, {panelHeight})");
         }
 
+        // Render the menu using SpriteBatch
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
+        // DrawCore(RenderContext, RenderDrawContext) - Called each frame to render the scene
+        // RenderContext: Contains scene information and rendering state
+        // RenderDrawContext: Provides graphics context and command list for drawing operations
         protected override void DrawCore(RenderContext context, RenderDrawContext drawContext)
         {
             if (!_isVisible)
                 return;
 
-            // Begin sprite batch
+            // Begin sprite batch rendering
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
-            // Begin(GraphicsContext, SpriteSortMode, BlendStateDescription?, ...)
+            // Begin(GraphicsContext, SpriteSortMode, BlendStateDescription?) - Prepares sprite batch for drawing
+            // Method signature: Begin(GraphicsContext context, SpriteSortMode sortMode, BlendStateDescription? blendState)
+            // SpriteSortMode.Deferred: Sprites are sorted and rendered in a single batch for better performance
             // Passing null for blendState uses default (BlendState.AlphaBlend equivalent)
             _spriteBatch.Begin(drawContext.GraphicsContext, SpriteSortMode.Deferred, null);
 
             // Access back buffer dimensions from GraphicsDevice.Presenter.BackBuffer
-            // Based on Stride API: BackBuffer is a Texture, access dimensions via Description property
-            // Source: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsPresenter.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsPresenter.html
+            // GraphicsPresenter.BackBuffer - Gets the back buffer texture used for rendering
+            // BackBuffer is a Texture, access dimensions via Description property
+            // TextureDescription.Width/Height - Gets the width and height of the texture in pixels
             var backBuffer = GraphicsDevice.Presenter.BackBuffer;
             float screenWidth = backBuffer.Description.Width;
             float screenHeight = backBuffer.Description.Height;
@@ -160,11 +183,17 @@ namespace Odyssey.Stride.GUI
             CalculateLayout(screenWidth, screenHeight);
 
             // Draw background (full screen dark blue)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) draws a texture as a colored rectangle
+            // Method signature: Draw(Texture texture, RectangleF destinationRectangle, Color color)
+            // Source: https://doc.stride3d.net/4.0/en/Manual/graphics/low-level-api/spritebatch.html
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(0, 0, screenWidth, screenHeight),
                 _backgroundColor);
 
             // Draw main panel background
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing panel rectangle
             _spriteBatch.Draw(_whiteTexture, _mainPanelRect, _panelBackgroundColor);
 
             // Draw panel border (thick white border)
@@ -214,6 +243,8 @@ namespace Odyssey.Stride.GUI
                 var color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
 
                 // Button background
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+                // Draw(Texture, RectangleF, Color) - Draws button as a colored rectangle
                 _spriteBatch.Draw(_whiteTexture, button.Rect, color);
 
                 // Button border (white, thicker when selected)
@@ -247,10 +278,23 @@ namespace Odyssey.Stride.GUI
                         button.Rect.Width - innerMargin * 2,
                         button.Rect.Height - innerMargin * 2
                     );
+                    // Draw inner border highlight for selected button
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+                    // Draw(Texture, RectangleF, Color) - Draws inner highlight with semi-transparent white
+                    // Color(255, 255, 255, 128) creates a 50% opacity white overlay
                     _spriteBatch.Draw(_whiteTexture, innerRect, new Color(255, 255, 255, 128));
                 }
             }
 
+            // End sprite batch rendering
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // End() finalizes sprite batch operations and submits draw calls
+            // Must be called after all Draw() calls and before Begin() is called again
+            // Source: https://doc.stride3d.net/4.0/en/Manual/graphics/low-level-api/spritebatch.html
+            // End sprite batch rendering
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // End() - Finalizes the sprite batch and submits all queued sprites for rendering
+            // Must be called after all Draw calls and before the next Begin call
             _spriteBatch.End();
         }
 
@@ -289,4 +333,3 @@ namespace Odyssey.Stride.GUI
         public bool IsVisible => _isVisible;
     }
 }
-
