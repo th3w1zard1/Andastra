@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Diff;
 using CSharpKOTOR.Extract;
@@ -943,6 +944,26 @@ namespace KotorDiff.NET.Diff
                         try
                         {
                             byte[] data = resource.GetData();
+                            
+                            // Validate GFF file size before attempting to parse
+                            // GFF files must have at least a 56-byte header
+                            if (data == null || data.Length < 56)
+                            {
+                                logFunc($"  [WARNING] GFF file {filename} is too small ({data?.Length ?? 0} bytes), skipping");
+                                continue;
+                            }
+                            
+                            // Validate GFF signature
+                            if (data.Length >= 4)
+                            {
+                                string signature = System.Text.Encoding.ASCII.GetString(data, 0, 4).Trim();
+                                if (!GFFContentExtensions.IsValidGFFContent(signature))
+                                {
+                                    logFunc($"  [WARNING] GFF file {filename} has invalid signature '{signature}', skipping");
+                                    continue;
+                                }
+                            }
+                            
                             GFF gffObj = new GFFBinaryReader(data).Load();
 
                             // Search for fields matching this 2DA reference

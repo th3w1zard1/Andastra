@@ -128,6 +128,19 @@ namespace CSharpKOTOR.Formats.GFF
                 "itp", "nfo", "pt", "gvt", "inv"
             };
         }
+
+        /// <summary>
+        /// Check if a fourCC string represents a valid GFF content type.
+        /// </summary>
+        public static bool IsValidGFFContent(string fourCC)
+        {
+            if (string.IsNullOrEmpty(fourCC))
+            {
+                return false;
+            }
+            string trimmedFourCC = fourCC.Trim();
+            return System.Enum.TryParse<GFFContent>(trimmedFourCC, ignoreCase: true, out _);
+        }
     }
 }
 
