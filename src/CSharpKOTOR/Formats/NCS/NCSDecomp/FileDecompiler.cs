@@ -1651,7 +1651,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             // This is more reliable and handles edge cases better
             try
             {
-                return this.DecompileNcsObjectFromFile(file);
+                Utils.FileScriptData result = this.DecompileNcsObjectFromFile(file);
+                if (result == null)
+                {
+                    JavaSystem.@out.Println("DecompileNcsObjectFromFile returned null, falling back to old decoder/parser path");
+                    // Fall back to old path if new path returns null
+                    return this.DecompileNcsOldPath(file);
+                }
+                return result;
             }
             catch (Exception e)
             {
@@ -3064,7 +3071,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
             catch (Exception e)
             {
-                JavaSystem.@out.Println("TRACE DecompileNcsObject: EXCEPTION caught, returning null");
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: EXCEPTION caught, creating fallback stub");
                 JavaSystem.@out.Println("Exception during decompilation: " + e.GetType().Name + ": " + e.Message);
                 if (e.StackTrace != null)
                 {
@@ -3076,7 +3083,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     JavaSystem.@out.Println("Inner exception: " + e.InnerException.GetType().Name + ": " + e.InnerException.Message);
                     e.InnerException.PrintStackTrace(JavaSystem.@out);
                 }
-                return null;
+                // Return a stub FileScriptData instead of null to allow fallback to old path
+                // This matches the behavior of DecompileNcsOldPath which always returns a FileScriptData
+                if (data == null)
+                {
+                    data = new Utils.FileScriptData();
+                }
+                // Create a minimal stub - the caller will fall back to old path if needed
+                string stub = "// ========================================" + Environment.NewLine +
+                             "// DECOMPILATION ERROR - EXCEPTION CAUGHT" + Environment.NewLine +
+                             "// ========================================" + Environment.NewLine +
+                             "// Exception: " + e.GetType().Name + ": " + (e.Message != null ? e.Message : "(no message)") + Environment.NewLine +
+                             "// This file failed to decompile using the new NcsToAstConverter path." + Environment.NewLine +
+                             "// The decompiler will attempt to use the old decoder/parser path as fallback." + Environment.NewLine +
+                             Environment.NewLine +
+                             "void main() {" + Environment.NewLine +
+                             "    // Decompilation failed" + Environment.NewLine +
+                             "}" + Environment.NewLine;
+                data.SetCode(stub);
+                return data;
             }
             finally
             {
