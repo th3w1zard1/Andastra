@@ -102,6 +102,12 @@ namespace HolocronToolset.NET.Editors
                 _onOpenEdit = this.FindControl<TextBox>("onOpenEdit");
                 _storeFlagSelect = this.FindControl<ComboBox>("storeFlagSelect");
                 _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+
+                // Check if all critical controls were found
+                if (_nameEdit == null || _tagEdit == null || _resrefEdit == null || _idSpin == null)
+                {
+                    xamlLoaded = false; // Some controls missing, use programmatic UI
+                }
             }
             catch
             {
@@ -112,6 +118,8 @@ namespace HolocronToolset.NET.Editors
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
+                // Setup signals after programmatic UI is created
+                SetupSignals();
             }
             else
             {
@@ -337,21 +345,37 @@ namespace HolocronToolset.NET.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:155-167
             utm.Name = _nameEdit?.GetLocString() ?? utm.Name ?? LocalizedString.FromInvalid();
             utm.Tag = _tagEdit?.Text ?? utm.Tag ?? "";
-            utm.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
-                ? new ResRef(_resrefEdit.Text)
-                : utm.ResRef;
-            utm.Id = _idSpin?.Value != null ? (int)_idSpin.Value : utm.Id;
-            utm.MarkUp = _markUpSpin?.Value != null ? (int)_markUpSpin.Value : utm.MarkUp;
-            utm.MarkDown = _markDownSpin?.Value != null ? (int)_markDownSpin.Value : utm.MarkDown;
-            utm.OnOpenScript = _onOpenEdit != null && !string.IsNullOrEmpty(_onOpenEdit.Text)
-                ? new ResRef(_onOpenEdit.Text)
-                : utm.OnOpenScript;
+            // Matching PyKotor implementation: utm.resref = ResRef(self.ui.resrefEdit.text())
+            // Python always reads from UI, even if empty (creates blank ResRef)
+            utm.ResRef = _resrefEdit != null ? new ResRef(_resrefEdit.Text ?? "") : utm.ResRef;
+            // Matching PyKotor implementation: utm.id = self.ui.idSpin.value()
+            // Python always reads from UI, even if 0
+            // Note: NumericUpDown.Value is nullable, but Python's QSpinBox.value() always returns an int
+            if (_idSpin != null)
+            {
+                utm.Id = _idSpin.Value.HasValue ? (int)_idSpin.Value.Value : 0;
+            }
+            // Matching PyKotor implementation: utm.mark_up = self.ui.markUpSpin.value()
+            if (_markUpSpin != null)
+            {
+                utm.MarkUp = _markUpSpin.Value.HasValue ? (int)_markUpSpin.Value.Value : 0;
+            }
+            // Matching PyKotor implementation: utm.mark_down = self.ui.markDownSpin.value()
+            if (_markDownSpin != null)
+            {
+                utm.MarkDown = _markDownSpin.Value.HasValue ? (int)_markDownSpin.Value.Value : 0;
+            }
+            // Matching PyKotor implementation: utm.on_open = ResRef(self.ui.onOpenEdit.text())
+            // Python always reads from UI, even if empty (creates blank ResRef)
+            utm.OnOpenScript = _onOpenEdit != null ? new ResRef(_onOpenEdit.Text ?? "") : utm.OnOpenScript;
 
             // Matching PyKotor implementation: utm.can_buy = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 1)
             // Matching PyKotor implementation: utm.can_sell = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 2)
-            if (_storeFlagSelect?.SelectedIndex != null && _storeFlagSelect.SelectedIndex >= 0)
+            // Python always reads from UI, even if currentIndex() is -1 (which gives flagValue = 0, both flags false)
+            if (_storeFlagSelect != null)
             {
-                int flagValue = _storeFlagSelect.SelectedIndex + 1;
+                int index = _storeFlagSelect.SelectedIndex >= 0 ? _storeFlagSelect.SelectedIndex : -1;
+                int flagValue = index + 1; // -1 + 1 = 0, 0 + 1 = 1, 1 + 1 = 2, 2 + 1 = 3
                 utm.CanBuy = (flagValue & 1) != 0;
                 utm.CanSell = (flagValue & 2) != 0;
             }

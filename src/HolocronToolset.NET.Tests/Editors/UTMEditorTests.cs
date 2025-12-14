@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
@@ -20,6 +21,57 @@ namespace HolocronToolset.NET.Tests.Editors
         public UTMEditorTests(AvaloniaTestFixture fixture)
         {
             _fixture = fixture;
+        }
+
+        // Helper method to get test file and installation (matching Python test pattern)
+        private (string utmFile, HTInstallation installation) GetTestFileAndInstallation()
+        {
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+            testFilesDir = System.IO.Path.GetFullPath(testFilesDir);
+
+            // Try to find m_chano.utm
+            string utmFile = System.IO.Path.Combine(testFilesDir, "m_chano.utm");
+            if (!System.IO.File.Exists(utmFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                testFilesDir = System.IO.Path.GetFullPath(testFilesDir);
+                utmFile = System.IO.Path.Combine(testFilesDir, "m_chano.utm");
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            return (utmFile, installation);
         }
 
         [Fact]
@@ -391,6 +443,331 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation: assert editor.ui.tagEdit.text() == "modified_tag"
             editor.TagEdit.Text.Should().Be("modified_tag");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:77-99
+        // Original: def test_utm_editor_manipulate_resref(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateResref()
+        {
+            var (utmFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: editor.ui.resrefEdit.setText("modified_resref")
+            editor.ResrefEdit.Should().NotBeNull("ResrefEdit should be initialized");
+            editor.ResrefEdit.Text = "modified_resref";
+
+            // Matching PyKotor implementation: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching PyKotor implementation: modified_utm = read_utm(data)
+            var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+            // Matching PyKotor implementation: assert str(modified_utm.resref) == "modified_resref"
+            modifiedUtm.ResRef.ToString().Should().Be("modified_resref");
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
+
+            // Matching PyKotor implementation: assert editor.ui.resrefEdit.text() == "modified_resref"
+            editor.ResrefEdit.Text.Should().Be("modified_resref");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:101-125
+        // Original: def test_utm_editor_manipulate_id_spin(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateIdSpin()
+        {
+            var (utmFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: test_id_values = [0, 1, 5, 10, 100, 255]
+            int[] testIdValues = { 0, 1, 5, 10, 100, 255 };
+
+            // Matching PyKotor implementation: for val in test_id_values:
+            foreach (int val in testIdValues)
+            {
+                // Matching PyKotor implementation: editor.ui.idSpin.setValue(val)
+                editor.IdSpin.Should().NotBeNull("IdSpin should be initialized");
+                editor.IdSpin.Value = val;
+
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching PyKotor implementation: modified_utm = read_utm(data)
+                var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+                // Matching PyKotor implementation: assert modified_utm.id == val
+                modifiedUtm.Id.Should().Be(val);
+
+                // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
+                editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
+
+                // Matching PyKotor implementation: assert editor.ui.idSpin.value() == val
+                editor.IdSpin.Value.Should().Be(val);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:127-152
+        // Original: def test_utm_editor_manipulate_markup_spins(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateMarkupSpins()
+        {
+            var (utmFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: test_markup_values = [0, 10, 25, 50, 100, 200]
+            int[] testMarkupValues = { 0, 10, 25, 50, 100, 200 };
+
+            // Matching PyKotor implementation: for val in test_markup_values: (mark up)
+            foreach (int val in testMarkupValues)
+            {
+                // Matching PyKotor implementation: editor.ui.markUpSpin.setValue(val)
+                editor.MarkUpSpin.Should().NotBeNull("MarkUpSpin should be initialized");
+                editor.MarkUpSpin.Value = val;
+
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching PyKotor implementation: modified_utm = read_utm(data)
+                var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+                // Matching PyKotor implementation: assert modified_utm.mark_up == val
+                modifiedUtm.MarkUp.Should().Be(val);
+            }
+
+            // Matching PyKotor implementation: for val in test_markup_values: (mark down)
+            foreach (int val in testMarkupValues)
+            {
+                // Matching PyKotor implementation: editor.ui.markDownSpin.setValue(val)
+                editor.MarkDownSpin.Should().NotBeNull("MarkDownSpin should be initialized");
+                editor.MarkDownSpin.Value = val;
+
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching PyKotor implementation: modified_utm = read_utm(data)
+                var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+                // Matching PyKotor implementation: assert modified_utm.mark_down == val
+                modifiedUtm.MarkDown.Should().Be(val);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:154-176
+        // Original: def test_utm_editor_manipulate_on_open_script(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateOnOpenScript()
+        {
+            var (utmFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: editor.ui.onOpenEdit.setText("test_on_open")
+            editor.OnOpenEdit.Should().NotBeNull("OnOpenEdit should be initialized");
+            editor.OnOpenEdit.Text = "test_on_open";
+
+            // Matching PyKotor implementation: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching PyKotor implementation: modified_utm = read_utm(data)
+            var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+            // Matching PyKotor implementation: assert str(modified_utm.on_open) == "test_on_open"
+            modifiedUtm.OnOpenScript.ToString().Should().Be("test_on_open");
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
+
+            // Matching PyKotor implementation: assert editor.ui.onOpenEdit.text() == "test_on_open"
+            editor.OnOpenEdit.Text.Should().Be("test_on_open");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:178-211
+        // Original: def test_utm_editor_manipulate_store_flag_select(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateStoreFlagSelect()
+        {
+            var (utmFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: for i in range(editor.ui.storeFlagSelect.count()):
+            editor.StoreFlagSelect.Should().NotBeNull("StoreFlagSelect should be initialized");
+            for (int i = 0; i < editor.StoreFlagSelect.ItemCount; i++)
+            {
+                // Matching PyKotor implementation: editor.ui.storeFlagSelect.setCurrentIndex(i)
+                editor.StoreFlagSelect.SelectedIndex = i;
+
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching PyKotor implementation: modified_utm = read_utm(data)
+                var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+                // Matching PyKotor implementation: expected_can_buy = bool((i + 1) & 1)
+                // Matching PyKotor implementation: expected_can_sell = bool((i + 1) & 2)
+                bool expectedCanBuy = ((i + 1) & 1) != 0;
+                bool expectedCanSell = ((i + 1) & 2) != 0;
+
+                // Matching PyKotor implementation: assert modified_utm.can_buy == expected_can_buy
+                // Matching PyKotor implementation: assert modified_utm.can_sell == expected_can_sell
+                modifiedUtm.CanBuy.Should().Be(expectedCanBuy);
+                modifiedUtm.CanSell.Should().Be(expectedCanSell);
+
+                // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
+                editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
+
+                // Matching PyKotor implementation: assert editor.ui.storeFlagSelect.currentIndex() == i
+                editor.StoreFlagSelect.SelectedIndex.Should().Be(i);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:217-248
+        // Original: def test_utm_editor_manipulate_comments(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateComments()
+        {
+            var (utmFile, installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: test_comments = ["", "Test comment", "Multi\nline\ncomment", ...]
+            string[] testComments = {
+                "",
+                "Test comment",
+                "Multi\nline\ncomment",
+                "Comment with special chars !@#$%^&*()",
+                string.Join("", Enumerable.Repeat("Very long comment ", 100))
+            };
+
+            // Matching PyKotor implementation: for comment in test_comments:
+            foreach (string comment in testComments)
+            {
+                // Matching PyKotor implementation: editor.ui.commentsEdit.setPlainText(comment)
+                editor.CommentsEdit.Should().NotBeNull("CommentsEdit should be initialized");
+                editor.CommentsEdit.Text = comment;
+
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching PyKotor implementation: modified_utm = read_utm(data)
+                var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+                // Matching PyKotor implementation: assert modified_utm.comment == comment
+                modifiedUtm.Comment.Should().Be(comment);
+
+                // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
+                editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
+
+                // Matching PyKotor implementation: assert editor.ui.commentsEdit.toPlainText() == comment
+                editor.CommentsEdit.Text.Should().Be(comment);
+            }
         }
     }
 }

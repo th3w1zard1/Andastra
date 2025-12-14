@@ -1,32 +1,32 @@
 using System;
-using Stride.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using CSharpKOTOR.Formats.TPC;
 using JetBrains.Annotations;
 
 namespace Odyssey.MonoGame.Converters
 {
     /// <summary>
-    /// Converts CSharpKOTOR TPC texture data to Stride Graphics Texture.
+    /// Converts CSharpKOTOR TPC texture data to MonoGame Texture2D.
     /// Handles DXT1/DXT3/DXT5 compressed formats, RGB/RGBA uncompressed,
     /// and grayscale textures.
     /// </summary>
-    public static class TpcToStrideTextureConverter
+    public static class TpcToMonoGameTextureConverter
     {
         /// <summary>
-        /// Converts a TPC texture to a Stride Texture.
+        /// Converts a TPC texture to a MonoGame Texture2D.
         /// </summary>
         /// <param name="tpc">The TPC texture to convert.</param>
         /// <param name="device">The graphics device.</param>
         /// <param name="generateMipmaps">Whether to generate mipmaps if not present.</param>
-        /// <returns>A Stride Texture ready for rendering.</returns>
-        // Convert TPC texture format to Stride Texture
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-        // Texture represents image data for rendering, static method creates new texture instance
-        // Method signature: static Texture Convert(TPC tpc, GraphicsDevice device, bool generateMipmaps)
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        /// <returns>A MonoGame Texture2D ready for rendering.</returns>
+        // Convert TPC texture format to MonoGame Texture2D
+        // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
+        // Texture2D represents 2D image data for rendering
+        // Method signature: static Texture2D Convert(TPC tpc, GraphicsDevice device, bool generateMipmaps)
+        // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.GraphicsDevice.html
         // GraphicsDevice parameter provides access to graphics hardware for texture creation
-        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-        public static Texture Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true)
+        // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
+        public static Texture2D Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true)
         {
             if (tpc == null)
             {
@@ -48,20 +48,16 @@ namespace Odyssey.MonoGame.Converters
             int height = baseMipmap.Height;
             TPCTextureFormat format = tpc.Format();
 
-            // Handle cube maps
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-            // Cube maps require 6 faces (layers), handled separately from 2D textures
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
+            // Handle cube maps - MonoGame doesn't have built-in cube map support in Texture2D
+            // For now, convert to 2D texture from first face
             if (tpc.IsCubeMap && tpc.Layers.Count == 6)
             {
-                return ConvertCubeMap(tpc, device);
+                // TODO: Implement proper cube map support using TextureCube if needed
+                return Convert2DTexture(tpc.Layers[0], device, generateMipmaps);
             }
 
             // Convert standard 2D texture
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-            // 2D textures are the most common format, created via Texture.New2D
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-            return Convert2DTexture(tpc, device, generateMipmaps);
+            return Convert2DTexture(tpc.Layers[0], device, generateMipmaps);
         }
 
         /// <summary>
@@ -83,130 +79,41 @@ namespace Odyssey.MonoGame.Converters
             return ConvertMipmapToRgba(mipmap);
         }
 
-        private static Texture Convert2DTexture(TPC tpc, GraphicsDevice device, bool generateMipmaps)
+        private static Texture2D Convert2DTexture(TPCLayer layer, GraphicsDevice device, bool generateMipmaps)
         {
-            var layer = tpc.Layers[0];
             var baseMipmap = layer.Mipmaps[0];
             int width = baseMipmap.Width;
             int height = baseMipmap.Height;
-            TPCTextureFormat format = tpc.Format();
 
-            // Determine Stride pixel format
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-            // PixelFormat enum defines texture pixel formats (BC1_UNorm for DXT1, R8G8B8A8_UNorm for RGBA, etc.)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-            PixelFormat strideFormat = GetStridePixelFormat(format);
-
-            // Check if we can use compressed format directly
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
-            // GraphicsDevice capabilities determine if compressed formats are supported
-            // Compressed formats (DXT/BC) require hardware support
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-            if (format.IsDxt() && SupportsCompressedFormat(device, strideFormat))
-            {
-                return CreateCompressedTexture(tpc, device, strideFormat);
-            }
-
-            // Convert to RGBA for uncompressed upload
+            // Convert to RGBA for MonoGame
+            // MonoGame Texture2D constructor accepts Color[] or byte[] data
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
+            // Texture2D(GraphicsDevice, int, int, bool, SurfaceFormat) constructor
+            // Method signature: Texture2D(GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format)
+            // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
             byte[] rgbaData = ConvertMipmapToRgba(baseMipmap);
 
-            // Create texture description
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
-            // TextureDescription.New2D(int, int, int, PixelFormat, TextureFlags) - Creates a 2D texture description
-            // Method signature: New2D(int width, int height, int mipLevels, PixelFormat format, TextureFlags flags)
-            // mipLevels: Number of mipmap levels (1 for no mipmaps, or calculated count)
-            // PixelFormat.R8G8B8A8_UNorm: 8-bit RGBA format, normalized to [0,1] range
-            // TextureFlags.ShaderResource: Texture can be bound as a shader resource
-            var desc = TextureDescription.New2D(
-                width,
-                height,
-                generateMipmaps ? CalculateMipmapCount(width, height) : 1,
-                PixelFormat.R8G8B8A8_UNorm,
-                TextureFlags.ShaderResource);
-
-            // Create the texture with data
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, byte[]) - Creates a 2D texture with initial data
-            // Method signature: New2D(GraphicsDevice device, int width, int height, PixelFormat format, byte[] data)
-            // The byte array contains RGBA pixel data in row-major order
-            var texture = Texture.New2D(device, width, height, PixelFormat.R8G8B8A8_UNorm, rgbaData);
-            return texture;
-        }
-
-        private static Texture ConvertCubeMap(TPC tpc, GraphicsDevice device)
-        {
-            if (tpc.Layers.Count != 6)
+            // Create Texture2D from RGBA data
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
+            // Texture2D.SetData<T>(T[]) sets texture pixel data
+            // Method signature: void SetData<T>(T[] data) where T : struct
+            // We'll create the texture and then set the data
+            // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
+            Texture2D texture = new Texture2D(device, width, height, generateMipmaps, SurfaceFormat.Color);
+            
+            // Convert byte array to Color array for SetData
+            Color[] colorData = new Color[width * height];
+            for (int i = 0; i < colorData.Length; i++)
             {
-                throw new ArgumentException("Cube map must have exactly 6 layers", "tpc");
-            }
-
-            var baseMipmap = tpc.Layers[0].Mipmaps[0];
-            int size = baseMipmap.Width;
-
-            // Convert all faces to RGBA
-            byte[][] faceData = new byte[6][];
-            for (int i = 0; i < 6; i++)
-            {
-                if (tpc.Layers[i].Mipmaps.Count == 0)
+                int offset = i * 4;
+                if (offset + 3 < rgbaData.Length)
                 {
-                    throw new ArgumentException(string.Format("Cube map layer {0} has no mipmaps", i), "tpc");
+                    colorData[i] = new Color(rgbaData[offset], rgbaData[offset + 1], rgbaData[offset + 2], rgbaData[offset + 3]);
                 }
-                faceData[i] = ConvertMipmapToRgba(tpc.Layers[i].Mipmaps[0]);
             }
 
-            // Create cube map texture description
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
-            // TextureDescription.NewCube(int, int, PixelFormat, TextureFlags) - Creates a cube map texture description
-            // Method signature: NewCube(int size, int mipLevels, PixelFormat format, TextureFlags flags)
-            // size: Width and height of each cube face (must be square)
-            // mipLevels: Number of mipmap levels
-            // PixelFormat.R8G8B8A8_UNorm: 8-bit RGBA format
-            // TextureFlags.ShaderResource: Texture can be bound as a shader resource
-            var desc = TextureDescription.NewCube(
-                size,
-                CalculateMipmapCount(size, size),
-                PixelFormat.R8G8B8A8_UNorm,
-                TextureFlags.ShaderResource);
-
-            // TODO: Cube map upload needs proper CommandList handling
-            // FIXME: Currently returns a 2D texture instead of a proper cube map
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, byte[]) - Creates a 2D texture (temporary workaround)
-            // For now, return a simple 2D texture from face 0
-            return Texture.New2D(device, size, size, PixelFormat.R8G8B8A8_UNorm, faceData[0]);
-        }
-
-        private static Texture CreateCompressedTexture(TPC tpc, GraphicsDevice device, PixelFormat format)
-        {
-            var layer = tpc.Layers[0];
-            var baseMipmap = layer.Mipmaps[0];
-            int width = baseMipmap.Width;
-            int height = baseMipmap.Height;
-            int mipmapCount = layer.Mipmaps.Count;
-
-            // Create compressed texture description
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
-            // TextureDescription.New2D(int, int, int, PixelFormat, TextureFlags) - Creates description for compressed texture
-            // Method signature: static TextureDescription New2D(int width, int height, int mipLevels, PixelFormat format, TextureFlags flags)
-            // format: Compressed format (BC1_UNorm for DXT1, BC2_UNorm for DXT3, BC3_UNorm for DXT5)
-            // TextureFlags.ShaderResource: Texture can be bound as a shader resource
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-            var desc = TextureDescription.New2D(
-                width,
-                height,
-                mipmapCount,
-                format,
-                TextureFlags.ShaderResource);
-
-            // TODO: Compressed texture upload needs proper CommandList handling
-            // FIXME: Currently decompresses instead of using compressed format directly
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, byte[]) - Creates uncompressed texture as workaround
-            // Method signature: static Texture New2D(GraphicsDevice device, int width, int height, PixelFormat format, byte[] data)
-            // For now, decompress base mipmap to RGBA and create uncompressed texture
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-            byte[] rgbaData = ConvertMipmapToRgba(baseMipmap);
-            return Texture.New2D(device, width, height, PixelFormat.R8G8B8A8_UNorm, rgbaData);
+            texture.SetData(colorData);
+            return texture;
         }
 
         private static byte[] ConvertMipmapToRgba(TPCMipmap mipmap)
@@ -598,84 +505,6 @@ namespace Odyssey.MonoGame.Converters
         }
 
         #endregion
-
-        // Convert KOTOR TPC texture format to Stride PixelFormat enum
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-        // PixelFormat enum defines texture pixel formats for Stride rendering
-        // BC1_UNorm: DXT1 compressed format (4 bits per pixel, no alpha)
-        // BC2_UNorm: DXT3 compressed format (8 bits per pixel, explicit alpha)
-        // BC3_UNorm: DXT5 compressed format (8 bits per pixel, interpolated alpha)
-        // R8G8B8A8_UNorm: 32-bit RGBA uncompressed format (8 bits per channel)
-        // R8_UNorm: 8-bit grayscale format
-        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-        private static PixelFormat GetStridePixelFormat(TPCTextureFormat format)
-        {
-            switch (format)
-            {
-                case TPCTextureFormat.DXT1:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // PixelFormat.BC1_UNorm: Block-compressed format, equivalent to DXT1
-                    return PixelFormat.BC1_UNorm;
-                case TPCTextureFormat.DXT3:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // PixelFormat.BC2_UNorm: Block-compressed format, equivalent to DXT3
-                    return PixelFormat.BC2_UNorm;
-                case TPCTextureFormat.DXT5:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // PixelFormat.BC3_UNorm: Block-compressed format, equivalent to DXT5
-                    return PixelFormat.BC3_UNorm;
-                case TPCTextureFormat.RGBA:
-                case TPCTextureFormat.BGRA:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // PixelFormat.R8G8B8A8_UNorm: 32-bit RGBA format, normalized to [0,1] range
-                    return PixelFormat.R8G8B8A8_UNorm;
-                case TPCTextureFormat.RGB:
-                case TPCTextureFormat.BGR:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // PixelFormat.R8G8B8A8_UNorm: RGB/BGR converted to RGBA (alpha set to 255)
-                    return PixelFormat.R8G8B8A8_UNorm;
-                case TPCTextureFormat.Greyscale:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // PixelFormat.R8_UNorm: 8-bit single-channel format for grayscale
-                    return PixelFormat.R8_UNorm;
-                default:
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PixelFormat.html
-                    // Default to RGBA format for unknown formats
-                    return PixelFormat.R8G8B8A8_UNorm;
-            }
-        }
-
-        // Check if graphics device supports compressed texture format
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
-        // GraphicsDevice.Capabilities property provides device feature information
-        // Can check for compressed format support via capabilities
-        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
-        private static bool SupportsCompressedFormat(GraphicsDevice device, PixelFormat format)
-        {
-            // For now, always decompress to ensure compatibility
-            // Can be extended to check device capabilities
-            // FIXME: Should check GraphicsDevice.Capabilities for compressed format support
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsCapabilities.html
-            // GraphicsCapabilities provides information about supported features
-            return false;
-        }
-
-        // Calculate number of mipmap levels for a texture
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
-        // Mipmap count is calculated by repeatedly halving dimensions until reaching 1x1
-        // Each level is half the size of the previous level
-        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
-        private static int CalculateMipmapCount(int width, int height)
-        {
-            int count = 1;
-            while (width > 1 || height > 1)
-            {
-                width = Math.Max(1, width / 2);
-                height = Math.Max(1, height / 2);
-                count++;
-            }
-            return count;
-        }
     }
 }
 
