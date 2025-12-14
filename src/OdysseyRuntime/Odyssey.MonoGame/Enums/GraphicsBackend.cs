@@ -38,6 +38,12 @@ namespace Odyssey.MonoGame.Enums
         Direct3D9Remix = 1 << 3,
 
         /// <summary>
+        /// DirectX 10 - Windows Vista+ support.
+        /// Transitional API between DX9 and DX11.
+        /// </summary>
+        Direct3D10 = 1 << 7,
+
+        /// <summary>
         /// OpenGL 4.5+ - Cross-platform fallback.
         /// Used when Vulkan is unavailable.
         /// </summary>
