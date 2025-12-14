@@ -77,7 +77,7 @@ namespace CSharpKOTOR.Utility
             }
 
             // Try to extract error details from common exception attributes
-            var errorMessages = new System.Collections.Generic.List<string>();
+            var errorMessages = new global::System.Collections.Generic.List<string>();
 
             // Check for common exception properties
             var props = e.GetType().GetProperties();

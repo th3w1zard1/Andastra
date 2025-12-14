@@ -89,7 +89,7 @@ namespace CSharpKOTOR.Tests.Generator
         {
             // Arrange
             var modifications = ModificationsByType.CreateEmpty();
-            var mod2DA = new Modifications2DA("test.2da", "");
+            var mod2DA = new Modifications2DA("test.2da");
             modifications.Twoda.Add(mod2DA);
 
             // Act

@@ -122,7 +122,7 @@ namespace CSharpKOTOR.Tests.Generator
             // Create a base 2DA file in temp dir
             var base2DAPath = Path.Combine(_tempDir, "test.2da");
             var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
-            twoda.AddRow(new Dictionary<string, string> { { "Col1", "Value1" }, { "Col2", "Value2" } });
+            twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" }, { "Col2", "Value2" } });
             byte[] twodaBytes = new TwoDABinaryWriter(twoda).Write();
             File.WriteAllBytes(base2DAPath, twodaBytes);
 
@@ -258,7 +258,7 @@ namespace CSharpKOTOR.Tests.Generator
             Directory.CreateDirectory(Path.GetDirectoryName(base2DAPath));
             
             var twoda = new TwoDA(new List<string> { "Col1" });
-            twoda.AddRow(new Dictionary<string, string> { { "Col1", "Value1" } });
+            twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" } });
             byte[] twodaBytes2 = new TwoDABinaryWriter(twoda).Write();
             File.WriteAllBytes(base2DAPath, twodaBytes2);
             

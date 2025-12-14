@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Utility.System
             {
                 uint fileSizeHigh = 0;
                 uint fileSizeLow = GetCompressedFileSizeW(filePath, out fileSizeHigh);
-                
+
                 if (fileSizeLow == 0xFFFFFFFF)
                 {
                     int error = Marshal.GetLastWin32Error();
@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Utility.System
                         throw new IOException($"GetCompressedFileSizeW failed with error {error}");
                     }
                 }
-                
+
                 return ((long)fileSizeHigh << 32) + fileSizeLow;
             }
             else
@@ -49,7 +49,7 @@ namespace CSharpKOTOR.Utility.System
         {
             if (IsFrozen())
             {
-                return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
+                return Path.GetDirectoryName(global::System.Reflection.Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
             }
             return AppDomain.CurrentDomain.BaseDirectory ?? Directory.GetCurrentDirectory();
         }
@@ -59,7 +59,7 @@ namespace CSharpKOTOR.Utility.System
         public static bool IsFrozen()
         {
             return !string.IsNullOrEmpty(AppDomain.CurrentDomain.SetupInformation.ApplicationBase) &&
-                   !string.IsNullOrEmpty(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                   !string.IsNullOrEmpty(global::System.Reflection.Assembly.GetExecutingAssembly().Location);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/system/os_helper.py:84-93
@@ -180,3 +180,4 @@ namespace CSharpKOTOR.Utility.System
         }
     }
 }
+

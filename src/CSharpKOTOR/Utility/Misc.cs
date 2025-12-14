@@ -97,7 +97,7 @@ namespace CSharpKOTOR.Utility
                 return string.Empty;
             }
 
-            using (System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create())
+            using (global::System.Security.Cryptography.SHA256 sha256 = global::System.Security.Cryptography.SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(data);
                 return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
