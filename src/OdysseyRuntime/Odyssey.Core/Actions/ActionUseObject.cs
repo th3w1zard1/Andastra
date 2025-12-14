@@ -115,9 +115,16 @@ namespace Odyssey.Core.Actions
                             // Check if actor has the key
                             if (door.KeyRequired && !string.IsNullOrEmpty(door.KeyTag))
                             {
-                                // TODO: Check if actor has item with matching tag
-                                // For now, if key is required, fail
-                                return ActionStatus.Failed;
+                                IInventoryComponent inventory = actor.GetComponent<IInventoryComponent>();
+                                if (inventory != null && inventory.HasItemByTag(door.KeyTag))
+                                {
+                                    door.Unlock();
+                                }
+                                else
+                                {
+                                    // Actor doesn't have the required key
+                                    return ActionStatus.Failed;
+                                }
                             }
 
                             // If lockable by script and has lock DC, attempt to unlock
@@ -149,9 +156,16 @@ namespace Odyssey.Core.Actions
                         // Check if actor has the key
                         if (!string.IsNullOrEmpty(placeable.KeyTag))
                         {
-                            // TODO: Check if actor has item with matching tag
-                            // For now, if key is required, fail
-                            return ActionStatus.Failed;
+                            IInventoryComponent inventory = actor.GetComponent<IInventoryComponent>();
+                            if (inventory != null && inventory.HasItemByTag(placeable.KeyTag))
+                            {
+                                placeable.Unlock();
+                            }
+                            else
+                            {
+                                // Actor doesn't have the required key
+                                return ActionStatus.Failed;
+                            }
                         }
 
                         // If has lock DC, attempt to unlock
