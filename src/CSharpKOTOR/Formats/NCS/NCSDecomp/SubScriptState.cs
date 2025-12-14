@@ -2256,12 +2256,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private int GetNextCommand(AJumpCommand node)
         {
-            return this.nodedata.GetPos(node) + 6;
+            return this.SafeGetPos(node) + 6;
         }
 
         private int GetPriorToDestCommand(AJumpCommand node)
         {
-            return this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 2;
+            Node dest = this.nodedata.GetDestination(node);
+            return this.SafeGetPos(dest) - 2;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1900-1919
