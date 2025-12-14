@@ -76,6 +76,11 @@ namespace Odyssey.Content.MDL
         /// <summary>
         /// Creates an optimized reader from file paths (reads entire files into memory).
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when mdlPath or mdxPath is null or empty.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when the specified file does not exist.</exception>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the specified path is invalid.</exception>
+        /// <exception cref="UnauthorizedAccessException">Thrown when access to the file is denied.</exception>
+        /// <exception cref="IOException">Thrown when an I/O error occurs while reading the file.</exception>
         public MDLOptimizedReader(string mdlPath, string mdxPath)
         {
             if (string.IsNullOrEmpty(mdlPath))
