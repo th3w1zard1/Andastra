@@ -1414,26 +1414,88 @@ namespace CSharpKOTOR.Common
         // Original: def resource(self) -> T | None:
         public override object Resource()
         {
-            // TODO: Implement full resource() method once all format readers are ported
-            // This requires read_are, read_dlg, read_git, etc. functions
             if (!_resourceLoadAttempted)
             {
-                _resourceLoadAttempted = true; // Mark as attempted to prevent repeated loading
+                _resourceLoadAttempted = true;
                 byte[] data = Data();
                 if (data == null)
                 {
-                    // Data() returned null, set to default to cache the "not found" result
                     _resourceObj = default(T);
                     return default(T);
                 }
 
-                // Placeholder - will be replaced with actual format readers
-                // conversions: dict[ResourceType, Callable[[SOURCE_TYPES], Any]] = { ... }
-                // In Python: self._resource_obj = conversions.get(self._restype, lambda _: None)(data)
-                // When format readers are implemented, set _resourceObj to the converted resource object here
-                // For now, set to default(T) to cache the "conversion not implemented" state
-                // This prevents repeated calls to Data() while format readers are being ported
-                _resourceObj = default(T);
+                // Load resource based on type
+                object loaded = null;
+                if (ResType == ResourceType.ARE)
+                {
+                    loaded = ResourceAutoHelpers.ReadAre(data);
+                }
+                else if (ResType == ResourceType.GIT)
+                {
+                    loaded = ResourceAutoHelpers.ReadGit(data);
+                }
+                else if (ResType == ResourceType.IFO)
+                {
+                    loaded = ResourceAutoHelpers.ReadIfo(data);
+                }
+                else if (ResType == ResourceType.UTC)
+                {
+                    loaded = ResourceAutoHelpers.ReadUtc(data);
+                }
+                else if (ResType == ResourceType.PTH)
+                {
+                    loaded = ResourceAutoHelpers.ReadPth(data);
+                }
+                else if (ResType == ResourceType.UTD)
+                {
+                    loaded = ResourceAutoHelpers.ReadUtd(data);
+                }
+                else if (ResType == ResourceType.UTP)
+                {
+                    loaded = ResourceAutoHelpers.ReadUtp(data);
+                }
+                else if (ResType == ResourceType.UTS)
+                {
+                    loaded = ResourceAutoHelpers.ReadUts(data);
+                }
+                else if (ResType == ResourceType.LYT)
+                {
+                    loaded = Formats.LYT.LYTAuto.ReadLyt(data);
+                }
+                else if (ResType == ResourceType.VIS)
+                {
+                    loaded = Formats.VIS.VISAuto.ReadVis(data);
+                }
+                else if (ResType == ResourceType.NCS)
+                {
+                    // NCS is just raw bytes
+                    loaded = data;
+                }
+                else
+                {
+                    // For other types, try to load as GFF if it's a GFF-based resource
+                    if (ResType.IsGff())
+                    {
+                        try
+                        {
+                            var reader = new Formats.GFF.GFFBinaryReader(data);
+                            loaded = reader.Load();
+                        }
+                        catch
+                        {
+                            loaded = null;
+                        }
+                    }
+                }
+
+                if (loaded != null && loaded is T)
+                {
+                    _resourceObj = (T)loaded;
+                }
+                else
+                {
+                    _resourceObj = default(T);
+                }
             }
 
             return _resourceObj;

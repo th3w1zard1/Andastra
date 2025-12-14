@@ -261,6 +261,56 @@ namespace CSharpKOTOR.Installation
             return _resourceManager.LookupResource(resname, restype, searchOrder, moduleRoot);
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1807-1843
+        // Original: def texture(self, resname: str, order: Sequence[SearchLocation] | None = None, *, capsules: Sequence[Capsule] | None = None, folders: list[Path] | None = None, logger: Callable[[str], None] | None = None) -> TPC | None:
+        /// <summary>
+        /// Returns a TPC object loaded from a resource with the specified name.
+        /// </summary>
+        [CanBeNull]
+        public Formats.TPC.TPC Texture(
+            string resname,
+            [CanBeNull] SearchLocation[] searchOrder = null)
+        {
+            if (string.IsNullOrWhiteSpace(resname))
+            {
+                return null;
+            }
+
+            // Default search order for textures
+            if (searchOrder == null || searchOrder.Length == 0)
+            {
+                searchOrder = new[]
+                {
+                    SearchLocation.CUSTOM_FOLDERS,
+                    SearchLocation.OVERRIDE,
+                    SearchLocation.CUSTOM_MODULES,
+                    SearchLocation.TEXTURES_TPA,
+                    SearchLocation.CHITIN
+                };
+            }
+
+            // Try TPC first, then TGA
+            ResourceResult result = Resource(resname, ResourceType.TPC, searchOrder);
+            if (result == null)
+            {
+                result = Resource(resname, ResourceType.TGA, searchOrder);
+            }
+
+            if (result == null || result.Data == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return Formats.TPC.TPCAuto.ReadTpc(result.Data);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Locates all instances of a resource across the installation.
         /// </summary>

@@ -24,6 +24,18 @@ namespace CSharpKOTOR.Resource.Generics
         // Localized module name displayed in-game
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:51
+        // Original: self.mod_name: LocalizedString = LocalizedString.from_invalid()
+        public LocalizedString ModName { get; set; } = LocalizedString.FromInvalid();
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:56
+        // Original: self.area_name: ResRef = ResRef.from_blank()
+        public ResRef AreaName { get; set; } = ResRef.FromBlank();
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:62
+        // Original: self.resref: ResRef = ResRef.from_blank()
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+
         // Module tag identifier
         public string Tag { get; set; } = string.Empty;
 
@@ -73,6 +85,37 @@ namespace CSharpKOTOR.Resource.Generics
 
         // Module Vault ID (for multiplayer)
         public int VaultId { get; set; }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:86
+        // Original: self.vo_id: str = ""
+        public string VoId { get; set; } = string.Empty;
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:113
+        // Original: self.hak: str = ""
+        public string Hak { get; set; } = string.Empty;
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:115-122
+        // Original: Time settings
+        public int DawnHour { get; set; }
+        public int DuskHour { get; set; }
+        public int TimeScale { get; set; }
+        public int StartMonth { get; set; }
+        public int StartDay { get; set; }
+        public int StartHour { get; set; }
+        public int StartYear { get; set; }
+        public int XpScale { get; set; }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:123-124
+        // Original: Additional script hooks
+        public ResRef OnPlayerRest { get; set; } = ResRef.FromBlank();
+        public ResRef StartMovie { get; set; } = ResRef.FromBlank();
+
+        // Additional script hooks from Python
+        public ResRef OnLoad { get; set; } = ResRef.FromBlank();
+        public ResRef OnStart { get; set; } = ResRef.FromBlank();
+
+        // Entry direction as angle (computed from X/Y components)
+        public float EntryDirection { get; set; }
 
         public IFO()
         {
