@@ -265,6 +265,11 @@ namespace Odyssey.Stride.GUI
             // Draw(Texture, RectangleF, Color) - same method as documented above, drawing top border
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
             // RectangleF(float x, float y, float width, float height) - same constructor as above
+            // Access RectangleF properties for position and size
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF.X, RectangleF.Y, RectangleF.Width, RectangleF.Height properties get rectangle position and size
+            // Method signatures: float X { get; set; }, float Y { get; set; }, float Width { get; set; }, float Height { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_mainPanelRect.X, _mainPanelRect.Y, _mainPanelRect.Width, borderThickness),
                 _borderColor);
