@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Windows.MainWindow"
+        Title="Holocron Toolset"
+        Width="1200" Height="800">
+    <TextBlock Text="Holocron Toolset - Under Construction"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               FontSize="24"/>
+</Window>
