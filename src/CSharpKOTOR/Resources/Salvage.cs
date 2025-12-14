@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Resources
                 {
                     foreach (var resource in erfContainer)
                     {
-                        RobustLogger.Instance.Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
+                        new RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
                         if (resource.ResType == ResourceType.NCS)
                         {
                             newErf.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
@@ -66,14 +66,14 @@ namespace CSharpKOTOR.Resources
                             newData = strict ? newData : resource.Data;
                             if (newData == null)
                             {
-                                RobustLogger.Instance.Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
+                                new RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
                                 continue;
                             }
                             newErf.SetData(resource.ResRef.ToString(), resource.ResType, newData);
                         }
                         catch (Exception ex) when (ex is IOException || ex is ArgumentException)
                         {
-                            RobustLogger.Instance.Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
+                            new RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
                         }
                     }
                 }
@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Resources
                 {
                     foreach (var resource in rimContainer)
                     {
-                        RobustLogger.Instance.Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
+                        new RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
                         if (resource.ResType == ResourceType.NCS)
                         {
                             newRim.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
@@ -93,25 +93,25 @@ namespace CSharpKOTOR.Resources
                             newData = strict ? newData : resource.Data;
                             if (newData == null)
                             {
-                                RobustLogger.Instance.Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
+                                new RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
                                 continue;
                             }
                             newRim.SetData(resource.ResRef.ToString(), resource.ResType, newData);
                         }
                         catch (Exception ex) when (ex is IOException || ex is ArgumentException)
                         {
-                            RobustLogger.Instance.Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
+                            new RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
                         }
                     }
                 }
             }
             catch (Exception ex) when (ex is IOException || ex is ArgumentException)
             {
-                RobustLogger.Instance.Error($"Corrupted ERF/RIM, could not salvage: '{capsuleObj}'");
+                new RobustLogger().Error($"Corrupted ERF/RIM, could not salvage: '{capsuleObj}'");
             }
 
             int resourceCount = newErf != null ? newErf.Count : (newRim != null ? newRim.Count : 0);
-            RobustLogger.Instance.Info($"Returning salvaged ERF/RIM container with {resourceCount} total resources in it.");
+            new RobustLogger().Info($"Returning salvaged ERF/RIM container with {resourceCount} total resources in it.");
             return newErf ?? (object)newRim;
         }
 
@@ -171,7 +171,7 @@ namespace CSharpKOTOR.Resources
                 {
                     throw;
                 }
-                RobustLogger.Instance.Error($"Corrupted resource: {resource}", !(e is IOException || e is ArgumentException));
+                new RobustLogger().Error($"Corrupted resource: {resource}", !(e is IOException || e is ArgumentException));
             }
             return null;
         }
@@ -181,18 +181,18 @@ namespace CSharpKOTOR.Resources
         private static byte[] ValidateGff(GFF gff, ResourceType restype)
         {
             // Use construct/dismantle functions to validate GFF
-            switch (restype)
+            if (restype == ResourceType.ARE)
             {
-                case ResourceType.ARE:
-                    var are = AREHelpers.ConstructAre(gff);
-                    return GFFAuto.BytesGff(AREHelpers.DismantleAre(are), ResourceType.GFF);
-                case ResourceType.GIT:
-                    var git = GITHelpers.ConstructGit(gff);
-                    return GFFAuto.BytesGff(GITHelpers.DismantleGit(git), ResourceType.GFF);
-                // Other resource types would need their construct/dismantle functions ported
-                default:
-                    return GFFAuto.BytesGff(gff, ResourceType.GFF);
+                var are = AREHelpers.ConstructAre(gff);
+                return GFFAuto.BytesGff(AREHelpers.DismantleAre(are), ResourceType.GFF);
             }
+            if (restype == ResourceType.GIT)
+            {
+                var git = GITHelpers.ConstructGit(gff);
+                return GFFAuto.BytesGff(GITHelpers.DismantleGit(git), ResourceType.GFF);
+            }
+            // Other resource types would need their construct/dismantle functions ported
+            return GFFAuto.BytesGff(gff, ResourceType.GFF);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:257-302
@@ -216,7 +216,7 @@ namespace CSharpKOTOR.Resources
                     }
                     catch
                     {
-                        RobustLogger.Instance.Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory");
+                        new RobustLogger().Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory");
                         return null;
                     }
                 }
@@ -236,7 +236,7 @@ namespace CSharpKOTOR.Resources
                 }
                 catch
                 {
-                    RobustLogger.Instance.Warning($"Invalid path passed to `validate_capsule`: '{path}'");
+                    new RobustLogger().Warning($"Invalid path passed to `validate_capsule`: '{path}'");
                     return null;
                 }
             }
@@ -255,7 +255,7 @@ namespace CSharpKOTOR.Resources
                     }
                     catch
                     {
-                        RobustLogger.Instance.Error("the binary data passed to `validate_capsule` could not be loaded as an ERF/RIM.");
+                        new RobustLogger().Error("the binary data passed to `validate_capsule` could not be loaded as an ERF/RIM.");
                         return null;
                     }
                 }
