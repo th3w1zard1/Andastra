@@ -1,0 +1,124 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Use IntelliSense to find out which attributes exist for C# debugging
+      // Use hover for the description of the existing attributes
+      // For further information visit https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
+      "name": ".NET 8.0 Launch HoloPatcher",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-gui",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/src/HoloPatcher/bin/Debug/net8.0/HoloPatcher.dll",
+      "cwd": "${workspaceFolder}/src/HoloPatcher",
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "env": {
+        "AVALONIA_LOGGING_LEVEL": "Verbose",
+        "Logging__LogLevel__Default": "Debug",
+        "Logging__LogLevel__Microsoft": "Information",
+        "Logging__LogLevel__Avalonia": "Verbose"
+      }
+    },
+    {
+      "name": ".NET 8.0 Launch KNCSDecomp",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-kncsdecomp",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/src/KNCSDecomp/bin/Debug/net8.0/KNCSDecomp.dll",
+      "cwd": "${workspaceFolder}/src/KNCSDecomp",
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "env": {
+        "AVALONIA_LOGGING_LEVEL": "Verbose",
+        "Logging__LogLevel__Default": "Debug",
+        "Logging__LogLevel__Microsoft": "Information",
+        "Logging__LogLevel__Avalonia": "Verbose"
+      }
+    },
+    {
+      "name": ".NET 8.0 Run Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-tests",
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/src/TSLPatcher.Tests/TSLPatcher.Tests.csproj"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": false
+    },
+    {
+      "name": ".NET Core Attach",
+      "type": "coreclr",
+      "request": "attach"
+    },
+    {
+      "name": "Launch Odyssey Game (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-odyssey-debug",
+      "program": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/bin/Debug/net9.0-windows/Odyssey.Game.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "internalConsoleOptions": "openOnSessionStart",
+      "justMyCode": false,
+      "enableStepFiltering": false,
+      "symbolOptions": {
+        "searchPaths": [
+          "${workspaceFolder}/src/OdysseyRuntime/**/bin/Debug/net9.0-windows",
+          "${workspaceFolder}/src/CSharpKOTOR/bin/Debug/net9.0"
+        ],
+        "searchMicrosoftSymbolServer": true,
+        "searchNuGetOrgSymbolServer": true
+      },
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Launch Odyssey Game (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-odyssey-release",
+      "program": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/bin/Release/net9.0-windows/Odyssey.Game.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "internalConsoleOptions": "openOnSessionStart",
+      "justMyCode": false,
+      "enableStepFiltering": false,
+      "symbolOptions": {
+        "searchPaths": [
+          "${workspaceFolder}/src/OdysseyRuntime/**/bin/Release/net9.0-windows",
+          "${workspaceFolder}/src/CSharpKOTOR/bin/Release/net9.0"
+        ],
+        "searchMicrosoftSymbolServer": true,
+        "searchNuGetOrgSymbolServer": true
+      },
+      "env": {
+        "DOTNET_ENVIRONMENT": "Production"
+      }
+    },
+    {
+      "name": "Attach to Odyssey Game",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "Odyssey.Game.exe"
+    },
+    {
+      "name": "Attach to Stride Process",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": ""
+    }
+  ]
+}

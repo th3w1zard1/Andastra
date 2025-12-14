@@ -45,6 +45,9 @@ TestResults/
 
 # Visual Studio Code
 .vscode/
+# Exception: commit launch.json and tasks.json for team debugging configuration
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # macOS
 .DS_Store
