@@ -1207,7 +1207,7 @@ namespace KotorDiff.NET.Diff
                 modificationsByType.Install = new List<CSharpKOTOR.Mods.InstallFile>();
             }
 
-            var installFile = new CSharpKOTOR.Mods.InstallFile(filename, file2Path, destination);
+            var installFile = new CSharpKOTOR.Mods.InstallFile(filename, destination, file2Path);
             modificationsByType.Install.Add(installFile);
 
             // Write immediately if incremental writer is provided
