@@ -674,6 +674,13 @@ namespace Odyssey.Game.Core
             };
 
             // Simple row layout - larger spacing
+            // Add row definitions to grid layout
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid.RowDefinitions property gets the collection of row strip definitions
+            // RowDefinitions.Add(StripDefinition) adds a row definition to the grid
+            // Method signature: void Add(StripDefinition definition)
+            // StripDefinition defines row height and sizing behavior (Fixed, Star, Auto)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80)); // Title/header
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80)); // Main button
