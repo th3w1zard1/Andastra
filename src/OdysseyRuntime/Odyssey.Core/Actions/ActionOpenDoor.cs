@@ -178,28 +178,31 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Event fired when a door is opened.
     /// </summary>
-    public class DoorOpenedEvent : IEvent
+    public class DoorOpenedEvent : IGameEvent
     {
         public IEntity Actor { get; set; }
         public IEntity Door { get; set; }
+        public IEntity Entity { get { return Door; } }
     }
 
     /// <summary>
     /// Event fired when a door is closed.
     /// </summary>
-    public class DoorClosedEvent : IEvent
+    public class DoorClosedEvent : IGameEvent
     {
         public IEntity Actor { get; set; }
         public IEntity Door { get; set; }
+        public IEntity Entity { get { return Door; } }
     }
 
     /// <summary>
     /// Event fired when trying to open a locked door.
     /// </summary>
-    public class DoorLockedEvent : IEvent
+    public class DoorLockedEvent : IGameEvent
     {
         public IEntity Actor { get; set; }
         public IEntity Door { get; set; }
+        public IEntity Entity { get { return Door; } }
     }
 }
 

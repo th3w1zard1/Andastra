@@ -134,12 +134,13 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Event fired when damage is dealt.
     /// </summary>
-    public class DamageEvent : IEvent
+    public class DamageEvent : IGameEvent
     {
         public IEntity Attacker { get; set; }
         public IEntity Target { get; set; }
         public int Damage { get; set; }
         public DamageType DamageType { get; set; }
+        public IEntity Entity { get { return Target; } }
     }
 
     /// <summary>
