@@ -16,6 +16,16 @@ namespace Odyssey.Core.Interfaces.Components
         /// Maximum hit points.
         /// </summary>
         int MaxHP { get; }
+
+        /// <summary>
+        /// Current Force points.
+        /// </summary>
+        int CurrentFP { get; set; }
+
+        /// <summary>
+        /// Maximum Force points.
+        /// </summary>
+        int MaxFP { get; }
         
         /// <summary>
         /// Gets an ability score.
