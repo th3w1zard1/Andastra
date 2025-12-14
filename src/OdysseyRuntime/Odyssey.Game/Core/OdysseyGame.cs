@@ -1720,8 +1720,7 @@ namespace Odyssey.Game.Core
                     StartDialogueWithEntity(entity);
                     break;
                 case Odyssey.Core.Enums.ObjectType.Trigger:
-                    Console.WriteLine("[Odyssey] Trigger clicked - would activate trigger");
-                    // TODO: Activate trigger
+                    HandleTriggerActivation(entity);
                     break;
                 default:
                     Console.WriteLine($"[Odyssey] Unknown entity type clicked: {entity.ObjectType}");
