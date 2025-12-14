@@ -50,6 +50,11 @@ namespace Odyssey.Game.Core
         private float _menuAnimationTime = 0f; // For smooth animations
         private int _hoveredMenuIndex = -1; // Track mouse hover
 
+        // Installation path selection
+        private List<string> _availablePaths = new List<string>();
+        private int _selectedPathIndex = 0;
+        private bool _isSelectingPath = false;
+
         // Basic 3D rendering
         private BasicEffect _basicEffect;
         private VertexBuffer _groundVertexBuffer;
@@ -128,6 +133,9 @@ namespace Odyssey.Game.Core
             // Initialize menu input states
             _previousMenuKeyboardState = Keyboard.GetState();
             _previousMenuMouseState = Mouse.GetState();
+
+            // Initialize installation path selection
+            InitializeInstallationPaths();
 
             Console.WriteLine("[Odyssey] Menu system initialized");
 
@@ -281,7 +289,21 @@ namespace Odyssey.Game.Core
             switch (menuIndex)
             {
                 case 0: // Start Game
-                    StartGame();
+                    if (_isSelectingPath)
+                    {
+                        // Confirm path selection and start game
+                        if (_selectedPathIndex >= 0 && _selectedPathIndex < _availablePaths.Count)
+                        {
+                            _settings.GamePath = _availablePaths[_selectedPathIndex];
+                            _isSelectingPath = false;
+                            StartGame();
+                        }
+                    }
+                    else
+                    {
+                        // Toggle path selection mode
+                        _isSelectingPath = true;
+                    }
                     break;
                 case 1: // Options
                     Console.WriteLine("[Odyssey] Options menu not implemented");
@@ -289,6 +311,47 @@ namespace Odyssey.Game.Core
                 case 2: // Exit
                     Exit();
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Initializes available installation paths.
+        /// </summary>
+        private void InitializeInstallationPaths()
+        {
+            // Get paths from GamePathDetector
+            _availablePaths = GamePathDetector.FindKotorPathsFromDefault(_settings.Game);
+
+            // If no paths found, try single detection
+            if (_availablePaths.Count == 0)
+            {
+                string detectedPath = GamePathDetector.DetectKotorPath(_settings.Game);
+                if (!string.IsNullOrEmpty(detectedPath))
+                {
+                    _availablePaths.Add(detectedPath);
+                }
+            }
+
+            // If we have a path from settings, use it and add to list if not present
+            if (!string.IsNullOrEmpty(_settings.GamePath))
+            {
+                if (!_availablePaths.Contains(_settings.GamePath))
+                {
+                    _availablePaths.Insert(0, _settings.GamePath);
+                }
+                _selectedPathIndex = _availablePaths.IndexOf(_settings.GamePath);
+            }
+            else if (_availablePaths.Count > 0)
+            {
+                // Use first available path
+                _selectedPathIndex = 0;
+                _settings.GamePath = _availablePaths[0];
+            }
+
+            Console.WriteLine($"[Odyssey] Found {_availablePaths.Count} installation path(s)");
+            foreach (var path in _availablePaths)
+            {
+                Console.WriteLine($"[Odyssey]   - {path}");
             }
         }
 
@@ -359,15 +422,15 @@ namespace Odyssey.Game.Core
                 int titleSize = 80;
                 int titleX = centerX - titleSize / 2;
                 int titleY = startY - titleOffset - 60;
-                
+
                 // Outer ring (gold)
                 Rectangle outerRing = new Rectangle(titleX, titleY, titleSize, titleSize);
                 DrawRectangleBorder(_spriteBatch, outerRing, 6, new Color(255, 215, 0, 255));
-                
+
                 // Inner circle (hollow)
                 Rectangle innerRing = new Rectangle(titleX + 15, titleY + 15, titleSize - 30, titleSize - 30);
                 DrawRectangleBorder(_spriteBatch, innerRing, 4, new Color(255, 215, 0, 180));
-                
+
                 Console.WriteLine("[Odyssey] WARNING: Font not available - using visual fallback indicators");
             }
 
@@ -435,17 +498,40 @@ namespace Odyssey.Game.Core
                 }
                 else
                 {
-                    // Fallback indicator when font is missing
-                    if (isSelected)
+                    // Fallback: draw clear visual indicators for each button
+                    int iconSize = 30;
+                    int iconX = scaledButtonRect.X + (scaledButtonRect.Width - iconSize) / 2;
+                    int iconY = scaledButtonRect.Y + (scaledButtonRect.Height - iconSize) / 2;
+                    Rectangle iconRect = new Rectangle(iconX, iconY, iconSize, iconSize);
+
+                    Color iconColor = isSelected ? Color.White : new Color(200, 200, 200, 255);
+
+                    if (i == 0)
                     {
-                        int indicatorSize = 20;
-                        Rectangle indicatorRect = new Rectangle(
-                            scaledButtonRect.X + 20,
-                            scaledButtonRect.Y + (scaledButtonRect.Height - indicatorSize) / 2,
-                            indicatorSize,
-                            indicatorSize
-                        );
-                        _spriteBatch.Draw(_menuTexture, indicatorRect, Color.White);
+                        // Start Game: Play triangle (right-pointing)
+                        int[] triangleX = { iconRect.X + 8, iconRect.X + 8, iconRect.X + iconSize - 8 };
+                        int[] triangleY = { iconRect.Y + 8, iconRect.Y + iconSize - 8, iconRect.Y + iconSize / 2 };
+                        DrawTriangle(_spriteBatch, triangleX, triangleY, iconColor);
+                    }
+                    else if (i == 1)
+                    {
+                        // Options: Gear icon (square with diagonal lines)
+                        DrawRectangleBorder(_spriteBatch, iconRect, 3, iconColor);
+                        // Draw X through center
+                        int margin = 8;
+                        _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + margin, iconRect.Y + iconSize / 2 - 2, iconSize - margin * 2, 4), iconColor);
+                        _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + iconSize / 2 - 2, iconRect.Y + margin, 4, iconSize - margin * 2), iconColor);
+                    }
+                    else if (i == 2)
+                    {
+                        // Exit: X symbol
+                        int thickness = 4;
+                        // Diagonal lines
+                        for (int offset = -2; offset <= 2; offset++)
+                        {
+                            _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + offset, iconRect.Y, thickness, iconSize), iconColor);
+                            _spriteBatch.Draw(_menuTexture, new Rectangle(iconRect.X + iconSize - offset - thickness, iconRect.Y, thickness, iconSize), iconColor);
+                        }
                     }
                 }
             }
@@ -462,6 +548,26 @@ namespace Odyssey.Game.Core
                 // Main text
                 _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
             }
+            else
+            {
+                // Fallback: draw simple visual instruction indicators
+                int indicatorY = viewportHeight - 40;
+                int indicatorSize = 8;
+                
+                // Arrow keys indicator (up arrow)
+                int arrowX = centerX - 100;
+                _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX, indicatorY - 5, indicatorSize, indicatorSize * 2), new Color(150, 150, 170, 255));
+                _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX - 4, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
+                _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX + indicatorSize - indicatorSize / 2, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
+                
+                // Mouse indicator (circle)
+                int mouseX = centerX;
+                DrawRectangleBorder(_spriteBatch, new Rectangle(mouseX - indicatorSize / 2, indicatorY - indicatorSize / 2, indicatorSize, indicatorSize), 2, new Color(150, 150, 170, 255));
+                
+                // Enter key indicator (rectangle)
+                int enterX = centerX + 100;
+                _spriteBatch.Draw(_menuTexture, new Rectangle(enterX, indicatorY - 5, indicatorSize * 2, indicatorSize), new Color(150, 150, 170, 255));
+            }
 
             _spriteBatch.End();
         }
@@ -476,6 +582,45 @@ namespace Odyssey.Game.Core
             spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
             // Right
             spriteBatch.Draw(_menuTexture, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), color);
+        }
+
+        /// <summary>
+        /// Draws a filled triangle using rectangles (approximation).
+        /// Used for play button icon when font is not available.
+        /// </summary>
+        private void DrawTriangle(SpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        {
+            // Simple triangle drawing using line approximation
+            // Draw lines between points
+            int minY = Math.Min(Math.Min(y[0], y[1]), y[2]);
+            int maxY = Math.Max(Math.Max(y[0], y[1]), y[2]);
+            
+            for (int py = minY; py <= maxY; py++)
+            {
+                // Find intersections with horizontal line at py
+                System.Collections.Generic.List<int> intersections = new System.Collections.Generic.List<int>();
+                
+                for (int i = 0; i < 3; i++)
+                {
+                    int next = (i + 1) % 3;
+                    if ((y[i] <= py && py < y[next]) || (y[next] <= py && py < y[i]))
+                    {
+                        if (y[i] != y[next])
+                        {
+                            float t = (float)(py - y[i]) / (y[next] - y[i]);
+                            int ix = (int)(x[i] + t * (x[next] - x[i]));
+                            intersections.Add(ix);
+                        }
+                    }
+                }
+                
+                if (intersections.Count >= 2)
+                {
+                    int minX = Math.Min(intersections[0], intersections[1]);
+                    int maxX = Math.Max(intersections[0], intersections[1]);
+                    spriteBatch.Draw(_menuTexture, new Rectangle(minX, py, maxX - minX, 1), color);
+                }
+            }
         }
 
         private void StartGame()
