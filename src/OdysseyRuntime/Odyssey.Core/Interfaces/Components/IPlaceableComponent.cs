@@ -79,6 +79,11 @@ namespace Odyssey.Core.Interfaces.Components
         /// Deactivates the placeable.
         /// </summary>
         void Deactivate();
+
+        /// <summary>
+        /// Unlocks the placeable.
+        /// </summary>
+        void Unlock();
     }
 }
 

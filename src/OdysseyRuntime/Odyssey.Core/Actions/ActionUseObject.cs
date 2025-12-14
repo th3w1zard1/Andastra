@@ -32,6 +32,7 @@ namespace Odyssey.Core.Actions
         private const float UseDistance = 2.0f;
         private bool _reachedTarget;
         private bool _hasUsed;
+        private static readonly Random _random = new Random();
 
         public ActionUseObject(uint targetObjectId)
             : base(ActionType.UseObject)

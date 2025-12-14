@@ -1,4 +1,5 @@
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Kotor.Components
 {
@@ -8,7 +9,7 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Based on UTP file format documentation.
     /// </remarks>
-    public class PlaceableComponent : IComponent
+    public class PlaceableComponent : IPlaceableComponent
     {
         public IEntity Owner { get; set; }
 
@@ -130,5 +131,22 @@ namespace Odyssey.Kotor.Components
         /// Whether the placeable is plot-critical.
         /// </summary>
         public bool Plot { get; set; }
+
+        /// <summary>
+        /// Key tag (alias for KeyName for interface compatibility).
+        /// </summary>
+        public string KeyTag
+        {
+            get { return KeyName; }
+            set { KeyName = value; }
+        }
+
+        /// <summary>
+        /// Unlocks the placeable.
+        /// </summary>
+        public void Unlock()
+        {
+            IsLocked = false;
+        }
     }
 }
