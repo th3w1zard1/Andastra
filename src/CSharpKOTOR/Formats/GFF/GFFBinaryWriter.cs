@@ -137,7 +137,10 @@ namespace CSharpKOTOR.Formats.GFF
             }
             else if (fieldCount == 1)
             {
-                _structWriter.WriteUInt32((uint)_fieldCount);
+                // When fieldCount == 1, store the field index directly (before incrementing)
+                // The field index is the current _fieldCount value (0-based)
+                uint fieldIndex = (uint)_fieldCount;
+                _structWriter.WriteUInt32(fieldIndex);
                 _structWriter.WriteUInt32((uint)fieldCount);
 
                 foreach ((string label, GFFFieldType fieldType, object value) in gffStruct)
