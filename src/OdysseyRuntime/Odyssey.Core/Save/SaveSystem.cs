@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
-using Odyssey.Scripting.Interfaces;
 
 namespace Odyssey.Core.Save
 {
@@ -48,7 +47,7 @@ namespace Odyssey.Core.Save
     {
         private readonly IWorld _world;
         private readonly ISaveDataProvider _dataProvider;
-        private readonly IScriptGlobals _globals;
+        private object _globals; // IScriptGlobals - stored as object to avoid dependency
 
         /// <summary>
         /// Currently loaded save data.
@@ -75,10 +74,17 @@ namespace Odyssey.Core.Save
         /// </summary>
         public event Action<string, bool> OnLoadComplete;
 
-        public SaveSystem(IWorld world, ISaveDataProvider dataProvider, IScriptGlobals globals = null)
+        public SaveSystem(IWorld world, ISaveDataProvider dataProvider)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _dataProvider = dataProvider ?? throw new ArgumentNullException("dataProvider");
+        }
+
+        /// <summary>
+        /// Sets the script globals instance for saving/loading global variables.
+        /// </summary>
+        public void SetScriptGlobals(object globals)
+        {
             _globals = globals;
         }
 
@@ -342,28 +348,34 @@ namespace Odyssey.Core.Save
                 return;
             }
 
-            // Restore global variables to IScriptGlobals
-            if (saveData.GlobalVariables.Booleans != null)
+            // Restore global variables to IScriptGlobals using reflection
+            // This avoids a direct dependency on Odyssey.Scripting
+            var globalsType = _globals.GetType();
+            var setGlobalBoolMethod = globalsType.GetMethod("SetGlobalBool");
+            var setGlobalIntMethod = globalsType.GetMethod("SetGlobalInt");
+            var setGlobalStringMethod = globalsType.GetMethod("SetGlobalString");
+
+            if (saveData.GlobalVariables.Booleans != null && setGlobalBoolMethod != null)
             {
                 foreach (KeyValuePair<string, bool> kvp in saveData.GlobalVariables.Booleans)
                 {
-                    _globals.SetGlobalBool(kvp.Key, kvp.Value);
+                    setGlobalBoolMethod.Invoke(_globals, new object[] { kvp.Key, kvp.Value });
                 }
             }
 
-            if (saveData.GlobalVariables.Numbers != null)
+            if (saveData.GlobalVariables.Numbers != null && setGlobalIntMethod != null)
             {
                 foreach (KeyValuePair<string, int> kvp in saveData.GlobalVariables.Numbers)
                 {
-                    _globals.SetGlobalInt(kvp.Key, kvp.Value);
+                    setGlobalIntMethod.Invoke(_globals, new object[] { kvp.Key, kvp.Value });
                 }
             }
 
-            if (saveData.GlobalVariables.Strings != null)
+            if (saveData.GlobalVariables.Strings != null && setGlobalStringMethod != null)
             {
                 foreach (KeyValuePair<string, string> kvp in saveData.GlobalVariables.Strings)
                 {
-                    _globals.SetGlobalString(kvp.Key, kvp.Value);
+                    setGlobalStringMethod.Invoke(_globals, new object[] { kvp.Key, kvp.Value });
                 }
             }
         }

@@ -205,7 +205,8 @@ namespace Odyssey.Kotor.Game
             string savesDirectory = Path.Combine(_settings.GamePath, "saves");
             var saveSerializer = new Odyssey.Content.Save.SaveSerializer();
             var saveDataProvider = new SaveDataProvider(savesDirectory, saveSerializer);
-            _saveSystem = new SaveSystem(world, saveDataProvider, globals);
+            _saveSystem = new SaveSystem(world, saveDataProvider);
+            _saveSystem.SetScriptGlobals(globals);
 
             // Load talk tables
             LoadTalkTables();
@@ -901,11 +902,7 @@ namespace Odyssey.Kotor.Game
                 }
             }
 
-            // Restore global variables
-            if (saveData.GlobalVariables != null && _globals != null)
-            {
-                // TODO: Restore global variables from save data
-            }
+            // Restore global variables (handled by SaveSystem.ApplySaveData)
 
             return true;
         }

@@ -215,14 +215,24 @@ namespace Odyssey.Content.MDL
 
     /// <summary>
     /// Skinning data for skeletal animation.
+    /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Skinmesh Header
     /// </summary>
     public sealed class MDLSkinData
     {
+        // MDX offsets for bone data
+        public int MDXBoneWeightsOffset;
+        public int MDXBoneIndicesOffset;
+
+        // Per-vertex skinning data (4 bones per vertex)
         public float[] BoneWeights;
         public int[] BoneIndices;
+
+        // Bone mapping (local bone index to skeleton bone number)
         public int[] BoneMap;
-        public Vector4Data[] QBones;
-        public Vector3Data[] TBones;
+
+        // Bind pose data
+        public Vector4Data[] QBones;  // Quaternion rotations (W, X, Y, Z)
+        public Vector3Data[] TBones;  // Translation vectors
     }
 
     /// <summary>

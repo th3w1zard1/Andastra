@@ -1,11 +1,17 @@
 using System;
 using System.IO;
+using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
 
 namespace Odyssey.Content.MDL
 {
     /// <summary>
     /// High-level MDL model loader that integrates with the resource provider system.
+    /// 
+    /// Optimization features:
+    /// - Automatic model caching (configurable via UseCache property)
+    /// - Bulk I/O operations using MDLBulkReader for best performance
+    /// - Falls back to MDLFastReader for stream-based loading
     /// 
     /// Usage:
     /// <code>
@@ -14,14 +20,37 @@ namespace Odyssey.Content.MDL
     /// </code>
     /// 
     /// Performance characteristics:
-    /// - Buffered I/O with 64KB buffers for efficient disk access
-    /// - Pre-allocated arrays to minimize GC pressure
-    /// - Single-pass header reading
-    /// - Direct MDX vertex data extraction
+    /// - Bulk read of entire MDL/MDX files into memory
+    /// - Pre-allocated arrays based on header counts
+    /// - Zero-copy struct reading where possible
+    /// - LRU cache with configurable size (default 100 models)
+    /// 
+    /// Reference: KotOR.js MDLLoader.ts, reone mdlmdxreader.cpp
     /// </summary>
     public sealed class MDLLoader
     {
         private readonly IResourceProvider _resourceProvider;
+        private bool _useCache;
+        private bool _useBulkReader;
+
+        /// <summary>
+        /// Gets or sets whether to use the model cache. Default is true.
+        /// </summary>
+        public bool UseCache
+        {
+            get { return _useCache; }
+            set { _useCache = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets whether to use the bulk reader (recommended). Default is true.
+        /// The bulk reader provides better performance for most scenarios.
+        /// </summary>
+        public bool UseBulkReader
+        {
+            get { return _useBulkReader; }
+            set { _useBulkReader = value; }
+        }
 
         /// <summary>
         /// Creates a new MDL loader using the specified resource provider.
@@ -34,10 +63,12 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException("resourceProvider");
             }
             _resourceProvider = resourceProvider;
+            _useCache = true;
+            _useBulkReader = true;
         }
 
         /// <summary>
-        /// Loads an MDL model by ResRef.
+        /// Loads an MDL model by ResRef with optional caching.
         /// </summary>
         /// <param name="resRef">Resource reference (model name without extension)</param>
         /// <returns>Loaded MDL model, or null if not found</returns>
@@ -48,8 +79,20 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException("resRef");
             }
 
+            string normalizedRef = resRef.ToLowerInvariant();
+
+            // Check cache first
+            if (_useCache)
+            {
+                MDLModel cached;
+                if (MDLCache.Instance.TryGet(normalizedRef, out cached))
+                {
+                    return cached;
+                }
+            }
+
             // Get MDL data
-            byte[] mdlData = _resourceProvider.GetResource(resRef, "mdl");
+            byte[] mdlData = GetResourceData(resRef, ResourceType.MDL);
             if (mdlData == null || mdlData.Length == 0)
             {
                 Console.WriteLine("[MDLLoader] MDL not found: " + resRef);
@@ -57,7 +100,7 @@ namespace Odyssey.Content.MDL
             }
 
             // Get MDX data
-            byte[] mdxData = _resourceProvider.GetResource(resRef, "mdx");
+            byte[] mdxData = GetResourceData(resRef, ResourceType.MDX);
             if (mdxData == null || mdxData.Length == 0)
             {
                 Console.WriteLine("[MDLLoader] MDX not found: " + resRef);
@@ -66,10 +109,32 @@ namespace Odyssey.Content.MDL
 
             try
             {
-                using (var reader = new MDLFastReader(mdlData, mdxData))
+                MDLModel model;
+
+                if (_useBulkReader)
                 {
-                    return reader.Load();
+                    // Use optimized bulk reader
+                    using (var reader = new MDLBulkReader(mdlData, mdxData))
+                    {
+                        model = reader.Load();
+                    }
                 }
+                else
+                {
+                    // Fall back to streaming reader
+                    using (var reader = new MDLFastReader(mdlData, mdxData))
+                    {
+                        model = reader.Load();
+                    }
+                }
+
+                // Add to cache
+                if (_useCache && model != null)
+                {
+                    MDLCache.Instance.Add(normalizedRef, model);
+                }
+
+                return model;
             }
             catch (Exception ex)
             {
@@ -79,7 +144,34 @@ namespace Odyssey.Content.MDL
         }
 
         /// <summary>
-        /// Loads an MDL model from file paths.
+        /// Helper method to get resource data from provider.
+        /// </summary>
+        private byte[] GetResourceData(string resRef, ResourceType resType)
+        {
+            var id = new ResourceIdentifier(resRef, resType);
+            Stream stream;
+
+            if (!_resourceProvider.TryOpen(id, out stream))
+            {
+                return null;
+            }
+
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+            finally
+            {
+                stream.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Loads an MDL model from file paths using the optimized bulk reader.
         /// </summary>
         /// <param name="mdlPath">Path to the MDL file</param>
         /// <param name="mdxPath">Path to the MDX file</param>
@@ -95,14 +187,14 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException("mdxPath");
             }
 
-            using (var reader = new MDLFastReader(mdlPath, mdxPath))
+            using (var reader = new MDLBulkReader(mdlPath, mdxPath))
             {
                 return reader.Load();
             }
         }
 
         /// <summary>
-        /// Loads an MDL model from byte arrays.
+        /// Loads an MDL model from byte arrays using the optimized bulk reader.
         /// </summary>
         /// <param name="mdlData">MDL file data</param>
         /// <param name="mdxData">MDX file data</param>
@@ -118,7 +210,7 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException("mdxData");
             }
 
-            using (var reader = new MDLFastReader(mdlData, mdxData))
+            using (var reader = new MDLBulkReader(mdlData, mdxData))
             {
                 return reader.Load();
             }
@@ -126,6 +218,7 @@ namespace Odyssey.Content.MDL
 
         /// <summary>
         /// Loads an MDL model from streams.
+        /// Note: This method reads streams into memory first for bulk processing.
         /// </summary>
         /// <param name="mdlStream">MDL stream</param>
         /// <param name="mdxStream">MDX stream</param>
@@ -142,10 +235,54 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException("mdxStream");
             }
 
-            using (var reader = new MDLFastReader(mdlStream, mdxStream, ownsStreams))
+            try
             {
-                return reader.Load();
+                // Read streams into byte arrays for bulk processing
+                byte[] mdlData;
+                byte[] mdxData;
+
+                using (var ms = new MemoryStream())
+                {
+                    mdlStream.CopyTo(ms);
+                    mdlData = ms.ToArray();
+                }
+
+                using (var ms = new MemoryStream())
+                {
+                    mdxStream.CopyTo(ms);
+                    mdxData = ms.ToArray();
+                }
+
+                using (var reader = new MDLBulkReader(mdlData, mdxData))
+                {
+                    return reader.Load();
+                }
             }
+            finally
+            {
+                if (ownsStreams)
+                {
+                    mdlStream.Dispose();
+                    mdxStream.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the model cache.
+        /// </summary>
+        public static void ClearCache()
+        {
+            MDLCache.Instance.Clear();
+        }
+
+        /// <summary>
+        /// Sets the maximum number of models to cache.
+        /// </summary>
+        /// <param name="maxEntries">Maximum number of cached models</param>
+        public static void SetCacheSize(int maxEntries)
+        {
+            MDLCache.Instance.MaxEntries = maxEntries;
         }
     }
 }

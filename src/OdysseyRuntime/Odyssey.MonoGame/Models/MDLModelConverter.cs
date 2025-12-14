@@ -71,6 +71,7 @@ namespace Odyssey.MonoGame.Models
         /// <summary>
         /// Skinned vertex format for skeletal animation.
         /// Supports up to 4 bone influences per vertex.
+        /// Note: Bone indices packed as Color (RGBA bytes) for MonoGame compatibility.
         /// </summary>
         public struct MDLVertexSkinned : IVertexType
         {
@@ -78,14 +79,14 @@ namespace Odyssey.MonoGame.Models
             public Vector3 Normal;
             public Vector2 TexCoord;
             public Vector4 BoneWeights;
-            public Byte4 BoneIndices;
+            public Color BoneIndices; // Packed as RGBA bytes (R=idx0, G=idx1, B=idx2, A=idx3)
 
             public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
                 new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                 new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
                 new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
                 new VertexElement(32, VertexElementFormat.Vector4, VertexElementUsage.BlendWeight, 0),
-                new VertexElement(48, VertexElementFormat.Byte4, VertexElementUsage.BlendIndices, 0)
+                new VertexElement(48, VertexElementFormat.Color, VertexElementUsage.BlendIndices, 0)
             );
 
             VertexDeclaration IVertexType.VertexDeclaration
@@ -328,8 +329,93 @@ namespace Odyssey.MonoGame.Models
                 return null;
             }
 
-            // Build vertex array
+            bool isSkinned = mesh.Skin != null && mesh.Skin.BoneWeights != null;
+            bool hasLightmap = mesh.HasLightmap && mesh.TexCoords1 != null && mesh.TexCoords1.Length > 0;
+
+            VertexBuffer vertexBuffer;
+            Matrix[] boneMatrices = null;
+            int[] boneMap = null;
+
+            if (isSkinned)
+            {
+                // Build skinned vertex array
+                vertexBuffer = CreateSkinnedVertexBuffer(mesh, out boneMatrices, out boneMap);
+            }
+            else if (hasLightmap)
+            {
+                // Build lightmapped vertex array
+                vertexBuffer = CreateLightmappedVertexBuffer(mesh);
+            }
+            else
+            {
+                // Build standard vertex array
+                vertexBuffer = CreateStandardVertexBuffer(mesh);
+            }
+
+            if (vertexBuffer == null)
+            {
+                return null;
+            }
+
+            // Build index buffer - use 32-bit indices for large meshes
+            IndexBuffer indexBuffer;
+            if (mesh.VertexCount > 65535)
+            {
+                int[] indices32 = new int[mesh.FaceCount * 3];
+                for (int i = 0; i < mesh.FaceCount; i++)
+                {
+                    MDLFaceData face = mesh.Faces[i];
+                    indices32[i * 3 + 0] = face.Vertex0;
+                    indices32[i * 3 + 1] = face.Vertex1;
+                    indices32[i * 3 + 2] = face.Vertex2;
+                }
+                indexBuffer = new IndexBuffer(_device, IndexElementSize.ThirtyTwoBit, indices32.Length, BufferUsage.WriteOnly);
+                indexBuffer.SetData(indices32);
+            }
+            else
+            {
+                short[] indices16 = new short[mesh.FaceCount * 3];
+                for (int i = 0; i < mesh.FaceCount; i++)
+                {
+                    MDLFaceData face = mesh.Faces[i];
+                    indices16[i * 3 + 0] = face.Vertex0;
+                    indices16[i * 3 + 1] = face.Vertex1;
+                    indices16[i * 3 + 2] = face.Vertex2;
+                }
+                indexBuffer = new IndexBuffer(_device, IndexElementSize.SixteenBit, indices16.Length, BufferUsage.WriteOnly);
+                indexBuffer.SetData(indices16);
+            }
+
+            // Clean texture names
+            string texture0 = CleanTextureName(mesh.Texture0);
+            string texture1 = CleanTextureName(mesh.Texture1);
+
+            return new ConvertedMeshPart
+            {
+                NodeName = node.Name ?? string.Empty,
+                VertexBuffer = vertexBuffer,
+                IndexBuffer = indexBuffer,
+                PrimitiveCount = mesh.FaceCount,
+                Transform = worldTransform,
+                Texture0 = texture0,
+                Texture1 = texture1,
+                DiffuseColor = new Vector3(mesh.DiffuseColor.X, mesh.DiffuseColor.Y, mesh.DiffuseColor.Z),
+                AmbientColor = new Vector3(mesh.AmbientColor.X, mesh.AmbientColor.Y, mesh.AmbientColor.Z),
+                IsRenderable = mesh.Render,
+                CastsShadow = mesh.Shadow,
+                LocalBoundsMin = ToVector3(mesh.BoundingBoxMin),
+                LocalBoundsMax = ToVector3(mesh.BoundingBoxMax),
+                IsSkinned = isSkinned,
+                HasLightmap = hasLightmap,
+                BoneMatrices = boneMatrices,
+                BoneMap = boneMap
+            };
+        }
+
+        private VertexBuffer CreateStandardVertexBuffer(MDLMeshData mesh)
+        {
             MDLVertex[] vertices = new MDLVertex[mesh.VertexCount];
+
             for (int i = 0; i < mesh.VertexCount; i++)
             {
                 vertices[i].Position = new Vector3(
@@ -358,59 +444,173 @@ namespace Odyssey.MonoGame.Models
                         mesh.TexCoords0[i].Y
                     );
                 }
-                else
-                {
-                    vertices[i].TexCoord = Vector2.Zero;
-                }
             }
 
-            // Build index array from faces
-            short[] indices = new short[mesh.FaceCount * 3];
-            for (int i = 0; i < mesh.FaceCount; i++)
-            {
-                MDLFaceData face = mesh.Faces[i];
-                indices[i * 3 + 0] = face.Vertex0;
-                indices[i * 3 + 1] = face.Vertex1;
-                indices[i * 3 + 2] = face.Vertex2;
-            }
-
-            // Create GPU buffers
-            VertexBuffer vertexBuffer = new VertexBuffer(
+            VertexBuffer buffer = new VertexBuffer(
                 _device,
                 MDLVertex.VertexDeclaration,
                 vertices.Length,
                 BufferUsage.WriteOnly
             );
-            vertexBuffer.SetData(vertices);
+            buffer.SetData(vertices);
+            return buffer;
+        }
 
-            IndexBuffer indexBuffer = new IndexBuffer(
+        private VertexBuffer CreateLightmappedVertexBuffer(MDLMeshData mesh)
+        {
+            MDLVertexLightmapped[] vertices = new MDLVertexLightmapped[mesh.VertexCount];
+
+            for (int i = 0; i < mesh.VertexCount; i++)
+            {
+                vertices[i].Position = new Vector3(
+                    mesh.Positions[i].X,
+                    mesh.Positions[i].Y,
+                    mesh.Positions[i].Z
+                );
+
+                if (mesh.Normals != null && i < mesh.Normals.Length)
+                {
+                    vertices[i].Normal = new Vector3(
+                        mesh.Normals[i].X,
+                        mesh.Normals[i].Y,
+                        mesh.Normals[i].Z
+                    );
+                }
+                else
+                {
+                    vertices[i].Normal = Vector3.Up;
+                }
+
+                if (mesh.TexCoords0 != null && i < mesh.TexCoords0.Length)
+                {
+                    vertices[i].TexCoord0 = new Vector2(
+                        mesh.TexCoords0[i].X,
+                        mesh.TexCoords0[i].Y
+                    );
+                }
+
+                if (mesh.TexCoords1 != null && i < mesh.TexCoords1.Length)
+                {
+                    vertices[i].TexCoord1 = new Vector2(
+                        mesh.TexCoords1[i].X,
+                        mesh.TexCoords1[i].Y
+                    );
+                }
+            }
+
+            VertexBuffer buffer = new VertexBuffer(
                 _device,
-                IndexElementSize.SixteenBit,
-                indices.Length,
+                MDLVertexLightmapped.VertexDeclaration,
+                vertices.Length,
                 BufferUsage.WriteOnly
             );
-            indexBuffer.SetData(indices);
+            buffer.SetData(vertices);
+            return buffer;
+        }
 
-            // Clean texture names
-            string texture0 = CleanTextureName(mesh.Texture0);
-            string texture1 = CleanTextureName(mesh.Texture1);
+        private VertexBuffer CreateSkinnedVertexBuffer(MDLMeshData mesh, out Matrix[] boneMatrices, out int[] boneMap)
+        {
+            MDLSkinData skin = mesh.Skin;
+            MDLVertexSkinned[] vertices = new MDLVertexSkinned[mesh.VertexCount];
 
-            return new ConvertedMeshPart
+            for (int i = 0; i < mesh.VertexCount; i++)
             {
-                NodeName = node.Name ?? string.Empty,
-                VertexBuffer = vertexBuffer,
-                IndexBuffer = indexBuffer,
-                PrimitiveCount = mesh.FaceCount,
-                Transform = worldTransform,
-                Texture0 = texture0,
-                Texture1 = texture1,
-                DiffuseColor = new Vector3(mesh.DiffuseColor.X, mesh.DiffuseColor.Y, mesh.DiffuseColor.Z),
-                AmbientColor = new Vector3(mesh.AmbientColor.X, mesh.AmbientColor.Y, mesh.AmbientColor.Z),
-                IsRenderable = mesh.Render,
-                CastsShadow = mesh.Shadow,
-                LocalBoundsMin = ToVector3(mesh.BoundingBoxMin),
-                LocalBoundsMax = ToVector3(mesh.BoundingBoxMax)
-            };
+                vertices[i].Position = new Vector3(
+                    mesh.Positions[i].X,
+                    mesh.Positions[i].Y,
+                    mesh.Positions[i].Z
+                );
+
+                if (mesh.Normals != null && i < mesh.Normals.Length)
+                {
+                    vertices[i].Normal = new Vector3(
+                        mesh.Normals[i].X,
+                        mesh.Normals[i].Y,
+                        mesh.Normals[i].Z
+                    );
+                }
+                else
+                {
+                    vertices[i].Normal = Vector3.Up;
+                }
+
+                if (mesh.TexCoords0 != null && i < mesh.TexCoords0.Length)
+                {
+                    vertices[i].TexCoord = new Vector2(
+                        mesh.TexCoords0[i].X,
+                        mesh.TexCoords0[i].Y
+                    );
+                }
+
+                // Bone weights
+                if (skin.BoneWeights != null && i * 4 + 3 < skin.BoneWeights.Length)
+                {
+                    vertices[i].BoneWeights = new Vector4(
+                        skin.BoneWeights[i * 4 + 0],
+                        skin.BoneWeights[i * 4 + 1],
+                        skin.BoneWeights[i * 4 + 2],
+                        skin.BoneWeights[i * 4 + 3]
+                    );
+                }
+
+                // Bone indices (packed into Color as RGBA bytes)
+                if (skin.BoneIndices != null && i * 4 + 3 < skin.BoneIndices.Length)
+                {
+                    vertices[i].BoneIndices = new Color(
+                        (byte)Math.Max(0, Math.Min(255, skin.BoneIndices[i * 4 + 0])),
+                        (byte)Math.Max(0, Math.Min(255, skin.BoneIndices[i * 4 + 1])),
+                        (byte)Math.Max(0, Math.Min(255, skin.BoneIndices[i * 4 + 2])),
+                        (byte)Math.Max(0, Math.Min(255, skin.BoneIndices[i * 4 + 3]))
+                    );
+                }
+            }
+
+            VertexBuffer buffer = new VertexBuffer(
+                _device,
+                MDLVertexSkinned.VertexDeclaration,
+                vertices.Length,
+                BufferUsage.WriteOnly
+            );
+            buffer.SetData(vertices);
+
+            // Compute bone matrices from bind pose
+            // Reference: reone mdlmdxreader.cpp line 280-288
+            boneMatrices = ComputeBoneMatrices(skin);
+            boneMap = skin.BoneMap != null ? (int[])skin.BoneMap.Clone() : new int[0];
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Computes inverse bind pose matrices for skeletal animation.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Bone Matrix Computation
+        /// </summary>
+        private Matrix[] ComputeBoneMatrices(MDLSkinData skin)
+        {
+            if (skin.QBones == null || skin.TBones == null)
+            {
+                return new Matrix[0];
+            }
+
+            int boneCount = Math.Min(skin.QBones.Length, skin.TBones.Length);
+            Matrix[] matrices = new Matrix[boneCount];
+
+            for (int i = 0; i < boneCount; i++)
+            {
+                // Build bind pose matrix: Translation * Rotation
+                Vector3Data t = skin.TBones[i];
+                Vector4Data q = skin.QBones[i];
+
+                Quaternion rotation = new Quaternion(q.X, q.Y, q.Z, q.W);
+                Vector3 translation = new Vector3(t.X, t.Y, t.Z);
+
+                Matrix bindPose = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(translation);
+
+                // Store inverse bind pose for GPU skinning
+                matrices[i] = Matrix.Invert(bindPose);
+            }
+
+            return matrices;
         }
 
         private static string CleanTextureName(string name)
