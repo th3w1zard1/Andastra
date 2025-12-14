@@ -107,6 +107,9 @@ namespace Odyssey.Stride.UI
             {
                 Width = 250,
                 Height = 80,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+                // Thickness(float left, float top, float right, float bottom) constructor creates a thickness with left, top, right, bottom values
+                // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
                 Margin = new Thickness(20, 20, 20, 20),
                 VerticalAlignment = VerticalAlignment.Top,
                 HorizontalAlignment = HorizontalAlignment.Left,
