@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
 using Odyssey.Core.Enums;
@@ -10,6 +11,7 @@ using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Loading;
+using Odyssey.Kotor.Systems;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Resource.Generics.DLG;
 
@@ -34,6 +36,7 @@ namespace Odyssey.Kotor.Game
         private readonly IScriptGlobals _globals;
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly DialogueManager _dialogueManager;
+        private readonly TriggerSystem _triggerSystem;
 
         private string _currentModuleName;
         private RuntimeModule _currentRuntimeModule;
@@ -127,8 +130,68 @@ namespace Odyssey.Kotor.Game
                 LoadScript
             );
 
+            // Create trigger system
+            _triggerSystem = new TriggerSystem(world, FireScriptEvent);
+
             // Load talk tables
             LoadTalkTables();
+        }
+
+        /// <summary>
+        /// Fires a script event for an entity.
+        /// </summary>
+        private void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks == null)
+            {
+                return;
+            }
+
+            string scriptResRef = scriptHooks.GetScript(eventType);
+            if (!string.IsNullOrEmpty(scriptResRef))
+            {
+                ExecuteEntityScript(scriptResRef, entity, triggerer);
+            }
+        }
+
+        /// <summary>
+        /// Executes a script for an entity.
+        /// </summary>
+        private void ExecuteEntityScript(string scriptResRef, IEntity owner, IEntity triggerer)
+        {
+            byte[] scriptBytes = LoadScript(scriptResRef);
+            if (scriptBytes == null || scriptBytes.Length == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create engine API instance
+                var engineApi = new Odyssey.Scripting.EngineApi.K1EngineApi();
+                
+                // Create execution context
+                var ctx = new Odyssey.Scripting.VM.ExecutionContext(
+                    owner,
+                    _world,
+                    engineApi,
+                    _globals
+                );
+                ctx.SetTriggerer(triggerer);
+                ctx.ResourceProvider = _moduleLoader;
+
+                _vm.Execute(scriptBytes, ctx);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameSession] Error executing script {scriptResRef}: {ex.Message}");
+            }
         }
 
         private void LoadTalkTables()
@@ -387,6 +450,12 @@ namespace Odyssey.Kotor.Game
             if (_dialogueManager != null)
             {
                 _dialogueManager.Update(deltaTime);
+            }
+
+            // Update trigger system
+            if (_triggerSystem != null)
+            {
+                _triggerSystem.Update();
             }
 
             // Check perception

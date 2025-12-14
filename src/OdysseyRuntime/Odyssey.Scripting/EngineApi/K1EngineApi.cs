@@ -295,7 +295,11 @@ namespace Odyssey.Scripting.EngineApi
             float delay = args.Count > 0 ? args[0].AsFloat() : 0f;
             IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
 
-            // TODO: Schedule the action in the delay scheduler
+            if (action != null && ctx.Caller != null && ctx.World != null)
+            {
+                // Schedule the action in the world's delay scheduler
+                ctx.World.DelayScheduler.ScheduleDelay(delay, action, ctx.Caller);
+            }
 
             return Variable.Void();
         }
@@ -1011,22 +1015,22 @@ namespace Odyssey.Scripting.EngineApi
             return base.Func_GetArea(args, ctx);
         }
 
-        private Variable Func_GetObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_GetObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return base.Func_GetObjectByTag(args, ctx);
         }
 
-        private Variable Func_GetNearestObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_GetNearestObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return base.Func_GetNearestObjectByTag(args, ctx);
         }
 
-        private Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return base.Func_GetModule(args, ctx);
         }
 
-        private Variable Func_ObjectToString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_ObjectToString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return base.Func_ObjectToString(args, ctx);
         }

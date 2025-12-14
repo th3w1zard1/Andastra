@@ -72,6 +72,11 @@ namespace Odyssey.Core.Interfaces
         IEventBus EventBus { get; }
 
         /// <summary>
+        /// The delay scheduler for delayed actions (DelayCommand).
+        /// </summary>
+        IDelayScheduler DelayScheduler { get; }
+
+        /// <summary>
         /// Registers an entity with the world.
         /// </summary>
         void RegisterEntity(IEntity entity);

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Kotor.Components
 {
@@ -11,7 +12,7 @@ namespace Odyssey.Kotor.Components
     /// Based on UTT file format documentation.
     /// Triggers are invisible polygonal regions that fire scripts on enter/exit.
     /// </remarks>
-    public class TriggerComponent : IComponent
+    public class TriggerComponent : ITriggerComponent
     {
         public IEntity Owner { get; set; }
 
@@ -63,6 +64,57 @@ namespace Odyssey.Kotor.Components
         /// </summary>
         public List<Vector3> Vertices { get; set; }
 
+        // ITriggerComponent implementation
+        IList<Vector3> ITriggerComponent.Geometry
+        {
+            get { return Vertices; }
+            set { Vertices = value != null ? new List<Vector3>(value) : new List<Vector3>(); }
+        }
+
+        public bool IsEnabled { get; set; } = true;
+
+        public int TriggerType
+        {
+            get { return Type; }
+            set { Type = value; }
+        }
+
+        string ITriggerComponent.LinkedTo
+        {
+            get { return LinkedTo; }
+            set { LinkedTo = value ?? string.Empty; }
+        }
+
+        string ITriggerComponent.LinkedToModule
+        {
+            get { return LinkedToModule; }
+            set { LinkedToModule = value ?? string.Empty; }
+        }
+
+        public bool IsTrap
+        {
+            get { return TrapFlag; }
+            set { TrapFlag = value; }
+        }
+
+        public bool TrapActive { get; set; } = true;
+
+        public bool TrapDisarmed { get; set; } = false;
+
+        public int TrapDisarmDC
+        {
+            get { return DisarmDC; }
+            set { DisarmDC = value; }
+        }
+
+        public bool FireOnce
+        {
+            get { return TrapOneShot; }
+            set { TrapOneShot = value; }
+        }
+
+        public bool HasFired { get; set; } = false;
+
         /// <summary>
         /// Faction ID.
         /// </summary>
@@ -112,6 +164,33 @@ namespace Odyssey.Kotor.Components
         /// Set of entity IDs currently inside this trigger.
         /// </summary>
         public HashSet<uint> EnteredBy { get; set; }
+
+        /// <summary>
+        /// Tests if an entity is inside the trigger volume.
+        /// </summary>
+        bool ITriggerComponent.ContainsEntity(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return false;
+            }
+
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+            if (transform == null)
+            {
+                return false;
+            }
+
+            return ContainsPoint(transform.Position);
+        }
+
+        /// <summary>
+        /// Tests if a point is inside the trigger polygon (ITriggerComponent implementation).
+        /// </summary>
+        bool ITriggerComponent.ContainsPoint(Vector3 point)
+        {
+            return ContainsPoint(point);
+        }
 
         /// <summary>
         /// Tests if a point is inside the trigger polygon.

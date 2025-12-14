@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Odyssey.Core.Actions;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Templates;
@@ -25,6 +26,7 @@ namespace Odyssey.Core.Entities
             _allEntities = new List<IEntity>();
             TimeManager = new TimeManager();
             EventBus = new EventBus();
+            DelayScheduler = new DelayScheduler();
         }
 
         public IArea CurrentArea { get; set; }
@@ -47,6 +49,7 @@ namespace Odyssey.Core.Entities
         }
         public ITimeManager TimeManager { get; }
         public IEventBus EventBus { get; }
+        public IDelayScheduler DelayScheduler { get; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
         {
@@ -110,14 +113,14 @@ namespace Odyssey.Core.Entities
             float radiusSquared = radius * radius;
             var result = new List<IEntity>();
 
-            foreach (var entity in _allEntities)
+            foreach (IEntity entity in _allEntities)
             {
                 if ((entity.ObjectType & typeMask) == 0)
                 {
                     continue;
                 }
 
-                var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+                Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
                     float distSquared = Vector3.DistanceSquared(center, transform.Position);
@@ -218,6 +221,9 @@ namespace Odyssey.Core.Entities
                 TimeManager.Tick();
                 // Fixed update logic would go here
             }
+
+            // Update delay scheduler
+            DelayScheduler.Update(deltaTime);
 
             EventBus.DispatchQueuedEvents();
         }
