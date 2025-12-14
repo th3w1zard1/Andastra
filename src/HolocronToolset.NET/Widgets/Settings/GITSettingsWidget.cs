@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Widgets.Edit;
+using CSharpKOTOR.Common;
+using KotorColor = CSharpKOTOR.Common.Color;
 
 namespace HolocronToolset.NET.Widgets.Settings
 {
@@ -10,13 +12,14 @@ namespace HolocronToolset.NET.Widgets.Settings
     // Original: class GITWidget(SettingsWidget):
     public partial class GITSettingsWidget : UserControl
     {
-        private object _settings; // TODO: Use GITSettings type when available
+        private GITSettings _settings;
         private Button _coloursResetButton;
         private Button _controlsResetButton;
 
         public GITSettingsWidget()
         {
             InitializeComponent();
+            _settings = new GITSettings();
             SetupUI();
             SetupValues();
         }
@@ -96,21 +99,31 @@ namespace HolocronToolset.NET.Widgets.Settings
         // Original: def resetColours(self):
         private void ResetColours()
         {
-            // TODO: Reset material colors when GITSettings is available
-            SetupColourValues();
+            if (_settings != null)
+            {
+                _settings.ResetMaterialColors();
+                SetupColourValues();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:74-76
         // Original: def resetControls(self):
         private void ResetControls()
         {
-            // TODO: Reset controls when GITSettings is available
-            SetupBindValues();
+            if (_settings != null)
+            {
+                _settings.ResetControls();
+                SetupBindValues();
+            }
         }
 
         public void Save()
         {
-            // TODO: Save settings when GITSettings is available
+            // Settings are saved automatically via property setters
+            if (_settings != null)
+            {
+                _settings.Save();
+            }
         }
     }
 }

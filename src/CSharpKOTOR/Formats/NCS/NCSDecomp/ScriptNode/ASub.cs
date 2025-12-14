@@ -93,12 +93,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return GetHeader() + " {" + this.newline + GetBody() + "}" + this.newline;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASub.java:53-61
+        // Original: public String getBody() { StringBuffer buff = new StringBuffer(); for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } return buff.toString(); }
         public string GetBody()
         {
             var buff = new StringBuilder();
             foreach (var child in GetChildren())
             {
-                buff.Append(child.ToString());
+                // If child is an expression (not a statement), wrap it in AExpressionStatement for output
+                // This matches Java behavior where expressions added directly need to be statements
+                if (child is AExpression && !(child is AExpressionStatement) && !(child is AVarDecl))
+                {
+                    buff.Append(this.tabs + child.ToString() + ";" + this.newline);
+                }
+                else
+                {
+                    buff.Append(child.ToString());
+                }
             }
             return buff.ToString();
         }

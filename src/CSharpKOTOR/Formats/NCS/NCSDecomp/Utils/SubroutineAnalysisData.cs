@@ -525,7 +525,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 subroutines.Add(sub);
             }
-            
+
             // Ensure we have at least one subroutine (the main)
             if (subroutines.Count == 0)
             {
@@ -533,7 +533,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 JavaSystem.@out.Println("DEBUG SplitOffSubroutines: subList.Count=" + subList.Count + ", subroutines.Count=" + subroutines.Count);
                 return;
             }
-            
+
             ASubroutine node = (ASubroutine)subroutines.RemoveFirst();
             // Check if first subroutine is globals - only separate it if there are other subroutines
             if (subroutines.Count > 0 && this.IsGlobalsSub(node))

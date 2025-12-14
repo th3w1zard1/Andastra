@@ -65,7 +65,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 JavaSystem.@out.Println("DEBUG NcsToAstConverter: No SAVEBP instruction found - no globals subroutine will be created");
             }
-            
+
             // Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
             // If there's a SAVEBP, entry stub starts at savebpIndex+1
             // Otherwise, entry stub is at position 0
@@ -76,7 +76,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking entry stub at {entryStubStart}: {instructions[entryStubStart].InsType}, next: {instructions[entryStubStart + 1].InsType}");
                 // Pattern 1: JSR followed by RETN (simple entry stub)
-                if (instructions[entryStubStart].InsType == NCSInstructionType.JSR && 
+                if (instructions[entryStubStart].InsType == NCSInstructionType.JSR &&
                     instructions[entryStubStart].Jump != null &&
                     instructions[entryStubStart + 1].InsType == NCSInstructionType.RETN)
                 {
@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 // Pattern 2: JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
                 else if (instructions.Count >= entryStubStart + 2 &&
-                         instructions[entryStubStart].InsType == NCSInstructionType.JSR && 
+                         instructions[entryStubStart].InsType == NCSInstructionType.JSR &&
                          instructions[entryStubStart].Jump != null &&
                          instructions[entryStubStart + 1].InsType == NCSInstructionType.RESTOREBP)
                 {
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     }
                 }
             }
-            
+
             for (int i = 0; i < instructions.Count; i++)
             {
                 NCSInstruction inst = instructions[i];
@@ -121,7 +121,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         {
                             // Check for entry stub and extend globalsAndStubEnd
                             int entryStubCheck = globalsAndStubEnd;
-                            if (instructions.Count > entryStubCheck + 1 && 
+                            if (instructions.Count > entryStubCheck + 1 &&
                                 instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
                                 instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
                             {
@@ -134,7 +134,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                                 globalsAndStubEnd = entryStubCheck + 2; // JSR + RESTOREBP
                             }
                         }
-                        
+
                         // Only add if jumpIdx is after globals/entry stub and not the entry JSR target
                         if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget)
                         {
@@ -149,7 +149,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
             int mainStart = 0;
             int mainEnd = instructions.Count;
-            
+
             // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
             // But we need to calculate mainStart first, so we'll do this after mainStart is determined
             // For now, just set it to instructions.Count as default
@@ -163,14 +163,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 {
                     program.GetSubroutine().Add(globalsSub);
                 }
-                
+
                 // Calculate where globals and entry stub end
                 int globalsEnd = savebpIndex + 1;
                 int entryStubEnd = globalsEnd;
-                
+
                 // Check for entry stub pattern at savebpIndex+1
                 // Pattern 1: JSR (at savebpIndex+1) + RETN (at savebpIndex+2)
-                if (instructions.Count > entryStubEnd + 1 && 
+                if (instructions.Count > entryStubEnd + 1 &&
                     instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
                     instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
                 {
@@ -185,7 +185,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RESTOREBP detected, entry stub ends at {entryStubEnd}");
                 }
-                
+
                 // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
                 // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
                 if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd)
@@ -217,7 +217,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 // Check for entry stub and adjust globalsEndForMain
                 int entryStubCheck = globalsEndForMain;
-                if (instructions.Count > entryStubCheck + 1 && 
+                if (instructions.Count > entryStubCheck + 1 &&
                     instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
                     instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
                 {
@@ -230,14 +230,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     globalsEndForMain = entryStubCheck + 2; // JSR + RESTOREBP
                 }
             }
-            
+
             // Ensure mainStart is after globals and entry stub
             if (mainStart <= globalsEndForMain)
             {
                 mainStart = globalsEndForMain;
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final adjustment: mainStart set to {mainStart} (after globals/entry stub at {globalsEndForMain})");
             }
-            
+
             // Only create main if it has valid range
             if (mainStart < mainEnd && mainStart >= 0)
             {
@@ -308,7 +308,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         fallbackMainStart += 2; // Skip JSR + RETN/RESTOREBP
                     }
                 }
-                
+
                 if (fallbackMainStart < fallbackMainEnd && fallbackMainStart >= 0)
                 {
                     ASubroutine fallbackMain = ConvertInstructionRangeToSubroutine(ncs, instructions, fallbackMainStart, fallbackMainEnd, fallbackMainStart);

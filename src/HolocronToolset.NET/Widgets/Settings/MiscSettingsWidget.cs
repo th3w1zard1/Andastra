@@ -125,11 +125,11 @@ namespace HolocronToolset.NET.Widgets.Settings
             }
             if (_attemptKeepOldGFFFields != null)
             {
-                _attemptKeepOldGFFFields.IsChecked = _settings.AttemptKeepOldGFFFields;
+                _attemptKeepOldGFFFields.IsChecked = _settings.GetValue<bool>("AttemptKeepOldGFFFields", false);
             }
             if (_saveRimCheck != null)
             {
-                _saveRimCheck.IsChecked = !_settings.DisableRIMSaving;
+                _saveRimCheck.IsChecked = !_settings.GetValue<bool>("DisableRIMSaving", false);
             }
             if (_mergeRimCheck != null)
             {
@@ -137,23 +137,23 @@ namespace HolocronToolset.NET.Widgets.Settings
             }
             if (_moduleSortOptionComboBox != null)
             {
-                _moduleSortOptionComboBox.SelectedIndex = _settings.ModuleSortOption;
+                _moduleSortOptionComboBox.SelectedIndex = _settings.GetValue<int>("ModuleSortOption", 0);
             }
             if (_greyRimCheck != null)
             {
-                _greyRimCheck.IsChecked = _settings.GreyRIMText;
+                _greyRimCheck.IsChecked = _settings.GetValue<bool>("GreyRIMText", false);
             }
             if (_showPreviewUTCCheck != null)
             {
-                _showPreviewUTCCheck.IsChecked = _settings.ShowPreviewUTC;
+                _showPreviewUTCCheck.IsChecked = _settings.GetValue<bool>("ShowPreviewUTC", false);
             }
             if (_showPreviewUTPCheck != null)
             {
-                _showPreviewUTPCheck.IsChecked = _settings.ShowPreviewUTP;
+                _showPreviewUTPCheck.IsChecked = _settings.GetValue<bool>("ShowPreviewUTP", false);
             }
             if (_showPreviewUTDCheck != null)
             {
-                _showPreviewUTDCheck.IsChecked = _settings.ShowPreviewUTD;
+                _showPreviewUTDCheck.IsChecked = _settings.GetValue<bool>("ShowPreviewUTD", false);
             }
             if (_tempDirEdit != null)
             {
@@ -161,7 +161,7 @@ namespace HolocronToolset.NET.Widgets.Settings
             }
             if (_gffEditorCombo != null)
             {
-                _gffEditorCombo.SelectedIndex = _settings.GffSpecializedEditors ? 1 : 0;
+                _gffEditorCombo.SelectedIndex = _settings.GetGffSpecializedEditors() ? 1 : 0;
             }
             if (_ncsToolEdit != null)
             {
@@ -180,54 +180,59 @@ namespace HolocronToolset.NET.Widgets.Settings
             if (_useBetaChannel != null)
             {
                 _settings.UseBetaChannel = _useBetaChannel.IsChecked ?? false;
+                _settings.SetValue("UseBetaChannel", _settings.UseBetaChannel);
             }
             if (_attemptKeepOldGFFFields != null)
             {
-                _settings.AttemptKeepOldGFFFields = _attemptKeepOldGFFFields.IsChecked ?? false;
+                _settings.SetValue("AttemptKeepOldGFFFields", _attemptKeepOldGFFFields.IsChecked ?? false);
             }
             if (_saveRimCheck != null)
             {
-                _settings.DisableRIMSaving = !(_saveRimCheck.IsChecked ?? false);
+                _settings.SetValue("DisableRIMSaving", !(_saveRimCheck.IsChecked ?? false));
             }
             if (_mergeRimCheck != null)
             {
                 _settings.JoinRIMsTogether = _mergeRimCheck.IsChecked ?? false;
+                _settings.SetValue("JoinRIMsTogether", _settings.JoinRIMsTogether);
             }
             if (_moduleSortOptionComboBox != null)
             {
-                _settings.ModuleSortOption = _moduleSortOptionComboBox.SelectedIndex;
+                _settings.SetValue("ModuleSortOption", _moduleSortOptionComboBox.SelectedIndex);
             }
             if (_greyRimCheck != null)
             {
-                _settings.GreyRIMText = _greyRimCheck.IsChecked ?? false;
+                _settings.SetValue("GreyRIMText", _greyRimCheck.IsChecked ?? false);
             }
             if (_showPreviewUTCCheck != null)
             {
-                _settings.ShowPreviewUTC = _showPreviewUTCCheck.IsChecked ?? false;
+                _settings.SetValue("ShowPreviewUTC", _showPreviewUTCCheck.IsChecked ?? false);
             }
             if (_showPreviewUTPCheck != null)
             {
-                _settings.ShowPreviewUTP = _showPreviewUTPCheck.IsChecked ?? false;
+                _settings.SetValue("ShowPreviewUTP", _showPreviewUTPCheck.IsChecked ?? false);
             }
             if (_showPreviewUTDCheck != null)
             {
-                _settings.ShowPreviewUTD = _showPreviewUTDCheck.IsChecked ?? false;
+                _settings.SetValue("ShowPreviewUTD", _showPreviewUTDCheck.IsChecked ?? false);
             }
             if (_tempDirEdit != null)
             {
                 _settings.ExtractPath = _tempDirEdit.Text ?? "";
+                _settings.SetValue("ExtractPath", _settings.ExtractPath);
             }
             if (_gffEditorCombo != null)
             {
-                _settings.GffSpecializedEditors = _gffEditorCombo.SelectedIndex == 1;
+                _settings.SetGffSpecializedEditors(_gffEditorCombo.SelectedIndex == 1);
             }
             if (_ncsToolEdit != null)
             {
                 _settings.NcsDecompilerPath = _ncsToolEdit.Text ?? "";
+                _settings.SetValue("NcsDecompilerPath", _settings.NcsDecompilerPath);
             }
             if (_nssCompEdit != null)
             {
                 _settings.NssCompilerPath = _nssCompEdit.Text ?? "";
+                _settings.SetValue("NssCompilerPath", _settings.NssCompilerPath);
             }
         }
     }
