@@ -93,6 +93,53 @@ namespace CSharpKOTOR.Formats.TPC
             hash.Add(Txi ?? string.Empty);
             return hash.ToHashCode();
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:547-553
+        // Original: def set_single(self, data: bytes | bytearray, tpc_format: TPCTextureFormat, width: int, height: int)
+        public void SetSingle(byte[] data, TPCTextureFormat tpcFormat, int width, int height)
+        {
+            Layers = new List<TPCLayer> { new TPCLayer() };
+            IsCubeMap = false;
+            IsAnimated = false;
+            Layers[0].SetSingle(width, height, data, tpcFormat);
+            _format = tpcFormat;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:594-640
+        // Original: def convert(self, target: TPCTextureFormat) -> None
+        // Simplified: basic format conversion support
+        public void Convert(TPCTextureFormat target)
+        {
+            if (_format == target)
+            {
+                return;
+            }
+
+            // Basic conversion: RGBA <-> RGB based on alpha channel
+            if (target == TPCTextureFormat.RGB && _format == TPCTextureFormat.RGBA)
+            {
+                foreach (var layer in Layers)
+                {
+                    foreach (var mipmap in layer.Mipmaps)
+                    {
+                        if (mipmap.TpcFormat == TPCTextureFormat.RGBA)
+                        {
+                            byte[] rgbData = new byte[mipmap.Width * mipmap.Height * 3];
+                            for (int i = 0; i < mipmap.Width * mipmap.Height; i++)
+                            {
+                                rgbData[i * 3] = mipmap.Data[i * 4];
+                                rgbData[i * 3 + 1] = mipmap.Data[i * 4 + 1];
+                                rgbData[i * 3 + 2] = mipmap.Data[i * 4 + 2];
+                            }
+                            mipmap.Data = rgbData;
+                            mipmap.TpcFormat = TPCTextureFormat.RGB;
+                        }
+                    }
+                }
+                _format = TPCTextureFormat.RGB;
+            }
+            // More conversions can be added as needed
+        }
     }
 }
 

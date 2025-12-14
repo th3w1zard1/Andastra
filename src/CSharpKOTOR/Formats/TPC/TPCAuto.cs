@@ -75,6 +75,25 @@ namespace CSharpKOTOR.Formats.TPC
                     throw new ArgumentException("Unsupported source type for DDS reading");
                 }
             }
+            else if (format == ResourceType.TGA)
+            {
+                if (source is string filepath)
+                {
+                    loaded = new TPCTGAReader(filepath, offset, size).Load();
+                }
+                else if (source is byte[] data)
+                {
+                    loaded = new TPCTGAReader(data, offset, size).Load();
+                }
+                else if (source is Stream stream)
+                {
+                    loaded = new TPCTGAReader(stream, offset, size).Load();
+                }
+                else
+                {
+                    throw new ArgumentException("Unsupported source type for TGA reading");
+                }
+            }
             else
             {
                 throw new ArgumentException($"Unsupported TPC format: {format}");
@@ -120,6 +139,21 @@ namespace CSharpKOTOR.Formats.TPC
                     throw new ArgumentException("Target must be string or Stream for DDS");
                 }
             }
+            else if (fmt == ResourceType.TGA)
+            {
+                if (target is string filepath)
+                {
+                    new TPCTGAWriter(tpc, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new TPCTGAWriter(tpc, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for TGA");
+                }
+            }
             else
             {
                 throw new ArgumentException($"Unsupported format specified: {fmt}");
@@ -132,6 +166,14 @@ namespace CSharpKOTOR.Formats.TPC
             if (fmt == ResourceType.DDS)
             {
                 using (var writer = new TPCDDSWriter(tpc))
+                {
+                    writer.Write(autoClose: false);
+                    return writer.GetBytes();
+                }
+            }
+            if (fmt == ResourceType.TGA)
+            {
+                using (var writer = new TPCTGAWriter(tpc))
                 {
                     writer.Write(autoClose: false);
                     return writer.GetBytes();

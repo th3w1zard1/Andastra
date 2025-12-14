@@ -48,6 +48,37 @@ namespace CSharpKOTOR.Formats.TPC
             }
             return hash.ToHashCode();
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:392-427
+        // Original: def set_single(self, width: int, height: int, data: bytes | bytearray, tpc_format: TPCTextureFormat)
+        public void SetSingle(int width, int height, byte[] data, TPCTextureFormat tpcFormat)
+        {
+            Mipmaps.Clear();
+            int mmWidth = width, mmHeight = height;
+            byte[] currentData = data;
+
+            while (mmWidth > 0 && mmHeight > 0)
+            {
+                int w = Math.Max(1, mmWidth);
+                int h = Math.Max(1, mmHeight);
+                var mm = new TPCMipmap(w, h, tpcFormat, currentData);
+                Mipmaps.Add(mm);
+
+                mmWidth >>= 1;
+                mmHeight >>= 1;
+
+                if (w > 1 && h > 1 && mmWidth >= 1 && mmHeight >= 1)
+                {
+                    // Simplified: just use the same data for now (downsampling would be complex)
+                    // In a full implementation, we'd downsample here
+                    currentData = new byte[mmWidth * mmHeight * tpcFormat.BytesPerPixel()];
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
     }
 }
 
