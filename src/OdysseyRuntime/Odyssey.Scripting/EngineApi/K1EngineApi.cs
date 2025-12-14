@@ -15,6 +15,7 @@ using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Game;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
@@ -1883,6 +1884,125 @@ namespace Odyssey.Scripting.EngineApi
                 }
             }
             return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetStringByStrRef(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetStringByStrRef(int nStrRef) - Get a string from the talk table using nStrRef
+            int strRef = args.Count > 0 ? args[0].AsInt() : 0;
+            
+            // Access DialogueManager from GameServicesContext to get TLK
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null)
+                {
+                    string text = services.DialogueManager.LookupString(strRef);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        return Variable.FromString(text);
+                    }
+                }
+            }
+            
+            return Variable.FromString("");
+        }
+
+        private Variable Func_GetLastSpeaker(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetLastSpeaker() - Use this in a conversation script to get the person with whom you are conversing
+            // Returns OBJECT_INVALID if the caller is not a valid creature or not in conversation
+            
+            // Access DialogueManager from GameServicesContext
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                {
+                    DialogueState state = services.DialogueManager.CurrentState;
+                    if (state != null)
+                    {
+                        // Get the speaker (owner of the dialogue)
+                        IEntity speaker = state.Context.Owner;
+                        if (speaker != null)
+                        {
+                            return Variable.FromObject(speaker.ObjectId);
+                        }
+                    }
+                }
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        private Variable Func_GetIsInConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetIsInConversation(object oObject) - Determine whether oObject is in conversation
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity == null)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            // Access DialogueManager from GameServicesContext
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                {
+                    DialogueState state = services.DialogueManager.CurrentState;
+                    if (state != null)
+                    {
+                        // Check if entity is the owner or PC speaker in the conversation
+                        if (state.Context.Owner != null && state.Context.Owner.ObjectId == entity.ObjectId)
+                        {
+                            return Variable.FromInt(1);
+                        }
+                        if (state.Context.PCSpeaker != null && state.Context.PCSpeaker.ObjectId == entity.ObjectId)
+                        {
+                            return Variable.FromInt(1);
+                        }
+                    }
+                }
+            }
+            
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetIsConversationActive(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetIsConversationActive() - Checks to see if any conversations are currently taking place
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null)
+                {
+                    return Variable.FromInt(services.DialogueManager.IsConversationActive ? 1 : 0);
+                }
+            }
+            
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetLastConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetLastConversation() - Gets the last conversation string
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                {
+                    DialogueState state = services.DialogueManager.CurrentState;
+                    if (state != null && state.CurrentNode != null)
+                    {
+                        // Get text from current node
+                        string text = services.DialogueManager.GetNodeText(state.CurrentNode);
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            return Variable.FromString(text);
+                        }
+                    }
+                }
+            }
+            
+            return Variable.FromString("");
         }
 
         private Variable Func_GetPCSpeaker(IReadOnlyList<Variable> args, IExecutionContext ctx)

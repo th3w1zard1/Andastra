@@ -822,7 +822,10 @@ namespace Odyssey.Kotor.Dialogue
         /// <summary>
         /// Looks up a string by reference in the talk tables.
         /// </summary>
-        private string LookupString(int stringRef)
+        /// <summary>
+        /// Looks up a string by string reference in the talk tables.
+        /// </summary>
+        public string LookupString(int stringRef)
         {
             if (stringRef < 0)
             {
