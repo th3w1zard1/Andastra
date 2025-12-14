@@ -28,6 +28,8 @@ namespace HolocronToolset.NET.Editors
         public LocalizedStringEdit NameEdit => _nameEdit;
         private Button _nameEditBtn;
         private TextBox _tagEdit;
+        // Matching PyKotor implementation: Expose tagEdit for testing (Python uses editor.ui.tagEdit)
+        public TextBox TagEdit => _tagEdit;
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
         private Button _resrefGenerateBtn;

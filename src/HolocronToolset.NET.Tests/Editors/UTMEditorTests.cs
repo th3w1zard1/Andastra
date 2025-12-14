@@ -295,5 +295,102 @@ namespace HolocronToolset.NET.Tests.Editors
             var loadedName = editor.NameEdit.GetLocString();
             loadedName.Get(Language.English, Gender.Male, false).Should().Be("Modified Merchant Name");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utm_editor.py:51-75
+        // Original: def test_utm_editor_manipulate_tag(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtmEditorManipulateTag()
+        {
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+            testFilesDir = System.IO.Path.GetFullPath(testFilesDir);
+
+            // Try to find m_chano.utm
+            string utmFile = System.IO.Path.Combine(testFilesDir, "m_chano.utm");
+            if (!System.IO.File.Exists(utmFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                testFilesDir = System.IO.Path.GetFullPath(testFilesDir);
+                utmFile = System.IO.Path.Combine(testFilesDir, "m_chano.utm");
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            if (!System.IO.File.Exists(utmFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            if (installation == null)
+            {
+                // Skip if no installation available
+                return;
+            }
+
+            // Matching PyKotor implementation: editor = UTMEditor(None, installation)
+            var editor = new UTMEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = utm_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(utmFile);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, original_data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
+
+            // Matching PyKotor implementation: original_utm = read_utm(original_data)
+            var originalUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
+
+            // Matching PyKotor implementation: editor.ui.tagEdit.setText("modified_tag")
+            editor.TagEdit.Should().NotBeNull("TagEdit should be initialized");
+            editor.TagEdit.Text = "modified_tag";
+
+            // Matching PyKotor implementation: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching PyKotor implementation: modified_utm = read_utm(data)
+            var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
+            // Matching PyKotor implementation: assert modified_utm.tag == "modified_tag"
+            modifiedUtm.Tag.Should().Be("modified_tag");
+
+            // Matching PyKotor implementation: assert modified_utm.tag != original_utm.tag
+            modifiedUtm.Tag.Should().NotBe(originalUtm.Tag);
+
+            // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
+            editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
+
+            // Matching PyKotor implementation: assert editor.ui.tagEdit.text() == "modified_tag"
+            editor.TagEdit.Text.Should().Be("modified_tag");
+        }
     }
 }
