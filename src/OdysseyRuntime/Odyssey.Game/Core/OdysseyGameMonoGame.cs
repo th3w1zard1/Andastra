@@ -138,11 +138,18 @@ namespace Odyssey.Game.Core
             {
                 if (_menuRenderer != null)
                 {
-                    _menuRenderer.Draw(gameTime, GraphicsDevice);
+                    if (_menuRenderer.IsVisible)
+                    {
+                        _menuRenderer.Draw(gameTime, GraphicsDevice);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: Menu renderer exists but is not visible!");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("[Odyssey] WARNING: Menu renderer is null in Draw!");
+                    Console.WriteLine("[Odyssey] ERROR: Menu renderer is null in Draw! Menu cannot be displayed.");
                 }
             }
 
