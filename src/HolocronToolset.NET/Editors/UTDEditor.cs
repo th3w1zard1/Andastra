@@ -367,68 +367,157 @@ namespace HolocronToolset.NET.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:265-330
         // Original: def build(self) -> tuple[bytes, bytes]:
+        // Original: utd: UTD = deepcopy(self._utd)
         public override Tuple<byte[], byte[]> Build()
         {
-            // Basic
-            _utd.Name = _utd.Name ?? LocalizedString.FromInvalid(); // Preserve existing or create new
-            _utd.Tag = _tagEdit?.Text ?? "";
-            _utd.ResRef = new ResRef(_resrefEdit?.Text ?? "");
-            _utd.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
-            _utd.Conversation = new ResRef(_conversationEdit?.Text ?? "");
+            // Matching PyKotor implementation: deepcopy(self._utd) to preserve original values
+            // Since C# 7.3 doesn't have deepcopy, manually copy the UTD
+            var utd = CopyUTD(_utd);
 
-            // Advanced
-            _utd.Min1Hp = _min1HpCheckbox?.IsChecked ?? false;
-            _utd.Plot = _plotCheckbox?.IsChecked ?? false;
-            _utd.Static = _staticCheckbox?.IsChecked ?? false;
-            _utd.NotBlastable = _notBlastableCheckbox?.IsChecked ?? false;
-            _utd.FactionId = _factionSelect?.SelectedIndex ?? 0;
-            _utd.AnimationState = (int)(_animationStateSpin?.Value ?? 0);
-            _utd.CurrentHp = (int)(_currentHpSpin?.Value ?? 0);
-            _utd.MaximumHp = (int)(_maxHpSpin?.Value ?? 0);
-            _utd.Hardness = (int)(_hardnessSpin?.Value ?? 0);
-            _utd.Fortitude = (int)(_fortitudeSpin?.Value ?? 0);
-            _utd.Reflex = (int)(_reflexSpin?.Value ?? 0);
-            _utd.Willpower = (int)(_willSpin?.Value ?? 0);
+            // Basic - read from UI controls (matching Python which always reads from UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:280-285
+            utd.Name = utd.Name ?? LocalizedString.FromInvalid();
+            utd.Tag = _tagEdit?.Text ?? utd.Tag ?? "";
+            utd.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
+                ? new ResRef(_resrefEdit.Text)
+                : utd.ResRef;
+            utd.AppearanceId = (_appearanceSelect?.SelectedIndex >= 0) ? _appearanceSelect.SelectedIndex : utd.AppearanceId;
+            utd.Conversation = _conversationEdit != null && !string.IsNullOrEmpty(_conversationEdit.Text)
+                ? new ResRef(_conversationEdit.Text)
+                : utd.Conversation;
 
-            // Lock
-            _utd.Locked = _lockedCheckbox?.IsChecked ?? false;
-            _utd.UnlockDc = (int)(_openLockSpin?.Value ?? 0);
-            _utd.UnlockDiff = (int)(_difficultySpin?.Value ?? 0);
-            _utd.UnlockDiffMod = (int)(_difficultyModSpin?.Value ?? 0);
-            _utd.KeyRequired = _needKeyCheckbox?.IsChecked ?? false;
-            _utd.AutoRemoveKey = _removeKeyCheckbox?.IsChecked ?? false;
-            _utd.KeyName = _keyEdit?.Text ?? "";
+            // Advanced - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:287-299
+            utd.Min1Hp = _min1HpCheckbox?.IsChecked ?? utd.Min1Hp;
+            utd.Plot = _plotCheckbox?.IsChecked ?? utd.Plot;
+            utd.Static = _staticCheckbox?.IsChecked ?? utd.Static;
+            utd.NotBlastable = _notBlastableCheckbox?.IsChecked ?? utd.NotBlastable;
+            utd.FactionId = (_factionSelect?.SelectedIndex >= 0) ? _factionSelect.SelectedIndex : utd.FactionId;
+            utd.AnimationState = _animationStateSpin?.Value != null ? (int)_animationStateSpin.Value : utd.AnimationState;
+            utd.CurrentHp = _currentHpSpin?.Value != null ? (int)_currentHpSpin.Value : utd.CurrentHp;
+            utd.MaximumHp = _maxHpSpin?.Value != null ? (int)_maxHpSpin.Value : utd.MaximumHp;
+            utd.Hardness = _hardnessSpin?.Value != null ? (int)_hardnessSpin.Value : utd.Hardness;
+            utd.Fortitude = _fortitudeSpin?.Value != null ? (int)_fortitudeSpin.Value : utd.Fortitude;
+            utd.Reflex = _reflexSpin?.Value != null ? (int)_reflexSpin.Value : utd.Reflex;
+            utd.Willpower = _willSpin?.Value != null ? (int)_willSpin.Value : utd.Willpower;
 
-            // Scripts
-            if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null)
-                _utd.OnClick = new ResRef(_scriptFields["OnClick"].Text);
-            if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
-                _utd.OnClosed = new ResRef(_scriptFields["OnClosed"].Text);
-            if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                _utd.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
-            if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                _utd.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
-            if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
-                _utd.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text);
-            if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                _utd.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
-            if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
-                _utd.OnMelee = new ResRef(_scriptFields["OnMelee"].Text);
-            if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
-                _utd.OnOpen = new ResRef(_scriptFields["OnOpen"].Text);
-            if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
-                _utd.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text);
-            if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                _utd.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
+            // Lock - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:301-307
+            utd.Locked = _lockedCheckbox?.IsChecked ?? utd.Locked;
+            utd.UnlockDc = _openLockSpin?.Value != null ? (int)_openLockSpin.Value : utd.UnlockDc;
+            utd.UnlockDiff = _difficultySpin?.Value != null ? (int)_difficultySpin.Value : utd.UnlockDiff;
+            utd.UnlockDiffMod = _difficultyModSpin?.Value != null ? (int)_difficultyModSpin.Value : utd.UnlockDiffMod;
+            utd.KeyRequired = _needKeyCheckbox?.IsChecked ?? utd.KeyRequired;
+            utd.AutoRemoveKey = _removeKeyCheckbox?.IsChecked ?? utd.AutoRemoveKey;
+            utd.KeyName = _keyEdit?.Text ?? utd.KeyName ?? "";
+
+            // Scripts - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:309-320
+            if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null && !string.IsNullOrEmpty(_scriptFields["OnClick"].Text))
+                utd.OnClick = new ResRef(_scriptFields["OnClick"].Text);
+            if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null && !string.IsNullOrEmpty(_scriptFields["OnClosed"].Text))
+                utd.OnClosed = new ResRef(_scriptFields["OnClosed"].Text);
+            if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null && !string.IsNullOrEmpty(_scriptFields["OnDamaged"].Text))
+                utd.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
+            if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null && !string.IsNullOrEmpty(_scriptFields["OnDeath"].Text))
+                utd.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
+            if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null && !string.IsNullOrEmpty(_scriptFields["OnOpenFailed"].Text))
+                utd.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text);
+            if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null && !string.IsNullOrEmpty(_scriptFields["OnHeartbeat"].Text))
+                utd.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
+            if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null && !string.IsNullOrEmpty(_scriptFields["OnMelee"].Text))
+                utd.OnMelee = new ResRef(_scriptFields["OnMelee"].Text);
+            if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null && !string.IsNullOrEmpty(_scriptFields["OnOpen"].Text))
+                utd.OnOpen = new ResRef(_scriptFields["OnOpen"].Text);
+            if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null && !string.IsNullOrEmpty(_scriptFields["OnUnlock"].Text))
+                utd.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text);
+            if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null && !string.IsNullOrEmpty(_scriptFields["OnUserDefined"].Text))
+                utd.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
 
             // Comments
-            _utd.Comment = _commentsEdit?.Text ?? "";
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:322
+            utd.Comment = _commentsEdit?.Text ?? utd.Comment ?? "";
 
             // Build GFF
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:324-327
             Game game = _installation?.Game ?? Game.K2;
-            var gff = UTDHelpers.DismantleUtd(_utd, game);
+            var gff = UTDHelpers.DismantleUtd(utd, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTD);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        // Matching PyKotor implementation: deepcopy equivalent for C# 7.3
+        // Original: utd: UTD = deepcopy(self._utd)
+        private UTD CopyUTD(UTD source)
+        {
+            // Deep copy LocalizedString objects (they're reference types)
+            LocalizedString copyName = source.Name != null
+                ? new LocalizedString(source.Name.StringRef, new Dictionary<int, string>(GetSubstringsDict(source.Name)))
+                : null;
+            LocalizedString copyDesc = source.Description != null
+                ? new LocalizedString(source.Description.StringRef, new Dictionary<int, string>(GetSubstringsDict(source.Description)))
+                : null;
+
+            var copy = new UTD
+            {
+                ResRef = source.ResRef,
+                AppearanceId = source.AppearanceId,
+                Name = copyName,
+                Description = copyDesc,
+                Conversation = source.Conversation,
+                Comment = source.Comment,
+                FactionId = source.FactionId,
+                AnimationState = source.AnimationState,
+                AutoRemoveKey = source.AutoRemoveKey,
+                KeyName = source.KeyName,
+                KeyRequired = source.KeyRequired,
+                Lockable = source.Lockable,
+                Locked = source.Locked,
+                UnlockDc = source.UnlockDc,
+                UnlockDiff = source.UnlockDiff,
+                UnlockDiffMod = source.UnlockDiffMod,
+                OpenState = source.OpenState,
+                Min1Hp = source.Min1Hp,
+                NotBlastable = source.NotBlastable,
+                Plot = source.Plot,
+                Static = source.Static,
+                MaximumHp = source.MaximumHp,
+                CurrentHp = source.CurrentHp,
+                Hardness = source.Hardness,
+                Fortitude = source.Fortitude,
+                Reflex = source.Reflex,
+                Willpower = source.Willpower,
+                OnClick = source.OnClick,
+                OnClosed = source.OnClosed,
+                OnDamaged = source.OnDamaged,
+                OnDeath = source.OnDeath,
+                OnOpenFailed = source.OnOpenFailed,
+                OnHeartbeat = source.OnHeartbeat,
+                OnMelee = source.OnMelee,
+                OnOpen = source.OnOpen,
+                OnUnlock = source.OnUnlock,
+                OnUserDefined = source.OnUserDefined,
+                OnLock = source.OnLock,
+                OnPower = source.OnPower,
+                Tag = source.Tag
+            };
+
+            return copy;
+        }
+
+        // Helper to extract substrings dictionary from LocalizedString for copying
+        private Dictionary<int, string> GetSubstringsDict(LocalizedString locString)
+        {
+            var dict = new Dictionary<int, string>();
+            if (locString != null)
+            {
+                foreach ((Language lang, Gender gender, string text) in locString)
+                {
+                    int substringId = LocalizedString.SubstringId(lang, gender);
+                    dict[substringId] = text;
+                }
+            }
+            return dict;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:332-334
