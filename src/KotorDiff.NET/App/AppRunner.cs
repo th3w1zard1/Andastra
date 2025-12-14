@@ -197,7 +197,7 @@ namespace KotorDiff.NET.App
                     try
                     {
                         // Finalize INI by writing InstallList section
-                        incrementalWriter.Finalize();
+                        incrementalWriter.FinalizeWriter();
                         
                         // Summary
                         DiffLogger.GetLogger()?.Info("\nTSLPatcher data generation complete:");

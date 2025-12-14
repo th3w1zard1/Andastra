@@ -440,6 +440,41 @@ namespace KotorDiff.NET.Generator
 
 
         /// <summary>
+        /// Write SSF modification.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3839-3876
+        /// </summary>
+        private void WriteSsfModification(ModificationsSSF modSsf, byte[] sourceData = null)
+        {
+            string filename = modSsf.SourceFile;
+
+            // Skip if already written
+            if (_writtenSections.Contains(filename))
+            {
+                return;
+            }
+
+            // Write resource file (base vanilla SSF that will be patched)
+            if (sourceData != null && sourceData.Length > 0)
+            {
+                string destPath = Path.Combine(_tslpatchdataPath, filename);
+                File.WriteAllBytes(destPath, sourceData);
+            }
+
+            string destination = modSsf.Destination ?? "Override";
+            AddToInstallFolder(destination, filename);
+
+            // Write INI section
+            WriteToIni(new List<ModificationsSSF> { modSsf }, "ssf");
+            _writtenSections.Add(filename);
+
+            // Track in all_modifications (only if not already added)
+            if (!AllModifications.Ssf.Contains(modSsf))
+            {
+                AllModifications.Ssf.Add(modSsf);
+            }
+        }
+
+        /// <summary>
         /// Write NCS modification.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3877-3904
         /// </summary>
@@ -821,7 +856,7 @@ namespace KotorDiff.NET.Generator
         /// This method just logs a summary and flushes any pending writes.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:4354-4371
         /// </summary>
-        public void Finalize()
+        public void FinalizeWriter()
         {
             // Flush any remaining pending writes
             FlushPendingWrites();
