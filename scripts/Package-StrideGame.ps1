@@ -422,6 +422,16 @@ foreach ($PlatformDir in $PlatformDirs) {
         }
     }
     
+    # Include version files if they exist in build path
+    $VersionFiles = @("version.txt", "VERSION", "version.json")
+    foreach ($VersionFile in $VersionFiles) {
+        $VersionSourcePath = Join-Path (Split-Path -Parent $BuildPath) $VersionFile
+        if (Test-Path $VersionSourcePath) {
+            Copy-Item -Path $VersionSourcePath -Destination $PlatformPath -Force -ErrorAction SilentlyContinue
+            Write-VerboseOutput "Copied version file: $VersionFile"
+        }
+    }
+    
     # Create README for distribution
     $ReadmePath = Join-Path $PlatformPath "README.txt"
     $ReadmeContent = @"

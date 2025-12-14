@@ -63,6 +63,10 @@
 .PARAMETER SkipPackage
     Skip the packaging step (build only).
 
+.PARAMETER CreateVersionFiles
+    Whether to create version information files.
+    Defaults to $true
+
 .PARAMETER CreateChecksums
     Whether to create checksum files (SHA256) for archives. Defaults to $false
 
@@ -101,6 +105,7 @@ param(
     [switch]$SkipBuild,
     [switch]$SkipPackage,
     [bool]$CreateChecksums = $false,
+    [bool]$CreateVersionFiles = $true,
     [switch]$Verbose
 )
 
@@ -157,6 +162,44 @@ if (-not $SkipBuild) {
     Write-Host ""
 } else {
     Write-Host "STEP 1: Skipping build (using existing artifacts)" -ForegroundColor Yellow
+    Write-Host ""
+}
+
+# Step 1.5: Create version files
+if ($CreateVersionFiles -and -not $SkipBuild) {
+    Write-Host "STEP 1.5: Creating version files..." -ForegroundColor Yellow
+    Write-Host ""
+    
+    # Try to get build number from environment (CI/CD)
+    $BuildNumber = $env:BUILD_NUMBER
+    if ([string]::IsNullOrEmpty($BuildNumber)) {
+        $BuildNumber = $env:GITHUB_RUN_NUMBER
+    }
+    if ([string]::IsNullOrEmpty($BuildNumber)) {
+        $BuildNumber = $env:CI_PIPELINE_ID
+    }
+    
+    $VersionScriptPath = Join-Path $ScriptDir "New-StrideVersionFile.ps1"
+    if (Test-Path $VersionScriptPath) {
+        $VersionParams = @{
+            OutputPath = $OutputPath
+            GameName = $GameName
+            Version = $Version
+        }
+        
+        if (-not [string]::IsNullOrEmpty($BuildNumber)) {
+            $VersionParams["BuildNumber"] = $BuildNumber
+        }
+        
+        & $VersionScriptPath @VersionParams
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Version file creation had issues, but continuing..."
+        }
+    } else {
+        Write-Warning "Version file script not found, skipping version file creation"
+    }
+    
     Write-Host ""
 }
 
