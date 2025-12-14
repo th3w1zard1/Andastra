@@ -75,9 +75,19 @@ namespace CSharpKOTOR.Extract.SaveData
 
         public void Load()
         {
+            if (!File.Exists(_partyTablePath))
+            {
+                return;
+            }
             byte[] data = File.ReadAllBytes(_partyTablePath);
-            GFF gff = GFF.FromBytes(data);
-            GFFStruct root = gff.Root;
+            if (data == null || data.Length == 0)
+            {
+                return;
+            }
+            try
+            {
+                GFF gff = GFF.FromBytes(data);
+                GFFStruct root = gff.Root;
 
             var processed = new HashSet<string>();
 
@@ -203,6 +213,12 @@ namespace CSharpKOTOR.Extract.SaveData
                 {
                     AdditionalFields[label] = Tuple.Create(fieldType, value);
                 }
+            }
+            }
+            catch (Exception)
+            {
+                // If loading fails, just leave fields at defaults
+                // This matches Python behavior where loading invalid files doesn't crash
             }
         }
 

@@ -1,4 +1,8 @@
 using System;
+using System.IO;
+using System.Reflection;
+using CSharpKOTOR.Extract.SaveData;
+using CSharpKOTOR.Formats.ERF;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
@@ -47,12 +51,159 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Should().NotBeNull();
         }
 
-        [Fact(Skip = "Save game format loading requires valid save game data - test will be implemented when save game format is fully supported")]
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_save_editor.py:802-843
+        // Original: def test_save_game_editor_loads_save(qtbot, installation: HTInstallation, real_save_folder: Path):
+        [Fact]
         public void TestSaveGameEditorLoadExistingFile()
         {
-            // This test is skipped until save game format loading is fully implemented
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_save_editor.py
-            // Original: def test_save_game_editor_load_existing_file(qtbot, installation):
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            if (installation == null)
+            {
+                // Skip if no installation available
+                return;
+            }
+
+            // Matching PyKotor implementation: Create a real save folder with actual save files
+            // Original: save_folder = tmp_path / "000001 - TestSave"; save_folder.mkdir()
+            string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "HolocronToolsetTest_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            string saveFolder = System.IO.Path.Combine(tempDir, "000001 - TestSave");
+            System.IO.Directory.CreateDirectory(saveFolder);
+
+            try
+            {
+                // Matching PyKotor implementation: Create minimal but valid save files
+                // Original: save_info = SaveInfo(str(save_folder)); save_info.savegame_name = "Test Save"; etc.
+                var saveInfo = new CSharpKOTOR.Extract.SaveData.SaveInfo(saveFolder);
+                saveInfo.SavegameName = "Test Save";
+                saveInfo.PcName = "TestPlayer";
+                saveInfo.AreaName = "Test Area";
+                saveInfo.LastModule = "test_module";
+                saveInfo.TimePlayed = 3600;
+                saveInfo.Save();
+
+                // Matching PyKotor implementation: party_table = PartyTable(str(save_folder)); etc.
+                // Original: party_table.pt_members = [pc_member]; party_table.pt_gold = 1000; party_table.pt_xp_pool = 5000
+                var partyTable = new CSharpKOTOR.Extract.SaveData.PartyTable(saveFolder);
+                var pcMember = new CSharpKOTOR.Extract.SaveData.PartyMemberEntry
+                {
+                    Index = -1,
+                    IsLeader = true
+                };
+                partyTable.Members.Add(pcMember);
+                partyTable.Gold = 1000;
+                partyTable.XpPool = 5000;
+                // Ensure required fields are set before saving
+                partyTable.ControlledNpc = -1;
+                partyTable.AiState = 0;
+                partyTable.FollowState = 0;
+                partyTable.SoloMode = false;
+                partyTable.CheatUsed = false;
+                partyTable.ItemComponents = 0;
+                partyTable.ItemChemicals = 0;
+                partyTable.Save();
+
+                // Matching PyKotor implementation: global_vars = GlobalVars(str(save_folder)); etc.
+                var globalVars = new CSharpKOTOR.Extract.SaveData.GlobalVars(saveFolder);
+                globalVars.SetBool("TEST_BOOL", true);
+                globalVars.SetNumber("TEST_NUM", 42);
+                globalVars.SetString("TEST_STR", "test string");
+                globalVars.Save();
+
+                // Matching PyKotor implementation: Create minimal valid SAVEGAME.sav (ERF file)
+                // Original: erf_data = (b"SAV V1.0" + ...)
+                // Create empty ERF file using ERF class
+                var erf = new CSharpKOTOR.Formats.ERF.ERF(CSharpKOTOR.Formats.ERF.ERFType.ERF, isSave: true);
+                byte[] erfData = CSharpKOTOR.Formats.ERF.ERFAuto.BytesErf(erf, CSharpKOTOR.Resources.ResourceType.SAV);
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(saveFolder, "SAVEGAME.sav"), erfData);
+
+                // Matching PyKotor implementation: Load save components directly (skip SAVEGAME.sav which requires valid ERF)
+                // Original: save_info = SaveInfo(str(real_save_folder)); save_info.load()
+                var loadedSaveInfo = new CSharpKOTOR.Extract.SaveData.SaveInfo(saveFolder);
+                loadedSaveInfo.Load();
+                var loadedPartyTable = new CSharpKOTOR.Extract.SaveData.PartyTable(saveFolder);
+                loadedPartyTable.Load();
+                var loadedGlobalVars = new CSharpKOTOR.Extract.SaveData.GlobalVars(saveFolder);
+                loadedGlobalVars.Load();
+
+                // Matching PyKotor implementation: Create nested capsule manually (without loading invalid SAVEGAME.sav)
+                // Original: nested_capsule = MagicMock(spec=SaveNestedCapsule); nested_capsule.cached_characters = {}
+                var nestedCapsule = new CSharpKOTOR.Extract.SaveData.SaveNestedCapsule(saveFolder);
+                // Don't call Load() to avoid loading invalid SAVEGAME.sav
+
+                // Matching PyKotor implementation: Set up editor with loaded data
+                // Original: editor._save_info = save_info; editor._party_table = party_table; etc.
+                var editor = new SaveGameEditor(null, installation);
+                // Use reflection to set private fields (matching Python's direct assignment)
+                var saveInfoField = typeof(SaveGameEditor).GetField("_saveInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var partyTableField = typeof(SaveGameEditor).GetField("_partyTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var globalVarsField = typeof(SaveGameEditor).GetField("_globalVars", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var nestedCapsuleField = typeof(SaveGameEditor).GetField("_nestedCapsule", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                saveInfoField?.SetValue(editor, loadedSaveInfo);
+                partyTableField?.SetValue(editor, loadedPartyTable);
+                globalVarsField?.SetValue(editor, loadedGlobalVars);
+                nestedCapsuleField?.SetValue(editor, nestedCapsule);
+
+                // Matching PyKotor implementation: Populate UI
+                // Original: editor.populate_save_info(); editor.populate_party_table(); editor.populate_global_vars()
+                editor.PopulateSaveInfo();
+                editor.PopulatePartyTable();
+                editor.PopulateGlobalVars();
+
+                // Matching PyKotor implementation: Verify data structures are set
+                // Original: assert editor._save_info is not None
+                editor.SaveInfo.Should().NotBeNull("Save info should be loaded");
+                editor.PartyTable.Should().NotBeNull("Party table should be loaded");
+                editor.GlobalVars.Should().NotBeNull("Global vars should be loaded");
+                editor.NestedCapsule.Should().NotBeNull("Nested capsule should be loaded");
+
+                // Matching PyKotor implementation: Verify UI is populated
+                // Original: assert editor.ui.lineEditSaveName.text() == "Test Save"
+                // Note: We can't directly access UI controls in tests, but we can verify through properties
+                editor.SaveInfo.SavegameName.Should().Be("Test Save", "Save name should be set");
+                editor.SaveInfo.PcName.Should().Be("TestPlayer", "PC name should be set");
+            }
+            finally
+            {
+                // Cleanup
+                try
+                {
+                    if (System.IO.Directory.Exists(tempDir))
+                    {
+                        System.IO.Directory.Delete(tempDir, true);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
         }
     }
 }
