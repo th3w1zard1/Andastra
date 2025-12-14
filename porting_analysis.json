@@ -1,0 +1,1519 @@
+﻿{
+    "resource\\generics\\pth.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\PrunedDepthFirstAdapter.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\lip\\lip_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_action.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "tools\\resources.py":  {
+                                "Status":  "Missing"
+                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_cptopbp.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "tslpatcher\\diff\\formatters.py":  {
+                                            "Status":  "Missing"
+                                        },
+    "resource\\formats\\wav\\wav_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\wav\\wav_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\mdl\\io_mdl.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "gl\\models\\cube.py":  {
+                                "Status":  "Missing"
+                            },
+    "resource\\formats\\key\\key_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "gl\\compat.py":  {
+                          "Status":  "Missing"
+                      },
+    "resource\\formats\\ncs\\dencs\\node\\t_lt.py":  {
+                                                         "Status":  "Missing"
+                                                     },
+    "resource\\formats\\ncs\\dencs\\node\\a_decisp_stack_op.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_semi.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "resource\\formats\\ncs\\dencs\\node\\a_mul_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "gl\\native\\fastmath.py":  {
+                                    "Status":  "Missing"
+                                },
+    "resource\\formats\\ncs\\dencs\\analysis\\pruned_reversed_depth_first_adapter.py":  {
+                                                                                            "Status":  "Missing"
+                                                                                        },
+    "font\\metrics.py":  {
+                             "Status":  "Missing"
+                         },
+    "resource\\formats\\ncs\\dencs\\main_pass.py":  {
+                                                        "Status":  "Missing"
+                                                    },
+    "font\\draw.py":  {
+                          "Status":  "Missing"
+                      },
+    "resource\\formats\\gff\\io_gff_json.py":  {
+                                                   "Status":  "Missing"
+                                               },
+    "engine\\panda3d\\module_loader.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\t_cpdownbp.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "resource\\formats\\tpc\\manipulate\\downsample.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_switch.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\type.py":  {
+                              "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\DataType.cs",
+                              "Status":  "PortExists"
+                          },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_var_ref.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\tt.py":  {
+                                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\LYT\\LYTTrack.cs",
+                                                       "Status":  "PortExists"
+                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\p_jump_to_subroutine.py":  {
+                                                                         "Status":  "Missing"
+                                                                     },
+    "resource\\formats\\ncs\\dencs\\node\\a_copy_down_bp_command.py":  {
+                                                                           "Status":  "Missing"
+                                                                       },
+    "resource\\formats\\ncs\\dencs\\node\\a_gt_binary_op.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\wav\\io_wav.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\a_comp_unary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\ncs_types.py":  {
+                                                 "Status":  "Missing"
+                                             },
+    "resource\\formats\\ncs\\dencs\\analysis\\pruned_depth_first_adapter.py":  {
+                                                                                   "Status":  "Missing"
+                                                                               },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_else.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "gl\\scene\\scene.py":  {
+                                "Status":  "Missing"
+                            },
+    "tslpatcher\\mods\\nss.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\NssCompiler.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ncs\\dencs\\node\\a_nequal_binary_op.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_rsadd_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_incibp_stack_op.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_comp.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "resource\\formats\\ncs\\dencs\\utils\\check_is_globals.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_neg.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "engine\\panda3d\\legacy\\loader.py":  {
+                                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\ModuleDataLoader.cs",
+                                               "Status":  "PortExists"
+                                           },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_code_block.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "tools\\door.py":  {
+                           "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\LYT\\LYTDoorHook.cs",
+                           "Status":  "PortExists"
+                       },
+    "gl\\models\\predefined_mdl.py":  {
+                                          "Status":  "Missing"
+                                      },
+    "resource\\formats\\ncs\\compiler\\parser.py":  {
+                                                        "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\NwscriptParser.cs",
+                                                        "Status":  "PortExists"
+                                                    },
+    "resource\\formats\\ncs\\dencs\\node\\p_action_command.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\formats\\ncs\\dencs\\node\\a_subroutine.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\node\\t_nop.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "tools\\scripts.py":  {
+                              "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\SubScriptState.cs",
+                              "Status":  "PortExists"
+                          },
+    "resource\\formats\\twoda\\io_twoda.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\formats\\lyt\\io_lyt.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\tpc\\convert\\dxt\\compress_dxt.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "resource\\formats\\ncs\\dencs\\utils\\destroy_parse_tree.py":  {
+                                                                        "Status":  "Missing"
+                                                                    },
+    "resource\\formats\\ncs\\compiler\\toolset_v3.1.1_main.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\generics\\git.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\GIT.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ltr\\io_ltr.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\t_excorii.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\resource_auto.py":  {
+                                       "Status":  "Missing"
+                                   },
+    "resource\\formats\\ncs\\dencs\\node\\p_size.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "engine\\panda3d\\legacy\\__main__.py":  {
+                                                 "Status":  "Missing"
+                                             },
+    "resource\\formats\\ncs\\dencs\\node\\p_logii_op.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "resource\\formats\\tlk\\io_tlk_json.py":  {
+                                                   "Status":  "Missing"
+                                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_jump_sub_cmd.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\erf\\erf_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "tools\\creature.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Creature.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\formats\\ncs\\dencs\\node\\a_equal_binary_op.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\a_decibp_stack_op.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\generics\\ute.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\obj\\Debug\\net8\\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "gl\\scene\\frustum.py":  {
+                                  "Status":  "Missing"
+                              },
+    "resource\\formats\\ncs\\dencs\\node\\p_cmd.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\t_shleft.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\generics\\dlg\\stunts.py":  {
+                                               "Status":  "Missing"
+                                           },
+    "resource\\formats\\gff\\io_gff.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\utils\\type.py":  {
+                                                          "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\DataType.cs",
+                                                          "Status":  "PortExists"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\p_program.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\tlk\\io_tlk_xml.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\formats\\ncs\\dencs\\node\\p_rsadd_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\decoder.py":  {
+                                                      "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\Decoder.cs",
+                                                      "Status":  "PortExists"
+                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_logandii.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "gl\\models\\read_mdl.py":  {
+                                    "Status":  "Missing"
+                                },
+    "resource\\formats\\ncs\\dencs\\utils\\subroutine_iterator.py":  {
+                                                                         "Status":  "Missing"
+                                                                     },
+    "resource\\formats\\ncs\\dencs\\node\\start.py":  {
+                                                          "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\Node\\Start.cs",
+                                                          "Status":  "PortExists"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\stack\\int_const.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "resource\\formats\\tpc\\tga2tpc.py":  {
+                                               "Status":  "Missing"
+                                           },
+    "resource\\formats\\ncs\\ncs_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\p_const_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "tools\\reference_cache.py":  {
+                                      "Status":  "Missing"
+                                  },
+    "resource\\formats\\ncs\\decompiler.py":  {
+                                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\Decompiler.cs",
+                                                  "Status":  "PortExists"
+                                              },
+    "resource\\formats\\key\\key_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\tlk\\tlk_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "tslpatcher\\patcher.py":  {
+                                   "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Config\\PatcherConfig.cs",
+                                   "Status":  "PortExists"
+                               },
+    "resource\\formats\\ncs\\dencs\\node\\t_cptopsp.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\generics\\utd.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTD.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\twoda\\twoda_data.py":  {
+                                                    "Status":  "Missing"
+                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_sub_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_const_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_store_state_cmd.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\twoda\\io_twoda_csv.py":  {
+                                                      "Status":  "Missing"
+                                                  },
+    "resource\\formats\\rim\\rim_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_incl_or_logii_op.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_action_command.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\formats\\gff\\gff_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\p_copy_down_bp_command.py":  {
+                                                                           "Status":  "Missing"
+                                                                       },
+    "merge\\module.py":  {
+                             "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Module.cs",
+                             "Status":  "PortExists"
+                         },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_unary_exp.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "tslpatcher\\diff\\structured.py":  {
+                                            "Status":  "Missing"
+                                        },
+    "resource\\formats\\ncs\\dencs\\node\\p_destruct_command.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "common\\alien_sounds.py":  {
+                                    "Status":  "Missing"
+                                },
+    "tools\\template.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Template.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\generics\\dlg\\io\\twine_data.py":  {
+                                                       "Status":  "Missing"
+                                                   },
+    "tslpatcher\\mods\\install.py":  {
+                                         "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\InstallationWrapper.cs",
+                                         "Status":  "PortExists"
+                                     },
+    "resource\\formats\\ncs\\dencs\\node\\t_equal.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "gl\\models\\mdl_converter.py":  {
+                                         "Status":  "Missing"
+                                     },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_control_loop.py":  {
+                                                                         "Status":  "Missing"
+                                                                     },
+    "resource\\formats\\wav\\wav_obfuscation.py":  {
+                                                       "Status":  "Missing"
+                                                   },
+    "tslpatcher\\uninstall.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Uninstall\\ModUninstaller.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "gl\\scene\\scene_cache.py":  {
+                                      "Status":  "Missing"
+                                  },
+    "gl\\models\\boundary.py":  {
+                                    "Status":  "Missing"
+                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_destruct_command.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\p_binary_command.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "common\\stream.py":  {
+                              "Status":  "Missing"
+                          },
+    "resource\\formats\\ncs\\dencs\\node\\a_command_block.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_shleft_binary_op.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_sub.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\generics\\dlg\\nodes.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\do_types.py":  {
+                                                       "Status":  "Missing"
+                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_unright_binary_op.py":  {
+                                                                        "Status":  "Missing"
+                                                                    },
+    "resource\\formats\\ncs\\dencs\\node\\a_return_cmd.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\twoda\\twoda_auto.py":  {
+                                                    "Status":  "Missing"
+                                                },
+    "resource\\formats\\mdl\\mdl_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "tslpatcher\\memory.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Memory\\PatcherMemory.cs",
+                                  "Status":  "PortExists"
+                              },
+    "resource\\formats\\ncs\\dencs\\node\\a_copydownsp_cmd.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "common\\module_loader.py":  {
+                                     "Status":  "Missing"
+                                 },
+    "resource\\formats\\ncs\\dencs\\utils\\subroutine_state.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\stack\\local_type_stack.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\generics\\dlg\\base.py":  {
+                                             "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BinaryFormatReaderBase.cs",
+                                             "Status":  "PortExists"
+                                         },
+    "resource\\formats\\ncs\\dencs\\node\\t_storestate.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\node\\a_not_unary_op.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_savebp_bp_op.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_jump_cmd.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "common\\scriptlib.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\ScriptLib.cs",
+                                 "Status":  "PortExists"
+                             },
+    "resource\\resource_data.py":  {
+                                       "Status":  "Missing"
+                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_unary_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\t_rsadd.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "resource\\formats\\ncs\\dencs\\node\\a_jump_to_subroutine.py":  {
+                                                                         "Status":  "Missing"
+                                                                     },
+    "resource\\formats\\ncs\\dencs\\node\\a_jump_command.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "engine\\panda3d\\animation.py":  {
+                                          "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\DLG\\DLGAnimation.cs",
+                                          "Status":  "PortExists"
+                                      },
+    "resource\\formats\\tpc\\convert\\dxt\\decompress_dxt.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_action_cmd.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\node\\a_cond_jump_cmd.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "tslpatcher\\reader.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\BinaryReader.cs",
+                                  "Status":  "PortExists"
+                              },
+    "gl\\scene\\camera.py":  {
+                                 "Status":  "Missing"
+                             },
+    "tools\\patching.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Patching.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\formats\\ncs\\dencs\\node\\a_binary_command.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "tools\\placeable.py":  {
+                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Placeable.cs",
+                                "Status":  "PortExists"
+                            },
+    "resource\\formats\\ncs\\dencs\\stack\\const.py":  {
+                                                           "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\ScriptConstant.cs",
+                                                           "Status":  "PortExists"
+                                                       },
+    "common\\language.py":  {
+                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Language.cs",
+                                "Status":  "PortExists"
+                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_copytopbp_cmd.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "tools\\heuristics.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Heuristics.cs",
+                                 "Status":  "PortExists"
+                             },
+    "tslpatcher\\mods\\twoda.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\TwoDaDiff.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\utils\\ncs_to_ast_converter.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\a_int_constant.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\ncs\\dencs\\node\\t_add.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_modify_exp.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_switch_case.py":  {
+                                                                        "Status":  "Missing"
+                                                                    },
+    "resource\\formats\\ncs\\dencs\\node\\a_program.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\ssf\\io_ssf.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "gl\\glm_compat.py":  {
+                              "Status":  "Missing"
+                          },
+    "resource\\formats\\ncs\\dencs\\node\\a_excl_or_logii_op.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\do_global_vars.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\a_geq_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\t_incibp.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "engine\\animation\\base.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BinaryFormatReaderBase.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\vis\\vis_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_neg_unary_op.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_copydownbp_cmd.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\bioware_archive.py":  {
+                                         "Status":  "Missing"
+                                     },
+    "resource\\formats\\ncs\\dencs\\stack\\float_const.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\generics\\utp.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTP.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_if.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "resource\\formats\\ncs\\dencs\\node\\a_add_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\t_div.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\io_ncs.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "engine\\panda3d\\legacy\\scene.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\utils\\node_analysis_data.py":  {
+                                                                        "Status":  "Missing"
+                                                                    },
+    "resource\\formats\\lyt\\lyt_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\compiler\\classes.py":  {
+                                                         "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\Classes.cs",
+                                                         "Status":  "PortExists"
+                                                     },
+    "resource\\formats\\ncs\\dencs\\node\\p_conditional_jump_command.py":  {
+                                                                               "Status":  "Missing"
+                                                                           },
+    "resource\\formats\\ncs\\dencs\\node\\t_leq.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\t_gt.py":  {
+                                                         "Status":  "Missing"
+                                                     },
+    "resource\\formats\\ncs\\dencs\\scriptutils\\sub_script_state.py":  {
+                                                                            "Status":  "Missing"
+                                                                        },
+    "resource\\formats\\ncs\\compiler\\parsetab.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\a_store_state_command.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "resource\\generics\\utw.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTW.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_stack_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_expression_statement.py":  {
+                                                                                 "Status":  "Missing"
+                                                                             },
+    "gl\\modern_renderer.py":  {
+                                   "Status":  "Missing"
+                               },
+    "common\\module.py":  {
+                              "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Module.cs",
+                              "Status":  "PortExists"
+                          },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_unk_loop_control.py":  {
+                                                                             "Status":  "Missing"
+                                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\a_copy_top_bp_command.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "common\\scriptdefs.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\ScriptDefs.cs",
+                                  "Status":  "PortExists"
+                              },
+    "extract\\capsule.py":  {
+                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\LazyCapsule.cs",
+                                "Status":  "PortExists"
+                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_move_sp_command.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\lip\\io_lip_json.py":  {
+                                                   "Status":  "Missing"
+                                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_bp_cmd.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\utils\\subroutine_analysis_data.py":  {
+                                                                              "Status":  "Missing"
+                                                                          },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_var_decl.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\formats\\ncs\\dencs\\stack\\var_struct.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_jz.py":  {
+                                                         "Status":  "Missing"
+                                                     },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_expression.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "common\\script.py":  {
+                              "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Script\\NwscriptParser.cs",
+                              "Status":  "PortExists"
+                          },
+    "font\\grid.py":  {
+                          "Status":  "Missing"
+                      },
+    "resource\\formats\\gff\\io_gff_xml.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_vector_const_exp.py":  {
+                                                                             "Status":  "Missing"
+                                                                         },
+    "extract\\keywriter.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\KeyWriterWrapper.cs",
+                                  "Status":  "PortExists"
+                              },
+    "resource\\formats\\ncs\\dencs\\node\\token.py":  {
+                                                          "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\NSS\\NssToken.cs",
+                                                          "Status":  "PortExists"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_while_loop.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\utils\\subroutine_path_finder.py":  {
+                                                                            "Status":  "Missing"
+                                                                        },
+    "resource\\formats\\ncs\\dencs\\node\\tr_par.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "resource\\formats\\txi\\txi_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_shright.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "tools\\playpazaak.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\PlayPazaak.cs",
+                                 "Status":  "PortExists"
+                             },
+    "resource\\formats\\ncs\\dencs\\node\\t_incisp.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "engine\\panda3d\\mdl_loader.py":  {
+                                           "Status":  "Missing"
+                                       },
+    "resource\\formats\\ncs\\dencs\\node\\a_stack_op_cmd.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\tpc\\io_bmp.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "tslpatcher\\diff\\analyzers.py":  {
+                                           "Status":  "Missing"
+                                       },
+    "gl\\models\\empty.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\NSS\\AST\\Statements\\EmptyStatement.cs",
+                                 "Status":  "PortExists"
+                             },
+    "resource\\generics\\jrl.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\JRL.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_fcn_call_exp.py":  {
+                                                                         "Status":  "Missing"
+                                                                     },
+    "resource\\generics\\uti.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\GeometryUtils.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\generics\\gui.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\GUI\\GUI.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\compilers.py":  {
+                                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compilers.cs",
+                                                 "Status":  "PortExists"
+                                             },
+    "tslpatcher\\mods\\ncs.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\INCSOptimizer.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ncs\\dencs\\node\\p_jump_command.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "tslpatcher\\diff\\enhanced_engine.py":  {
+                                                 "Status":  "Missing"
+                                             },
+    "resource\\formats\\ncs\\dencs\\node\\p_return.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "engine\\panda3d\\resources\\texture_loader.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\_base.py":  {
+                                        "Status":  "Missing"
+                                    },
+    "resource\\formats\\ncs\\dencs\\node\\p_copy_top_bp_command.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\a_logii_cmd.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_action_jump_cmd.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_continue_statement.py":  {
+                                                                               "Status":  "Missing"
+                                                                           },
+    "resource\\formats\\ncs\\dencs\\node\\p_stack_op.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "extract\\keyfile.py":  {
+                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\KeyFileWrapper.cs",
+                                "Status":  "PortExists"
+                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_or_logii_op.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "tslpatcher\\diff\\resolution.py":  {
+                                            "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\Resolution.cs",
+                                            "Status":  "PortExists"
+                                        },
+    "resource\\generics\\uts.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTS.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\utils\\file_script_data.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\p_store_state_command.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\t_mod.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\a_mod_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\tpc\\convert\\bgra.py":  {
+                                                     "Status":  "Missing"
+                                                 },
+    "resource\\formats\\ncs\\dencs\\utils\\set_dead_code.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "gl\\scene\\camera_controller.py":  {
+                                            "Status":  "Missing"
+                                        },
+    "tslpatcher\\config.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Config\\PatcherConfig.cs",
+                                  "Status":  "PortExists"
+                              },
+    "resource\\formats\\ncs\\dencs\\node\\t_decisp.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\t_float_constant.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\formats\\ncs\\compiler\\lexer.py":  {
+                                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\NSS\\NssLexer.cs",
+                                                       "Status":  "PortExists"
+                                                   },
+    "resource\\formats\\tpc\\io_tpc.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\lyt\\lyt_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "tslpatcher\\mods\\gff.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\GffDiff.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ncs\\dencs\\node\\a_lt_binary_op.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_logii_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "tools\\path.py":  {
+                           "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\CaseAwarePath.cs",
+                           "Status":  "PortExists"
+                       },
+    "tools\\conversions.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Conversions.cs",
+                                  "Status":  "PortExists"
+                              },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_action_exp.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_incisp_stack_op.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "tslpatcher\\namespaces.py":  {
+                                      "Status":  "Missing"
+                                  },
+    "engine\\panda3d\\scene_graph.py":  {
+                                            "Status":  "Missing"
+                                        },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_unary_mod_exp.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "gl\\scene\\render_object.py":  {
+                                        "Status":  "Missing"
+                                    },
+    "resource\\generics\\dlg\\io\\gff.py":  {
+                                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\GffDiff.cs",
+                                                "Status":  "PortExists"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_const_cmd.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "engine\\scene\\base.py":  {
+                                   "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BinaryFormatReaderBase.cs",
+                                   "Status":  "PortExists"
+                               },
+    "resource\\formats\\ncs\\dencs\\node\\a_string_constant.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\stack\\variable.py":  {
+                                                              "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\Variable.cs",
+                                                              "Status":  "PortExists"
+                                                          },
+    "resource\\formats\\wav\\io_wav_standard.py":  {
+                                                       "Status":  "Missing"
+                                                   },
+    "common\\game_object.py":  {
+                                   "Status":  "Missing"
+                               },
+    "tools\\misc.py":  {
+                           "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Misc.cs",
+                           "Status":  "PortExists"
+                       },
+    "resource\\formats\\ncs\\dencs\\node\\a_leq_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "tools\\kit.py":  {
+                          "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Kit.cs",
+                          "Status":  "PortExists"
+                      },
+    "resource\\formats\\tpc\\io_dds.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\p_bp_op.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "resource\\formats\\ncs\\dencs\\node\\t_sub.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "extract\\savedata.py":  {
+                                 "Status":  "Missing"
+                             },
+    "tslpatcher\\mods\\template.py":  {
+                                          "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Template.cs",
+                                          "Status":  "PortExists"
+                                      },
+    "engine\\panda3d\\engine.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\DiffEngine.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\bwm\\bwm_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "extract\\bzf.py":  {
+                            "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\BZF.cs",
+                            "Status":  "PortExists"
+                        },
+    "extract\\talktable.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\TalkTable.cs",
+                                  "Status":  "PortExists"
+                              },
+    "resource\\formats\\ncs\\dencs\\node\\a_shright_binary_op.py":  {
+                                                                        "Status":  "Missing"
+                                                                    },
+    "tools\\module.py":  {
+                             "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Module.cs",
+                             "Status":  "PortExists"
+                         },
+    "resource\\formats\\bwm\\bwm_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_for.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\dencs\\node\\p_subroutine.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\tpc\\tga.py":  {
+                                           "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\TPC\\TGA.cs",
+                                           "Status":  "PortExists"
+                                       },
+    "resource\\formats\\bwm\\io_bwm.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "common\\pathfinding.py":  {
+                                   "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Pathfinding.cs",
+                                   "Status":  "PortExists"
+                               },
+    "resource\\generics\\dlg\\links.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "tools\\utilities.py":  {
+                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Utilities.cs",
+                                "Status":  "PortExists"
+                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_return.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\a_div_binary_op.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\stack\\stack_entry.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\node\\a_restorebp_bp_op.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\a_copytopsp_cmd.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\generics\\are.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\CaseAwarePath.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\scriptutils\\cleanup_pass.py":  {
+                                                                        "Status":  "Missing"
+                                                                    },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\script_node.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\generics\\utt.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTT.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "engine\\materials\\base.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BinaryFormatReaderBase.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\node\\t_destruct.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "resource\\formats\\ncs\\dencs\\node\\a_nonzero_jump_if.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "extract\\file.py":  {
+                             "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\FileResourceHelpers.cs",
+                             "Status":  "PortExists"
+                         },
+    "resource\\formats\\tpc\\tpc_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\vis\\vis_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "extract\\chitin.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\ChitinWrapper.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\formats\\ncs\\dencs\\stack\\string_const.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "tslpatcher\\diff\\cache.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\ReferenceCache.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\mdl\\io_mdl_ascii.py":  {
+                                                    "Status":  "Missing"
+                                                },
+    "resource\\formats\\ncs\\dencs\\node\\t_blank.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "resource\\formats\\vis\\io_vis.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "tslpatcher\\writer.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\BinaryWriter.cs",
+                                  "Status":  "PortExists"
+                              },
+    "tools\\registry.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\TwoDARegistry.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\generics\\ifo.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\IFO.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\node\\p_bp_command.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\utils\\flatten_sub.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ltr\\ltr_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\bif\\io_bif.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\t_decibp.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\actions_data.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "resource\\formats\\ncs\\dencs\\node\\p_copy_top_sp_command.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "resource\\formats\\erf\\io_erf.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "gl\\models\\mdl.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\MDL\\MDLAsciiReader.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\formats\\ncs\\dencs\\utils\\set_destinations.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_jmp.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\p_move_sp_command.py":  {
+                                                                      "Status":  "Missing"
+                                                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_movsp.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "resource\\formats\\ncs\\dencs\\node\\a_zero_jump_if.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\tpc\\convert\\rgb.py":  {
+                                                    "Status":  "Missing"
+                                                },
+    "resource\\formats\\ncs\\dencs\\node\\t_mul.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\key\\io_key.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\a_movesp_cmd.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "gl\\scene\\async_loader.py":  {
+                                       "Status":  "Missing"
+                                   },
+    "resource\\formats\\lip\\io_lip_xml.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_action_arg_exp.py":  {
+                                                                           "Status":  "Missing"
+                                                                       },
+    "resource\\formats\\ncs\\dencs\\node\\t_geq.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "tslpatcher\\logger.py":  {
+                                  "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Logger\\PatchLogger.cs",
+                                  "Status":  "PortExists"
+                              },
+    "resource\\formats\\ncs\\dencs\\node\\p_unary_op.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_do_loop.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\mdl\\mdl_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\p_copy_down_sp_command.py":  {
+                                                                           "Status":  "Missing"
+                                                                       },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_const.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "resource\\generics\\utm.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTM.cs",
+                                       "Status":  "PortExists"
+                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_and_logii_op.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "resource\\formats\\ncs\\compiler\\language_server.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "tools\\validation.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Validation.cs",
+                                 "Status":  "PortExists"
+                             },
+    "tools\\pazaak_gui.py":  {
+                                 "Status":  "Missing"
+                             },
+    "resource\\formats\\twoda\\io_twoda_json.py":  {
+                                                       "Status":  "Missing"
+                                                   },
+    "engine\\panda3d\\materials\\manager.py":  {
+                                                   "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\TwoDAManager.cs",
+                                                   "Status":  "PortExists"
+                                               },
+    "resource\\formats\\ssf\\ssf_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "tslpatcher\\diff\\objects.py":  {
+                                         "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\NSS\\AST\\TopLevelObjects.cs",
+                                         "Status":  "PortExists"
+                                     },
+    "resource\\formats\\ncs\\dencs\\decompile_ncs.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "resource\\formats\\bif\\bif_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_copy_down_sp_command.py":  {
+                                                                           "Status":  "Missing"
+                                                                       },
+    "resource\\generics\\base.py":  {
+                                        "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BinaryFormatReaderBase.cs",
+                                        "Status":  "PortExists"
+                                    },
+    "resource\\formats\\ncs\\dencs\\node\\a_rsadd_cmd.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "gl\\models\\terrain.py":  {
+                                   "Status":  "Missing"
+                               },
+    "resource\\formats\\ncs\\dencs\\node\\p_command_block.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ltr\\ltr_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\txi\\txi_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_bp_command.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\node\\p_binary_op.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\optimizers.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\formats\\ncs\\dencs\\node\\t_retn.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "resource\\formats\\ncs\\dencs\\node\\t_dot.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\tl_par.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "resource\\formats\\ncs\\dencs\\stack\\local_var_stack.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "tslpatcher\\diff\\application.py":  {
+                                             "Status":  "Missing"
+                                         },
+    "resource\\formats\\lip\\io_lip.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\tpc\\manipulate\\dxt_manipulate.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "resource\\formats\\ncs\\dencs\\node\\t_cpdownsp.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "gl\\shader\\shader.py":  {
+                                  "Status":  "Missing"
+                              },
+    "resource\\formats\\bif\\bif_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "extract\\twoda.py":  {
+                              "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\TwoDaDiff.cs",
+                              "Status":  "PortExists"
+                          },
+    "gl\\models\\model.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\TreeModelFactory.cs",
+                                 "Status":  "PortExists"
+                             },
+    "tslpatcher\\mods\\ssf.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\SsfDiff.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ssf\\ssf_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\script_root_node.py":  {
+                                                                           "Status":  "Missing"
+                                                                       },
+    "resource\\formats\\ncs\\dencs\\node\\p_stack_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "tslpatcher\\diff\\gff.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\GffDiff.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ncs\\dencs\\node\\a_binary_cmd.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "engine\\graphics\\gui.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\GUI\\GUI.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "tools\\model.py":  {
+                            "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\TreeModelFactory.cs",
+                            "Status":  "PortExists"
+                        },
+    "resource\\formats\\txi\\io_txi.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\erf\\erf_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "tslpatcher\\mods\\tlk.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\TlkDiff.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_return_statement.py":  {
+                                                                             "Status":  "Missing"
+                                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\t_nequal.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\tpc\\io_tga.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\generics\\dlg\\io\\twine.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\formats\\rim\\rim_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "common\\geometry_utils.py":  {
+                                      "Status":  "Missing"
+                                  },
+    "resource\\formats\\ncs\\dencs\\node\\t_boolandii.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\ncs_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\salvage.py":  {
+                                 "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resources\\Salvage.cs",
+                                 "Status":  "PortExists"
+                             },
+    "resource\\formats\\ncs\\dencs\\stack\\object_const.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "resource\\formats\\rim\\io_rim.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\tlk\\tlk_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\a_float_constant.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "resource\\formats\\ncs\\dencs\\node\\t_const.py":  {
+                                                            "Status":  "Missing"
+                                                        },
+    "resource\\formats\\ncs\\dencs\\node\\t_savebp.py":  {
+                                                             "Status":  "Missing"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\p_logii_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\node\\a_destruct_cmd.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "gl\\models\\node.py":  {
+                                "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BWM\\BWMNodeAABB.cs",
+                                "Status":  "PortExists"
+                            },
+    "resource\\formats\\ncs\\dencs\\node\\p_constant.py":  {
+                                                               "Status":  "Missing"
+                                                           },
+    "gl\\models\\mesh.py":  {
+                                "Status":  "Missing"
+                            },
+    "tslpatcher\\diff\\generator.py":  {
+                                           "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\NameGenerator.cs",
+                                           "Status":  "PortExists"
+                                       },
+    "resource\\formats\\tlk\\io_tlk.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "tslpatcher\\diff\\engine.py":  {
+                                        "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Diff\\DiffEngine.cs",
+                                        "Status":  "PortExists"
+                                    },
+    "resource\\formats\\lip\\lip_data.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_not.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\utils\\set_positions.py":  {
+                                                                   "Status":  "Missing"
+                                                               },
+    "common\\misc.py":  {
+                            "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Common\\Misc.cs",
+                            "Status":  "PortExists"
+                        },
+    "resource\\formats\\ncs\\dencs\\node\\p_jump_if.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\gff\\gff_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "gl\\scene\\scene_base.py":  {
+                                     "Status":  "Missing"
+                                 },
+    "resource\\formats\\ncs\\dencs\\utils\\node_utils.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_jsr.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\mdl\\mdl_types.py":  {
+                                                 "Status":  "Missing"
+                                             },
+    "resource\\formats\\ncs\\dencs\\node\\t_integer_constant.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_copy_top_sp_command.py":  {
+                                                                          "Status":  "Missing"
+                                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\t_unright.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\ncs\\dencs\\node\\a_unary_cmd.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "resource\\formats\\ncs\\dencs\\node\\t_incorii.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\ncs\\dencs\\node\\t_logorii.py":  {
+                                                              "Status":  "Missing"
+                                                          },
+    "resource\\formats\\ncs\\dencs\\stack\\local_stack.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\analysis\\analysis_adapter.py":  {
+                                                                         "Status":  "Missing"
+                                                                     },
+    "resource\\formats\\ssf\\io_ssf_xml.py":  {
+                                                  "Status":  "Missing"
+                                              },
+    "resource\\generics\\dlg\\anims.py":  {
+                                              "Status":  "Missing"
+                                          },
+    "resource\\formats\\ncs\\dencs\\node\\a_size.py":  {
+                                                           "Status":  "Missing"
+                                                       },
+    "tools\\encoding.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\WAV\\WaveEncoding.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\formats\\ncs\\dencs\\node\\eof.py":  {
+                                                        "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\NCSDecomp\\Node\\EOF.cs",
+                                                        "Status":  "PortExists"
+                                                    },
+    "resource\\formats\\gff\\io_gff_twine.py":  {
+                                                    "Status":  "Missing"
+                                                },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_break_statement.py":  {
+                                                                            "Status":  "Missing"
+                                                                        },
+    "engine\\core.py":  {
+                            "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\obj\\Debug\\net8\\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs",
+                            "Status":  "PortExists"
+                        },
+    "tools\\archives.py":  {
+                               "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Tools\\Archives.cs",
+                               "Status":  "PortExists"
+                           },
+    "resource\\formats\\ncs\\dencs\\node\\a_conditional_jump_command.py":  {
+                                                                               "Status":  "Missing"
+                                                                           },
+    "resource\\formats\\ncs\\compiler\\interpreter.py":  {
+                                                             "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\NCS\\Compiler\\Interpreter.cs",
+                                                             "Status":  "PortExists"
+                                                         },
+    "resource\\formats\\ncs\\dencs\\node\\t_jnz.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\node\\p_unary_command.py":  {
+                                                                    "Status":  "Missing"
+                                                                },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_conditional_exp.py":  {
+                                                                            "Status":  "Missing"
+                                                                        },
+    "resource\\formats\\ncs\\dencs\\node\\t_string_literal.py":  {
+                                                                     "Status":  "Missing"
+                                                                 },
+    "extract\\installation.py":  {
+                                     "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Extract\\InstallationWrapper.cs",
+                                     "Status":  "PortExists"
+                                 },
+    "resource\\formats\\ncs\\dencs\\node\\node.py":  {
+                                                         "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\BWM\\BWMNodeAABB.cs",
+                                                         "Status":  "PortExists"
+                                                     },
+    "resource\\formats\\ncs\\dencs\\node\\a_add_var_cmd.py":  {
+                                                                  "Status":  "Missing"
+                                                              },
+    "resource\\formats\\tpc\\manipulate\\rotate.py":  {
+                                                          "Status":  "Missing"
+                                                      },
+    "resource\\formats\\ncs\\dencs\\utils\\struct_type.py":  {
+                                                                 "Status":  "Missing"
+                                                             },
+    "resource\\formats\\ncs\\dencs\\node\\t_restorebp.py":  {
+                                                                "Status":  "Missing"
+                                                            },
+    "tslpatcher\\diff\\ini_manager.py":  {
+                                             "Status":  "Missing"
+                                         },
+    "resource\\formats\\tpc\\tpc_auto.py":  {
+                                                "Status":  "Missing"
+                                            },
+    "gl\\shader\\texture.py":  {
+                                   "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Formats\\TPC\\TPCTextureFormat.cs",
+                                   "Status":  "PortExists"
+                               },
+    "resource\\formats\\ncs\\dencs\\scriptnode\\a_binary_exp.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\formats\\ncs\\dencs\\node\\a_bit_and_logii_op.py":  {
+                                                                       "Status":  "Missing"
+                                                                   },
+    "resource\\generics\\utc.py":  {
+                                       "CsFile":  "G:\\GitHub\\HoloPatcher.NET\\src\\CSharpKOTOR\\Resource\\Generics\\UTC.cs",
+                                       "Status":  "PortExists"
+                                   }
+}
