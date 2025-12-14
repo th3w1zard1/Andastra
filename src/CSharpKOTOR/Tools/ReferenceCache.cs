@@ -156,7 +156,7 @@ namespace CSharpKOTOR.Tools
                         var gffObj = reader.Load();
                         if (gffObj != null)
                         {
-                            ScanGFF(identifier, gffObj.TopLevelStruct);
+                            ScanGFF(identifier, gffObj.Root);
                         }
                     }
                     catch
@@ -463,7 +463,7 @@ namespace CSharpKOTOR.Tools
                         var gffObj = reader.Load();
                         if (gffObj != null)
                         {
-                            ScanGFF(identifier, gffObj.TopLevelStruct);
+                            ScanGFF(identifier, gffObj.Root);
                         }
                     }
                     catch
