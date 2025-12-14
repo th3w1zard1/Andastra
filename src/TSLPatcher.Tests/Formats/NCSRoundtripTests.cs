@@ -793,8 +793,8 @@ namespace CSharpKOTOR.Tests.Formats
                     {
                         try
                         {
-                            string decompiledContent = File.ReadAllText(decompiled, Encoding.UTF8);
-                            string[] decompiledLines = decompiledContent.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+                            string decompiledText = File.ReadAllText(decompiled, Encoding.UTF8);
+                            string[] decompiledLines = decompiledText.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
                             errorMsg.AppendLine("DECOMPILED OUTPUT (first 30 lines):");
                             int showLines = Math.Min(30, decompiledLines.Length);
                             for (int i = 0; i < showLines; i++)
