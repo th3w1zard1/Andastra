@@ -44,6 +44,8 @@ namespace Odyssey.Game.Core
 
             // Set window title
             Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
+            
+            Console.WriteLine("[Odyssey] Game window initialized - IsMouseVisible: " + IsMouseVisible);
         }
 
         protected override void Initialize()

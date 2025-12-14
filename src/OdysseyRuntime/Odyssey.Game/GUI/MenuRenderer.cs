@@ -166,6 +166,12 @@ namespace Odyssey.Game.GUI
             {
                 return;
             }
+            
+            // Log first update to verify Update is being called
+            if (gameTime.TotalGameTime.TotalSeconds < 0.1)
+            {
+                Console.WriteLine("[MenuRenderer] Update called - menu is visible and active");
+            }
 
             // Ensure layout is calculated before handling input
             // Layout needs to be up-to-date for click detection to work
@@ -292,7 +298,7 @@ namespace Odyssey.Game.GUI
                 _lastScreenWidth = screenWidth;
                 _lastScreenHeight = screenHeight;
             }
-            
+
             // Verify buttons are initialized (safety check)
             if (_menuButtons == null || _menuButtons.Length == 0)
             {
