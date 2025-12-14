@@ -440,6 +440,9 @@ namespace Odyssey.Game.Core
             // IsBillboard controls if UI faces camera, IsFullScreen makes UI fill entire screen
             // RenderGroup sets which render group the UI belongs to
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
+            // Window.ClientBounds property gets the client area bounds (width and height in pixels)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/window-management.html
             _uiComponent.Resolution = new Vector3(Window.ClientBounds.Width, Window.ClientBounds.Height, 1000);
             _uiComponent.ResolutionStretch = ResolutionStretch.FixedWidthAdaptableHeight;
             _uiComponent.IsBillboard = false;
@@ -522,6 +525,8 @@ namespace Odyssey.Game.Core
 
                 // Load the main menu GUI from KOTOR game files
                 // Standard KOTOR main menu GUIs: mainmenu8x6_p (K1), mainmenu16x12_p (K1 widescreen)
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
+                // Window.ClientBounds.Width/Height get the client area dimensions in pixels
                 bool guiLoaded = _kotorGuiManager.LoadGui("mainmenu8x6_p",
                     Window.ClientBounds.Width,
                     Window.ClientBounds.Height);
@@ -1104,6 +1109,12 @@ namespace Odyssey.Game.Core
 
         private void ProcessInput(float deltaTime)
         {
+            // Check keyboard input
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsKeyPressed(Keys) checks if a key was just pressed this frame (returns true once per press)
+            // Method signature: bool IsKeyPressed(Keys key)
+            // Keys enum defines keyboard key codes (F1, Escape, Space, etc.)
+            // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
             if (Input.IsKeyPressed(Keys.F1))
             {
                 _showDebugInfo = !_showDebugInfo;
@@ -1173,9 +1184,16 @@ namespace Odyssey.Game.Core
             ProcessCameraInput(deltaTime);
 
             // Click to move
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsMouseButtonPressed(MouseButton) checks if a mouse button was just pressed this frame
+            // MousePosition property gets the current mouse position in screen coordinates (X, Y)
+            // Method signatures: bool IsMouseButtonPressed(MouseButton button), Vector2 MousePosition { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (Input.IsMouseButtonPressed(MouseButton.Left) && _playerController != null)
             {
                 System.Numerics.Vector3 worldPos;
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
+                // Window.ClientBounds.Width/Height get the client area dimensions in pixels
                 if (_playerController.ScreenToWorld(
                     Input.MousePosition.X / Window.ClientBounds.Width,
                     Input.MousePosition.Y / Window.ClientBounds.Height,
@@ -1215,6 +1233,10 @@ namespace Odyssey.Game.Core
             float rotateSpeed = 2f * deltaTime;
 
             // WASD movement
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsKeyDown(Keys) checks if a key is currently held down (returns true while key is pressed)
+            // Method signature: bool IsKeyDown(Keys key)
+            // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
             Vector3 movement = Vector3.Zero;
             if (Input.IsKeyDown(Keys.W))
             {
@@ -1249,18 +1271,34 @@ namespace Odyssey.Game.Core
             if (movement != Vector3.Zero)
             {
                 // Transform movement by camera rotation
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Matrix.html
+                // Matrix.RotationQuaternion(Quaternion) creates a rotation matrix from a quaternion
+                // Vector3.TransformNormal(Vector3, Matrix) transforms a vector by a matrix (ignores translation)
+                // Method signatures: static Matrix RotationQuaternion(Quaternion rotation), static Vector3 TransformNormal(Vector3 vector, Matrix transform)
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 var rotation = Matrix.RotationQuaternion(_cameraEntity.Transform.Rotation);
                 movement = Vector3.TransformNormal(movement, rotation);
                 _cameraEntity.Transform.Position += movement * moveSpeed;
             }
 
             // Mouse look when right button held
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsMouseButtonDown(MouseButton) checks if a mouse button is currently held down
+            // MouseDelta property gets the mouse movement delta since last frame (X, Y)
+            // Method signatures: bool IsMouseButtonDown(MouseButton button), Vector2 MouseDelta { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (Input.IsMouseButtonDown(MouseButton.Right))
             {
                 float yaw = -Input.MouseDelta.X * rotateSpeed;
                 float pitch = -Input.MouseDelta.Y * rotateSpeed;
 
                 var currentRotation = _cameraEntity.Transform.Rotation;
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+                // Quaternion.RotationY(float) creates a quaternion representing rotation around Y axis
+                // Quaternion.RotationX(float) creates a quaternion representing rotation around X axis
+                // Quaternion multiplication combines rotations
+                // Method signatures: static Quaternion RotationY(float angle), static Quaternion RotationX(float angle)
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 var yawRotation = Quaternion.RotationY(yaw);
                 var pitchRotation = Quaternion.RotationX(pitch);
 
@@ -1268,8 +1306,16 @@ namespace Odyssey.Game.Core
             }
 
             // Mouse wheel zoom
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // MouseWheelDelta property gets the mouse wheel scroll delta since last frame
+            // Method signature: float MouseWheelDelta { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (Math.Abs(Input.MouseWheelDelta) > 0.01f)
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.WorldMatrix property gets the world transformation matrix
+                // WorldMatrix.Forward property gets the forward vector from the matrix
+                // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms.html
                 var forward = _cameraEntity.Transform.WorldMatrix.Forward;
                 _cameraEntity.Transform.Position += forward * Input.MouseWheelDelta * 2f;
             }
