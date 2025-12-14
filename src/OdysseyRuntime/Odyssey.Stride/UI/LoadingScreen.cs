@@ -28,6 +28,9 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Gets or sets whether the loading screen is visible.
         /// </summary>
+        // Control visibility of loading screen
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+        // Visibility property controls whether element is rendered (Visible) or hidden (Collapsed)
         public bool IsVisible
         {
             get { return _isVisible; }
@@ -57,6 +60,11 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Creates a new loading screen.
         /// </summary>
+        // Initialize loading screen with UI component and font
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent manages UI rendering and input handling
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteFont.html
+        // SpriteFont provides font rendering capabilities for text
         public LoadingScreen([NotNull] UIComponent uiComponent, [NotNull] SpriteFont font)
         {
             _uiComponent = uiComponent ?? throw new ArgumentNullException("uiComponent");
@@ -68,6 +76,10 @@ namespace Odyssey.Stride.UI
         private void BuildUI()
         {
             // Full-screen black overlay
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid with Width/Height = float.NaN fills available space
+            // BackgroundColor sets background, Visibility.Collapsed initially hides the panel
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _rootPanel = new Grid
             {
                 Width = float.NaN,
@@ -77,6 +89,9 @@ namespace Odyssey.Stride.UI
             };
 
             // Center content
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel arranges children vertically, HorizontalAlignment/VerticalAlignment.Center centers content
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var contentPanel = new StackPanel
             {
                 Orientation = Orientation.Vertical,
@@ -198,6 +213,9 @@ namespace Odyssey.Stride.UI
                 return;
             }
 
+            // Update progress bar width
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+            // Width property sets the element's width
             float maxWidth = 346; // 350 - 4 for margins
             _progressBar.Width = maxWidth * _progress;
         }

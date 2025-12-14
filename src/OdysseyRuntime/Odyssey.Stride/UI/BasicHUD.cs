@@ -38,6 +38,9 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Gets or sets whether debug info is displayed.
         /// </summary>
+        // Control visibility of debug text
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+        // Visibility property controls whether element is rendered (Visible) or hidden (Collapsed)
         public bool ShowDebug
         {
             get { return _showDebug; }
@@ -54,6 +57,9 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Gets or sets whether the HUD is visible.
         /// </summary>
+        // Control visibility of HUD root canvas
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+        // Visibility property controls whether element is rendered
         public bool IsVisible
         {
             get { return _rootCanvas?.Visibility == Visibility.Visible; }
@@ -69,6 +75,12 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Creates a new basic HUD.
         /// </summary>
+        // Initialize HUD with UI component and font
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent manages UI rendering and input handling
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteFont.html
+        // SpriteFont provides font rendering capabilities for text
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/spritefont.html
         public BasicHUD([NotNull] UIComponent uiComponent, [NotNull] SpriteFont font)
         {
             _uiComponent = uiComponent ?? throw new ArgumentNullException("uiComponent");
@@ -79,9 +91,18 @@ namespace Odyssey.Stride.UI
 
         private void BuildUI()
         {
+            // Create root canvas for UI layout
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Canvas.html
+            // Canvas is a panel that allows absolute positioning of child elements
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _rootCanvas = new Canvas();
 
             // Health/Force panel in top-left
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid arranges children in rows and columns, Width/Height set dimensions
+            // Margin sets spacing, VerticalAlignment/HorizontalAlignment control positioning
+            // BackgroundColor sets background color
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _healthPanel = new Grid
             {
                 Width = 250,
@@ -92,6 +113,9 @@ namespace Odyssey.Stride.UI
                 BackgroundColor = new Color(0, 0, 0, 150)
             };
 
+            // Define grid rows using StripDefinition
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripType.Star makes rows fill available space proportionally
             _healthPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));
             _healthPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));
 
@@ -118,6 +142,9 @@ namespace Odyssey.Stride.UI
             _rootCanvas.Children.Add(_healthPanel);
 
             // Debug text in top-right
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock displays text, Visibility.Collapsed hides the element
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             _debugText = new TextBlock
             {
                 Font = _font,
@@ -131,6 +158,10 @@ namespace Odyssey.Stride.UI
             _rootCanvas.Children.Add(_debugText);
 
             // Add to UI page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // Page property gets/sets the active UI page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIPage.html
+            // RootElement property sets the root UI element for the page
             if (_uiComponent.Page != null)
             {
                 _uiComponent.Page.RootElement = _rootCanvas;
@@ -167,6 +198,10 @@ namespace Odyssey.Stride.UI
             grid.Children.Add(labelText);
 
             // Bar background
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border is a control that draws a border around content
+            // BackgroundColor sets background, BorderColor sets border color, BorderThickness sets border width
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             background = new Border
             {
                 BackgroundColor = new Color(40, 40, 40, 200),
@@ -179,6 +214,7 @@ namespace Odyssey.Stride.UI
             grid.Children.Add(background);
 
             // Bar fill
+            // Border used as progress bar fill, HorizontalAlignment.Left aligns to left edge
             bar = new Border
             {
                 BackgroundColor = barColor,
@@ -249,6 +285,8 @@ namespace Odyssey.Stride.UI
             ratio = Math.Max(0, Math.Min(1, ratio));
 
             // Update bar width (relative to background)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+            // Width property sets the element's width
             float maxWidth = 160; // Approximate width
             _healthBar.Width = maxWidth * ratio;
 

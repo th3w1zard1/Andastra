@@ -38,6 +38,9 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Gets or sets whether the menu is visible.
         /// </summary>
+        // Control visibility of pause menu
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+        // Visibility property controls whether element is rendered (Visible) or hidden (Collapsed)
         public bool IsVisible
         {
             get { return _isVisible; }
@@ -59,6 +62,11 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Creates a new pause menu.
         /// </summary>
+        // Initialize pause menu with UI component and font
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent manages UI rendering and input handling
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteFont.html
+        // SpriteFont provides font rendering capabilities for text
         public PauseMenu([NotNull] UIComponent uiComponent, [NotNull] SpriteFont font)
         {
             _uiComponent = uiComponent ?? throw new ArgumentNullException("uiComponent");
@@ -70,6 +78,10 @@ namespace Odyssey.Stride.UI
         private void BuildUI()
         {
             // Full-screen overlay with semi-transparent background
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid with Width/Height = float.NaN fills available space
+            // BackgroundColor sets semi-transparent background, Visibility.Collapsed initially hides
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _rootPanel = new Grid
             {
                 Width = float.NaN,
@@ -79,6 +91,10 @@ namespace Odyssey.Stride.UI
             };
 
             // Center panel
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border draws a border around content, BackgroundColor/BorderColor/BorderThickness set appearance
+            // HorizontalAlignment/VerticalAlignment.Center centers the border
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var centerPanel = new Border
             {
                 BackgroundColor = new Color(20, 20, 40, 220),
@@ -90,6 +106,8 @@ namespace Odyssey.Stride.UI
                 VerticalAlignment = VerticalAlignment.Center
             };
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel arranges children vertically, Margin sets spacing
             var contentPanel = new StackPanel
             {
                 Orientation = Orientation.Vertical,
@@ -154,6 +172,11 @@ namespace Odyssey.Stride.UI
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+            // Click event fires when button is clicked
+            // MouseOverStateChanged event fires when mouse enters/leaves button
+            // MouseOverState.MouseOverElement indicates mouse is over the element
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             button.Click += clickHandler;
             button.MouseOverStateChanged += (sender, args) =>
             {
@@ -170,6 +193,10 @@ namespace Odyssey.Stride.UI
             return button;
         }
 
+        // Handle button click events
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Events.RoutedEventArgs.html
+        // RoutedEventArgs provides event data for routed events like button clicks
+        // Source: https://doc.stride3d.net/latest/en/manual/user-interface/events.html
         private void OnResumeClick(object sender, RoutedEventArgs e)
         {
             IsVisible = false;

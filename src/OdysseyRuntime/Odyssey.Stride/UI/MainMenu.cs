@@ -53,6 +53,10 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Gets or sets whether the main menu is visible.
         /// </summary>
+        // Control visibility of UI element
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+        // Visibility property controls whether element is rendered (Visible) or hidden (Collapsed)
+        // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
         public bool IsVisible
         {
             get { return _rootCanvas?.Visibility == Visibility.Visible; }
@@ -68,6 +72,12 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Creates a new main menu.
         /// </summary>
+        // Initialize main menu with UI component and font
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent manages UI rendering and input handling
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteFont.html
+        // SpriteFont provides font rendering capabilities for text
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/spritefont.html
         public MainMenu([NotNull] UIComponent uiComponent, [NotNull] SpriteFont font)
         {
             _uiComponent = uiComponent ?? throw new ArgumentNullException("uiComponent");
@@ -78,9 +88,17 @@ namespace Odyssey.Stride.UI
 
         private void BuildUI()
         {
+            // Create root canvas for UI layout
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Canvas.html
+            // Canvas is a panel that allows absolute positioning of child elements
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _rootCanvas = new Canvas();
 
             // Main panel - centered
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid is a panel that arranges children in rows and columns
+            // Width/Height set dimensions, BackgroundColor sets background, HorizontalAlignment/VerticalAlignment control layout
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _mainPanel = new Grid
             {
                 Width = 600,
@@ -90,6 +108,10 @@ namespace Odyssey.Stride.UI
                 VerticalAlignment = VerticalAlignment.Center
             };
 
+            // Define grid rows using StripDefinition
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition defines a row or column in a Grid, StripType.Fixed sets fixed size, StripType.Star sets proportional size
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60)); // Title
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 40)); // Install path label
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 50)); // Install path button
@@ -99,6 +121,10 @@ namespace Odyssey.Stride.UI
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));  // Status text
 
             // Title
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock displays text, Font sets the font, TextSize sets size, TextColor sets color, Text sets content
+            // HorizontalAlignment/VerticalAlignment control text alignment
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             _titleText = new TextBlock
             {
                 Font = _font,
@@ -108,10 +134,19 @@ namespace Odyssey.Stride.UI
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
+            // Set grid row position
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // SetGridRow sets which row the element occupies in the grid
             _titleText.SetGridRow(0);
+            // Add to panel children
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Panel.html
+            // Children property contains the child UI elements
             _mainPanel.Children.Add(_titleText);
 
             // Install path label
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // Margin property sets spacing around the element using Thickness
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var installLabel = new TextBlock
             {
                 Font = _font,
@@ -126,6 +161,8 @@ namespace Odyssey.Stride.UI
             _mainPanel.Children.Add(installLabel);
 
             // Install path text and button
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // ColumnDefinitions defines grid columns, StripType.Star makes column fill remaining space
             var installPathPanel = new Grid();
             installPathPanel.ColumnDefinitions.Add(new StripDefinition(StripType.Star, 1));
             installPathPanel.ColumnDefinitions.Add(new StripDefinition(StripType.Fixed, 120));
@@ -143,6 +180,11 @@ namespace Odyssey.Stride.UI
             _installPathText.SetGridColumn(0);
             installPathPanel.Children.Add(_installPathText);
 
+            // Create button with text content
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+            // Button is a clickable control, Content property sets the button's content (TextBlock in this case)
+            // BackgroundColor sets button background, Click event fires when button is clicked
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             _selectInstallButton = new Button
             {
                 Content = new TextBlock
@@ -158,6 +200,9 @@ namespace Odyssey.Stride.UI
                 VerticalAlignment = VerticalAlignment.Stretch
             };
             _selectInstallButton.Click += OnSelectInstallPath;
+            // Set grid column position
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // SetGridColumn sets which column the element occupies
             _selectInstallButton.SetGridColumn(1);
             installPathPanel.Children.Add(_selectInstallButton);
 
@@ -235,6 +280,11 @@ namespace Odyssey.Stride.UI
             _rootCanvas.Children.Add(_mainPanel);
 
             // Add to UI page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // Page property gets/sets the active UI page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIPage.html
+            // RootElement property sets the root UI element for the page
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             if (_uiComponent.Page != null)
             {
                 _uiComponent.Page.RootElement = _rootCanvas;
@@ -299,6 +349,9 @@ namespace Odyssey.Stride.UI
         {
             if (_startGameButton != null)
             {
+                // Enable/disable button
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+                // IsEnabled property controls whether button can be clicked
                 _startGameButton.IsEnabled = !string.IsNullOrEmpty(_selectedInstallPath);
             }
         }

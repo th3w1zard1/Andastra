@@ -29,6 +29,12 @@ namespace Odyssey.Stride.GUI
         /// </summary>
         public event EventHandler<GuiButtonClickedEventArgs> OnButtonClicked;
 
+        // Initialize KotorGuiManager with UI component and graphics device
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent manages UI rendering and input handling
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // GraphicsDevice provides access to graphics hardware and resources
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
         public KotorGuiManager(UIComponent uiComponent, GraphicsDevice graphicsDevice, string gamePath)
         {
             _uiComponent = uiComponent ?? throw new ArgumentNullException(nameof(uiComponent));
@@ -157,6 +163,10 @@ namespace Odyssey.Stride.GUI
         /// <summary>
         /// Loads a texture resource from game files.
         /// </summary>
+        // Load texture from game resources and return Stride Texture
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+        // Texture represents image data for rendering
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
         public Texture LoadTexture(string resRef)
         {
             if (string.IsNullOrEmpty(resRef))

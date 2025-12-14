@@ -44,6 +44,9 @@ namespace Odyssey.Stride.UI
         /// <summary>
         /// Gets or sets whether the panel is visible.
         /// </summary>
+        // Control visibility of dialogue panel
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+        // Visibility property controls whether element is rendered (Visible) or hidden (Collapsed)
         public bool IsVisible
         {
             get { return _isVisible; }
@@ -62,6 +65,11 @@ namespace Odyssey.Stride.UI
         /// </summary>
         /// <param name="uiComponent">The UI component to attach to.</param>
         /// <param name="font">The font to use for text.</param>
+        // Initialize dialogue panel with UI component and font
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent manages UI rendering and input handling
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteFont.html
+        // SpriteFont provides font rendering capabilities for text
         public DialoguePanel([NotNull] UIComponent uiComponent, [NotNull] SpriteFont font)
         {
             _uiComponent = uiComponent ?? throw new ArgumentNullException("uiComponent");
@@ -74,6 +82,10 @@ namespace Odyssey.Stride.UI
         private void BuildUI()
         {
             // Create root panel (bottom portion of screen)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid arranges children in rows and columns, Width = float.NaN fills available space
+            // VerticalAlignment.Bottom aligns to bottom, BackgroundColor sets background
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _rootPanel = new Grid
             {
                 Width = float.NaN, // Fill
@@ -83,10 +95,16 @@ namespace Odyssey.Stride.UI
             };
 
             // Define columns: portrait (left), dialogue area (center)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripType.Fixed sets fixed width, StripType.Star fills remaining space
             _rootPanel.ColumnDefinitions.Add(new StripDefinition(StripType.Fixed, 150));
             _rootPanel.ColumnDefinitions.Add(new StripDefinition(StripType.Star, 1));
 
             // Portrait area
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ImageElement.html
+            // ImageElement displays an image, Width/Height set dimensions
+            // StretchType.Uniform maintains aspect ratio while fitting within bounds
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             _portraitImage = new ImageElement
             {
                 Width = 128,
@@ -139,6 +157,10 @@ namespace Odyssey.Stride.UI
             dialogueArea.Children.Add(_dialogueBackground);
 
             // Replies panel
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ScrollViewer.html
+            // ScrollViewer provides scrolling for content that exceeds visible area
+            // ScrollMode.Vertical enables vertical scrolling, Content property sets scrollable content
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var repliesContainer = new ScrollViewer
             {
                 ScrollMode = ScrollingMode.Vertical,
@@ -146,6 +168,10 @@ namespace Odyssey.Stride.UI
             };
             repliesContainer.SetGridRow(2);
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel arranges children in a single line (horizontal or vertical)
+            // Orientation.Vertical stacks children vertically
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _repliesPanel = new StackPanel
             {
                 Orientation = Orientation.Vertical
@@ -181,6 +207,9 @@ namespace Odyssey.Stride.UI
             _dialogueText.Text = dialogueText ?? "";
 
             // Set portrait
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ImageElement.html
+            // Visibility property controls whether image is displayed
+            // FIXME: ImageElement requires SpriteFromTexture conversion - currently not implemented
             if (portrait != null)
             {
                 _portraitImage.Visibility = Visibility.Visible;
@@ -233,6 +262,11 @@ namespace Odyssey.Stride.UI
                     HorizontalAlignment = HorizontalAlignment.Stretch
                 };
 
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+                // Click event fires when button is clicked
+                // MouseOverStateChanged event fires when mouse enters/leaves button
+                // MouseOverState.MouseOverElement indicates mouse is over the element
+                // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
                 button.Click += (sender, args) => SelectReply(index);
                 button.MouseOverStateChanged += (sender, args) =>
                 {
