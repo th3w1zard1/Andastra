@@ -44,6 +44,15 @@ namespace Odyssey.Kotor.Game
     /// <summary>
     /// Manages the current game session - module loading, saves, party, etc.
     /// </summary>
+    /// <remarks>
+    /// Game Session Management:
+    /// - Based on swkotor2.exe game session system
+    /// - Located via string references: "GAMEINPROGRESS" @ 0x007c68f0, "GAMEINPROGRESS:" @ 0x007bde44
+    /// - Original engine uses "GAMEINPROGRESS:" prefix for game state directory (z:\gameinprogress, .\gameinprogress)
+    /// - Game state stored in: GAMEINPROGRESS:PC, GAMEINPROGRESS:INVENTORY, GAMEINPROGRESS:REPUTE, etc.
+    /// - Module loading triggers ON_MODULE_LOAD and ON_MODULE_START script events
+    /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up all game directories including GAMEINPROGRESS)
+    /// </remarks>
     public class GameSession : IDisposable
     {
         private readonly GameSessionSettings _settings;
@@ -60,6 +69,7 @@ namespace Odyssey.Kotor.Game
         private readonly ModuleTransitionSystem _moduleTransitionSystem;
         private readonly SaveSystem _saveSystem;
         private readonly PartyManager _partyManager;
+        private readonly EncounterSystem _encounterSystem;
 
         private string _currentModuleName;
         private RuntimeModule _currentRuntimeModule;
@@ -211,6 +221,9 @@ namespace Odyssey.Kotor.Game
             // Create party manager
             _partyManager = new PartyManager(world);
 
+            // Create encounter system
+            _encounterSystem = new EncounterSystem(world, _factionManager, FireScriptEvent, _moduleLoader);
+
             // Create module transition system
             _moduleTransitionSystem = new ModuleTransitionSystem(
                 LoadModuleAsync,
@@ -261,6 +274,11 @@ namespace Odyssey.Kotor.Game
         /// <summary>
         /// Loads a module asynchronously.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe module loading
+        /// Original implementation: Loads module, triggers ON_MODULE_LOAD and ON_MODULE_START events
+        /// Module loading progress tracked via progress callbacks
+        /// </remarks>
         private async System.Threading.Tasks.Task<bool> LoadModuleAsync(string moduleName)
         {
             try
@@ -687,6 +705,12 @@ namespace Odyssey.Kotor.Game
             if (_triggerSystem != null)
             {
                 _triggerSystem.Update();
+            }
+
+            // Update encounter system (spawns creatures when entered)
+            if (_encounterSystem != null)
+            {
+                _encounterSystem.Update(deltaTime);
             }
 
             // Update perception system

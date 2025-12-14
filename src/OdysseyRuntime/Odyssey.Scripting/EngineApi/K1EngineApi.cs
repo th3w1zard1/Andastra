@@ -221,6 +221,11 @@ namespace Odyssey.Scripting.EngineApi
                 case 574: return Func_AddPartyMember(args, ctx);
                 case 575: return Func_RemovePartyMember(args, ctx);
                 
+                // Faction functions
+                case 172: return Func_GetFactionEqual(args, ctx);
+                case 235: return Func_GetIsEnemy(args, ctx);
+                case 236: return Func_GetIsFriend(args, ctx);
+                
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
                 case 579: return Func_SetGlobalBoolean(args, ctx);
@@ -2257,102 +2262,78 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
-        /// GetPartyMemberCount() - returns number of active party members
+        /// GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF) - returns TRUE if both objects have same faction
         /// </summary>
-        private Variable Func_GetPartyMemberCount(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private Variable Func_GetFactionEqual(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Get PartyManager from AdditionalContext (GameSession)
-            GameSession gameSession = ctx.AdditionalContext as GameSession;
-            if (gameSession != null && gameSession.PartyManager != null)
-            {
-                return Variable.FromInt(gameSession.PartyManager.ActiveMemberCount);
-            }
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// GetPartyMemberByIndex(int nIndex) - returns party member at index (0 = leader)
-        /// </summary>
-        private Variable Func_GetPartyMemberByIndex(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            int index = args.Count > 0 ? args[0].AsInt() : 0;
+            uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             
-            GameSession gameSession = ctx.AdditionalContext as GameSession;
-            if (gameSession != null && gameSession.PartyManager != null)
-            {
-                IEntity member = gameSession.PartyManager.GetMemberAtSlot(index);
-                if (member != null)
-                {
-                    return Variable.FromObject(member.ObjectId);
-                }
-            }
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// IsObjectPartyMember(object oCreature) - returns TRUE if creature is in party
-        /// </summary>
-        private Variable Func_IsObjectPartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity1 = ResolveObject(objectId1, ctx);
+            IEntity entity2 = ResolveObject(objectId2, ctx);
             
-            if (entity != null)
+            if (entity1 != null && entity2 != null)
             {
-                GameSession gameSession = ctx.AdditionalContext as GameSession;
-                if (gameSession != null && gameSession.PartyManager != null)
+                IFactionComponent faction1 = entity1.GetComponent<IFactionComponent>();
+                IFactionComponent faction2 = entity2.GetComponent<IFactionComponent>();
+                
+                if (faction1 != null && faction2 != null)
                 {
-                    return Variable.FromInt(gameSession.PartyManager.IsInParty(entity) ? 1 : 0);
+                    return Variable.FromInt(faction1.FactionId == faction2.FactionId ? 1 : 0);
                 }
             }
             return Variable.FromInt(0);
         }
 
         /// <summary>
-        /// AddPartyMember(int nNPC, object oCreature) - adds creature to party by NPC index
+        /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as enemy
         /// </summary>
-        private Variable Func_AddPartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private Variable Func_GetIsEnemy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
-            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            IEntity entity = ResolveObject(objectId, ctx);
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             
-            if (entity != null && npcIndex >= 0)
+            IEntity source = ResolveObject(sourceId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
+            
+            if (source != null && target != null)
             {
-                GameSession gameSession = ctx.AdditionalContext as GameSession;
-                if (gameSession != null && gameSession.PartyManager != null)
+                // Get FactionManager from GameSession via AdditionalContext
+                if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.CombatManager != null)
                 {
-                    // Add to available members if not already available
-                    if (!gameSession.PartyManager.IsAvailable(npcIndex))
-                    {
-                        gameSession.PartyManager.AddAvailableMember(npcIndex, entity);
-                    }
-                    
-                    // Select member for active party
-                    bool success = gameSession.PartyManager.SelectMember(npcIndex);
-                    return Variable.FromInt(success ? 1 : 0);
+                    // FactionManager is accessed through CombatManager or directly
+                    // For now, use a simpler approach - get from world if available
+                    // TODO: Add FactionManager to GameServicesContext
+                }
+                
+                // Alternative: Get from GameSession directly if available
+                if (ctx.AdditionalContext is GameSession gameSession && gameSession.FactionManager != null)
+                {
+                    bool isEnemy = gameSession.FactionManager.IsHostile(source, target);
+                    return Variable.FromInt(isEnemy ? 1 : 0);
                 }
             }
             return Variable.FromInt(0);
         }
 
         /// <summary>
-        /// RemovePartyMember(int nNPC) - removes party member by NPC index
+        /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as friend
         /// </summary>
-        private Variable Func_RemovePartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private Variable Func_GetIsFriend(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             
-            if (npcIndex >= 0)
+            IEntity source = ResolveObject(sourceId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
+            
+            if (source != null && target != null)
             {
-                GameSession gameSession = ctx.AdditionalContext as GameSession;
-                if (gameSession != null && gameSession.PartyManager != null)
+                // Get FactionManager from GameSession via AdditionalContext
+                if (ctx.AdditionalContext is GameSession gameSession && gameSession.FactionManager != null)
                 {
-                    if (gameSession.PartyManager.IsSelected(npcIndex))
-                    {
-                        gameSession.PartyManager.DeselectMember(npcIndex);
-                        return Variable.FromInt(1);
-                    }
+                    bool isFriend = gameSession.FactionManager.IsFriendly(source, target);
+                    return Variable.FromInt(isFriend ? 1 : 0);
                 }
             }
             return Variable.FromInt(0);
