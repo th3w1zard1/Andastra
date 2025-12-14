@@ -16,15 +16,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Node.java
         // Original: public void apply(Switch sw) { ... }
+        // NOTE: Base implementation - subclasses override this to call their visitor method
         public virtual void Apply(Switch sw)
         {
-            System.Reflection.MethodInfo method = this.GetType().GetMethod("Apply", new[] { typeof(Switch) });
-            if (method != null && method.DeclaringType != typeof(Node))
-            {
-                method.Invoke(this, new object[] { sw });
-                return;
-            }
-
+            // Default implementation - subclasses like AActionCmd override this
+            // to call the appropriate visitor method on the switch
             if (sw is AnalysisAdapter adapter)
             {
                 Apply(adapter);

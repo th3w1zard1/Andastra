@@ -98,25 +98,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public override void CaseASubroutine(ASubroutine node)
         {
             this.InASubroutine(node);
-            string cmdBlockStatus = node.GetCommandBlock() != null ? "not null" : "null";
-            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseASubroutine: ENTERED, commandBlock=" + cmdBlockStatus;
-            Console.Error.WriteLine(debugMsg);
-            JavaSystem.@out.Println(debugMsg);
-            try
-            {
-                System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-            }
-            catch { }
             if (node.GetCommandBlock() != null)
             {
-                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseASubroutine: Visiting commandBlock";
-                Console.Error.WriteLine(debugMsg);
-                JavaSystem.@out.Println(debugMsg);
-                try
-                {
-                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-                }
-                catch { }
                 node.GetCommandBlock().Apply(this);
             }
 
@@ -149,7 +132,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             // Matching Java: for (int i = 0; i < temp.length; i++) { temp[i].apply(this); }
             for (int i = 0; i < temp.Length; i++)
             {
-                temp[i].Apply(this);
+                // Cast to Switch to ensure correct overload resolution (Apply(Switch) not Apply(AnalysisAdapter))
+                temp[i].Apply((Switch)this);
             }
 
             this.OutACommandBlock(node);
@@ -534,46 +518,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseAActionCmd(AActionCmd node)
         {
-            string actionCmdStatus = node.GetActionCommand() != null ? "not null" : "null";
-            string debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: ENTERED, actionCommand=" + actionCmdStatus;
-            Console.Error.WriteLine(debugMsg);
-            JavaSystem.@out.Println(debugMsg);
-            try
-            {
-                System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-            }
-            catch { }
             this.InAActionCmd(node);
             if (node.GetActionCommand() != null)
             {
-                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: calling Apply on actionCommand";
-                Console.Error.WriteLine(debugMsg);
-                JavaSystem.@out.Println(debugMsg);
-                try
-                {
-                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-                }
-                catch { }
                 node.GetActionCommand().Apply(this);
-                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: Apply completed";
-                Console.Error.WriteLine(debugMsg);
-                JavaSystem.@out.Println(debugMsg);
-                try
-                {
-                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-                }
-                catch { }
-            }
-            else
-            {
-                debugMsg = "DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: actionCommand is null!";
-                Console.Error.WriteLine(debugMsg);
-                JavaSystem.@out.Println(debugMsg);
-                try
-                {
-                    System.IO.File.AppendAllText("debug_ast_traversal.txt", debugMsg + "\n");
-                }
-                catch { }
             }
 
             this.OutAActionCmd(node);

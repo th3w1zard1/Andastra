@@ -39,7 +39,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
         {
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ASubroutine.java:28-31
             // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseASubroutine(this); }
-            // Cast to IAnalysis interface and call CaseASubroutine directly
             if (sw is Analysis.IAnalysis analysis)
             {
                 analysis.CaseASubroutine(this);
