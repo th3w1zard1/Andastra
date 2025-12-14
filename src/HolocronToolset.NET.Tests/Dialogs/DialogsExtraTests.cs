@@ -228,6 +228,8 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 return; // Skip if K1_PATH not set
             }
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:162-172
+            // Original: mock_resource: FileResource = cast(FileResource, MagicMock(spec=FileResource))
             // Create a mock FileResource for testing
             var mockResource = new CSharpKOTOR.Resources.FileResource(
                 "test_resource",
@@ -237,6 +239,8 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 System.IO.Path.Combine(_installation.Path, "test.utc")
             );
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:171-172
+            // Original: search_results: list[FileResource] = []
             // Create LoadFromLocationResultDialog with resources list
             var searchResults = new List<CSharpKOTOR.Resources.FileResource> { mockResource };
             var parent = new Window();
@@ -244,12 +248,28 @@ namespace HolocronToolset.NET.Tests.Dialogs
             var window = new LoadFromLocationResultDialog(parent, searchResults);
             window.Show();
 
-            // The window should populate resources automatically
-
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:196-203
+            // Original: window.resize_to_content()
+            // The key test: resize_to_content should NOT try to import QDesktopWidget
+            // It should use screen geometry instead (QApplication.primaryScreen() in Qt, Screen in Avalonia)
             // In Avalonia/C#, we don't have QDesktopWidget issues like Qt6
-            // But we should verify the window can be resized
+            // But we should verify the window can be resized using ResizeToContent()
+            double initialWidth = window.Width;
+            double initialHeight = window.Height;
+            
             window.Width.Should().BeGreaterThan(0);
             window.Height.Should().BeGreaterThan(0);
+
+            // Call ResizeToContent() - this should work without trying to import QDesktopWidget
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:198
+            // Original: window.resize_to_content()
+            window.ResizeToContent();
+
+            // Verify the window was resized (width may change, height should remain)
+            window.Width.Should().BeGreaterThan(0);
+            window.Height.Should().BeGreaterThan(0);
+            // Width may have changed after resize - verify it's at least the minimum width
+            (window.Width >= window.MinWidth).Should().BeTrue();
 
             window.Close();
             parent.Close();

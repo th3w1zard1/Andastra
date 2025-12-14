@@ -157,5 +157,66 @@ namespace HolocronToolset.NET.Dialogs
             // TODO: Get selected resources from table
             return new List<FileResource>();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1089-1105
+        // Original: def resize_to_content(self):
+        // This method resizes the window to fit the table content, using screen geometry instead of QDesktopWidget
+        // In Qt, it uses QApplication.primaryScreen() which works for both Qt5 and Qt6 (QDesktopWidget is deprecated in Qt6)
+        // In Avalonia, we use Screen API which is always available
+        public void ResizeToContent()
+        {
+            if (_tableWidget == null)
+            {
+                return;
+            }
+
+            // Calculate width based on table columns
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1094-1096
+            // Original: width = vert_header.width() + 4  # 4 for the frame
+            //          for i in range(self.resource_table.columnCount()):
+            //              width += self.resource_table.columnWidth(i)
+            double width = 50; // Estimate for vertical header and frame padding
+
+            if (_tableWidget.Columns != null)
+            {
+                foreach (var column in _tableWidget.Columns)
+                {
+                    // Estimate column width (header + content)
+                    // In Avalonia DataGrid, we estimate based on typical content
+                    width += 150; // Default column width estimate
+                }
+            }
+
+            // Get screen bounds to ensure window doesn't exceed screen size
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1097-1102
+            // Original: primary_screen: QScreen | None = QApplication.primaryScreen()
+            //          if primary_screen is None:
+            //              raise ValueError("Primary screen is not set")
+            //          width = min(width, primary_screen.availableGeometry().width())
+            try
+            {
+                var screens = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                if (screens?.MainWindow != null)
+                {
+                    var screen = screens.MainWindow.Screens.ScreenFromWindow(screens.MainWindow);
+                    if (screen != null)
+                    {
+                        var availableWidth = screen.WorkingArea.Width;
+                        width = System.Math.Min(width, availableWidth * 0.9); // Max 90% of screen width
+                    }
+                }
+            }
+            catch
+            {
+                // If screen API is not available, use a reasonable default
+                width = System.Math.Min(width, 1920); // Default max width
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1103-1104
+            // Original: height = self.height()  # keep the current height
+            //          self.resize(width, height)
+            // Set window width, keep current height
+            Width = System.Math.Max(width, MinWidth);
+        }
     }
 }
