@@ -7,7 +7,6 @@ namespace Odyssey.Content.MDL
     /// Lightweight vector types for MDL data without external dependencies.
     /// These are used for intermediate parsing before conversion to rendering-specific types.
     /// </summary>
-    
     /// <summary>
     /// Represents a 2D vector with X and Y components.
     /// Used for texture coordinates in MDL mesh data.
