@@ -1704,47 +1704,124 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_EffectHeal(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectHeal(int nDamageToHeal)
+            int amount = args.Count > 0 ? args[0].AsInt() : 0;
+            var effect = new Effect(EffectType.Heal)
+            {
+                Amount = amount,
+                DurationType = EffectDurationType.Instant
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectDamage(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectDamage(int nDamageAmount, int nDamageType=DAMAGE_TYPE_UNIVERSAL, int nDamagePower=DAMAGE_POWER_NORMAL)
+            int amount = args.Count > 0 ? args[0].AsInt() : 0;
+            int damageType = args.Count > 1 ? args[1].AsInt() : 8; // DAMAGE_TYPE_UNIVERSAL
+            int damagePower = args.Count > 2 ? args[2].AsInt() : 0; // DAMAGE_POWER_NORMAL
+            var effect = new Effect(EffectType.DamageIncrease)
+            {
+                Amount = amount,
+                SubType = damageType,
+                DurationType = EffectDurationType.Instant
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectAbilityIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectAbilityIncrease(int nAbilityToIncrease, int nModifyBy)
+            int ability = args.Count > 0 ? args[0].AsInt() : 0;
+            int amount = args.Count > 1 ? args[1].AsInt() : 0;
+            var effect = new Effect(EffectType.AbilityIncrease)
+            {
+                Amount = amount,
+                SubType = ability,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectDamageResistance(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectDamageResistance(int nDamageType, int nAmount, int nLimit=0)
+            int damageType = args.Count > 0 ? args[0].AsInt() : 0;
+            int amount = args.Count > 1 ? args[1].AsInt() : 0;
+            int limit = args.Count > 2 ? args[2].AsInt() : 0;
+            var effect = new Effect(EffectType.DamageResistance)
+            {
+                Amount = amount,
+                SubType = damageType,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectResurrection(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectResurrection()
+            var effect = new Effect(EffectType.Heal)
+            {
+                Amount = 999999, // Full heal on resurrection
+                DurationType = EffectDurationType.Instant
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectSavingThrowIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectSavingThrowIncrease(int nSaveType, int nAmount)
+            int saveType = args.Count > 0 ? args[0].AsInt() : 0; // SAVING_THROW_ALL
+            int amount = args.Count > 1 ? args[1].AsInt() : 0;
+            var effect = new Effect(EffectType.SaveIncrease)
+            {
+                Amount = amount,
+                SubType = saveType,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectAttackIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectAttackIncrease(int nBonus)
+            int bonus = args.Count > 0 ? args[0].AsInt() : 0;
+            var effect = new Effect(EffectType.AttackIncrease)
+            {
+                Amount = bonus,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectDamageReduction(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectDamageReduction(int nAmount, int nDamagePower, int nLimit=0)
+            int amount = args.Count > 0 ? args[0].AsInt() : 0;
+            int damagePower = args.Count > 1 ? args[1].AsInt() : 0;
+            int limit = args.Count > 2 ? args[2].AsInt() : 0;
+            var effect = new Effect(EffectType.DamageReduction)
+            {
+                Amount = amount,
+                SubType = damagePower,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_EffectDamageIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectDamageIncrease(int nBonus, int nDamageType=DAMAGE_TYPE_UNIVERSAL)
+            int bonus = args.Count > 0 ? args[0].AsInt() : 0;
+            int damageType = args.Count > 1 ? args[1].AsInt() : 8; // DAMAGE_TYPE_UNIVERSAL
+            var effect = new Effect(EffectType.DamageIncrease)
+            {
+                Amount = bonus,
+                SubType = damageType,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         #endregion
