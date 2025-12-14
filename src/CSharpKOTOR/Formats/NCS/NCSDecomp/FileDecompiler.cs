@@ -1631,9 +1631,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 SubroutineState state = subdata.GetState(iterSub);
                 if (!state.IsTotallyPrototyped())
                 {
+                    int sigPos = nodedata.TryGetPos(iterSub);
                     JavaSystem.@out.Println(
                         "Strict signatures: unresolved signature for subroutine at " +
-                        nodedata.GetPos(iterSub).ToString() +
+                        (sigPos >= 0 ? sigPos.ToString() : "unknown") +
                         " (continuing)"
                     );
                 }
@@ -2141,7 +2142,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 foreach (ASubroutine iterSub in this.SubIterable(subdata))
                 {
                     subCount++;
-                    JavaSystem.@out.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + nodedata.GetPos(iterSub));
+                    int subPos = nodedata.TryGetPos(iterSub);
+                    JavaSystem.@out.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + (subPos >= 0 ? subPos.ToString() : "unknown"));
                     try
                     {
                         mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
@@ -2182,7 +2184,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 // Generate code for main subroutine - recover if this fails
-                JavaSystem.@out.Println("DEBUG decompileNcs: mainsub=" + (mainsub != null ? "found at pos=" + nodedata.GetPos(mainsub) : "null"));
+                int mainPos = mainsub != null ? nodedata.TryGetPos(mainsub) : -1;
+                JavaSystem.@out.Println("DEBUG decompileNcs: mainsub=" + (mainsub != null ? "found at pos=" + (mainPos >= 0 ? mainPos.ToString() : "unknown") : "null"));
                 if (mainsub != null)
                 {
                     try
