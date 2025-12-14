@@ -280,8 +280,6 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 
 5. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
 
-<<<<<<< HEAD
-
 ### Engine Architecture Principles
 
 **Layered Architecture** (strict separation):
@@ -309,9 +307,35 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 - `Odyssey.Stride` may reference Stride and Odyssey.Core
 - `Odyssey.Kotor` may reference all Odyssey.* except Odyssey.Game
 
+**Dependency Direction**:
+- Core → (nothing external)
+- Content → Core, CSharpKOTOR
+- Scripting → Core
+- Kotor → Core, Content, Scripting
+- Stride → Core, Content, Kotor (adapter layer)
+- Game → All
+
+**No Game Assets**: The runtime must load from user-provided KOTOR/TSL installation. Never ship game assets.
+
+### Implementation Order (Dependency-First)
+
+When implementing features, follow this order to avoid rework:
+1. Foundation: projects, config, Stride window
+2. Resource provider: wrap CSharpKOTOR.Installation
+3. Content cache: texture/model decode
+4. Area rendering: LYT + VIS + room meshes
+5. Walkmesh: collision + navigation
+6. Entity spawn: GIT parsing
+7. NCS VM: script execution
+8. Engine API: NWScript function implementations
+9. Transitions: doors, triggers, modules
+10. Dialogue: DLG/TLK/VO
+11. Combat: attack resolution, HP
+12. Save/Load: state persistence
+
 ### Game Loop Implementation
 
-Follow this fixed-timestep game loop pattern:
+Follow this fixed-timestep game loop pattern (60 Hz simulation):
 
 ```csharp
 // Per-frame phases (execute in order)
@@ -329,6 +353,7 @@ Follow this fixed-timestep game loop pattern:
 When implementing NCS VM features:
 
 - **Header validation**: `"NCS "` + `"V1.0"` signature, `0x42` marker at offset 8
+- **Instructions start**: At offset `0x0D`
 - **Endianness**: All multi-byte values are **big-endian**
 - **Stack alignment**: 4-byte aligned, vectors are 12 bytes (3 floats)
 - **Jump offsets**: Relative to **instruction start**, not next instruction
@@ -343,6 +368,16 @@ When implementing NWScript engine functions:
 2. **Profile separation**: K1 has ~850 functions, K2 has ~950 functions
 3. **Incremental coverage**: Start with minimal set for boot/movement, expand by feature
 4. **Return conventions**: Follow exact return type semantics (void, int, float, object, etc.)
+
+**Do NOT implement all NWScript functions alphabetically.** Implement by usage tiers:
+
+- **Tier 0**: Boot/Basic (~50 functions) - PrintString, Random, GetTag, GetLocal*, etc.
+- **Tier 1**: Movement/Actions (~80 functions) - ActionMove*, AssignCommand, DelayCommand
+- **Tier 2**: Creatures/Stats (~100 functions) - GetAbilityScore, GetCurrentHitPoints
+- **Tier 3**: Combat (~80 functions) - ActionAttack, EffectDamage, ApplyEffectToObject
+- **Tier 4**: Dialogue (~40 functions) - SpeakString, GetPCSpeaker, BeginConversation
+- **Tier 5**: Inventory (~60 functions) - GetItemInSlot, CreateItemOnObject
+- **Tier 6**: Force Powers (~50 functions) - ActionCastSpellAtObject, GetHasSpell
 
 ### Entity/Component System
 
@@ -372,6 +407,7 @@ Object (abstract base)
 - UTW → Waypoint entity
 - UTS → Sound emitter entity
 - UTE → Encounter spawner entity
+- UTI → Item (BaseItem, Properties, Charges)
 
 ### Walkmesh Implementation
 
@@ -380,6 +416,7 @@ BWM format requirements:
 - Type 1 (WOK): Area walkmesh with AABB tree, adjacency, perimeter edges
 - Type 0 (PWK/DWK): Placeable/door walkmesh with hook vectors
 - Adjacency encoding: `adjacency = faceIndex * 3 + edgeIndex`, `-1` = no neighbor
+- Decode adjacency: `face = encoded / 3`, `edge = encoded % 3`
 - Surface materials: Lookup via `surfacemat.2da` for walkability
 
 ### Combat System
@@ -401,6 +438,19 @@ D20 attack resolution:
 - Natural 1 = always miss
 - Roll + attack bonus >= target AC = hit
 
+### File Format References
+
+When implementing format handling, reference these CSharpKOTOR parsers:
+- NCS: `CSharpKOTOR/Formats/NCS/` - NWScript bytecode
+- BWM: `CSharpKOTOR/Formats/BWM/` - Walkmesh (WOK/PWK/DWK)
+- LYT: `CSharpKOTOR/Formats/LYT/` - Area layout
+- VIS: `CSharpKOTOR/Formats/VIS/` - Room visibility
+- MDL/MDX: `CSharpKOTOR/Formats/MDL/` - Models/animations
+- TPC/TXI: `CSharpKOTOR/Formats/TPC/` - Textures
+- DLG: `CSharpKOTOR/Formats/DLG/` - Dialogue
+- GIT: `CSharpKOTOR/Formats/GIT/` - Instance spawning
+- GFF templates: UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTI
+
 ### Future Engine Support (Aurora Family)
 
 The architecture supports future engines via abstraction:
@@ -411,93 +461,6 @@ The architecture supports future engines via abstraction:
 | Aurora | NWN | Similar NCS, different rendering |
 | Electron | Jade Empire | Modified NCS |
 | Eclipse | Dragon Age | Different script system |
-
-### Key Files to Reference
-
-| Subsystem | Reference Files |
-|-----------|-----------------|
-| VM Implementation | `Odyssey.Scripting/VM/NcsVm.cs` |
-| Navigation | `Odyssey.Core/Navigation/NavigationMesh.cs` |
-| Actions | `Odyssey.Core/Actions/*.cs` |
-| Entity System | `Odyssey.Core/Entities/Entity.cs`, `World.cs` |
-| Format Parsing | `CSharpKOTOR/Formats/*` |
-| Full Plan | `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` |
-| Roadmap | `docs/engine_roadmap.md` |
-
-### Engine Implementation Patterns
-
-**NCS Virtual Machine**:
-
-- Header: 13 bytes (`"NCS V1.0"` + `0x42` marker + big-endian file size)
-- Instructions: `<opcode:uint8><qualifier:uint8><args...>`
-- Stack: 4-byte aligned, vectors = 12 bytes (3 floats)
-- Jump offsets: Relative from instruction start (not next instruction)
-- Engine calls: `ACTION` with `uint16 routineId` + `uint8 argCount`
-
-**BWM Walkmesh**:
-
-- Types: WOK (area), PWK (placeable), DWK (door)
-- Adjacency encoding: `adjacency = faceIndex * 3 + edgeIndex`
-- Decode adjacency: `face = encoded / 3`, `edge = encoded % 3`
-- Surface materials: Walkability from surfacemat.2da semantics
-
-**Resource Precedence**:
-
-```
-Pre-save:  override → module archives → chitin (KEY/BIF) → defaults
-Post-save: override → module archives → save overlay → chitin → defaults
-```
-
-**Game Loop Phases**:
-
-1. Input Phase: Collect input, update camera, click-to-move
-2. Script Phase: Process delay wheel, heartbeats, actions (budget-limited)
-3. Simulation Phase: Update positions, perception, combat rounds
-4. Animation Phase: Skeletal animations, particles, lip sync
-5. Scene Sync Phase: Sync runtime transforms → Stride scene graph
-6. Render Phase: VIS culling, transparency sort, draw calls
-7. Audio Phase: Spatial audio, trigger one-shots
-
-**Object Type Hierarchy**:
-
-```
-Object (abstract)
-├── Creature (PC/NPC)
-├── Door
-├── Placeable
-├── Trigger
-├── Waypoint
-├── Sound
-├── Store
-├── Encounter
-├── Item
-└── AreaOfEffect
-```
-
-**GFF Template Types**:
-
-- UTC → Creature (Appearance_Type, Faction, HP, Scripts)
-- UTP → Placeable (Appearance, Useable, Locked, OnUsed)
-- UTD → Door (GenericType, Locked, OnOpen, OnClose)
-- UTT → Trigger (Geometry polygon, OnEnter, OnExit)
-- UTW → Waypoint (Tag, position)
-- UTS → Sound (Active, Looping, Positional, ResRef)
-- UTE → Encounter (Creature list, spawn conditions)
-- UTI → Item (BaseItem, Properties, Charges)
-
-**NWScript Engine API Coverage Strategy**:
-
-- Tier 0: Boot + area + movement + interaction + dialogue entry
-- Tier 1: Combat core + inventory + party management
-- Tier 2: Quests, journals, influence, minigames, AI
-- Tier 3: Edge features and obscure calls
-
-**Combat System** (~3 second rounds):
-
-- D20 attack resolution: roll + modifiers vs AC
-- Natural 20: Always hit, confirm crit
-- Natural 1: Always miss
-- Combat states: Starting → FirstAttack → SecondAttack → Cooldown → Finished
 
 **Engine Family Abstraction** (for future Aurora/Eclipse support):
 
@@ -511,6 +474,24 @@ public interface IGameProfile
 }
 ```
 
+Design for extensibility to other engines:
+- Keep `IGameProfile` interface for game-specific behavior
+- Game rules in `Odyssey.Kotor`, not `Odyssey.Core`
+- Resource paradigms (GFF, archives, scripting) shared
+- Game-specific 2DA/rules are pluggable
+
+### Key Files to Reference
+
+| Subsystem | Reference Files |
+|-----------|-----------------|
+| VM Implementation | `Odyssey.Scripting/VM/NcsVm.cs` |
+| Navigation | `Odyssey.Core/Navigation/NavigationMesh.cs` |
+| Actions | `Odyssey.Core/Actions/*.cs` |
+| Entity System | `Odyssey.Core/Entities/Entity.cs`, `World.cs` |
+| Format Parsing | `CSharpKOTOR/Formats/*` |
+| Full Plan | `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` |
+| Roadmap | `docs/engine_roadmap.md` |
+
 ### Key 2DA Tables
 
 | Table | Purpose |
@@ -521,6 +502,28 @@ public interface IGameProfile
 | `spells.2da` | Force powers |
 | `classes.2da` | Class progression |
 | `surfacemat.2da` | Surface walkability |
+
+### Clean-Room Process
+
+- Implementation is derived from behavioral observation and specification documents
+- **No code copying** from other implementations
+- Match original engine behavior exactly where documented
+- Document any deviations or improvements
+- Avoid GPL/LGPL/AGPL dependencies in shipped runtime
+
+### Testing Requirements
+
+- NCS VM: deterministic unit tests for all opcodes
+- Resource precedence: synthetic mini-installation fixtures
+- Content decoding: golden-file tests
+- Vertical slice: playable integration tests
+
+### Performance Budgets
+
+- Module load (warm): seconds, not minutes
+- Frame rate: stable 60fps on midrange GPU
+- Script budget: capped instructions per frame
+- Memory: bounded caches with LRU eviction
 
 ### Definition of Done for Engine Work
 
