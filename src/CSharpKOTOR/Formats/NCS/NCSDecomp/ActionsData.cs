@@ -44,46 +44,86 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:58-74
-        // Original: private void readActions() throws IOException { Pattern p = Pattern.compile("^\\s*(\\w+)\\s+(\\w+)\\s*\\((.*)\\).*"); String str; while ((str = this.actionsreader.readLine()) != null && !str.startsWith("// 0")) { } while ((str = this.actionsreader.readLine()) != null) { if (!str.startsWith("//") && str.length() != 0) { Matcher m = p.matcher(str); if (m.matches()) { this.actions.add(new ActionsData.Action(m.group(1), m.group(2), m.group(3))); } } } System.out.println("read actions.  There were " + Integer.toString(this.actions.size())); }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:58-168
+        // Original: private void readActions() throws IOException { ... binds signatures to their explicit numeric indices in comment headers ... }
         private void ReadActions()
         {
-            Pattern p = Pattern.Compile("^\\s*(\\w+)\\s+(\\w+)\\s*\\((.*)\\).*");
-            while (true)
+            // KOTOR/TSL nwscript files interleave documentation comments like:
+            //   // 768. GetScriptParameter
+            // followed by a signature line:
+            //   int GetScriptParameter( int nIndex );
+            //
+            // Earlier implementations appended every signature line after the first "// 0",
+            // assuming indices were contiguous and that no other declarations existed.
+            // That is brittle and can desync action indices, breaking stack typing and
+            // round-trip fidelity. Instead, bind signatures to their explicit numeric
+            // indices in the comment headers.
+            // Only treat real action headers as indices. Many nwscript files contain
+            // enumerated doc lists like "// 6) ..." which must NOT be treated as
+            // an action index, otherwise signatures get mis-assigned (breaks decompile).
+            // Accept common header styles:
+            // - "// 123:" (K1/K2)
+            // - "// 123." (some vendor variants)
+            // - "// 123"  (some tool-distributed nwscript files)
+            // Reject enumerated lists like "// 6) ..." which otherwise desync indices.
+            Pattern header = Pattern.Compile("^\\s*//\\s*(\\d+)\\s*(?:[\\.:]\\s*.*)?$");
+            Pattern sig = Pattern.Compile("^\\s*(\\w+)\\s+(\\w+)\\s*\\((.*)\\)\\s*;?.*");
+
+            string str;
+            bool started = false;
+            int pendingIndex = -1;
+            int maxIndex = -1;
+
+            while ((str = this.actionsreader.ReadLine()) != null)
             {
-                string str;
-                while ((str = this.actionsreader.ReadLine()) != null)
+                Matcher h = header.Matcher(str);
+                if (h.Matches())
                 {
-                    if (str.StartsWith("// 0"))
+                    int idx;
+                    try
                     {
-                        while ((str = this.actionsreader.ReadLine()) != null)
+                        idx = int.Parse(h.Group(1));
+                    }
+                    catch (FormatException)
+                    {
+                        continue;
+                    }
+                    // We only consider ourselves "in" the actions table once we see index 0.
+                    if (idx == 0)
+                    {
+                        started = true;
+                    }
+                    if (started)
+                    {
+                        pendingIndex = idx;
+                        if (idx > maxIndex)
                         {
-                            if (str.StartsWith("//"))
-                            {
-                                continue;
-                            }
-
-                            if (str.Length == 0)
-                            {
-                                continue;
-                            }
-
-                            Matcher m = p.Matcher(str);
-                            if (!m.Matches())
-                            {
-                                continue;
-                            }
-
-                            this.actions.Add(new Action(m.Group(1), m.Group(2), m.Group(3)));
+                            maxIndex = idx;
                         }
-
-                        ((JavaPrintStream)JavaSystem.@out).Println("read actions.  There were " + this.actions.Count.ToString());
-                        return;
                     }
                 }
-
-                continue;
+                else if (started)
+                {
+                    Matcher m = sig.Matcher(str);
+                    if (m.Matches())
+                    {
+                        if (pendingIndex < 0)
+                        {
+                            // No header seen - skip this signature (shouldn't happen in well-formed files)
+                            continue;
+                        }
+                        // Ensure list is large enough
+                        while (this.actions.Count <= pendingIndex)
+                        {
+                            this.actions.Add(null);
+                        }
+                        this.actions[pendingIndex] = new Action(m.Group(1), m.Group(2), m.Group(3));
+                        pendingIndex = -1;
+                    }
+                }
             }
+
+            ((JavaPrintStream)JavaSystem.@out).Println("read actions.  There were " + this.actions.Count.ToString());
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:76-81

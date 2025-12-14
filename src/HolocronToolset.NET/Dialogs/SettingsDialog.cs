@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.NET.Data;
@@ -12,6 +13,14 @@ namespace HolocronToolset.NET.Dialogs
         private bool _isResetting;
         private bool _installationEdited;
         private GlobalSettings _settings;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
+        // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
+        public SettingsDialogUi Ui { get; private set; }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
+        // Original: self._is_resetting: bool = False
+        public bool IsResetting => _isResetting;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:19-125
         // Original: def __init__(self, parent):
@@ -68,35 +77,79 @@ namespace HolocronToolset.NET.Dialogs
             Content = panel;
         }
 
-        private TreeView _settingsTree;
-        private ContentControl _settingsStack;
-
         private void SetupUI()
         {
-            // Find controls from XAML
-            _settingsTree = this.FindControl<TreeView>("settingsTree");
-            _settingsStack = this.FindControl<ContentControl>("settingsStack");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
+            // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
+            // Find all controls from XAML and expose via Ui property
+            var settingsTree = this.FindControl<TreeView>("settingsTree");
+            var settingsStack = this.FindControl<ContentControl>("settingsStack");
             var okButton = this.FindControl<Button>("okButton");
             var cancelButton = this.FindControl<Button>("cancelButton");
 
-            if (okButton != null)
+            // Create placeholder pages for testing
+            var installationsPage = new Control();
+            var gitEditorPage = new Control();
+            var miscPage = new Control();
+            var moduleDesignerPage = new Control();
+            var applicationSettingsPage = new Control();
+
+            Ui = new SettingsDialogUi
             {
-                okButton.Click += (s, e) => Accept();
+                SettingsTree = settingsTree,
+                SettingsStack = settingsStack,
+                InstallationsPage = installationsPage,
+                GitEditorPage = gitEditorPage,
+                MiscPage = miscPage,
+                ModuleDesignerPage = moduleDesignerPage,
+                ApplicationSettingsPage = applicationSettingsPage,
+                OkButton = okButton,
+                CancelButton = cancelButton
+            };
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:52-58
+            // Original: self.page_dict: dict[str, QWidget]
+            var pageDict = new Dictionary<string, Control>
+            {
+                { "Installations", Ui.InstallationsPage },
+                { "GIT Editor", Ui.GitEditorPage },
+                { "Misc", Ui.MiscPage },
+                { "Module Designer", Ui.ModuleDesignerPage },
+                { "Application", Ui.ApplicationSettingsPage }
+            };
+
+            if (Ui.OkButton != null)
+            {
+                Ui.OkButton.Click += (s, e) => Accept();
             }
-            if (cancelButton != null)
+            if (Ui.CancelButton != null)
             {
-                cancelButton.Click += (s, e) => Close();
+                Ui.CancelButton.Click += (s, e) => Close();
             }
-            if (_settingsTree != null)
+            if (Ui.SettingsTree != null)
             {
-                _settingsTree.SelectionChanged += (s, e) => OnSettingsTreeSelectionChanged();
+                Ui.SettingsTree.SelectionChanged += (s, e) => OnSettingsTreeSelectionChanged(pageDict);
+            }
+
+            // Set initial page
+            if (Ui.SettingsStack != null && Ui.InstallationsPage != null)
+            {
+                Ui.SettingsStack.Content = Ui.InstallationsPage;
             }
         }
 
-        private void OnSettingsTreeSelectionChanged()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:75-92
+        // Original: def on_page_change(self, page_tree_item: QTreeWidgetItem):
+        private void OnSettingsTreeSelectionChanged(Dictionary<string, Control> pageDict)
         {
-            // Switch between settings pages based on selection
-            // This will be implemented when settings widgets are available
+            if (Ui?.SettingsTree?.SelectedItem is TreeViewItem item)
+            {
+                string pageName = item.Header?.ToString() ?? "";
+                if (pageDict.ContainsKey(pageName) && Ui.SettingsStack != null)
+                {
+                    Ui.SettingsStack.Content = pageDict[pageName];
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:116-125
@@ -114,12 +167,32 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:94-111
         // Original: def on_reset_all_settings(self):
-        private void OnResetAllSettings()
+        public void OnResetAllSettings()
         {
-            // Reset all settings to defaults
-            // This will be implemented when MessageBox is available
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:95-111
+            // Original: QMessageBox.question and QMessageBox.information
+            // In C#, we'll use a simple approach - clear settings and close
+            // For full implementation, would use Avalonia MessageBox
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
+            // Original: GlobalSettings().settings.clear()
+            _settings.Clear();
             _isResetting = true;
             Close();
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
+    // Original: self.ui = settings.Ui_Dialog() - UI wrapper class exposing all controls
+    public class SettingsDialogUi
+    {
+        public TreeView SettingsTree { get; set; }
+        public ContentControl SettingsStack { get; set; }
+        public Control InstallationsPage { get; set; }
+        public Control GitEditorPage { get; set; }
+        public Control MiscPage { get; set; }
+        public Control ModuleDesignerPage { get; set; }
+        public Control ApplicationSettingsPage { get; set; }
+        public Button OkButton { get; set; }
+        public Button CancelButton { get; set; }
     }
 }

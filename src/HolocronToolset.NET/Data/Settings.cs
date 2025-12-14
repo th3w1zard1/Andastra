@@ -130,6 +130,14 @@ namespace HolocronToolset.NET.Data
             var prop = GetProperty<object>(name);
             prop.ResetToDefault(this);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
+        // Original: GlobalSettings().settings.clear()
+        public void Clear()
+        {
+            _values.Clear();
+            Save();
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:28-157

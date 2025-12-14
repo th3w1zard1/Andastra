@@ -16,6 +16,10 @@ namespace HolocronToolset.NET.Dialogs
         private Dictionary<string, HTInstallation> _installations;
         private HTInstallation _selectedInstallation;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
+        // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
+        public FileSearcherDialogUi Ui { get; private set; }
+
         // Public parameterless constructor for XAML
         public FileSearcherDialog() : this(null, null)
         {
@@ -68,42 +72,80 @@ namespace HolocronToolset.NET.Dialogs
 
         private void SetupUI()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:64-72
-            // Original: Setup installations in combo box
-            var installationSelect = this.FindControl<ComboBox>("installationSelect");
-            if (installationSelect != null && _installations != null)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
+            // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
+            // Find all controls from XAML and expose via Ui property
+            Ui = new FileSearcherDialogUi
             {
-                installationSelect.Items.Clear();
+                InstallationSelect = this.FindControl<ComboBox>("installationSelect"),
+                SearchTextEdit = this.FindControl<TextBox>("searchTextEdit"),
+                CaseSensitiveRadio = this.FindControl<RadioButton>("caseSensitiveRadio"),
+                CaseInsensitiveRadio = this.FindControl<RadioButton>("caseInsensitiveRadio"),
+                FilenamesOnlyCheck = this.FindControl<CheckBox>("filenamesOnlyCheck"),
+                CoreCheck = this.FindControl<CheckBox>("coreCheck"),
+                ModulesCheck = this.FindControl<CheckBox>("modulesCheck"),
+                OverrideCheck = this.FindControl<CheckBox>("overrideCheck"),
+                SelectAllCheck = this.FindControl<CheckBox>("selectAllCheck"),
+                TypeARECheck = this.FindControl<CheckBox>("typeARECheck"),
+                TypeGITCheck = this.FindControl<CheckBox>("typeGITCheck"),
+                TypeIFOCheck = this.FindControl<CheckBox>("typeIFOCheck"),
+                TypeVISCheck = this.FindControl<CheckBox>("typeVISCheck"),
+                TypeLYTCheck = this.FindControl<CheckBox>("typeLYTCheck"),
+                TypeDLGCheck = this.FindControl<CheckBox>("typeDLGCheck"),
+                TypeJRLCheck = this.FindControl<CheckBox>("typeJRLCheck"),
+                TypeUTCCheck = this.FindControl<CheckBox>("typeUTCCheck"),
+                TypeUTDCheck = this.FindControl<CheckBox>("typeUTDCheck"),
+                TypeUTECheck = this.FindControl<CheckBox>("typeUTECheck"),
+                TypeUTICheck = this.FindControl<CheckBox>("typeUTICheck"),
+                TypeUTPCheck = this.FindControl<CheckBox>("typeUTPCheck"),
+                TypeUTMCheck = this.FindControl<CheckBox>("typeUTMCheck"),
+                TypeUTSCheck = this.FindControl<CheckBox>("typeUTSCheck"),
+                TypeUTTCheck = this.FindControl<CheckBox>("typeUTTCheck"),
+                TypeUTWCheck = this.FindControl<CheckBox>("typeUTWCheck"),
+                Type2DACheck = this.FindControl<CheckBox>("type2DACheck"),
+                TypeNSSCheck = this.FindControl<CheckBox>("typeNSSCheck"),
+                TypeNCSCheck = this.FindControl<CheckBox>("typeNCSCheck"),
+                SearchButton = this.FindControl<Button>("searchButton"),
+                CancelButton = this.FindControl<Button>("cancelButton")
+            };
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:64-72
+            // Original: Setup installations in combo box - store installation as data
+            if (Ui.InstallationSelect != null && _installations != null)
+            {
+                Ui.InstallationSelect.Items.Clear();
                 foreach (var kvp in _installations)
                 {
-                    installationSelect.Items.Add(kvp.Key);
+                    // Store installation as data, display name as text
+                    Ui.InstallationSelect.Items.Add(new ComboBoxItem
+                    {
+                        Content = kvp.Key,
+                        Tag = kvp.Value
+                    });
                 }
-                if (installationSelect.Items.Count > 0)
+                if (Ui.InstallationSelect.Items.Count > 0)
                 {
-                    installationSelect.SelectedIndex = 0;
+                    Ui.InstallationSelect.SelectedIndex = 0;
                 }
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:70-71
             // Original: Connect Select All checkbox
-            var selectAllCheck = this.FindControl<CheckBox>("selectAllCheck");
-            if (selectAllCheck != null)
+            if (Ui.SelectAllCheck != null)
             {
-                selectAllCheck.IsCheckedChanged += (sender, e) => ToggleAllCheckboxes(selectAllCheck.IsChecked ?? false);
+                Ui.SelectAllCheck.IsCheckedChanged += (sender, e) => ToggleAllCheckboxes(Ui.SelectAllCheck.IsChecked ?? false);
             }
 
             // Connect search button
-            var searchButton = this.FindControl<Button>("searchButton");
-            if (searchButton != null)
+            if (Ui.SearchButton != null)
             {
-                searchButton.Click += (sender, e) => OnSearch();
+                Ui.SearchButton.Click += (sender, e) => OnSearch();
             }
 
             // Connect cancel button
-            var cancelButton = this.FindControl<Button>("cancelButton");
-            if (cancelButton != null)
+            if (Ui.CancelButton != null)
             {
-                cancelButton.Click += (sender, e) => Close();
+                Ui.CancelButton.Click += (sender, e) => Close();
             }
         }
 
@@ -111,27 +153,32 @@ namespace HolocronToolset.NET.Dialogs
         // Original: def toggle_all_checkboxes(self, state: Qt.CheckState):
         private void ToggleAllCheckboxes(bool checkState)
         {
+            if (Ui == null)
+            {
+                return;
+            }
+
             var checkBoxes = new[]
             {
-                this.FindControl<CheckBox>("typeARECheck"),
-                this.FindControl<CheckBox>("typeGITCheck"),
-                this.FindControl<CheckBox>("typeIFOCheck"),
-                this.FindControl<CheckBox>("typeVISCheck"),
-                this.FindControl<CheckBox>("typeLYTCheck"),
-                this.FindControl<CheckBox>("typeDLGCheck"),
-                this.FindControl<CheckBox>("typeJRLCheck"),
-                this.FindControl<CheckBox>("typeUTCCheck"),
-                this.FindControl<CheckBox>("typeUTDCheck"),
-                this.FindControl<CheckBox>("typeUTECheck"),
-                this.FindControl<CheckBox>("typeUTICheck"),
-                this.FindControl<CheckBox>("typeUTPCheck"),
-                this.FindControl<CheckBox>("typeUTMCheck"),
-                this.FindControl<CheckBox>("typeUTWCheck"),
-                this.FindControl<CheckBox>("typeUTSCheck"),
-                this.FindControl<CheckBox>("typeUTTCheck"),
-                this.FindControl<CheckBox>("type2DACheck"),
-                this.FindControl<CheckBox>("typeNSSCheck"),
-                this.FindControl<CheckBox>("typeNCSCheck")
+                Ui.TypeARECheck,
+                Ui.TypeGITCheck,
+                Ui.TypeIFOCheck,
+                Ui.TypeVISCheck,
+                Ui.TypeLYTCheck,
+                Ui.TypeDLGCheck,
+                Ui.TypeJRLCheck,
+                Ui.TypeUTCCheck,
+                Ui.TypeUTDCheck,
+                Ui.TypeUTECheck,
+                Ui.TypeUTICheck,
+                Ui.TypeUTPCheck,
+                Ui.TypeUTMCheck,
+                Ui.TypeUTWCheck,
+                Ui.TypeUTSCheck,
+                Ui.TypeUTTCheck,
+                Ui.Type2DACheck,
+                Ui.TypeNSSCheck,
+                Ui.TypeNCSCheck
             };
 
             foreach (var checkBox in checkBoxes)
@@ -147,58 +194,68 @@ namespace HolocronToolset.NET.Dialogs
         // Original: def accept(self):
         private void OnSearch()
         {
-            var installationSelect = this.FindControl<ComboBox>("installationSelect");
-            var searchTextEdit = this.FindControl<TextBox>("searchTextEdit");
-            var coreCheck = this.FindControl<CheckBox>("coreCheck");
-            var modulesCheck = this.FindControl<CheckBox>("modulesCheck");
-            var overrideCheck = this.FindControl<CheckBox>("overrideCheck");
-            var caseSensitiveRadio = this.FindControl<RadioButton>("caseSensitiveRadio");
-            var filenamesOnlyCheck = this.FindControl<CheckBox>("filenamesOnlyCheck");
-
-            if (installationSelect == null || installationSelect.SelectedItem == null)
+            if (Ui == null)
             {
                 return;
             }
 
-            string selectedInstallationName = installationSelect.SelectedItem.ToString();
-            if (!_installations.ContainsKey(selectedInstallationName))
+            if (Ui.InstallationSelect == null || Ui.InstallationSelect.SelectedItem == null)
             {
                 return;
             }
 
-            HTInstallation installation = _installations[selectedInstallationName];
+            // Get installation from ComboBoxItem.Tag
+            HTInstallation installation = null;
+            if (Ui.InstallationSelect.SelectedItem is ComboBoxItem item && item.Tag is HTInstallation inst)
+            {
+                installation = inst;
+            }
+            else
+            {
+                // Fallback: try to get by name
+                string selectedInstallationName = Ui.InstallationSelect.SelectedItem.ToString();
+                if (_installations.ContainsKey(selectedInstallationName))
+                {
+                    installation = _installations[selectedInstallationName];
+                }
+            }
+
+            if (installation == null)
+            {
+                return;
+            }
             _selectedInstallation = installation;
 
             var checkTypes = new List<ResourceType>();
-            if (this.FindControl<CheckBox>("typeARECheck")?.IsChecked == true) checkTypes.Add(ResourceType.ARE);
-            if (this.FindControl<CheckBox>("typeGITCheck")?.IsChecked == true) checkTypes.Add(ResourceType.GIT);
-            if (this.FindControl<CheckBox>("typeIFOCheck")?.IsChecked == true) checkTypes.Add(ResourceType.IFO);
-            if (this.FindControl<CheckBox>("typeVISCheck")?.IsChecked == true) checkTypes.Add(ResourceType.VIS);
-            if (this.FindControl<CheckBox>("typeLYTCheck")?.IsChecked == true) checkTypes.Add(ResourceType.LYT);
-            if (this.FindControl<CheckBox>("typeDLGCheck")?.IsChecked == true) checkTypes.Add(ResourceType.DLG);
-            if (this.FindControl<CheckBox>("typeJRLCheck")?.IsChecked == true) checkTypes.Add(ResourceType.JRL);
-            if (this.FindControl<CheckBox>("typeUTCCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTC);
-            if (this.FindControl<CheckBox>("typeUTDCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTD);
-            if (this.FindControl<CheckBox>("typeUTECheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTE);
-            if (this.FindControl<CheckBox>("typeUTICheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTI);
-            if (this.FindControl<CheckBox>("typeUTPCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTP);
-            if (this.FindControl<CheckBox>("typeUTMCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTM);
-            if (this.FindControl<CheckBox>("typeUTWCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTW);
-            if (this.FindControl<CheckBox>("typeUTSCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTS);
-            if (this.FindControl<CheckBox>("typeUTTCheck")?.IsChecked == true) checkTypes.Add(ResourceType.UTT);
-            if (this.FindControl<CheckBox>("type2DACheck")?.IsChecked == true) checkTypes.Add(ResourceType.TwoDA);
-            if (this.FindControl<CheckBox>("typeNSSCheck")?.IsChecked == true) checkTypes.Add(ResourceType.NSS);
-            if (this.FindControl<CheckBox>("typeNCSCheck")?.IsChecked == true) checkTypes.Add(ResourceType.NCS);
+            if (Ui.TypeARECheck?.IsChecked == true) checkTypes.Add(ResourceType.ARE);
+            if (Ui.TypeGITCheck?.IsChecked == true) checkTypes.Add(ResourceType.GIT);
+            if (Ui.TypeIFOCheck?.IsChecked == true) checkTypes.Add(ResourceType.IFO);
+            if (Ui.TypeVISCheck?.IsChecked == true) checkTypes.Add(ResourceType.VIS);
+            if (Ui.TypeLYTCheck?.IsChecked == true) checkTypes.Add(ResourceType.LYT);
+            if (Ui.TypeDLGCheck?.IsChecked == true) checkTypes.Add(ResourceType.DLG);
+            if (Ui.TypeJRLCheck?.IsChecked == true) checkTypes.Add(ResourceType.JRL);
+            if (Ui.TypeUTCCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTC);
+            if (Ui.TypeUTDCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTD);
+            if (Ui.TypeUTECheck?.IsChecked == true) checkTypes.Add(ResourceType.UTE);
+            if (Ui.TypeUTICheck?.IsChecked == true) checkTypes.Add(ResourceType.UTI);
+            if (Ui.TypeUTPCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTP);
+            if (Ui.TypeUTMCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTM);
+            if (Ui.TypeUTWCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTW);
+            if (Ui.TypeUTSCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTS);
+            if (Ui.TypeUTTCheck?.IsChecked == true) checkTypes.Add(ResourceType.UTT);
+            if (Ui.Type2DACheck?.IsChecked == true) checkTypes.Add(ResourceType.TwoDA);
+            if (Ui.TypeNSSCheck?.IsChecked == true) checkTypes.Add(ResourceType.NSS);
+            if (Ui.TypeNCSCheck?.IsChecked == true) checkTypes.Add(ResourceType.NCS);
 
             var query = new FileSearchQuery
             {
                 Installation = installation,
-                CaseSensitive = caseSensitiveRadio?.IsChecked ?? false,
-                FilenamesOnly = filenamesOnlyCheck?.IsChecked ?? false,
-                Text = searchTextEdit?.Text ?? "",
-                SearchCore = coreCheck?.IsChecked ?? false,
-                SearchModules = modulesCheck?.IsChecked ?? false,
-                SearchOverride = overrideCheck?.IsChecked ?? false,
+                CaseSensitive = Ui.CaseSensitiveRadio?.IsChecked ?? false,
+                FilenamesOnly = Ui.FilenamesOnlyCheck?.IsChecked ?? false,
+                Text = Ui.SearchTextEdit?.Text ?? "",
+                SearchCore = Ui.CoreCheck?.IsChecked ?? false,
+                SearchModules = Ui.ModulesCheck?.IsChecked ?? false,
+                SearchOverride = Ui.OverrideCheck?.IsChecked ?? false,
                 CheckTypes = checkTypes
             };
 
@@ -291,6 +348,63 @@ namespace HolocronToolset.NET.Dialogs
         {
             FileResults?.Invoke(results, installation);
         }
+
+        // Helper method to get current installation from ComboBox (for tests)
+        public HTInstallation GetCurrentInstallation()
+        {
+            if (Ui?.InstallationSelect?.SelectedItem is ComboBoxItem item && item.Tag is HTInstallation inst)
+            {
+                return inst;
+            }
+            return null;
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
+    // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
+    public class FileSearcherDialogUi
+    {
+        public ComboBox InstallationSelect { get; set; }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_search.py:222
+        // Original: dialog.ui.installationSelect.currentData() - helper to get current installation
+        public HTInstallation GetCurrentInstallation()
+        {
+            if (InstallationSelect?.SelectedItem is ComboBoxItem item && item.Tag is HTInstallation inst)
+            {
+                return inst;
+            }
+            return null;
+        }
+        public TextBox SearchTextEdit { get; set; }
+        public RadioButton CaseSensitiveRadio { get; set; }
+        public RadioButton CaseInsensitiveRadio { get; set; }
+        public CheckBox FilenamesOnlyCheck { get; set; }
+        public CheckBox CoreCheck { get; set; }
+        public CheckBox ModulesCheck { get; set; }
+        public CheckBox OverrideCheck { get; set; }
+        public CheckBox SelectAllCheck { get; set; }
+        public CheckBox TypeARECheck { get; set; }
+        public CheckBox TypeGITCheck { get; set; }
+        public CheckBox TypeIFOCheck { get; set; }
+        public CheckBox TypeVISCheck { get; set; }
+        public CheckBox TypeLYTCheck { get; set; }
+        public CheckBox TypeDLGCheck { get; set; }
+        public CheckBox TypeJRLCheck { get; set; }
+        public CheckBox TypeUTCCheck { get; set; }
+        public CheckBox TypeUTDCheck { get; set; }
+        public CheckBox TypeUTECheck { get; set; }
+        public CheckBox TypeUTICheck { get; set; }
+        public CheckBox TypeUTPCheck { get; set; }
+        public CheckBox TypeUTMCheck { get; set; }
+        public CheckBox TypeUTSCheck { get; set; }
+        public CheckBox TypeUTTCheck { get; set; }
+        public CheckBox TypeUTWCheck { get; set; }
+        public CheckBox Type2DACheck { get; set; }
+        public CheckBox TypeNSSCheck { get; set; }
+        public CheckBox TypeNCSCheck { get; set; }
+        public Button SearchButton { get; set; }
+        public Button CancelButton { get; set; }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:25-36

@@ -60,9 +60,14 @@ namespace HolocronToolset.NET.Windows
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py
+        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+        public HelpWindowUi Ui { get; private set; }
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Create UI wrapper for testing
+            Ui = new HelpWindowUi();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:76-92
@@ -122,5 +127,11 @@ namespace HolocronToolset.NET.Windows
 </body>
 </html>";
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py
+    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+    public class HelpWindowUi
+    {
     }
 }

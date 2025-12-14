@@ -527,7 +527,21 @@ namespace CSharpKOTOR.Installation
                 return new Dictionary<ResourceIdentifier, List<LocationResult>>();
             }
 
-            if (order == null || order.Length == 0)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1297-1360
+            // Original: if order is an empty list, return empty results. If None, use default order.
+            // If order is an empty array (not null), return empty results immediately
+            if (order != null && order.Length == 0)
+            {
+                var emptyResults = new Dictionary<ResourceIdentifier, List<LocationResult>>();
+                foreach (ResourceIdentifier query in queries)
+                {
+                    emptyResults[query] = new List<LocationResult>();
+                }
+                return emptyResults;
+            }
+
+            // Default search order if not specified (null)
+            if (order is null)
             {
                 order = new[]
                 {

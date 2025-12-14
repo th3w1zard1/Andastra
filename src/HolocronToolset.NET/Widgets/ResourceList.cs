@@ -23,6 +23,10 @@ namespace HolocronToolset.NET.Widgets
         private Button _refreshButton;
         private TreeView _resourceTree;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py
+        // Original: UI wrapper exposing controls for testing
+        public ResourceListUi Ui { get; private set; }
+
         public ResourceList()
         {
             InitializeComponent();
@@ -102,6 +106,16 @@ namespace HolocronToolset.NET.Widgets
         // Original: def setup_signals(self):
         private void SetupSignals()
         {
+            // Create UI wrapper exposing controls for testing
+            Ui = new ResourceListUi
+            {
+                SectionCombo = _sectionCombo,
+                SearchEdit = _searchEdit,
+                ReloadButton = _reloadButton,
+                RefreshButton = _refreshButton,
+                ResourceTree = _resourceTree
+            };
+
             if (_searchEdit != null)
             {
                 _searchEdit.TextChanged += (sender, e) => OnFilterStringUpdated();
@@ -399,5 +413,16 @@ namespace HolocronToolset.NET.Widgets
         {
             return _resources;
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py
+    // Original: UI wrapper class exposing all controls for testing
+    public class ResourceListUi
+    {
+        public ComboBox SectionCombo { get; set; }
+        public TextBox SearchEdit { get; set; }
+        public Button ReloadButton { get; set; }
+        public Button RefreshButton { get; set; }
+        public TreeView ResourceTree { get; set; }
     }
 }

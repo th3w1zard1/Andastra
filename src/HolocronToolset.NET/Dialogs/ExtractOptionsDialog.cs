@@ -147,7 +147,8 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:22-25
         // Original: @property def tpc_decompile(self) -> bool: return self.ui.tpcDecompileCheckbox.isChecked()
-        public bool TpcDecompile
+        // Note: Using snake_case property names to match Python API for test compatibility
+        public bool tpc_decompile
         {
             get => _tpcDecompileCheckbox?.IsChecked ?? false;
             set
@@ -160,9 +161,16 @@ namespace HolocronToolset.NET.Dialogs
             }
         }
 
+        // C# PascalCase property for normal usage
+        public bool TpcDecompile
+        {
+            get => tpc_decompile;
+            set => tpc_decompile = value;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:27-30
         // Original: @property def tpc_extract_txi(self) -> bool: return self.ui.tpcTxiCheckbox.isChecked()
-        public bool TpcExtractTxi
+        public bool tpc_extract_txi
         {
             get => _tpcTxiCheckbox?.IsChecked ?? false;
             set
@@ -175,9 +183,16 @@ namespace HolocronToolset.NET.Dialogs
             }
         }
 
+        // C# PascalCase property for normal usage
+        public bool TpcExtractTxi
+        {
+            get => tpc_extract_txi;
+            set => tpc_extract_txi = value;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:32-35
         // Original: @property def mdl_decompile(self) -> bool: return self.ui.mdlDecompileCheckbox.isChecked()
-        public bool MdlDecompile
+        public bool mdl_decompile
         {
             get => _mdlDecompileCheckbox?.IsChecked ?? false;
             set
@@ -190,9 +205,16 @@ namespace HolocronToolset.NET.Dialogs
             }
         }
 
+        // C# PascalCase property for normal usage
+        public bool MdlDecompile
+        {
+            get => mdl_decompile;
+            set => mdl_decompile = value;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:37-40
         // Original: @property def mdl_extract_textures(self) -> bool: return self.ui.mdlTexturesCheckbox.isChecked()
-        public bool MdlExtractTextures
+        public bool mdl_extract_textures
         {
             get => _mdlTexturesCheckbox?.IsChecked ?? false;
             set
@@ -203,6 +225,13 @@ namespace HolocronToolset.NET.Dialogs
                     _mdlTexturesCheckbox.IsChecked = value;
                 }
             }
+        }
+
+        // C# PascalCase property for normal usage
+        public bool MdlExtractTextures
+        {
+            get => mdl_extract_textures;
+            set => mdl_extract_textures = value;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:14-15

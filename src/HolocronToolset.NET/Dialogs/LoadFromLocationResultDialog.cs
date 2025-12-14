@@ -92,10 +92,18 @@ namespace HolocronToolset.NET.Dialogs
         private void SetupUI()
         {
             // Find controls from XAML
-            _tableWidget = this.FindControl<DataGrid>("tableWidget");
-            _searchEdit = this.FindControl<TextBox>("searchEdit");
-            _openButton = this.FindControl<Button>("openButton");
-            _extractButton = this.FindControl<Button>("extractButton");
+            try
+            {
+                _tableWidget = this.FindControl<DataGrid>("tableWidget");
+                _searchEdit = this.FindControl<TextBox>("searchEdit");
+                _openButton = this.FindControl<Button>("openButton");
+                _extractButton = this.FindControl<Button>("extractButton");
+            }
+            catch
+            {
+                // XAML not loaded or controls not found - will use programmatic UI
+                // Controls are already set up in SetupProgrammaticUI
+            }
 
             if (_searchEdit != null)
             {

@@ -14,11 +14,16 @@ namespace HolocronToolset.NET.Dialogs
     // Original: class FileResults(QDialog):
     public partial class FileResultsDialog : Window
     {
-        private ListBox _resultList;
-        private Button _openButton;
-        private Button _okButton;
         private HTInstallation _installation;
         private FileResource _selection;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
+        // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
+        public FileResultsDialogUi Ui { get; private set; }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:195
+        // Original: sig_searchresults_selected = Signal(FileResource)
+        public event Action<FileResource> SearchResultsSelected;
 
         // Public parameterless constructor for XAML
         public FileResultsDialog() : this(null, null, null)
@@ -61,71 +66,97 @@ namespace HolocronToolset.NET.Dialogs
             Height = 401;
 
             var panel = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 10 };
-            _resultList = new ListBox();
+            var resultList = new ListBox();
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 5 };
-            _openButton = new Button { Content = "Open" };
-            _openButton.Click += (s, e) => Open();
-            _okButton = new Button { Content = "OK" };
-            _okButton.Click += (s, e) => Accept();
-            buttonPanel.Children.Add(_openButton);
-            buttonPanel.Children.Add(_okButton);
-            panel.Children.Add(_resultList);
+            var openButton = new Button { Content = "Open" };
+            openButton.Click += (s, e) => Open();
+            var okButton = new Button { Content = "OK" };
+            okButton.Click += (s, e) => Accept();
+            buttonPanel.Children.Add(openButton);
+            buttonPanel.Children.Add(okButton);
+            panel.Children.Add(resultList);
             panel.Children.Add(buttonPanel);
             Content = panel;
+
+            // Create Ui wrapper for programmatic UI
+            Ui = new FileResultsDialogUi
+            {
+                ResultList = resultList,
+                OpenButton = openButton,
+                OkButton = okButton
+            };
         }
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _resultList = this.FindControl<ListBox>("resultList");
-            _openButton = this.FindControl<Button>("openButton");
-            _okButton = this.FindControl<Button>("okButton");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
+            // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
+            // Find all controls from XAML and expose via Ui property
+            Ui = new FileResultsDialogUi
+            {
+                ResultList = this.FindControl<ListBox>("resultList"),
+                OpenButton = this.FindControl<Button>("openButton"),
+                OkButton = this.FindControl<Button>("okButton")
+            };
 
-            if (_openButton != null)
+            if (Ui.OpenButton != null)
             {
-                _openButton.Click += (s, e) => Open();
+                Ui.OpenButton.Click += (s, e) => Open();
             }
-            if (_okButton != null)
+            if (Ui.OkButton != null)
             {
-                _okButton.Click += (s, e) => Accept();
+                Ui.OkButton.Click += (s, e) => Accept();
             }
-            if (_resultList != null)
+            if (Ui.ResultList != null)
             {
-                _resultList.DoubleTapped += (s, e) => Open();
+                Ui.ResultList.DoubleTapped += (s, e) => Open();
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:243-250
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:243-252
         // Original: Populate results list
         private void PopulateResults(IEnumerable<FileResource> results)
         {
-            if (_resultList == null)
+            if (Ui?.ResultList == null)
             {
                 return;
             }
 
-            _resultList.Items.Clear();
+            Ui.ResultList.Items.Clear();
+            var resultList = new List<FileResourceResultItem>();
+
             foreach (var result in results)
             {
-                string filename = result.ResName + "." + result.ResType.Extension;
+                string filename = result.Identifier.ToString();
                 string filepath = result.FilePath ?? "";
                 string parentName = Path.GetFileName(Path.GetDirectoryName(filepath)) ?? "";
                 string displayText = string.IsNullOrEmpty(parentName) ? filename : $"{parentName}/{filename}";
-                _resultList.Items.Add(new { Text = displayText, Resource = result, Tooltip = filepath });
+
+                resultList.Add(new FileResourceResultItem
+                {
+                    DisplayText = displayText,
+                    Resource = result,
+                    Tooltip = filepath
+                });
             }
 
-            // Sort items
-            // TODO: Implement sorting when ListBox item access is available
+            // Sort items alphabetically
+            resultList.Sort((a, b) => string.Compare(a.DisplayText, b.DisplayText, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var item in resultList)
+            {
+                Ui.ResultList.Items.Add(item);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:254-271
         // Original: def accept(self):
         private void Accept()
         {
-            if (_resultList?.SelectedItem != null)
+            if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
             {
-                // TODO: Extract resource from selected item
-                // For now, just close
+                _selection = item.Resource;
+                SearchResultsSelected?.Invoke(_selection);
             }
             Close();
         }
@@ -134,17 +165,42 @@ namespace HolocronToolset.NET.Dialogs
         // Original: def open(self):
         private void Open()
         {
-            if (_resultList?.SelectedItem == null)
+            if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
+            {
+                _selection = item.Resource;
+                SearchResultsSelected?.Invoke(_selection);
+                // TODO: Open resource editor when available
+                // For now, just emit signal and close
+                Close();
+            }
+            else
             {
                 System.Console.WriteLine("Nothing to open, no item selected");
-                return;
             }
-
-            // TODO: Extract resource and open editor when available
-            // For now, just log
-            System.Console.WriteLine("Open resource editor not yet implemented");
         }
 
         public FileResource Selection => _selection;
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
+    // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
+    public class FileResultsDialogUi
+    {
+        public ListBox ResultList { get; set; }
+        public Button OpenButton { get; set; }
+        public Button OkButton { get; set; }
+    }
+
+    // Helper class to store FileResource with display text in ListBox
+    internal class FileResourceResultItem
+    {
+        public string DisplayText { get; set; }
+        public FileResource Resource { get; set; }
+        public string Tooltip { get; set; }
+
+        public override string ToString()
+        {
+            return DisplayText;
+        }
     }
 }

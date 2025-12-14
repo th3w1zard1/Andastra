@@ -56,9 +56,20 @@ namespace HolocronToolset.NET.Windows
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
+        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+        public IndoorBuilderWindowUi Ui { get; private set; }
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Create UI wrapper for testing
+            Ui = new IndoorBuilderWindowUi();
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
+    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+    public class IndoorBuilderWindowUi
+    {
     }
 }

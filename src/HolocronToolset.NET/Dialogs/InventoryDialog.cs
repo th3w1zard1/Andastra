@@ -87,13 +87,40 @@ namespace HolocronToolset.NET.Dialogs
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
+        // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
+        public InventoryDialogUi Ui { get; private set; }
+
+        private DataGrid _contentsTable;
+
         private void SetupUI()
         {
             // Find controls from XAML and set up event handlers
-            // TODO: Implement when UI is fully defined
+            try
+            {
+                _contentsTable = this.FindControl<DataGrid>("contentsTable");
+            }
+            catch
+            {
+                // XAML not loaded or control not found - will use programmatic UI
+                _contentsTable = null;
+            }
+
+            // Create UI wrapper for testing
+            Ui = new InventoryDialogUi
+            {
+                ContentsTable = _contentsTable
+            };
         }
 
         public List<InventoryItem> Inventory => _inventory;
         public Dictionary<EquipmentSlot, InventoryItem> Equipment => _equipment;
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
+    // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
+    public class InventoryDialogUi
+    {
+        public DataGrid ContentsTable { get; set; }
     }
 }

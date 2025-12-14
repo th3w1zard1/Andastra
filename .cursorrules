@@ -190,9 +190,11 @@ cd <workspace_path>/vendor/PyKotor; & "<workspace_path>/vendor/PyKotor/.venv_3.1
 The `scripts` directory contains a comprehensive unified PowerShell tool for all NCS/NSS file operations:
 
 ### NcsTool.ps1
+
 Unified tool for all NCS (bytecode) and NSS (source) file operations. Supports multiple operations via subcommands:
 
 **Operations:**
+
 - `compile`: Compile NSS source files to NCS bytecode
 - `decompile`: Decompile NCS bytecode files to NSS source
 - `compare`: Compare two NCS files (bytecode and/or instructions)

@@ -12,17 +12,17 @@ namespace Odyssey.Core.Interfaces
         /// The resource reference of this template.
         /// </summary>
         string ResRef { get; }
-        
+
         /// <summary>
         /// The tag to assign to spawned entities.
         /// </summary>
         string Tag { get; }
-        
+
         /// <summary>
         /// The object type this template creates.
         /// </summary>
         ObjectType ObjectType { get; }
-        
+
         /// <summary>
         /// Spawns an entity from this template.
         /// </summary>

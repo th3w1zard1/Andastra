@@ -39,8 +39,16 @@ namespace CSharpKOTOR.Installation
             if (string.IsNullOrWhiteSpace(resname))
                 return null;
 
-            // Default search order if not specified
-            if (searchOrder is null || searchOrder.Length == 0)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1151-1160
+            // Original: if order is an empty list, return None. If None, use default order.
+            // If searchOrder is an empty array (not null), return null immediately
+            if (searchOrder != null && searchOrder.Length == 0)
+            {
+                return null;
+            }
+
+            // Default search order if not specified (null)
+            if (searchOrder is null)
             {
                 searchOrder = new[]
                 {
@@ -295,18 +303,26 @@ namespace CSharpKOTOR.Installation
             // Search each module file
             foreach (string moduleFile in moduleFiles)
             {
-                LazyCapsule capsule = GetCapsule(moduleFile);
-                if (capsule is null)
-                    continue;
-
-                List<FileResource> resources = capsule.GetResources();
-                FileResource match = resources.FirstOrDefault(r =>
-                    r.ResName.Equals(resname, StringComparison.OrdinalIgnoreCase) &&
-                    r.ResType == restype);
-
-                if (match != null)
+                try
                 {
-                    results.Add(match);
+                    LazyCapsule capsule = GetCapsule(moduleFile);
+                    if (capsule is null)
+                        continue;
+
+                    List<FileResource> resources = capsule.GetResources();
+                    FileResource match = resources.FirstOrDefault(r =>
+                        r.ResName.Equals(resname, StringComparison.OrdinalIgnoreCase) &&
+                        r.ResType == restype);
+
+                    if (match != null)
+                    {
+                        results.Add(match);
+                    }
+                }
+                catch
+                {
+                    // Skip corrupted or invalid module files
+                    continue;
                 }
             }
 
@@ -388,23 +404,39 @@ namespace CSharpKOTOR.Installation
             if (!Directory.Exists(lipsPath))
                 return results;
 
-            // Search all ERF files in lips directory
-            var erfFiles = Directory.GetFiles(lipsPath, "*.erf", SearchOption.TopDirectoryOnly);
-
-            foreach (string erfFile in erfFiles)
-            {
-                LazyCapsule capsule = GetCapsule(erfFile);
-                if (capsule is null)
-                    continue;
-
-                List<FileResource> resources = capsule.GetResources();
-                FileResource match = resources.FirstOrDefault(r =>
-                    r.ResName.Equals(resname, StringComparison.OrdinalIgnoreCase) &&
-                    r.ResType == restype);
-
-                if (match != null)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:479
+            // Original: self.load_resources_dict(self.lips_path(), capsule_check=is_mod_file)
+            // Search all capsule files (MOD, ERF, RIM) in lips directory
+            var capsuleFiles = Directory.GetFiles(lipsPath)
+                .Where(f =>
                 {
-                    results.Add(match);
+                    string ext = Path.GetExtension(f).ToLowerInvariant();
+                    return ext == ".mod" || ext == ".erf" || ext == ".rim";
+                })
+                .ToList();
+
+            foreach (string capsuleFile in capsuleFiles)
+            {
+                try
+                {
+                    LazyCapsule capsule = GetCapsule(capsuleFile);
+                    if (capsule is null)
+                        continue;
+
+                    List<FileResource> resources = capsule.GetResources();
+                    FileResource match = resources.FirstOrDefault(r =>
+                        r.ResName.Equals(resname, StringComparison.OrdinalIgnoreCase) &&
+                        r.ResType == restype);
+
+                    if (match != null)
+                    {
+                        results.Add(match);
+                    }
+                }
+                catch
+                {
+                    // Skip corrupted or invalid ERF files
+                    continue;
                 }
             }
 

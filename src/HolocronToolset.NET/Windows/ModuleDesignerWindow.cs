@@ -14,6 +14,10 @@ namespace HolocronToolset.NET.Windows
         private string _moduleName;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
+        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+        public ModuleDesignerWindowUi Ui { get; private set; }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
         // Original: def __init__(self, parent, installation, module_path=None):
         public ModuleDesignerWindow(
             Window parent = null,
@@ -62,9 +66,38 @@ namespace HolocronToolset.NET.Windows
             Content = panel;
         }
 
+        private TreeView _moduleTree;
+        private DataGrid _propertiesTable;
+
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Find controls from XAML
+            try
+            {
+                _moduleTree = this.FindControl<TreeView>("moduleTree");
+                _propertiesTable = this.FindControl<DataGrid>("propertiesTable");
+            }
+            catch
+            {
+                // XAML not loaded or controls not found - will use programmatic UI
+                _moduleTree = null;
+                _propertiesTable = null;
+            }
+
+            // Create UI wrapper for testing
+            Ui = new ModuleDesignerWindowUi
+            {
+                ModuleTree = _moduleTree,
+                PropertiesTable = _propertiesTable
+            };
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
+    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+    public class ModuleDesignerWindowUi
+    {
+        public TreeView ModuleTree { get; set; }
+        public DataGrid PropertiesTable { get; set; }
     }
 }

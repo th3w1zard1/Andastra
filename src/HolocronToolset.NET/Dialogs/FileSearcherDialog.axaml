@@ -38,8 +38,8 @@
                 <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Padding="5">
                     <StackPanel>
                         <TextBlock Text="Case" FontWeight="Bold" Margin="0,0,0,5" />
-                        <RadioButton Name="caseInsensitiveRadio" Content="Sensitive" GroupName="CaseGroup" />
-                        <RadioButton Name="caseSensitiveRadio" Content="Insensitive" GroupName="CaseGroup" IsChecked="True" />
+                        <RadioButton Name="caseSensitiveRadio" Content="Sensitive" GroupName="CaseGroup" />
+                        <RadioButton Name="caseInsensitiveRadio" Content="Insensitive" GroupName="CaseGroup" IsChecked="True" />
                     </StackPanel>
                 </Border>
                 <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Padding="5">

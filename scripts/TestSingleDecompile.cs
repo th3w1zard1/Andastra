@@ -25,13 +25,13 @@ class TestSingleDecompile
             FileDecompiler.isK2Selected = false; // K1
             FileDecompiler decompiler = new FileDecompiler();
             decompiler.LoadActionsData(false); // K1
-            
+
             NcsFile ncs = new NcsFile(ncsFile);
             string output = Path.ChangeExtension(ncsFile, ".dec.nss");
             NcsFile outputFile = new NcsFile(output);
-            
+
             decompiler.DecompileToFile(ncs, outputFile, System.Text.Encoding.UTF8, true);
-            
+
             if (File.Exists(output))
             {
                 Console.WriteLine("=== DECOMPILED OUTPUT ===");

@@ -89,17 +89,13 @@ namespace HolocronToolset.NET.Data
         {
             if (capsules != null && capsules.Count > 0)
             {
-                // Use Locations with capsules, then get first result
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+                // Original: Use Resources method with capsules to get the resource
                 var query = new ResourceIdentifier(resname, restype);
-                var locations = _installation.Locations(new List<ResourceIdentifier> { query }, searchOrder, capsules);
-                if (locations.ContainsKey(query) && locations[query].Count > 0)
+                var resources = Resources(new List<ResourceIdentifier> { query }, searchOrder, capsules);
+                if (resources.ContainsKey(query) && resources[query] != null)
                 {
-                    var location = locations[query][0];
-                    var resource = _installation.Resource(resname, restype, searchOrder);
-                    if (resource != null)
-                    {
-                        return resource;
-                    }
+                    return resources[query];
                 }
             }
             return _installation.Resource(resname, restype, searchOrder);
@@ -118,6 +114,8 @@ namespace HolocronToolset.NET.Data
                 return results;
             }
 
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1239-1285
+            // Original: locations: dict[ResourceIdentifier, list[LocationResult]] = self.locations(...)
             var locations = _installation.Locations(queries, searchOrder, capsules);
             var handles = new Dictionary<ResourceIdentifier, FileStream>();
 
@@ -148,17 +146,12 @@ namespace HolocronToolset.NET.Data
                             byte[] data = new byte[location.Size];
                             handle.Read(data, 0, location.Size);
 
+                            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1272-1278
+                            // Original: result = ResourceResult(...); result.set_file_resource(FileResource(...))
                             var result = new ResourceResult(query.ResName, query.ResType, location.FilePath, data);
-                            // Only set FileResource if location doesn't already have one to avoid recursion issues
-                            if (location.FileResource == null)
-                            {
-                                var fileResource = new FileResource(query.ResName, query.ResType, location.Size, location.Offset, location.FilePath);
-                                result.SetFileResource(fileResource);
-                            }
-                            else
-                            {
-                                result.SetFileResource(location.FileResource);
-                            }
+                            // Create a new FileResource without circular reference - don't use location.FileResource
+                            var fileResource = new FileResource(query.ResName, query.ResType, location.Size, location.Offset, location.FilePath);
+                            result.SetFileResource(fileResource);
                             results[query] = result;
                         }
                         else
@@ -177,7 +170,8 @@ namespace HolocronToolset.NET.Data
                 }
             }
 
-            // Close all open handles
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1282-1283
+            // Original: for handle in handles.values(): handle.close()
             foreach (var handle in handles.Values)
             {
                 handle?.Dispose();
@@ -823,6 +817,8 @@ namespace HolocronToolset.NET.Data
                 }
                 else if (location == SearchLocation.VOICE)
                 {
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
+                    // Original: Try StreamVoice first (TSL), then StreamWaves (K1)
                     string streamVoicePath = Installation.GetStreamVoicePath(Path);
                     if (Directory.Exists(streamVoicePath))
                     {
@@ -843,6 +839,33 @@ namespace HolocronToolset.NET.Data
                             catch
                             {
                                 // Skip invalid files
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to StreamWaves for K1
+                        string streamWavesPath = Installation.GetStreamWavesPath(Path);
+                        if (Directory.Exists(streamWavesPath))
+                        {
+                            foreach (var file in Directory.GetFiles(streamWavesPath, "*.*", SearchOption.AllDirectories))
+                            {
+                                try
+                                {
+                                    var identifier = ResourceIdentifier.FromPath(file);
+                                    if (Array.IndexOf(soundFormats, identifier.ResType) >= 0)
+                                    {
+                                        string lowerResname = identifier.ResName.ToLowerInvariant();
+                                        if (resnames.Any(r => r.ToLowerInvariant() == lowerResname))
+                                        {
+                                            sounds[identifier.ResName] = File.ReadAllBytes(file);
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // Skip invalid files
+                                }
                             }
                         }
                     }

@@ -12,6 +12,12 @@ namespace HolocronToolset.NET.Editors
     public class WAVEditor : Editor
     {
         private WAV _wav;
+        private Button _playButton;
+        private Button _stopButton;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py
+        // Original: self.ui = Ui_Editor() - UI wrapper class exposing all controls
+        public WAVEditorUi Ui { get; private set; }
 
         public WAVEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Audio Editor", "audio",
@@ -37,7 +43,34 @@ namespace HolocronToolset.NET.Editors
         private void SetupUI()
         {
             var panel = new StackPanel();
+            
+            // Create play/stop buttons
+            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+            _playButton = new Button { Content = "Play" };
+            _stopButton = new Button { Content = "Stop" };
+            buttonPanel.Children.Add(_playButton);
+            buttonPanel.Children.Add(_stopButton);
+            panel.Children.Add(buttonPanel);
+            
             Content = panel;
+
+            // Find controls from XAML if available
+            try
+            {
+                _playButton = this.FindControl<Button>("playButton") ?? _playButton;
+                _stopButton = this.FindControl<Button>("stopButton") ?? _stopButton;
+            }
+            catch
+            {
+                // XAML not loaded - use programmatic UI
+            }
+
+            // Create UI wrapper for testing
+            Ui = new WAVEditorUi
+            {
+                PlayButton = _playButton,
+                StopButton = _stopButton
+            };
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -69,5 +102,13 @@ namespace HolocronToolset.NET.Editors
         {
             Save();
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py
+    // Original: self.ui = Ui_Editor() - UI wrapper class exposing all controls
+    public class WAVEditorUi
+    {
+        public Button PlayButton { get; set; }
+        public Button StopButton { get; set; }
     }
 }

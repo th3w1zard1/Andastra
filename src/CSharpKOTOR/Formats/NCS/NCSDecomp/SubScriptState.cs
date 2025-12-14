@@ -974,60 +974,37 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Action metadata missing or invalid - assume void return
                 type = new UtilsType((byte)0);
             }
-            bool isVoid = type != null && type.Equals((byte)0);
-            Console.Error.WriteLine($"DEBUG transformAction: actionName={actionName}, actionId={NodeUtils.GetActionId(node)}, returnType={(type != null ? type.ToString() : "null")}, typeByte={(type != null ? type.ByteValue().ToString() : "null")}, equalsVoid={isVoid}");
-            if (!isVoid)
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:956-975
+            // Original: if (!type.equals((byte) 0)) { Variable var = (Variable) this.stack.get(1); ... } else { this.current.addChild(act); }
+            bool isVoidType = type != null && type.Equals((byte)0);
+            if (actionName == "AddAvailableNPCByObject" || actionName == "AddPartyMember")
             {
-                // Check if return value is being discarded (MOVSP immediately follows that pops exactly the return size)
-                bool returnValueDiscarded = false;
-                if (this.nodedata != null)
+                Console.Error.WriteLine($"DEBUG transformAction: actionName={actionName}, returnType={(type != null ? type.ToString() : "null")}, typeByte={(type != null ? type.ByteValue().ToString() : "null")}, equalsVoid={isVoidType}");
+            }
+            if (!isVoidType)
+            {
+                Variable var = (Variable)this.stack.Get(1);
+                if (type.Equals(unchecked((byte)(-16))))
                 {
-                    try
-                    {
-                        Node nextCmd = NodeUtils.GetNextCommand(node, this.nodedata);
-                        if (nextCmd != null && typeof(AMoveSpCommand).IsInstanceOfType(nextCmd))
-                        {
-                            AMoveSpCommand movesp = (AMoveSpCommand)nextCmd;
-                            int popSize = NodeUtils.StackOffsetToPos(movesp.GetOffset());
-                            int returnSize = type.Size();
-                            // If the MOVSP pops exactly the return type size, the value is being discarded
-                            if (popSize == returnSize)
-                            {
-                                returnValueDiscarded = true;
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // If we can't determine, default to assigning to variable
-                    }
+                    var = var.Varstruct();
                 }
 
-                if (returnValueDiscarded)
+                act.Stackentry(var);
+                // Check if variable is already declared to prevent duplicates
+                object existingVardecObj;
+                AVarDecl vardec = this.vardecs.TryGetValue(var, out existingVardecObj) ? (AVarDecl)existingVardecObj : null;
+                if (vardec == null)
                 {
-                    // Return value is discarded - emit as statement expression without variable assignment
-                    this.current.AddChild(act);
-                }
-                else
-                {
-                    Variable var = (Variable)this.stack.Get(1);
-                    if (type.Equals(unchecked((byte)(-16))))
-                    {
-                        var = var.Varstruct();
-                    }
-
-                    act.Stackentry(var);
-                    AVarDecl vardec = new AVarDecl(var);
-                    vardec.SetIsFcnReturn(true);
-                    vardec.InitializeExp(act);
+                    vardec = new AVarDecl(var);
                     this.UpdateVarCount(var);
                     this.current.AddChild(vardec);
                     this.vardecs.Put(var, vardec);
                 }
+                vardec.SetIsFcnReturn(true);
+                vardec.InitializeExp(act);
             }
             else
             {
-                // Void return - emit as statement expression
                 this.current.AddChild(act);
             }
 

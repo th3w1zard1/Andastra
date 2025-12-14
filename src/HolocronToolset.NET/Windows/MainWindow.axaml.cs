@@ -27,6 +27,22 @@ namespace HolocronToolset.NET.Windows
         // Original: self.update_manager: UpdateManager = UpdateManager(silent=True)
         public UpdateManager UpdateManager => _updateManager;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: self.ui = Ui_MainWindow(); self.ui.setupUi(self)
+        public MainWindowUi Ui { get; private set; }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:206
+        // Original: self.active: HTInstallation | None = None
+        public HTInstallation Active => _active;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:207
+        // Original: self.installations: dict[str, HTInstallation] = {}
+        public Dictionary<string, HTInstallation> Installations => _installations;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:208
+        // Original: self.settings: GlobalSettings = GlobalSettings()
+        public GlobalSettings Settings => _settings;
+
         // UI Widgets - will be populated from XAML or created programmatically
         private ComboBox _gameCombo;
         private TabControl _resourceTabs;
@@ -38,6 +54,12 @@ namespace HolocronToolset.NET.Windows
         private Button _openButton;
         private Button _extractButton;
         private Button _specialActionButton;
+        private TabItem _coreTab;
+        private TabItem _modulesTab;
+        private TabItem _overrideTab;
+        private MenuItem _actionNewDLG;
+        private MenuItem _actionNewUTC;
+        private MenuItem _actionNewNSS;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:206-276
         // Original: def __init__(self):
@@ -71,13 +93,23 @@ namespace HolocronToolset.NET.Windows
                 _openButton = this.FindControl<Button>("openButton");
                 _extractButton = this.FindControl<Button>("extractButton");
                 _specialActionButton = this.FindControl<Button>("specialActionButton");
-                
+
                 // Find resource list widgets
                 _coreWidget = this.FindControl<ResourceList>("coreWidget");
                 _modulesWidget = this.FindControl<ResourceList>("modulesWidget");
                 _overrideWidget = this.FindControl<ResourceList>("overrideWidget");
                 _savesWidget = this.FindControl<ResourceList>("savesWidget");
                 _texturesWidget = this.FindControl<ResourceList>("texturesWidget");
+
+                // Find tab items
+                _coreTab = this.FindControl<TabItem>("coreTab");
+                _modulesTab = this.FindControl<TabItem>("modulesTab");
+                _overrideTab = this.FindControl<TabItem>("overrideTab");
+
+                // Find menu items
+                _actionNewDLG = this.FindControl<MenuItem>("actionNewDLG");
+                _actionNewUTC = this.FindControl<MenuItem>("actionNewUTC");
+                _actionNewNSS = this.FindControl<MenuItem>("actionNewNSS");
             }
             catch
             {
@@ -145,6 +177,26 @@ namespace HolocronToolset.NET.Windows
             {
                 _texturesWidget = new ResourceList();
             }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+            // Original: self.ui = Ui_MainWindow(); self.ui.setupUi(self)
+            // Create UI wrapper exposing all controls
+            Ui = new MainWindowUi
+            {
+                GameCombo = _gameCombo,
+                ResourceTabs = _resourceTabs,
+                CoreWidget = _coreWidget,
+                ModulesWidget = _modulesWidget,
+                OverrideWidget = _overrideWidget,
+                SavesWidget = _savesWidget,
+                TexturesWidget = _texturesWidget,
+                CoreTab = _coreTab,
+                ModulesTab = _modulesTab,
+                OverrideTab = _overrideTab,
+                ActionNewDLG = _actionNewDLG,
+                ActionNewUTC = _actionNewUTC,
+                ActionNewNSS = _actionNewNSS
+            };
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:485-665
@@ -296,7 +348,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1131-1259
         // Original: def change_active_installation(...):
-        private void ChangeActiveInstallation(int index)
+        public void ChangeActiveInstallation(int index)
         {
             if (index < 0)
             {
@@ -366,7 +418,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1657-1700
         // Original: def unset_installation(self):
-        private void UnsetInstallation()
+        public void UnsetInstallation()
         {
             if (_gameCombo != null)
             {
@@ -398,16 +450,29 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1370-1432
         // Original: def update_menus(self):
-        private void UpdateMenus()
+        public void UpdateMenus()
         {
             // Update menu states based on active installation
             // Enable/disable menu items based on whether installation is active
-            // This will be fully implemented when menu items are available from XAML
+            bool hasInstallation = _active != null;
+
+            if (_actionNewDLG != null)
+            {
+                _actionNewDLG.IsEnabled = hasInstallation;
+            }
+            if (_actionNewUTC != null)
+            {
+                _actionNewUTC.IsEnabled = hasInstallation;
+            }
+            if (_actionNewNSS != null)
+            {
+                _actionNewNSS.IsEnabled = hasInstallation;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1705-1716
         // Original: def refresh_core_list(...):
-        private void RefreshCoreList(bool reload = true)
+        public void RefreshCoreList(bool reload = true)
         {
             if (_active == null || _coreWidget == null)
             {
@@ -428,7 +493,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1851-1869
         // Original: def refresh_saves_list(...):
-        private void RefreshSavesList(bool reload = true)
+        public void RefreshSavesList(bool reload = true)
         {
             if (_active == null || _savesWidget == null)
             {
@@ -454,7 +519,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1721-1740
         // Original: def refresh_module_list(...):
-        private void RefreshModuleList(bool reload = true)
+        public void RefreshModuleList(bool reload = true, List<object> moduleItems = null)
         {
             if (_active == null || _modulesWidget == null)
             {
@@ -463,14 +528,27 @@ namespace HolocronToolset.NET.Windows
 
             try
             {
-                // Get modules from installation
-                var moduleNames = _active.ModuleNames();
-                var sections = new List<string>();
-                foreach (var moduleName in moduleNames.Keys)
+                if (moduleItems != null)
                 {
-                    sections.Add(moduleName);
+                    // Use provided module items (for testing)
+                    var sections = new List<string>();
+                    foreach (var item in moduleItems)
+                    {
+                        sections.Add(item.ToString());
+                    }
+                    _modulesWidget.SetSections(sections);
                 }
-                _modulesWidget.SetSections(sections);
+                else
+                {
+                    // Get modules from installation
+                    var moduleNames = _active.ModuleNames();
+                    var sections = new List<string>();
+                    foreach (var moduleName in moduleNames.Keys)
+                    {
+                        sections.Add(moduleName);
+                    }
+                    _modulesWidget.SetSections(sections);
+                }
             }
             catch (Exception ex)
             {
@@ -480,7 +558,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1832-1840
         // Original: def refresh_override_list(...):
-        private void RefreshOverrideList(bool reload = true)
+        public void RefreshOverrideList(bool reload = true)
         {
             if (_active == null || _overrideWidget == null)
             {
@@ -506,14 +584,14 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1581-1583
         // Original: def reload_settings(self):
-        private void ReloadSettings()
+        public void ReloadSettings()
         {
             ReloadInstallations();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1646-1654
         // Original: def reload_installations(self):
-        private void ReloadInstallations()
+        public void ReloadInstallations()
         {
             if (_gameCombo == null)
             {
@@ -532,7 +610,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1567-1579
         // Original: def get_active_resource_widget(self):
-        private ResourceList GetActiveResourceWidget()
+        public ResourceList GetActiveResourceWidget()
         {
             if (_resourceTabs == null)
             {
@@ -564,6 +642,46 @@ namespace HolocronToolset.NET.Windows
             return _coreWidget ?? new ResourceList();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:100-106
+        // Original: def get_active_resource_tab(self):
+        public Control GetActiveResourceTab()
+        {
+            if (_resourceTabs?.SelectedItem is TabItem selectedTab)
+            {
+                return selectedTab;
+            }
+            return _coreTab;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: def get_active_tab_index(self):
+        public int GetActiveTabIndex()
+        {
+            if (_resourceTabs != null)
+            {
+                return _resourceTabs.SelectedIndex;
+            }
+            return 0;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: def on_tab_changed(self):
+        public void OnTabChanged()
+        {
+            // Handle tab change - update UI state based on active tab
+            // For example, show/hide ERF editor button on modules tab
+            if (_resourceTabs?.SelectedItem == _modulesTab)
+            {
+                // Show ERF editor button when on modules tab
+                // TODO: Implement when ERF editor button is added
+            }
+            else
+            {
+                // Hide ERF editor button when not on modules tab
+                // TODO: Implement when ERF editor button is added
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1439-1455
         // Original: def open_module_designer(self):
         private void OpenModuleDesigner()
@@ -587,21 +705,21 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:873-875
         // Original: def on_core_refresh(self):
-        private void OnCoreRefresh()
+        public void OnCoreRefresh()
         {
             RefreshCoreList(reload: true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:877-881
         // Original: def on_module_changed(self, new_module_file: str):
-        private void OnModuleChanged(string newModuleFile)
+        public void OnModuleChanged(string newModuleFile)
         {
             OnModuleReload(newModuleFile);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:884-901
         // Original: def on_module_reload(self, module_file: str):
-        private void OnModuleReload(string moduleFile)
+        public void OnModuleReload(string moduleFile)
         {
             if (_active == null || string.IsNullOrWhiteSpace(moduleFile))
             {
@@ -621,14 +739,14 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:917-918
         // Original: def on_module_refresh(self):
-        private void OnModuleRefresh()
+        public void OnModuleRefresh()
         {
             RefreshModuleList(reload: true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1100-1105
         // Original: def on_override_changed(self, new_directory: str):
-        private void OnOverrideChanged(string newDirectory)
+        public void OnOverrideChanged(string newDirectory)
         {
             if (_active == null)
             {
@@ -639,7 +757,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1107-1121
         // Original: def on_override_reload(self, file_or_folder: str):
-        private void OnOverrideReload(string fileOrFolder)
+        public void OnOverrideReload(string fileOrFolder)
         {
             if (_active == null)
             {
@@ -670,7 +788,7 @@ namespace HolocronToolset.NET.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1123-1124
         // Original: def on_override_refresh(self):
-        private void OnOverrideRefresh()
+        public void OnOverrideRefresh()
         {
             RefreshOverrideList(reload: true);
         }
@@ -684,6 +802,51 @@ namespace HolocronToolset.NET.Windows
                 return;
             }
             _texturesWidget?.SetResources(_active.TexturepackResources(texturepackName));
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: def on_save_refresh(self):
+        public void OnSaveRefresh()
+        {
+            RefreshSavesList(reload: true);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: def on_module_file_updated(self, file_path: str, event_type: str):
+        public void OnModuleFileUpdated(string filePath, string eventType)
+        {
+            if (_active == null || string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+
+            if (eventType == "deleted")
+            {
+                RefreshModuleList(reload: true);
+            }
+            else if (eventType == "modified")
+            {
+                OnModuleReload(filePath);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: def on_override_file_updated(self, file_path: str, event_type: str):
+        public void OnOverrideFileUpdated(string filePath, string eventType)
+        {
+            if (_active == null || string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+
+            if (eventType == "deleted")
+            {
+                RefreshOverrideList(reload: true);
+            }
+            else if (eventType == "modified")
+            {
+                OnOverrideReload(filePath);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1475-1486
@@ -782,5 +945,24 @@ namespace HolocronToolset.NET.Windows
             dialog.ShowDialog(this);
             // TODO: Reload installations if settings were edited
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+    public class MainWindowUi
+    {
+        public ComboBox GameCombo { get; set; }
+        public TabControl ResourceTabs { get; set; }
+        public ResourceList CoreWidget { get; set; }
+        public ResourceList ModulesWidget { get; set; }
+        public ResourceList OverrideWidget { get; set; }
+        public ResourceList SavesWidget { get; set; }
+        public ResourceList TexturesWidget { get; set; }
+        public TabItem CoreTab { get; set; }
+        public TabItem ModulesTab { get; set; }
+        public TabItem OverrideTab { get; set; }
+        public MenuItem ActionNewDLG { get; set; }
+        public MenuItem ActionNewUTC { get; set; }
+        public MenuItem ActionNewNSS { get; set; }
     }
 }

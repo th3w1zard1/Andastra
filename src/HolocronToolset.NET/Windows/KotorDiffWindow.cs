@@ -13,6 +13,10 @@ namespace HolocronToolset.NET.Windows
         private Dictionary<string, HTInstallation> _installations;
         private HTInstallation _activeInstallation;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py
+        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+        public KotorDiffWindowUi Ui { get; private set; }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py:87-107
         // Original: def __init__(self, parent, installations, active_installation):
         public KotorDiffWindow(
@@ -64,16 +68,23 @@ namespace HolocronToolset.NET.Windows
 
         private void SetupUI()
         {
-            // Additional UI setup if needed
+            // Create UI wrapper for testing
+            Ui = new KotorDiffWindowUi();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py:200-248
         // Original: def _run_diff(self):
-        private void RunDiff()
+        public void Compare()
         {
             // Run KotorDiff operation
             // This will be implemented when KotorDiff integration is available
             System.Console.WriteLine("KotorDiff not yet fully implemented");
         }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py
+    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
+    public class KotorDiffWindowUi
+    {
     }
 }

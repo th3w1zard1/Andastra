@@ -10,7 +10,7 @@ namespace Odyssey.Core.Entities
     {
         private const float DefaultFixedTimestep = 1f / 60f;
         private const float MaxFrameTime = 0.25f;
-        
+
         private float _accumulator;
         private float _simulationTime;
         private float _realTime;

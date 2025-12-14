@@ -325,7 +325,7 @@ namespace CSharpKOTOR.Resources
 
         public static bool operator !=(FileResource left, [CanBeNull] FileResource right)
         {
-            return left != right;
+            return !(left == right);
         }
     }
 
@@ -350,7 +350,7 @@ namespace CSharpKOTOR.Resources
 
         public void SetFileResource(FileResource resource)
         {
-            if (FileResource != null)
+            if (!ReferenceEquals(FileResource, null))
             {
                 throw new InvalidOperationException("FileResource can only be set once");
             }

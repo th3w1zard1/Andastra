@@ -268,10 +268,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: @Override public void outAActionCommand(AActionCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutAActionCommand(AActionCommand node)
         {
-            if (!this.skipdeadcode)
+            try
             {
-                this.WithRecovery(node, () =>
+                Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: ENTERED, actionId=" + NodeUtils.GetActionId(node) + ", skipdeadcode=" + this.skipdeadcode);
+                JavaSystem.@out.Println("DEBUG MainPass.OutAActionCommand: ENTERED, actionId=" + NodeUtils.GetActionId(node) + ", skipdeadcode=" + this.skipdeadcode);
+                if (!this.skipdeadcode)
                 {
+                    this.WithRecovery(node, () =>
+                    {
                     int remove = NodeUtils.ActionRemoveElementCount(node, this.actions);
                     int i = 0;
 
@@ -310,12 +314,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         this.stack.Structify(1, 3, this.subdata);
                     }
 
+                    Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: about to call TransformAction, actionId=" + NodeUtils.GetActionId(node));
+                    JavaSystem.@out.Println("DEBUG MainPass.OutAActionCommand: about to call TransformAction, actionId=" + NodeUtils.GetActionId(node));
                     this.state.TransformAction(node);
-                });
+                        Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: TransformAction completed");
+                        JavaSystem.@out.Println("DEBUG MainPass.OutAActionCommand: TransformAction completed");
+                    });
+                }
+                else
+                {
+                    this.state.TransformDeadCode(node);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                this.state.TransformDeadCode(node);
+                Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: EXCEPTION: " + ex.Message + ", StackTrace: " + ex.StackTrace);
+                JavaSystem.@out.Println("DEBUG MainPass.OutAActionCommand: EXCEPTION: " + ex.Message);
+                throw;
             }
         }
 
