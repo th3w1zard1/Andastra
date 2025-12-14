@@ -36,13 +36,20 @@ namespace HolocronToolset.NET.Editors
             InitializeComponent();
             SetupUI();
             SetupSignals();
-            AddHelpAction();
-
+            
             if (_modelRenderer != null)
             {
                 _modelRenderer.Installation = installation;
             }
 
+            AddHelpAction();
+            
+            // Set Content after AddHelpAction (which may wrap it in a DockPanel)
+            if (Content == null && _modelRenderer != null)
+            {
+                Content = _modelRenderer;
+            }
+            
             New();
         }
 
@@ -75,7 +82,8 @@ namespace HolocronToolset.NET.Editors
             {
                 _modelRenderer = new ModelRenderer();
             }
-            Content = _modelRenderer;
+            // Don't set Content here - AddHelpAction will wrap it in a DockPanel if needed
+            // Set Content after AddHelpAction is called
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:44-45
