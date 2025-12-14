@@ -337,28 +337,81 @@ foreach ($Target in $BuildTargets) {
     if ($VerifyAssets) {
         Write-Host "Verifying Stride assets..." -ForegroundColor Yellow
         
-        # Check for Data folder (Stride asset output)
-        $DataFolders = @(
-            Join-Path $PublishDir "Data"
-            Join-Path $PublishDir "data"
-            Join-Path $PublishDir "Assets"
-        )
-        
-        $FoundAssets = $false
-        foreach ($DataFolder in $DataFolders) {
-            if (Test-Path $DataFolder) {
-                $AssetFiles = Get-ChildItem -Path $DataFolder -Recurse -ErrorAction SilentlyContinue
-                if ($AssetFiles.Count -gt 0) {
-                    Write-Host "Found $($AssetFiles.Count) asset file(s) in $(Split-Path -Leaf $DataFolder)" -ForegroundColor Green
-                    $FoundAssets = $true
-                    break
+        # Load Stride build helpers if available
+        $HelpersPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "StrideBuildHelpers.ps1"
+        if (Test-Path $HelpersPath) {
+            try {
+                . $HelpersPath
+                
+                $AssetValidation = Test-StrideAssetCompilation -BuildPath $PublishDir -Platform $Platform
+                Write-StrideBuildReport -ValidationResults $AssetValidation -BuildPath $PublishDir
+                
+                # Additional shader compilation check
+                $ShadersCompiled = Test-StrideShaderCompilation -BuildPath $PublishDir
+                if ($ShadersCompiled) {
+                    Write-Host "Shader compilation: Verified" -ForegroundColor Green
+                } else {
+                    Write-VerboseOutput "No compiled shaders detected (may be compiled at runtime or not present)"
+                }
+                
+                # Package structure validation
+                $PackageStructure = Get-StridePackageStructure -BuildPath $PublishDir -Platform $Platform
+                if (-not $PackageStructure.IsValid) {
+                    Write-Warning "Package structure validation issues detected"
+                    if ($PackageStructure.MissingFolders.Count -gt 0) {
+                        Write-Warning "Missing expected folders: $($PackageStructure.MissingFolders -join ', ')"
+                    }
+                }
+            } catch {
+                Write-Warning "Could not load Stride build helpers: $_"
+                # Fall back to basic verification
+                $DataFolders = @(
+                    Join-Path $PublishDir "Data"
+                    Join-Path $PublishDir "data"
+                    Join-Path $PublishDir "Assets"
+                )
+                
+                $FoundAssets = $false
+                foreach ($DataFolder in $DataFolders) {
+                    if (Test-Path $DataFolder) {
+                        $AssetFiles = Get-ChildItem -Path $DataFolder -Recurse -ErrorAction SilentlyContinue
+                        if ($AssetFiles.Count -gt 0) {
+                            Write-Host "Found $($AssetFiles.Count) asset file(s) in $(Split-Path -Leaf $DataFolder)" -ForegroundColor Green
+                            $FoundAssets = $true
+                            break
+                        }
+                    }
+                }
+                
+                if (-not $FoundAssets) {
+                    Write-VerboseOutput "No asset files found in build output. Assets may not be compiled."
+                    Write-VerboseOutput "This is normal if your project doesn't use Stride assets, or if assets are embedded."
                 }
             }
-        }
-        
-        if (-not $FoundAssets) {
-            Write-Warning "No asset files found in build output. Assets may not be compiled."
-            Write-Warning "This is normal if your project doesn't use Stride assets, or if assets are embedded."
+        } else {
+            # Basic verification without helpers
+            $DataFolders = @(
+                Join-Path $PublishDir "Data"
+                Join-Path $PublishDir "data"
+                Join-Path $PublishDir "Assets"
+            )
+            
+            $FoundAssets = $false
+            foreach ($DataFolder in $DataFolders) {
+                if (Test-Path $DataFolder) {
+                    $AssetFiles = Get-ChildItem -Path $DataFolder -Recurse -ErrorAction SilentlyContinue
+                    if ($AssetFiles.Count -gt 0) {
+                        Write-Host "Found $($AssetFiles.Count) asset file(s) in $(Split-Path -Leaf $DataFolder)" -ForegroundColor Green
+                        $FoundAssets = $true
+                        break
+                    }
+                }
+            }
+            
+            if (-not $FoundAssets) {
+                Write-VerboseOutput "No asset files found in build output. Assets may not be compiled."
+                Write-VerboseOutput "This is normal if your project doesn't use Stride assets, or if assets are embedded."
+            }
         }
     }
     
