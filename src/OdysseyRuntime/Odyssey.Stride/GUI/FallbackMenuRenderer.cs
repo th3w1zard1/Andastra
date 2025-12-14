@@ -291,22 +291,27 @@ namespace Odyssey.Stride.GUI
             // End() finalizes sprite batch operations and submits draw calls
             // Must be called after all Draw() calls and before Begin() is called again
             // Source: https://doc.stride3d.net/4.0/en/Manual/graphics/low-level-api/spritebatch.html
-            // End sprite batch rendering
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
-            // End() - Finalizes the sprite batch and submits all queued sprites for rendering
-            // Must be called after all Draw calls and before the next Begin call
             _spriteBatch.End();
         }
 
         /// <summary>
         /// Updates menu state based on input.
         /// </summary>
+        // Update menu based on input
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+        // InputManager provides access to input devices (keyboard, mouse, gamepad)
+        // Source: https://doc.stride3d.net/latest/en/manual/input/index.html
         public void UpdateMenu(InputManager input, GameTime gameTime = null)
         {
             if (!_isVisible)
                 return;
 
             // Handle keyboard navigation
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsKeyPressed(Keys) checks if a key is currently pressed (returns true while key is held)
+            // Method signature: bool IsKeyPressed(Keys key)
+            // Keys enum defines keyboard key codes (Up, Down, Enter, Space, etc.)
+            // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
             if (input.IsKeyPressed(Keys.Up))
             {
                 _selectedIndex = (_selectedIndex - 1 + _menuButtons.Length) % _menuButtons.Length;
