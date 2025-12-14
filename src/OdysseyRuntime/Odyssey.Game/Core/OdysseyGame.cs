@@ -429,6 +429,12 @@ namespace Odyssey.Game.Core
                 }
             }
 
+            // Draw player entity
+            if (_session != null && _session.PlayerEntity != null)
+            {
+                DrawPlayerEntity(_session.PlayerEntity);
+            }
+
             // Draw UI overlay
             _spriteBatch.Begin();
             string statusText = "Game Running - Press ESC to return to menu";
@@ -508,6 +514,83 @@ namespace Odyssey.Game.Core
                         0,
                         0,
                         meshData.IndexCount / 3 // Number of triangles
+                    );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws the player entity as a simple representation.
+        /// </summary>
+        private void DrawPlayerEntity(Odyssey.Core.Interfaces.IEntity playerEntity)
+        {
+            if (_basicEffect == null)
+            {
+                return;
+            }
+
+            var transform = playerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+            if (transform == null)
+            {
+                return;
+            }
+
+            // Create a simple representation of the player (colored box)
+            // TODO: Replace with actual player model rendering
+            var playerPos = new Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+            var playerWorld = Matrix.CreateTranslation(playerPos);
+
+            // Create a simple box for the player (1x2x1 units - humanoid shape)
+            var playerVertices = new VertexPositionColor[]
+            {
+                // Bottom face
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0), Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0), Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0), Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0), Color.Blue),
+                // Top face
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2), Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2), Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2), Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), Color.Blue)
+            };
+
+            var playerIndices = new short[]
+            {
+                // Bottom
+                0, 1, 2, 0, 2, 3,
+                // Top
+                4, 6, 5, 4, 7, 6,
+                // Sides
+                0, 4, 5, 0, 5, 1,
+                1, 5, 6, 1, 6, 2,
+                2, 6, 7, 2, 7, 3,
+                3, 7, 4, 3, 4, 0
+            };
+
+            // Create temporary buffers for player
+            using (var playerVb = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), playerVertices.Length, BufferUsage.WriteOnly))
+            using (var playerIb = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, playerIndices.Length, BufferUsage.WriteOnly))
+            {
+                playerVb.SetData(playerVertices);
+                playerIb.SetData(playerIndices);
+
+                GraphicsDevice.SetVertexBuffer(playerVb);
+                GraphicsDevice.Indices = playerIb;
+
+                _basicEffect.View = _viewMatrix;
+                _basicEffect.Projection = _projectionMatrix;
+                _basicEffect.World = playerWorld;
+                _basicEffect.VertexColorEnabled = true;
+
+                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    GraphicsDevice.DrawIndexedPrimitives(
+                        PrimitiveType.TriangleList,
+                        0,
+                        0,
+                        playerIndices.Length / 3
                     );
                 }
             }
