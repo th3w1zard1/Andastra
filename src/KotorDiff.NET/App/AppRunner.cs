@@ -1,6 +1,7 @@
 // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:582-631
 // Original: def run_application(config: KotorDiffConfig) -> int: ...
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -243,7 +244,7 @@ namespace KotorDiff.NET.App
             return comparison;
         }
 
-        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:292-374
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:261-340
         // Original: def generate_tslpatcher_data(...): ...
         private static void GenerateTslPatcherData(
             DirectoryInfo tslpatchdataPath,
@@ -252,6 +253,51 @@ namespace KotorDiff.NET.App
             DirectoryInfo baseDataPath = null)
         {
             DiffLogger.GetLogger()?.Info($"\nGenerating TSLPatcher data at: {tslpatchdataPath}");
+
+            // Analyze TLK StrRef references and create linking patches BEFORE generating files
+            if (modifications.Tlk != null && modifications.Tlk.Count > 0 && baseDataPath != null)
+            {
+                DiffLogger.GetLogger()?.Info("\n=== Analyzing StrRef References ===");
+                DiffLogger.GetLogger()?.Info("Searching entire installation/folder for files that reference modified StrRefs...");
+
+                foreach (var tlkMod in modifications.Tlk)
+                {
+                    try
+                    {
+                        // Build the tuple expected by AnalyzeTlkStrrefReferences signature.
+                        // Here we do not have strref_mappings directly, so pass empty mapping for now.
+                        // TODO: Extract strref_mappings from TLK analyzer results if available
+                        var strrefMappings = new Dictionary<int, int>();
+                        var tlkModTuple = Tuple.Create(tlkMod, strrefMappings);
+
+                        KotorDiff.NET.Diff.ReferenceAnalyzers.AnalyzeTlkStrrefReferences(
+                            tlkModTuple,
+                            strrefMappings,
+                            baseDataPath.FullName,
+                            modifications.Gff,
+                            modifications.Twoda,
+                            modifications.Ssf,
+                            modifications.Ncs,
+                            logFunc: (msg) => DiffLogger.GetLogger()?.Info(msg));
+                    }
+                    catch (Exception e)
+                    {
+                        DiffLogger.GetLogger()?.Warning($"[Warning] StrRef analysis failed for tlk_mod={tlkMod}: {e.GetType().Name}: {e.Message}");
+                        DiffLogger.GetLogger()?.Debug($"Full traceback (tlk_mod={tlkMod}):");
+                        DiffLogger.GetLogger()?.Debug(e.StackTrace);
+                    }
+                }
+
+                DiffLogger.GetLogger()?.Info("StrRef analysis complete. Added linking patches:");
+                int gffPatches = modifications.Gff?.Sum(m => m.Modifiers.Count) ?? 0;
+                int twodaPatches = modifications.Twoda?.Sum(m => m.Modifiers.Count) ?? 0;
+                int ssfPatches = modifications.Ssf?.Sum(m => m.Modifiers.Count) ?? 0;
+                int ncsPatches = modifications.Ncs?.Sum(m => m.Modifiers.Count) ?? 0;
+                DiffLogger.GetLogger()?.Info($"  GFF patches: {gffPatches}");
+                DiffLogger.GetLogger()?.Info($"  2DA patches: {twodaPatches}");
+                DiffLogger.GetLogger()?.Info($"  SSF patches: {ssfPatches}");
+                DiffLogger.GetLogger()?.Info($"  NCS patches: {ncsPatches}");
+            }
 
             // Create the generator
             var generator = new TSLPatchDataGenerator(tslpatchdataPath);
@@ -277,7 +323,7 @@ namespace KotorDiff.NET.App
 
             // Serialize INI file
             var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
-            string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: false, verbose: false);
+            string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true, verbose: false);
             File.WriteAllText(iniPath.FullName, iniContent, Encoding.UTF8);
             DiffLogger.GetLogger()?.Info($"Generated {iniFilename} with {iniContent.Split('\n').Length} lines");
 
