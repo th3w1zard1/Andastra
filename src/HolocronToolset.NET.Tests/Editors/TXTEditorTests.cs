@@ -5,14 +5,22 @@ using CSharpKOTOR.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
+using HolocronToolset.NET.Tests.TestHelpers;
 using Xunit;
 
 namespace HolocronToolset.NET.Tests.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_txt_editor.py
     // Original: Comprehensive tests for TXT Editor
-    public class TXTEditorTests
+    [Collection("Avalonia Test Collection")]
+    public class TXTEditorTests : IClassFixture<AvaloniaTestFixture>
     {
+        private readonly AvaloniaTestFixture _fixture;
+
+        public TXTEditorTests(AvaloniaTestFixture fixture)
+        {
+            _fixture = fixture;
+        }
         [Fact]
         public void TestTxtEditorNewFileCreation()
         {
@@ -106,8 +114,10 @@ namespace HolocronToolset.NET.Tests.Editors
             // Content should match (normalized for line endings)
             string decoded1 = DecodeBytesWithFallbacks(savedData);
             string decoded2 = DecodeBytesWithFallbacks(data2);
-            decoded1.Replace("\r\n", "\n").Replace("\r", "\n")
-                .Should().Be(decoded2.Replace("\r\n", "\n").Replace("\r", "\n"));
+            // Normalize line endings for comparison
+            string normalized1 = decoded1.Replace("\r\n", "\n").Replace("\r", "\n");
+            string normalized2 = decoded2.Replace("\r\n", "\n").Replace("\r", "\n");
+            normalized1.Should().Be(normalized2);
         }
 
         private string DecodeBytesWithFallbacks(byte[] data)

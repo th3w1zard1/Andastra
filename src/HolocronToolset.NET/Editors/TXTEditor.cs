@@ -30,19 +30,34 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            _textEdit = this.FindControl<TextBox>("TextEdit");
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+                _textEdit = this.FindControl<TextBox>("TextEdit");
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+            
             if (_textEdit == null)
             {
-                // Create a simple text box if XAML doesn't exist
-                _textEdit = new TextBox
-                {
-                    AcceptsReturn = true,
-                    AcceptsTab = true,
-                    TextWrapping = Avalonia.Media.TextWrapping.NoWrap
-                };
-                Content = _textEdit;
+                SetupProgrammaticUI();
             }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            // Create a simple text box if XAML doesn't exist
+            _textEdit = new TextBox
+            {
+                AcceptsReturn = true,
+                AcceptsTab = true,
+                TextWrapping = Avalonia.Media.TextWrapping.NoWrap
+            };
+            Content = _textEdit;
         }
 
         private static ResourceType[] GetSupportedTypes()
@@ -71,9 +86,7 @@ namespace HolocronToolset.NET.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            string text = _textEdit.Text
-                .Replace("\r\n", Environment.NewLine)
-                .Replace("\n", Environment.NewLine);
+            string text = _textEdit?.Text ?? string.Empty;
 
             // Try UTF-8 first, then Windows-1252, then Latin-1
             try

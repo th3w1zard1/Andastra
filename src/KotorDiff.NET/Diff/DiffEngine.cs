@@ -519,7 +519,7 @@ namespace KotorDiff.NET.Diff
 
                             if (incrementalWriter != null)
                             {
-                                incrementalWriter.AddModification(modGff);
+                                incrementalWriter.WriteModification(modGff);
                             }
                             else
                             {
@@ -571,7 +571,7 @@ namespace KotorDiff.NET.Diff
 
                             if (incrementalWriter != null)
                             {
-                                incrementalWriter.AddModification(mod2da);
+                                incrementalWriter.WriteModification(mod2da);
                             }
                             else if (modificationsByType != null)
                             {
@@ -626,7 +626,7 @@ namespace KotorDiff.NET.Diff
 
                             if (incrementalWriter != null)
                             {
-                                incrementalWriter.AddModification(modTlk);
+                                incrementalWriter.WriteModification(modTlk);
                             }
                             else if (modificationsByType != null)
                             {
@@ -678,7 +678,7 @@ namespace KotorDiff.NET.Diff
 
                             if (incrementalWriter != null)
                             {
-                                incrementalWriter.AddModification(modSsf);
+                                incrementalWriter.WriteModification(modSsf);
                             }
                             else if (modificationsByType != null)
                             {
