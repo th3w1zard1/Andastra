@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Odyssey.Content.Interfaces;
+using CSharpKOTOR.Resources;
 
 namespace Odyssey.MonoGame.Rendering
 {
@@ -153,11 +154,10 @@ namespace Odyssey.MonoGame.Rendering
                 try
                 {
                     // Preload resource
-                    var resourceId = new ResourceIdentifier
-                    {
-                        ResName = task.ResourceName,
-                        ResType = task.ResourceType
-                    };
+                    var resourceId = new ResourceIdentifier(
+                        task.ResourceName,
+                        ConvertResourceType(task.ResourceType)
+                    );
 
                     // Load resource data (but don't create GPU resources yet)
                     await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
@@ -168,19 +168,29 @@ namespace Odyssey.MonoGame.Rendering
                 }
             });
         }
+
+        private CSharpKOTOR.Resources.ResourceType ConvertResourceType(ResourceType type)
+        {
+            switch (type)
+            {
+                case ResourceType.Texture:
+                    return CSharpKOTOR.Resources.ResourceType.TPC;
+                case ResourceType.Model:
+                    return CSharpKOTOR.Resources.ResourceType.MDL;
+                case ResourceType.Animation:
+                    return CSharpKOTOR.Resources.ResourceType.MDL;
+                case ResourceType.Sound:
+                    return CSharpKOTOR.Resources.ResourceType.WAV;
+                case ResourceType.Script:
+                    return CSharpKOTOR.Resources.ResourceType.NCS;
+                default:
+                    return CSharpKOTOR.Resources.ResourceType.INVALID;
+            }
+        }
     }
 
     /// <summary>
-    /// Resource identifier structure.
-    /// </summary>
-    public struct ResourceIdentifier
-    {
-        public string ResName;
-        public ResourceType ResType;
-    }
-
-    /// <summary>
-    /// Resource type enumeration.
+    /// Resource type enumeration for preloading.
     /// </summary>
     public enum ResourceType
     {
