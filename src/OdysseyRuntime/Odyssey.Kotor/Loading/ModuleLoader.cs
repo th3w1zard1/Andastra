@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
+using Vector3 = System.Numerics.Vector3;
 using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using Odyssey.Content.Interfaces;
@@ -124,17 +125,17 @@ namespace Odyssey.Kotor.Loading
             // Entry position
             if (root.Exists("Mod_Entry_X") && root.Exists("Mod_Entry_Y") && root.Exists("Mod_Entry_Z"))
             {
-                float x = root.GetFloat("Mod_Entry_X");
-                float y = root.GetFloat("Mod_Entry_Y");
-                float z = root.GetFloat("Mod_Entry_Z");
+                float x = root.GetSingle("Mod_Entry_X");
+                float y = root.GetSingle("Mod_Entry_Y");
+                float z = root.GetSingle("Mod_Entry_Z");
                 runtimeModule.EntryPosition = new Vector3(x, y, z);
             }
 
             // Entry direction
             if (root.Exists("Mod_Entry_Dir_X") && root.Exists("Mod_Entry_Dir_Y"))
             {
-                runtimeModule.EntryDirectionX = root.GetFloat("Mod_Entry_Dir_X");
-                runtimeModule.EntryDirectionY = root.GetFloat("Mod_Entry_Dir_Y");
+                runtimeModule.EntryDirectionX = root.GetSingle("Mod_Entry_Dir_X");
+                runtimeModule.EntryDirectionY = root.GetSingle("Mod_Entry_Dir_Y");
             }
 
             // Time settings
@@ -276,8 +277,8 @@ namespace Odyssey.Kotor.Loading
 
             // Fog
             area.FogEnabled = GetIntField(root, "SunFogOn", 0) != 0;
-            area.FogNear = root.Exists("SunFogNear") ? root.GetFloat("SunFogNear") : 0f;
-            area.FogFar = root.Exists("SunFogFar") ? root.GetFloat("SunFogFar") : 0f;
+            area.FogNear = root.Exists("SunFogNear") ? root.GetSingle("SunFogNear") : 0f;
+            area.FogFar = root.Exists("SunFogFar") ? root.GetSingle("SunFogFar") : 0f;
             area.FogColor = (uint)GetIntField(root, "FogColor", 0);
 
             // Grass
@@ -287,8 +288,8 @@ namespace Odyssey.Kotor.Loading
                 var grassTex = root.GetResRef("Grass_TexName");
                 area.GrassTexture = grassTex != null ? grassTex.ToString() : string.Empty;
             }
-            area.GrassDensity = root.Exists("Grass_Density") ? root.GetFloat("Grass_Density") : 0f;
-            area.GrassQuadSize = root.Exists("Grass_QuadSize") ? root.GetFloat("Grass_QuadSize") : 0f;
+            area.GrassDensity = root.Exists("Grass_Density") ? root.GetSingle("Grass_Density") : 0f;
+            area.GrassQuadSize = root.Exists("Grass_QuadSize") ? root.GetSingle("Grass_QuadSize") : 0f;
 
             // Audio
             area.MusicDay = GetIntField(root, "MusicDay", -1);
@@ -384,21 +385,39 @@ namespace Odyssey.Kotor.Loading
                 return;
             }
 
-            // Map visibility to rooms
-            for (int i = 0; i < area.Rooms.Count && i < vis.RoomNames.Count; i++)
+            // Get all room names from VIS
+            var allRoomNames = vis.AllRooms().ToList();
+            
+            // Map visibility to rooms - each room tracks which other rooms are visible from it
+            for (int i = 0; i < area.Rooms.Count; i++)
             {
-                var roomVis = vis.GetVisibleRooms(vis.RoomNames[i]);
-                if (roomVis != null)
+                string roomName = area.Rooms[i].ModelName.ToLowerInvariant();
+                if (!vis.RoomExists(roomName))
                 {
-                    area.Rooms[i].VisibleRooms = new List<int>();
-                    foreach (var visibleRoomName in roomVis)
+                    continue;
+                }
+
+                area.Rooms[i].VisibleRooms = new List<int>();
+                
+                // Check visibility against all other rooms
+                for (int j = 0; j < area.Rooms.Count; j++)
+                {
+                    string otherRoomName = area.Rooms[j].ModelName.ToLowerInvariant();
+                    if (!vis.RoomExists(otherRoomName))
                     {
-                        // Find index of visible room
-                        int idx = vis.RoomNames.IndexOf(visibleRoomName);
-                        if (idx >= 0)
+                        continue;
+                    }
+
+                    try
+                    {
+                        if (vis.GetVisible(roomName, otherRoomName))
                         {
-                            area.Rooms[i].VisibleRooms.Add(idx);
+                            area.Rooms[i].VisibleRooms.Add(j);
                         }
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Room doesn't exist in VIS, skip
                     }
                 }
             }

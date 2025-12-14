@@ -42,11 +42,7 @@ namespace Odyssey.Kotor.Components
 
         public void OnAttach()
         {
-            // Load faction from entity data if available
-            if (Owner != null && Owner.HasData("FactionID"))
-            {
-                FactionId = Owner.GetData<int>("FactionID", StandardFactions.Commoner);
-            }
+            // FactionId is set during entity creation
         }
 
         public void OnDetach()

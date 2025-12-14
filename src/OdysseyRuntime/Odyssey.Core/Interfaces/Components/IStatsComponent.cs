@@ -15,7 +15,7 @@ namespace Odyssey.Core.Interfaces.Components
         /// <summary>
         /// Maximum hit points.
         /// </summary>
-        int MaxHP { get; }
+        int MaxHP { get; set; }
 
         /// <summary>
         /// Current Force points.
@@ -25,7 +25,7 @@ namespace Odyssey.Core.Interfaces.Components
         /// <summary>
         /// Maximum Force points.
         /// </summary>
-        int MaxFP { get; }
+        int MaxFP { get; set; }
         
         /// <summary>
         /// Gets an ability score.

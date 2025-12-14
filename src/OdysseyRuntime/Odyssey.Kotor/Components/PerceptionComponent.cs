@@ -53,16 +53,8 @@ namespace Odyssey.Kotor.Components
 
         public void OnAttach()
         {
-            // Load perception ranges from entity data if available
-            if (Owner != null)
-            {
-                if (Owner.HasData("PerceptionRange"))
-                {
-                    SightRange = Owner.GetData<float>("PerceptionRange", PerceptionManager.DefaultSightRange);
-                }
-                // Hearing is typically slightly less than sight
-                HearingRange = SightRange * 0.75f;
-            }
+            // Default ranges - can be customized after creation
+            HearingRange = SightRange * 0.75f;
         }
 
         public void OnDetach()

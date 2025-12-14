@@ -380,7 +380,7 @@ namespace Odyssey.Kotor.Systems
             foreach (var member in _activeParty)
             {
                 // Award XP through creature's stats component
-                var stats = member.GetComponent<Odyssey.Core.Interfaces.Components.IStatsComponent>();
+                var stats = member.GetComponent<Odyssey.Kotor.Components.StatsComponent>();
                 if (stats != null)
                 {
                     stats.Experience += xpPerMember;

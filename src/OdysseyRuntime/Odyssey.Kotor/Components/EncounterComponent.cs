@@ -13,6 +13,11 @@ namespace Odyssey.Kotor.Components
     /// </remarks>
     public class EncounterComponent : IComponent
     {
+        public IEntity Owner { get; set; }
+
+        public void OnAttach() { }
+        public void OnDetach() { }
+
         public EncounterComponent()
         {
             TemplateResRef = string.Empty;

@@ -10,7 +10,7 @@ namespace Odyssey.Core.Interfaces.Components
         /// <summary>
         /// The geometry vertices defining the trigger volume.
         /// </summary>
-        IList<System.Numerics.Vector3> Geometry { get; }
+        IList<System.Numerics.Vector3> Geometry { get; set; }
 
         /// <summary>
         /// Whether the trigger is currently enabled.

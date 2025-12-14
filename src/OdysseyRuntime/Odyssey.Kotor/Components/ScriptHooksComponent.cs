@@ -15,10 +15,21 @@ namespace Odyssey.Kotor.Components
     public class ScriptHooksComponent : IComponent, IScriptHooksComponent
     {
         private readonly Dictionary<ScriptEvent, string> _scripts;
+        private readonly Dictionary<string, int> _localInts;
+        private readonly Dictionary<string, float> _localFloats;
+        private readonly Dictionary<string, string> _localStrings;
+
+        public IEntity Owner { get; set; }
+
+        public void OnAttach() { }
+        public void OnDetach() { }
 
         public ScriptHooksComponent()
         {
             _scripts = new Dictionary<ScriptEvent, string>();
+            _localInts = new Dictionary<string, int>();
+            _localFloats = new Dictionary<string, float>();
+            _localStrings = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -81,15 +92,67 @@ namespace Odyssey.Kotor.Components
             _scripts.Clear();
         }
 
-        // IScriptHooksComponent implementation using generic ResRef
-        CSharpKOTOR.Common.ResRef IScriptHooksComponent.GetScript(ScriptEvent evt)
+        /// <summary>
+        /// Gets a local integer variable.
+        /// </summary>
+        public int GetLocalInt(string name)
         {
-            string script;
-            if (_scripts.TryGetValue(evt, out script) && !string.IsNullOrEmpty(script))
+            int value;
+            if (_localInts.TryGetValue(name, out value))
             {
-                return CSharpKOTOR.Common.ResRef.FromString(script);
+                return value;
             }
-            return CSharpKOTOR.Common.ResRef.FromBlank();
+            return 0;
+        }
+
+        /// <summary>
+        /// Sets a local integer variable.
+        /// </summary>
+        public void SetLocalInt(string name, int value)
+        {
+            _localInts[name] = value;
+        }
+
+        /// <summary>
+        /// Gets a local float variable.
+        /// </summary>
+        public float GetLocalFloat(string name)
+        {
+            float value;
+            if (_localFloats.TryGetValue(name, out value))
+            {
+                return value;
+            }
+            return 0f;
+        }
+
+        /// <summary>
+        /// Sets a local float variable.
+        /// </summary>
+        public void SetLocalFloat(string name, float value)
+        {
+            _localFloats[name] = value;
+        }
+
+        /// <summary>
+        /// Gets a local string variable.
+        /// </summary>
+        public string GetLocalString(string name)
+        {
+            string value;
+            if (_localStrings.TryGetValue(name, out value))
+            {
+                return value;
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Sets a local string variable.
+        /// </summary>
+        public void SetLocalString(string name, string value)
+        {
+            _localStrings[name] = value ?? string.Empty;
         }
     }
 }

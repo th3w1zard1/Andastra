@@ -12,6 +12,11 @@ namespace Odyssey.Kotor.Components
     /// </remarks>
     public class CreatureComponent : IComponent
     {
+        public IEntity Owner { get; set; }
+
+        public void OnAttach() { }
+        public void OnDetach() { }
+
         public CreatureComponent()
         {
             TemplateResRef = string.Empty;

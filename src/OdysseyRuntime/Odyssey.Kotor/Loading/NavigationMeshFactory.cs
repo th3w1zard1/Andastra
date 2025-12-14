@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.BWM;
+using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
+using Vector3 = System.Numerics.Vector3;
 
 namespace Odyssey.Kotor.Loading
 {
@@ -36,7 +37,7 @@ namespace Odyssey.Kotor.Loading
             }
 
             // Collect all vertices and faces from all room walkmeshes
-            var allVertices = new List<Vector3>();
+            var allVertices = new List<System.Numerics.Vector3>();
             var allFaceIndices = new List<int>();
             var allAdjacency = new List<int>();
             var allSurfaceMaterials = new List<int>();
@@ -121,14 +122,14 @@ namespace Odyssey.Kotor.Loading
         /// Creates a navigation mesh from a single BWM.
         /// </summary>
         [CanBeNull]
-        public INavigationMesh CreateFromBwm(BWM bwm, Vector3 offset)
+        public INavigationMesh CreateFromBwm(BWM bwm, System.Numerics.Vector3 offset)
         {
             if (bwm == null || bwm.Faces.Count == 0)
             {
                 return null;
             }
 
-            var vertices = new List<Vector3>();
+            var vertices = new List<System.Numerics.Vector3>();
             var faceIndices = new List<int>();
             var adjacency = new List<int>();
             var surfaceMaterials = new List<int>();
@@ -209,7 +210,7 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Adds a vertex to the list, returning its index.
         /// </summary>
-        private int AddVertex(List<Vector3> vertices, CSharpKOTOR.Common.Vector3 v, Vector3 offset, 
+        private int AddVertex(List<System.Numerics.Vector3> vertices, CSharpKOTOR.Common.Vector3 v, System.Numerics.Vector3 offset, 
             Dictionary<CSharpKOTOR.Common.Vector3, int> indexMap)
         {
             // Check if vertex already exists
@@ -220,7 +221,7 @@ namespace Odyssey.Kotor.Loading
 
             // Add new vertex with offset
             int newIndex = vertices.Count;
-            vertices.Add(new Vector3(v.X + offset.X, v.Y + offset.Y, v.Z + offset.Z));
+            vertices.Add(new System.Numerics.Vector3(v.X + offset.X, v.Y + offset.Y, v.Z + offset.Z));
             indexMap[v] = newIndex;
             return newIndex;
         }
@@ -259,7 +260,7 @@ namespace Odyssey.Kotor.Loading
         /// Builds an AABB tree for the navigation mesh.
         /// </summary>
         [CanBeNull]
-        private NavigationMesh.AabbNode BuildAabbTree(List<Vector3> vertices, List<int> faceIndices, List<int> materials)
+        private NavigationMesh.AabbNode BuildAabbTree(List<System.Numerics.Vector3> vertices, List<int> faceIndices, List<int> materials)
         {
             int faceCount = faceIndices.Count / 3;
             if (faceCount == 0)
@@ -280,7 +281,7 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Recursively builds the AABB tree.
         /// </summary>
-        private NavigationMesh.AabbNode BuildAabbTreeRecursive(List<Vector3> vertices, List<int> faceIndices, 
+        private NavigationMesh.AabbNode BuildAabbTreeRecursive(List<System.Numerics.Vector3> vertices, List<int> faceIndices, 
             List<int> materials, List<int> faceList, int depth)
         {
             const int MaxDepth = 32;
@@ -411,7 +412,7 @@ namespace Odyssey.Kotor.Loading
             return node;
         }
 
-        private static float GetAxisValue(Vector3 v, int axis)
+        private static float GetAxisValue(System.Numerics.Vector3 v, int axis)
         {
             switch (axis)
             {

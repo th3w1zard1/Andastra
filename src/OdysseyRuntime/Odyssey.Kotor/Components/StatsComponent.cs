@@ -93,6 +93,7 @@ namespace Odyssey.Kotor.Components
         public int MaxHP
         {
             get { return _maxHP; }
+            set { _maxHP = Math.Max(1, value); }
         }
 
         public int GetAbility(Ability ability)
@@ -347,40 +348,8 @@ namespace Odyssey.Kotor.Components
         /// </summary>
         private void LoadFromEntityData()
         {
-            if (Owner == null)
-            {
-                return;
-            }
-
-            // Try to get stored ability scores
-            foreach (Ability ability in Enum.GetValues(typeof(Ability)))
-            {
-                string key = "Ability_" + ability;
-                if (Owner.HasData(key))
-                {
-                    _abilities[ability] = Owner.GetData<int>(key, 10);
-                }
-            }
-
-            // Load HP
-            if (Owner.HasData("CurrentHitPoints"))
-            {
-                _currentHP = Owner.GetData<int>("CurrentHitPoints", 10);
-            }
-            if (Owner.HasData("MaxHitPoints"))
-            {
-                _maxHP = Owner.GetData<int>("MaxHitPoints", 10);
-            }
-
-            // Load movement speeds
-            if (Owner.HasData("WalkRate"))
-            {
-                WalkSpeed = Owner.GetData<float>("WalkRate", 1.75f);
-            }
-            if (Owner.HasData("RunRate"))
-            {
-                RunSpeed = Owner.GetData<float>("RunRate", 4.0f);
-            }
+            // Stats are now loaded via SetMaxHP, SetAbility, etc.
+            // This method is a placeholder for future entity data integration.
         }
 
         #endregion

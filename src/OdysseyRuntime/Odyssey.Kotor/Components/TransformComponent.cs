@@ -45,12 +45,7 @@ namespace Odyssey.Kotor.Components
 
         public void OnAttach()
         {
-            // Load position from entity if available
-            if (Owner != null)
-            {
-                _position = Owner.Position;
-                _facing = Owner.Facing;
-            }
+            // Position and facing are managed by this component
         }
 
         public void OnDetach()
@@ -74,12 +69,6 @@ namespace Odyssey.Kotor.Components
                 {
                     _position = value;
                     _worldMatrixDirty = true;
-                    
-                    // Sync to entity if attached
-                    if (Owner != null)
-                    {
-                        Owner.Position = value;
-                    }
                 }
             }
         }
@@ -103,12 +92,6 @@ namespace Odyssey.Kotor.Components
                 {
                     _facing = normalized;
                     _worldMatrixDirty = true;
-                    
-                    // Sync to entity if attached
-                    if (Owner != null)
-                    {
-                        Owner.Facing = normalized;
-                    }
                 }
             }
         }

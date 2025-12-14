@@ -5,8 +5,9 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using JetBrains.Annotations;
 using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using ObjectType = Odyssey.Core.Enums.ObjectType;
+using ScriptEvent = Odyssey.Core.Enums.ScriptEvent;
 
 namespace Odyssey.Kotor.Loading
 {
@@ -45,7 +46,7 @@ namespace Odyssey.Kotor.Loading
             var entity = new Entity(GetNextObjectId(), ObjectType.Creature);
             
             // Get position
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
             
             // Basic properties
@@ -142,7 +143,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Door);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
@@ -233,7 +234,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Placeable);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
@@ -322,7 +323,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Trigger);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
@@ -333,13 +334,13 @@ namespace Odyssey.Kotor.Loading
                 var geometryList = gitStruct.GetList("Geometry");
                 if (geometryList != null)
                 {
-                    var points = new List<Vector3>();
+                    var points = new List<System.Numerics.Vector3>();
                     foreach (var pointStruct in geometryList)
                     {
-                        float px = pointStruct.Exists("PointX") ? pointStruct.GetFloat("PointX") : 0f;
-                        float py = pointStruct.Exists("PointY") ? pointStruct.GetFloat("PointY") : 0f;
-                        float pz = pointStruct.Exists("PointZ") ? pointStruct.GetFloat("PointZ") : 0f;
-                        points.Add(new Vector3(px, py, pz));
+                        float px = pointStruct.Exists("PointX") ? pointStruct.GetSingle("PointX") : 0f;
+                        float py = pointStruct.Exists("PointY") ? pointStruct.GetSingle("PointY") : 0f;
+                        float pz = pointStruct.Exists("PointZ") ? pointStruct.GetSingle("PointZ") : 0f;
+                        points.Add(new System.Numerics.Vector3(px, py, pz));
                     }
                     entity.SetData("Geometry", points);
                 }
@@ -368,7 +369,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Waypoint);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
@@ -393,7 +394,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Sound);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
@@ -407,8 +408,8 @@ namespace Odyssey.Kotor.Loading
             entity.SetData("RandomPosition", GetIntField(gitStruct, "RandomPosition", 0) != 0);
             entity.SetData("Volume", GetIntField(gitStruct, "Volume", 100));
             entity.SetData("VolumeVrtn", GetIntField(gitStruct, "VolumeVrtn", 0));
-            entity.SetData("MaxDistance", gitStruct.Exists("MaxDistance") ? gitStruct.GetFloat("MaxDistance") : 30f);
-            entity.SetData("MinDistance", gitStruct.Exists("MinDistance") ? gitStruct.GetFloat("MinDistance") : 1f);
+            entity.SetData("MaxDistance", gitStruct.Exists("MaxDistance") ? gitStruct.GetSingle("MaxDistance") : 30f);
+            entity.SetData("MinDistance", gitStruct.Exists("MinDistance") ? gitStruct.GetSingle("MinDistance") : 1f);
 
             // Sound list
             if (gitStruct.Exists("Sounds"))
@@ -440,7 +441,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Store);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
@@ -458,7 +459,7 @@ namespace Odyssey.Kotor.Loading
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Encounter);
             
-            Vector3 position = GetPosition(gitStruct);
+            System.Numerics.Vector3 position = GetPosition(gitStruct);
             
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
@@ -500,13 +501,13 @@ namespace Odyssey.Kotor.Loading
                 var geometryList = gitStruct.GetList("Geometry");
                 if (geometryList != null)
                 {
-                    var points = new List<Vector3>();
+                    var points = new List<System.Numerics.Vector3>();
                     foreach (var pointStruct in geometryList)
                     {
-                        float px = pointStruct.Exists("X") ? pointStruct.GetFloat("X") : 0f;
-                        float py = pointStruct.Exists("Y") ? pointStruct.GetFloat("Y") : 0f;
-                        float pz = pointStruct.Exists("Z") ? pointStruct.GetFloat("Z") : 0f;
-                        points.Add(new Vector3(px, py, pz));
+                        float px = pointStruct.Exists("X") ? pointStruct.GetSingle("X") : 0f;
+                        float py = pointStruct.Exists("Y") ? pointStruct.GetSingle("Y") : 0f;
+                        float pz = pointStruct.Exists("Z") ? pointStruct.GetSingle("Z") : 0f;
+                        points.Add(new System.Numerics.Vector3(px, py, pz));
                     }
                     entity.SetData("Geometry", points);
                 }
@@ -527,23 +528,23 @@ namespace Odyssey.Kotor.Loading
 
         #region Helper Methods
 
-        private static Vector3 GetPosition(GFFStruct gitStruct)
+        private static System.Numerics.Vector3 GetPosition(GFFStruct gitStruct)
         {
-            float x = gitStruct.Exists("XPosition") ? gitStruct.GetFloat("XPosition") : 0f;
-            float y = gitStruct.Exists("YPosition") ? gitStruct.GetFloat("YPosition") : 0f;
-            float z = gitStruct.Exists("ZPosition") ? gitStruct.GetFloat("ZPosition") : 0f;
-            return new Vector3(x, y, z);
+            float x = gitStruct.Exists("XPosition") ? gitStruct.GetSingle("XPosition") : 0f;
+            float y = gitStruct.Exists("YPosition") ? gitStruct.GetSingle("YPosition") : 0f;
+            float z = gitStruct.Exists("ZPosition") ? gitStruct.GetSingle("ZPosition") : 0f;
+            return new System.Numerics.Vector3(x, y, z);
         }
 
         private static float GetFacing(GFFStruct gitStruct)
         {
             if (gitStruct.Exists("Bearing"))
             {
-                return gitStruct.GetFloat("Bearing");
+                return gitStruct.GetSingle("Bearing");
             }
             // Calculate from XOrientation/YOrientation
-            float xOri = gitStruct.Exists("XOrientation") ? gitStruct.GetFloat("XOrientation") : 0f;
-            float yOri = gitStruct.Exists("YOrientation") ? gitStruct.GetFloat("YOrientation") : 1f;
+            float xOri = gitStruct.Exists("XOrientation") ? gitStruct.GetSingle("XOrientation") : 0f;
+            float yOri = gitStruct.Exists("YOrientation") ? gitStruct.GetSingle("YOrientation") : 1f;
             return (float)Math.Atan2(yOri, xOri);
         }
 

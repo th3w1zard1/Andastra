@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Common;
+using Odyssey.Content.Interfaces;
 
 namespace Odyssey.Kotor.Profiles
 {
@@ -16,7 +17,7 @@ namespace Odyssey.Kotor.Profiles
             _profileFactories = new Dictionary<GameType, Func<IGameProfile>>
             {
                 { GameType.K1, () => new K1GameProfile() },
-                { GameType.TSL, () => new K2GameProfile() }
+                { GameType.K2, () => new K2GameProfile() }
             };
         }
         

@@ -2,11 +2,23 @@ using System;
 using System.IO;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Navigation;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.VM;
+using Odyssey.Kotor.Dialogue;
+using CSharpKOTOR.Formats.TLK;
+using CSharpKOTOR.Resource.Generics.DLG;
 
 namespace Odyssey.Kotor.Game
 {
+    /// <summary>
+    /// Event arguments for module loaded events.
+    /// </summary>
+    public class ModuleLoadedEventArgs : EventArgs
+    {
+        public string ModuleName { get; set; }
+    }
+
     /// <summary>
     /// Manages the current game session - module loading, saves, party, etc.
     /// </summary>
@@ -17,16 +29,54 @@ namespace Odyssey.Kotor.Game
         private readonly NcsVm _vm;
         private readonly IScriptGlobals _globals;
         private readonly ModuleLoader _moduleLoader;
+        private readonly DialogueManager _dialogueManager;
 
         private string _currentModuleName;
         private bool _isRunning;
         private bool _isPaused;
+        private NavigationMesh _currentNavMesh;
+        private TLK _baseTlk;
+        private TLK _customTlk;
 
-        // TODO: Proper party management
+        // Player and party
         private IEntity _playerEntity;
 
-        // TODO: Journal system
-        // TODO: Global game state
+        /// <summary>
+        /// Event fired when a module is loaded.
+        /// </summary>
+        public event EventHandler<ModuleLoadedEventArgs> OnModuleLoaded;
+
+        /// <summary>
+        /// Gets the current module name.
+        /// </summary>
+        public string CurrentModuleName
+        {
+            get { return _currentModuleName; }
+        }
+
+        /// <summary>
+        /// Gets the player entity.
+        /// </summary>
+        public IEntity PlayerEntity
+        {
+            get { return _playerEntity; }
+        }
+
+        /// <summary>
+        /// Gets the current navigation mesh.
+        /// </summary>
+        public NavigationMesh NavigationMesh
+        {
+            get { return _currentNavMesh; }
+        }
+
+        /// <summary>
+        /// Gets the dialogue manager.
+        /// </summary>
+        public DialogueManager DialogueManager
+        {
+            get { return _dialogueManager; }
+        }
 
         public GameSession(object settings, World world, NcsVm vm, IScriptGlobals globals)
         {
@@ -35,6 +85,71 @@ namespace Odyssey.Kotor.Game
             _vm = vm;
             _globals = globals;
             _moduleLoader = new ModuleLoader(_settings.GamePath, _world);
+
+            // Create dialogue manager
+            _dialogueManager = new DialogueManager(
+                vm,
+                world,
+                LoadDialogue,
+                LoadScript
+            );
+
+            // Load talk tables
+            LoadTalkTables();
+        }
+
+        private void LoadTalkTables()
+        {
+            // Load base TLK
+            string baseTlkPath = Path.Combine(_settings.GamePath, "dialog.tlk");
+            if (File.Exists(baseTlkPath))
+            {
+                try
+                {
+                    _baseTlk = TLKAuto.ReadTlk(baseTlkPath);
+                    Console.WriteLine("[GameSession] Loaded base TLK");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[GameSession] Failed to load base TLK: " + ex.Message);
+                }
+            }
+
+            // Load custom TLK if present
+            string customTlkPath = Path.Combine(_settings.GamePath, "dialogf.tlk");
+            if (File.Exists(customTlkPath))
+            {
+                try
+                {
+                    _customTlk = TLKAuto.ReadTlk(customTlkPath);
+                    Console.WriteLine("[GameSession] Loaded custom TLK");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[GameSession] Failed to load custom TLK: " + ex.Message);
+                }
+            }
+
+            // Set TLK tables in dialogue manager
+            _dialogueManager.SetTalkTables(_baseTlk, _customTlk);
+        }
+
+        /// <summary>
+        /// Loads a dialogue by ResRef.
+        /// </summary>
+        public DLG LoadDialogue(string resRef)
+        {
+            // Load from module or global resources
+            // This would use the resource provider
+            return _moduleLoader.LoadDialogue(resRef);
+        }
+
+        /// <summary>
+        /// Loads a script by ResRef.
+        /// </summary>
+        public byte[] LoadScript(string resRef)
+        {
+            return _moduleLoader.LoadScript(resRef);
         }
 
         /// <summary>
@@ -99,10 +214,16 @@ namespace Odyssey.Kotor.Game
                 _moduleLoader.LoadModule(moduleName);
                 _currentModuleName = moduleName;
 
+                // Get navigation mesh from loaded module
+                _currentNavMesh = _moduleLoader.GetNavigationMesh();
+
                 // Fire module OnModuleLoad script
                 // TODO: Execute module OnModuleLoad script
 
                 Console.WriteLine("[GameSession] Module loaded: " + moduleName);
+
+                // Fire event
+                OnModuleLoaded?.Invoke(this, new ModuleLoadedEventArgs { ModuleName = moduleName });
             }
             catch (Exception ex)
             {

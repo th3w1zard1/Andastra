@@ -165,7 +165,7 @@ namespace Odyssey.Core.Movement
                     return false;
                 }
 
-                _currentPath = path;
+                _currentPath = new List<Vector3>(path);
             }
             else
             {

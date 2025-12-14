@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Templates;
 
 namespace Odyssey.Core.Entities
 {

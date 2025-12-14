@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Common;
+using Odyssey.Content.Interfaces;
 using Odyssey.Kotor.Profiles;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.Interfaces;
@@ -22,9 +23,9 @@ namespace Odyssey.Kotor.Profiles
             _tableConfig = new K2TableConfig();
         }
         
-        public GameType GameType
+        public Odyssey.Content.Interfaces.GameType GameType
         {
-            get { return GameType.TSL; }
+            get { return Odyssey.Content.Interfaces.GameType.K2; }
         }
         
         public string Name
@@ -90,12 +91,12 @@ namespace Odyssey.Kotor.Profiles
         
         private class K2ResourceConfig : IResourceConfig
         {
-            public string ChitinKeyPath
+            public string ChitinKeyFile
             {
                 get { return "chitin.key"; }
             }
             
-            public IReadOnlyList<string> TexturePackPaths
+            public IReadOnlyList<string> TexturePackFiles
             {
                 get
                 {
@@ -107,7 +108,7 @@ namespace Odyssey.Kotor.Profiles
                 }
             }
             
-            public string DialogTlkPath
+            public string DialogTlkFile
             {
                 get { return "dialog.tlk"; }
             }
@@ -241,6 +242,38 @@ namespace Odyssey.Kotor.Profiles
                     return columns;
                 }
                 return new string[0];
+            }
+            
+            public IReadOnlyDictionary<string, string> AppearanceColumns
+            {
+                get
+                {
+                    var dict = new Dictionary<string, string>();
+                    if (_tables.TryGetValue("appearance", out string[] columns))
+                    {
+                        foreach (var col in columns)
+                        {
+                            dict[col] = col;
+                        }
+                    }
+                    return dict;
+                }
+            }
+            
+            public IReadOnlyDictionary<string, string> BaseItemsColumns
+            {
+                get
+                {
+                    var dict = new Dictionary<string, string>();
+                    if (_tables.TryGetValue("baseitems", out string[] columns))
+                    {
+                        foreach (var col in columns)
+                        {
+                            dict[col] = col;
+                        }
+                    }
+                    return dict;
+                }
             }
         }
         

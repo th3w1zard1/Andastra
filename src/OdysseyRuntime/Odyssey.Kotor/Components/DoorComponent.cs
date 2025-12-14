@@ -11,6 +11,8 @@ namespace Odyssey.Kotor.Components
     /// </remarks>
     public class DoorComponent : IComponent
     {
+        public IEntity Owner { get; set; }
+
         public DoorComponent()
         {
             TemplateResRef = string.Empty;
@@ -18,6 +20,14 @@ namespace Odyssey.Kotor.Components
             LinkedTo = string.Empty;
             LinkedToModule = string.Empty;
             TransitionDestination = string.Empty;
+        }
+
+        public void OnAttach()
+        {
+        }
+
+        public void OnDetach()
+        {
         }
 
         /// <summary>

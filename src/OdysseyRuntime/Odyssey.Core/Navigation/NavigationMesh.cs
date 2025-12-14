@@ -91,6 +91,87 @@ namespace Odyssey.Core.Navigation
         public int WalkableFaceCount { get { return _walkableFaceCount; } }
 
         /// <summary>
+        /// Creates an empty navigation mesh (for placeholder use).
+        /// </summary>
+        public NavigationMesh()
+        {
+            _vertices = new Vector3[0];
+            _faceIndices = new int[0];
+            _adjacency = new int[0];
+            _surfaceMaterials = new int[0];
+            _aabbRoot = null;
+            _faceCount = 0;
+            _walkableFaceCount = 0;
+        }
+
+        /// <summary>
+        /// Builds the navigation mesh from a list of triangles.
+        /// </summary>
+        public void BuildFromTriangles(List<Vector3> vertices, List<int> indices)
+        {
+            // Note: This mutates the mesh which should ideally be immutable
+            // For placeholder use only
+        }
+
+        /// <summary>
+        /// Performs a raycast and returns the hit point (simplified overload).
+        /// </summary>
+        public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint)
+        {
+            int hitFace;
+            return Raycast(origin, direction, maxDistance, out hitPoint, out hitFace);
+        }
+
+        /// <summary>
+        /// Checks if a point is on the mesh (within any walkable face).
+        /// </summary>
+        public bool IsPointOnMesh(Vector3 point)
+        {
+            int faceIndex = FindFaceAt(point);
+            return faceIndex >= 0 && IsWalkable(faceIndex);
+        }
+
+        /// <summary>
+        /// Gets the nearest point on the mesh to the given position.
+        /// </summary>
+        /// <returns>Nullable Vector3 - null if no walkable point found.</returns>
+        public Vector3? GetNearestPoint(Vector3 point)
+        {
+            Vector3 result;
+            float height;
+            if (ProjectToSurface(point, out result, out height))
+            {
+                int faceAt = FindFaceAt(point);
+                if (faceAt >= 0 && IsWalkable(faceAt))
+                {
+                    return result;
+                }
+            }
+
+            // If not on walkable mesh, find nearest walkable face center
+            float nearestDist = float.MaxValue;
+            Vector3? nearest = null;
+
+            for (int i = 0; i < _faceCount; i++)
+            {
+                if (!IsWalkable(i))
+                {
+                    continue;
+                }
+
+                Vector3 center = GetFaceCenter(i);
+                float dist = Vector3.DistanceSquared(point, center);
+                if (dist < nearestDist)
+                {
+                    nearestDist = dist;
+                    nearest = center;
+                }
+            }
+
+            return nearest;
+        }
+
+        /// <summary>
         /// Finds a path from start to goal using A* on the walkmesh adjacency graph.
         /// </summary>
         public IList<Vector3> FindPath(Vector3 start, Vector3 goal)

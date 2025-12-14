@@ -204,11 +204,40 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 // Also ignore if entryJsrTarget points to the last RETN (likely wrong target)
                 // The last RETN is typically at instructions.Count - 1
                 bool entryJsrTargetIsLastRetn = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                
+                // Special case: If entry JSR targets last RETN, check if there's a JSR at position 0
+                // that might be the actual main entry point (common in some compiler outputs)
+                int alternativeMainStart = -1;
+                if (entryJsrTargetIsLastRetn && instructions.Count > 0 && 
+                    instructions[0].InsType == NCSInstructionType.JSR && instructions[0].Jump != null)
+                {
+                    try
+                    {
+                        int jsr0Target = ncs.GetInstructionIndex(instructions[0].Jump);
+                        // If JSR at 0 targets something after globals initialization (typically > 20),
+                        // and it's before the entry stub, it might be the main function
+                        if (jsr0Target > 20 && jsr0Target < entryStubEnd)
+                        {
+                            alternativeMainStart = jsr0Target;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found alternative main start at {alternativeMainStart} (JSR at 0 targets {jsr0Target}, entry JSR targets last RETN)");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                
                 if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn)
                 {
                     // entryJsrTarget is valid and after entry stub and not the last RETN - use it
                     mainStart = entryJsrTarget;
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
+                }
+                else if (alternativeMainStart >= 0)
+                {
+                    // Use alternative main start from JSR at 0
+                    mainStart = alternativeMainStart;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using alternative mainStart {alternativeMainStart} (JSR at 0 target, entry JSR targets last RETN)");
                 }
                 else
                 {

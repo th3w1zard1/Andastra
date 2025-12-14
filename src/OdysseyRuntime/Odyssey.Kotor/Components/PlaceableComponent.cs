@@ -10,6 +10,11 @@ namespace Odyssey.Kotor.Components
     /// </remarks>
     public class PlaceableComponent : IComponent
     {
+        public IEntity Owner { get; set; }
+
+        public void OnAttach() { }
+        public void OnDetach() { }
+
         public PlaceableComponent()
         {
             TemplateResRef = string.Empty;

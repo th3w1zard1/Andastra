@@ -148,14 +148,14 @@ namespace Odyssey.Kotor.Data
                 RowIndex = classId,
                 Label = row.Label(),
                 Name = row.GetString("name"),
-                HitDie = row.GetInt("hitdie") ?? 8,
+                HitDie = row.GetInteger("hitdie") ?? 8,
                 AttackBonusTable = row.GetString("attackbonustable"),
                 FeatsBonusTable = row.GetString("featstable"),
                 SavingThrowTable = row.GetString("savingthrowtable"),
-                SkillsPerLevel = row.GetInt("skillpointbase") ?? 1,
+                SkillsPerLevel = row.GetInteger("skillpointbase") ?? 1,
                 PrimaryAbility = row.GetString("primaryabil"),
-                SpellCaster = row.GetInt("spellcaster") == 1,
-                ForceUser = row.GetInt("forcedie") > 0
+                SpellCaster = row.GetInteger("spellcaster") == 1,
+                ForceUser = row.GetInteger("forcedie") > 0
             };
         }
 
@@ -181,16 +181,16 @@ namespace Odyssey.Kotor.Data
                 RowIndex = baseItem,
                 Label = row.Label(),
                 Name = row.GetString("name"),
-                EquipableSlots = row.GetInt("equipableslots") ?? 0,
+                EquipableSlots = row.GetInteger("equipableslots") ?? 0,
                 DefaultModel = row.GetString("defaultmodel"),
-                WeaponType = row.GetInt("weapontype") ?? 0,
-                DamageType = row.GetInt("damagetype") ?? 0,
-                NumDice = row.GetInt("numdice") ?? 0,
-                DieToRoll = row.GetInt("dietoroll") ?? 0,
-                CriticalThreat = row.GetInt("criticalthreat") ?? 20,
-                CriticalMultiplier = row.GetInt("critmultiplier") ?? 2,
-                BaseCost = row.GetInt("basecost") ?? 0,
-                MaxStack = row.GetInt("stacking") ?? 1
+                WeaponType = row.GetInteger("weapontype") ?? 0,
+                DamageType = row.GetInteger("damagetype") ?? 0,
+                NumDice = row.GetInteger("numdice") ?? 0,
+                DieToRoll = row.GetInteger("dietoroll") ?? 0,
+                CriticalThreat = row.GetInteger("criticalthreat") ?? 20,
+                CriticalMultiplier = row.GetInteger("critmultiplier") ?? 2,
+                BaseCost = row.GetInteger("basecost") ?? 0,
+                MaxStack = row.GetInteger("stacking") ?? 1
             };
         }
 
@@ -218,11 +218,11 @@ namespace Odyssey.Kotor.Data
                 Name = row.GetString("name"),
                 Description = row.GetString("description"),
                 Icon = row.GetString("icon"),
-                PrereqFeat1 = row.GetInt("prereqfeat1") ?? -1,
-                PrereqFeat2 = row.GetInt("prereqfeat2") ?? -1,
-                MinLevel = row.GetInt("minlevel") ?? 1,
-                MinLevelClass = row.GetInt("minlevelclass") ?? -1,
-                Selectable = row.GetInt("allclassescanuse") == 1 || row.GetInt("selectable") == 1
+                PrereqFeat1 = row.GetInteger("prereqfeat1") ?? -1,
+                PrereqFeat2 = row.GetInteger("prereqfeat2") ?? -1,
+                MinLevel = row.GetInteger("minlevel") ?? 1,
+                MinLevelClass = row.GetInteger("minlevelclass") ?? -1,
+                Selectable = row.GetInteger("allclassescanuse") == 1 || row.GetInteger("selectable") == 1
             };
         }
 
@@ -247,10 +247,10 @@ namespace Odyssey.Kotor.Data
             {
                 RowIndex = surfaceId,
                 Label = row.Label(),
-                Walk = row.GetInt("walk") == 1,
-                WalkCheck = row.GetInt("walkcheck") == 1,
-                LineOfSight = row.GetInt("lineofsight") == 1,
-                Grass = row.GetInt("grass") == 1,
+                Walk = row.GetInteger("walk") == 1,
+                WalkCheck = row.GetInteger("walkcheck") == 1,
+                LineOfSight = row.GetInteger("lineofsight") == 1,
+                Grass = row.GetInteger("grass") == 1,
                 Sound = row.GetString("sound"),
                 Name = row.GetString("name")
             };
@@ -288,7 +288,7 @@ namespace Odyssey.Kotor.Data
                 Label = row.Label(),
                 ModelName = row.GetString("modelname"),
                 LowGore = row.GetString("lowgore"),
-                SoundAppType = row.GetInt("soundapptype") ?? 0
+                SoundAppType = row.GetInteger("soundapptype") ?? 0
             };
         }
 
@@ -314,8 +314,8 @@ namespace Odyssey.Kotor.Data
                 RowIndex = doorType,
                 Label = row.Label(),
                 ModelName = row.GetString("modelname"),
-                SoundAppType = row.GetInt("soundapptype") ?? 0,
-                BlockSight = row.GetInt("blocksight") == 1
+                SoundAppType = row.GetInteger("soundapptype") ?? 0,
+                BlockSight = row.GetInteger("blocksight") == 1
             };
         }
 

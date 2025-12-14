@@ -11,6 +11,11 @@ namespace Odyssey.Kotor.Components
     /// </remarks>
     public class WaypointComponent : IComponent
     {
+        public IEntity Owner { get; set; }
+
+        public void OnAttach() { }
+        public void OnDetach() { }
+
         public WaypointComponent()
         {
             TemplateResRef = string.Empty;

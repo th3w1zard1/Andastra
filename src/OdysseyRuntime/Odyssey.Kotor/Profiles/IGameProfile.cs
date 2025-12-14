@@ -91,54 +91,36 @@ namespace Odyssey.Kotor.Profiles
     /// </summary>
     public enum GameFeature
     {
-        /// <summary>
-        /// Influence system (TSL)
-        /// </summary>
+        // Core game systems
+        DialogSystem,
+        JournalSystem,
+        PartySystem,
+        InventorySystem,
+        CombatSystem,
+        LevelingSystem,
+        ForceSystem,
+        CraftingSystem,
+        MiniGames,
+        
+        // TSL-specific
         Influence,
-        
-        /// <summary>
-        /// Workbench/lab item crafting
-        /// </summary>
+        InfluenceSystem,
         ItemCrafting,
-        
-        /// <summary>
-        /// Form-based combat bonuses
-        /// </summary>
         CombatForms,
-        
-        /// <summary>
-        /// Prestige classes
-        /// </summary>
         PrestigeClasses,
+        Workbench,
+        LabStation,
+        ItemBreakdown,
         
-        /// <summary>
-        /// Pazaak minigame
-        /// </summary>
+        // Minigames
         Pazaak,
-        
-        /// <summary>
-        /// Swoop racing minigame
-        /// </summary>
+        PazaakDen,
         SwoopRacing,
-        
-        /// <summary>
-        /// Turret minigame
-        /// </summary>
         Turret,
         
-        /// <summary>
-        /// Remote/droid controls
-        /// </summary>
+        // Other
         RemoteControl,
-        
-        /// <summary>
-        /// Alignment-specific dialogue options
-        /// </summary>
         AlignmentDialogue,
-        
-        /// <summary>
-        /// Party member death/knockout
-        /// </summary>
         PartyDeathHandling
     }
     
