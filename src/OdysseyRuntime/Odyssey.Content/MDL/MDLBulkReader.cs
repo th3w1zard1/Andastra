@@ -25,7 +25,6 @@ namespace Odyssey.Content.MDL
         private readonly byte[] _mdlData;
         private readonly byte[] _mdxData;
         private int _mdlPos;
-        private int _mdxPos;
         private bool _isTSL;
         private string[] _nodeNames;
         private bool _disposed;
@@ -49,7 +48,6 @@ namespace Odyssey.Content.MDL
             _mdlData = mdlData;
             _mdxData = mdxData;
             _mdlPos = 0;
-            _mdxPos = 0;
         }
 
         /// <summary>
@@ -63,14 +61,22 @@ namespace Odyssey.Content.MDL
             _mdlData = File.ReadAllBytes(mdlPath);
             _mdxData = File.ReadAllBytes(mdxPath);
             _mdlPos = 0;
-            _mdxPos = 0;
         }
 
         /// <summary>
         /// Loads the complete MDL model using bulk operations.
         /// </summary>
+        /// <returns>The loaded MDL model containing all geometry, animation, and node data.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed.</exception>
+        /// <exception cref="InvalidDataException">Thrown when the MDL or MDX file is corrupted, truncated, or has invalid data.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when data size calculations overflow or array bounds are exceeded.</exception>
         public MDLModel Load()
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(MDLBulkReader));
+            }
+
             var model = new MDLModel();
 
             // Phase 1: Read file header (12 bytes)
