@@ -148,5 +148,59 @@ namespace Odyssey.Kotor.Components
         {
             IsLocked = false;
         }
+
+        /// <summary>
+        /// Opens the placeable (for containers).
+        /// </summary>
+        public void Open()
+        {
+            IsOpen = true;
+        }
+
+        /// <summary>
+        /// Closes the placeable.
+        /// </summary>
+        public void Close()
+        {
+            IsOpen = false;
+        }
+
+        /// <summary>
+        /// Activates the placeable.
+        /// </summary>
+        public void Activate()
+        {
+            // Placeable activation logic
+            // For containers, this opens them
+            if (HasInventory || IsContainer)
+            {
+                Open();
+            }
+        }
+
+        /// <summary>
+        /// Deactivates the placeable.
+        /// </summary>
+        public void Deactivate()
+        {
+            // Placeable deactivation logic
+            if (HasInventory || IsContainer)
+            {
+                Close();
+            }
+        }
+
+        // IPlaceableComponent interface properties
+        public int HitPoints
+        {
+            get { return CurrentHP; }
+            set { CurrentHP = value; }
+        }
+
+        public int MaxHitPoints
+        {
+            get { return MaxHP; }
+            set { MaxHP = value; }
+        }
     }
 }
