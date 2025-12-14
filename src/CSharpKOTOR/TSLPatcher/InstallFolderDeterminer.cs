@@ -9,7 +9,7 @@ using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
 
-namespace KotorDiff.NET.Generator
+namespace CSharpKOTOR.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:1212-1236
     // Original: def determine_install_folders(...): ...

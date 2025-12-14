@@ -23,7 +23,7 @@ using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
 using LIPAuto = CSharpKOTOR.Formats.LIP.LIPAuto;
 
-namespace KotorDiff.NET.Generator
+namespace CSharpKOTOR.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:68-129
     // Original: class TSLPatchDataGenerator: ...

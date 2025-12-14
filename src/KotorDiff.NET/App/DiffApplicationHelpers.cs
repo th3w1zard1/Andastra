@@ -6,7 +6,7 @@ using System.Text;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Mods;
 using KotorDiff.NET.Diff;
-using KotorDiff.NET.Generator;
+using CSharpKOTOR.TSLPatcher;
 
 namespace KotorDiff.NET.App
 {

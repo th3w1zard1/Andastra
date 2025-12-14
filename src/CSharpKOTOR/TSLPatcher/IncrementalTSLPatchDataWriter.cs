@@ -26,10 +26,7 @@ using CSharpKOTOR.Tools;
 using CSharpKOTOR.Utility;
 using SystemTextEncoding = System.Text.Encoding;
 using JetBrains.Annotations;
-using KotorDiff.NET.Diff;
-using KotorDiff.NET.Logger;
-
-namespace KotorDiff.NET.Generator
+namespace CSharpKOTOR.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
     // Original: @dataclass class TwoDALinkTarget, PendingStrRefReference, Pending2DARowReference
@@ -159,7 +156,7 @@ namespace KotorDiff.NET.Generator
             _moddedDataPath = moddedDataPath;
             _strrefCache = strrefCache;
             _twodaCaches = twodaCaches ?? new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
-            _logFunc = logFunc ?? ((msg) => DiffLogger.GetLogger()?.Info(msg));
+            _logFunc = logFunc ?? Console.WriteLine;
 
             // Create tslpatchdata directory
             Directory.CreateDirectory(_tslpatchdataPath);

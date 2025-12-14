@@ -7,7 +7,7 @@ using System.Linq;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
-using KotorDiff.NET.Generator;
+using CSharpKOTOR.TSLPatcher;
 using KotorDiff.NET.Resolution;
 using KotorDiff.NET.Cache;
 

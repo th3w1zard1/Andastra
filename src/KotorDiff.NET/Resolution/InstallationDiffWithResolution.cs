@@ -11,7 +11,7 @@ using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using CSharpKOTOR.Mods;
 using KotorDiff.NET.Diff;
-using KotorDiff.NET.Generator;
+using CSharpKOTOR.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.NET.Resolution
