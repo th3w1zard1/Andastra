@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
-using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Input;
 
 namespace HolocronToolset.NET.Common
@@ -65,7 +64,7 @@ namespace HolocronToolset.NET.Common
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:76
         // Original: def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        public bool EventFilter(Control obj, PointerWheelEventArgs event)
+        public bool EventFilter(Control obj, PointerWheelEventArgs evt)
         {
             // In Avalonia, we handle scroll events differently
             // This would need to be implemented with proper event handling
@@ -129,7 +128,7 @@ namespace HolocronToolset.NET.Common
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:132
         // Original: def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        public bool EventFilter(Control obj, PointerEventArgs event)
+        public bool EventFilter(Control obj, PointerEventArgs evt)
         {
             // Handle hover events in Avalonia
             // This would need proper implementation with PointerEntered/PointerExited
