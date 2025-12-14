@@ -271,7 +271,6 @@ namespace Odyssey.Game.GUI
         {
             if (!_isVisible)
             {
-                // Don't log every frame - only log once
                 return;
             }
 
@@ -287,7 +286,13 @@ namespace Odyssey.Game.GUI
 
             // Always recalculate layout in Draw to ensure buttons are positioned
             // (Update might not have been called yet, or screen size might have changed)
-            CalculateLayout(screenWidth, screenHeight);
+            // Only recalculate if dimensions changed to avoid excessive logging
+            if (screenWidth != _lastScreenWidth || screenHeight != _lastScreenHeight || _lastScreenWidth == 0)
+            {
+                CalculateLayout(screenWidth, screenHeight);
+                _lastScreenWidth = screenWidth;
+                _lastScreenHeight = screenHeight;
+            }
 
             // Begin sprite batch rendering
             _spriteBatch.Begin();
