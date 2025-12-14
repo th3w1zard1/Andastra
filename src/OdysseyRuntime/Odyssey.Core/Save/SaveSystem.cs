@@ -178,9 +178,52 @@ namespace Odyssey.Core.Save
         {
             saveData.GlobalVariables = new GlobalVariableState();
 
-            // Save global variables from script globals if available
-            // Note: This requires access to IScriptGlobals, which should be passed in
-            // For now, create empty state - will be populated when SaveSystem has access to globals
+            if (_globals == null)
+            {
+                return;
+            }
+
+            // Use reflection to access private dictionaries in ScriptGlobals
+            var globalsType = _globals.GetType();
+            var globalIntsField = globalsType.GetField("_globalInts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var globalBoolsField = globalsType.GetField("_globalBools", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var globalStringsField = globalsType.GetField("_globalStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (globalIntsField != null)
+            {
+                var intsDict = globalIntsField.GetValue(_globals) as Dictionary<string, int>;
+                if (intsDict != null)
+                {
+                    foreach (var kvp in intsDict)
+                    {
+                        saveData.GlobalVariables.Numbers[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            if (globalBoolsField != null)
+            {
+                var boolsDict = globalBoolsField.GetValue(_globals) as Dictionary<string, bool>;
+                if (boolsDict != null)
+                {
+                    foreach (var kvp in boolsDict)
+                    {
+                        saveData.GlobalVariables.Booleans[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            if (globalStringsField != null)
+            {
+                var stringsDict = globalStringsField.GetValue(_globals) as Dictionary<string, string>;
+                if (stringsDict != null)
+                {
+                    foreach (var kvp in stringsDict)
+                    {
+                        saveData.GlobalVariables.Strings[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
         }
 
         private void SavePartyState(SaveGameData saveData)

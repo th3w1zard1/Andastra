@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.ERF;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resources;
 using Odyssey.Core.Save;
 
 namespace Odyssey.Content.Save
@@ -16,7 +20,7 @@ namespace Odyssey.Content.Save
     ///   - GLOBALVARS.res (GFF)
     ///   - PARTYTABLE.res (GFF)
     ///   - [module]_s.rim files
-    /// 
+    ///
     /// TODO: Integrate with CSharpKOTOR GFF/ERF readers/writers
     /// </remarks>
     public class SaveSerializer : ISaveSerializer
@@ -38,237 +42,145 @@ namespace Odyssey.Content.Save
 
         public byte[] SerializeSaveNfo(SaveGameData saveData)
         {
-            // TODO: Use CSharpKOTOR GFF writer
-            // For now, create a placeholder implementation
-            
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
-            {
-                // GFF header signature
-                writer.Write(Encoding.ASCII.GetBytes("GFF "));
-                writer.Write(Encoding.ASCII.GetBytes("V3.2"));
-                writer.Write((uint)0); // Type
-                
-                // Write field data as simple format
-                // In real implementation, this would construct proper GFF structure
-                WriteGffString(writer, FIELD_SAVE_NAME, saveData.Name ?? "");
-                WriteGffString(writer, FIELD_MODULE_NAME, saveData.CurrentModule ?? "");
-                WriteGffString(writer, FIELD_SAVE_DATE, saveData.SaveTime.ToString("yyyy-MM-dd"));
-                WriteGffString(writer, FIELD_SAVE_TIME, saveData.SaveTime.ToString("HH:mm:ss"));
-                WriteGffInt(writer, FIELD_TIME_PLAYED, (int)saveData.PlayTime.TotalSeconds);
-                
-                return ms.ToArray();
-            }
+            // Use CSharpKOTOR GFF writer
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+
+            root.SetString(FIELD_SAVE_NAME, saveData.Name ?? "");
+            root.SetString(FIELD_MODULE_NAME, saveData.CurrentModule ?? "");
+            root.SetString(FIELD_SAVE_DATE, saveData.SaveTime.ToString("yyyy-MM-dd"));
+            root.SetString(FIELD_SAVE_TIME, saveData.SaveTime.ToString("HH:mm:ss"));
+            root.SetInt32(FIELD_TIME_PLAYED, (int)saveData.PlayTime.TotalSeconds);
+            root.SetString(FIELD_PLAYER_NAME, ""); // TODO: Get player name from party state
+            root.SetInt32(FIELD_CHEAT_USED, 0); // TODO: Track cheat usage
+
+            return gff.ToBytes();
         }
 
         public SaveGameData DeserializeSaveNfo(byte[] data)
         {
-            // TODO: Use CSharpKOTOR GFF reader
-            // For now, create a placeholder implementation
+            // Use CSharpKOTOR GFF reader
+            GFF gff;
+            try
+            {
+                gff = GFF.FromBytes(data);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
+            if (gff == null || gff.Root == null)
+            {
+                return null;
+            }
 
             var saveData = new SaveGameData();
+            var root = gff.Root;
 
-            using (var ms = new MemoryStream(data))
-            using (var reader = new BinaryReader(ms))
+            saveData.Name = root.GetString(FIELD_SAVE_NAME);
+            saveData.CurrentModule = root.GetString(FIELD_MODULE_NAME);
+
+            string dateStr = root.GetString(FIELD_SAVE_DATE);
+            string timeStr = root.GetString(FIELD_SAVE_TIME);
+
+            DateTime saveTime;
+            if (DateTime.TryParse(dateStr + " " + timeStr, out saveTime))
             {
-                // Verify GFF header
-                string signature = Encoding.ASCII.GetString(reader.ReadBytes(4));
-                if (signature != "GFF ")
-                {
-                    return null;
-                }
-
-                string version = Encoding.ASCII.GetString(reader.ReadBytes(4));
-                if (!version.StartsWith("V3."))
-                {
-                    return null;
-                }
-
-                // Skip type
-                reader.ReadUInt32();
-
-                // Read fields
-                // In real implementation, this would parse proper GFF structure
-                saveData.Name = ReadGffString(reader, FIELD_SAVE_NAME);
-                saveData.CurrentModule = ReadGffString(reader, FIELD_MODULE_NAME);
-                
-                string dateStr = ReadGffString(reader, FIELD_SAVE_DATE);
-                string timeStr = ReadGffString(reader, FIELD_SAVE_TIME);
-                
-                DateTime saveTime;
-                if (DateTime.TryParse(dateStr + " " + timeStr, out saveTime))
-                {
-                    saveData.SaveTime = saveTime;
-                }
-                
-                int seconds = ReadGffInt(reader, FIELD_TIME_PLAYED);
-                saveData.PlayTime = TimeSpan.FromSeconds(seconds);
+                saveData.SaveTime = saveTime;
             }
+            else
+            {
+                saveData.SaveTime = DateTime.Now;
+            }
+
+            int seconds = root.GetInt32(FIELD_TIME_PLAYED);
+            saveData.PlayTime = TimeSpan.FromSeconds(seconds);
 
             return saveData;
         }
 
         public byte[] SerializeSaveArchive(SaveGameData saveData)
         {
-            // TODO: Use CSharpKOTOR ERF writer
-            // For now, create a placeholder ERF structure
+            // Use CSharpKOTOR ERF writer
+            var erf = new ERF(ERFType.MOD, true); // MOD type is used for save files
 
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            // Add GLOBALVARS.res
+            byte[] globalVarsData = SerializeGlobalVariables(saveData.GlobalVariables);
+            erf.SetData("GLOBALVARS", ResourceType.GFF, globalVarsData);
+
+            // Add PARTYTABLE.res
+            byte[] partyTableData = SerializePartyTable(saveData.PartyState);
+            erf.SetData("PARTYTABLE", ResourceType.GFF, partyTableData);
+
+            // Add module state files
+            if (saveData.AreaStates != null)
             {
-                // ERF header
-                writer.Write(Encoding.ASCII.GetBytes(ERF_TYPE_SAV));
-                writer.Write(Encoding.ASCII.GetBytes("V1.0"));
-
-                var resources = new List<KeyValuePair<string, byte[]>>();
-
-                // Add GLOBALVARS.res
-                byte[] globalVarsData = SerializeGlobalVariables(saveData.GlobalVariables);
-                resources.Add(new KeyValuePair<string, byte[]>("GLOBALVARS", globalVarsData));
-
-                // Add PARTYTABLE.res
-                byte[] partyTableData = SerializePartyTable(saveData.PartyState);
-                resources.Add(new KeyValuePair<string, byte[]>("PARTYTABLE", partyTableData));
-
-                // Add module state files
-                if (saveData.AreaStates != null)
+                foreach (KeyValuePair<string, AreaState> kvp in saveData.AreaStates)
                 {
-                    foreach (var kvp in saveData.AreaStates)
-                    {
-                        string areaResRef = kvp.Key;
-                        AreaState areaState = kvp.Value;
+                    string areaResRef = kvp.Key;
+                    AreaState areaState = kvp.Value;
 
-                        string stateFileName = areaResRef + "_s";
-                        byte[] stateData = SerializeAreaState(areaState);
-                        resources.Add(new KeyValuePair<string, byte[]>(stateFileName, stateData));
-                    }
+                    string stateFileName = areaResRef + "_s";
+                    byte[] stateData = SerializeAreaState(areaState);
+                    erf.SetData(stateFileName, ResourceType.RIM, stateData);
                 }
-
-                // Write resource count
-                writer.Write((uint)resources.Count);
-
-                // Calculate offsets
-                long keyListOffset = ms.Position + 12; // After header
-                long resourceListOffset = keyListOffset + (resources.Count * 24); // 24 bytes per key
-                long dataOffset = resourceListOffset + (resources.Count * 8); // 8 bytes per resource entry
-
-                // Write offsets
-                writer.Write((uint)keyListOffset);
-                writer.Write((uint)resourceListOffset);
-
-                // Write key list
-                long currentDataOffset = dataOffset;
-                foreach (var resource in resources)
-                {
-                    // ResRef (16 bytes, null-padded)
-                    byte[] resRefBytes = new byte[16];
-                    byte[] nameBytes = Encoding.ASCII.GetBytes(resource.Key);
-                    Array.Copy(nameBytes, resRefBytes, Math.Min(nameBytes.Length, 16));
-                    writer.Write(resRefBytes);
-
-                    // Resource ID (4 bytes)
-                    writer.Write((uint)0);
-
-                    // Resource type (2 bytes) - using 0xFFFF for generic
-                    writer.Write((ushort)0xFFFF);
-
-                    // Unused (2 bytes)
-                    writer.Write((ushort)0);
-                }
-
-                // Write resource entries
-                currentDataOffset = dataOffset;
-                foreach (var resource in resources)
-                {
-                    // Offset
-                    writer.Write((uint)currentDataOffset);
-
-                    // Size
-                    writer.Write((uint)resource.Value.Length);
-
-                    currentDataOffset += resource.Value.Length;
-                }
-
-                // Write resource data
-                foreach (var resource in resources)
-                {
-                    writer.Write(resource.Value);
-                }
-
-                return ms.ToArray();
             }
+
+            // Write ERF using CSharpKOTOR writer
+            var writer = new ERFBinaryWriter(erf);
+            return writer.Write();
         }
 
         public void DeserializeSaveArchive(byte[] data, SaveGameData saveData)
         {
-            // TODO: Use CSharpKOTOR ERF reader
-            // For now, create a placeholder implementation
-
-            using (var ms = new MemoryStream(data))
-            using (var reader = new BinaryReader(ms))
+            // Use CSharpKOTOR ERF reader
+            ERF erf;
+            try
             {
-                // Read ERF header
-                string type = Encoding.ASCII.GetString(reader.ReadBytes(4));
-                string version = Encoding.ASCII.GetString(reader.ReadBytes(4));
+                var reader = new ERFBinaryReader(data);
+                erf = reader.Load();
+            }
+            catch (Exception)
+            {
+                return;
+            }
 
-                if (!version.StartsWith("V1."))
+            if (erf == null)
+            {
+                return;
+            }
+
+            // Read GLOBALVARS.res
+            byte[] globalVarsData = erf.Get("GLOBALVARS", ResourceType.GFF);
+            if (globalVarsData != null)
+            {
+                saveData.GlobalVariables = DeserializeGlobalVariables(globalVarsData);
+            }
+
+            // Read PARTYTABLE.res
+            byte[] partyTableData = erf.Get("PARTYTABLE", ResourceType.GFF);
+            if (partyTableData != null)
+            {
+                saveData.PartyState = DeserializePartyTable(partyTableData);
+            }
+
+            // Read module state files
+            if (saveData.AreaStates == null)
+            {
+                saveData.AreaStates = new Dictionary<string, AreaState>();
+            }
+
+            foreach (ERFResource resource in erf)
+            {
+                string resName = resource.ResRef.ToString();
+                if (resName.EndsWith("_s") && resource.ResType == ResourceType.RIM)
                 {
-                    return;
-                }
-
-                uint resourceCount = reader.ReadUInt32();
-                uint keyListOffset = reader.ReadUInt32();
-                uint resourceListOffset = reader.ReadUInt32();
-
-                // Read key list
-                ms.Seek(keyListOffset, SeekOrigin.Begin);
-                var keys = new List<string>();
-                for (int i = 0; i < resourceCount; i++)
-                {
-                    byte[] resRefBytes = reader.ReadBytes(16);
-                    string resRef = Encoding.ASCII.GetString(resRefBytes).TrimEnd('\0');
-                    keys.Add(resRef);
-                    reader.ReadUInt32(); // Resource ID
-                    reader.ReadUInt16(); // Type
-                    reader.ReadUInt16(); // Unused
-                }
-
-                // Read resource entries
-                ms.Seek(resourceListOffset, SeekOrigin.Begin);
-                var entries = new List<Tuple<uint, uint>>();
-                for (int i = 0; i < resourceCount; i++)
-                {
-                    uint offset = reader.ReadUInt32();
-                    uint size = reader.ReadUInt32();
-                    entries.Add(Tuple.Create(offset, size));
-                }
-
-                // Read resources
-                for (int i = 0; i < resourceCount; i++)
-                {
-                    string resRef = keys[i];
-                    uint offset = entries[i].Item1;
-                    uint size = entries[i].Item2;
-
-                    ms.Seek(offset, SeekOrigin.Begin);
-                    byte[] resourceData = reader.ReadBytes((int)size);
-
-                    if (resRef.Equals("GLOBALVARS", StringComparison.OrdinalIgnoreCase))
+                    string areaResRef = resName.Substring(0, resName.Length - 2);
+                    AreaState areaState = DeserializeAreaState(resource.Data);
+                    if (areaState != null)
                     {
-                        saveData.GlobalVariables = DeserializeGlobalVariables(resourceData);
-                    }
-                    else if (resRef.Equals("PARTYTABLE", StringComparison.OrdinalIgnoreCase))
-                    {
-                        saveData.PartyState = DeserializePartyTable(resourceData);
-                    }
-                    else if (resRef.EndsWith("_s", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string areaResRef = resRef.Substring(0, resRef.Length - 2);
-                        var areaState = DeserializeAreaState(resourceData);
-                        if (areaState != null)
-                        {
-                            saveData.AreaStates[areaResRef] = areaState;
-                        }
+                        saveData.AreaStates[areaResRef] = areaState;
                     }
                 }
             }
@@ -282,41 +194,41 @@ namespace Odyssey.Content.Save
         {
             if (state == null)
             {
-                return new byte[0];
+                state = new GlobalVariableState();
             }
 
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            // Use CSharpKOTOR GFF writer
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+
+            // Store booleans as a list
+            var boolList = root.Acquire<GFFList>("Booleans", new GFFList());
+            foreach (KeyValuePair<string, bool> kvp in state.Booleans)
             {
-                // GFF header
-                writer.Write(Encoding.ASCII.GetBytes("GFF "));
-                writer.Write(Encoding.ASCII.GetBytes("V3.2"));
-                writer.Write((uint)0); // Type
-
-                // Write boolean count and values
-                writer.Write((uint)state.Booleans.Count);
-                foreach (var kvp in state.Booleans)
-                {
-                    WriteGffString(writer, kvp.Key, kvp.Value.ToString());
-                }
-
-                // Write number count and values
-                writer.Write((uint)state.Numbers.Count);
-                foreach (var kvp in state.Numbers)
-                {
-                    WriteGffString(writer, kvp.Key, "");
-                    writer.Write(kvp.Value);
-                }
-
-                // Write string count and values
-                writer.Write((uint)state.Strings.Count);
-                foreach (var kvp in state.Strings)
-                {
-                    WriteGffString(writer, kvp.Key, kvp.Value ?? "");
-                }
-
-                return ms.ToArray();
+                GFFStruct entry = boolList.Add();
+                entry.SetString("Name", kvp.Key);
+                entry.SetInt32("Value", kvp.Value ? 1 : 0);
             }
+
+            // Store numbers as a list
+            var numList = root.Acquire<GFFList>("Numbers", new GFFList());
+            foreach (KeyValuePair<string, int> kvp in state.Numbers)
+            {
+                GFFStruct entry = numList.Add();
+                entry.SetString("Name", kvp.Key);
+                entry.SetInt32("Value", kvp.Value);
+            }
+
+            // Store strings as a list
+            var strList = root.Acquire<GFFList>("Strings", new GFFList());
+            foreach (KeyValuePair<string, string> kvp in state.Strings)
+            {
+                GFFStruct entry = strList.Add();
+                entry.SetString("Name", kvp.Key);
+                entry.SetString("Value", kvp.Value ?? "");
+            }
+
+            return gff.ToBytes();
         }
 
         private GlobalVariableState DeserializeGlobalVariables(byte[] data)
@@ -328,7 +240,58 @@ namespace Odyssey.Content.Save
                 return state;
             }
 
-            // TODO: Proper GFF parsing with CSharpKOTOR
+            // Use CSharpKOTOR GFF reader
+            try
+            {
+                GFF gff = GFF.FromBytes(data);
+                if (gff == null || gff.Root == null)
+                {
+                    return state;
+                }
+
+                var root = gff.Root;
+
+                // Read booleans
+                GFFList boolList = root.GetList("Booleans");
+                if (boolList != null)
+                {
+                    foreach (GFFStruct entry in boolList)
+                    {
+                        string name = entry.GetString("Name");
+                        int value = entry.GetInt32("Value");
+                        state.Booleans[name] = value != 0;
+                    }
+                }
+
+                // Read numbers
+                GFFList numList = root.GetList("Numbers");
+                if (numList != null)
+                {
+                    foreach (GFFStruct entry in numList)
+                    {
+                        string name = entry.GetString("Name");
+                        int value = entry.GetInt32("Value");
+                        state.Numbers[name] = value;
+                    }
+                }
+
+                // Read strings
+                GFFList strList = root.GetList("Strings");
+                if (strList != null)
+                {
+                    foreach (GFFStruct entry in strList)
+                    {
+                        string name = entry.GetString("Name");
+                        string value = entry.GetString("Value");
+                        state.Strings[name] = value;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Return empty state on error
+            }
+
             return state;
         }
 
@@ -340,41 +303,35 @@ namespace Odyssey.Content.Save
         {
             if (state == null)
             {
-                return new byte[0];
+                state = new PartyState();
             }
 
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            // Use CSharpKOTOR GFF writer
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+
+            root.SetInt32("Gold", state.Gold);
+            root.SetInt32("ExperiencePoints", state.ExperiencePoints);
+
+            // Store selected party as a list
+            var selectedList = root.Acquire<GFFList>("SelectedParty", new GFFList());
+            foreach (string member in state.SelectedParty)
             {
-                // GFF header
-                writer.Write(Encoding.ASCII.GetBytes("GFF "));
-                writer.Write(Encoding.ASCII.GetBytes("V3.2"));
-                writer.Write((uint)0); // Type
-
-                // Write gold
-                writer.Write(state.Gold);
-
-                // Write XP
-                writer.Write(state.ExperiencePoints);
-
-                // Write selected party count
-                writer.Write((uint)state.SelectedParty.Count);
-                foreach (string member in state.SelectedParty)
-                {
-                    WriteGffString(writer, "MEMBER", member);
-                }
-
-                // Write available members count
-                writer.Write((uint)state.AvailableMembers.Count);
-                foreach (var kvp in state.AvailableMembers)
-                {
-                    WriteGffString(writer, "RESREF", kvp.Key);
-                    writer.Write(kvp.Value.IsAvailable ? (byte)1 : (byte)0);
-                    writer.Write(kvp.Value.IsSelectable ? (byte)1 : (byte)0);
-                }
-
-                return ms.ToArray();
+                GFFStruct entry = selectedList.Add();
+                entry.SetString("ResRef", member);
             }
+
+            // Store available members as a list
+            var availableList = root.Acquire<GFFList>("AvailableMembers", new GFFList());
+            foreach (KeyValuePair<string, PartyMemberState> kvp in state.AvailableMembers)
+            {
+                GFFStruct entry = availableList.Add();
+                entry.SetString("ResRef", kvp.Key);
+                entry.SetInt32("IsAvailable", kvp.Value.IsAvailable ? 1 : 0);
+                entry.SetInt32("IsSelectable", kvp.Value.IsSelectable ? 1 : 0);
+            }
+
+            return gff.ToBytes();
         }
 
         private PartyState DeserializePartyTable(byte[] data)
@@ -386,7 +343,56 @@ namespace Odyssey.Content.Save
                 return state;
             }
 
-            // TODO: Proper GFF parsing with CSharpKOTOR
+            // Use CSharpKOTOR GFF reader
+            try
+            {
+                GFF gff = GFF.FromBytes(data);
+                if (gff == null || gff.Root == null)
+                {
+                    return state;
+                }
+
+                var root = gff.Root;
+
+                state.Gold = root.GetInt32("Gold");
+                state.ExperiencePoints = root.GetInt32("ExperiencePoints");
+
+                // Read selected party
+                GFFList selectedList = root.GetList("SelectedParty");
+                if (selectedList != null)
+                {
+                    foreach (GFFStruct entry in selectedList)
+                    {
+                        string resRef = entry.GetString("ResRef");
+                        state.SelectedParty.Add(resRef);
+                    }
+                }
+
+                // Read available members
+                GFFList availableList = root.GetList("AvailableMembers");
+                if (availableList != null)
+                {
+                    foreach (GFFStruct entry in availableList)
+                    {
+                        string resRef = entry.GetString("ResRef");
+                        bool isAvailable = entry.GetInt32("IsAvailable") != 0;
+                        bool isSelectable = entry.GetInt32("IsSelectable") != 0;
+
+                        var memberState = new PartyMemberState
+                        {
+                            TemplateResRef = resRef,
+                            IsAvailable = isAvailable,
+                            IsSelectable = isSelectable
+                        };
+                        state.AvailableMembers[resRef] = memberState;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Return empty state on error
+            }
+
             return state;
         }
 
@@ -402,7 +408,7 @@ namespace Odyssey.Content.Save
             }
 
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            using (var writer = new System.IO.BinaryWriter(ms))
             {
                 // GFF header
                 writer.Write(Encoding.ASCII.GetBytes("GFF "));
@@ -442,33 +448,33 @@ namespace Odyssey.Content.Save
             return state;
         }
 
-        private void SerializeEntityStates(BinaryWriter writer, string label, List<EntityState> states)
+        private void SerializeEntityStates(System.IO.BinaryWriter writer, string label, List<EntityState> states)
         {
             writer.Write((uint)states.Count);
-            foreach (var entityState in states)
+            foreach (EntityState entityState in states)
             {
                 SerializeEntityState(writer, entityState);
             }
         }
 
-        private void SerializeEntityState(BinaryWriter writer, EntityState state)
+        private void SerializeEntityState(System.IO.BinaryWriter writer, EntityState state)
         {
             WriteGffString(writer, "TAG", state.Tag ?? "");
             writer.Write(state.ObjectId);
             writer.Write((int)state.ObjectType);
-            
+
             // Position
             writer.Write(state.Position.X);
             writer.Write(state.Position.Y);
             writer.Write(state.Position.Z);
-            
+
             // Facing
             writer.Write(state.Facing);
-            
+
             // HP
             writer.Write(state.CurrentHP);
             writer.Write(state.MaxHP);
-            
+
             // Flags
             writer.Write(state.IsDestroyed ? (byte)1 : (byte)0);
             writer.Write(state.IsPlot ? (byte)1 : (byte)0);
@@ -481,7 +487,7 @@ namespace Odyssey.Content.Save
 
         #region GFF Helpers
 
-        private void WriteGffString(BinaryWriter writer, string label, string value)
+        private void WriteGffString(System.IO.BinaryWriter writer, string label, string value)
         {
             // Write label length and label
             byte[] labelBytes = Encoding.ASCII.GetBytes(label);
@@ -494,7 +500,7 @@ namespace Odyssey.Content.Save
             writer.Write(valueBytes);
         }
 
-        private void WriteGffInt(BinaryWriter writer, string label, int value)
+        private void WriteGffInt(System.IO.BinaryWriter writer, string label, int value)
         {
             byte[] labelBytes = Encoding.ASCII.GetBytes(label);
             writer.Write((byte)labelBytes.Length);
@@ -502,7 +508,7 @@ namespace Odyssey.Content.Save
             writer.Write(value);
         }
 
-        private string ReadGffString(BinaryReader reader, string expectedLabel)
+        private string ReadGffString(System.IO.BinaryReader reader, string expectedLabel)
         {
             try
             {
@@ -520,7 +526,7 @@ namespace Odyssey.Content.Save
             }
         }
 
-        private int ReadGffInt(BinaryReader reader, string expectedLabel)
+        private int ReadGffInt(System.IO.BinaryReader reader, string expectedLabel)
         {
             try
             {
