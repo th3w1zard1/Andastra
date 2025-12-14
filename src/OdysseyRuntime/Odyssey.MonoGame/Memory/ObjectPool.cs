@@ -1,0 +1,107 @@
+using System;
+using System.Collections.Generic;
+
+namespace Odyssey.MonoGame.Memory
+{
+    /// <summary>
+    /// Generic object pool for reducing allocations and GC pressure.
+    /// 
+    /// Object pooling reuses objects instead of allocating new ones,
+    /// reducing garbage collection overhead in game loops.
+    /// 
+    /// Based on modern AAA game practices for memory management.
+    /// </summary>
+    /// <typeparam name="T">Type of object to pool.</typeparam>
+    public class ObjectPool<T> where T : class
+    {
+        private readonly Stack<T> _pool;
+        private readonly Func<T> _factory;
+        private readonly Action<T> _reset;
+        private readonly int _maxSize;
+
+        /// <summary>
+        /// Gets the number of objects currently in the pool.
+        /// </summary>
+        public int PoolSize
+        {
+            get { return _pool.Count; }
+        }
+
+        /// <summary>
+        /// Initializes a new object pool.
+        /// </summary>
+        /// <param name="factory">Factory function to create new objects.</param>
+        /// <param name="reset">Optional function to reset objects when returned to pool.</param>
+        /// <param name="maxSize">Maximum pool size (0 = unlimited).</param>
+        /// <param name="initialSize">Initial number of objects to pre-allocate.</param>
+        public ObjectPool(Func<T> factory, Action<T> reset = null, int maxSize = 0, int initialSize = 0)
+        {
+            if (factory == null)
+            {
+                throw new ArgumentNullException("factory");
+            }
+
+            _factory = factory;
+            _reset = reset;
+            _maxSize = maxSize;
+            _pool = new Stack<T>();
+
+            // Pre-allocate initial objects
+            for (int i = 0; i < initialSize; i++)
+            {
+                _pool.Push(_factory());
+            }
+        }
+
+        /// <summary>
+        /// Gets an object from the pool, or creates a new one if pool is empty.
+        /// </summary>
+        public T Get()
+        {
+            if (_pool.Count > 0)
+            {
+                return _pool.Pop();
+            }
+            return _factory();
+        }
+
+        /// <summary>
+        /// Returns an object to the pool.
+        /// </summary>
+        public void Return(T obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
+
+            // Reset object if reset function provided
+            if (_reset != null)
+            {
+                _reset(obj);
+            }
+
+            // Return to pool if not at max size
+            if (_maxSize == 0 || _pool.Count < _maxSize)
+            {
+                _pool.Push(obj);
+            }
+        }
+
+        /// <summary>
+        /// Clears the pool, disposing of all pooled objects.
+        /// </summary>
+        public void Clear()
+        {
+            while (_pool.Count > 0)
+            {
+                T obj = _pool.Pop();
+                if (obj is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+        }
+    }
+}
+
