@@ -620,9 +620,18 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Gets the currently loaded module.
         /// </summary>
-        public RuntimeModule CurrentModule
+        public RuntimeModule CurrentModule => _currentModule;
+
+        /// <summary>
+        /// Gets the CSharpKOTOR Module for the currently loaded runtime module.
+        /// </summary>
+        public CSharpKOTOR.Common.Module GetCurrentModule()
         {
-            get { return _currentModule; }
+            if (_currentModule == null)
+            {
+                return null;
+            }
+            return new Module(_currentModule.ResRef, _installation);
         }
 
         /// <summary>

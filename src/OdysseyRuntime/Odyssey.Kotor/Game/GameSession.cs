@@ -876,7 +876,7 @@ namespace Odyssey.Kotor.Game
                 // Use module's entry position if no waypoint specified
                 if (_currentRuntimeModule != null)
                 {
-                    var transform = _playerEntity?.GetComponent<Components.TransformComponent>();
+                    TransformComponent transform = _playerEntity?.GetComponent<Components.TransformComponent>();
                     if (transform != null)
                     {
                         transform.Position = _currentRuntimeModule.EntryPosition;

@@ -278,7 +278,7 @@ namespace Odyssey.Kotor.Systems
                 return; // No templates or spawn points
             }
 
-            IArea area = encounter.Area;
+            IArea area = _world.CurrentArea;
             if (area == null)
             {
                 return;
@@ -332,7 +332,10 @@ namespace Odyssey.Kotor.Systems
                             // Override appearance if specified
                             if (template.Appearance > 0)
                             {
-                                creature.SetData("Appearance_Type", template.Appearance);
+                                if (creature is Core.Entities.Entity entity)
+                                {
+                                    entity.SetData("Appearance_Type", template.Appearance);
+                                }
                             }
 
                             // Register entity with world

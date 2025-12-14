@@ -44,14 +44,14 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateCreatureFromGit(GFFStruct gitStruct, Module module)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Creature);
-            
+
             // Get position
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
-            
+
             // Basic properties
             entity.Tag = GetResRefField(gitStruct, "Tag");
-            
+
             // Set transform
             entity.Position = position;
             entity.Facing = facing;
@@ -67,11 +67,31 @@ namespace Odyssey.Kotor.Loading
         }
 
         /// <summary>
+        /// Creates a creature from a template ResRef at a specific position.
+        /// </summary>
+        [CanBeNull]
+        public IEntity CreateCreatureFromTemplate(Module module, string templateResRef, System.Numerics.Vector3 position, float facing)
+        {
+            if (module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            var entity = new Entity(GetNextObjectId(), ObjectType.Creature);
+            entity.Position = position;
+            entity.Facing = facing;
+
+            LoadCreatureTemplate(entity, module, templateResRef);
+
+            return entity;
+        }
+
+        /// <summary>
         /// Loads creature template from UTC.
         /// </summary>
         private void LoadCreatureTemplate(Entity entity, Module module, string templateResRef)
         {
-            var utcResource = module.Creature(templateResRef);
+            ModuleResource utcResource = module.Creature(templateResRef);
             if (utcResource == null)
             {
                 return;
@@ -142,10 +162,10 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateDoorFromGit(GFFStruct gitStruct, Module module)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Door);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
             entity.Facing = facing;
@@ -171,7 +191,7 @@ namespace Odyssey.Kotor.Loading
         /// </summary>
         private void LoadDoorTemplate(Entity entity, Module module, string templateResRef)
         {
-            var utdResource = module.Door(templateResRef);
+            ModuleResource utdResource = module.Door(templateResRef);
             if (utdResource == null)
             {
                 return;
@@ -233,10 +253,10 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreatePlaceableFromGit(GFFStruct gitStruct, Module module)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Placeable);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
             entity.Facing = facing;
@@ -256,7 +276,7 @@ namespace Odyssey.Kotor.Loading
         /// </summary>
         private void LoadPlaceableTemplate(Entity entity, Module module, string templateResRef)
         {
-            var utpResource = module.Placeable(templateResRef);
+            ModuleResource utpResource = module.Placeable(templateResRef);
             if (utpResource == null)
             {
                 return;
@@ -322,20 +342,20 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateTriggerFromGit(GFFStruct gitStruct)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Trigger);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
 
             // Trigger geometry
             if (gitStruct.Exists("Geometry"))
             {
-                var geometryList = gitStruct.GetList("Geometry");
+                GFFList geometryList = gitStruct.GetList("Geometry");
                 if (geometryList != null)
                 {
                     var points = new List<System.Numerics.Vector3>();
-                    foreach (var pointStruct in geometryList)
+                    foreach (GFFStruct pointStruct in geometryList)
                     {
                         float px = pointStruct.Exists("PointX") ? pointStruct.GetSingle("PointX") : 0f;
                         float py = pointStruct.Exists("PointY") ? pointStruct.GetSingle("PointY") : 0f;
@@ -368,10 +388,10 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateWaypointFromGit(GFFStruct gitStruct)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Waypoint);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
             entity.Facing = facing;
@@ -393,9 +413,9 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateSoundFromGit(GFFStruct gitStruct)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Sound);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
 
@@ -414,11 +434,11 @@ namespace Odyssey.Kotor.Loading
             // Sound list
             if (gitStruct.Exists("Sounds"))
             {
-                var soundList = gitStruct.GetList("Sounds");
+                GFFList soundList = gitStruct.GetList("Sounds");
                 if (soundList != null)
                 {
                     var sounds = new List<string>();
-                    foreach (var soundStruct in soundList)
+                    foreach (GFFStruct soundStruct in soundList)
                     {
                         string sound = GetResRefField(soundStruct, "Sound");
                         if (!string.IsNullOrEmpty(sound))
@@ -440,9 +460,9 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateStoreFromGit(GFFStruct gitStruct)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Store);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
 
@@ -458,9 +478,9 @@ namespace Odyssey.Kotor.Loading
         public IEntity CreateEncounterFromGit(GFFStruct gitStruct)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Encounter);
-            
+
             System.Numerics.Vector3 position = GetPosition(gitStruct);
-            
+
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
 
@@ -479,11 +499,11 @@ namespace Odyssey.Kotor.Loading
             // Creature list
             if (gitStruct.Exists("CreatureList"))
             {
-                var creatureList = gitStruct.GetList("CreatureList");
+                GFFList creatureList = gitStruct.GetList("CreatureList");
                 if (creatureList != null)
                 {
                     var creatures = new List<string>();
-                    foreach (var creatureStruct in creatureList)
+                    foreach (GFFStruct creatureStruct in creatureList)
                     {
                         string resRef = GetResRefField(creatureStruct, "ResRef");
                         if (!string.IsNullOrEmpty(resRef))
@@ -498,11 +518,11 @@ namespace Odyssey.Kotor.Loading
             // Geometry
             if (gitStruct.Exists("Geometry"))
             {
-                var geometryList = gitStruct.GetList("Geometry");
+                GFFList geometryList = gitStruct.GetList("Geometry");
                 if (geometryList != null)
                 {
                     var points = new List<System.Numerics.Vector3>();
-                    foreach (var pointStruct in geometryList)
+                    foreach (GFFStruct pointStruct in geometryList)
                     {
                         float px = pointStruct.Exists("X") ? pointStruct.GetSingle("X") : 0f;
                         float py = pointStruct.Exists("Y") ? pointStruct.GetSingle("Y") : 0f;
@@ -552,7 +572,7 @@ namespace Odyssey.Kotor.Loading
         {
             if (root.Exists(fieldName))
             {
-                var resRef = root.GetResRef(fieldName);
+                ResRef resRef = root.GetResRef(fieldName);
                 if (resRef != null)
                 {
                     return resRef.ToString();
@@ -574,7 +594,7 @@ namespace Odyssey.Kotor.Loading
         {
             if (root.Exists(fieldName))
             {
-                var locStr = root.GetLocString(fieldName);
+                LocalizedString locStr = root.GetLocString(fieldName);
                 if (locStr != null)
                 {
                     return locStr.ToString();
@@ -594,11 +614,11 @@ namespace Odyssey.Kotor.Loading
 
         private static void SetEntityScripts(Entity entity, GFFStruct root, Dictionary<string, ScriptEvent> mappings)
         {
-            foreach (var mapping in mappings)
+            foreach (KeyValuePair<string, ScriptEvent> mapping in mappings)
             {
                 if (root.Exists(mapping.Key))
                 {
-                    var scriptRef = root.GetResRef(mapping.Key);
+                    ResRef scriptRef = root.GetResRef(mapping.Key);
                     if (scriptRef != null && !string.IsNullOrEmpty(scriptRef.ToString()))
                     {
                         entity.SetScript(mapping.Value, scriptRef.ToString());
