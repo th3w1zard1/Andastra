@@ -247,15 +247,37 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            // Keyboard navigation
-            if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
+            // Handle path selection navigation
+            if (_isSelectingPath)
             {
-                _selectedMenuIndex = (_selectedMenuIndex - 1 + _menuItems.Length) % _menuItems.Length;
-            }
+                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
+                {
+                    _selectedPathIndex = (_selectedPathIndex - 1 + _availablePaths.Count) % _availablePaths.Count;
+                }
 
-            if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Down))
+                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Down))
+                {
+                    _selectedPathIndex = (_selectedPathIndex + 1) % _availablePaths.Count;
+                }
+
+                // ESC to cancel path selection
+                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Escape))
+                {
+                    _isSelectingPath = false;
+                }
+            }
+            else
             {
-                _selectedMenuIndex = (_selectedMenuIndex + 1) % _menuItems.Length;
+                // Keyboard navigation
+                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
+                {
+                    _selectedMenuIndex = (_selectedMenuIndex - 1 + _menuItems.Length) % _menuItems.Length;
+                }
+
+                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Down))
+                {
+                    _selectedMenuIndex = (_selectedMenuIndex + 1) % _menuItems.Length;
+                }
             }
 
             // Select menu item
@@ -553,17 +575,17 @@ namespace Odyssey.Game.Core
                 // Fallback: draw simple visual instruction indicators
                 int indicatorY = viewportHeight - 40;
                 int indicatorSize = 8;
-                
+
                 // Arrow keys indicator (up arrow)
                 int arrowX = centerX - 100;
                 _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX, indicatorY - 5, indicatorSize, indicatorSize * 2), new Color(150, 150, 170, 255));
                 _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX - 4, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
                 _spriteBatch.Draw(_menuTexture, new Rectangle(arrowX + indicatorSize - indicatorSize / 2, indicatorY, indicatorSize / 2, indicatorSize), new Color(150, 150, 170, 255));
-                
+
                 // Mouse indicator (circle)
                 int mouseX = centerX;
                 DrawRectangleBorder(_spriteBatch, new Rectangle(mouseX - indicatorSize / 2, indicatorY - indicatorSize / 2, indicatorSize, indicatorSize), 2, new Color(150, 150, 170, 255));
-                
+
                 // Enter key indicator (rectangle)
                 int enterX = centerX + 100;
                 _spriteBatch.Draw(_menuTexture, new Rectangle(enterX, indicatorY - 5, indicatorSize * 2, indicatorSize), new Color(150, 150, 170, 255));
@@ -594,12 +616,12 @@ namespace Odyssey.Game.Core
             // Draw lines between points
             int minY = Math.Min(Math.Min(y[0], y[1]), y[2]);
             int maxY = Math.Max(Math.Max(y[0], y[1]), y[2]);
-            
+
             for (int py = minY; py <= maxY; py++)
             {
                 // Find intersections with horizontal line at py
                 System.Collections.Generic.List<int> intersections = new System.Collections.Generic.List<int>();
-                
+
                 for (int i = 0; i < 3; i++)
                 {
                     int next = (i + 1) % 3;
@@ -613,7 +635,7 @@ namespace Odyssey.Game.Core
                         }
                     }
                 }
-                
+
                 if (intersections.Count >= 2)
                 {
                     int minX = Math.Min(intersections[0], intersections[1]);
