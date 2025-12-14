@@ -929,6 +929,11 @@ namespace Odyssey.Game.Core
             // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
             if (sceneSystem.SceneInstance == null)
             {
+                // Create root scene for entity management
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Scene.html
+                // Scene() constructor creates a new scene for organizing entities
+                // Method signature: Scene()
+                // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
                 var rootScene = new StrideEngine.Scene();
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneInstance.html
                 // SceneInstance(Services, Scene) constructor creates a scene instance for rendering
@@ -1011,6 +1016,12 @@ namespace Odyssey.Game.Core
             // Method signature: void Add(SceneCameraSlot slot)
             // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
             var cameraSlot = new SceneCameraSlot();
+            // Add camera slot to compositor
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.GraphicsCompositor.html
+            // GraphicsCompositor.Cameras collection contains all camera slots
+            // Add(SceneCameraSlot) adds a camera slot to the compositor
+            // Method signature: void Add(SceneCameraSlot slot)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
             compositor.Cameras.Add(cameraSlot);
 
                 // #region agent log
@@ -1061,11 +1072,20 @@ namespace Odyssey.Game.Core
                 // Method signature: void Add(ISceneRenderer renderer)
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
                 var sceneRenderer = new SceneRendererCollection();
+                // Add forward renderer to scene renderer collection
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
+                // SceneRendererCollection.Children collection contains child renderers
+                // Add(ISceneRenderer) adds a child renderer to the collection
+                // Method signature: void Add(ISceneRenderer renderer)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
                 sceneRenderer.Children.Add(forwardRenderer);
 
                 // Create and add Myra UI menu renderer (text-based buttons, renders on top)
                 _fallbackMenuRenderer = new MyraMenuRenderer();
                 _fallbackMenuRenderer.MenuItemSelected += OnFallbackMenuItemSelected;
+                // Add fallback menu renderer to scene renderer collection
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
+                // SceneRendererCollection.Children.Add(ISceneRenderer) - same method as above
                 sceneRenderer.Children.Add(_fallbackMenuRenderer);
 
                 // Bind the render pipeline to our camera slot
