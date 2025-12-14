@@ -70,7 +70,7 @@ namespace Odyssey.Kotor.Loading
             string entryAreaResRef = runtimeModule.EntryArea;
             if (!string.IsNullOrEmpty(entryAreaResRef))
             {
-                var area = LoadArea(module, entryAreaResRef);
+                RuntimeArea area = LoadArea(module, entryAreaResRef);
                 if (area != null)
                 {
                     runtimeModule.AddArea(area);
@@ -88,10 +88,18 @@ namespace Odyssey.Kotor.Loading
         /// </summary>
         private void LoadModuleInfo(Module module, RuntimeModule runtimeModule)
         {
-            var ifoResource = module.Info();
+            ModuleResource ifoResource = module.Info();
             if (ifoResource == null)
             {
                 throw new InvalidOperationException($"Module '{module.GetRoot()}' has no IFO resource. Ensure the module archive contains 'module.ifo'.");
+            }
+
+            // Check if the resource has any locations
+            List<string> locations = ifoResource.Locations();
+            if (locations == null || locations.Count == 0)
+            {
+                string modulePath = System.IO.Path.Combine(module.Installation.Path, "Modules", module.GetRoot() + ".rim");
+                throw new InvalidOperationException($"Module '{module.GetRoot()}' has no IFO resource locations. Expected to find 'module.ifo' in '{modulePath}'. Ensure the module archive exists and contains the IFO file.");
             }
 
             object ifoData = null;
@@ -106,7 +114,8 @@ namespace Odyssey.Kotor.Loading
 
             if (ifoData == null)
             {
-                throw new InvalidOperationException($"Failed to load module IFO for '{module.GetRoot()}': Resource() returned null. The IFO file may be corrupted or missing.");
+                string locationsStr = locations.Count > 0 ? string.Join(", ", locations) : "none";
+                throw new InvalidOperationException($"Failed to load module IFO for '{module.GetRoot()}': Resource() returned null. Locations searched: {locationsStr}. The IFO file may be corrupted or missing.");
             }
 
             // IFO is a GFF file
@@ -125,14 +134,14 @@ namespace Odyssey.Kotor.Loading
             // Display name (localized string)
             if (root.Exists("Mod_Name"))
             {
-                var nameLocStr = root.GetLocString("Mod_Name");
+                LocalizedString nameLocStr = root.GetLocString("Mod_Name");
                 runtimeModule.DisplayName = nameLocStr != null ? nameLocStr.ToString() : string.Empty;
             }
 
             // Entry area
             if (root.Exists("Mod_Entry_Area"))
             {
-                var entryAreaRef = root.GetResRef("Mod_Entry_Area");
+                ResRef entryAreaRef = root.GetResRef("Mod_Entry_Area");
                 runtimeModule.EntryArea = entryAreaRef != null ? entryAreaRef.ToString() : string.Empty;
             }
 
@@ -166,7 +175,7 @@ namespace Odyssey.Kotor.Loading
             // Start movie
             if (root.Exists("Mod_StartMovie"))
             {
-                var movieRef = root.GetResRef("Mod_StartMovie");
+                ResRef movieRef = root.GetResRef("Mod_StartMovie");
                 runtimeModule.StartMovie = movieRef != null ? movieRef.ToString() : string.Empty;
             }
 
@@ -198,11 +207,11 @@ namespace Odyssey.Kotor.Loading
                 { "Mod_OnUsrDefined", ScriptEvent.OnUserDefined }
             };
 
-            foreach (var mapping in scriptMappings)
+            foreach (KeyValuePair<string, ScriptEvent> mapping in scriptMappings)
             {
                 if (root.Exists(mapping.Key))
                 {
-                    var scriptRef = root.GetResRef(mapping.Key);
+                    ResRef scriptRef = root.GetResRef(mapping.Key);
                     if (scriptRef != null && !string.IsNullOrEmpty(scriptRef.ToString()))
                     {
                         module.SetScript(mapping.Value, scriptRef.ToString());
@@ -221,28 +230,28 @@ namespace Odyssey.Kotor.Loading
             area.ResRef = areaResRef;
 
             // Load ARE (area properties)
-            var areResource = module.Are();
+            ModuleResource areResource = module.Are();
             if (areResource != null)
             {
                 LoadAreaProperties(areResource, area);
             }
 
             // Load LYT (room layout)
-            var lytResource = module.Layout();
+            ModuleResource lytResource = module.Layout();
             if (lytResource != null)
             {
                 LoadLayout(lytResource, area);
             }
 
             // Load VIS (visibility)
-            var visResource = module.Vis();
+            ModuleResource visResource = module.Vis();
             if (visResource != null)
             {
                 LoadVisibility(visResource, area);
             }
 
             // Load GIT (dynamic objects)
-            var gitResource = module.Git();
+            ModuleResource gitResource = module.Git();
             if (gitResource != null)
             {
                 LoadGitObjects(gitResource, area, module);
@@ -276,7 +285,7 @@ namespace Odyssey.Kotor.Loading
             // Basic info
             if (root.Exists("Name"))
             {
-                var nameLocStr = root.GetLocString("Name");
+                LocalizedString nameLocStr = root.GetLocString("Name");
                 area.DisplayName = nameLocStr != null ? nameLocStr.ToString() : string.Empty;
             }
 
@@ -299,7 +308,7 @@ namespace Odyssey.Kotor.Loading
             area.GrassEnabled = GetIntField(root, "Grass_TexName", 0) != 0; // Has grass if texture specified
             if (root.Exists("Grass_TexName"))
             {
-                var grassTex = root.GetResRef("Grass_TexName");
+                ResRef grassTex = root.GetResRef("Grass_TexName");
                 area.GrassTexture = grassTex != null ? grassTex.ToString() : string.Empty;
             }
             area.GrassDensity = root.Exists("Grass_Density") ? root.GetSingle("Grass_Density") : 0f;
@@ -339,11 +348,11 @@ namespace Odyssey.Kotor.Loading
                 { "OnUserDefined", ScriptEvent.OnUserDefined }
             };
 
-            foreach (var mapping in scriptMappings)
+            foreach (KeyValuePair<string, ScriptEvent> mapping in scriptMappings)
             {
                 if (root.Exists(mapping.Key))
                 {
-                    var scriptRef = root.GetResRef(mapping.Key);
+                    ResRef scriptRef = root.GetResRef(mapping.Key);
                     if (scriptRef != null && !string.IsNullOrEmpty(scriptRef.ToString()))
                     {
                         area.SetScript(mapping.Value, scriptRef.ToString());
@@ -371,7 +380,7 @@ namespace Odyssey.Kotor.Loading
 
             area.Rooms = new List<RoomInfo>();
 
-            foreach (var room in lyt.Rooms)
+            foreach (LYTRoom room in lyt.Rooms)
             {
                 var roomInfo = new RoomInfo
                 {
@@ -459,12 +468,12 @@ namespace Odyssey.Kotor.Loading
             // Load creatures
             if (root.Exists("Creature List"))
             {
-                var creatureList = root.GetList("Creature List");
+                GFFList creatureList = root.GetList("Creature List");
                 if (creatureList != null)
                 {
-                    foreach (var creatureStruct in creatureList)
+                    foreach (GFFStruct creatureStruct in creatureList)
                     {
-                        var entity = _entityFactory.CreateCreatureFromGit(creatureStruct, module);
+                        IEntity entity = _entityFactory.CreateCreatureFromGit(creatureStruct, module);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -476,12 +485,12 @@ namespace Odyssey.Kotor.Loading
             // Load doors
             if (root.Exists("Door List"))
             {
-                var doorList = root.GetList("Door List");
+                GFFList doorList = root.GetList("Door List");
                 if (doorList != null)
                 {
-                    foreach (var doorStruct in doorList)
+                    foreach (GFFStruct doorStruct in doorList)
                     {
-                        var entity = _entityFactory.CreateDoorFromGit(doorStruct, module);
+                        IEntity entity = _entityFactory.CreateDoorFromGit(doorStruct, module);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -493,12 +502,12 @@ namespace Odyssey.Kotor.Loading
             // Load placeables
             if (root.Exists("Placeable List"))
             {
-                var placeableList = root.GetList("Placeable List");
+                GFFList placeableList = root.GetList("Placeable List");
                 if (placeableList != null)
                 {
-                    foreach (var placeableStruct in placeableList)
+                    foreach (GFFStruct placeableStruct in placeableList)
                     {
-                        var entity = _entityFactory.CreatePlaceableFromGit(placeableStruct, module);
+                        IEntity entity = _entityFactory.CreatePlaceableFromGit(placeableStruct, module);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -510,12 +519,12 @@ namespace Odyssey.Kotor.Loading
             // Load triggers
             if (root.Exists("TriggerList"))
             {
-                var triggerList = root.GetList("TriggerList");
+                GFFList triggerList = root.GetList("TriggerList");
                 if (triggerList != null)
                 {
-                    foreach (var triggerStruct in triggerList)
+                    foreach (GFFStruct triggerStruct in triggerList)
                     {
-                        var entity = _entityFactory.CreateTriggerFromGit(triggerStruct);
+                        IEntity entity = _entityFactory.CreateTriggerFromGit(triggerStruct);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -527,12 +536,12 @@ namespace Odyssey.Kotor.Loading
             // Load waypoints
             if (root.Exists("WaypointList"))
             {
-                var waypointList = root.GetList("WaypointList");
+                GFFList waypointList = root.GetList("WaypointList");
                 if (waypointList != null)
                 {
-                    foreach (var waypointStruct in waypointList)
+                    foreach (GFFStruct waypointStruct in waypointList)
                     {
-                        var entity = _entityFactory.CreateWaypointFromGit(waypointStruct);
+                        IEntity entity = _entityFactory.CreateWaypointFromGit(waypointStruct);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -544,12 +553,12 @@ namespace Odyssey.Kotor.Loading
             // Load sounds
             if (root.Exists("SoundList"))
             {
-                var soundList = root.GetList("SoundList");
+                GFFList soundList = root.GetList("SoundList");
                 if (soundList != null)
                 {
-                    foreach (var soundStruct in soundList)
+                    foreach (GFFStruct soundStruct in soundList)
                     {
-                        var entity = _entityFactory.CreateSoundFromGit(soundStruct);
+                        IEntity entity = _entityFactory.CreateSoundFromGit(soundStruct);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -561,12 +570,12 @@ namespace Odyssey.Kotor.Loading
             // Load stores
             if (root.Exists("StoreList"))
             {
-                var storeList = root.GetList("StoreList");
+                GFFList storeList = root.GetList("StoreList");
                 if (storeList != null)
                 {
-                    foreach (var storeStruct in storeList)
+                    foreach (GFFStruct storeStruct in storeList)
                     {
-                        var entity = _entityFactory.CreateStoreFromGit(storeStruct);
+                        IEntity entity = _entityFactory.CreateStoreFromGit(storeStruct);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -578,12 +587,12 @@ namespace Odyssey.Kotor.Loading
             // Load encounters
             if (root.Exists("Encounter List"))
             {
-                var encounterList = root.GetList("Encounter List");
+                GFFList encounterList = root.GetList("Encounter List");
                 if (encounterList != null)
                 {
-                    foreach (var encounterStruct in encounterList)
+                    foreach (GFFStruct encounterStruct in encounterList)
                     {
-                        var entity = _entityFactory.CreateEncounterFromGit(encounterStruct);
+                        IEntity entity = _entityFactory.CreateEncounterFromGit(encounterStruct);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -599,7 +608,7 @@ namespace Odyssey.Kotor.Loading
         private void LoadNavigationMesh(Module module, RuntimeArea area)
         {
             // For each room, load its walkmesh and combine
-            var combinedNavMesh = _navMeshFactory.CreateFromModule(module, area.Rooms);
+            INavigationMesh combinedNavMesh = _navMeshFactory.CreateFromModule(module, area.Rooms);
             area.NavigationMesh = combinedNavMesh;
         }
 
@@ -628,7 +637,7 @@ namespace Odyssey.Kotor.Loading
 
             // Load from module resources
             var module = new Module(_currentModule.ResRef, _installation);
-            var dlgResource = module.Resource(resRef, ResourceType.DLG);
+            ModuleResource dlgResource = module.Resource(resRef, ResourceType.DLG);
             if (dlgResource == null)
             {
                 return null;
@@ -650,7 +659,7 @@ namespace Odyssey.Kotor.Loading
 
             // Load from module resources
             var module = new Module(_currentModule.ResRef, _installation);
-            var ncsResource = module.Resource(resRef, ResourceType.NCS);
+            ModuleResource ncsResource = module.Resource(resRef, ResourceType.NCS);
             if (ncsResource == null)
             {
                 return null;
@@ -677,7 +686,7 @@ namespace Odyssey.Kotor.Loading
                 return null;
             }
 
-            var entryArea = _currentModule.GetArea(_currentModule.EntryArea);
+            IArea entryArea = _currentModule.GetArea(_currentModule.EntryArea);
             if (entryArea == null)
             {
                 return null;
@@ -718,7 +727,7 @@ namespace Odyssey.Kotor.Loading
         {
             if (root.Exists(fieldName))
             {
-                var resRef = root.GetResRef(fieldName);
+                ResRef resRef = root.GetResRef(fieldName);
                 if (resRef != null)
                 {
                     return resRef.ToString();
