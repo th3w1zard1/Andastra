@@ -153,7 +153,75 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual string ToStringGlobals()
         {
-            return this.root.GetBody();
+            string body = this.root.GetBody();
+            // Post-process to merge variable declarations with assignments into initializers
+            // Pattern: "int varName;\nvarName = value;" -> "int varName = value;"
+            return MergeGlobalInitializers(body);
+        }
+        
+        private string MergeGlobalInitializers(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+            {
+                return code;
+            }
+            
+            // Split into lines
+            string[] lines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            System.Text.StringBuilder result = new System.Text.StringBuilder();
+            
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                string trimmed = line.Trim();
+                
+                // Check if this is a variable declaration (e.g., "int intGLOB_1;")
+                // Pattern: type name;
+                System.Text.RegularExpressions.Regex declPattern = new System.Text.RegularExpressions.Regex(
+                    @"^\s*(int|float|string|object|vector|location|effect|itemproperty|talent|action|event)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;\s*$");
+                var declMatch = declPattern.Match(trimmed);
+                
+                if (declMatch.Success && i + 1 < lines.Length)
+                {
+                    string type = declMatch.Groups[1].Value;
+                    string varName = declMatch.Groups[2].Value;
+                    
+                    // Look ahead for assignment to this variable
+                    int nextLineIdx = i + 1;
+                    while (nextLineIdx < lines.Length && string.IsNullOrWhiteSpace(lines[nextLineIdx]))
+                    {
+                        nextLineIdx++;
+                    }
+                    
+                    if (nextLineIdx < lines.Length)
+                    {
+                        string nextLine = lines[nextLineIdx].Trim();
+                        // Pattern: varName = value;
+                        System.Text.RegularExpressions.Regex assignPattern = new System.Text.RegularExpressions.Regex(
+                            @"^\s*" + System.Text.RegularExpressions.Regex.Escape(varName) + @"\s*=\s*(.+?)\s*;\s*$");
+                        var assignMatch = assignPattern.Match(nextLine);
+                        
+                        if (assignMatch.Success)
+                        {
+                            // Merge into initialization
+                            string value = assignMatch.Groups[1].Value;
+                            result.Append("\t").Append(type).Append(" ").Append(varName).Append(" = ").Append(value).Append(";").Append("\n");
+                            // Skip the assignment line
+                            i = nextLineIdx;
+                            continue;
+                        }
+                    }
+                }
+                
+                // Not a mergeable declaration, output as-is
+                result.Append(line);
+                if (i < lines.Length - 1)
+                {
+                    result.Append("\n");
+                }
+            }
+            
+            return result.ToString();
         }
 
         public virtual string GetProto()
