@@ -118,6 +118,18 @@ Include version in:
 
 ## Scripts Overview
 
+### Core Scripts
+
+The packaging system consists of several scripts that work together:
+
+1. **Build-StrideGame.ps1** - Builds the game for target platforms
+2. **Package-StrideGame.ps1** - Packages builds into distribution archives
+3. **Distribute-StrideGame.ps1** - Orchestrates complete build + package pipeline
+4. **StrideBuildHelpers.ps1** - Stride-specific validation helpers (module)
+5. **New-StrideVersionFile.ps1** - Creates version information files
+6. **Invoke-StrideCICD.ps1** - CI/CD wrapper for automated pipelines
+7. **Add-StrideGameDocumentation.ps1** - Adds documentation to packages
+
 ### Build-StrideGame.ps1
 
 Builds the game project for specified platforms and architectures with comprehensive validation.
@@ -256,6 +268,125 @@ Adds documentation to existing distribution packages.
 
 # Add documentation without README
 .\Add-StrideGameDocumentation.ps1 -IncludeReadme $false
+```
+
+### New-StrideVersionFile.ps1
+
+Creates version information files for distribution tracking.
+
+**Usage:**
+```powershell
+.\New-StrideVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" `
+    -Version "1.0.0" -BuildNumber "123" -CommitHash "abc123"
+```
+
+**Creates:**
+- `version.txt` - Human-readable version information
+- `VERSION` - Key=value format for scripting
+- `version.json` - Structured JSON format
+
+**Examples:**
+```powershell
+# Basic version file
+.\New-StrideVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" -Version "1.0.0"
+
+# With CI/CD build information
+.\New-StrideVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" `
+    -Version "1.0.0" -BuildNumber $env:BUILD_NUMBER -CommitHash $env:GITHUB_SHA
+```
+
+### Invoke-StrideCICD.ps1
+
+CI/CD wrapper script that automatically detects CI/CD environments and configures the build pipeline.
+
+**Usage:**
+```powershell
+.\Invoke-StrideCICD.ps1 -GameName "Odyssey" -Version "1.0.0"
+```
+
+**Features:**
+- Auto-detects CI/CD environment (GitHub Actions, Azure DevOps, Jenkins)
+- Extracts version from git tags or environment variables
+- Sets appropriate artifact paths
+- Publishes artifacts for CI/CD systems
+- Provides verbose logging in CI environments
+
+**Examples:**
+```powershell
+# In GitHub Actions workflow
+- name: Build and Package
+  run: .\scripts\Invoke-StrideCICD.ps1 -GameName "Odyssey"
+
+# In Azure DevOps pipeline
+- task: PowerShell@2
+  inputs:
+    targetType: 'filePath'
+    filePath: 'scripts/Invoke-StrideCICD.ps1'
+    arguments: '-GameName "Odyssey" -Version "$(Build.BuildNumber)"'
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Build and Package
+        run: .\scripts\Invoke-StrideCICD.ps1 -GameName "Odyssey"
+        shell: pwsh
+      
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: game-distributions
+          path: dist/*.zip
+```
+
+### Azure DevOps Example
+
+```yaml
+trigger:
+  tags:
+    include:
+      - v*
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '9.0.x'
+  
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: 'scripts/Invoke-StrideCICD.ps1'
+      arguments: '-GameName "Odyssey" -Version "$(Build.BuildNumber)"'
+  
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: 'dist'
+      artifactName: 'game-distributions'
 ```
 
 ## Complete Workflow Example
