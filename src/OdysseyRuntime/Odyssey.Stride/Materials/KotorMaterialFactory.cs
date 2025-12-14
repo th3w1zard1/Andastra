@@ -25,6 +25,11 @@ namespace Odyssey.Stride.Materials
         /// Creates a new material factory.
         /// </summary>
         /// <param name="device">Graphics device.</param>
+        // Initialize material factory with graphics device
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // GraphicsDevice provides access to graphics hardware and resources
+        // Material and Texture are Stride rendering types
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
         public KotorMaterialFactory([NotNull] GraphicsDevice device)
         {
             _device = device ?? throw new ArgumentNullException("device");
@@ -65,6 +70,10 @@ namespace Odyssey.Stride.Materials
         /// </summary>
         public Material CreateOpaqueMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
         {
+            // Create material descriptor
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDescriptor.html
+            // MaterialDescriptor defines material properties and features
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
             var desc = new MaterialDescriptor();
 
             // Load diffuse texture
@@ -72,6 +81,12 @@ namespace Odyssey.Stride.Materials
 
             if (diffuseTex != null)
             {
+                // Set diffuse map feature
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDiffuseMapFeature.html
+                // MaterialDiffuseMapFeature defines the diffuse color/texture of the material
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeTextureColor.html
+                // ComputeTextureColor samples color from a texture
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
                 desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
                 {
                     DiffuseMap = new ComputeTextureColor(diffuseTex)
@@ -80,6 +95,8 @@ namespace Odyssey.Stride.Materials
             else
             {
                 // Default white diffuse
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeColor.html
+                // ComputeColor provides a constant color value
                 desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
                 {
                     DiffuseMap = new ComputeColor(Color4.White)
@@ -87,11 +104,20 @@ namespace Odyssey.Stride.Materials
             }
 
             // Basic specular
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialGlossinessMapFeature.html
+            // MaterialGlossinessMapFeature controls surface roughness/glossiness
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeFloat.html
+            // ComputeFloat provides a constant float value
             desc.Attributes.MicroSurface = new MaterialGlossinessMapFeature
             {
                 GlossinessMap = new ComputeFloat(0.3f)
             };
 
+            // Create material from descriptor
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
+            // Material.New creates a new Material instance from a MaterialDescriptor
+            // Method signature: Material.New(GraphicsDevice, MaterialDescriptor)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
             return Material.New(_device, desc);
         }
 
@@ -112,6 +138,10 @@ namespace Odyssey.Stride.Materials
                 };
 
                 // Enable alpha cutout
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialTransparencyCutoffFeature.html
+                // MaterialTransparencyCutoffFeature enables alpha testing (hard transparency edges)
+                // Alpha property sets the threshold for alpha testing
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
                 desc.Attributes.Transparency = new MaterialTransparencyCutoffFeature
                 {
                     Alpha = new ComputeFloat(alphaThreshold)
@@ -138,6 +168,9 @@ namespace Odyssey.Stride.Materials
                 };
 
                 // Enable alpha blending
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialTransparencyBlendFeature.html
+                // MaterialTransparencyBlendFeature enables alpha blending (soft transparency)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
                 desc.Attributes.Transparency = new MaterialTransparencyBlendFeature();
             }
 
@@ -161,6 +194,10 @@ namespace Odyssey.Stride.Materials
                 };
 
                 // Make it emissive
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialEmissiveMapFeature.html
+                // MaterialEmissiveMapFeature makes the material emit light
+                // EmissiveMap sets the emissive texture, Intensity controls emission strength
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
                 desc.Attributes.Emissive = new MaterialEmissiveMapFeature
                 {
                     EmissiveMap = new ComputeTextureColor(diffuseTex),
@@ -168,6 +205,9 @@ namespace Odyssey.Stride.Materials
                 };
 
                 // Additive blending
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialTransparencyAdditiveFeature.html
+                // MaterialTransparencyAdditiveFeature enables additive blending (glowing effects)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
                 desc.Attributes.Transparency = new MaterialTransparencyAdditiveFeature();
             }
 
@@ -195,6 +235,9 @@ namespace Odyssey.Stride.Materials
             // TODO: Apply lightmap as secondary texture multiply
             // Stride's material system may need custom shader for proper lightmap support
             // For now, we'll use emissive channel as a workaround
+            // FIXME: Lightmap should be multiplied with diffuse, not used as emissive
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialEmissiveMapFeature.html
+            // Using emissive as workaround for lightmap - proper implementation would use custom shader
             if (lightmapTex != null)
             {
                 desc.Attributes.Emissive = new MaterialEmissiveMapFeature
@@ -320,6 +363,10 @@ namespace Odyssey.Stride.Materials
         /// <summary>
         /// Clears all cached materials and textures.
         /// </summary>
+        // Dispose cached textures
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+        // Texture.Dispose releases graphics resources
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
         public void ClearCache()
         {
             foreach (var tex in _textureCache.Values)
