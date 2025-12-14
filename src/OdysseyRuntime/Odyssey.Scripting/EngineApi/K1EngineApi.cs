@@ -171,6 +171,9 @@ namespace Odyssey.Scripting.EngineApi
                 case 120: return Func_EffectDamageIncrease(args, ctx);
                 // ... more functions
 
+                // GetAbilityScore (routine 139)
+                case 139: return Func_GetAbilityScore(args, ctx);
+                
                 // PrintVector
                 case 141: return Func_PrintVector(args, ctx);
 
@@ -1143,6 +1146,40 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_CreateItemOnObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // CreateItemOnObject(string sItemTemplate, object oTarget=OBJECT_SELF, int nStackSize=1, int nHideMessage = 0)
+            string itemTemplate = args.Count > 0 ? args[0].AsString() : string.Empty;
+            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            int stackSize = args.Count > 2 ? args[2].AsInt() : 1;
+            int hideMessage = args.Count > 3 ? args[3].AsInt() : 0;
+
+            if (string.IsNullOrEmpty(itemTemplate) || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                target = ctx.Caller;
+            }
+
+            if (target == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Create item entity
+            // TODO: Load item template from resource provider and create entity
+            // For now, create a basic item entity
+            IEntity itemEntity = ctx.World.CreateEntity(ObjectType.Item, Vector3.Zero, 0f);
+            if (itemEntity != null)
+            {
+                itemEntity.Tag = itemTemplate;
+                // TODO: Add item component with template data
+                // TODO: Add to target's inventory if target has inventory component
+                return Variable.FromObject(itemEntity.ObjectId);
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -1221,6 +1258,31 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        private Variable Func_GetAbilityScore(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetAbilityScore(object oCreature, int nAbilityType)
+            // nAbilityType: ABILITY_STRENGTH (0), ABILITY_DEXTERITY (1), ABILITY_CONSTITUTION (2),
+            //              ABILITY_INTELLIGENCE (3), ABILITY_WISDOM (4), ABILITY_CHARISMA (5)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            int abilityType = args.Count > 1 ? args[1].AsInt() : 0;
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    // Map ability type to Ability enum
+                    if (abilityType >= 0 && abilityType <= 5)
+                    {
+                        Ability ability = (Ability)abilityType;
+                        return Variable.FromInt(stats.GetAbility(ability));
+                    }
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
         // Effect placeholders
         private Variable Func_EffectAssuredHit(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -1244,11 +1306,33 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_GetCurrentForcePoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // GetCurrentForcePoints(object oCreature = OBJECT_SELF)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.CurrentFP);
+                }
+            }
             return Variable.FromInt(0);
         }
 
         private Variable Func_GetMaxForcePoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // GetMaxForcePoints(object oCreature = OBJECT_SELF)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.MaxFP);
+                }
+            }
             return Variable.FromInt(0);
         }
 
@@ -1329,16 +1413,49 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_FortitudeSave(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // FortitudeSave(object oCreature = OBJECT_SELF)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.FortitudeSave);
+                }
+            }
             return Variable.FromInt(0);
         }
 
         private Variable Func_ReflexSave(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ReflexSave(object oCreature = OBJECT_SELF)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.ReflexSave);
+                }
+            }
             return Variable.FromInt(0);
         }
 
         private Variable Func_WillSave(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // WillSave(object oCreature = OBJECT_SELF)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.WillSave);
+                }
+            }
             return Variable.FromInt(0);
         }
 
