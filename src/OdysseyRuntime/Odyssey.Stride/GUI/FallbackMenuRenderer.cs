@@ -22,6 +22,15 @@ namespace Odyssey.Stride.GUI
         private int _selectedIndex = 0;
         private readonly MenuButton[] _menuButtons;
 
+        // Input debouncing
+        private float _keyRepeatTimer = 0f;
+        private const float KeyRepeatDelay = 0.15f; // 150ms delay between key repeats
+        private bool _upKeyWasDown = false;
+        private bool _downKeyWasDown = false;
+        private bool _enterKeyWasDown = false;
+        private bool _spaceKeyWasDown = false;
+        private bool _mouseButtonWasDown = false;
+
         // Rendering resources
         private SpriteBatch _spriteBatch;
         private Texture _whiteTexture; // 1x1 white texture for drawing rectangles
@@ -32,17 +41,38 @@ namespace Odyssey.Stride.GUI
         private RectangleF _headerRect;
 
         // Colors - BRIGHT for maximum visibility
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) constructor creates a color from RGBA byte values (0-255)
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
         private readonly Color _backgroundColor = new Color(20, 30, 60, 255); // Dark blue background
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _panelBackgroundColor = new Color(40, 50, 80, 255); // Panel background
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _headerColor = new Color(255, 200, 50, 255); // Bright gold header
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _borderColor = new Color(255, 255, 255, 255); // White border
 
         // Button colors
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _buttonStartColor = new Color(100, 255, 100, 255); // Bright green
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _buttonStartSelectedColor = new Color(150, 255, 150, 255); // Brighter green when selected
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _buttonOptionsColor = new Color(100, 150, 255, 255); // Bright blue
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _buttonOptionsSelectedColor = new Color(150, 180, 255, 255); // Brighter blue when selected
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _buttonExitColor = new Color(255, 100, 100, 255); // Bright red
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color(byte r, byte g, byte b, byte a) - same constructor as above
         private readonly Color _buttonExitSelectedColor = new Color(255, 150, 150, 255); // Brighter red when selected
 
         // Menu action callback
@@ -148,6 +178,8 @@ namespace Odyssey.Stride.GUI
             );
 
             // Options button (blue) - disabled but visible
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _menuButtons[1] = new MenuButton(
                 new RectangleF(buttonX, startY + buttonHeight + buttonSpacing, buttonWidth, buttonHeight),
                 _buttonOptionsColor,
@@ -156,6 +188,8 @@ namespace Odyssey.Stride.GUI
             );
 
             // Exit button (red)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _menuButtons[2] = new MenuButton(
                 new RectangleF(buttonX, startY + (buttonHeight + buttonSpacing) * 2, buttonWidth, buttonHeight),
                 _buttonExitColor,
@@ -163,7 +197,7 @@ namespace Odyssey.Stride.GUI
                 "Exit"
             );
 
-            Console.WriteLine($"[FallbackMenuRenderer] Layout calculated: Panel=({panelX}, {panelY}, {panelWidth}, {panelHeight})");
+            // Layout calculated silently - no per-frame logging
         }
 
         // Render the menu using SpriteBatch
@@ -290,6 +324,9 @@ namespace Odyssey.Stride.GUI
                 if (i == _selectedIndex)
                 {
                     float innerMargin = 8;
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+                    // RectangleF(float x, float y, float width, float height) constructor creates a rectangle
+                    // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                     var innerRect = new RectangleF(
                         button.Rect.X + innerMargin,
                         button.Rect.Y + innerMargin,
@@ -299,6 +336,7 @@ namespace Odyssey.Stride.GUI
                     // Draw inner border highlight for selected button
                     // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
                     // Draw(Texture, RectangleF, Color) - Draws inner highlight with semi-transparent white
+                    // Method signature: Draw(Texture texture, RectangleF destinationRectangle, Color color)
                     // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
                     // Color(byte r, byte g, byte b, byte a) constructor creates a color from RGBA byte values (0-255)
                     // Color(255, 255, 255, 128) creates a 50% opacity white overlay
@@ -327,26 +365,120 @@ namespace Odyssey.Stride.GUI
             if (!_isVisible)
                 return;
 
-            // Handle keyboard navigation
+            // Get delta time for debouncing
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameTime.html
+            // GameTime.Elapsed property gets the elapsed time since the last frame
+            // TotalSeconds property gets the elapsed time in seconds as a double
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
+            float deltaTime = gameTime != null ? (float)gameTime.Elapsed.TotalSeconds : 0.016f; // Default to ~60fps if no gameTime
+            _keyRepeatTimer += deltaTime;
+
+            // Handle keyboard navigation with debouncing
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
-            // IsKeyPressed(Keys) checks if a key is currently pressed (returns true while key is held)
-            // Method signature: bool IsKeyPressed(Keys key)
+            // IsKeyPressed(Keys) checks if a key was just pressed this frame (returns true once per press)
+            // IsKeyDown(Keys) checks if a key is currently held down (returns true while key is pressed)
+            // Method signatures: bool IsKeyPressed(Keys key), bool IsKeyDown(Keys key)
             // Keys enum defines keyboard key codes (Up, Down, Enter, Space, etc.)
             // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
-            if (input.IsKeyPressed(Keys.Up))
+            bool upPressed = input.IsKeyPressed(Keys.Up);
+            bool upDown = input.IsKeyDown(Keys.Up);
+            bool downPressed = input.IsKeyPressed(Keys.Down);
+            bool downDown = input.IsKeyDown(Keys.Down);
+            bool enterPressed = input.IsKeyPressed(Keys.Enter);
+            bool enterDown = input.IsKeyDown(Keys.Enter);
+            bool spacePressed = input.IsKeyPressed(Keys.Space);
+            bool spaceDown = input.IsKeyDown(Keys.Space);
+
+            // Handle Up key - move selection up
+            if (upPressed || (upDown && _upKeyWasDown && _keyRepeatTimer >= KeyRepeatDelay))
             {
-                _selectedIndex = (_selectedIndex - 1 + _menuButtons.Length) % _menuButtons.Length;
-                Console.WriteLine($"[FallbackMenuRenderer] Selected: {_menuButtons[_selectedIndex].Label}");
+                if (upPressed || _keyRepeatTimer >= KeyRepeatDelay)
+                {
+                    _selectedIndex = (_selectedIndex - 1 + _menuButtons.Length) % _menuButtons.Length;
+                    Console.WriteLine($"[FallbackMenuRenderer] Selected: {_menuButtons[_selectedIndex].Label}");
+                    _keyRepeatTimer = 0f; // Reset timer on selection change
+                }
+                _upKeyWasDown = true;
             }
-            else if (input.IsKeyPressed(Keys.Down))
+            else
             {
-                _selectedIndex = (_selectedIndex + 1) % _menuButtons.Length;
-                Console.WriteLine($"[FallbackMenuRenderer] Selected: {_menuButtons[_selectedIndex].Label}");
+                _upKeyWasDown = false;
             }
-            else if (input.IsKeyPressed(Keys.Enter) || input.IsKeyPressed(Keys.Space))
+
+            // Handle Down key - move selection down
+            if (downPressed || (downDown && _downKeyWasDown && _keyRepeatTimer >= KeyRepeatDelay))
+            {
+                if (downPressed || _keyRepeatTimer >= KeyRepeatDelay)
+                {
+                    _selectedIndex = (_selectedIndex + 1) % _menuButtons.Length;
+                    Console.WriteLine($"[FallbackMenuRenderer] Selected: {_menuButtons[_selectedIndex].Label}");
+                    _keyRepeatTimer = 0f; // Reset timer on selection change
+                }
+                _downKeyWasDown = true;
+            }
+            else
+            {
+                _downKeyWasDown = false;
+            }
+
+            // Handle Enter/Space - select menu item
+            if ((enterPressed && !_enterKeyWasDown) || (spacePressed && !_spaceKeyWasDown))
             {
                 Console.WriteLine($"[FallbackMenuRenderer] Menu item selected: {_menuButtons[_selectedIndex].Label}");
                 MenuItemSelected?.Invoke(this, _selectedIndex);
+            }
+            _enterKeyWasDown = enterDown;
+            _spaceKeyWasDown = spaceDown;
+
+            // Handle mouse input - click detection
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsMouseButtonPressed(MouseButton) checks if a mouse button was just pressed this frame
+            // MousePosition property gets the current mouse position in screen coordinates (X, Y)
+            // Method signatures: bool IsMouseButtonPressed(MouseButton button), Vector2 MousePosition { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
+            bool mousePressed = input.IsMouseButtonPressed(MouseButton.Left);
+            bool mouseDown = input.IsMouseButtonDown(MouseButton.Left);
+
+            if (mousePressed && !_mouseButtonWasDown)
+            {
+                // Get mouse position in screen coordinates
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+                // GraphicsDevice.Presenter.BackBuffer provides access to back buffer dimensions
+                // BackBuffer.Description.Width/Height gets the width and height in pixels
+                var backBuffer = GraphicsDevice.Presenter.BackBuffer;
+                float screenWidth = backBuffer.Description.Width;
+                float screenHeight = backBuffer.Description.Height;
+
+                // Calculate layout to get current button positions
+                CalculateLayout(screenWidth, screenHeight);
+
+                // Check if mouse click is within any button
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+                // Vector2.X and Vector2.Y properties get the X and Y components
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
+                Vector2 mousePos = input.MousePosition;
+                for (int i = 0; i < _menuButtons.Length; i++)
+                {
+                    var button = _menuButtons[i];
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+                    // RectangleF.Contains(Vector2) checks if a point is within the rectangle
+                    // Method signature: bool Contains(Vector2 point)
+                    // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
+                    if (button.Rect.Contains(mousePos))
+                    {
+                        _selectedIndex = i;
+                        Console.WriteLine($"[FallbackMenuRenderer] Mouse clicked on: {_menuButtons[_selectedIndex].Label}");
+                        MenuItemSelected?.Invoke(this, _selectedIndex);
+                        break;
+                    }
+                }
+            }
+            _mouseButtonWasDown = mouseDown;
+
+            // Reset timer if no keys are being held
+            if (!upDown && !downDown)
+            {
+                _keyRepeatTimer = 0f;
             }
         }
 
