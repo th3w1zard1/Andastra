@@ -10,13 +10,19 @@ namespace Odyssey.Content.MDL
     /// Ultra-high-performance MDL/MDX reader using unsafe code and zero-copy operations.
     /// 
     /// Performance optimizations (based on reone, KotOR.js, MDLOps analysis):
-    /// 1. Unsafe pointer access for direct memory reading (no bounds checking overhead)
-    /// 2. MemoryMarshal.Cast for zero-copy struct array reading
-    /// 3. Pre-computed MDX vertex offsets to eliminate per-vertex calculations
-    /// 4. Single-pass vertex data extraction with bulk operations
-    /// 5. Stack-allocated buffers for small strings (no heap allocations)
-    /// 6. Struct-based header reading with fixed layouts
-    /// 7. Bulk array operations using Buffer.BlockCopy where applicable
+    /// 1. Unsafe pointer access for direct memory reading (with comprehensive bounds checking for security)
+    /// 2. Pre-computed MDX vertex offsets to eliminate per-vertex calculations
+    /// 3. Single-pass vertex data extraction with bulk operations
+    /// 4. Efficient string reading with bounds validation
+    /// 5. Struct-based header reading with fixed layouts
+    /// 6. Bulk array operations with overflow protection
+    /// 
+    /// Security and robustness:
+    /// - Comprehensive bounds checking on all memory accesses
+    /// - Integer overflow protection using long arithmetic
+    /// - Offset validation for all array and node accesses
+    /// - Minimum file size and header size validation
+    /// - Graceful handling of corrupted or truncated files
     /// 
     /// Reference implementations:
     /// - reone/src/libs/graphics/format/mdlmdxreader.cpp - C++ implementation with pointer arithmetic
