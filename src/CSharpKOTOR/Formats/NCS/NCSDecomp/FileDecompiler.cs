@@ -1642,7 +1642,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1193-1847
         // Original: private FileDecompiler.FileScriptData decompileNcs(File file)
+        // UPDATED: Now uses DecompileNcsObjectFromFile which uses NcsToAstConverter for more reliable AST conversion
+        // This matches the newer approach and avoids decoder/parser failures
         private Utils.FileScriptData DecompileNcs(NcsFile file)
+        {
+            // Use the new NcsToAstConverter path instead of old decoder/parser path
+            // This is more reliable and handles edge cases better
+            try
+            {
+                return this.DecompileNcsObjectFromFile(file);
+            }
+            catch (Exception e)
+            {
+                JavaSystem.@out.Println("DecompileNcsObjectFromFile failed, falling back to old decoder/parser path: " + e.Message);
+                // Fall back to old path if new path fails
+                return this.DecompileNcsOldPath(file);
+            }
+        }
+
+        // Old decoder/parser path - kept as fallback
+        private Utils.FileScriptData DecompileNcsOldPath(NcsFile file)
         {
             Utils.FileScriptData data = null;
             string commands = null;
