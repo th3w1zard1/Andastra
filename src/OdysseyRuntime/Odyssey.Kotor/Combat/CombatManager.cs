@@ -536,9 +536,18 @@ namespace Odyssey.Kotor.Combat
             IStatsComponent killerStats = killer.GetComponent<IStatsComponent>();
             if (killerStats != null)
             {
-                // Award XP (this would typically update the creature's XP and check for level up)
+                // Award XP and check for level up
+                int oldLevel = killerStats.Level;
+                killerStats.Experience += xpAwarded;
+                
                 Console.WriteLine("[CombatManager] Awarding " + xpAwarded + " XP to " + killer.Tag + " for killing " + victim.Tag + " (CR " + cr + ")");
-                // TODO: Integrate with leveling system to actually add XP and check for level up
+                
+                // Check for level up
+                if (killerStats.CanLevelUp())
+                {
+                    Console.WriteLine("[CombatManager] " + killer.Tag + " can level up! (Level " + oldLevel + " -> " + (oldLevel + 1) + ")");
+                    // TODO: Fire OnLevelUp script event or show level up UI
+                }
             }
         }
 

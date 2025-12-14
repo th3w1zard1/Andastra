@@ -580,6 +580,13 @@ namespace Odyssey.Kotor.Game
                 count++;
             }
 
+            // Spawn stores
+            foreach (GITStore store in git.Stores)
+            {
+                SpawnStore(store, area);
+                count++;
+            }
+
             Console.WriteLine("[ModuleLoader] Spawned " + count + " entities");
         }
 
@@ -676,6 +683,75 @@ namespace Odyssey.Kotor.Game
             }
 
             area.AddEntity(entity);
+        }
+
+        private void SpawnStore(GITStore store, RuntimeArea area)
+        {
+            IEntity entity = _world.CreateEntity(OdyObjectType.Store, ToSysVector3(store.Position), store.Bearing);
+
+            // Load store template (UTM)
+            if (!string.IsNullOrEmpty(store.ResRef?.ToString()))
+            {
+                LoadStoreTemplate(entity, store.ResRef.ToString());
+            }
+
+            // Set store tag
+            if (!string.IsNullOrEmpty(store.Tag))
+            {
+                entity.Tag = store.Tag;
+            }
+
+            area.AddEntity(entity);
+        }
+
+        /// <summary>
+        /// Loads UTM store template and applies properties to entity.
+        /// </summary>
+        private void LoadStoreTemplate(IEntity entity, string utmResRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(utmResRef, ResourceType.UTM, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    var gff = GFF.FromBytes(result.Data);
+                    UTM utm = UTMHelpers.ConstructUtm(gff);
+
+                    // Apply UTM properties to store component
+                    StoreComponent storeComponent = entity.GetComponent<StoreComponent>();
+                    if (storeComponent != null)
+                    {
+                        storeComponent.TemplateResRef = utmResRef;
+                        storeComponent.MarkUp = utm.MarkUp;
+                        storeComponent.MarkDown = utm.MarkDown;
+                        storeComponent.CanBuy = utm.CanBuy;
+                        storeComponent.OnOpenStore = utm.OnOpenScript.ToString();
+                        
+                        // Load items for sale
+                        storeComponent.ItemsForSale = new List<StoreItem>();
+                        foreach (UTMItem utmItem in utm.Items)
+                        {
+                            var storeItem = new StoreItem
+                            {
+                                ResRef = utmItem.ResRef.ToString(),
+                                StackSize = 1, // UTM doesn't store stack size, default to 1
+                                Infinite = utmItem.Infinite != 0
+                            };
+                            storeComponent.ItemsForSale.Add(storeItem);
+                        }
+                    }
+
+                    // Set entity tag
+                    if (!string.IsNullOrEmpty(utm.Tag))
+                    {
+                        entity.Tag = utm.Tag;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTM template " + utmResRef + ": " + ex.Message);
+            }
         }
 
         /// <summary>
