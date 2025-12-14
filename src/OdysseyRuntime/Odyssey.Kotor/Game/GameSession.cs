@@ -37,6 +37,7 @@ namespace Odyssey.Kotor.Game
     {
         public DialogueManager DialogueManager { get; set; }
         public IEntity PlayerEntity { get; set; }
+        public CombatManager CombatManager { get; set; }
     }
 
     /// <summary>
@@ -360,7 +361,8 @@ namespace Odyssey.Kotor.Game
                 var gameServices = new GameServicesContext
                 {
                     DialogueManager = _dialogueManager,
-                    PlayerEntity = _playerEntity
+                    PlayerEntity = _playerEntity,
+                    CombatManager = _combatManager
                 };
                 ctx.AdditionalContext = gameServices;
 
