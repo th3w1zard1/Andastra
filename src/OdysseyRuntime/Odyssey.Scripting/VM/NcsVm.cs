@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Scripting.Interfaces;
@@ -16,7 +17,7 @@ namespace Odyssey.Scripting.VM
     {
         private const int DefaultMaxInstructions = 100000;
         private const uint ObjectInvalid = 0x7F000000;
-        
+
         // VM State
         private byte[] _code;
         private int _pc; // Program counter
@@ -27,57 +28,57 @@ namespace Odyssey.Scripting.VM
         private bool _running;
         private bool _aborted;
         private IExecutionContext _context;
-        
+
         // String storage (strings are stored off-stack with handles)
         private Dictionary<int, string> _stringPool;
         private int _nextStringHandle;
-        
+
         // Stack size
         private const int StackSize = 65536;
-        
+
         public NcsVm()
         {
             _stack = new byte[StackSize];
             _stringPool = new Dictionary<int, string>();
             MaxInstructions = DefaultMaxInstructions;
         }
-        
+
         public bool IsRunning { get { return _running; } }
         public int InstructionsExecuted { get { return _instructionCount; } }
         public int MaxInstructions { get; set; }
         public bool EnableTracing { get; set; }
-        
+
         public int Execute(byte[] ncsBytes, IExecutionContext ctx)
         {
             if (ncsBytes == null || ncsBytes.Length < 13)
             {
                 throw new ArgumentException("Invalid NCS data");
             }
-            
+
             // Validate header
             if (ncsBytes[0] != 'N' || ncsBytes[1] != 'C' || ncsBytes[2] != 'S' || ncsBytes[3] != ' ')
             {
                 throw new InvalidDataException("Invalid NCS signature");
             }
-            
+
             if (ncsBytes[4] != 'V' || ncsBytes[5] != '1' || ncsBytes[6] != '.' || ncsBytes[7] != '0')
             {
                 throw new InvalidDataException("Invalid NCS version");
             }
-            
+
             // Byte at offset 8 must be 0x42 (program size marker)
             if (ncsBytes[8] != 0x42)
             {
                 throw new InvalidDataException("Invalid NCS program marker");
             }
-            
+
             // File size is big-endian uint32 at offset 9
             int fileSize = (ncsBytes[9] << 24) | (ncsBytes[10] << 16) | (ncsBytes[11] << 8) | ncsBytes[12];
             if (fileSize != ncsBytes.Length)
             {
                 // Warning but continue - some NCS files have incorrect size
             }
-            
+
             _code = ncsBytes;
             _pc = 13; // Instructions start at offset 0x0D
             _sp = 0;
@@ -86,15 +87,15 @@ namespace Odyssey.Scripting.VM
             _running = true;
             _aborted = false;
             _context = ctx;
-            
+
             // Clear string pool for new execution
             _stringPool.Clear();
             _nextStringHandle = 1; // Start at 1, 0 reserved for null/empty
-            
+
             Array.Clear(_stack, 0, _stack.Length);
-            
+
             int result = 0;
-            
+
             try
             {
                 while (_running && !_aborted && _pc < _code.Length && _instructionCount < MaxInstructions)
@@ -102,7 +103,7 @@ namespace Odyssey.Scripting.VM
                     ExecuteInstruction();
                     _instructionCount++;
                 }
-                
+
                 // Get return value if any
                 if (_sp >= 4)
                 {
@@ -121,10 +122,10 @@ namespace Odyssey.Scripting.VM
             {
                 _running = false;
             }
-            
+
             return result;
         }
-        
+
         public int ExecuteScript(string resRef, IExecutionContext ctx)
         {
             // Load the NCS from the resource provider
@@ -133,9 +134,9 @@ namespace Odyssey.Scripting.VM
             {
                 throw new InvalidOperationException("No resource provider in context");
             }
-            
+
             byte[] ncsBytes = null;
-            
+
             // Try IGameResourceProvider first (Odyssey system)
             if (provider is IGameResourceProvider gameProvider)
             {
@@ -152,7 +153,7 @@ namespace Odyssey.Scripting.VM
                 }
             }
             // Fallback to CSharpKOTOR Installation provider
-            else if (provider is CSharpKOTOR.Common.Installation installation)
+            else if (provider is Installation installation)
             {
                 var result = installation.Resource(resRef, ResourceType.NCS, null, null);
                 if (result != null && result.Data != null)
@@ -160,31 +161,31 @@ namespace Odyssey.Scripting.VM
                     ncsBytes = result.Data;
                 }
             }
-            
+
             if (ncsBytes == null || ncsBytes.Length == 0)
             {
                 throw new FileNotFoundException("Script not found: " + resRef);
             }
-            
+
             return Execute(ncsBytes, ctx);
         }
-        
+
         public void Abort()
         {
             _aborted = true;
         }
-        
+
         private void ExecuteInstruction()
         {
             byte opcode = _code[_pc];
             byte qualifier = _code[_pc + 1];
             _pc += 2;
-            
+
             if (EnableTracing)
             {
                 Console.WriteLine("PC={0:X4} OP={1:X2} Q={2:X2}", _pc - 2, opcode, qualifier);
             }
-            
+
             switch (opcode)
             {
                 case 0x01: CPDOWNSP(); break;
@@ -269,9 +270,9 @@ namespace Odyssey.Scripting.VM
                     throw new InvalidOperationException("Unknown opcode: 0x" + opcode.ToString("X2"));
             }
         }
-        
+
         #region Stack Operations
-        
+
         private void PushInt(int value)
         {
             _stack[_sp++] = (byte)(value >> 24);
@@ -279,19 +280,19 @@ namespace Odyssey.Scripting.VM
             _stack[_sp++] = (byte)(value >> 8);
             _stack[_sp++] = (byte)value;
         }
-        
+
         private int PopInt()
         {
             _sp -= 4;
             return (_stack[_sp] << 24) | (_stack[_sp + 1] << 16) | (_stack[_sp + 2] << 8) | _stack[_sp + 3];
         }
-        
+
         private int PeekInt(int offset)
         {
             int idx = _sp + offset;
             return (_stack[idx] << 24) | (_stack[idx + 1] << 16) | (_stack[idx + 2] << 8) | _stack[idx + 3];
         }
-        
+
         private void PushFloat(float value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -302,7 +303,7 @@ namespace Odyssey.Scripting.VM
             Array.Copy(bytes, 0, _stack, _sp, 4);
             _sp += 4;
         }
-        
+
         private float PopFloat()
         {
             _sp -= 4;
@@ -314,7 +315,7 @@ namespace Odyssey.Scripting.VM
             }
             return BitConverter.ToSingle(bytes, 0);
         }
-        
+
         private void PushString(string value)
         {
             // Strings are stored in a separate pool and referenced by handle on the stack
@@ -329,7 +330,7 @@ namespace Odyssey.Scripting.VM
                 PushInt(handle);
             }
         }
-        
+
         private string PopString()
         {
             int handle = PopInt();
@@ -343,7 +344,7 @@ namespace Odyssey.Scripting.VM
             }
             return string.Empty;
         }
-        
+
         private string PeekString(int offset)
         {
             int handle = PeekInt(offset);
@@ -357,21 +358,21 @@ namespace Odyssey.Scripting.VM
             }
             return string.Empty;
         }
-        
+
         private short ReadInt16()
         {
             short value = (short)((_code[_pc] << 8) | _code[_pc + 1]);
             _pc += 2;
             return value;
         }
-        
+
         private int ReadInt32()
         {
             int value = (_code[_pc] << 24) | (_code[_pc + 1] << 16) | (_code[_pc + 2] << 8) | _code[_pc + 3];
             _pc += 4;
             return value;
         }
-        
+
         private float ReadFloat()
         {
             byte[] bytes = new byte[4];
@@ -383,11 +384,11 @@ namespace Odyssey.Scripting.VM
             _pc += 4;
             return BitConverter.ToSingle(bytes, 0);
         }
-        
+
         #endregion
-        
+
         #region Instruction Implementations
-        
+
         private void CPDOWNSP()
         {
             short offset = ReadInt16();
@@ -399,12 +400,12 @@ namespace Odyssey.Scripting.VM
             }
             _sp += size;
         }
-        
+
         private void RSADDI() { PushInt(0); }
         private void RSADDF() { PushFloat(0f); }
         private void RSADDS() { PushString(string.Empty); }
         private void RSADDO() { PushInt(unchecked((int)ObjectInvalid)); }
-        
+
         private void CPTOPSP()
         {
             short offset = ReadInt16();
@@ -416,10 +417,10 @@ namespace Odyssey.Scripting.VM
             }
             _sp += size;
         }
-        
+
         private void CONSTI() { PushInt(ReadInt32()); }
         private void CONSTF() { PushFloat(ReadFloat()); }
-        
+
         private void CONSTS()
         {
             short length = ReadInt16();
@@ -427,19 +428,19 @@ namespace Odyssey.Scripting.VM
             _pc += length;
             PushString(value);
         }
-        
+
         private void CONSTO()
         {
             int objectId = ReadInt32();
             PushInt(objectId);
         }
-        
+
         private void ACTION()
         {
             ushort routineId = (ushort)((_code[_pc] << 8) | _code[_pc + 1]);
             _pc += 2;
             byte argCount = _code[_pc++];
-            
+
             // Pop arguments from stack
             var args = new List<Variable>();
             for (int i = 0; i < argCount; i++)
@@ -448,10 +449,10 @@ namespace Odyssey.Scripting.VM
                 args.Add(Variable.FromInt(PopInt()));
             }
             args.Reverse(); // Arguments are in reverse order on stack
-            
+
             // Call engine function
             Variable result = _context.EngineApi.CallEngineFunction(routineId, args, _context);
-            
+
             // Push result if not void
             if (result.Type != VariableType.Void)
             {
@@ -477,26 +478,26 @@ namespace Odyssey.Scripting.VM
                 }
             }
         }
-        
+
         // Logical operations
         private void LOGANDII() { int b = PopInt(); int a = PopInt(); PushInt((a != 0 && b != 0) ? 1 : 0); }
         private void LOGORII() { int b = PopInt(); int a = PopInt(); PushInt((a != 0 || b != 0) ? 1 : 0); }
         private void INCORII() { int b = PopInt(); int a = PopInt(); PushInt(a | b); }
         private void EXCORII() { int b = PopInt(); int a = PopInt(); PushInt(a ^ b); }
         private void BOOLANDII() { int b = PopInt(); int a = PopInt(); PushInt(a & b); }
-        
+
         // Equality
         private void EQUALII() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
         private void EQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) < 0.0001f ? 1 : 0); }
         private void EQUALSS() { string b = PopString(); string a = PopString(); PushInt(a == b ? 1 : 0); }
         private void EQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
-        
+
         // Inequality
         private void NEQUALII() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
         private void NEQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) >= 0.0001f ? 1 : 0); }
         private void NEQUALSS() { string b = PopString(); string a = PopString(); PushInt(a != b ? 1 : 0); }
         private void NEQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
-        
+
         // Comparisons
         private void GEQII() { int b = PopInt(); int a = PopInt(); PushInt(a >= b ? 1 : 0); }
         private void GEQFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a >= b ? 1 : 0); }
@@ -506,12 +507,12 @@ namespace Odyssey.Scripting.VM
         private void LTFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a < b ? 1 : 0); }
         private void LEQII() { int b = PopInt(); int a = PopInt(); PushInt(a <= b ? 1 : 0); }
         private void LEQFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a <= b ? 1 : 0); }
-        
+
         // Bit shifts
         private void SHLEFTII() { int b = PopInt(); int a = PopInt(); PushInt(a << b); }
         private void SHRIGHTII() { int b = PopInt(); int a = PopInt(); PushInt(a >> b); }
         private void USHRIGHTII() { int b = PopInt(); int a = PopInt(); PushInt((int)((uint)a >> b)); }
-        
+
         // Arithmetic
         private void ADDII() { int b = PopInt(); int a = PopInt(); PushInt(a + b); }
         private void ADDIF() { float b = PopFloat(); int a = PopInt(); PushFloat(a + b); }
@@ -524,7 +525,7 @@ namespace Odyssey.Scripting.VM
             float az = PopFloat(); float ay = PopFloat(); float ax = PopFloat();
             PushFloat(ax + bx); PushFloat(ay + by); PushFloat(az + bz);
         }
-        
+
         private void SUBII() { int b = PopInt(); int a = PopInt(); PushInt(a - b); }
         private void SUBIF() { float b = PopFloat(); int a = PopInt(); PushFloat(a - b); }
         private void SUBFI() { int b = PopInt(); float a = PopFloat(); PushFloat(a - b); }
@@ -535,7 +536,7 @@ namespace Odyssey.Scripting.VM
             float az = PopFloat(); float ay = PopFloat(); float ax = PopFloat();
             PushFloat(ax - bx); PushFloat(ay - by); PushFloat(az - bz);
         }
-        
+
         private void MULII() { int b = PopInt(); int a = PopInt(); PushInt(a * b); }
         private void MULIF() { float b = PopFloat(); int a = PopInt(); PushFloat(a * b); }
         private void MULFI() { int b = PopInt(); float a = PopFloat(); PushFloat(a * b); }
@@ -552,7 +553,7 @@ namespace Odyssey.Scripting.VM
             float s = PopFloat();
             PushFloat(x * s); PushFloat(y * s); PushFloat(z * s);
         }
-        
+
         private void DIVII() { int b = PopInt(); int a = PopInt(); PushInt(b != 0 ? a / b : 0); }
         private void DIVIF() { float b = PopFloat(); int a = PopInt(); PushFloat(b != 0 ? a / b : 0); }
         private void DIVFI() { int b = PopInt(); float a = PopFloat(); PushFloat(b != 0 ? a / b : 0); }
@@ -570,24 +571,24 @@ namespace Odyssey.Scripting.VM
                 PushFloat(0); PushFloat(0); PushFloat(0);
             }
         }
-        
+
         private void MODII() { int b = PopInt(); int a = PopInt(); PushInt(b != 0 ? a % b : 0); }
-        
+
         private void NEGI() { PushInt(-PopInt()); }
         private void NEGF() { PushFloat(-PopFloat()); }
-        
+
         private void MOVSP()
         {
             int offset = ReadInt32();
             _sp += offset;
         }
-        
+
         private void JMP()
         {
             int offset = ReadInt32();
             _pc = (_pc - 6) + offset; // Offset from instruction start
         }
-        
+
         private void JSR()
         {
             int offset = ReadInt32();
@@ -596,7 +597,7 @@ namespace Odyssey.Scripting.VM
             _bp = _sp;
             _pc = (_pc - 6) + offset;
         }
-        
+
         private void JZ()
         {
             int offset = ReadInt32();
@@ -606,39 +607,39 @@ namespace Odyssey.Scripting.VM
                 _pc = (_pc - 6) + offset;
             }
         }
-        
+
         private void RETN()
         {
             _sp = _bp;
             _bp = PopInt();
             _pc = PopInt();
-            
+
             if (_pc == 0 || _pc >= _code.Length)
             {
                 _running = false;
             }
         }
-        
+
         private void DESTRUCT()
         {
             short sizeToRemove = ReadInt16();
             short offsetToKeep = ReadInt16();
             short sizeToKeep = ReadInt16();
-            
+
             // Copy the portion to keep
             byte[] kept = new byte[sizeToKeep];
             Array.Copy(_stack, _sp - sizeToRemove + offsetToKeep, kept, 0, sizeToKeep);
-            
+
             // Remove the full range
             _sp -= sizeToRemove;
-            
+
             // Push back the kept portion
             Array.Copy(kept, 0, _stack, _sp, sizeToKeep);
             _sp += sizeToKeep;
         }
-        
+
         private void NOTI() { PushInt(PopInt() == 0 ? 1 : 0); }
-        
+
         private void DECISP()
         {
             int offset = ReadInt32();
@@ -650,7 +651,7 @@ namespace Odyssey.Scripting.VM
             _stack[idx + 2] = (byte)(value >> 8);
             _stack[idx + 3] = (byte)value;
         }
-        
+
         private void INCISP()
         {
             int offset = ReadInt32();
@@ -662,7 +663,7 @@ namespace Odyssey.Scripting.VM
             _stack[idx + 2] = (byte)(value >> 8);
             _stack[idx + 3] = (byte)value;
         }
-        
+
         private void JNZ()
         {
             int offset = ReadInt32();
@@ -672,7 +673,7 @@ namespace Odyssey.Scripting.VM
                 _pc = (_pc - 6) + offset;
             }
         }
-        
+
         private void CPDOWNBP()
         {
             int offset = ReadInt32();
@@ -684,7 +685,7 @@ namespace Odyssey.Scripting.VM
             }
             _sp += size;
         }
-        
+
         private void CPTOPBP()
         {
             int offset = ReadInt32();
@@ -693,7 +694,7 @@ namespace Odyssey.Scripting.VM
             int dstOffset = _bp + offset;
             Array.Copy(_stack, _sp, _stack, dstOffset, size);
         }
-        
+
         private void DECIBP()
         {
             int offset = ReadInt32();
@@ -705,7 +706,7 @@ namespace Odyssey.Scripting.VM
             _stack[idx + 2] = (byte)(value >> 8);
             _stack[idx + 3] = (byte)value;
         }
-        
+
         private void INCIBP()
         {
             int offset = ReadInt32();
@@ -717,30 +718,30 @@ namespace Odyssey.Scripting.VM
             _stack[idx + 2] = (byte)(value >> 8);
             _stack[idx + 3] = (byte)value;
         }
-        
+
         private void SAVEBP()
         {
             PushInt(_bp);
             _bp = _sp;
         }
-        
+
         private void RESTOREBP()
         {
             _sp = _bp;
             _bp = PopInt();
         }
-        
+
         private void STORE_STATE()
         {
             int stackBytes = ReadInt32();
             int localsBytes = ReadInt32();
-            
+
             // Store state for deferred action execution
             // This is used by DelayCommand and action parameters
             // The stored state would be pushed to the action system
             // Full implementation would capture the relevant stack/locals
         }
-        
+
         #endregion
     }
 }
