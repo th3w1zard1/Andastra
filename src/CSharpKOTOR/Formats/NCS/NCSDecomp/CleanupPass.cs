@@ -145,7 +145,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
 
-                    if (this.IsDanglingExpression(node1))
+                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:133-137
+                    // Original: if (this.isDanglingExpression(node1)) { AExpressionStatement expstm = new AExpressionStatement((AExpression)node1); expstm.parent(rootnode); it.set(expstm); }
+                    // Handle AVarDecl with isFcnReturn=true and unused variable - convert to statement expression
+                    if (typeof(AVarDecl).IsInstanceOfType(node1))
+                    {
+                        AVarDecl decl = (AVarDecl)node1;
+                        if (decl.IsFcnReturn() && decl.GetExp() != null)
+                        {
+                            // Function return value is unused - extract expression and convert to statement
+                            AExpression expr = decl.RemoveExp();
+                            AExpressionStatement expstm = new AExpressionStatement(expr);
+                            expstm.Parent(rootnode);
+                            it.Set(expstm);
+                        }
+                    }
+                    else if (this.IsDanglingExpression(node1))
                     {
                         AExpressionStatement expstm = new AExpressionStatement((AExpression)node1);
                         expstm.Parent(rootnode);

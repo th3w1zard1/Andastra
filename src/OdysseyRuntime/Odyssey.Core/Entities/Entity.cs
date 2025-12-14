@@ -66,6 +66,11 @@ namespace Odyssey.Core.Entities
         /// Gets or sets the entity facing angle in radians.
         /// </summary>
         public float Facing { get; set; }
+        
+        /// <summary>
+        /// The resource reference of the template this entity was spawned from.
+        /// </summary>
+        public string TemplateResRef { get; set; }
 
         public T GetComponent<T>() where T : class, IComponent
         {

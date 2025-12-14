@@ -25,12 +25,12 @@ namespace Odyssey.Core.Interfaces.Components
         /// <summary>
         /// For transition triggers, the destination tag.
         /// </summary>
-        string LinkedToTag { get; set; }
+        string LinkedTo { get; set; }
 
         /// <summary>
-        /// For transition triggers, the destination waypoint.
+        /// For transition triggers, the destination module.
         /// </summary>
-        string LinkedToWaypoint { get; set; }
+        string LinkedToModule { get; set; }
 
         /// <summary>
         /// Whether this is a trap trigger.

@@ -56,6 +56,21 @@ namespace Odyssey.Core.Interfaces.Components
         bool KeyRequired { get; set; }
 
         /// <summary>
+        /// Animation state (0=closed, 1=open, 2=destroyed).
+        /// </summary>
+        int OpenState { get; set; }
+
+        /// <summary>
+        /// Linked destination tag for transitions.
+        /// </summary>
+        string LinkedTo { get; set; }
+
+        /// <summary>
+        /// Linked destination module for transitions.
+        /// </summary>
+        string LinkedToModule { get; set; }
+
+        /// <summary>
         /// Opens the door.
         /// </summary>
         void Open();
