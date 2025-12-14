@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Installation;
@@ -73,15 +75,15 @@ namespace CSharpKOTOR.Merge
                     {
                         var fileInfo = new FileInfo(location);
                         var fileResource = new FileResource(
-                            resname: modRes.Resname(),
-                            restype: modRes.Restype(),
+                            resname: modRes.GetResName(),
+                            restype: modRes.GetResType(),
                             size: (int)fileInfo.Length,
                             offset: 0,
                             filepath: location
                         );
                         resourceInfo.FileResources.Add(fileResource);
-                        string resourceHash = fileResource.GetSha1Hash();
-                        resourceInfo.ResourceHashes[fileResource.Filepath().Replace('\\', '/')] = resourceHash;
+                        string resourceHash = ComputeSha1Hash(location);
+                        resourceInfo.ResourceHashes[fileResource.FilePath.Replace('\\', '/')] = resourceHash;
                     }
 
                     // Check for unused resources
@@ -91,7 +93,8 @@ namespace CSharpKOTOR.Merge
                     }
 
                     // If the resource data is missing, mark it as missing
-                    if (modRes.Data() == null)
+                    // Note: Data() is only available on ModuleResource<T>, need to check type
+                    if (modRes is ModuleResource<object> typedRes && typedRes.Data() == null)
                     {
                         resourceInfo.IsMissing = true;
                         resourceInfo.ImpactOfMissing = "Critical resource missing, could impact module functionality.";
@@ -134,32 +137,39 @@ namespace CSharpKOTOR.Merge
             var dependencies = new HashSet<ResourceIdentifier>();
 
             // Search for linked resources like GIT, LYT, VIS
-            if (modRes.Restype() == ResourceType.GIT || modRes.Restype() == ResourceType.LYT || modRes.Restype() == ResourceType.VIS)
+            ResourceType restype = modRes.GetResType();
+            if (restype == ResourceType.GIT || restype == ResourceType.LYT || restype == ResourceType.VIS)
             {
                 var linkedResources = SearchLinkedResources(module, modRes);
                 dependencies.UnionWith(linkedResources);
             }
 
             // Extract dependencies from GFF files
-            if (modRes.Restype() == ResourceType.GFF || modRes.Restype() == ResourceType.ARE || 
-                modRes.Restype() == ResourceType.IFO || modRes.Restype() == ResourceType.DLG)
+            if (restype == ResourceType.GFF || restype == ResourceType.ARE || 
+                restype == ResourceType.IFO || restype == ResourceType.DLG)
             {
-                byte[] data = modRes.Data();
-                if (data != null)
+                if (modRes is ModuleResource<object> typedRes)
                 {
-                    var references = ExtractReferencesFromGff(data);
-                    dependencies.UnionWith(references);
+                    byte[] data = typedRes.Data();
+                    if (data != null)
+                    {
+                        var references = ExtractReferencesFromGff(data);
+                        dependencies.UnionWith(references);
+                    }
                 }
             }
 
             // Extract texture and model dependencies
-            if (modRes.Restype() == ResourceType.MDL || modRes.Restype() == ResourceType.MDX)
+            if (restype == ResourceType.MDL || restype == ResourceType.MDX)
             {
-                byte[] modelData = modRes.Data();
-                if (modelData != null)
+                if (modRes is ModuleResource<object> typedRes2)
                 {
-                    var modelRefs = ExtractReferencesFromModel(modelData);
-                    dependencies.UnionWith(modelRefs);
+                    byte[] modelData = typedRes2.Data();
+                    if (modelData != null)
+                    {
+                        var modelRefs = ExtractReferencesFromModel(modelData);
+                        dependencies.UnionWith(modelRefs);
+                    }
                 }
             }
 
@@ -203,7 +213,8 @@ namespace CSharpKOTOR.Merge
 
             try
             {
-                var gff = GFFAuto.ReadGff(data);
+                var reader = new GFFBinaryReader(data);
+                var gff = reader.Load();
                 if (gff == null)
                 {
                     return references;
@@ -222,27 +233,27 @@ namespace CSharpKOTOR.Merge
 
         private void TraverseGffFields(GFFStruct gffStruct, HashSet<ResourceIdentifier> references)
         {
-            foreach (var field in gffStruct.Fields())
+            foreach (var (label, fieldType, value) in gffStruct)
             {
-                if (field.Type == GFFFieldType.ResRef)
+                if (fieldType == GFFFieldType.ResRef)
                 {
-                    var resref = field.Value as ResRef;
+                    var resref = value as ResRef;
                     if (resref != null)
                     {
-                        references.Add(new ResourceIdentifier(resref.ToString(), ResourceType.UNKNOWN));
+                        references.Add(new ResourceIdentifier(resref.ToString(), ResourceType.INVALID));
                     }
                 }
-                else if (field.Type == GFFFieldType.Struct)
+                else if (fieldType == GFFFieldType.Struct)
                 {
-                    var nestedStruct = field.Value as GFFStruct;
+                    var nestedStruct = value as GFFStruct;
                     if (nestedStruct != null)
                     {
                         TraverseGffFields(nestedStruct, references);
                     }
                 }
-                else if (field.Type == GFFFieldType.List)
+                else if (fieldType == GFFFieldType.List)
                 {
-                    var list = field.Value as GFFList;
+                    var list = value as GFFList;
                     if (list != null)
                     {
                         foreach (var item in list)
@@ -262,8 +273,8 @@ namespace CSharpKOTOR.Merge
 
             try
             {
-                var textures = Model.IterateTextures(modelData);
-                var lightmaps = Model.IterateLightmaps(modelData);
+                var textures = ModelTools.IterateTextures(modelData);
+                var lightmaps = ModelTools.IterateLightmaps(modelData);
                 lookupTextureQueries.UnionWith(textures);
                 lookupTextureQueries.UnionWith(lightmaps);
             }
@@ -279,6 +290,23 @@ namespace CSharpKOTOR.Merge
             }
 
             return result;
+        }
+
+        private string ComputeSha1Hash(string filepath)
+        {
+            try
+            {
+                using (var sha1 = SHA1.Create())
+                using (var stream = File.OpenRead(filepath))
+                {
+                    byte[] hash = sha1.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/merge/module.py:184-206
@@ -318,7 +346,7 @@ namespace CSharpKOTOR.Merge
                         Console.WriteLine("  - Conflict: Appears in multiple modules");
                     }
                     Console.WriteLine($"  - File Resources: {info.FileResources.Count} instances found.");
-                    Console.WriteLine($"  - Resource Hashes: {string.Join(", ", info.ResourceHashes.Select(kvp => $"{kvp.Key}={kvp.Value}"))}");
+                    Console.WriteLine($"  - Resource Hashes: {string.Join(", ", info.ResourceHashes.Select(hashPair => $"{hashPair.Key}={hashPair.Value}"))}");
                 }
             }
 
@@ -338,7 +366,7 @@ namespace CSharpKOTOR.Merge
         // Original: def extract_all_resources(self, module_name: str, output_dir: str) -> None:
         public void ExtractAllResources(string moduleName, string outputDir)
         {
-            bool useDotMod = Misc.IsModFile(moduleName);
+            bool useDotMod = FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             var moduleDir = Path.Combine(outputDir, moduleName);
             Directory.CreateDirectory(moduleDir);
@@ -350,7 +378,12 @@ namespace CSharpKOTOR.Merge
                 var identifier = kvp.Key;
                 var modRes = kvp.Value;
 
-                byte[] resourceData = modRes.Data();
+                byte[] resourceData = null;
+                if (modRes is ModuleResource<object> typedRes)
+                {
+                    resourceData = typedRes.Data();
+                }
+
                 if (resourceData == null)
                 {
                     Console.WriteLine($"Missing resource: {identifier}");
@@ -363,7 +396,7 @@ namespace CSharpKOTOR.Merge
                     continue;
                 }
 
-                string resourceFilename = $"{identifier.Resname}.{identifier.Restype.Extension()}";
+                string resourceFilename = $"{identifier.ResName}.{identifier.ResType.Extension}";
                 string resourcePath = Path.Combine(moduleDir, resourceFilename);
 
                 try
@@ -383,19 +416,43 @@ namespace CSharpKOTOR.Merge
         public void BuildResourceToModulesMapping()
         {
             Console.WriteLine("Building resource to modules mapping...");
-            var moduleNames = _installation.ModuleNames();
-            foreach (var moduleName in moduleNames.Keys)
+            // Note: Installation.ModuleNames() may not exist, using alternative approach
+            // Get modules from installation path
+            string modulesPath = Installation.Installation.GetModulesPath(_installation.Path);
+            if (!Directory.Exists(modulesPath))
             {
-                bool useDotMod = Misc.IsModFile(moduleName);
-                var module = new Module(moduleName, _installation, useDotMod: useDotMod);
-                foreach (var identifier in module.Resources.Keys)
+                return;
+            }
+
+            foreach (var moduleFile in Directory.GetFiles(modulesPath, "*.mod").Concat(Directory.GetFiles(modulesPath, "*.rim")))
+            {
+                string moduleName = Path.GetFileNameWithoutExtension(moduleFile);
+                if (moduleName.EndsWith("_s"))
                 {
-                    if (!_resourceToModules.TryGetValue(identifier.Resname.ToLowerInvariant(), out HashSet<string> modules))
+                    moduleName = moduleName.Substring(0, moduleName.Length - 2);
+                }
+                else if (moduleName.EndsWith("_dlg"))
+                {
+                    moduleName = moduleName.Substring(0, moduleName.Length - 4);
+                }
+
+                bool useDotMod = FileHelpers.IsModFile(moduleFile);
+                try
+                {
+                    var module = new Module(moduleName, _installation, useDotMod: useDotMod);
+                    foreach (var identifier in module.Resources.Keys)
                     {
-                        modules = new HashSet<string>();
-                        _resourceToModules[identifier.Resname.ToLowerInvariant()] = modules;
+                        if (!_resourceToModules.TryGetValue(identifier.ResName.ToLowerInvariant(), out HashSet<string> modules))
+                        {
+                            modules = new HashSet<string>();
+                            _resourceToModules[identifier.ResName.ToLowerInvariant()] = modules;
+                        }
+                        modules.Add(moduleName);
                     }
-                    modules.Add(moduleName);
+                }
+                catch
+                {
+                    // Skip modules that fail to load
                 }
             }
         }
@@ -416,7 +473,7 @@ namespace CSharpKOTOR.Merge
                 var modules = kvp.Value;
                 if (modules.Count > 1)
                 {
-                    var identifier = new ResourceIdentifier(resname, ResourceType.UNKNOWN);
+                    var identifier = new ResourceIdentifier(resname, ResourceType.INVALID);
                     if (!_conflictingResources.TryGetValue(identifier, out HashSet<string> conflicts))
                     {
                         conflicts = new HashSet<string>();
@@ -432,7 +489,7 @@ namespace CSharpKOTOR.Merge
         // Original: def find_missing_resources(self, module_name: str) -> None:
         public void FindMissingResources(string moduleName)
         {
-            bool useDotMod = Misc.IsModFile(moduleName);
+            bool useDotMod = FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             Console.WriteLine($"Checking for missing resources in module '{moduleName}'...");
 
@@ -440,7 +497,12 @@ namespace CSharpKOTOR.Merge
             {
                 var identifier = kvp.Key;
                 var modRes = kvp.Value;
-                if (modRes.Data() == null)
+                byte[] data = null;
+                if (modRes is ModuleResource<object> typedRes)
+                {
+                    data = typedRes.Data();
+                }
+                if (data == null)
                 {
                     if (!_missingResources.TryGetValue(moduleName, out List<ResourceIdentifier> missing))
                     {
@@ -457,7 +519,7 @@ namespace CSharpKOTOR.Merge
         // Original: def find_unused_resources(self, module_name: str) -> None:
         public void FindUnusedResources(string moduleName)
         {
-            bool useDotMod = Misc.IsModFile(moduleName);
+            bool useDotMod = FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             Console.WriteLine($"Checking for unused resources in module '{moduleName}'...");
 
@@ -514,20 +576,21 @@ namespace CSharpKOTOR.Merge
                     continue;
                 }
 
+                string resourceFileName = Path.GetFileName(resourceFile);
                 foreach (var moduleName in modules)
                 {
                     string moduleDir = Path.Combine(outputDir, moduleName);
                     Directory.CreateDirectory(moduleDir);
-                    string destination = Path.Combine(moduleDir, fileName);
+                    string destination = Path.Combine(moduleDir, resourceFileName);
 
                     try
                     {
                         File.Copy(resourceFile, destination, overwrite: true);
-                        Console.WriteLine($"Copied '{fileName}' to '{destination}'.");
+                        Console.WriteLine($"Copied '{resourceFileName}' to '{destination}'.");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to copy '{fileName}' to '{destination}': {ex.Message}");
+                        Console.WriteLine($"Failed to copy '{resourceFileName}' to '{destination}': {ex.Message}");
                     }
                 }
             }
