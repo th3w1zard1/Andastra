@@ -525,7 +525,9 @@ namespace HolocronToolset.NET.Tests.Editors
             {
                 // Matching PyKotor implementation: editor.ui.idSpin.setValue(val)
                 editor.IdSpin.Should().NotBeNull("IdSpin should be initialized");
-                editor.IdSpin.Value = val;
+                editor.IdSpin.Value = (decimal)val;
+                // Verify the value was set correctly
+                editor.IdSpin.Value.Should().Be((decimal)val, "IdSpin value should be set correctly");
 
                 // Matching PyKotor implementation: data, _ = editor.build()
                 var (data, _) = editor.Build();

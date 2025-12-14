@@ -1,9 +1,3 @@
----
-name: MonoGame Odyssey Engine
-overview: Comprehensive one-shot implementation plan for a clean-room Odyssey engine reimplementation
-todos: []
----
-
 # MonoGame-based Odyssey Engine (K1/K2) — Clean-Room One‑Shot Implementation Plan
 
 > **Purpose**: This document serves as a comprehensive, self-contained specification for an AI agent to implement a faithful KOTOR 1/2 engine reimplementation using MonoGame and C#. All implementation details are derived from behavioral observation, documented specifications, and in-game testing—never from existing codebases.
@@ -118,14 +112,14 @@ flowchart TD
     textureConv --> tpcDecode[TPC Decode<br/>DXT/Mipmap/Cube]
     textureConv --> tgaDecode[TGA Decode<br/>RGBA/Palette]
     textureConv --> txiMaterial[TXI Parser<br/>Material Flags]
-    tpcDecode & tgaDecode & txiMaterial --> strideTexture[Stride.Texture]
+    tpcDecode & tgaDecode & txiMaterial --> monoGameTexture[MonoGame.Texture2D]
     
     contentCache --> modelConv[Model Converter]
     modelConv --> mdlDecode[MDL Decode<br/>Nodes/Meshes]
     modelConv --> mdxDecode[MDX Decode<br/>Vertex Data]
     modelConv --> skinDecode[Skin/Skeleton<br/>Bone Hierarchy]
     modelConv --> animDecode[Animation Decode<br/>Keyframes]
-    mdlDecode & mdxDecode & skinDecode & animDecode --> strideModel[Stride.Model]
+    mdlDecode & mdxDecode & skinDecode & animDecode --> monoGameModel[MonoGame.Model]
     
     contentCache --> walkmeshConv[Walkmesh Converter]
     walkmeshConv --> bwmDecode[BWM Decode<br/>Triangles/Adjacency]
@@ -136,7 +130,7 @@ flowchart TD
     contentCache --> audioConv[Audio Converter]
     audioConv --> wavDecode[WAV Decode]
     audioConv --> mp3Decode[MP3 Decode<br/>Optional]
-    wavDecode & mp3Decode --> strideAudioClip[Stride.AudioClip]
+    wavDecode & mp3Decode --> monoGameSound[MonoGame.SoundEffect]
   end
   
   subgraph WorldConstruction["World Construction"]
@@ -173,8 +167,8 @@ flowchart TD
     sceneGraphMgr --> emitterNodes[Emitter Scene Nodes]
     sceneGraphMgr --> soundNodes[Sound Scene Nodes]
     
-    strideTexture --> materialFactory[Material Factory]
-    strideModel --> modelNodes
+    monoGameTexture --> materialFactory[Material Factory]
+    monoGameModel --> modelNodes
     navMesh --> walkmeshNodes
     
     materialFactory --> opaquePass[Opaque Pass]
@@ -292,7 +286,7 @@ The engine operates on a **fixed-timestep game loop** with the following per-fra
 2. **Script Phase**: process delay wheel, fire heartbeats, execute action queues (budget-limited)
 3. **Simulation Phase**: update entity positions, perception checks, combat rounds
 4. **Animation Phase**: advance skeletal animations, particle emitters, lip sync
-5. **Scene Sync Phase**: sync runtime transforms → Stride scene graph
+5. **Scene Sync Phase**: sync runtime transforms → MonoGame rendering structures
 6. **Render Phase**: cull by VIS groups, sort transparency, submit draw calls
 7. **Audio Phase**: update spatial audio positions, trigger one-shots
 
@@ -440,13 +434,15 @@ To keep a defensible clean-room posture:
   - For each subsystem, maintain a list of *sources consulted* (project + file path + high-level behavior summary) **without copying code**.
   - Track acceptance tests derived from the spec.
 
-## Stride choice justification (vs Ogre/three.js)
+## MonoGame choice justification (vs Ogre/three.js/Stride)
 
-- **Stride** is the best fit for a .NET-first, commercially-friendly, long-lived runtime:
+- **MonoGame** is the best fit for a .NET-first, commercially-friendly, long-lived runtime:
   - .NET ecosystem alignment (tooling, profiling, packaging, CI)
-  - Modern rendering pipeline, editor/runtime architecture, cross-platform
-  - Permissive licensing in practice
-- Ogre/three.js are useful reference points for behavior (materials, scene import), but we avoid introducing non-.NET core tech stacks.
+  - Modern rendering pipeline, cross-platform (Windows, Linux, macOS, consoles)
+  - Permissive MIT licensing
+  - Mature and stable API
+  - Large community and documentation
+- Ogre/three.js/Stride are useful reference points for behavior (materials, scene import), but we use MonoGame as our core rendering framework.
 
 ## Subsystem plans (what to build, in dependency order)
 
@@ -459,7 +455,7 @@ To keep a defensible clean-room posture:
   - Central package management (`Directory.Packages.props`) if the repo already uses it; otherwise keep per-project references consistent.
   - CI matrix for Windows first; later Linux/macOS.
 
-**Acceptance**: blank Stride window launches; can select install path; validates K1/K2 installation via `CSharpKOTOR.Installation.DetermineGame`.
+**Acceptance**: blank MonoGame window launches; can select install path; validates K1/K2 installation via `CSharpKOTOR.Installation.DetermineGame`.
 
 ### 1) Installation + resource virtualization (runtime-safe)
 
@@ -489,13 +485,13 @@ Resource order note (Odyssey/Aurora behavior target, per `vendor/PyKotor/wiki/Ho
 
 **Acceptance**: can enumerate modules, load `module.ifo`, `*.are`, `*.git`, `*.lyt`, `*.vis`, `*.pth`, `*.dlg` for a chosen module. Async reads complete without blocking the main thread. Resource existence checks are fast (< 1ms for cache hits).
 
-### 2) Asset pipeline (KOTOR → Stride runtime assets)
+### 2) Asset pipeline (KOTOR → MonoGame runtime assets)
 
 Create `Odyssey.Content` responsible for converting on demand:
 
-- **Textures**: `TPC/TGA → Stride.Texture` with correct:
+- **Textures**: `TPC/TGA → MonoGame.Texture2D` with correct:
   - alpha handling, normal maps (if any), mipmaps, sRGB/linear rules.
-- **Models**: `MDL/MDX → Stride.Model`:
+- **Models**: `MDL/MDX → MonoGame.Model`:
   - geometry, skinning, animations, attachment nodes.
 - **Walkmesh**: `BWM → navigation + collision mesh`.
 - **Caching**: content cache directory keyed by (game, module, resref, hash-of-source-bytes, converter-version).
@@ -512,11 +508,11 @@ Create `Odyssey.Content` responsible for converting on demand:
 - **Dependency tracking**: if a model references textures, cache the dependency graph to invalidate downstream assets when source changes.
 - **Memory management**: cache entries have size limits; evict least-recently-used entries when memory pressure is high.
 
-**Acceptance**: can render a static model + texture in Stride; cache hit rate measurable; no stutter for repeated loads. Background conversion doesn't block main thread. Cache invalidation works correctly on converter updates.
+**Acceptance**: can render a static model + texture in MonoGame; cache hit rate measurable; no stutter for repeated loads. Background conversion doesn't block main thread. Cache invalidation works correctly on converter updates.
 
 ### 3) Rendering: area scene assembly (first playable slice)
 
-Implement `Odyssey.Stride` scene assembly:
+Implement `Odyssey.MonoGame` scene assembly:
 
 - Read module layout (`LYT`) and visibility (`VIS`) to:
   - instantiate room meshes
@@ -524,7 +520,7 @@ Implement `Odyssey.Stride` scene assembly:
 
 **Scene graph architecture**:
 
-- **Room hierarchy**: each room becomes a Stride `Entity` with a `ModelComponent`; rooms are children of the area root entity.
+- **Room hierarchy**: each room becomes a MonoGame rendering entity with model rendering; rooms are organized in the scene hierarchy.
 - **Doorhook placement**: LYT doorhooks create placeholder entities at specified transforms; actual door models attach when GIT spawns doors.
 - **VIS culling groups**: maintain a `VisibilityGroup` component per room; `VIS` file defines which groups are visible from each room; update on room transitions.
 - **Material assignment**: room meshes reference materials with lightmaps; material instances are shared across rooms using the same texture set.
@@ -546,7 +542,7 @@ LYT specifics to implement (see `vendor/PyKotor/wiki/LYT-File-Format.md`):
   - BWM hooks (USE1/USE2) define **interaction points** for doors/placeables (see BWM spec below).
 - Material system:
   - reproduce Odyssey material behaviors: lightmaps, envmaps, additive/alpha blend, cutout, two-sided, etc.
-  - unify shading into a small set of Stride effects/shaders.
+  - unify shading into a small set of MonoGame effects/shaders.
 
 **Acceptance**: load a module and walk camera around; rooms show correct lightmaps and transparency ordering.
 
@@ -830,7 +826,7 @@ Build `Odyssey.Scripting` as a standalone, deterministic **stack-based VM** that
 - **Execution model**:
   - Cooperative (script runs until it yields via action scheduling, delay, or completion).
   - Bounded step budget per frame to prevent lockups (deterministic, configurable).
-- **Public API** (no Stride dependency):
+- **Public API** (no MonoGame dependency):
   - `INcsVm`: load/execute script by resref; introspection; tracing.
   - `IScriptScheduler`: per-object script queues (OnSpawn, OnHeartbeat, OnUse, etc.).
   - `IEngineApi`: engine-call surface (ACTION instruction dispatch).
@@ -1154,7 +1150,7 @@ public class LipSyncController
 
 ### 8) UI (in-game) + Input + UX baseline
 
-Use **Stride UI** for the in-game HUD and menus (avoid mixing UI frameworks inside the runtime).
+Use **MonoGame UI** (SpriteBatch/SpriteFont or Myra) for the in-game HUD and menus (avoid mixing UI frameworks inside the runtime).
 
 Minimum UI for the first playable slice:
 
@@ -1188,7 +1184,7 @@ Technical:
 - `Odyssey.Content.AudioDecoder` should support:
   - WAV at minimum (no external dependency needed),
   - optional MP3/OGG via a permissive library if required by assets (only if KOTOR actually uses it in target installations).
-- `Odyssey.Stride.AudioBridge` maps to Stride audio objects, with:
+- `Odyssey.MonoGame.AudioBridge` maps to MonoGame SoundEffect objects, with:
   - distance attenuation,
   - basic reverb zones (future).
 
@@ -2142,9 +2138,9 @@ Deliver a placeholder structure (no implementation):
 
 This is the recommended order to avoid rework:
 
-1. **Foundation**: solution/projects, config, Stride window + install selection.
+1. **Foundation**: solution/projects, config, MonoGame window + install selection.
 2. **Resource provider**: wrap `CSharpKOTOR.Installation` and `Module` into runtime-safe async APIs.
-3. **Content cache**: texture decode → Stride texture; minimal model import (single mesh).
+3. **Content cache**: texture decode → MonoGame texture; minimal model import (single mesh).
 4. **Area rendering**: LYT + VIS + room meshes + lightmaps.
 5. **Walkmesh**: collision + nav projection; camera + player controller.
 6. **Entity spawn**: parse GIT and instantiate placeholders with transforms.
@@ -2182,16 +2178,16 @@ The runtime is “playable KOTOR” when all are true:
 - **Behavior parity**:
   - Mitigation: vertical slice acceptance tests; instrumented builds; controlled determinism mode.
 
-### 22) Stride implementation decisions (make these explicit up front)
+### 22) MonoGame implementation decisions (make these explicit up front)
 
 To avoid death-by-architecture, decide these once and enforce consistently:
 
 - **Target frameworks**:
-  - Runtime: `net8.0` (Stride current baseline; adjust to Stride-supported target).
+  - Runtime: `net8.0` (MonoGame supports .NET 6/8).
   - Libraries (`Odyssey.Core`, `Odyssey.Scripting`): keep portable; no platform APIs.
 - **C# language version**: pin to **7.3** for all new projects to match repo conventions.
 - **Physics**:
-  - Use Stride’s physics integration for broad-phase/colliders where sensible.
+  - Use MonoGame-compatible physics libraries (e.g., Farseer Physics, Velcro Physics) for broad-phase/colliders where sensible.
   - Walkmesh remains the authority for navigation + ground projection (character controller should be walkmesh-driven, not “capsule-on-mesh” only).
 - **Renderer**:
   - Standardize on a small set of Effect/Material variants:
@@ -2203,7 +2199,7 @@ To avoid death-by-architecture, decide these once and enforce consistently:
   - Avoid per-material custom shader explosions; keep a strict compatibility matrix.
 - **Threading**:
   - Content conversion in background tasks with cancellation.
-  - Scene mutation on Stride main thread only.
+  - Scene mutation on MonoGame main thread only.
 - **Determinism mode**:
   - Fixed-step simulation time.
   - Deterministic RNG with seed control.
@@ -2244,11 +2240,11 @@ This is the “execution checklist” that teams can parallelize without steppin
   - storage path strategy,
   - pruning policy.
 - Texture import:
-  - TPC decode → pixel buffer → Stride texture creation
+  - TPC decode → pixel buffer → MonoGame Texture2D creation
   - TGA path support (fallback precedence)
   - sRGB rules and alpha rules (codified in tests).
 - Model import:
-  - MDL/MDX decode → mesh buffers → Stride mesh/model
+  - MDL/MDX decode → mesh buffers → MonoGame Model
   - skeletons/animations/attachments
   - material binding to textures/lightmaps/envmaps.
 - Walkmesh import:
@@ -2290,11 +2286,11 @@ This is the “execution checklist” that teams can parallelize without steppin
   - serialize core state
   - later: parity mappings to KOTOR save content.
 
-#### `Odyssey.Stride`
+#### `Odyssey.MonoGame`
 
 - Scene bridge:
-  - entity ↔ Stride Entity mapping (bidirectional registry)
-  - transform sync (runtime → Stride on update)
+  - entity ↔ MonoGame rendering structures mapping (bidirectional registry)
+  - transform sync (runtime → MonoGame on update)
   - attachment nodes (weapons, placeables, effects)
   - component synchronization (Renderable → ModelComponent, etc.)
 - Rendering:
@@ -2497,7 +2493,7 @@ public class GameLoop
     
     private void Render(float alpha)
     {
-        // 1. Sync runtime transforms to Stride scene graph (interpolated)
+        // 1. Sync runtime transforms to MonoGame rendering structures (interpolated)
         SceneBridge.SyncTransforms(alpha);
         
         // 2. Update camera
@@ -2509,8 +2505,8 @@ public class GameLoop
         // 4. Update audio positions
         AudioBridge.SyncPositions();
         
-        // 5. Submit to Stride for rendering
-        StrideGame.UpdateAndDraw();
+        // 5. Submit to MonoGame for rendering
+        MonoGameGame.UpdateAndDraw();
         
         // 6. Draw UI overlay
         UISystem.Draw();
@@ -2774,11 +2770,11 @@ Group engine functions by subsystem for incremental implementation:
 
 ### 32) Immediate next steps (first "week" checklist)
 
-- Lock Stride version and baseline platform targets.
+- Lock MonoGame version and baseline platform targets.
 - Create `OdysseyRuntime` projects and solution wiring.
 - Implement installation selection and `CSharpKOTOR.Installation` validation path.
-- Build content cache skeleton and decode a single TPC/TGA into a Stride texture.
-- Load one room model and render it in a Stride scene.
+- Build content cache skeleton and decode a single TPC/TGA into a MonoGame texture.
+- Load one room model and render it in a MonoGame scene.
 - Implement NCS VM skeleton with basic opcodes (arithmetic, comparisons, jumps).
 - Implement first 10 engine functions (PrintString, Random, GetTag, GetLocalInt, SetLocalInt).
 - Load a simple module (danm13 - Endar Spire) and spawn room meshes.

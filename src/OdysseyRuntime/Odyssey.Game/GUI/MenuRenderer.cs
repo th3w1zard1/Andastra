@@ -166,7 +166,7 @@ namespace Odyssey.Game.GUI
             {
                 return;
             }
-            
+
             // Log first update to verify Update is being called
             if (gameTime.TotalGameTime.TotalSeconds < 0.1)
             {
@@ -222,6 +222,15 @@ namespace Odyssey.Game.GUI
             // Check for mouse button press (transition from released to pressed)
             bool mouseJustPressed = currentMouseState.LeftButton == ButtonState.Pressed &&
                                     _previousMouseState.LeftButton == ButtonState.Released;
+            
+            // Also check if mouse button is currently pressed (for debugging)
+            bool mouseCurrentlyPressed = currentMouseState.LeftButton == ButtonState.Pressed;
+            if (mouseCurrentlyPressed && gameTime.TotalGameTime.TotalSeconds < 2.0)
+            {
+                // Log mouse position every frame for first 2 seconds to debug
+                Point mousePos = currentMouseState.Position;
+                Console.WriteLine($"[MenuRenderer] Mouse at: {mousePos.X}, {mousePos.Y} (Button: {mouseCurrentlyPressed})");
+            }
 
             if (mouseJustPressed)
             {

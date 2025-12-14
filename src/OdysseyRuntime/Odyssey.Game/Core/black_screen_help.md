@@ -7,7 +7,7 @@
 - For black screens on load, evidence leans toward issues like missing cameras, lights, or improper scene setup, often resolvable by verifying entity configurations or graphics profiles.
 
 **Recommended Playable Projects**
-Start with these as they implement full games or demos in the desired styles, using Stride's Vulkan backend by default for cross-platform compatibility (OpenGL for legacy support, no DirectX unless specified).
+Start with these as they implement full games or demos in the desired styles, using MonoGame for cross-platform compatibility.
 
 - **Distant Worlds 2**: A pausable real-time 4X space strategy game with top-down views, emphasizing exploration and management. It's commercially released and demonstrates large-scale world rendering. Available on Steam: <https://store.steampowered.com/app/1531540/Distant_Worlds_2>.
 - **Starbreach**: A first/third-person shooter that can be viewed in 3rd person over-the-head style, including multiplayer elements. It's an open-source demo showcasing combat and level design. GitHub repo: <https://github.com/xenko3d/Starbreach>.
@@ -103,4 +103,4 @@ This compilation draws from diverse sources to balance views, prioritizing offic
 - [Awesome resources for the fully open source Stride game engine.](https://github.com/Doprez/Awesome-Stride)
 - [stride3d/stride: Stride (formerly Xenko), a free and open ... - GitHub](https://github.com/stride3d/stride)
 - [PlayerController.cs - GitHub](https://github.com/stride3d/stride/blob/master/samples/Templates/ThirdPersonPlatformer/ThirdPersonPlatformer/ThirdPersonPlatformer.Game/Player/PlayerController.cs)
-- [Stride3D tutorials and examples in .NET 5 using C# 9.0 or ... - GitHub](https://github.com/VaclavElias/Stride3DTutorials)
+- [MonoGame tutorials and examples - GitHub](https://github.com/MonoGame/MonoGame.Samples)

@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Stride.Graphics;
-using Stride.Rendering;
-using Stride.Rendering.Materials;
-using Stride.Rendering.Materials.ComputeColors;
-using Stride.Core.Mathematics;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using CSharpKOTOR.Formats.TPC;
 using Odyssey.MonoGame.Converters;
 using JetBrains.Annotations;
@@ -12,29 +9,48 @@ using JetBrains.Annotations;
 namespace Odyssey.MonoGame.Materials
 {
     /// <summary>
-    /// Factory for creating Stride materials from KOTOR texture and material data.
+    /// Factory for creating MonoGame materials from KOTOR texture and material data.
     /// Supports opaque, alpha cutout, alpha blend, additive, and lightmapped materials.
     /// </summary>
+    /// <remarks>
+    /// In MonoGame, materials are represented using BasicEffect or custom Effect classes.
+    /// This factory creates texture references and material metadata that can be used
+    /// with MonoGame's rendering pipeline.
+    /// </remarks>
     public class KotorMaterialFactory
     {
         private readonly GraphicsDevice _device;
-        private readonly Dictionary<string, Material> _materialCache;
-        private readonly Dictionary<string, Texture> _textureCache;
+        private readonly Dictionary<string, MaterialData> _materialCache;
+        private readonly Dictionary<string, Texture2D> _textureCache;
+
+        /// <summary>
+        /// Material data structure for MonoGame rendering.
+        /// </summary>
+        public class MaterialData
+        {
+            public Texture2D DiffuseTexture { get; set; }
+            public Texture2D LightmapTexture { get; set; }
+            public MaterialType Type { get; set; }
+            public float AlphaThreshold { get; set; } = 0.5f;
+            public Color DiffuseColor { get; set; } = Color.White;
+            public BlendState BlendState { get; set; }
+            public bool IsTransparent { get; set; }
+        }
 
         /// <summary>
         /// Creates a new material factory.
         /// </summary>
         /// <param name="device">Graphics device.</param>
         // Initialize material factory with graphics device
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.GraphicsDevice.html
         // GraphicsDevice provides access to graphics hardware and resources
-        // Material and Texture are Stride rendering types
-        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
+        // Texture2D is MonoGame's texture type
+        // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
         public KotorMaterialFactory([NotNull] GraphicsDevice device)
         {
             _device = device ?? throw new ArgumentNullException("device");
-            _materialCache = new Dictionary<string, Material>(StringComparer.OrdinalIgnoreCase);
-            _textureCache = new Dictionary<string, Texture>(StringComparer.OrdinalIgnoreCase);
+            _materialCache = new Dictionary<string, MaterialData>(StringComparer.OrdinalIgnoreCase);
+            _textureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -43,8 +59,8 @@ namespace Odyssey.MonoGame.Materials
         /// <param name="diffuseTexName">Diffuse texture name.</param>
         /// <param name="lightmapTexName">Optional lightmap texture name.</param>
         /// <param name="loadTexture">Function to load TPC by name.</param>
-        /// <returns>A Stride Material.</returns>
-        public Material GetMaterial(
+        /// <returns>A MonoGame MaterialData.</returns>
+        public MaterialData GetMaterial(
             string diffuseTexName,
             string lightmapTexName,
             Func<string, TPC> loadTexture)
@@ -59,7 +75,7 @@ namespace Odyssey.MonoGame.Materials
             }
 
             // Create new material
-            Material material = CreateMaterial(diffuseTexName, lightmapTexName, loadTexture);
+            MaterialData material = CreateMaterial(diffuseTexName, lightmapTexName, loadTexture);
             _materialCache[key] = material;
 
             return material;
@@ -68,279 +84,115 @@ namespace Odyssey.MonoGame.Materials
         /// <summary>
         /// Creates an opaque material with diffuse texture.
         /// </summary>
-        public Material CreateOpaqueMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
+        public MaterialData CreateOpaqueMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
         {
-            // Create material descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDescriptor.html
-            // MaterialDescriptor() constructor creates a new material descriptor with default properties
-            // MaterialDescriptor defines material properties and features
-            // Method signature: MaterialDescriptor()
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            var desc = new MaterialDescriptor();
-
             // Load diffuse texture
-            Texture diffuseTex = LoadTexture(diffuseTexName, loadTexture);
+            Texture2D diffuseTex = LoadTexture(diffuseTexName, loadTexture);
 
-            if (diffuseTex != null)
+            var material = new MaterialData
             {
-                // Set diffuse map feature
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDiffuseMapFeature.html
-                // MaterialDiffuseMapFeature defines the diffuse color/texture of the material
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeTextureColor.html
-                // ComputeTextureColor samples color from a texture
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
-                desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
-                {
-                    DiffuseMap = new ComputeTextureColor(diffuseTex)
-                };
-            }
-            else
-            {
-                // Default white diffuse
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeColor.html
-                // ComputeColor(Color4) constructor creates a compute color from a Color4 value
-                // Method signature: ComputeColor(Color4 color)
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
-                // Color4.White is a static property representing white color (R=1, G=1, B=1, A=1)
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
-                desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
-                {
-                    DiffuseMap = new ComputeColor(Color4.White)
-                };
-            }
-
-            // Basic specular
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialGlossinessMapFeature.html
-            // MaterialGlossinessMapFeature() constructor creates a new glossiness map feature
-            // MaterialGlossinessMapFeature controls surface roughness/glossiness
-            // Method signature: MaterialGlossinessMapFeature()
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeFloat.html
-            // ComputeFloat(float) constructor creates a compute float from a constant value
-            // Method signature: ComputeFloat(float value)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
-            desc.Attributes.MicroSurface = new MaterialGlossinessMapFeature
-            {
-                GlossinessMap = new ComputeFloat(0.3f)
+                DiffuseTexture = diffuseTex ?? CreateDefaultTexture(),
+                Type = MaterialType.Opaque,
+                BlendState = BlendState.Opaque,
+                IsTransparent = false
             };
 
-            // Create material from descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
-            // Material.New creates a new Material instance from a MaterialDescriptor
-            // Method signature: Material.New(GraphicsDevice, MaterialDescriptor)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            return Material.New(_device, desc);
+            return material;
         }
 
         /// <summary>
         /// Creates an alpha cutout material for transparency with hard edges.
         /// </summary>
-        public Material CreateAlphaCutoutMaterial(string diffuseTexName, Func<string, TPC> loadTexture, float alphaThreshold = 0.5f)
+        public MaterialData CreateAlphaCutoutMaterial(string diffuseTexName, Func<string, TPC> loadTexture, float alphaThreshold = 0.5f)
         {
-            var desc = new MaterialDescriptor();
+            Texture2D diffuseTex = LoadTexture(diffuseTexName, loadTexture);
 
-            Texture diffuseTex = LoadTexture(diffuseTexName, loadTexture);
-
-            if (diffuseTex != null)
+            var material = new MaterialData
             {
-                desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
-                {
-                    DiffuseMap = new ComputeTextureColor(diffuseTex)
-                };
+                DiffuseTexture = diffuseTex ?? CreateDefaultTexture(),
+                Type = MaterialType.AlphaCutout,
+                AlphaThreshold = alphaThreshold,
+                BlendState = BlendState.Opaque, // Alpha testing handled in shader
+                IsTransparent = true
+            };
 
-                // Enable alpha cutout
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialTransparencyCutoffFeature.html
-                // MaterialTransparencyCutoffFeature() constructor creates a new transparency cutoff feature
-                // MaterialTransparencyCutoffFeature enables alpha testing (hard transparency edges)
-                // Alpha property sets the threshold for alpha testing
-                // Method signature: MaterialTransparencyCutoffFeature()
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeFloat.html
-                // ComputeFloat(float) constructor creates a compute float from a constant value
-                // Method signature: ComputeFloat(float value)
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
-                desc.Attributes.Transparency = new MaterialTransparencyCutoffFeature
-                {
-                    Alpha = new ComputeFloat(alphaThreshold)
-                };
-            }
-
-            return Material.New(_device, desc);
+            return material;
         }
 
         /// <summary>
         /// Creates an alpha blend material for soft transparency.
         /// </summary>
-        public Material CreateAlphaBlendMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
+        public MaterialData CreateAlphaBlendMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
         {
-            // Create material descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDescriptor.html
-            // MaterialDescriptor() constructor creates a new material descriptor
-            // Method signature: MaterialDescriptor()
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            var desc = new MaterialDescriptor();
+            Texture2D diffuseTex = LoadTexture(diffuseTexName, loadTexture);
 
-            Texture diffuseTex = LoadTexture(diffuseTexName, loadTexture);
-
-            if (diffuseTex != null)
+            var material = new MaterialData
             {
-                desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
-                {
-                    DiffuseMap = new ComputeTextureColor(diffuseTex)
-                };
+                DiffuseTexture = diffuseTex ?? CreateDefaultTexture(),
+                Type = MaterialType.AlphaBlend,
+                BlendState = BlendState.AlphaBlend,
+                IsTransparent = true
+            };
 
-                // Enable alpha blending
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialTransparencyBlendFeature.html
-                // MaterialTransparencyBlendFeature() constructor creates a new transparency blend feature
-                // MaterialTransparencyBlendFeature enables alpha blending (soft transparency)
-                // Method signature: MaterialTransparencyBlendFeature()
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
-                desc.Attributes.Transparency = new MaterialTransparencyBlendFeature();
-            }
-
-            return Material.New(_device, desc);
+            return material;
         }
 
         /// <summary>
         /// Creates an additive blend material for glowing/emissive effects.
         /// </summary>
-        public Material CreateAdditiveMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
+        public MaterialData CreateAdditiveMaterial(string diffuseTexName, Func<string, TPC> loadTexture)
         {
-            // Create material descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDescriptor.html
-            // MaterialDescriptor() constructor creates a new material descriptor
-            // Method signature: MaterialDescriptor()
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            var desc = new MaterialDescriptor();
+            Texture2D diffuseTex = LoadTexture(diffuseTexName, loadTexture);
 
-            Texture diffuseTex = LoadTexture(diffuseTexName, loadTexture);
-
-            if (diffuseTex != null)
+            var material = new MaterialData
             {
-                desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
-                {
-                    DiffuseMap = new ComputeTextureColor(diffuseTex)
-                };
+                DiffuseTexture = diffuseTex ?? CreateDefaultTexture(),
+                Type = MaterialType.Additive,
+                BlendState = BlendState.Additive,
+                IsTransparent = true
+            };
 
-                // Make it emissive
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialEmissiveMapFeature.html
-                // MaterialEmissiveMapFeature() constructor creates a new emissive map feature
-                // MaterialEmissiveMapFeature makes the material emit light
-                // EmissiveMap sets the emissive texture, Intensity controls emission strength
-                // Method signature: MaterialEmissiveMapFeature()
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeTextureColor.html
-                // ComputeTextureColor(Texture) constructor creates a compute texture color from a texture
-                // Method signature: ComputeTextureColor(Texture texture)
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeFloat.html
-                // ComputeFloat(float) constructor creates a compute float from a constant value
-                // Method signature: ComputeFloat(float value)
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
-                desc.Attributes.Emissive = new MaterialEmissiveMapFeature
-                {
-                    EmissiveMap = new ComputeTextureColor(diffuseTex),
-                    Intensity = new ComputeFloat(2.0f)
-                };
-
-                // Additive blending
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialTransparencyAdditiveFeature.html
-                // MaterialTransparencyAdditiveFeature() constructor creates a new transparency additive feature
-                // MaterialTransparencyAdditiveFeature enables additive blending (glowing effects)
-                // Method signature: MaterialTransparencyAdditiveFeature()
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/material-features.html
-                desc.Attributes.Transparency = new MaterialTransparencyAdditiveFeature();
-            }
-
-            return Material.New(_device, desc);
+            return material;
         }
 
         /// <summary>
         /// Creates a lightmapped material with baked lighting.
         /// </summary>
-        public Material CreateLightmappedMaterial(string diffuseTexName, string lightmapTexName, Func<string, TPC> loadTexture)
+        public MaterialData CreateLightmappedMaterial(string diffuseTexName, string lightmapTexName, Func<string, TPC> loadTexture)
         {
-            // Create material descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDescriptor.html
-            // MaterialDescriptor() constructor creates a new material descriptor
-            // Method signature: MaterialDescriptor()
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            var desc = new MaterialDescriptor();
+            Texture2D diffuseTex = LoadTexture(diffuseTexName, loadTexture);
+            Texture2D lightmapTex = LoadTexture(lightmapTexName, loadTexture);
 
-            Texture diffuseTex = LoadTexture(diffuseTexName, loadTexture);
-            Texture lightmapTex = LoadTexture(lightmapTexName, loadTexture);
-
-            if (diffuseTex != null)
+            var material = new MaterialData
             {
-                desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
-                {
-                    DiffuseMap = new ComputeTextureColor(diffuseTex)
-                };
-            }
+                DiffuseTexture = diffuseTex ?? CreateDefaultTexture(),
+                LightmapTexture = lightmapTex,
+                Type = MaterialType.LightmappedOpaque,
+                BlendState = BlendState.Opaque,
+                IsTransparent = false
+            };
 
-            // TODO: Apply lightmap as secondary texture multiply
-            // Stride's material system may need custom shader for proper lightmap support
-            // For now, we'll use emissive channel as a workaround
-            // FIXME: Lightmap should be multiplied with diffuse, not used as emissive
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialEmissiveMapFeature.html
-            // MaterialEmissiveMapFeature() constructor creates a new emissive map feature
-            // Using emissive as workaround for lightmap - proper implementation would use custom shader
-            // Method signature: MaterialEmissiveMapFeature()
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeTextureColor.html
-            // ComputeTextureColor(Texture) constructor creates a compute texture color from a texture
-            // Method signature: ComputeTextureColor(Texture texture)
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeFloat.html
-            // ComputeFloat(float) constructor creates a compute float from a constant value
-            // Method signature: ComputeFloat(float value)
-            if (lightmapTex != null)
-            {
-                desc.Attributes.Emissive = new MaterialEmissiveMapFeature
-                {
-                    EmissiveMap = new ComputeTextureColor(lightmapTex),
-                    Intensity = new ComputeFloat(0.5f)
-                };
-            }
-
-            // Create material from descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
-            // Material.New creates a new Material instance from a MaterialDescriptor
-            // Method signature: Material.New(GraphicsDevice, MaterialDescriptor)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            return Material.New(_device, desc);
+            return material;
         }
 
         /// <summary>
         /// Creates a default fallback material.
         /// </summary>
-        public Material CreateDefaultMaterial()
+        public MaterialData CreateDefaultMaterial()
         {
-            // Create material descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDescriptor.html
-            // MaterialDescriptor() constructor creates a new material descriptor
-            // Method signature: MaterialDescriptor()
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            var desc = new MaterialDescriptor();
-
-            // Checkerboard pattern in magenta to indicate missing texture
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.MaterialDiffuseMapFeature.html
-            // MaterialDiffuseMapFeature() constructor creates a new diffuse map feature
-            // Method signature: MaterialDiffuseMapFeature()
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Materials.ComputeColors.ComputeColor.html
-            // ComputeColor(Color4) constructor creates a compute color from a Color4 value
-            // Method signature: ComputeColor(Color4 color)
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
-            // Color4(float r, float g, float b, float a) constructor creates a color from RGBA float values (0-1)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
-            desc.Attributes.Diffuse = new MaterialDiffuseMapFeature
+            var material = new MaterialData
             {
-                DiffuseMap = new ComputeColor(new Color4(1f, 0f, 1f, 1f))
+                DiffuseTexture = CreateDefaultTexture(),
+                Type = MaterialType.Opaque,
+                DiffuseColor = new Color(255, 0, 255, 255), // Magenta for missing texture
+                BlendState = BlendState.Opaque,
+                IsTransparent = false
             };
 
-            // Create material from descriptor
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Material.html
-            // Material.New creates a new Material instance from a MaterialDescriptor
-            // Method signature: Material.New(GraphicsDevice, MaterialDescriptor)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/materials/index.html
-            return Material.New(_device, desc);
+            return material;
         }
 
-        private Material CreateMaterial(string diffuseTexName, string lightmapTexName, Func<string, TPC> loadTexture)
+        private MaterialData CreateMaterial(string diffuseTexName, string lightmapTexName, Func<string, TPC> loadTexture)
         {
             // Determine material type based on texture and flags
             if (string.IsNullOrEmpty(diffuseTexName))
@@ -386,7 +238,7 @@ namespace Odyssey.MonoGame.Materials
             }
         }
 
-        private Texture LoadTexture(string textureName, Func<string, TPC> loadTexture)
+        private Texture2D LoadTexture(string textureName, Func<string, TPC> loadTexture)
         {
             if (string.IsNullOrEmpty(textureName))
             {
@@ -418,11 +270,11 @@ namespace Odyssey.MonoGame.Materials
                 return null;
             }
 
-            // Convert to Stride texture
-            Texture texture;
+            // Convert to MonoGame texture
+            Texture2D texture;
             try
             {
-                texture = TpcToStrideTextureConverter.Convert(tpc, _device);
+                texture = TpcToMonoGameTextureConverter.Convert(tpc, _device);
             }
             catch (Exception ex)
             {
@@ -435,12 +287,23 @@ namespace Odyssey.MonoGame.Materials
         }
 
         /// <summary>
+        /// Creates a default magenta texture to indicate missing textures.
+        /// </summary>
+        private Texture2D CreateDefaultTexture()
+        {
+            // Create a 1x1 magenta texture
+            Texture2D texture = new Texture2D(_device, 1, 1);
+            texture.SetData(new[] { new Color(255, 0, 255, 255) });
+            return texture;
+        }
+
+        /// <summary>
         /// Clears all cached materials and textures.
         /// </summary>
         // Dispose cached textures
-        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-        // Texture.Dispose releases graphics resources
-        // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
+        // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
+        // Texture2D.Dispose releases graphics resources
+        // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
         public void ClearCache()
         {
             foreach (var tex in _textureCache.Values)
@@ -452,4 +315,3 @@ namespace Odyssey.MonoGame.Materials
         }
     }
 }
-

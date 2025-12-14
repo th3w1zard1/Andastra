@@ -303,15 +303,15 @@ namespace HolocronToolset.NET.Editors
             }
             if (_idSpin != null)
             {
-                _idSpin.Value = utm.Id;
+                _idSpin.Value = (decimal)utm.Id;
             }
             if (_markUpSpin != null)
             {
-                _markUpSpin.Value = utm.MarkUp;
+                _markUpSpin.Value = (decimal)utm.MarkUp;
             }
             if (_markDownSpin != null)
             {
-                _markDownSpin.Value = utm.MarkDown;
+                _markDownSpin.Value = (decimal)utm.MarkDown;
             }
             if (_onOpenEdit != null)
             {
@@ -350,20 +350,33 @@ namespace HolocronToolset.NET.Editors
             utm.ResRef = _resrefEdit != null ? new ResRef(_resrefEdit.Text ?? "") : utm.ResRef;
             // Matching PyKotor implementation: utm.id = self.ui.idSpin.value()
             // Python always reads from UI, even if 0
-            // Note: NumericUpDown.Value is nullable, but Python's QSpinBox.value() always returns an int
+            // Note: NumericUpDown.Value is decimal?, but Python's QSpinBox.value() always returns an int
+            // Matching PyKotor implementation: Python always reads from UI without null checks
+            // Python: utm.id = self.ui.idSpin.value() - always returns int, never None
             if (_idSpin != null)
             {
-                utm.Id = _idSpin.Value.HasValue ? (int)_idSpin.Value.Value : 0;
+                // Always read from UI (matching Python behavior)
+                // Use the property to ensure we're reading from the same instance the test sets
+                var idSpinValue = IdSpin?.Value;
+                utm.Id = idSpinValue.HasValue ? (int)idSpinValue.Value : 0;
             }
             // Matching PyKotor implementation: utm.mark_up = self.ui.markUpSpin.value()
-            if (_markUpSpin != null)
+            if (_markUpSpin != null && _markUpSpin.Value.HasValue)
             {
-                utm.MarkUp = _markUpSpin.Value.HasValue ? (int)_markUpSpin.Value.Value : 0;
+                utm.MarkUp = (int)_markUpSpin.Value.Value;
+            }
+            else if (_markUpSpin != null)
+            {
+                utm.MarkUp = 0;
             }
             // Matching PyKotor implementation: utm.mark_down = self.ui.markDownSpin.value()
-            if (_markDownSpin != null)
+            if (_markDownSpin != null && _markDownSpin.Value.HasValue)
             {
-                utm.MarkDown = _markDownSpin.Value.HasValue ? (int)_markDownSpin.Value.Value : 0;
+                utm.MarkDown = (int)_markDownSpin.Value.Value;
+            }
+            else if (_markDownSpin != null)
+            {
+                utm.MarkDown = 0;
             }
             // Matching PyKotor implementation: utm.on_open = ResRef(self.ui.onOpenEdit.text())
             // Python always reads from UI, even if empty (creates blank ResRef)

@@ -112,7 +112,7 @@ namespace Odyssey.MonoGame.Rendering
 
         /// <summary>
         /// Initializes the renderer with the specified settings.
-        /// NOTE: Currently, Stride handles all rendering through its built-in OpenGL pipeline.
+        /// NOTE: Currently, MonoGame handles all rendering through its built-in pipeline.
         /// This custom renderer is stubbed out and will be expanded for multi-backend support later.
         /// </summary>
         public bool Initialize(RenderSettings settings, IntPtr windowHandle)
@@ -124,13 +124,13 @@ namespace Odyssey.MonoGame.Rendering
 
             _settings = settings;
 
-            // NOTE: We rely on Stride's built-in OpenGL rendering, not custom backends.
-            // The SelectBackend call returns null intentionally - Stride handles rendering.
+            // NOTE: We rely on MonoGame's built-in rendering, not custom backends.
+            // The SelectBackend call returns null intentionally - MonoGame handles rendering.
             _backend = SelectBackend(settings);
 
-            // No custom backend is needed - Stride's GraphicsCompositor handles everything
+            // No custom backend is needed - MonoGame handles everything
             // This is intentional and not an error.
-            Console.WriteLine("[OdysseyRenderer] Using Stride's built-in OpenGL rendering pipeline");
+            Console.WriteLine("[OdysseyRenderer] Using MonoGame's built-in rendering pipeline");
 
             // RTX Remix is disabled in OpenGL-only mode
             if (settings.RemixCompatibility)
@@ -358,30 +358,30 @@ namespace Odyssey.MonoGame.Rendering
 
         private IGraphicsBackend SelectBackend(RenderSettings settings)
         {
-            // TODO: We currently use OpenGL exclusively through Stride's built-in rendering.
+            // TODO: We currently use MonoGame's built-in rendering.
             // The custom backend system is disabled for now. Vulkan/DirectX/Remix support
             // will be added in a future update.
             //
-            // Stride handles all rendering through its GraphicsCompositor system, which
-            // uses OpenGL on all platforms (as configured in the .csproj files).
+            // MonoGame handles all rendering through its GraphicsDevice system, which
+            // uses OpenGL on desktop platforms (as configured in the .csproj files).
 
-            Console.WriteLine("[OdysseyRenderer] Using Stride's built-in OpenGL rendering (custom backends disabled)");
+            Console.WriteLine("[OdysseyRenderer] Using MonoGame's built-in rendering (custom backends disabled)");
 
-            // Return null - we rely on Stride's rendering, not our custom backends
+            // Return null - we rely on MonoGame's rendering, not our custom backends
             return null;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
         private IGraphicsBackend TryCreateBackend(GraphicsBackend type)
         {
-            // All custom backends are disabled - we use Stride's OpenGL rendering exclusively.
+            // All custom backends are disabled - we use MonoGame's rendering exclusively.
             // This method is kept for future multi-backend support.
             switch (type)
             {
                 case GraphicsBackend.OpenGL:
                 case GraphicsBackend.Auto:
-                    // OpenGL is handled by Stride natively - no custom backend needed
-                    Console.WriteLine("[OdysseyRenderer] OpenGL handled by Stride natively");
+                    // OpenGL is handled by MonoGame natively - no custom backend needed
+                    Console.WriteLine("[OdysseyRenderer] OpenGL handled by MonoGame natively");
                     return null;
 
                 case GraphicsBackend.Vulkan:

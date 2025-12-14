@@ -38,7 +38,7 @@ According to MonoGame best practices, the following files should be removed from
    - Remove other intermediate/output folders
 
 3. **Custom Configuration Files**:
-   - Remove development-only configuration files not created by Stride
+   - Remove development-only configuration files not created by MonoGame
 
 ### Folder Structure
 
@@ -112,6 +112,7 @@ Follow semantic versioning: `MAJOR.MINOR.PATCH`
 - **PATCH**: Backward-compatible bug fixes
 
 Include version in:
+
 - Archive filename: `GameName-v1.0.0-Windows-x64.zip`
 - README.txt
 - Documentation
@@ -122,21 +123,22 @@ Include version in:
 
 The packaging system consists of several scripts that work together:
 
-1. **Build-StrideGame.ps1** - Builds the game for target platforms
-2. **Package-StrideGame.ps1** - Packages builds into distribution archives
-3. **Distribute-StrideGame.ps1** - Orchestrates complete build + package pipeline
-4. **StrideBuildHelpers.ps1** - Stride-specific validation helpers (module)
-5. **New-StrideVersionFile.ps1** - Creates version information files
-6. **Invoke-StrideCICD.ps1** - CI/CD wrapper for automated pipelines
-7. **Add-StrideGameDocumentation.ps1** - Adds documentation to packages
+1. **Build-MonoGame.ps1** - Builds the game for target platforms
+2. **Package-MonoGame.ps1** - Packages builds into distribution archives
+3. **Distribute-MonoGame.ps1** - Orchestrates complete build + package pipeline
+4. **MonoGameBuildHelpers.ps1** - MonoGame-specific validation helpers (module)
+5. **New-MonoGameVersionFile.ps1** - Creates version information files
+6. **Invoke-MonoGameCICD.ps1** - CI/CD wrapper for automated pipelines
+7. **Add-MonoGameDocumentation.ps1** - Adds documentation to packages
 
-### Build-StrideGame.ps1
+### Build-MonoGame.ps1
 
 Builds the game project for specified platforms and architectures with comprehensive validation.
 
 **Usage:**
+
 ```powershell
-.\Build-StrideGame.ps1 [-ProjectPath <path>] [-Configuration Release] `
+.\Build-MonoGame.ps1 [-ProjectPath <path>] [-Configuration Release] `
     [-Platforms Windows,Linux,macOS] [-Architectures x64,x86,arm64] `
     [-SelfContained] [-SingleFile] [-Trimmed] [-ReadyToRun] `
     [-OutputPath dist] [-Clean] [-Restore] [-Verbose] `
@@ -144,6 +146,7 @@ Builds the game project for specified platforms and architectures with comprehen
 ```
 
 **Key Features:**
+
 - Asset compilation verification
 - Build output validation
 - Cross-platform support (Windows/Linux/macOS)
@@ -155,36 +158,38 @@ Builds the game project for specified platforms and architectures with comprehen
 - Robust input validation
 
 **Examples:**
+
 ```powershell
 # Build for all platforms (x64 only)
-.\Build-StrideGame.ps1
+.\Build-MonoGameGame.ps1
 
 # Build for Windows only (x64 and x86) with trimming
-.\Build-StrideGame.ps1 -Platforms Windows -Architectures x64,x86 -Trimmed
+.\Build-MonoGameGame.ps1 -Platforms Windows -Architectures x64,x86 -Trimmed
 
 # Build self-contained single-file executables
-.\Build-StrideGame.ps1 -SingleFile -SelfContained
+.\Build-MonoGameGame.ps1 -SingleFile -SelfContained
 
 # Clean build with verbose output
-.\Build-StrideGame.ps1 -Clean -Verbose
+.\Build-MonoGameGame.ps1 -Clean -Verbose
 
 # Framework-dependent build (requires .NET on target machine)
-.\Build-StrideGame.ps1 -SelfContained $false
+.\Build-MonoGameGame.ps1 -SelfContained $false
 
 # Build with retry logic for transient failures
-.\Build-StrideGame.ps1 -RetryCount 3 -RetryDelaySeconds 10
+.\Build-MonoGameGame.ps1 -RetryCount 3 -RetryDelaySeconds 10
 
 # Build with NuGet cache clearing (helps with corrupted packages)
-.\Build-StrideGame.ps1 -ClearNuGetCache
+.\Build-MonoGameGame.ps1 -ClearNuGetCache
 ```
 
-### Package-StrideGame.ps1
+### Package-MonoGameGame.ps1
 
 Cleans up build artifacts and creates distribution packages with comprehensive validation.
 
 **Usage:**
+
 ```powershell
-.\Package-StrideGame.ps1 [-BuildPath dist] [-GameName Odyssey] `
+.\Package-MonoGameGame.ps1 [-BuildPath dist] [-GameName Odyssey] `
     [-Version 1.0.0] [-CreateArchive] [-ArchiveFormat zip|tar|tar.gz] `
     [-ArchiveCompression Optimal|Fastest|NoCompression] `
     [-IncludeDocumentation] [-IncludeLicenses] [-CreateChecksums] `
@@ -192,38 +197,41 @@ Cleans up build artifacts and creates distribution packages with comprehensive v
 ```
 
 **Key Features:**
+
 - Automatic debug file cleanup (.pdb, .xml, vshost files)
-- Folder structure validation (Stride best practices)
+- Folder structure validation (MonoGame best practices)
 - Cross-platform archive creation (ZIP/TAR/TAR.GZ)
 - Checksum generation (SHA256) for integrity verification
 - Size optimization reporting
 - Comprehensive documentation inclusion
 
 **Examples:**
+
 ```powershell
 # Package with default settings
-.\Package-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0"
+.\Package-MonoGameGame.ps1 -GameName "Odyssey" -Version "1.0.0"
 
 # Package with checksums and verbose output
-.\Package-StrideGame.ps1 -CreateChecksums -Verbose
+.\Package-MonoGameGame.ps1 -CreateChecksums -Verbose
 
 # Package with TAR.GZ archives (Linux/macOS standard)
-.\Package-StrideGame.ps1 -ArchiveFormat tar.gz
+.\Package-MonoGameGame.ps1 -ArchiveFormat tar.gz
 
 # Package without validation (faster, less safe)
-.\Package-StrideGame.ps1 -ValidateStructure $false
+.\Package-MonoGameGame.ps1 -ValidateStructure $false
 
 # Package with fastest compression
-.\Package-StrideGame.ps1 -ArchiveCompression Fastest
+.\Package-MonoGameGame.ps1 -ArchiveCompression Fastest
 ```
 
-### Distribute-StrideGame.ps1
+### Distribute-MonoGameGame.ps1
 
 Complete distribution pipeline: builds and packages in one command with all options.
 
 **Usage:**
+
 ```powershell
-.\Distribute-StrideGame.ps1 [-ProjectPath <path>] [-GameName Odyssey] `
+.\Distribute-MonoGameGame.ps1 [-ProjectPath <path>] [-GameName Odyssey] `
     [-Version 1.0.0] [-Platforms All] [-Architectures x64] `
     [-SelfContained] [-SingleFile] [-Trimmed] [-ReadyToRun] `
     [-ArchiveFormat zip] [-CreateChecksums] [-Clean] [-Verbose] `
@@ -231,90 +239,99 @@ Complete distribution pipeline: builds and packages in one command with all opti
 ```
 
 **Key Features:**
+
 - Orchestrates complete build + package pipeline
 - Passes through all build and packaging options
 - Comprehensive error handling and reporting
 - Progress tracking and summaries
 
 **Examples:**
+
 ```powershell
 # Complete distribution for all platforms
-.\Distribute-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0"
+.\Distribute-MonoGameGame.ps1 -GameName "Odyssey" -Version "1.0.0"
 
 # Build and package with trimming and checksums
-.\Distribute-StrideGame.ps1 -Trimmed -CreateChecksums -Verbose
+.\Distribute-MonoGameGame.ps1 -Trimmed -CreateChecksums -Verbose
 
 # Build and package for specific platforms only
-.\Distribute-StrideGame.ps1 -Platforms Windows,Linux -Architectures x64
+.\Distribute-MonoGameGame.ps1 -Platforms Windows,Linux -Architectures x64
 
 # Skip build step (use existing artifacts)
-.\Distribute-StrideGame.ps1 -SkipBuild
+.\Distribute-MonoGameGame.ps1 -SkipBuild
 
 # Skip packaging step (build only)
-.\Distribute-StrideGame.ps1 -SkipPackage
+.\Distribute-MonoGameGame.ps1 -SkipPackage
 
 # Framework-dependent with single-file deployment
-.\Distribute-StrideGame.ps1 -SelfContained $false -SingleFile
+.\Distribute-MonoGameGame.ps1 -SelfContained $false -SingleFile
 ```
 
-### Add-StrideGameDocumentation.ps1
+### Add-MonoGameGameDocumentation.ps1
 
 Adds documentation to existing distribution packages.
 
 **Usage:**
+
 ```powershell
-.\Add-StrideGameDocumentation.ps1 [-BuildPath dist] `
+.\Add-MonoGameGameDocumentation.ps1 [-BuildPath dist] `
     [-DocumentationPath docs] [-IncludeReadme] [-IncludeChangelog] `
     [-CreateIndex]
 ```
 
 **Examples:**
+
 ```powershell
 # Add documentation with default settings
-.\Add-StrideGameDocumentation.ps1
+.\Add-MonoGameGameDocumentation.ps1
 
 # Add documentation and create HTML index
-.\Add-StrideGameDocumentation.ps1 -CreateIndex $true
+.\Add-MonoGameGameDocumentation.ps1 -CreateIndex $true
 
 # Add documentation without README
-.\Add-StrideGameDocumentation.ps1 -IncludeReadme $false
+.\Add-MonoGameGameDocumentation.ps1 -IncludeReadme $false
 ```
 
-### New-StrideVersionFile.ps1
+### New-MonoGameVersionFile.ps1
 
 Creates version information files for distribution tracking.
 
 **Usage:**
+
 ```powershell
-.\New-StrideVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" `
+.\New-MonoGameVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" `
     -Version "1.0.0" -BuildNumber "123" -CommitHash "abc123"
 ```
 
 **Creates:**
+
 - `version.txt` - Human-readable version information
 - `VERSION` - Key=value format for scripting
 - `version.json` - Structured JSON format
 
 **Examples:**
+
 ```powershell
 # Basic version file
-.\New-StrideVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" -Version "1.0.0"
+.\New-MonoGameVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" -Version "1.0.0"
 
 # With CI/CD build information
-.\New-StrideVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" `
+.\New-MonoGameVersionFile.ps1 -OutputPath "dist" -GameName "Odyssey" `
     -Version "1.0.0" -BuildNumber $env:BUILD_NUMBER -CommitHash $env:GITHUB_SHA
 ```
 
-### Invoke-StrideCICD.ps1
+### Invoke-MonoGameCICD.ps1
 
 CI/CD wrapper script that automatically detects CI/CD environments and configures the build pipeline.
 
 **Usage:**
+
 ```powershell
-.\Invoke-StrideCICD.ps1 -GameName "Odyssey" -Version "1.0.0"
+.\Invoke-MonoGameCICD.ps1 -GameName "Odyssey" -Version "1.0.0"
 ```
 
 **Features:**
+
 - Auto-detects CI/CD environment (GitHub Actions, Azure DevOps, Jenkins)
 - Extracts version from git tags or environment variables
 - Sets appropriate artifact paths
@@ -322,16 +339,17 @@ CI/CD wrapper script that automatically detects CI/CD environments and configure
 - Provides verbose logging in CI environments
 
 **Examples:**
+
 ```powershell
 # In GitHub Actions workflow
 - name: Build and Package
-  run: .\scripts\Invoke-StrideCICD.ps1 -GameName "Odyssey"
+  run: .\scripts\Invoke-MonoGameCICD.ps1 -GameName "Odyssey"
 
 # In Azure DevOps pipeline
 - task: PowerShell@2
   inputs:
     targetType: 'filePath'
-    filePath: 'scripts/Invoke-StrideCICD.ps1'
+    filePath: 'scripts/Invoke-MonoGameCICD.ps1'
     arguments: '-GameName "Odyssey" -Version "$(Build.BuildNumber)"'
 ```
 
@@ -360,7 +378,7 @@ jobs:
           dotnet-version: '9.0.x'
       
       - name: Build and Package
-        run: .\scripts\Invoke-StrideCICD.ps1 -GameName "Odyssey"
+        run: .\scripts\Invoke-MonoGameCICD.ps1 -GameName "Odyssey"
         shell: pwsh
       
       - name: Upload Artifacts
@@ -390,7 +408,7 @@ steps:
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
-      filePath: 'scripts/Invoke-StrideCICD.ps1'
+      filePath: 'scripts/Invoke-MonoGameCICD.ps1'
       arguments: '-GameName "Odyssey" -Version "$(Build.BuildNumber)"'
   
   - task: PublishBuildArtifacts@1
@@ -404,7 +422,7 @@ steps:
 ### Step 1: Build for All Platforms
 
 ```powershell
-.\Build-StrideGame.ps1 -Platforms All -Architectures x64 -SelfContained
+.\Build-MonoGameGame.ps1 -Platforms All -Architectures x64 -SelfContained
 ```
 
 This creates builds in `dist/Windows-x64/`, `dist/Linux-x64/`, `dist/macOS-x64/`
@@ -412,10 +430,11 @@ This creates builds in `dist/Windows-x64/`, `dist/Linux-x64/`, `dist/macOS-x64/`
 ### Step 2: Package Distribution
 
 ```powershell
-.\Package-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0" -BuildPath "dist"
+.\Package-MonoGameGame.ps1 -GameName "Odyssey" -Version "1.0.0" -BuildPath "dist"
 ```
 
 This:
+
 - Cleans up debug files
 - Adds documentation
 - Adds license files
@@ -425,13 +444,13 @@ This:
 ### Step 3: (Optional) Add Additional Documentation
 
 ```powershell
-.\Add-StrideGameDocumentation.ps1 -BuildPath "dist" -CreateIndex $true
+.\Add-MonoGameGameDocumentation.ps1 -BuildPath "dist" -CreateIndex $true
 ```
 
 ### Or Use the All-in-One Command
 
 ```powershell
-.\Distribute-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0" `
+.\Distribute-MonoGameGame.ps1 -GameName "Odyssey" -Version "1.0.0" `
     -Platforms All -Architectures x64 -Clean
 ```
 
@@ -444,6 +463,7 @@ All scripts are designed to work on Windows, Linux, and macOS:
 - **macOS**: PowerShell Core 6+ (install via Homebrew: `brew install powershell`)
 
 The scripts automatically detect the platform and use appropriate commands:
+
 - Path separators (`\` vs `/`)
 - Archive creation tools (built-in .NET vs system commands)
 - File permissions handling
@@ -453,8 +473,9 @@ The scripts automatically detect the platform and use appropriate commands:
 ### Code Trimming
 
 The `-Trimmed` option removes unused code to reduce deployment size:
+
 ```powershell
-.\Build-StrideGame.ps1 -Trimmed
+.\Build-MonoGameGame.ps1 -Trimmed
 ```
 
 **Warning:** Trimming can break code that uses reflection. Test thoroughly before shipping trimmed builds.
@@ -462,8 +483,9 @@ The `-Trimmed` option removes unused code to reduce deployment size:
 ### ReadyToRun Compilation
 
 Enabled by default, ReadyToRun pre-compiles code for faster startup:
+
 ```powershell
-.\Build-StrideGame.ps1 -ReadyToRun $true  # Default
+.\Build-MonoGameGame.ps1 -ReadyToRun $true  # Default
 ```
 
 Disable only if you need smaller builds or encounter compatibility issues.
@@ -471,8 +493,9 @@ Disable only if you need smaller builds or encounter compatibility issues.
 ### Single-File Deployment
 
 Single-file creates a self-extracting archive:
+
 ```powershell
-.\Build-StrideGame.ps1 -SingleFile
+.\Build-MonoGameGame.ps1 -SingleFile
 ```
 
 **Note:** Single-file apps may have slower startup and require temp space extraction.
@@ -480,8 +503,9 @@ Single-file creates a self-extracting archive:
 ### Checksums
 
 Generate SHA256 checksums for archive integrity:
+
 ```powershell
-.\Package-StrideGame.ps1 -CreateChecksums
+.\Package-MonoGameGame.ps1 -CreateChecksums
 ```
 
 Creates `.sha256` files alongside archives for verification.
@@ -494,7 +518,7 @@ Before distributing your game, verify:
 - [ ] Debug files (.pdb, .xml) are removed
 - [ ] vshost files are removed
 - [ ] Unnecessary folders are cleaned up
-- [ ] Stride assets are properly compiled (Data folder present)
+- [ ] MonoGame assets are properly compiled (Data folder present)
 - [ ] Documentation folder is included
 - [ ] License file is included
 - [ ] README.txt is present with system requirements
@@ -506,7 +530,6 @@ Before distributing your game, verify:
 
 ## References
 
-- [Stride Distribution Documentation](https://doc.stride3d.net/latest/en/manual/files-and-folders/distribute-a-game.html)
+- [MonoGame Distribution Documentation](https://doc.monogame3d.net/latest/en/manual/files-and-folders/distribute-a-game.html)
 - [.NET Application Publishing Overview](https://learn.microsoft.com/en-us/dotnet/core/deploying/)
-- [Stride Project Structure](https://doc.stride3d.net/latest/en/manual/files-and-folders/project-structure.html)
-
+- [MonoGame Project Structure](https://doc.monogame3d.net/latest/en/manual/files-and-folders/project-structure.html)

@@ -1,17 +1,21 @@
 # Odyssey Runtime VM Improvements Summary
 
 ## Session Date
+
 December 14, 2025
 
 ## Overview
+
 This document summarizes critical improvements made to the Odyssey Runtime NCS Virtual Machine and Engine API systems. These changes enable proper script execution, string handling, and resource loading - essential features for running KOTOR game scripts.
 
 ## 1. NCS VM String Handling Implementation
 
 ### Problem
+
 The NCS VM's string handling was incomplete, using placeholder implementations that prevented proper string operations in scripts.
 
 ### Solution
+
 Implemented a proper string pool system with handle-based storage:
 
 **File**: `src/OdysseyRuntime/Odyssey.Scripting/VM/NcsVm.cs`
@@ -23,6 +27,7 @@ Implemented a proper string pool system with handle-based storage:
 - Strings are now properly preserved during script execution
 
 ### Technical Details
+
 ```csharp
 // String pool initialized per execution
 _stringPool.Clear();
@@ -41,9 +46,11 @@ return _stringPool.TryGetValue(handle, out string value) ? value : string.Empty;
 ## 2. NCS VM Resource Loading
 
 ### Problem
+
 `ExecuteScript(string resRef, IExecutionContext ctx)` was not implemented, preventing scripts from calling other scripts.
 
 ### Solution
+
 Implemented dual-path resource loading supporting both modern IGameResourceProvider and legacy CSharpKOTOR Installation systems:
 
 **File**: `src/OdysseyRuntime/Odyssey.Scripting/VM/NcsVm.cs`
@@ -76,9 +83,11 @@ public int ExecuteScript(string resRef, IExecutionContext ctx)
 ## 3. Tier 0 Engine Functions Implementation
 
 ### Problem
+
 Many basic engine functions needed by scripts were missing or stubbed out.
 
 ### Solution
+
 Implemented comprehensive set of Tier 0 engine functions in BaseEngineApi:
 
 **File**: `src/OdysseyRuntime/Odyssey.Scripting/EngineApi/BaseEngineApi.cs`
@@ -86,6 +95,7 @@ Implemented comprehensive set of Tier 0 engine functions in BaseEngineApi:
 ### Implemented Functions
 
 #### Global Variables
+
 - `GetGlobalNumber(string)` - Get global integer variable
 - `SetGlobalNumber(string, int)` - Set global integer variable  
 - `GetGlobalBoolean(string)` - Get global boolean variable
@@ -94,15 +104,18 @@ Implemented comprehensive set of Tier 0 engine functions in BaseEngineApi:
 - `SetGlobalString(string, string)` - Set global string variable
 
 #### Object/Tag Operations
+
 - `GetNearestObjectByTag(string tag, object target, int nth)` - Find nearest object by tag with distance sorting
 - `ObjectToString(object)` - Convert object ID to hex string
 - `StringToObject(string)` - Parse hex string to object ID
 
 #### Vector Operations
+
 - `PrintVector(vector)` - Output vector to console
 - `VectorToString(vector)` - Format vector as string
 
 ### K1EngineApi Wiring
+
 Connected new functions to dispatch table:
 
 **File**: `src/OdysseyRuntime/Odyssey.Scripting/EngineApi/K1EngineApi.cs`
@@ -126,7 +139,7 @@ case 272: return Func_ObjectToString(args, ctx);    // ObjectToString
    - Engine API integration (ACTION opcode)
 
 2. **Model Loading**
-   - `MdlToStrideModelConverter` - Complete MDL/MDX to Stride conversion
+   - `MdlToMonoGameModelConverter` - Complete MDL/MDX to MonoGame conversion
    - Vertex/index buffer generation
    - Material and texture references
    - Node hierarchy preservation
@@ -144,7 +157,7 @@ case 272: return Func_ObjectToString(args, ctx);    // ObjectToString
    - Area audio properties
 
 5. **Texture Loading**
-   - `TpcToStrideTextureConverter` - TPC/TGA to Stride texture conversion
+   - `TpcToMonoGameTextureConverter` - TPC/TGA to MonoGame texture conversion
    - Mipmap support
    - Cube map support
    - Multiple compression formats
@@ -158,6 +171,7 @@ case 272: return Func_ObjectToString(args, ctx);    // ObjectToString
 ## 5. Tier 0 Engine Function Coverage
 
 ### Implemented (~30 functions)
+
 - ✅ Random, PrintString, PrintInteger, PrintFloat, PrintVector
 - ✅ IntToString, FloatToString, StringToInt, StringToFloat
 - ✅ GetTag, GetObjectByTag, GetNearestObjectByTag
@@ -169,6 +183,7 @@ case 272: return Func_ObjectToString(args, ctx);    // ObjectToString
 - ✅ ObjectToString (StringToObject not in K1)
 
 ### Already Implemented in K1EngineApi
+
 - ✅ GetCurrentHitPoints, GetMaxHitPoints
 - ✅ GetDistanceToObject, GetNearestCreature
 - ✅ ActionMoveToLocation, ActionOpenDoor, ActionCloseDoor
@@ -179,11 +194,11 @@ case 272: return Func_ObjectToString(args, ctx);    // ObjectToString
 
 ## 6. Architecture Validation
 
-The implementation validates the planned architecture from `stride_odyssey_engine_e8927e4a.plan.md`:
+The implementation validates the planned architecture from `monogame_odyssey_engine_e8927e4a.plan.md`:
 
 - **Data/Formats Layer**: CSharpKOTOR handles all file formats ✅
 - **Runtime Domain Layer**: Core entities, components, world state ✅
-- **Stride Integration Layer**: Converters, SceneBuilder, Camera ✅
+- **MonoGame Integration Layer**: Converters, SceneBuilder, Camera ✅
 - **Scripting Layer**: VM, Engine API, execution context ✅
 - **Game Rules Layer**: K1/K2 profiles, combat, dialogue ✅
 
@@ -192,8 +207,8 @@ The implementation validates the planned architecture from `stride_odyssey_engin
 For a minimal playable demo, the following critical systems are operational:
 
 1. ✅ **Resource Loading** - BIF/RIM/ERF/Override precedence
-2. ✅ **Model Rendering** - MDL → Stride mesh pipeline
-3. ✅ **Texture Loading** - TPC/TGA → Stride texture
+2. ✅ **Model Rendering** - MDL → MonoGame mesh pipeline
+3. ✅ **Texture Loading** - TPC/TGA → MonoGame texture
 4. ✅ **Area Loading** - LYT rooms, VIS culling data
 5. ✅ **Script Execution** - NCS VM with string handling
 6. ✅ **Entity Spawning** - GIT instances from templates
@@ -203,23 +218,27 @@ For a minimal playable demo, the following critical systems are operational:
 ## 8. Remaining High-Priority Tasks
 
 ### Script System
+
 - ☐ Implement script delay scheduler (DelayCommand)
 - ☐ Implement action queue system (AssignCommand)
 - ☐ Complete Effect system (EffectDamage, EffectHeal, etc.)
 
 ### Combat System  
+
 - ☐ Attack resolution (d20 rolls)
 - ☐ Damage calculation with resistances
 - ☐ Combat round timing (~3 seconds)
 - ☐ Animation synchronization with hits
 
 ### Dialogue System
+
 - ☐ DLG traversal with conditionals
 - ☐ Voice-over playback synchronization
 - ☐ LIP sync facial animation
 - ☐ Dialogue UI integration
 
 ### Save/Load
+
 - ☐ Save game serialization (GFF/ERF format)
 - ☐ Module state preservation
 - ☐ Party state restoration
@@ -228,12 +247,14 @@ For a minimal playable demo, the following critical systems are operational:
 ## 9. Testing Status
 
 ### VM Testing
+
 - ✅ All opcodes manually verified
 - ☐ Need comprehensive NCS roundtrip testing
 - ☐ Test script chaining (ExecuteScript calls)
 - ☐ Test string operations in real scripts
 
 ### Integration Testing
+
 - ☐ Test module loading (danm13 - Endar Spire)
 - ☐ Test entity spawning from GIT
 - ☐ Test script execution on module load
@@ -242,11 +263,13 @@ For a minimal playable demo, the following critical systems are operational:
 ## 10. Performance Considerations
 
 ### VM Performance
+
 - String pool uses Dictionary<int, string> - O(1) lookup
 - Stack operations use byte[] array - minimal allocation
 - VM instruction limit: 100,000 per execution (configurable)
 
 ### Scene Performance
+
 - Model cache prevents duplicate conversions
 - Texture cache in ContentCache
 - VIS culling data ready for implementation
@@ -273,6 +296,7 @@ feat: implement additional Tier 0 engine functions
 ## Conclusion
 
 The Odyssey Runtime is now capable of:
+
 1. Executing NCS scripts with proper string handling
 2. Loading scripts dynamically via resource provider
 3. Providing ~50 essential engine functions to scripts
@@ -283,4 +307,3 @@ The Odyssey Runtime is now capable of:
 This brings the engine to a point where basic gameplay loops (module loading, entity interaction, script execution) are feasible.
 
 Next priority: Test with actual KOTOR module (danm13) to validate the full pipeline and identify remaining gaps.
-
