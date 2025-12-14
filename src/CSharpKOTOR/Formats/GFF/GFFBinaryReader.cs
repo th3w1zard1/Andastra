@@ -157,7 +157,7 @@ namespace CSharpKOTOR.Formats.GFF
             if (_complexFields.Contains(fieldType))
             {
                 uint offset = Reader.ReadUInt32(); // Relative to field data
-                Reader.Seek(_fieldDataOffset + offset);
+                Reader.Seek(_fieldDataOffset + (int)offset);
 
                 switch (fieldType)
                 {
@@ -176,7 +176,7 @@ namespace CSharpKOTOR.Formats.GFF
                         gffStruct.SetString(label, str);
                         break;
                     case GFFFieldType.ResRef:
-                        byte resrefLength = Reader.ReadByte();
+                        byte resrefLength = Reader.ReadUInt8();
                         string resrefStr = Encoding.ASCII.GetString(Reader.ReadBytes(resrefLength)).Trim();
                         gffStruct.SetResRef(label, new ResRef(resrefStr));
                         break;
@@ -212,10 +212,10 @@ namespace CSharpKOTOR.Formats.GFF
                 switch (fieldType)
                 {
                     case GFFFieldType.UInt8:
-                        gffStruct.SetUInt8(label, Reader.ReadByte());
+                        gffStruct.SetUInt8(label, Reader.ReadUInt8());
                         break;
                     case GFFFieldType.Int8:
-                        gffStruct.SetInt8(label, Reader.ReadSByte());
+                        gffStruct.SetInt8(label, Reader.ReadInt8());
                         break;
                     case GFFFieldType.UInt16:
                         gffStruct.SetUInt16(label, Reader.ReadUInt16());
@@ -239,7 +239,7 @@ namespace CSharpKOTOR.Formats.GFF
         private void LoadList(GFFStruct gffStruct, string label)
         {
             uint offset = Reader.ReadUInt32(); // Relative to list indices
-            Reader.Seek(_listIndicesOffset + offset);
+            Reader.Seek(_listIndicesOffset + (int)offset);
 
             var value = new GFFList();
             uint count = Reader.ReadUInt32();

@@ -96,7 +96,7 @@ namespace CSharpKOTOR.Utility
                 foreach (var kvp in _dictionary)
                 {
                     string lowerKey = kvp.Key.ToLowerInvariant();
-                    T otherValue;
+                    T otherValue = default(T);
                     bool found = false;
                     foreach (var otherKvp in dict)
                     {

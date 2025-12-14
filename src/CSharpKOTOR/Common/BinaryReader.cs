@@ -153,6 +153,25 @@ namespace CSharpKOTOR.Common
             // Check if the absolute position is valid
             if (position < 0)
             {
+                throw new ArgumentOutOfRangeException(nameof(position), "Position cannot be negative");
+            }
+            if (position > _size)
+            {
+                throw new ArgumentOutOfRangeException(nameof(position), $"Position {position} exceeds size {_size}");
+            }
+
+            _stream.Seek(_offset + position, SeekOrigin.Begin);
+            _position = position;
+        }
+
+        public void SeekRelative(int offset)
+        {
+            Seek(_position + offset);
+        }
+        {
+            // Check if the absolute position is valid
+            if (position < 0)
+            {
                 throw new IOException($"Cannot seek to a negative position: {position}");
             }
             if (position > _size)

@@ -126,7 +126,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
             if (_bif.BifType == BIFType.BZF && _bif.Resources.Count > 0)
             {
                 BIFResource lastResource = _bif.Resources[_bif.Resources.Count - 1];
-                int fileSize = Reader.Size();
+                int fileSize = Reader.Size;
                 lastResource.PackedSize = fileSize - lastResource.Offset;
             }
         }
