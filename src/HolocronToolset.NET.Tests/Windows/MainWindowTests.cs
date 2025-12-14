@@ -373,35 +373,85 @@ namespace HolocronToolset.NET.Tests.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_main_window.py:557-565
         // Original: def test_main_window_get_active_resource_widget_core(qtbot):
-        // Note: Python test checks reference equality (widget == window.ui.coreWidget)
-        // Skipping due to FluentAssertions recursion issues with ResourceList type checking
-        // The method is tested indirectly through other tests
-        [Fact(Skip = "FluentAssertions recursion issues with ResourceList type checking - tested indirectly")]
+        // Original: window.ui.resourceTabs.setCurrentWidget(window.ui.coreTab)
+        // Original: widget = window.get_active_resource_widget()
+        // Original: assert widget == window.ui.coreWidget
+        [Fact]
         public void TestMainWindowGetActiveResourceWidgetCore()
         {
-            // Test skipped - GetActiveResourceWidget is tested indirectly in other tests
+            var window = new MainWindow();
+            window.Show();
+
+            // Matching Python: window.ui.resourceTabs.setCurrentWidget(window.ui.coreTab)
+            if (window.Ui.ResourceTabs != null && window.Ui.CoreTab != null)
+            {
+                window.Ui.ResourceTabs.SelectedItem = window.Ui.CoreTab;
+            }
+
+            // Matching Python: widget = window.get_active_resource_widget()
+            var widget = window.GetActiveResourceWidget();
+
+            // Matching Python: assert widget == window.ui.coreWidget
+            // Use reference equality instead of FluentAssertions to avoid recursion
+            Assert.True(ReferenceEquals(widget, window.Ui.CoreWidget), "GetActiveResourceWidget should return CoreWidget when Core tab is selected");
+
+            window.Close();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_main_window.py:567-575
         // Original: def test_main_window_get_active_resource_widget_modules(qtbot):
-        // Note: Python test checks reference equality (widget == window.ui.modulesWidget)
-        // Skipping due to FluentAssertions recursion issues with ResourceList type checking
-        // The method is tested indirectly through other tests
-        [Fact(Skip = "FluentAssertions recursion issues with ResourceList type checking - tested indirectly")]
+        // Original: window.ui.resourceTabs.setCurrentWidget(window.ui.modulesTab)
+        // Original: widget = window.get_active_resource_widget()
+        // Original: assert widget == window.ui.modulesWidget
+        [Fact]
         public void TestMainWindowGetActiveResourceWidgetModules()
         {
-            // Test skipped - GetActiveResourceWidget is tested indirectly in other tests
+            var window = new MainWindow();
+            window.Show();
+
+            // Matching Python: window.ui.resourceTabs.setCurrentWidget(window.ui.modulesTab)
+            // Set SelectedIndex directly to ensure it updates (Avalonia might not sync SelectedItem->SelectedIndex immediately)
+            if (window.Ui.ResourceTabs != null)
+            {
+                window.Ui.ResourceTabs.SelectedIndex = 1; // Modules tab is index 1
+            }
+
+            // Matching Python: widget = window.get_active_resource_widget()
+            var widget = window.GetActiveResourceWidget();
+
+            // Matching Python: assert widget == window.ui.modulesWidget
+            // Use reference equality instead of FluentAssertions to avoid recursion
+            Assert.True(ReferenceEquals(widget, window.Ui.ModulesWidget), "GetActiveResourceWidget should return ModulesWidget when Modules tab is selected");
+
+            window.Close();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_main_window.py:577-585
         // Original: def test_main_window_get_active_resource_widget_override(qtbot):
-        // Note: Python test checks reference equality (widget == window.ui.overrideWidget)
-        // Skipping due to FluentAssertions recursion issues with ResourceList type checking
-        // The method is tested indirectly through other tests
-        [Fact(Skip = "FluentAssertions recursion issues with ResourceList type checking - tested indirectly")]
+        // Original: window.ui.resourceTabs.setCurrentWidget(window.ui.overrideTab)
+        // Original: widget = window.get_active_resource_widget()
+        // Original: assert widget == window.ui.overrideWidget
+        [Fact]
         public void TestMainWindowGetActiveResourceWidgetOverride()
         {
-            // Test skipped - GetActiveResourceWidget is tested indirectly in other tests
+            var window = new MainWindow();
+            window.Show();
+
+            // Matching Python: window.ui.resourceTabs.setCurrentWidget(window.ui.overrideTab)
+            // Set SelectedIndex directly to ensure it updates (Avalonia might not sync SelectedItem->SelectedIndex immediately)
+            if (window.Ui.ResourceTabs != null)
+            {
+                window.Ui.ResourceTabs.SelectedIndex = 2; // Override tab is index 2
+            }
+
+            // Matching Python: widget = window.get_active_resource_widget()
+            var widget = window.GetActiveResourceWidget();
+
+            // Matching Python: assert widget == window.ui.overrideWidget
+            // Use reference equality instead of FluentAssertions to avoid recursion
+            Assert.True(ReferenceEquals(widget, window.Ui.OverrideWidget), "GetActiveResourceWidget should return OverrideWidget when Override tab is selected");
+
+            window.Close();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_main_window.py:607-623
