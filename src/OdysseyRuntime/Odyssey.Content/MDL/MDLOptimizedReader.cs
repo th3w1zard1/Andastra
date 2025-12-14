@@ -1030,9 +1030,18 @@ namespace Odyssey.Content.MDL
             // Read and reorder vertices as per reone implementation
             if (mesh.VertexCount > 0)
             {
-                float[] saberVerts = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + saberVerticesOffset, mesh.VertexCount * 3);
-                float[] saberTexCoords = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + texCoordsOffset, mesh.VertexCount * 2);
-                float[] saberNormals = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + normalsOffset, mesh.VertexCount * 3);
+                // Check for potential integer overflow in array size calculations
+                long vertsCountLong = (long)mesh.VertexCount * 3;
+                long texCoordsCountLong = (long)mesh.VertexCount * 2;
+                if (vertsCountLong > int.MaxValue || texCoordsCountLong > int.MaxValue)
+                {
+                    throw new InvalidOperationException(
+                        $"Saber mesh vertex array size calculation overflow: vertexCount={mesh.VertexCount}"
+                    );
+                }
+                float[] saberVerts = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + saberVerticesOffset, (int)vertsCountLong);
+                float[] saberTexCoords = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + texCoordsOffset, (int)texCoordsCountLong);
+                float[] saberNormals = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + normalsOffset, (int)vertsCountLong);
 
                 mesh.Positions = new Vector3Data[mesh.VertexCount];
                 mesh.Normals = new Vector3Data[mesh.VertexCount];
