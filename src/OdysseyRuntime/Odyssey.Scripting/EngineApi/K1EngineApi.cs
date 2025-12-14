@@ -3285,6 +3285,9 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as enemy
         /// </summary>
+        /// <summary>
+        /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is an enemy of oSource
+        /// </summary>
         private Variable Func_GetIsEnemy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -3295,19 +3298,35 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameSession via AdditionalContext
-                if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.CombatManager != null)
+                // Get FactionManager from GameServicesContext or GameSession
+                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    // FactionManager is accessed through CombatManager or directly
-                    // For now, use a simpler approach - get from world if available
-                    // TODO: Add FactionManager to GameServicesContext
+                    // Try to get FactionManager from CombatManager (which has a reference)
+                    if (services.CombatManager != null)
+                    {
+                        // CombatManager has access to FactionManager internally
+                        // For now, check if entities are in different factions or hostile
+                        // TODO: Expose FactionManager.IsHostile through CombatManager or GameServicesContext
+                    }
                 }
                 
                 // Alternative: Get from GameSession directly if available
-                if (ctx.AdditionalContext is GameSession gameSession && gameSession.FactionManager != null)
+                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    bool isEnemy = gameSession.FactionManager.IsHostile(source, target);
-                    return Variable.FromInt(isEnemy ? 1 : 0);
+                    // Access FactionManager through reflection or add to GameServicesContext
+                    // For now, use a simple faction check
+                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                    
+                    if (sourceFaction != null && targetFaction != null)
+                    {
+                        // Check if different factions (simplified - would need FactionManager for proper hostility)
+                        if (sourceFaction.FactionId != targetFaction.FactionId)
+                        {
+                            // Different factions are enemies by default
+                            return Variable.FromInt(1);
+                        }
+                    }
                 }
             }
             return Variable.FromInt(0);
@@ -3315,6 +3334,9 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as friend
+        /// </summary>
+        /// <summary>
+        /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is a friend of oSource
         /// </summary>
         private Variable Func_GetIsFriend(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3326,11 +3348,33 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameSession via AdditionalContext
-                if (ctx.AdditionalContext is GameSession gameSession && gameSession.FactionManager != null)
+                // Get FactionManager from GameServicesContext or GameSession
+                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    bool isFriend = gameSession.FactionManager.IsFriendly(source, target);
-                    return Variable.FromInt(isFriend ? 1 : 0);
+                    // Try to get FactionManager from CombatManager
+                    if (services.CombatManager != null)
+                    {
+                        // TODO: Expose FactionManager.IsFriendly through CombatManager or GameServicesContext
+                    }
+                }
+                
+                // Alternative: Get from GameSession directly if available
+                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
+                {
+                    // Access FactionManager through reflection or add to GameServicesContext
+                    // For now, use a simple faction check
+                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                    
+                    if (sourceFaction != null && targetFaction != null)
+                    {
+                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
+                        if (sourceFaction.FactionId == targetFaction.FactionId)
+                        {
+                            // Same faction are friends by default
+                            return Variable.FromInt(1);
+                        }
+                    }
                 }
             }
             return Variable.FromInt(0);
