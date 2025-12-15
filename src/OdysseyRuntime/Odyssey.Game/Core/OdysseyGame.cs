@@ -102,7 +102,7 @@ namespace Odyssey.Game.Core
             IsMouseVisible = true;
 
             // Set window title
-            Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
+            Window.Title = "Odyssey Engine - " + (_settings.Game == Odyssey.Core.KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
 
             Console.WriteLine("[Odyssey] Game window initialized - IsMouseVisible: " + IsMouseVisible);
         }
@@ -492,7 +492,7 @@ namespace Odyssey.Game.Core
             if (_font != null)
             {
                 string title = "ODYSSEY ENGINE";
-                string subtitle = _settings.Game == KotorGame.K1
+                string subtitle = _settings.Game == Odyssey.Core.KotorGame.K1
                     ? "Knights of the Old Republic"
                     : "The Sith Lords";
                 string version = "Demo Build";
@@ -1007,7 +1007,7 @@ namespace Odyssey.Game.Core
             try
             {
                 // Update settings with game path
-                var updatedSettings = new GameSettings
+                var updatedSettings = new Odyssey.Core.GameSettings
                 {
                     Game = _settings.Game,
                     GamePath = gamePath,
