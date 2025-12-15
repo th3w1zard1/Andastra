@@ -136,12 +136,12 @@ namespace Odyssey.Core.Actions
             // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
             // Original implementation: FUN_004f5070 projects 3D position to walkmesh surface height
-            IArea area = actor.World.CurrentArea;
-            if (area != null && area.NavigationMesh != null)
+            IArea currentArea = actor.World.CurrentArea;
+            if (currentArea != null && currentArea.NavigationMesh != null)
             {
                 Vector3 projectedPos;
                 float height;
-                if (area.NavigationMesh.ProjectToSurface(newPosition, out projectedPos, out height))
+                if (currentArea.NavigationMesh.ProjectToSurface(newPosition, out projectedPos, out height))
                 {
                     newPosition = projectedPos;
                 }
