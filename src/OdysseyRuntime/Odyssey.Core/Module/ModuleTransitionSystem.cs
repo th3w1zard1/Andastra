@@ -98,9 +98,15 @@ namespace Odyssey.Core.Module
                     if (!string.IsNullOrEmpty(leaveScript) && _world.EventBus != null)
                     {
                         // Fire script event - module scripts use module ResRef as context
-                        // Modules don't have physical entities, so we use a placeholder entity or skip entity-based execution
-                        // For now, module scripts are executed via module loader/system, not through entity events
-                        // This TODO remains for proper module script execution integration
+                        // Modules don't have physical entities, so we create a temporary entity for script execution
+                        IEntity moduleEntity = _world.GetEntityByTag(_world.CurrentModule.ResRef, 0);
+                        if (moduleEntity == null)
+                        {
+                            // Create a temporary entity for module script execution
+                            moduleEntity = _world.CreateEntity(ObjectType.None, Vector3.Zero, 0f);
+                            moduleEntity.Tag = _world.CurrentModule.ResRef;
+                        }
+                        _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLeave, null);
                     }
                 }
 
