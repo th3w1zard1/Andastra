@@ -125,37 +125,9 @@ namespace Odyssey.Core.Actions
                 }
 
                 // 2. Check if spell is known
-                // Using dynamic to avoid dependency on Odyssey.Kotor.Components
-                IComponent creatureComponent = actor.GetComponent<IComponent>();
-                if (creatureComponent != null)
+                if (!stats.HasSpell(_spellId))
                 {
-                    dynamic creature = creatureComponent;
-                    try
-                    {
-                        var knownPowers = creature.KnownPowers as System.Collections.IEnumerable;
-                        if (knownPowers != null)
-                        {
-                            bool found = false;
-                            foreach (dynamic power in knownPowers)
-                            {
-                                int powerId = (int)power;
-                                if (powerId == _spellId)
-                                {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found)
-                            {
-                                // Spell not known
-                                return ActionStatus.Failed;
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Component doesn't have KnownPowers, skip check
-                    }
+                    return ActionStatus.Failed; // Spell not known
                 }
 
                 // 3. Start casting (play animation would go here)
