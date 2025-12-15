@@ -18,6 +18,9 @@ namespace Odyssey.Core.Interfaces
     /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive), nth parameter for multiple entities with same tag
     /// - ObjectId is unique 32-bit identifier assigned sequentially (see FUN_005226d0 @ 0x005226d0 for entity serialization)
     /// - World manages current area/module, time (ITimeManager), events (IEventBus), delay scheduler (IDelayScheduler), and effect system
+    /// - Module management: "Module" @ 0x007bc4e0, "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
+    /// - Module events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
+    /// - Module save: "modulesave" @ 0x007bde20, "LinkedToModule" @ 0x007bd7bc (door/trigger module links)
     /// - CreateEntity: Creates new entity from template or ObjectType, assigns ObjectId automatically
     /// - DestroyEntity: Removes entity from world and cleans up all components
     /// - GetEntitiesInRadius: Spatial query with optional ObjectType filter mask

@@ -22,6 +22,8 @@ namespace Odyssey.Core.Entities
     /// - ObjectId is unique 32-bit identifier assigned sequentially (OBJECT_INVALID = 0x7F000000)
     /// - Entity registration: Entities are registered in world with ObjectId, Tag, and ObjectType indices
     /// - Area management: Entities belong to areas (AreaId field), areas contain entity lists by type
+    /// - Module management: "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
+    /// - Module events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
     /// </remarks>
     public class World : IWorld
     {
