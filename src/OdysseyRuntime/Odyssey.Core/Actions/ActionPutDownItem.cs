@@ -11,13 +11,19 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Put Down Item Action:
     /// - Based on swkotor2.exe ActionPutDownItem NWScript function
-    /// - Located via string references: "GiveItem" @ 0x007be4f8, "PutDownItem" action type
-    /// - Inventory system: "Inventory" @ 0x007bd658, "Item" @ 0x007bc54c
+    /// - Located via string references: "GiveItem" @ 0x007be4f8 (give item action), "PutDownItem" action type (ACTION_TYPE_PUT_DOWN_ITEM constant)
+    /// - Inventory system: "Inventory" @ 0x007bd658 (inventory field), "Item" @ 0x007bc54c (item object type), "ItemList" @ 0x007bf580 (item list field)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c (lose item script event, 0x1c) - fires when item is removed from inventory
     /// - Original implementation: Removes item from inventory and places it in world at specified location
-    /// - Item becomes a world-dropped item that can be picked up by other entities
-    /// - Used for dropping items, giving items to other entities, placing items in containers
-    /// - Item position set to drop location, item becomes visible in world
-    /// - Action completes immediately if item is in inventory and location is valid
+    /// - Item validation: Checks if item exists in actor's inventory before dropping
+    /// - Item removal: Removes item from inventory (via IInventoryComponent.RemoveItem)
+    /// - Item placement: Item position set to drop location (via ITransformComponent.Position)
+    /// - World item: Item becomes a world-dropped item that can be picked up by other entities (ObjectType.Item in world)
+    /// - Usage: Dropping items on ground, giving items to other entities (via different action), placing items in containers (via ActionUseObject)
+    /// - Item visibility: Item becomes visible in world after being dropped (rendering system should display item model)
+    /// - Action completes immediately if item is in inventory and location is valid (single frame execution)
+    /// - Event firing: ON_LOSE_ITEM event may fire when item is removed from inventory (for item tracking)
+    /// - Based on NWScript function ActionPutDownItem (routine ID varies by game version)
     /// </remarks>
     public class ActionPutDownItem : ActionBase
     {

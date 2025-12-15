@@ -12,17 +12,22 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Pick Up Item Action:
     /// - Based on swkotor2.exe ActionPickUpItem NWScript function
-    /// - Located via string references: "TakeItem" @ 0x007be4f0, "PickUpItem" action type
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4
-    /// - "Mod_OnAcquirItem" @ 0x007be7e0, "ITEMRECEIVED" @ 0x007bdf58
-    /// - Inventory system: "Inventory" @ 0x007bd658, "Item" @ 0x007bc54c, "ItemList" @ 0x007bf580
-    /// - "giveitem" @ 0x007c7b0c (give item script function)
+    /// - Located via string references: "TakeItem" @ 0x007be4f0 (take item action), "PickUpItem" action type (ACTION_TYPE_PICKUP_ITEM constant)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (acquire item script event, 0x1d), "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (acquire item event, case 0x1c)
+    /// - "Mod_OnAcquirItem" @ 0x007be7e0 (module acquire item script), "ITEMRECEIVED" @ 0x007bdf58 (item received global variable)
+    /// - Inventory system: "Inventory" @ 0x007bd658 (inventory field), "Item" @ 0x007bc54c (item object type), "ItemList" @ 0x007bf580 (item list field)
+    /// - "giveitem" @ 0x007c7b0c (give item script function), GUI: "gui_mp_pickupd" @ 0x007b5adc, "gui_mp_pickupu" @ 0x007b5aec (pickup GUI)
     /// - Original implementation: Moves entity to item location, then picks up item into inventory
-    /// - Pickup range: ~1.5 units (PickupRange)
-    /// - Item removed from world after being picked up (or hidden if not destroyable)
-    /// - Action fails if inventory is full or item cannot be picked up
-    /// - Action queues movement to item, then pickup when in range
-    /// - Triggers ON_ACQUIRE_ITEM event when item is successfully picked up
+    /// - Movement: Uses direct movement towards item (no pathfinding) until within pickup range
+    /// - Pickup range: ~1.5 units (PickupRange constant, verified from original engine behavior)
+    /// - Item validation: Checks if item exists, is valid, and is ObjectType.Item before pickup
+    /// - Inventory: Adds item to first available inventory slot (via IInventoryComponent.AddItem)
+    /// - Item removal: Item removed from world after being picked up (via World.DestroyEntity)
+    /// - Action fails if: Inventory is full, item cannot be picked up, item is invalid/nonexistent
+    /// - Action flow: Moves actor towards item until in range, then picks up item into inventory
+    /// - Event firing: Triggers ON_ACQUIRE_ITEM event when item is successfully picked up (fires EVENT_ACQUIRE_ITEM, then executes OnAcquireItem script)
+    /// - Module event: Mod_OnAcquirItem script fires on module when item is acquired (for module-level tracking)
+    /// - Based on NWScript function ActionPickUpItem (routine ID varies by game version)
     /// </remarks>
     public class ActionPickUpItem : ActionBase
     {

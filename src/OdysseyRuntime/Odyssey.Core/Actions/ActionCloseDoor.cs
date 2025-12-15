@@ -1,3 +1,4 @@
+using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -10,11 +11,20 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Close Door Action:
     /// - Based on swkotor2.exe door closing system
-    /// - Located via string references: "OnClosed" @ 0x007be1c8 (door script event)
+    /// - Located via string references: "OnClosed" @ 0x007be1c8 (door closed script), "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (close object event, case 6)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (close script event, 0x10), door loading: FUN_005838d0 @ 0x005838d0 (load door properties)
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT event (case 6, fires before script execution)
     /// - Original implementation: Closes door, fires OnClosed script event
-    /// - Door state: IsOpen flag set to false
-    /// - Script events: OnClosed (door closed), OnLocked (door locked)
-    /// - Based on NWScript ActionCloseDoor semantics
+    /// - Movement: Moves actor towards door if not in interaction range (InteractRange ~2.0 units)
+    /// - Door interaction: Checks if actor is within InteractRange before closing door
+    /// - Door state: IsOpen flag set to false (via IDoorComponent.IsOpen property)
+    /// - Animation: Door close animation plays (controlled by rendering system, AnimationState changes from 1 to 0)
+    /// - Script events: OnClosed script executes after door is closed (ScriptOnClose field in UTD template)
+    /// - Event firing: EVENT_CLOSE_OBJECT fires first, then OnClosed script executes on door entity
+    /// - Lock state: Closing door does not change lock state (door can be closed while locked)
+    /// - Transition doors: Closing transition doors (module/area transitions) does not trigger transitions
+    /// - Action completes immediately after door is closed and event is fired (single frame execution if already in range)
+    /// - Based on NWScript function ActionCloseDoor (routine ID varies by game version)
     /// </remarks>
     public class ActionCloseDoor : ActionBase
     {
