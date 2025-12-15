@@ -17,10 +17,19 @@ namespace Odyssey.Kotor.Game
     /// Player Controller:
     /// - Based on swkotor2.exe player input/movement system
     /// - Located via string references: "Player" @ 0x007be628, "PlayerList" @ 0x007bdcf4, "GetPlayerList" @ 0x007bdd00
-    /// - "Mod_PlayerList" @ 0x007be060, "SetByPlayerParty" @ 0x007c1d04
+    /// - "Mod_PlayerList" @ 0x007be060, "SetByPlayerParty" @ 0x007c1d04, "MaxPlayers" @ 0x007bdb48
+    /// - "OnPlayerChange" @ 0x007bd9bc, "PlayerCreated" @ 0x007bf624, "PlayerOnly" @ 0x007c0ca8
+    /// - Player data: "PCNAME" @ 0x007be194, "PT_PCNAME" @ 0x007c1904, "GAMEINPROGRESS:PC" @ 0x007c1948
+    /// - "PCAUTOSAVE" @ 0x007be320, "PCLevelAtSpawn" @ 0x007c1968
+    /// - Player stats: "G_PC_LEVEL" @ 0x007bf150, "G_PC_Light_Total" @ 0x007c2944, "G_PC_Dark_Total" @ 0x007c2958
+    /// - "PCGender" @ 0x007c84d8, "PlayerClass" @ 0x007c2adc, "PlayerRace" @ 0x007c2c04
+    /// - "PLAYER" @ 0x007c36f0, " [Player]" @ 0x007be200, "Players: " @ 0x007be20c
     /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec
+    /// - Player animations: "DriveAnimRun_PC" @ 0x007c50cc
+    /// - Player audio: "Volume_PC" @ 0x007c6110, "MinVolumeDist_PC" @ 0x007c60c4, "MaxVolumeDist_PC" @ 0x007c60d8
     /// - Original implementation: Click-to-move with pathfinding, object selection, party control
     /// - Click-to-move: Click world position -> pathfind -> queue ActionMoveToLocation
     /// - Object interaction: Click entity -> queue ActionUseObject or ActionMoveToObject
@@ -488,7 +497,22 @@ namespace Odyssey.Kotor.Game
             Vector3 movement = Vector3.Normalize(direction) * speed * deltaTime;
             Vector3 newPosition = transform.Position + movement;
 
-            // TODO: Check walkmesh validity
+            // Check walkmesh validity using area's walkmesh
+            IArea area = _world?.CurrentArea;
+            if (area != null)
+            {
+                // Project the new position onto the walkmesh to ensure it's on valid ground
+                if (area.ProjectToWalkmesh(newPosition, out Vector3 projectedPosition, out float height))
+                {
+                    // Use the projected position (snapped to walkmesh)
+                    newPosition = projectedPosition;
+                }
+                else if (!area.IsPointWalkable(newPosition))
+                {
+                    // Position is not walkable, don't move
+                    return;
+                }
+            }
             
             // Update facing direction to match movement direction
             if (movement.LengthSquared() > 0.001f) // Only update if moving
