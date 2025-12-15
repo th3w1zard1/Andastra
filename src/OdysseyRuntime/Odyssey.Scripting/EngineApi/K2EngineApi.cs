@@ -723,8 +723,16 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_IsStealthed(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            // TODO: Check stealth status
-            return Variable.FromInt(0);
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity == null || ctx.World == null || ctx.World.EffectSystem == null)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            // Check if entity has Invisibility effect (stealth)
+            bool isStealthed = ctx.World.EffectSystem.HasEffect(entity, EffectType.Invisibility);
+            return Variable.FromInt(isStealthed ? 1 : 0);
         }
 
         private Variable Func_GetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
