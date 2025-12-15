@@ -240,6 +240,28 @@ namespace Odyssey.Kotor.Dialogue
         }
 
         /// <summary>
+        /// Pauses the current conversation.
+        /// </summary>
+        public void PauseConversation()
+        {
+            if (CurrentState != null && CurrentState.IsActive)
+            {
+                CurrentState.IsPaused = true;
+            }
+        }
+
+        /// <summary>
+        /// Resumes a paused conversation.
+        /// </summary>
+        public void ResumeConversation()
+        {
+            if (CurrentState != null && CurrentState.IsPaused)
+            {
+                CurrentState.IsPaused = false;
+            }
+        }
+
+        /// <summary>
         /// Aborts the current conversation.
         /// </summary>
         public void AbortConversation()

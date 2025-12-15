@@ -316,6 +316,10 @@ namespace Odyssey.Scripting.EngineApi
                 case 226: return Func_GetNearestCreatureToLocation(args, ctx);
                 case 227: return Func_GetNearestObject(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
+                case 203: return Func_SetAreaTransitionBMP(args, ctx);
+                case 204: return Func_ActionStartConversation(args, ctx);
+                case 205: return Func_ActionPauseConversation(args, ctx);
+                case 206: return Func_ActionResumeConversation(args, ctx);
                 case 239: return Func_GetStringByStrRef(args, ctx);
                 case 240: return Func_ActionSpeakStringByStrRef(args, ctx);
                 case 241: return Func_DestroyObject(args, ctx);
@@ -3166,6 +3170,120 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             return Variable.FromInt(0); // Failed - no DialogueManager available
+        }
+
+        /// <summary>
+        /// SetAreaTransitionBMP(int nPredefinedAreaTransition, string sCustomAreaTransitionBMP="")
+        /// Sets the transition bitmap for area transitions
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area transition bitmap setting
+        /// Original implementation: Sets transition bitmap for area loading screens
+        /// </remarks>
+        private Variable Func_SetAreaTransitionBMP(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // SetAreaTransitionBMP - Sets area transition bitmap
+            // This is typically handled by the area loading system
+            // For now, we'll just return void (no-op)
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// ActionStartConversation - Starts a conversation with an object
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: ActionStartConversation implementation
+        /// Located via string references: "ActionStartConversation" @ routine 204
+        /// Original implementation: Queues action to start conversation with target object
+        /// </remarks>
+        private Variable Func_ActionStartConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // ActionStartConversation(object oObjectToConverse, string sDialogResRef="", ...)
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            string dialogResRef = args.Count > 1 ? args[1].AsString() : "";
+
+            if (ctx.Caller != null)
+            {
+                // Get target entity
+                IEntity target = ResolveObject(targetId, ctx);
+                if (target == null)
+                {
+                    target = ctx.Caller;
+                }
+
+                // Access DialogueManager from GameServicesContext
+                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                {
+                    if (services.DialogueManager is DialogueManager dialogueManager && services.PlayerEntity != null)
+                    {
+                        // If no dialog resref provided, try to get from target's OnConversation script
+                        if (string.IsNullOrEmpty(dialogResRef) && target != null)
+                        {
+                            Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
+                            if (hooks != null)
+                            {
+                                CSharpKOTOR.Common.ResRef dialogueResRef = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
+                                if (dialogueResRef != null && !dialogueResRef.IsBlank())
+                                {
+                                    dialogResRef = dialogueResRef.ToString();
+                                }
+                            }
+                        }
+
+                        // Start conversation
+                        if (!string.IsNullOrEmpty(dialogResRef))
+                        {
+                            dialogueManager.StartConversation(dialogResRef, target, services.PlayerEntity);
+                        }
+                    }
+                }
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// ActionPauseConversation - Pauses the current conversation
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: ActionPauseConversation implementation
+        /// Located via string references: "ActionPauseConversation" @ routine 205
+        /// Original implementation: Pauses active conversation (used during cutscenes)
+        /// </remarks>
+        private Variable Func_ActionPauseConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // ActionPauseConversation() - Pause the current conversation
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            {
+                if (services.DialogueManager is DialogueManager dialogueManager)
+                {
+                    dialogueManager.PauseConversation();
+                }
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// ActionResumeConversation - Resumes a paused conversation
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: ActionResumeConversation implementation
+        /// Located via string references: "ActionResumeConversation" @ routine 206
+        /// Original implementation: Resumes conversation that was paused
+        /// </remarks>
+        private Variable Func_ActionResumeConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // ActionResumeConversation() - Resume a conversation after it has been paused
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            {
+                if (services.DialogueManager is DialogueManager dialogueManager)
+                {
+                    dialogueManager.ResumeConversation();
+                }
+            }
+
+            return Variable.Void();
         }
 
         private Variable Func_GetLastPerceived(IReadOnlyList<Variable> args, IExecutionContext ctx)
