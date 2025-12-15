@@ -8,6 +8,21 @@ namespace Odyssey.Core.Templates
     /// Interface for entity templates loaded from GFF files (UTC, UTP, UTD, etc.).
     /// Templates define the blueprint for spawning entities at runtime.
     /// </summary>
+    /// <remarks>
+    /// Entity Template System:
+    /// - Based on swkotor2.exe template loading system
+    /// - Located via string references: Template loading from GFF files with signatures
+    /// - GFF template signatures: "UTC " (Creature), "UTP " (Placeable), "UTD " (Door), "UTT " (Trigger)
+    /// - "UTW " (Waypoint), "UTS " (Sound), "UTE " (Encounter), "UTI " (Item), "UTM " (Store)
+    /// - Template loading: FUN_004e10b0 @ 0x004e10b0 loads creature instances from GIT
+    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door instances from GIT
+    /// - FUN_004e01a0 @ 0x004e01a0 loads encounter instances from GIT
+    /// - Template ResRef: Template resource reference (e.g., "n_darthmalak" for creature template)
+    /// - Template Tag: Unique identifier for script lookups (GetObjectByTag)
+    /// - Original implementation: Templates define entity properties, stats, scripts, appearance
+    /// - Templates loaded from module archives or override directory
+    /// - Entity spawning: Creates runtime entity from template with position/facing
+    /// </remarks>
     public interface IEntityTemplate
     {
         /// <summary>
