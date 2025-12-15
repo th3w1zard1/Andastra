@@ -5,6 +5,18 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for script event hooks.
     /// </summary>
+    /// <remarks>
+    /// Script Hooks Component Interface:
+    /// - Based on swkotor2.exe script event system
+    /// - Located via string references: "ScriptHeartbeat" @ 0x007bee60, "ScriptOnNotice" @ 0x007bee70,
+    ///   "ScriptAttacked" @ 0x007bee80, "ScriptDamaged" @ 0x007bee90, "ScriptDeath" @ 0x007beea0
+    /// - Script events: Stored as script ResRef strings in GFF structures (UTC, UTD, UTP, etc.)
+    /// - GetScript/SetScript: Manages script ResRefs for event types (OnHeartbeat, OnAttacked, etc.)
+    /// - Local variables: Per-entity local variables (int, float, string) stored in GFF LocalVars structure
+    /// - Local variables persist in save games and are accessible via NWScript GetLocal* functions
+    /// - Script hooks executed by event bus when game events occur (combat, damage, dialogue, etc.)
+    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks), FUN_0050c510 @ 0x0050c510 (load script hooks)
+    /// </remarks>
     public interface IScriptHooksComponent : IComponent
     {
         /// <summary>
