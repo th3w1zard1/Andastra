@@ -3,6 +3,21 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Manages simulation and render time for deterministic gameplay.
     /// </summary>
+    /// <remarks>
+    /// Time Manager Interface:
+    /// - Based on swkotor2.exe time management system
+    /// - Fixed timestep: Typically 1/60 second (60 Hz) for deterministic physics and gameplay
+    /// - SimulationTime: Accumulated fixed timestep time (advances only during simulation ticks)
+    /// - RealTime: Total elapsed real-world time (continuous)
+    /// - TimeScale: Multiplier for time flow (1.0 = normal, 0.0 = paused, >1.0 = faster)
+    /// - IsPaused: Pauses simulation (TimeScale = 0.0)
+    /// - DeltaTime: Time delta for current frame (scaled by TimeScale)
+    /// - InterpolationAlpha: Blending factor for smooth rendering between simulation frames (0.0 to 1.0)
+    /// - Tick: Advances simulation by one fixed timestep
+    /// - Update: Updates accumulator with real frame time (drives fixed timestep ticks)
+    /// - HasPendingTicks: Returns true if accumulator has enough time for additional ticks
+    /// - Fixed timestep prevents timing-dependent bugs and ensures deterministic gameplay
+    /// </remarks>
     public interface ITimeManager
     {
         /// <summary>

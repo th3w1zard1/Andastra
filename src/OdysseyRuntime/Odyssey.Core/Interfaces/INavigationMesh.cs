@@ -6,6 +6,21 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Navigation mesh for pathfinding and collision.
     /// </summary>
+    /// <remarks>
+    /// Navigation Mesh Interface:
+    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - Located via string references: "BWM" (walkmesh format), walkmesh-related functions
+    /// - BWM format: Binary walkmesh format (WOK = area walkmesh, PWK = placeable walkmesh, DWK = door walkmesh)
+    /// - FindPath: A* pathfinding algorithm from start to goal position
+    /// - FindFaceAt: Finds walkmesh face index containing given position
+    /// - GetFaceCenter: Returns center point of walkmesh face
+    /// - GetAdjacentFaces: Returns neighboring faces for pathfinding traversal
+    /// - IsWalkable: Checks if face is walkable (based on surface material lookup in surfacemat.2da)
+    /// - GetSurfaceMaterial: Returns surface material index (used for sound effects, walkability)
+    /// - Raycast: Line intersection test against walkmesh
+    /// - TestLineOfSight: Determines if line between two points is unobstructed
+    /// - ProjectToSurface: Projects point onto walkmesh surface (for height correction)
+    /// </remarks>
     public interface INavigationMesh
     {
         /// <summary>

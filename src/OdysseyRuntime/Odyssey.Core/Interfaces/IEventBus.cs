@@ -6,6 +6,18 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Event bus for routing entity and world events.
     /// </summary>
+    /// <remarks>
+    /// Event Bus Interface:
+    /// - Based on swkotor2.exe script event system
+    /// - Located via string references: Script event constants (EVENT_ON_*, CSWSSCRIPTEVENT_EVENTTYPE_*)
+    /// - Subscribe/Unsubscribe: Register/unregister event handlers for specific event types
+    /// - Publish: Immediately dispatches event to all subscribers (synchronous)
+    /// - QueueEvent: Queues event for deferred dispatch at frame boundary (prevents re-entrancy issues)
+    /// - DispatchQueuedEvents: Processes all queued events (called at frame boundary)
+    /// - FireScriptEvent: Fires script event on entity (triggers script hooks like OnHeartbeat, OnAttacked, etc.)
+    /// - Script events: Heartbeat, OnNotice, Attacked, Damaged, Death, Dialogue, etc.
+    /// - Event system decouples components and allows script-driven behavior
+    /// </remarks>
     public interface IEventBus
     {
         /// <summary>

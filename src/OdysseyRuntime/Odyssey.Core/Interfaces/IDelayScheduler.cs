@@ -3,6 +3,16 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Scheduler for delayed actions (DelayCommand).
     /// </summary>
+    /// <remarks>
+    /// Delay Scheduler Interface:
+    /// - Based on swkotor2.exe DelayCommand system
+    /// - Located via string references: DelayCommand implementation schedules actions for future execution
+    /// - Original implementation: DelayCommand NWScript function schedules actions to execute after specified delay
+    /// - Uses priority queue sorted by execution time to efficiently process delayed actions
+    /// - Delayed actions execute in order based on schedule time
+    /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
+    /// - Actions are queued to target entity's action queue when delay expires
+    /// </remarks>
     public interface IDelayScheduler
     {
         /// <summary>

@@ -5,6 +5,17 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Base interface for all actions that can be queued on entities.
     /// </summary>
+    /// <remarks>
+    /// Action Interface:
+    /// - Based on swkotor2.exe action system
+    /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
+    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF)
+    /// - Actions are executed by entities, return status (Complete, InProgress, Failed)
+    /// - Actions update each frame until they complete or fail
+    /// - Action types defined in ActionType enum (Move, Attack, UseObject, SpeakString, etc.)
+    /// - Group IDs allow batching/clearing related actions together
+    /// </remarks>
     public interface IAction
     {
         /// <summary>

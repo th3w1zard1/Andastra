@@ -5,6 +5,19 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for managing entity inventory and equipped items.
     /// </summary>
+    /// <remarks>
+    /// Inventory Component Interface:
+    /// - Based on swkotor2.exe inventory system
+    /// - Located via string references: "Inventory" (various locations), inventory slot constants (INVENTORY_SLOT_*)
+    /// - Inventory slots: Equipped items (weapon, armor, shield, etc.) and inventory bag (array of slots)
+    /// - GetItemInSlot: Retrieves item entity in specified slot (returns null if empty)
+    /// - SetItemInSlot: Places item entity in slot (null to clear/unequip)
+    /// - AddItem: Adds item to first available inventory slot
+    /// - RemoveItem: Removes item from inventory (from any slot)
+    /// - HasItemByTag: Checks if entity possesses item with matching tag string
+    /// - GetAllItems: Returns all items in inventory (equipped + inventory bag)
+    /// - Original engine: Inventory stored in GFF format (see UTC creature templates, save files)
+    /// </remarks>
     public interface IInventoryComponent : IComponent
     {
         /// <summary>
