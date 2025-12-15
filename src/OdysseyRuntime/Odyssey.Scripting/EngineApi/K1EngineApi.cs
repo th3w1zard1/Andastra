@@ -62,6 +62,10 @@ namespace Odyssey.Scripting.EngineApi
         // Iteration state for GetFirstInPersistentObject/GetNextInPersistentObject
         // Key: caller entity ID, Value: list of persistent objects and current index
         private readonly Dictionary<uint, PersistentObjectIteration> _persistentObjectIterations;
+        
+        // Iteration state for GetFirstItemInInventory/GetNextItemInInventory
+        // Key: caller entity ID, Value: list of inventory items and current index
+        private readonly Dictionary<uint, InventoryItemIteration> _inventoryItemIterations;
 
         // Track last spell target for GetSpellTargetObject
         // Key: caster entity ID, Value: target entity ID
@@ -103,6 +107,7 @@ namespace Odyssey.Scripting.EngineApi
             _areaObjectIterations = new Dictionary<uint, AreaObjectIteration>();
             _effectIterations = new Dictionary<uint, EffectIteration>();
             _persistentObjectIterations = new Dictionary<uint, PersistentObjectIteration>();
+            _inventoryItemIterations = new Dictionary<uint, InventoryItemIteration>();
             _lastSpellTargets = new Dictionary<uint, uint>();
             _lastEquippedItems = new Dictionary<uint, uint>();
             _lastMetamagicTypes = new Dictionary<uint, int>();
@@ -135,6 +140,12 @@ namespace Odyssey.Scripting.EngineApi
         private class PersistentObjectIteration
         {
             public List<IEntity> Objects { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        private class InventoryItemIteration
+        {
+            public List<IEntity> Items { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -402,6 +413,8 @@ namespace Odyssey.Scripting.EngineApi
                 // Class and level functions
                 case 166: return Func_GetHitDice(args, ctx);
                 case 285: return Func_GetHasFeat(args, ctx);
+                case 339: return Func_GetFirstItemInInventory(args, ctx);
+                case 340: return Func_GetNextItemInInventory(args, ctx);
                 case 341: return Func_GetClassByPosition(args, ctx);
                 case 342: return Func_GetLevelByPosition(args, ctx);
                 case 343: return Func_GetLevelByClass(args, ctx);
@@ -6022,6 +6035,88 @@ namespace Odyssey.Scripting.EngineApi
             }
 
             return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetFirstItemInInventory(object oTarget=OBJECT_SELF) - Get the first item in oTarget's inventory
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetFirstItemInInventory implementation
+        /// Located via string references: "Inventory" @ 0x007c2504, "ItemList" @ 0x007c2f28
+        /// Original implementation: Starts iteration over inventory items (equipped + inventory bag)
+        /// Returns first item or OBJECT_INVALID if no items
+        /// </remarks>
+        private Variable Func_GetFirstItemInInventory(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get inventory component
+            IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
+            if (inventory == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get all items from inventory
+            List<IEntity> items = new List<IEntity>(inventory.GetAllItems());
+
+            // Store iteration state
+            uint callerId = ctx.Caller != null ? ctx.Caller.ObjectId : 0;
+            _inventoryItemIterations[callerId] = new InventoryItemIteration
+            {
+                Items = items,
+                CurrentIndex = 0
+            };
+
+            // Return first item
+            if (items.Count > 0)
+            {
+                return Variable.FromObject(items[0].ObjectId);
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetNextItemInInventory(object oTarget=OBJECT_SELF) - Get the next item in oTarget's inventory
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetNextItemInInventory implementation
+        /// Original implementation: Continues iteration over inventory items
+        /// Returns next item or OBJECT_INVALID if no more items
+        /// </remarks>
+        private Variable Func_GetNextItemInInventory(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get iteration state
+            uint callerId = ctx.Caller != null ? ctx.Caller.ObjectId : 0;
+            InventoryItemIteration iteration;
+            if (!_inventoryItemIterations.TryGetValue(callerId, out iteration))
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Advance to next item
+            iteration.CurrentIndex++;
+            if (iteration.CurrentIndex < iteration.Items.Count)
+            {
+                return Variable.FromObject(iteration.Items[iteration.CurrentIndex].ObjectId);
+            }
+
+            // No more items - clear iteration state
+            _inventoryItemIterations.Remove(callerId);
+            return Variable.FromObject(ObjectInvalid);
         }
 
         #endregion
