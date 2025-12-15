@@ -6,6 +6,14 @@ namespace Odyssey.Game
     /// <summary>
     /// Entry point for the Odyssey Engine game launcher.
     /// </summary>
+    /// <remarks>
+    /// Program Entry Point:
+    /// - Based on swkotor2.exe main entry point
+    /// - Located via string references: "swkotor2" @ 0x007b575c (executable name), "KotOR2" @ 0x0080c210 (game title)
+    /// - Original implementation: Main entry point initializes game, parses command-line arguments, starts game loop
+    /// - Game initialization: Detects KOTOR installation path, loads configuration, creates game instance
+    /// - Based on swkotor2.exe: Main entry point initializes engine, loads resources, starts game loop
+    /// </remarks>
     public static class Program
     {
         [STAThread]

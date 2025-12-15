@@ -12,6 +12,16 @@ namespace Odyssey.Core
     /// <summary>
     /// Game settings and configuration.
     /// </summary>
+    /// <remarks>
+    /// Game Settings:
+    /// - Based on swkotor2.exe game configuration system
+    /// - Located via string references: "swkotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644, "config.txt" @ 0x007b5750
+    /// - "swkotor.ini" (K1 config file), "DiffSettings" @ 0x007c2cdc (display settings)
+    /// - Original implementation: Game settings loaded from INI file (swkotor2.ini for K2, swkotor.ini for K1)
+    /// - Settings include: Game path, window size, fullscreen mode, graphics options, audio options
+    /// - Command-line arguments override INI file settings
+    /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads configuration from INI file)
+    /// </remarks>
     public class GameSettings
     {
         /// <summary>
