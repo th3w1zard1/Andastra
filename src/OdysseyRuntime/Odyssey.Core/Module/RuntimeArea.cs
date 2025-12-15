@@ -15,9 +15,23 @@ namespace Odyssey.Core.Module
     /// Runtime Area:
     /// - Based on swkotor2.exe area system
     /// - Located via string references: "Area" @ 0x007be340, "AreaName" @ 0x007be340, "AREANAME" @ 0x007be1dc
-    /// - "AreaId" @ 0x007bef48, "AreaMap" @ 0x007bd118, "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100
-    /// - "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4
-    /// - "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+    /// - "Area_Name" @ 0x007be73c, "AreaId" @ 0x007bef48, "AreaNumber" @ 0x007c7324
+    /// - "Mod_Area_list" @ 0x007be748, "Mod_Entry_Area" @ 0x007be9b4 (module entry area)
+    /// - "Target_Area" @ 0x007c02d4, "AreaObject" @ 0x007c0b70, "AreaList" @ 0x007c0b7c
+    /// - "AreaListSize" @ 0x007c0b88, "AreaListMaxSize" @ 0x007c0ba4, "AreaPoints" @ 0x007c0b98
+    /// - Area map: "AreaMap" @ 0x007bd118, "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100
+    /// - "AreaMapData" @ 0x007bd0e4, "AreaMapDataSize" @ 0x007bd0f0
+    /// - "NW_MAP_PIN_AREA_%i" @ 0x007bd824 (map pin format string)
+    /// - Area properties: "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4
+    /// - "AreaEffectId" @ 0x007c13f8 (area-wide effect identifier)
+    /// - Events: "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+    /// - Error messages:
+    ///   - "X co-ordinate outside of area, should be in [%f, %f]" @ 0x007c224c
+    ///   - "Y co-ordinate outside of area, should be in [%f, %f]" @ 0x007c2284
+    ///   - "Area %s is not a valid area." @ 0x007c22bc
+    ///   - "Area %s not valid." @ 0x007c22dc
+    /// - Debug display: "    Area Tag: " @ 0x007cb12c, "Area Name: " @ 0x007cb13c
+    /// - GUI: "LBL_Area" @ 0x007cdac0, "LBL_AREANAME" @ 0x007cedb8, "areatrans_p" @ 0x007d0bdc
     /// - Original implementation: Areas contain entities, rooms, walkmesh, visibility data
     /// - Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/
     /// - ARE = Static area properties (lighting, fog, grass) - GFF with "ARE " signature
@@ -25,6 +39,7 @@ namespace Odyssey.Core.Module
     /// - LYT = Room layout and doorhooks - Binary format
     /// - VIS = Room visibility for culling - Binary format for frustum culling optimization
     /// - Area serialization: FUN_005226d0 @ 0x005226d0 saves AreaId and area state
+    /// - Temporary area reference: "tmparea" @ 0x007be620 (used during area loading)
     /// </remarks>
     public class RuntimeArea : IArea
     {
