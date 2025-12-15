@@ -1308,23 +1308,32 @@ namespace Odyssey.Kotor.EngineApi
 
                 case 3: // CREATURE_TYPE_REPUTATION
                     // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
+                    // Based on swkotor2.exe: GetNearestCreature reputation filtering
+                    // Located via string references: GetNearestCreature NWScript function filters by reputation
+                    // Original implementation: Checks faction reputation between caller and creature
                     if (ctx is VMExecutionContext execCtxRep && execCtxRep.AdditionalContext is IGameServicesContext servicesRep)
                     {
-                        if (servicesRep.FactionManager != null && servicesRep.PlayerEntity != null)
+                        if (servicesRep.FactionManager != null && ctx.Caller != null)
                         {
-                            switch (criteriaValue)
+                            // Get reputation between caller and creature
+                            if (servicesRep.FactionManager is FactionManager factionManager)
                             {
-                                case 0: // FRIEND
-                                    // TODO: FactionManager not yet implemented - default to false
-                                    return false;
-                                case 1: // ENEMY
-                                    // TODO: FactionManager not yet implemented - default to false
-                                    return false;
-                                case 2: // NEUTRAL
-                                    // TODO: FactionManager not yet implemented - default to false
-                                    return false;
-                                default:
-                                    return false;
+                                int reputation = factionManager.GetReputation(ctx.Caller, creature);
+                                
+                                switch (criteriaValue)
+                                {
+                                    case 0: // FRIEND
+                                        // Friendly threshold: >= 90
+                                        return reputation >= FactionManager.FriendlyThreshold;
+                                    case 1: // ENEMY
+                                        // Hostile threshold: <= 10
+                                        return reputation <= FactionManager.HostileThreshold;
+                                    case 2: // NEUTRAL
+                                        // Neutral: between hostile and friendly thresholds
+                                        return reputation > FactionManager.HostileThreshold && reputation < FactionManager.FriendlyThreshold;
+                                    default:
+                                        return false;
+                                }
                             }
                         }
                     }
