@@ -87,7 +87,7 @@ namespace Odyssey.MonoGame.Culling
             _graphicsDevice = graphicsDevice;
             _width = width;
             _height = height;
-            _mipLevels = (int)Math.Log(Math.Max(width, height), 2) + 1;
+            // Mip levels will be calculated dynamically in CreateHiZBuffer
 
             _occlusionCache = new Dictionary<uint, OcclusionInfo>();
             _stats = new OcclusionStats();
@@ -144,7 +144,8 @@ namespace Odyssey.MonoGame.Culling
                 // Each mip level stores the maximum depth from 2x2 region of previous level
                 // Note: Point sampling provides a simplified approximation. For accurate Hi-Z,
                 // a custom shader performing max operations on 2x2 regions would be required.
-                for (int mip = 1; mip < _mipLevels; mip++)
+                int maxMipLevels = _hiZBuffer != null ? _hiZBuffer.LevelCount : 1;
+                for (int mip = 1; mip < maxMipLevels; mip++)
                 {
                     int mipWidth = Math.Max(1, _width >> mip);
                     int mipHeight = Math.Max(1, _height >> mip);
@@ -279,12 +280,13 @@ namespace Odyssey.MonoGame.Culling
 
             // Find appropriate mip level based on AABB screen space size
             int mipLevel = 0;
-            if (estimatedScreenSize > 0)
+            if (estimatedScreenSize > 0 && _hiZBuffer != null)
             {
                 // Higher mip levels for smaller screen space objects
                 float mipScale = Math.Max(_width, _height) / estimatedScreenSize;
                 mipLevel = (int)Math.Log(mipScale, 2);
-                mipLevel = Math.Max(0, Math.Min(mipLevel, _mipLevels - 1));
+                int maxMipLevel = _hiZBuffer.LevelCount - 1;
+                mipLevel = Math.Max(0, Math.Min(mipLevel, maxMipLevel));
             }
 
             // Sample Hi-Z buffer at calculated mip level
@@ -348,16 +350,14 @@ namespace Odyssey.MonoGame.Culling
             _width = width;
             _height = height;
 
-            // Recreate Hi-Z buffer with new size
+            // Recreate Hi-Z buffer with new size (will recalculate mip levels automatically)
             if (_hiZBuffer != null)
             {
                 _hiZBuffer.Dispose();
                 _hiZBuffer = null;
             }
 
-            // Recalculate mip levels for new size and recreate buffer
-            // Note: _mipLevels is readonly, so we'd need to recalculate if it were mutable
-            // For now, we recreate with the same mip level count (it will auto-adjust via CreateHiZBuffer)
+            // Recreate buffer with new dimensions (mip levels calculated dynamically)
             CreateHiZBuffer();
         }
 
@@ -367,6 +367,11 @@ namespace Odyssey.MonoGame.Culling
             // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.RenderTarget2D.html
             // RenderTarget2D(GraphicsDevice, int, int, bool, SurfaceFormat, DepthFormat, int, RenderTargetUsage, bool, int)
             // SurfaceFormat.Single stores depth as 32-bit float, mipmaps enabled for hierarchical depth testing
+            // Calculate mip levels: log2(max(width, height)) + 1
+            // This gives us a full mip chain down to 1x1
+            int maxDimension = Math.Max(_width, _height);
+            int calculatedMipLevels = maxDimension > 0 ? ((int)Math.Log(maxDimension, 2) + 1) : 1;
+
             _hiZBuffer = new RenderTarget2D(
                 _graphicsDevice,
                 _width,
@@ -377,7 +382,7 @@ namespace Odyssey.MonoGame.Culling
                 0,
                 RenderTargetUsage.PreserveContents,
                 true,
-                _mipLevels
+                calculatedMipLevels
             );
         }
 
