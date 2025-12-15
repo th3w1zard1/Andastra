@@ -16,6 +16,8 @@ namespace Odyssey.Kotor.Components
     /// - "Max_HPs" @ 0x007cb714 (max HP field), "InCombatHPBase" @ 0x007bf224 (in-combat HP base), "OutOfCombatHPBase" @ 0x007bf210 (out-of-combat HP base)
     /// - "DAM_HP" @ 0x007bf130 (HP damage type identifier)
     /// - "TimePerHP" @ 0x007bf234 (time per HP regen field), "FPRegenTime" @ 0x007bf524 (Force point regen time)
+    /// - Force Points: "CurrentForce" @ 0x007c401c (current Force points field), "ForcePoints" @ 0x007c3410 (Force points field)
+    /// - "MaxForcePoints" @ 0x007c4278 (max Force points field), "BonusForcePoints" @ 0x007bf640 (bonus Force points field)
     /// - Ability score fields: "AbilityScore" @ 0x007c2b74, "STR" @ 0x007c2b80, "DEX" @ 0x007c2b8c, "CON" @ 0x007c2b98, "INT" @ 0x007c2ba4, "WIS" @ 0x007c2bb0, "CHA" @ 0x007c2bbc
     /// - "ModSTR" @ 0x007c2bc8, "ModDEX" @ 0x007c2bd4, "ModCON" @ 0x007c2be0, "ModINT" @ 0x007c2bec, "ModWIS" @ 0x007c2bf8, "ModCHA" @ 0x007c2c04 (ability modifiers)
     /// - Save fields: "FortSave" @ 0x007c4764, "RefSave" @ 0x007c4750, "WillSave" @ 0x007c4758 (save throw fields)
