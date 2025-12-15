@@ -98,6 +98,9 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Preloads resources based on camera position and direction.
         /// </summary>
+        /// <param name="position">Camera position in world space.</param>
+        /// <param name="direction">Camera look direction. Will be normalized if non-zero length.</param>
+        /// <param name="distance">Preload distance threshold. Must be greater than zero.</param>
         public void PreloadFromPosition(System.Numerics.Vector3 position, System.Numerics.Vector3 direction, float distance)
         {
             if (distance <= 0.0f)
