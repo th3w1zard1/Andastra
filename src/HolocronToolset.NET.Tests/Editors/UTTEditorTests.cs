@@ -374,6 +374,140 @@ namespace HolocronToolset.NET.Tests.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:157-178
+        // Original: def test_utt_editor_manipulate_auto_remove_key_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateAutoRemoveKeyCheckbox()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Toggle checkbox
+            editor.AutoRemoveKeyCheckbox.Should().NotBeNull("AutoRemoveKeyCheckbox should be initialized");
+
+            // Set checkbox to true and verify it's set
+            editor.AutoRemoveKeyCheckbox.IsChecked = true;
+            editor.AutoRemoveKeyCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
+            
+            // Build and verify
+            var (data1, _) = editor.Build();
+            var modifiedUtt1 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data1);
+            modifiedUtt1.AutoRemoveKey.Should().BeTrue("AutoRemoveKey should be true after setting checkbox to true");
+
+            // Set checkbox to false and verify it's set
+            editor.AutoRemoveKeyCheckbox.IsChecked = false;
+            editor.AutoRemoveKeyCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
+            
+            // Build and verify
+            var (data2, _) = editor.Build();
+            var modifiedUtt2 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data2);
+            modifiedUtt2.AutoRemoveKey.Should().BeFalse("AutoRemoveKey should be false after setting checkbox to false");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:180-202
+        // Original: def test_utt_editor_manipulate_key_edit(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateKeyEdit()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Test various key names
+            string[] testKeys = { "", "test_key", "key_001", "special_key_123" };
+            foreach (string key in testKeys)
+            {
+                var keyEditField = typeof(UTTEditor).GetField("_keyEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var keyEdit = keyEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+                keyEdit.Should().NotBeNull("KeyEdit should be initialized");
+                keyEdit.Text = key;
+
+                // Save and verify
+                var (data, _) = editor.Build();
+                var modifiedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+                modifiedUtt.KeyName.Should().Be(key);
+
+                // Load back and verify
+                editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
+                keyEdit = keyEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+                keyEdit.Should().NotBeNull();
+                keyEdit.Text.Should().Be(key);
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:713-742
         // Original: def test_utt_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]

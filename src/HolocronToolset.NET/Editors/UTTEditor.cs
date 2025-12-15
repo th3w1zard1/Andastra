@@ -494,7 +494,10 @@ namespace HolocronToolset.NET.Editors
 
             // Advanced
             // Matching Python: utt.auto_remove_key = self.ui.autoRemoveKeyCheckbox.isChecked()
-            _utt.AutoRemoveKey = _autoRemoveKeyCheckbox?.IsChecked == true;
+            if (_autoRemoveKeyCheckbox != null)
+            {
+                _utt.AutoRemoveKey = _autoRemoveKeyCheckbox.IsChecked == true;
+            }
             // Matching Python: utt.key_name = self.ui.keyEdit.text()
             if (_keyEdit != null)
             {
@@ -593,7 +596,7 @@ namespace HolocronToolset.NET.Editors
                 var fieldsSetByDismantle = new System.Collections.Generic.HashSet<string>
                 {
                     "Tag", "ResRef", "Comment", "Type", "LinkedTo", "LinkedToFlags",
-                    "KeyName", "TrapDetectable", "TrapDetectDC", "DisarmDC", "TrapFlag",
+                    "KeyName", "AutoRemoveKey", "TrapDetectable", "TrapDetectDC", "DisarmDC", "TrapFlag",
                     "TrapType", "IsTrap", "KeyRequired", "Lockable", "Locked", "Hardness",
                     "KeyName2", "ScriptHeartbeat", "ScriptOnEnter", "ScriptOnExit", "ScriptUserDefine",
                     "TransitionDestin"
@@ -706,6 +709,7 @@ namespace HolocronToolset.NET.Editors
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public TextBox ResrefEdit => _resrefEdit;
+        public Avalonia.Controls.CheckBox AutoRemoveKeyCheckbox => _autoRemoveKeyCheckbox;
         public UTT Utt => _utt;
     }
 }
