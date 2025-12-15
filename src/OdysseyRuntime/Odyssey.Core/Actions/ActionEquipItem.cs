@@ -102,16 +102,20 @@ namespace Odyssey.Core.Actions
 
             // Equip item to slot
             // Based on swkotor2.exe: Equip item implementation
-            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594
-            // Original implementation: Sets item in equipment slot, modifies entity stats, fires OnEquipItem script event
-            // OnEquipItem script event: CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM = 0x26 (from FUN_004dcfb0 switch case 0x26)
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594, "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
+            // Original implementation: Sets item in equipment slot, modifies entity stats, fires OnInventoryDisturbed script event
+            // OnInventoryDisturbed fires when items are added/removed/equipped/unequipped (CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED = 0x1b)
             // Item properties from baseitems.2da modify entity stats (AC, attack bonus, damage, abilities, etc.)
             inventory.SetItemInSlot(_inventorySlot, item);
 
-            // Fire equip event
+            // Fire OnInventoryDisturbed script event
+            // Based on swkotor2.exe: ON_INVENTORY_DISTURBED fires when items are equipped/unequipped
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
+            // Original implementation: OnInventoryDisturbed script fires on actor entity when inventory is modified (equip/unequip/add/remove)
             IEventBus eventBus = actor.World?.EventBus;
             if (eventBus != null)
             {
+                eventBus.FireScriptEvent(actor, ScriptEvent.OnDisturbed, item);
                 eventBus.Publish(new ItemEquippedEvent { Actor = actor, Item = item, Slot = _inventorySlot });
             }
 

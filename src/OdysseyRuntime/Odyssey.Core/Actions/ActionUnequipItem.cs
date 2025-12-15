@@ -47,17 +47,21 @@ namespace Odyssey.Core.Actions
 
             // Clear the slot (unequip)
             // Based on swkotor2.exe: Unequip item implementation
-            // Located via string references: "UnequipHItem" @ 0x007c3870, "UnequipItems" @ 0x007c3880
+            // Located via string references: "UnequipHItem" @ 0x007c3870, "UnequipItems" @ 0x007c3880, "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
             // Original implementation: Removes item from equipment slot, removes stat modifications, returns item to inventory
             // Item remains in entity's inventory after unequipping (does not delete item)
             // Unequipping removes stat bonuses/penalties from item properties (AC, attack, damage, etc.)
             IEntity unequippedItem = inventory.GetItemInSlot(_inventorySlot);
             inventory.SetItemInSlot(_inventorySlot, null);
 
-            // Fire unequip event
+            // Fire OnInventoryDisturbed script event
+            // Based on swkotor2.exe: ON_INVENTORY_DISTURBED fires when items are equipped/unequipped
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
+            // Original implementation: OnInventoryDisturbed script fires on actor entity when inventory is modified (equip/unequip/add/remove)
             IEventBus eventBus = actor.World?.EventBus;
             if (eventBus != null && unequippedItem != null)
             {
+                eventBus.FireScriptEvent(actor, ScriptEvent.OnDisturbed, unequippedItem);
                 eventBus.Publish(new ItemUnequippedEvent { Actor = actor, Item = unequippedItem, Slot = _inventorySlot });
             }
 
