@@ -11,19 +11,20 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Renderable Component:
     /// - Based on swkotor2.exe rendering system
-    /// - Located via string references: Model loading and rendering functions handle entity models
-    /// - "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
+    /// - Located via string references: "ModelResRef" @ 0x007c2f6c (model resource reference field)
+    /// - "Appearance_Type" @ 0x007c40f0 (appearance type field for creatures)
     /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da row
-    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
-    /// - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40 (appearance loading error)
+    /// - Error messages: "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc
+    /// - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
     /// - Original implementation: Entities with models can be rendered in the game world
     /// - ModelResRef: MDL file resource reference for 3D model (loaded from installation resources)
     /// - AppearanceRow: Index into appearance.2da for creature appearance customization (Appearance_Type field)
-    /// - Models loaded from MDL/MDX files (model geometry/animation), textures from TPC files (texture data)
+    /// - FUN_005261b0 loads creature model by reading appearance.2da row, extracting ModelA/ModelB fields,
+    ///   constructing model path, loading MDL/MDX files (model geometry/animation)
+    /// - Textures loaded from TPC files (texture data) referenced by TexA/TexB fields in appearance.2da
     /// - Appearance.2da defines: ModelA, ModelB (model variants), TexA, TexB (texture variants), Race (race model base)
     /// - Model visibility controlled by Visible flag (used for culling, stealth, invisibility effects)
     /// - IsLoaded flag tracks whether model data has been loaded into memory (for async loading)
-    /// - Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (load creature model from appearance)
     /// </remarks>
     public class RenderableComponent : IRenderableComponent
     {
