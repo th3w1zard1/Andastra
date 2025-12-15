@@ -75,6 +75,11 @@ namespace Odyssey.Core.Entities
 
         public void Tick()
         {
+            // Based on swkotor2.exe: Fixed timestep tick implementation
+            // Located via string references: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668
+            // Original implementation: 60 Hz fixed timestep (1/60s = 0.01667s per tick)
+            // Fixed timestep ensures consistent simulation regardless of frame rate
+            // Game logic (physics, combat, scripts) runs at fixed rate, rendering at variable rate
             if (_accumulator >= FixedTimestep)
             {
                 _simulationTime += FixedTimestep;

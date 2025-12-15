@@ -29,6 +29,11 @@ namespace Odyssey.Core.Entities
     /// </remarks>
     public class Entity : IEntity
     {
+        // Based on swkotor2.exe: ObjectId assignment system
+        // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+        // Original implementation: ObjectId is unique 32-bit identifier assigned sequentially
+        // OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001, OBJECT_TYPE_INVALID = 0x7F000002
+        // ObjectId starts from 1 and increments for each new entity
         private static uint _nextObjectId = 1;
         private readonly Dictionary<Type, IComponent> _components;
         private readonly Dictionary<string, object> _data;

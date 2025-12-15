@@ -158,6 +158,11 @@ namespace Odyssey.Core.Entities
 
         public void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer = null)
         {
+            // Based on swkotor2.exe: Script event firing implementation
+            // Located via string references: "OnHeartbeat" @ 0x007bd720, "Mod_OnHeartbeat" @ 0x007be840
+            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching
+            // Script events fire on entities with matching event hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
+            // Events are queued and dispatched each frame, routed to subscribed handlers
             var evt = new ScriptEventArgs(entity, eventType, triggerer);
             QueueEvent(evt);
         }

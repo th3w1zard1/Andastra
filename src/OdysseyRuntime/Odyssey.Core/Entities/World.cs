@@ -168,6 +168,10 @@ namespace Odyssey.Core.Entities
 
         public void RegisterEntity(IEntity entity)
         {
+            // Based on swkotor2.exe: Entity registration system
+            // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+            // Original implementation: Entities registered in world with ObjectId, Tag, and ObjectType indices
+            // Entity lookup: GetEntity by ObjectId (O(1) lookup), GetEntityByTag searches by tag string (case-insensitive)
             if (entity == null)
             {
                 throw new ArgumentNullException("entity");
@@ -182,6 +186,7 @@ namespace Odyssey.Core.Entities
             _allEntities.Add(entity);
 
             // Register by tag
+            // Original engine: Entities indexed by tag for GetObjectByTag NWScript function
             if (!string.IsNullOrEmpty(entity.Tag))
             {
                 if (!_entitiesByTag.TryGetValue(entity.Tag, out List<IEntity> tagList))
@@ -193,6 +198,7 @@ namespace Odyssey.Core.Entities
             }
 
             // Register by type
+            // Original engine: Entities indexed by ObjectType for efficient type-based queries
             if (!_entitiesByType.TryGetValue(entity.ObjectType, out List<IEntity> typeList))
             {
                 typeList = new List<IEntity>();
