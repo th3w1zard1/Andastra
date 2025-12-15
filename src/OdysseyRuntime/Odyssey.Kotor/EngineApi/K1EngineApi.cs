@@ -5644,11 +5644,9 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.Void();
             }
             
-            // Cannot destroy modules or areas (ObjectType enum doesn't have Module/Area - these are handled separately)
-            // TODO: Check if entity is module or area using a different method
-            {
-                return Variable.Void();
-            }
+            // Modules and areas are not entities in our system (they're managed separately via World/ModuleLoader)
+            // Only entity objects (Creature, Item, Placeable, Door, etc.) can be destroyed
+            // The entity null check above already handles invalid entities
             
             // If no delay and no fade, destroy immediately
             if (delay <= 0f && noFade != 0)
