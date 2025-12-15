@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Enums;
+using Odyssey.Core.Entities;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Components;
@@ -115,7 +117,22 @@ namespace Odyssey.Kotor.Game
             }
 
             // Project position onto walkmesh
-            Vector3? projectedPosition = area.NavigationMesh.GetNearestPoint(position);
+            // Based on swkotor2.exe: Projects click position onto walkmesh surface
+            // INavigationMesh.ProjectToSurface projects point onto walkmesh surface
+            Vector3? projectedPosition = null;
+            if (area.NavigationMesh != null)
+            {
+                Vector3 result;
+                float height;
+                if (area.NavigationMesh.ProjectToSurface(position, out result, out height))
+                {
+                    projectedPosition = result;
+                }
+                else
+                {
+                    projectedPosition = position; // Fallback to original position
+                }
+            }
             if (projectedPosition == null)
             {
                 Console.WriteLine("[PlayerController] Could not project position onto walkmesh");
@@ -211,11 +228,15 @@ namespace Odyssey.Kotor.Game
             {
                 // Start dialogue if friendly
                 // Check for Conversation property (loaded from UTC template ScriptDialogue field)
-                string conversation = creature.GetData<string>("Conversation", string.Empty);
-                if (string.IsNullOrEmpty(conversation))
+                string conversation = string.Empty;
+                if (creature is Entity entity)
                 {
-                    // Also check ScriptDialogue entity data
-                    conversation = creature.GetData<string>("ScriptDialogue", string.Empty);
+                    conversation = entity.GetData<string>("Conversation", string.Empty);
+                    if (string.IsNullOrEmpty(conversation))
+                    {
+                        // Also check ScriptDialogue entity data
+                        conversation = entity.GetData<string>("ScriptDialogue", string.Empty);
+                    }
                 }
                 
                 if (!string.IsNullOrEmpty(conversation))
@@ -309,13 +330,13 @@ namespace Odyssey.Kotor.Game
             }
 
             // 1. Try key first
-            if (doorComponent.KeyRequired && !string.IsNullOrEmpty(doorComponent.KeyName))
+            if (doorComponent.KeyRequired && !string.IsNullOrEmpty(doorComponent.KeyTag))
             {
                 IInventoryComponent inventory = _playerEntity.GetComponent<IInventoryComponent>();
-                if (inventory != null && inventory.HasItemByTag(doorComponent.KeyName))
+                if (inventory != null && inventory.HasItemByTag(doorComponent.KeyTag))
                 {
                     doorComponent.Unlock();
-                    Console.WriteLine("[PlayerController] Door unlocked with key: " + doorComponent.KeyName);
+                    Console.WriteLine("[PlayerController] Door unlocked with key: " + doorComponent.KeyTag);
                     return true;
                 }
             }
@@ -324,15 +345,15 @@ namespace Odyssey.Kotor.Game
             if (doorComponent.LockableByScript && doorComponent.LockDC > 0)
             {
                 // Get player's Security skill
-                IStatsComponent stats = _playerEntity.GetComponent<IStatsComponent>();
-                if (stats != null)
+                IStatsComponent playerStats = _playerEntity.GetComponent<IStatsComponent>();
+                if (playerStats != null)
                 {
-                    // Get Security skill from stats component
-                    IStatsComponent stats = _playerEntity.GetComponent<IStatsComponent>();
                     Random random = new Random();
                     int roll = random.Next(1, 21);
                     int securitySkill = 0;
-                    if (stats != null)
+                    // TODO: Get Security skill from stats component
+                    // Security skill would be calculated from DEX modifier + ranks + misc modifiers
+                    if (playerStats != null)
                     {
                         // SKILL_SECURITY = 6
                         securitySkill = stats.GetSkillRank(6);
@@ -381,7 +402,9 @@ namespace Odyssey.Kotor.Game
                 if (actionQueue != null)
                 {
                     actionQueue.Clear();
-                    actionQueue.Add(new ActionUseObject(placeable.ObjectId));
+                    // ActionUseObject doesn't exist yet - use ActionMoveToObject as placeholder
+                    // TODO: Implement ActionUseObject for placeable interaction
+                    actionQueue.Add(new ActionMoveToObject(placeable.ObjectId));
                 }
             }
             else
@@ -530,11 +553,15 @@ namespace Odyssey.Kotor.Game
             }
 
             // Get dialogue ResRef from NPC entity data (loaded from UTC template ScriptDialogue field)
-            string conversation = npc.GetData<string>("Conversation", string.Empty);
-            if (string.IsNullOrEmpty(conversation))
+            string conversation = string.Empty;
+            if (npc is Entity entity)
             {
-                // Also check ScriptDialogue entity data
-                conversation = npc.GetData<string>("ScriptDialogue", string.Empty);
+                conversation = entity.GetData<string>("Conversation", string.Empty);
+                if (string.IsNullOrEmpty(conversation))
+                {
+                    // Also check ScriptDialogue entity data
+                    conversation = entity.GetData<string>("ScriptDialogue", string.Empty);
+                }
             }
             
             if (string.IsNullOrEmpty(conversation))
