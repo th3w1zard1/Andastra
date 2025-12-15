@@ -2958,49 +2958,25 @@ namespace Odyssey.Kotor.EngineApi
         }
 
         /// <summary>
-        /// GetSpellTargetLocation() - Returns the location of the last spell target
-        /// Based on swkotor2.exe: GetSpellTargetLocation implementation (routine ID 222)
-        /// </summary>
-        private Variable Func_GetSpellTargetLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromLocation((object)ObjectInvalid);
-            }
-
-            // Retrieve last spell target location for this caster
-            if (_lastSpellTargetLocations.TryGetValue(ctx.Caller.ObjectId, out Location targetLocation))
-            {
-                // Return location as object reference (engine-managed Location object)
-                // Location objects are managed by the engine, so we pass the Location object itself
-                return Variable.FromLocation(targetLocation);
-            }
-
-            return Variable.FromLocation((object)ObjectInvalid);
-        }
-
-        /// <summary>
-        /// ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, ...) - Casts a spell at a target location
-        /// Based on swkotor2.exe: Queues spell casting action at location, tracks location and metamagic type
+        /// ActionCastSpellAtLocation(int nSpell, location lTarget, int nMetaMagic=0, ...) - Casts a spell at a target location
+        /// Based on swkotor2.exe: Queues spell casting action at location, tracks target location
         /// </summary>
         private Variable Func_ActionCastSpellAtLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int spellId = args.Count > 0 ? args[0].AsInt() : 0;
-            Location targetLocation = args.Count > 1 ? (Location)args[1].ComplexValue : null;
+            object locObj = args.Count > 1 ? args[1].AsLocation() : null;
             int metamagic = args.Count > 2 ? args[2].AsInt() : 0; // nMetaMagic parameter
 
-            if (ctx.Caller == null || targetLocation == null)
+            if (ctx.Caller == null || locObj == null || !(locObj is Location location))
             {
                 return Variable.Void();
             }
 
-            // Extract position from Location object
-            Vector3 targetPosition = targetLocation.Position;
-
             // Track spell target location for GetSpellTargetLocation
-            // Based on swkotor2.exe: GetSpellTargetLocation returns last location of spell cast by caller
+            // Based on swkotor2.exe: GetSpellTargetLocation returns last target location of spell cast by caller
+            // Located via string references: Spell target location tracking for script queries
             // Original implementation: Stores target location when spell is cast at location
-            _lastSpellTargetLocations[ctx.Caller.ObjectId] = targetLocation;
+            _lastSpellTargetLocations[ctx.Caller.ObjectId] = location;
 
             // Track spell ID for GetSpellId
             _lastSpellIds[ctx.Caller.ObjectId] = spellId;
@@ -3016,7 +2992,7 @@ namespace Odyssey.Kotor.EngineApi
                 _lastMetamagicTypes.Remove(ctx.Caller.ObjectId);
             }
 
-            var action = new ActionCastSpellAtLocation(spellId, targetPosition);
+            var action = new ActionCastSpellAtLocation(spellId, location.Position);
             IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
             if (queue != null)
             {
@@ -5489,6 +5465,30 @@ namespace Odyssey.Kotor.EngineApi
             
             var location = new Location(position, facing);
             return Variable.FromLocation(location);
+        }
+
+        /// <summary>
+        /// GetSpellTargetLocation() - Get the location of the caller's last spell target
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetSpellTargetLocation implementation
+        /// Routine 222: Returns the location of the caller's last spell target
+        /// Original implementation: Tracks spell target locations when spells are cast
+        /// </remarks>
+        private Variable Func_GetSpellTargetLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromLocation(null);
+            }
+
+            uint callerId = ctx.Caller.ObjectId;
+            if (_lastSpellTargetLocations.TryGetValue(callerId, out Location location))
+            {
+                return Variable.FromLocation(location);
+            }
+
+            return Variable.FromLocation(null);
         }
 
         /// <summary>
