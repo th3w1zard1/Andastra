@@ -9,7 +9,11 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Play Animation Action:
     /// - Based on swkotor2.exe animation system
-    /// - Located via string references: ActionPlayAnimation NWScript function implementation
+    /// - Located via string references: "Animation" @ 0x007c3440, "AnimList" @ 0x007c3694
+    /// - "PlayAnim" @ 0x007c346c, "AnimLoop" @ 0x007c4c70 (animation loop flag)
+    /// - "CurrentAnim" @ 0x007c38d4, "NextAnim" @ 0x007c38c8 (animation state tracking)
+    /// - Animation timing: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668 (animation frame timing)
+    /// - ActionPlayAnimation NWScript function queues animation action to entity action queue
     /// - Original implementation: Plays animation on entity, supports speed and duration parameters
     /// - Animation IDs reference animation indices in MDL animation arrays
     /// - Speed parameter controls playback rate (1.0 = normal, 2.0 = double speed, 0.5 = half speed)

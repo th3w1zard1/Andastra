@@ -16,6 +16,17 @@ namespace Odyssey.MonoGame.Rendering
     /// - Asynchronous query results
     /// - Temporal coherence
     /// </summary>
+    /// <remarks>
+    /// Occlusion Query System (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: Original engine uses VIS file-based room visibility culling
+    /// - Original implementation: KOTOR uses VIS (visibility) files for occlusion culling, not hardware occlusion queries
+    /// - VIS files: Pre-computed room-to-room visibility relationships stored in VIS binary format
+    /// - Original occlusion culling: Room-based visibility from VIS files + frustum culling
+    /// - This is a modernization feature: Hardware occlusion queries provide GPU-accelerated occlusion testing
+    /// - Modern enhancement: More accurate than VIS files for dynamic objects, but requires modern GPU features
+    /// - Original engine: DirectX 8/9 era, hardware occlusion queries not widely used in 2003-2004
+    /// </remarks>
     public class OcclusionQueries : IDisposable
     {
         /// <summary>
@@ -47,7 +58,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;

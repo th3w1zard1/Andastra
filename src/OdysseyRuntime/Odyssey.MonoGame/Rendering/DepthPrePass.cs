@@ -16,6 +16,16 @@ namespace Odyssey.MonoGame.Rendering
     /// - Can be used for Hi-Z buffer generation
     /// - Improves performance on fill-rate bound scenes
     /// </summary>
+    /// <remarks>
+    /// Depth Pre-Pass (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Original implementation: KOTOR uses immediate-mode rendering with depth buffer testing
+    /// - Original engine: DirectX 8/9 fixed-function pipeline, no explicit depth pre-pass
+    /// - Original rendering: Single-pass rendering with depth testing enabled
+    /// - This is a modernization feature: Depth pre-pass reduces pixel shader overhead on modern GPUs
+    /// - Modern enhancement: Two-pass rendering (depth-only, then full) for fill-rate optimization
+    /// - Original engine: Rendered directly with depth buffer, relied on early-Z hardware when available
+    /// </remarks>
     public class DepthPrePass : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -51,7 +61,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;

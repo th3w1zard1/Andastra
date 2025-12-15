@@ -18,6 +18,19 @@ namespace Odyssey.MonoGame.Culling
     /// - Software occlusion culling for distant objects
     /// - Temporal coherence (objects stay occluded for multiple frames)
     /// </summary>
+    /// <remarks>
+    /// Occlusion Culling System (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: Original engine uses VIS file-based room visibility culling
+    /// - VIS file format: "%s/%s.VIS" @ 0x007b972c (VIS file path format), "visasmarr" @ 0x007bf720 (VIS file reference)
+    /// - Original implementation: KOTOR uses VIS (visibility) files for room-based occlusion culling
+    /// - VIS files: Pre-computed room-to-room visibility relationships for efficient occlusion culling
+    /// - Original occlusion culling: Room-based visibility from VIS files combined with frustum culling
+    /// - This is a modernization feature: Hi-Z buffer provides GPU-accelerated pixel-accurate occlusion testing
+    /// - Modern enhancement: More accurate than VIS files for dynamic objects, requires modern GPU features
+    /// - Original engine: DirectX 8/9 era, Hi-Z buffers not available, relied on VIS file pre-computation
+    /// - Combined approaches: Modern renderer can use both VIS-based room culling + Hi-Z for best performance
+    /// </remarks>
     public class OcclusionCuller : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;

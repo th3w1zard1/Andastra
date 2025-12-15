@@ -17,6 +17,17 @@ namespace Odyssey.MonoGame.Rendering
     /// - Crowd rendering
     /// - Architectural elements (columns, windows, etc.)
     /// </summary>
+    /// <remarks>
+    /// GPU Instancing (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Original implementation: KOTOR renders each object with individual draw calls
+    /// - Original engine: DirectX 8/9 era, hardware instancing not widely available/supported
+    /// - Original rendering: Each entity/model rendered separately with individual draw calls
+    /// - This is a modernization feature: GPU instancing dramatically reduces draw calls for repeated geometry
+    /// - Modern enhancement: Uses modern GPU instancing APIs to render many instances in one draw call
+    /// - Original behavior: Every repeated prop (trees, rocks) = separate draw call
+    /// - Modern benefit: Hundreds of instances can be rendered in a single draw call
+    /// </remarks>
     public class GPUInstancing : IDisposable
     {
         /// <summary>
@@ -63,7 +74,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;

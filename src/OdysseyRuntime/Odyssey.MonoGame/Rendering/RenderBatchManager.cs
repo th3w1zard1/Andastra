@@ -17,6 +17,17 @@ namespace Odyssey.MonoGame.Rendering
     /// - Instance batching for repeated meshes
     /// - State sorting to minimize state changes
     /// </summary>
+    /// <remarks>
+    /// Render Batch Manager (Based on Original Engine):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: "renderorder" @ 0x007bab50 (render order sorting)
+    /// - "Apropagaterender" @ 0x007bb10f (render propagation), "renderbmlmtype" @ 0x007bb26c (billboard/lightmap type)
+    /// - Original implementation: KOTOR sorts objects by material/shader for efficient rendering
+    /// - Render order: Objects grouped by material to minimize state changes and enable batching
+    /// - Original behavior: Objects sorted by material ID, then by distance for transparency
+    /// - Modern enhancement: Explicit batch management with static/dynamic/instance batching strategies
+    /// - Original engine: Implicit batching through render order optimization
+    /// </remarks>
     public class RenderBatchManager
     {
         /// <summary>
