@@ -945,8 +945,22 @@ namespace Odyssey.Scripting.EngineApi
         {
             uint creature = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int form = args.Count > 1 ? args[1].AsInt() : 0;
-            // TODO: Check if combat form is active
-            return Variable.FromInt(0);
+            
+            IEntity entity = ResolveObject(creature, ctx);
+            if (entity == null)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            // Get active combat form from entity data (stored as "ActiveCombatForm")
+            // Combat forms: 0 = None, 1 = Beast, 2 = Droid, 3 = Force, etc.
+            if (entity.HasData("ActiveCombatForm"))
+            {
+                int activeForm = entity.GetData<int>("ActiveCombatForm", 0);
+                return Variable.FromInt(activeForm == form ? 1 : 0);
+            }
+            
+            return Variable.FromInt(0); // No form active
         }
 
         // Swoop minigame functions (TSL extensions)
@@ -958,14 +972,27 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_SWMG_GetPlayerInvincibility(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Get swoop minigame invincibility
-            return Variable.FromInt(0);
+            // Get swoop minigame invincibility state from player entity
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PlayerEntity != null)
+            {
+                bool invincible = services.PlayerEntity.GetData<bool>("SwoopMinigameInvincible", false);
+                return Variable.FromInt(invincible ? 1 : 0);
+            }
+            
+            return Variable.FromInt(0); // Not invincible
         }
 
         private Variable Func_SWMG_SetPlayerInvincibility(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int invincible = args.Count > 0 ? args[0].AsInt() : 0;
-            // TODO: Set swoop minigame invincibility
+            
+            // Store swoop minigame invincibility state in player entity
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PlayerEntity != null)
+            {
+                // Store invincibility state in player entity data
+                services.PlayerEntity.SetData("SwoopMinigameInvincible", invincible != 0);
+            }
+            
             return Variable.Void();
         }
 
