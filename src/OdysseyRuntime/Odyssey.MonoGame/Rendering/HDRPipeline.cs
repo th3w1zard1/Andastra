@@ -104,12 +104,12 @@ namespace Odyssey.MonoGame.Rendering
             }
 
             // Create luminance target if needed
-            if (_luminanceTarget == null || _luminanceTarget.Width != hdrInput.Width || _luminanceTarget.Height != hdrInput.Height)
+            // Luminance buffer can be smaller (1/4 or 1/8 size) for performance
+            int lumWidth = Math.Max(1, hdrInput.Width / 4);
+            int lumHeight = Math.Max(1, hdrInput.Height / 4);
+            if (_luminanceTarget == null || _luminanceTarget.Width != lumWidth || _luminanceTarget.Height != lumHeight)
             {
                 _luminanceTarget?.Dispose();
-                // Luminance buffer can be smaller (1/4 or 1/8 size) for performance
-                int lumWidth = hdrInput.Width / 4;
-                int lumHeight = hdrInput.Height / 4;
                 _luminanceTarget = new RenderTarget2D(
                     _graphicsDevice,
                     lumWidth,

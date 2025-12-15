@@ -139,16 +139,27 @@ namespace CSharpKOTOR.Formats.LIP
                 {
                     var writer = new LIPBinaryWriter(lip, ms);
                     writer.Write(autoClose: false); // Don't auto-close in Write()
-                    // Ensure stream is flushed and get data
-                    // ToArray() returns all data written regardless of current position
-                    ms.Flush();
-                    byte[] result = ms.ToArray();
-                    writer.Dispose(); // Dispose after we have the data (this will close the stream)
+                    // Get data using the underlying RawBinaryWriter's Data() method
+                    // This ensures all buffered writes are included
+                    var rawWriterField = typeof(LIPBinaryWriter).GetField("_writer", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var rawWriter = rawWriterField?.GetValue(writer) as RawBinaryWriter;
+                    byte[] result;
+                    if (rawWriter != null)
+                    {
+                        // Use the writer's Data() method which reads from the stream correctly
+                        result = rawWriter.Data();
+                    }
+                    else
+                    {
+                        // Fallback: read from stream directly
+                        ms.Position = 0;
+                        result = ms.ToArray();
+                    }
+                    writer.Dispose(); // Dispose after we have the data
                     return result;
                 }
                 finally
                 {
-                    // Stream may already be closed by writer.Dispose(), but Dispose is idempotent
                     ms.Dispose();
                 }
             }
