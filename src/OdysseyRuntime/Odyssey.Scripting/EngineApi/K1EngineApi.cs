@@ -874,6 +874,147 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
+        /// GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue, location lLocation, int nNth=1, ...)
+        /// Returns the nearest creature to a location matching the specified criteria
+        /// </summary>
+        private Variable Func_GetNearestCreatureToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int firstCriteriaType = args.Count > 0 ? args[0].AsInt() : -1;
+            int firstCriteriaValue = args.Count > 1 ? args[1].AsInt() : -1;
+            object locObj = args.Count > 2 ? args[2].AsLocation() : null;
+            int nth = args.Count > 3 ? args[3].AsInt() : 1;
+            int secondCriteriaType = args.Count > 4 ? args[4].AsInt() : -1;
+            int secondCriteriaValue = args.Count > 5 ? args[5].AsInt() : -1;
+            int thirdCriteriaType = args.Count > 6 ? args[6].AsInt() : -1;
+            int thirdCriteriaValue = args.Count > 7 ? args[7].AsInt() : -1;
+
+            // Extract position from location
+            Vector3 locationPos = Vector3.Zero;
+            if (locObj != null && locObj is Location location)
+            {
+                locationPos = location.Position;
+            }
+            else
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get all creatures in radius
+            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(locationPos, 100f, ObjectType.Creature);
+            
+            // Filter and sort by criteria
+            List<IEntity> matchingCreatures = new List<IEntity>();
+            
+            foreach (IEntity entity in entities)
+            {
+                if (entity.ObjectType != ObjectType.Creature) continue;
+
+                // Check first criteria
+                if (!MatchesCreatureCriteria(entity, firstCriteriaType, firstCriteriaValue, ctx))
+                {
+                    continue;
+                }
+
+                // Check second criteria (if specified)
+                if (secondCriteriaType >= 0 && !MatchesCreatureCriteria(entity, secondCriteriaType, secondCriteriaValue, ctx))
+                {
+                    continue;
+                }
+
+                // Check third criteria (if specified)
+                if (thirdCriteriaType >= 0 && !MatchesCreatureCriteria(entity, thirdCriteriaType, thirdCriteriaValue, ctx))
+                {
+                    continue;
+                }
+
+                matchingCreatures.Add(entity);
+            }
+
+            // Sort by distance and return Nth nearest
+            if (matchingCreatures.Count > 0)
+            {
+                matchingCreatures.Sort((a, b) =>
+                {
+                    Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    if (aTransform == null || bTransform == null) return 0;
+                    
+                    float distA = Vector3.DistanceSquared(locationPos, aTransform.Position);
+                    float distB = Vector3.DistanceSquared(locationPos, bTransform.Position);
+                    return distA.CompareTo(distB);
+                });
+
+                int index = nth - 1; // nth is 1-based
+                if (index >= 0 && index < matchingCreatures.Count)
+                {
+                    return Variable.FromObject(matchingCreatures[index].ObjectId);
+                }
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1)
+        /// Returns the Nth object nearest to oTarget that is of the specified type
+        /// </summary>
+        private Variable Func_GetNearestObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int objectType = args.Count > 0 ? args[0].AsInt() : 32767; // OBJECT_TYPE_ALL = 32767
+            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            int nth = args.Count > 2 ? args[2].AsInt() : 1;
+
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                target = ctx.Caller;
+            }
+
+            if (target == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            if (targetTransform == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Convert object type constant to ObjectType enum
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            if (objectType != 32767) // Not OBJECT_TYPE_ALL
+            {
+                typeMask = (Core.Enums.ObjectType)objectType;
+            }
+
+            // Get all entities of the specified type
+            var candidates = new List<(IEntity entity, float distance)>();
+            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
+            {
+                if (entity == target) continue;
+
+                Core.Interfaces.Components.ITransformComponent entityTransform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                if (entityTransform != null)
+                {
+                    float distance = Vector3.DistanceSquared(targetTransform.Position, entityTransform.Position);
+                    candidates.Add((entity, distance));
+                }
+            }
+
+            // Sort by distance
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+
+            // Return Nth nearest (1-indexed)
+            if (nth > 0 && nth <= candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
         /// Helper method to check if a creature matches the specified criteria
         /// </summary>
         private bool MatchesCreatureCriteria(IEntity creature, int criteriaType, int criteriaValue, IExecutionContext ctx)
