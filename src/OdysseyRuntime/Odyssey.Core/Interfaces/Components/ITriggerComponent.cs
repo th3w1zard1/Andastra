@@ -5,6 +5,18 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for trigger volumes.
     /// </summary>
+    /// <remarks>
+    /// Trigger Component Interface:
+    /// - Based on swkotor2.exe trigger system
+    /// - Located via string references: "Trigger" @ 0x007bc548, "Trigger List" @ 0x007bd280
+    /// - Original implementation: Triggers are invisible volumes defined by polygon geometry
+    /// - Triggers fire events (OnEnter, OnExit) when entities enter/exit trigger volume
+    /// - TriggerType: 0=generic, 1=transition, 2=trap
+    /// - Transitions link to other areas/modules (LinkedTo, LinkedToModule)
+    /// - Traps can be detected (TrapDetected), disarmed (TrapDisarmed) with DCs (TrapDetectDC, TrapDisarmDC)
+    /// - FireOnce triggers only fire once (HasFired tracks state)
+    /// - Script events: OnEnter, OnExit, OnHeartbeat, OnClick, OnDisarm, OnTrapTriggered
+    /// </remarks>
     public interface ITriggerComponent : IComponent
     {
         /// <summary>

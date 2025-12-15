@@ -3,6 +3,16 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for placeable objects.
     /// </summary>
+    /// <remarks>
+    /// Placeable Component Interface:
+    /// - Based on swkotor2.exe placeable system
+    /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
+    /// - Original implementation: Placeables have appearance, useability, locks, inventory, HP
+    /// - Placeables can be useable (IsUseable), have inventory (HasInventory), be static (IsStatic)
+    /// - Containers can be opened/closed (IsOpen), locked (IsLocked) with lock DC (LockDC)
+    /// - Destructible placeables have HP (HitPoints, MaxHitPoints) and hardness (Hardness)
+    /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// </remarks>
     public interface IPlaceableComponent : IComponent
     {
         /// <summary>
