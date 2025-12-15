@@ -44,6 +44,7 @@ namespace Odyssey.Kotor.Game
         public PerceptionManager PerceptionManager { get; set; }
         public bool IsLoadingFromSave { get; set; }
         public GameSession GameSession { get; set; }
+        public Core.Camera.CameraController CameraController { get; set; }
     }
 
     /// <summary>
