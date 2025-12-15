@@ -11,7 +11,10 @@ namespace Odyssey.Core.Journal
     /// - Based on swkotor2.exe journal/quest system
     /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8, "Journal" @ 0x007c2490
     /// - "journal_p" @ 0x007ca9c4, "LBL_JOURNAL" @ 0x007c8c60, "LBL_JOURNAL_DESC" @ 0x007c8c4c
-    /// - "Quest" @ 0x007c2450, "QuestState" @ 0x007c2458, "QuestCompleted" @ 0x007c2460
+    /// - "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8, "QuestState" @ 0x007c2458, "QuestCompleted" @ 0x007c2460
+    /// - "NEWQUESTSOUND" @ 0x007bded8 (new quest notification sound)
+    /// - Journal picture format: "]?NW_JOURNAL_PICTURE%s" @ 0x007c2a3e (journal picture reference format)
+    /// - GUI: "BTN_QUESTS" @ 0x007d1058 (quests button)
     /// - Error: "Journal Crash! Partial Update on non-existant entry; plot:%s flags:%i" @ 0x007cbca8
     /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
     /// - Original implementation: Journal entries stored in JRL files, quest states in global variables
