@@ -16,6 +16,18 @@ namespace Odyssey.MonoGame.LOD
     /// - Configurable fade distance
     /// - Per-object fade tracking
     /// </summary>
+    /// <remarks>
+    /// LOD Fade System:
+    /// - Based on swkotor2.exe fade system
+    /// - Located via string references: "FadeDelayOnDeath" @ 0x007bf55c (fade delay on death)
+    /// - "FadeLength" @ 0x007c3580, "FadeDelay" @ 0x007c358c, "FadeColor" @ 0x007c3598
+    /// - "FadeType" @ 0x007c35a4, "FadeTime" @ 0x007c60ec
+    /// - GUI: "fade_p" @ 0x007c8790 (fade panel), "donefade" @ 0x007cdb94 (fade complete flag)
+    /// - Original implementation: KOTOR uses fade effects for transitions, death, and screen effects
+    /// - Fade types: Screen fade (full screen), object fade (per-object alpha), LOD fade (smooth LOD transitions)
+    /// - Fade timing: FadeDelay controls when fade starts, FadeLength controls duration
+    /// - FadeColor: RGBA color for screen fade effects
+    /// </remarks>
     public class LODFadeSystem
     {
         /// <summary>
