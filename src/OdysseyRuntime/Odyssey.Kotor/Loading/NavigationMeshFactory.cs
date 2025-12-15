@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
-using Vector3 = System.Numerics.Vector3;
 
 namespace Odyssey.Kotor.Loading
 {
@@ -18,13 +17,21 @@ namespace Odyssey.Kotor.Loading
     /// <remarks>
     /// Navigation Mesh Factory:
     /// - Based on swkotor2.exe walkmesh/navigation system
-    /// - Located via string references: "walkmesh" pathfinding functions, "nwsareapathfind.cpp"
+    /// - Located via string references: "walkmesh" pathfinding functions, "?nwsareapathfind.cpp" @ 0x007be3ff (pathfinding implementation)
+    /// - "BWM V1.0" @ 0x007c061c (BWM file signature), "ERROR: opening a Binary walkmesh file for writeing that already exists (File: %s)" @ 0x007c0630
+    /// - Pathfinding errors:
+    ///   - "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    ///   - "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
     /// - Original implementation: Combines multiple room walkmeshes into single navigation mesh for pathfinding
+    /// - AABB tree: Original engine builds AABB tree from walkmesh faces for spatial queries (raycast, point projection)
+    /// - Pathfinding: Uses A* algorithm on walkmesh adjacency graph, falls back to grid-based pathfinding when direct path fails
+    /// - Grid-based pathfinding: Used for initial/terminal path segments when direct walkmesh path cannot be found
     /// - BWM File Format (from spec):
     ///   - Type 1: Area walkmesh (WOK) - Includes AABB tree + walkable adjacency + perimeter edges
     ///   - Type 0: Placeable/door walkmesh (PWK/DWK) - Collision + hook vectors
-    /// - Adjacency encoding: adjacency = faceIndex * 3 + edgeIndex
+    /// - Adjacency encoding: adjacency = faceIndex * 3 + edgeIndex, -1 = no neighbor
     /// - Decode: face = adjacency / 3, edge = adjacency % 3
+    /// - Surface materials: Determine walkability (0-30 range, lookup via surfacemat.2da)
     /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
     /// </remarks>
     public class NavigationMeshFactory

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Odyssey.MonoGame.Spatial
 {
@@ -14,7 +13,15 @@ namespace Odyssey.MonoGame.Spatial
     /// - Proximity queries
     /// - Dynamic object management
     /// 
-    /// Based on modern AAA game spatial partitioning practices.
+    /// Based on swkotor2.exe rendering optimization system:
+    /// - Located via string references: "VIS" (visibility data), "room" (room-based culling)
+    /// - Original implementation: Uses VIS (visibility) files for room-based frustum culling
+    /// - VIS files: Binary format containing room visibility graph for frustum culling optimization
+    /// - Room culling: Original engine uses VIS data to determine which rooms are visible from camera
+    /// - Frustum culling: Tests room bounding boxes against camera frustum to skip rendering hidden rooms
+    /// - Spatial queries: Original engine uses room-based spatial queries for entity lookup
+    /// - This implementation: Modern octree enhancement for more flexible spatial partitioning
+    /// - Note: Original engine primarily uses VIS-based room culling, octree is a modern optimization
     /// </summary>
     public class Octree<T> where T : class
     {
