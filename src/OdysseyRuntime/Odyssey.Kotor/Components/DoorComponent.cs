@@ -1,3 +1,4 @@
+using System;
 using Odyssey.Core.Interfaces;
 
 namespace Odyssey.Kotor.Components
@@ -10,10 +11,13 @@ namespace Odyssey.Kotor.Components
     /// - Based on swkotor2.exe door system
     /// - Located via string references: "Door List" @ 0x007bd248, "GenericDoors" @ 0x007c4ba8
     /// - "DoorTypes" @ 0x007c4b9c, "SecretDoorDC" @ 0x007c1acc
-    /// - Original implementation: Doors have open/closed states, locks, traps, module transitions
+    /// - Original implementation: FUN_00584f40 @ 0x00584f40 (save door data to GFF)
+    /// - FUN_004e08e0 @ 0x004e08e0 (load door instances from GIT)
+    /// - Doors have open/closed states, locks, traps, module transitions
     /// - Based on UTD file format (GFF with "UTD " signature)
     /// - Script events: OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
     /// - Module transitions: LinkedToModule + LinkedToFlags bit 1 = module transition
+    /// - Area transitions: LinkedToFlags bit 2 = area transition (linked to waypoint/trigger)
     /// </remarks>
     public class DoorComponent : IComponent
     {
@@ -210,6 +214,138 @@ namespace Odyssey.Kotor.Components
         public bool IsAreaTransition
         {
             get { return (LinkedToFlags & 2) != 0 && !string.IsNullOrEmpty(LinkedTo); }
+        }
+
+        /// <summary>
+        /// Whether the door can be locked by scripts.
+        /// </summary>
+        public bool LockableByScript { get; set; }
+
+        /// <summary>
+        /// Whether the door has been bashed open.
+        /// </summary>
+        public bool IsBashed { get; set; }
+
+        /// <summary>
+        /// Key tag (alias for KeyName for interface compatibility).
+        /// </summary>
+        public string KeyTag
+        {
+            get { return KeyName; }
+            set { KeyName = value; }
+        }
+
+        /// <summary>
+        /// Opens the door.
+        /// </summary>
+        /// <remarks>
+        /// Door Opening:
+        /// - Based on swkotor2.exe door opening system
+        /// - Original implementation: Sets IsOpen flag, plays open animation, fires OnOpen script
+        /// </remarks>
+        public void Open()
+        {
+            if (IsOpen)
+            {
+                return;
+            }
+
+            IsOpen = true;
+            AnimationState = 1; // Open state
+
+            // Fire OnOpen script event would be handled by action system
+        }
+
+        /// <summary>
+        /// Closes the door.
+        /// </summary>
+        /// <remarks>
+        /// Door Closing:
+        /// - Based on swkotor2.exe door closing system
+        /// - Original implementation: Sets IsOpen flag, plays close animation, fires OnClose script
+        /// </remarks>
+        public void Close()
+        {
+            if (!IsOpen)
+            {
+                return;
+            }
+
+            IsOpen = false;
+            AnimationState = 0; // Closed state
+
+            // Fire OnClose script event would be handled by action system
+        }
+
+        /// <summary>
+        /// Locks the door.
+        /// </summary>
+        /// <remarks>
+        /// Door Locking:
+        /// - Based on swkotor2.exe door locking system
+        /// - Original implementation: Sets IsLocked flag, fires OnLock script
+        /// </remarks>
+        public void Lock()
+        {
+            if (!Lockable || IsLocked)
+            {
+                return;
+            }
+
+            IsLocked = true;
+
+            // Fire OnLock script event would be handled by action system
+        }
+
+        /// <summary>
+        /// Unlocks the door.
+        /// </summary>
+        /// <remarks>
+        /// Door Unlocking:
+        /// - Based on swkotor2.exe door unlocking system
+        /// - Original implementation: Clears IsLocked flag, fires OnUnlock script
+        /// - Can be unlocked via key, lockpicking (Security skill), or bashing
+        /// </remarks>
+        public void Unlock()
+        {
+            if (!IsLocked)
+            {
+                return;
+            }
+
+            IsLocked = false;
+
+            // Fire OnUnlock script event would be handled by action system
+        }
+
+        /// <summary>
+        /// Applies damage to the door (for bashing).
+        /// </summary>
+        /// <remarks>
+        /// Door Bashing:
+        /// - Based on swkotor2.exe door bashing system
+        /// - Original implementation: Applies damage minus hardness, destroys door when HP reaches 0
+        /// - Hardness reduces damage taken (minimum 1 damage per hit)
+        /// </remarks>
+        public void ApplyDamage(int damage)
+        {
+            if (damage <= 0)
+            {
+                return;
+            }
+
+            // Apply hardness reduction (minimum 1 damage)
+            int actualDamage = Math.Max(1, damage - Hardness);
+            CurrentHP = Math.Max(0, CurrentHP - actualDamage);
+
+            // If door is destroyed, mark as bashed and open
+            if (CurrentHP <= 0)
+            {
+                IsBashed = true;
+                IsLocked = false;
+                IsOpen = true;
+                AnimationState = 2; // Destroyed state
+            }
         }
     }
 }

@@ -11,9 +11,12 @@ namespace Odyssey.Kotor.Components
     /// - Based on swkotor2.exe placeable system
     /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
     /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0
-    /// - Original implementation: Placeables have appearance, useability, locks, inventory, HP
+    /// - Original implementation: FUN_00585ec0 @ 0x00585ec0 (save placeable data to GFF)
+    /// - FUN_004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
+    /// - Placeables have appearance, useability, locks, inventory, HP
     /// - Based on UTP file format (GFF with "UTP " signature)
     /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// - Containers (HasInventory=true) can store items, open/close states
     /// </remarks>
     public class PlaceableComponent : IPlaceableComponent
     {

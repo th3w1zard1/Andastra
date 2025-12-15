@@ -13,9 +13,14 @@ namespace Odyssey.Kotor.Components
     /// - "CreatureSize" @ 0x007bf680, "CreatureSpeed" @ 0x007c4b8c
     /// - Error: "Creature template '%s' doesn't exist." @ 0x007bf78c
     /// - "Cannot set creature %s to faction %d because faction does not exist!" @ 0x007bf2a8
-    /// - Original implementation: Creatures have appearance, stats, equipment, classes, feats, force powers
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
+    /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature instances from GIT)
+    /// - FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
+    /// - Creatures have appearance, stats, equipment, classes, feats, force powers
     /// - Based on UTC file format (GFF with "UTC " signature)
     /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, etc.
+    /// - Equip_ItemList stores equipped items, ItemList stores inventory, PerceptionList stores perception data
+    /// - CombatRoundData stores combat state (FUN_00529470 saves combat round data)
     /// </remarks>
     public class CreatureComponent : IComponent
     {

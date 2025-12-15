@@ -14,7 +14,7 @@ namespace Odyssey.Kotor.Components
     /// - Perception updates periodically
     /// - Scripts can query GetLastPerceived, GetObjectSeen, etc.
     /// - Perception fires OnPerception event on creature
-    /// 
+    ///
     /// Default ranges (from appearances.2da PERSPACE column):
     /// - Standard creature: ~20m sight, ~15m hearing
     /// - Can be modified by effects/feats
@@ -87,7 +87,7 @@ namespace Odyssey.Kotor.Components
             }
 
             // Fall back to local tracking
-            foreach (var kvp in _perceivedEntities)
+            foreach (KeyValuePair<uint, PerceptionInfo> kvp in _perceivedEntities)
             {
                 if (kvp.Value.Seen && Owner != null)
                 {
@@ -285,7 +285,7 @@ namespace Odyssey.Kotor.Components
             get
             {
                 int count = 0;
-                foreach (var kvp in _perceivedEntities)
+                foreach (KeyValuePair<uint, PerceptionInfo> kvp in _perceivedEntities)
                 {
                     if (kvp.Value.Seen)
                     {
@@ -304,7 +304,7 @@ namespace Odyssey.Kotor.Components
             get
             {
                 int count = 0;
-                foreach (var kvp in _perceivedEntities)
+                foreach (KeyValuePair<uint, PerceptionInfo> kvp in _perceivedEntities)
                 {
                     if (kvp.Value.Heard)
                     {

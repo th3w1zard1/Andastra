@@ -11,12 +11,16 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Script Hooks Component:
     /// - Based on swkotor2.exe script event system
-    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007bee98
+    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0
     /// - "ScriptAttacked" @ 0x007bee80, "ScriptDamaged" @ 0x007bee70, "ScriptDeath" @ 0x007bee20
-    /// - Original implementation: Maps script events to script resource references (ResRef strings)
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures)
+    /// - FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables)
+    /// - FUN_00584f40 @ 0x00584f40 (save script hooks for doors)
+    /// - Maps script events to script resource references (ResRef strings)
     /// - Scripts are executed by NCS VM when events fire (OnHeartbeat, OnPerception, OnAttacked, etc.)
     /// - Script ResRefs stored in GFF structures (e.g., ScriptHeartbeat, ScriptOnNotice fields)
     /// - Local variables (int, float, string) stored per-entity for script execution context
+    /// - Local variables accessed via GetLocalInt/GetLocalFloat/GetLocalString NWScript functions
     /// </remarks>
     public class ScriptHooksComponent : IComponent, IScriptHooksComponent
     {

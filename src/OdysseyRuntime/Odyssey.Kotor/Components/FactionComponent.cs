@@ -13,7 +13,7 @@ namespace Odyssey.Kotor.Components
     /// - FactionId references repute.2da
     /// - Personal reputation overrides faction-based
     /// - Temporary hostility from combat
-    /// 
+    ///
     /// Common factions:
     /// - 1: Player
     /// - 2: Hostile (always hostile to player)
@@ -83,7 +83,7 @@ namespace Odyssey.Kotor.Components
             }
 
             // Fall back to simple faction comparison
-            var otherFaction = other.GetComponent<IFactionComponent>();
+            IFactionComponent otherFaction = other.GetComponent<IFactionComponent>();
             if (otherFaction == null)
             {
                 return false;
@@ -139,7 +139,7 @@ namespace Odyssey.Kotor.Components
             }
 
             // Fall back to simple faction comparison
-            var otherFaction = other.GetComponent<IFactionComponent>();
+            IFactionComponent otherFaction = other.GetComponent<IFactionComponent>();
             if (otherFaction == null)
             {
                 return false;

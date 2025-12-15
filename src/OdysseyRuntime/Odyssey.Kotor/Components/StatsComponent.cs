@@ -14,16 +14,19 @@ namespace Odyssey.Kotor.Components
     /// - Based on swkotor2.exe stats system
     /// - Located via string references: "CurrentHP" @ 0x007c1b40, "Max_HPs" @ 0x007cb714
     /// - "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210, "DAM_HP" @ 0x007bf130
-    /// - Original implementation: Ability scores, HP, BAB, saves stored in creature GFF structures
-    /// - Ability scores: 1-30+ range, modifier = (score - 10) / 2
-    /// - Hit points: Based on class hit dice + Con modifier per level
-    /// - Attack: BAB + STR/DEX mod vs. Defense
-    /// - Defense: 10 + DEX mod + Armor + Class bonus
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature stats to GFF)
+    /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature stats from GIT)
+    /// - Ability scores, HP, BAB, saves stored in creature GFF structures at offsets in creature object
+    /// - Ability scores: 1-30+ range, modifier = (score - 10) / 2 (D20 formula)
+    /// - Hit points: Based on class hit dice + Con modifier per level (from classes.2da)
+    /// - Attack: BAB + STR/DEX mod vs. Defense (natural 20 = auto hit, natural 1 = auto miss)
+    /// - Defense: 10 + DEX mod + Armor + Natural + Deflection + Class bonus
     /// - Saves: Base + ability mod (Fort=CON, Ref=DEX, Will=WIS)
+    /// - InCombatHPBase vs OutOfCombatHPBase: Creatures have separate HP pools for combat/non-combat
     /// 
     /// Key 2DA tables:
-    /// - classes.2da: Hit dice, BAB progression, saves
-    /// - appearance.2da: Walk/run speed
+    /// - classes.2da: Hit dice, BAB progression, saves progression
+    /// - appearance.2da: Walk/run speed, creature size
     /// </remarks>
     public class StatsComponent : IStatsComponent
     {
