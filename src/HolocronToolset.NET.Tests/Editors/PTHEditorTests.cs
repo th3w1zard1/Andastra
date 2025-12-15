@@ -689,5 +689,35 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Controls.SelectUnderneath.Should().NotBeNull("SelectUnderneath should exist");
             editor.Controls.DeleteSelected.Should().NotBeNull("DeleteSelected should exist");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:467-481
+        // Original: def test_pth_editor_material_colors_initialization(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorMaterialColorsInitialization()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new PTHEditor(null, installation);
+
+            // Verify material colors exist and have entries
+            editor.MaterialColors.Should().NotBeNull("MaterialColors should be initialized");
+            editor.MaterialColors.Count.Should().BeGreaterThan(0, "MaterialColors should have entries");
+
+            // Verify some expected materials exist
+            editor.MaterialColors.Should().ContainKey(CSharpKOTOR.Common.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
+            editor.MaterialColors.Should().ContainKey(CSharpKOTOR.Common.SurfaceMaterial.Grass, "Should contain GRASS material");
+            editor.MaterialColors.Should().ContainKey(CSharpKOTOR.Common.SurfaceMaterial.Water, "Should contain WATER material");
+        }
     }
 }

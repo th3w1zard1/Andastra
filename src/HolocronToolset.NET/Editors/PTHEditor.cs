@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
@@ -28,6 +29,9 @@ namespace HolocronToolset.NET.Editors
         
         // Control scheme - exposed for testing
         public PTHControlScheme Controls => _controls;
+        
+        // Material colors dictionary - exposed for testing
+        public Dictionary<SurfaceMaterial, Avalonia.Media.Color> MaterialColors { get; private set; }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:121-177
         // Original: def __init__(self, parent, installation):
@@ -41,11 +45,56 @@ namespace HolocronToolset.NET.Editors
             _settings = new GITSettings();
             _controls = new PTHControlScheme(this);
 
+            // Initialize material colors
+            InitializeMaterialColors();
+
             InitializeComponent();
             SetupStatusBar();
             StatusOut = new PTHStatusOut(this);
             SetupUI();
             New();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:143-169
+        // Original: def intColorToQColor(num_color: int) -> QColor:
+        private void InitializeMaterialColors()
+        {
+            // Helper to convert integer color to Avalonia Color
+            Avalonia.Media.Color IntColorToAvaloniaColor(int numColor)
+            {
+                var kotorColor = CSharpKOTOR.Common.Color.FromRgbaInteger(numColor);
+                return new Avalonia.Media.Color(
+                    (byte)(kotorColor.A * 255),
+                    (byte)(kotorColor.R * 255),
+                    (byte)(kotorColor.G * 255),
+                    (byte)(kotorColor.B * 255)
+                );
+            }
+
+            MaterialColors = new Dictionary<SurfaceMaterial, Avalonia.Media.Color>
+            {
+                { SurfaceMaterial.Undefined, IntColorToAvaloniaColor(_settings.UndefinedMaterialColour) },
+                { SurfaceMaterial.Obscuring, IntColorToAvaloniaColor(_settings.ObscuringMaterialColour) },
+                { SurfaceMaterial.Dirt, IntColorToAvaloniaColor(_settings.DirtMaterialColour) },
+                { SurfaceMaterial.Grass, IntColorToAvaloniaColor(_settings.GrassMaterialColour) },
+                { SurfaceMaterial.Stone, IntColorToAvaloniaColor(_settings.StoneMaterialColour) },
+                { SurfaceMaterial.Wood, IntColorToAvaloniaColor(_settings.WoodMaterialColour) },
+                { SurfaceMaterial.Water, IntColorToAvaloniaColor(_settings.WaterMaterialColour) },
+                { SurfaceMaterial.NonWalk, IntColorToAvaloniaColor(_settings.NonWalkMaterialColour) },
+                { SurfaceMaterial.Transparent, IntColorToAvaloniaColor(_settings.TransparentMaterialColour) },
+                { SurfaceMaterial.Carpet, IntColorToAvaloniaColor(_settings.CarpetMaterialColour) },
+                { SurfaceMaterial.Metal, IntColorToAvaloniaColor(_settings.MetalMaterialColour) },
+                { SurfaceMaterial.Puddles, IntColorToAvaloniaColor(_settings.PuddlesMaterialColour) },
+                { SurfaceMaterial.Swamp, IntColorToAvaloniaColor(_settings.SwampMaterialColour) },
+                { SurfaceMaterial.Mud, IntColorToAvaloniaColor(_settings.MudMaterialColour) },
+                { SurfaceMaterial.Leaves, IntColorToAvaloniaColor(_settings.LeavesMaterialColour) },
+                { SurfaceMaterial.Lava, IntColorToAvaloniaColor(_settings.LavaMaterialColour) },
+                { SurfaceMaterial.BottomlessPit, IntColorToAvaloniaColor(_settings.BottomlessPitMaterialColour) },
+                { SurfaceMaterial.DeepWater, IntColorToAvaloniaColor(_settings.DeepWaterMaterialColour) },
+                { SurfaceMaterial.Door, IntColorToAvaloniaColor(_settings.DoorMaterialColour) },
+                { SurfaceMaterial.NonWalkGrass, IntColorToAvaloniaColor(_settings.NonWalkGrassMaterialColour) },
+                { SurfaceMaterial.Trigger, IntColorToAvaloniaColor(_settings.NonWalkGrassMaterialColour) }
+            };
         }
 
         private void InitializeComponent()
