@@ -15,6 +15,19 @@ namespace Odyssey.MonoGame.PostProcessing
     /// - White point adjustment
     /// - Artistic control
     /// </summary>
+    /// <remarks>
+    /// Tone Mapping:
+    /// - Based on swkotor2.exe rendering system (modern HDR enhancement)
+    /// - Located via string references: "Frame Buffer" @ 0x007c8408 (HDR frame buffer)
+    /// - "CB_FRAMEBUFF" @ 0x007d1d84 (frame buffer option)
+    /// - Original implementation: KOTOR uses fixed lighting and color mapping
+    /// - HDR rendering: Original engine uses LDR (low dynamic range) rendering
+    /// - This MonoGame implementation: Modern HDR rendering with tone mapping
+    /// - Tone mapping: Converts HDR (high dynamic range) to LDR for display
+    /// - Operators: Reinhard, ACES, Uncharted 2, Filmic, Luminance-based
+    /// - Exposure control: Adjusts brightness of HDR image before tone mapping
+    /// - White point: Maximum luminance value for tone mapping curve
+    /// </remarks>
     public class ToneMapping
     {
         /// <summary>
