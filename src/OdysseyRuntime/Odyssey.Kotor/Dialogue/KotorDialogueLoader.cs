@@ -14,8 +14,15 @@ namespace Odyssey.Kotor.Dialogue
     /// Converts CSharpKOTOR.Resource.Generics.DLG.DLG to Odyssey.Core.Dialogue.RuntimeDialogue.
     /// </summary>
     /// <remarks>
-    /// Based on CSharpKOTOR DLG format at CSharpKOTOR/Resource/Generics/DLG/DLG.cs
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py
+    /// Dialogue Loader:
+    /// - Based on swkotor2.exe dialogue loading system
+    /// - Located via string references: Dialogue loading functions handle DLG file parsing
+    /// - Original implementation: Loads DLG files, converts to runtime dialogue structure
+    /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
+    /// - Dialogue entries (NPC lines) and replies (player options) linked by indices
+    /// - Scripts, conditions, and voice-over data embedded in dialogue nodes
+    /// - Based on CSharpKOTOR DLG format at CSharpKOTOR/Resource/Generics/DLG/DLG.cs
+    /// - Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py
     /// </remarks>
     public class KotorDialogueLoader : IDialogueLoader
     {
