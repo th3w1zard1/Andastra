@@ -12,22 +12,30 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// KOTOR D20 System:
     /// - Based on swkotor2.exe stats system
-    /// - Located via string references: "CurrentHP" @ 0x007c1b40, "CurrentHP: " @ 0x007cb168 (debug display)
-    /// - "Max_HPs" @ 0x007cb714, "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210
+    /// - Located via string references: "CurrentHP" @ 0x007c1b40 (current HP field), "CurrentHP: " @ 0x007cb168 (debug display)
+    /// - "Max_HPs" @ 0x007cb714 (max HP field), "InCombatHPBase" @ 0x007bf224 (in-combat HP base), "OutOfCombatHPBase" @ 0x007bf210 (out-of-combat HP base)
     /// - "DAM_HP" @ 0x007bf130 (HP damage type identifier)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature stats to GFF)
-    /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature stats from GIT)
+    /// - "TimePerHP" @ 0x007bf234 (time per HP regen field), "FPRegenTime" @ 0x007bf524 (Force point regen time)
+    /// - Ability score fields: "AbilityScore" @ 0x007c2b74, "STR" @ 0x007c2b80, "DEX" @ 0x007c2b8c, "CON" @ 0x007c2b98, "INT" @ 0x007c2ba4, "WIS" @ 0x007c2bb0, "CHA" @ 0x007c2bbc
+    /// - "ModSTR" @ 0x007c2bc8, "ModDEX" @ 0x007c2bd4, "ModCON" @ 0x007c2be0, "ModINT" @ 0x007c2bec, "ModWIS" @ 0x007c2bf8, "ModCHA" @ 0x007c2c04 (ability modifiers)
+    /// - Save fields: "FortSave" @ 0x007c4764, "RefSave" @ 0x007c4750, "WillSave" @ 0x007c4758 (save throw fields)
+    /// - "FortSaveThrow" @ 0x007c42b4, "RefSaveThrow" @ 0x007c42c4, "WillSaveThrow" @ 0x007c42d4 (save throw calculation fields)
+    /// - "Save_DC" @ 0x007c048c (save DC field), "DC_SAVE" @ 0x007c0160 (DC save constant)
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature stats to GFF including abilities, HP, saves)
+    /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature stats from GIT including abilities, HP, saves, BAB)
     /// - Ability scores, HP, BAB, saves stored in creature GFF structures at offsets in creature object
-    /// - Ability scores: 1-30+ range, modifier = (score - 10) / 2 (D20 formula)
-    /// - Hit points: Based on class hit dice + Con modifier per level (from classes.2da)
+    /// - Ability scores: 1-30+ range, modifier = (score - 10) / 2 (D20 formula, rounded down)
+    /// - Hit points: Based on class hit dice + Con modifier per level (from classes.2da HP column)
     /// - Attack: BAB + STR/DEX mod vs. Defense (natural 20 = auto hit, natural 1 = auto miss)
-    /// - Defense: 10 + DEX mod + Armor + Natural + Deflection + Class bonus
-    /// - Saves: Base + ability mod (Fort=CON, Ref=DEX, Will=WIS)
-    /// - InCombatHPBase vs OutOfCombatHPBase: Creatures have separate HP pools for combat/non-combat
+    /// - Defense: 10 + DEX mod + Armor + Natural + Deflection + Class bonus (AC = Armor Class)
+    /// - Saves: Base + ability mod (Fort=CON, Ref=DEX, Will=WIS) + miscellaneous bonuses
+    /// - InCombatHPBase vs OutOfCombatHPBase: Creatures have separate HP pools for combat/non-combat (combat HP is base for combat, non-combat HP is base for non-combat)
+    /// - Force points: CurrentFP and MaxFP stored for Force-sensitive classes (Jedi Consular, Guardian, Sentinel, etc.)
     /// 
     /// Key 2DA tables:
-    /// - classes.2da: Hit dice, BAB progression, saves progression
-    /// - appearance.2da: Walk/run speed, creature size
+    /// - classes.2da: Hit dice (HP column), BAB progression (BAB column), saves progression (Fort/Ref/Will columns)
+    /// - appearance.2da: Walk/run speed (WALKRATE/RUNRATE columns), creature size (SIZE column)
+    /// - abilities.2da: Ability score names and descriptions (not used for calculations, just display)
     /// </remarks>
     public class StatsComponent : IStatsComponent
     {
