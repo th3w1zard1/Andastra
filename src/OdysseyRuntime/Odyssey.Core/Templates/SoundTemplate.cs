@@ -12,13 +12,25 @@ namespace Odyssey.Core.Templates
     /// <remarks>
     /// Sound Template:
     /// - Based on swkotor2.exe sound system
-    /// - Located via string references: Sound entity functions handle ambient audio emission
-    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references sound templates)
+    /// - Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+    /// - "SoundResRef" @ 0x007b5f70 (sound resource reference field), "PlaySound" @ 0x007c5f70 (sound playback function)
+    /// - "Volume" @ 0x007c6110 (sound volume field), "MinVolumeDist" @ 0x007c60c4, "MaxVolumeDist" @ 0x007c60d8 (sound distance falloff fields)
+    /// - Sound types: "SoundOneShot" @ 0x007c4aa4 (one-shot sound flag), "SoundDuration" @ 0x007c49c0 (sound duration field)
+    /// - "AmbientSound" @ 0x007c4c68 (ambient sound flag), "SoundSet" @ 0x007cbd50 (sound set field)
+    /// - Sound paths: "HD0:STREAMSOUNDS\%s" @ 0x007c61d4 (streaming sound path format), "guisounds" @ 0x007b5f7c (GUI sounds directory)
+    /// - Template loading: FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
+    /// - FUN_005226d0 @ 0x005226d0 (entity serialization references sound templates)
     /// - Original implementation: UTS (Sound) GFF templates define sound properties
-    /// - UTS file format: GFF with "UTS " signature containing sound data
-    /// - Sound entities emit positional audio in the game world
-    /// - Sounds can be active/inactive, looping, positional, with volume and distance falloff
-    /// - Sounds can randomize position or play random sounds from a list
+    /// - UTS file format: GFF with "UTS " signature containing sound data (Active, Looping, Positional, ResRef, Volume, MaxDistance, MinDistance)
+    /// - Sound entities emit positional audio in the game world (Positional field for 3D audio)
+    /// - Sounds can be active/inactive (Active field), looping (Looping field), positional (Positional field)
+    /// - Volume: 0-127 range (Volume field), distance falloff: MinDistance (full volume) to MaxDistance (zero volume)
+    /// - Continuous sounds: Play continuously when active (Continuous field)
+    /// - Random sounds: Can play random sounds from SoundFiles list (Random field), randomize position (RandomPosition field)
+    /// - Interval: Time between plays for non-looping sounds (Interval field, IntervalVrtn for variation)
+    /// - Volume variation: VolumeVrtn field for random volume variation
+    /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
+    /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
     /// - Based on UTS file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class SoundTemplate : ISoundTemplate
