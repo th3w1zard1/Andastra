@@ -2175,5 +2175,110 @@ namespace HolocronToolset.NET.Tests.Editors
                 Math.Abs(modifiedUtt.HighlightHeight - (float)highlightHeightSpin.Maximum).Should().BeLessThan(0.01f);
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:885-918
+        // Original: def test_utt_editor_empty_strings(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorEmptyStrings()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Set all text fields to empty
+            editor.TagEdit.Text = "";
+            editor.ResrefEdit.Text = "";
+            
+            var keyEditField = typeof(UTTEditor).GetField("_keyEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var keyEdit = keyEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+            if (keyEdit != null)
+            {
+                keyEdit.Text = "";
+            }
+            
+            var commentsEditField = typeof(UTTEditor).GetField("_commentsEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var commentsEdit = commentsEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+            if (commentsEdit != null)
+            {
+                commentsEdit.Text = "";
+            }
+            
+            var onClickEditField = typeof(UTTEditor).GetField("_onClickEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var onClickEdit = onClickEditField?.GetValue(editor) as Avalonia.Controls.ComboBox;
+            if (onClickEdit != null)
+            {
+                onClickEdit.Text = "";
+            }
+            
+            var onDisarmEditField = typeof(UTTEditor).GetField("_onDisarmEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var onDisarmEdit = onDisarmEditField?.GetValue(editor) as Avalonia.Controls.ComboBox;
+            if (onDisarmEdit != null)
+            {
+                onDisarmEdit.Text = "";
+            }
+            
+            var onEnterSelectField = typeof(UTTEditor).GetField("_onEnterSelect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var onEnterSelect = onEnterSelectField?.GetValue(editor) as Avalonia.Controls.ComboBox;
+            if (onEnterSelect != null)
+            {
+                onEnterSelect.Text = "";
+            }
+            
+            var onExitSelectField = typeof(UTTEditor).GetField("_onExitSelect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var onExitSelect = onExitSelectField?.GetValue(editor) as Avalonia.Controls.ComboBox;
+            if (onExitSelect != null)
+            {
+                onExitSelect.Text = "";
+            }
+
+            // Save and verify
+            var (data, _) = editor.Build();
+            var modifiedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+
+            modifiedUtt.Tag.Should().Be("");
+            modifiedUtt.ResRef.ToString().Should().Be("");
+            modifiedUtt.KeyName.Should().Be("");
+            modifiedUtt.Comment.Should().Be("");
+            modifiedUtt.OnClickScript.ToString().Should().Be("");
+            modifiedUtt.OnDisarmScript.ToString().Should().Be("");
+            modifiedUtt.OnEnterScript.ToString().Should().Be("");
+            modifiedUtt.OnExitScript.ToString().Should().Be("");
+        }
     }
 }
