@@ -200,9 +200,23 @@ namespace Odyssey.Core.Party
         /// </summary>
         public void GetEquippedWeapons(out IEntity mainHand, out IEntity offHand)
         {
-            // TODO: Integrate with inventory/equipment system
             mainHand = null;
             offHand = null;
+
+            if (Entity == null)
+            {
+                return;
+            }
+
+            Core.Interfaces.Components.IInventoryComponent inventory = Entity.GetComponent<Core.Interfaces.Components.IInventoryComponent>();
+            if (inventory == null)
+            {
+                return;
+            }
+
+            // INVENTORY_SLOT_RIGHTWEAPON = 4, INVENTORY_SLOT_LEFTWEAPON = 5
+            mainHand = inventory.GetItemInSlot(4);
+            offHand = inventory.GetItemInSlot(5);
         }
 
         /// <summary>
@@ -210,8 +224,19 @@ namespace Odyssey.Core.Party
         /// </summary>
         public IEntity GetEquippedArmor()
         {
-            // TODO: Integrate with inventory/equipment system
-            return null;
+            if (Entity == null)
+            {
+                return null;
+            }
+
+            Core.Interfaces.Components.IInventoryComponent inventory = Entity.GetComponent<Core.Interfaces.Components.IInventoryComponent>();
+            if (inventory == null)
+            {
+                return null;
+            }
+
+            // INVENTORY_SLOT_ARMOR = 6
+            return inventory.GetItemInSlot(6);
         }
 
         #endregion

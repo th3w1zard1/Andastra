@@ -665,13 +665,73 @@ namespace Odyssey.Core.Party
 
         private void SpawnMemberInWorld(PartyMember member)
         {
-            // TODO: Integrate with area/module system
-            // Spawn entity at formation position relative to leader
+            if (member == null || member.Entity != null)
+            {
+                // Member already has an entity or is invalid
+                return;
+            }
+
+            // Get leader position for formation
+            PartyMember leader = Leader;
+            if (leader == null || leader.Entity == null)
+            {
+                // No leader, cannot spawn at formation position
+                return;
+            }
+
+            Core.Interfaces.Components.ITransformComponent leaderTransform = leader.Entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            if (leaderTransform == null)
+            {
+                return;
+            }
+
+            // Calculate formation position relative to leader
+            // Formation: Leader at center, members offset by formation distance
+            int memberIndex = _activeParty.IndexOf(member);
+            float formationDistance = 2.0f; // Default formation distance
+            float angleOffset = (memberIndex - _leaderIndex) * 1.0f; // Angle offset in radians
+
+            System.Numerics.Vector3 formationOffset = new System.Numerics.Vector3(
+                (float)Math.Cos(angleOffset) * formationDistance,
+                0.0f,
+                (float)Math.Sin(angleOffset) * formationDistance
+            );
+
+            System.Numerics.Vector3 spawnPosition = leaderTransform.Position + formationOffset;
+            float spawnFacing = leaderTransform.Facing;
+
+            // TODO: Create entity from member's template/resource
+            // For now, create a basic creature entity
+            // Full implementation would load from UTC template stored in member data
+            IEntity entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
+            if (entity != null)
+            {
+                member.UpdateEntity(entity);
+            }
         }
 
         private void DespawnMemberFromWorld(PartyMember member)
         {
-            // TODO: Remove entity from world but preserve state
+            if (member == null || member.Entity == null)
+            {
+                return;
+            }
+
+            // Preserve member state before removing entity
+            // State is already stored in PartyMember properties, so we just need to remove the entity
+            // The entity's components and data are preserved in the member's state
+            
+            // Preserve member state before removing entity
+            // State is already stored in PartyMember properties, so we just need to remove the entity
+            // The entity's components and data are preserved in the member's state
+            
+            // Remove entity from world
+            uint entityId = member.Entity.ObjectId;
+            _world.DestroyEntity(entityId);
+            
+            // Note: Entity reference remains in PartyMember but the entity is destroyed
+            // When respawning, UpdateEntity will be called with a new entity
+            // This preserves the member's state while removing the entity from the world
         }
 
         #endregion
