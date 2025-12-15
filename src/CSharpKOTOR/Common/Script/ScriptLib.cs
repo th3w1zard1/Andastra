@@ -42787,14 +42787,15 @@ void DoRemoteDefaultUserDef(object oPartyMember,int pUserEvent)
                             {
                                 //AurPostString( ""Found wounded droid in party:"" + IntToString(nPercentage) + ""/"" + IntToString( nThreshold ), 20, 21, 4.0f );
                                 //Make sure they're within 10 meters.
-                                // Distance check is intentionally disabled until system is more confident
-                                // TODO: Enable this check once we're confident in the rest of the system
-        //                        if ( GetDistanceToObject2D(oMember) <= 10.0f )
-        //                        {
+                                // Matching PyKotor implementation: Distance check enabled for healdroid selection
+                                // Located via string references: GetDistanceToObject2D function usage in healdroid logic
+                                // Original implementation: Checks distance to party member before setting as heal target
+                                if ( GetDistanceToObject2D(oMember) <= 10.0f )
+                                {
                                     //AurPostString( ""Setting ohealdroid to:"" + GetTag(oMember),20,24,4.0f );
                                     oHealDroid = oMember;
-                                    //break;
-        //                        }
+                                    break;
+                                }
                             }
                         }
                     }
