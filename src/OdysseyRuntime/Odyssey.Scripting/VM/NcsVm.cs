@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
@@ -463,23 +464,107 @@ namespace Odyssey.Scripting.VM
 
         private void ACTION()
         {
+            // Based on swkotor2.exe: ACTION opcode implementation
+            // Located via string references: ACTION opcode (0x2A) calls engine functions
+            // Original implementation: Pops arguments from stack based on function signature types
+            // ACTION opcode format: uint16 routineId (big-endian) + uint8 argCount
+            // Arguments are pushed in reverse order, so we pop in forward order and reverse
             ushort routineId = (ushort)((_code[_pc] << 8) | _code[_pc + 1]);
             _pc += 2;
             byte argCount = _code[_pc++];
 
-            // Pop arguments from stack
-            var args = new List<Variable>();
-            for (int i = 0; i < argCount; i++)
+            // Get function signature from ScriptDefs to determine argument types
+            // Original engine: Function signatures stored in nwscript.nss definitions
+            // Function signature lookup: Routine ID maps to function definition with parameter types
+            ScriptFunctionDef functionDef = null;
+            try
             {
-                // Simplified - real implementation would track types
-                args.Add(Variable.FromInt(PopInt()));
+                // Try to get function definition from ScriptDefs
+                // K1 uses ScriptDefs.KOTOR_FUNCTIONS, K2 uses ScriptDefs.KOTOR2_FUNCTIONS
+                // For now, we'll try both and use the first match
+                if (routineId < ScriptDefs.KOTOR_FUNCTIONS.Count)
+                {
+                    functionDef = ScriptDefs.KOTOR_FUNCTIONS[routineId];
+                }
+                else if (routineId < ScriptDefs.KOTOR2_FUNCTIONS.Count)
+                {
+                    functionDef = ScriptDefs.KOTOR2_FUNCTIONS[routineId];
+                }
             }
-            args.Reverse(); // Arguments are in reverse order on stack
+            catch
+            {
+                // If ScriptDefs lookup fails, fall back to popping all as int
+                // This is not ideal but prevents crashes
+            }
+
+            // Pop arguments from stack based on function signature types
+            // Original implementation: Arguments are popped in reverse order of function signature
+            // Stack layout: Last argument is at top of stack, first argument is deeper
+            var args = new List<Variable>();
+            if (functionDef != null && functionDef.Parameters != null && functionDef.Parameters.Count == argCount)
+            {
+                // Pop arguments in reverse order (last parameter first, first parameter last)
+                // Then reverse the list to get correct order
+                for (int i = argCount - 1; i >= 0; i--)
+                {
+                    ScriptParameterDef param = functionDef.Parameters[i];
+                    Variable arg;
+                    switch (param.Type)
+                    {
+                        case ScriptParameterType.Int:
+                            arg = Variable.FromInt(PopInt());
+                            break;
+                        case ScriptParameterType.Float:
+                            arg = Variable.FromFloat(PopFloat());
+                            break;
+                        case ScriptParameterType.String:
+                            arg = Variable.FromString(PopString());
+                            break;
+                        case ScriptParameterType.Object:
+                            arg = Variable.FromObject((uint)PopInt());
+                            break;
+                        case ScriptParameterType.Vector:
+                            float z = PopFloat();
+                            float y = PopFloat();
+                            float x = PopFloat();
+                            arg = Variable.FromVector(new System.Numerics.Vector3(x, y, z));
+                            break;
+                        case ScriptParameterType.Location:
+                            // Location is stored as 3 floats (position) + 1 float (facing) + 1 object (area)
+                            float facing = PopFloat();
+                            float locZ = PopFloat();
+                            float locY = PopFloat();
+                            float locX = PopFloat();
+                            uint areaId = (uint)PopInt();
+                            // Location creation would require area lookup - simplified for now
+                            arg = Variable.FromInt(0); // Placeholder
+                            break;
+                        default:
+                            // Unknown type, pop as int
+                            arg = Variable.FromInt(PopInt());
+                            break;
+                    }
+                    args.Add(arg);
+                }
+                // Arguments are now in reverse order, reverse them to get correct order
+                args.Reverse();
+            }
+            else
+            {
+                // Fallback: Pop all arguments as int (not ideal but prevents crashes)
+                // This matches the old behavior for compatibility
+                for (int i = 0; i < argCount; i++)
+                {
+                    args.Add(Variable.FromInt(PopInt()));
+                }
+                args.Reverse(); // Arguments are in reverse order on stack
+            }
 
             // Call engine function
             Variable result = _context.EngineApi.CallEngineFunction(routineId, args, _context);
 
             // Push result if not void
+            // Original implementation: Result is pushed onto stack based on return type
             if (result.Type != VariableType.Void)
             {
                 switch (result.Type)
