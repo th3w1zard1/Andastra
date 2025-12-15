@@ -12,14 +12,25 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Open Door Action:
     /// - Based on swkotor2.exe door interaction system
+    /// - Door loading: FUN_00580ed0 @ 0x00580ed0 (load door from UTD GFF template)
+    /// - Door loading with transitions: FUN_005838d0 @ 0x005838d0 (load door with LinkedToModule/LinkedToFlags)
     /// - Located via string references: "OnOpen" @ 0x007be1b0 (door script event), "ScriptOnOpen" @ 0x007beeb8
     /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
     /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
-    /// - Original implementation: Moves actor to door, checks lock state, opens door if unlocked
-    /// - Fires OnOpen script event when door opens (ScriptOnOpen field in UTD template)
-    /// - Use distance: ~2.0 units (InteractRange)
-    /// - Script events: OnOpen (door opened), OnLocked (door locked)
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+    ///   - EVENT_OPEN_OBJECT (case 7): Fires OnOpen script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN = 0x16)
+    ///   - EVENT_CLOSE_OBJECT (case 6): Fires OnClose script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE = 0x17)
+    ///   - EVENT_LOCK_OBJECT (case 0xd): Fires OnLocked script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
+    ///   - EVENT_UNLOCK_OBJECT (case 0xc): Fires OnUnlocked script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED = 0x1d)
+    /// - Door fields from UTD template (FUN_00580ed0): OpenState (0=closed, 1=open, 2=destroyed, 3=locked),
+    ///   LinkedTo (waypoint/trigger tag), LinkedToModule (module ResRef), LinkedToFlags (bit 1=module transition, bit 2=area transition),
+    ///   TransitionDestination (waypoint tag for positioning), Locked, Lockable, KeyRequired, KeyName
+    /// - Original implementation: Moves actor to door within InteractRange (~2.0 units), checks lock state
+    /// - If locked: Fires OnLocked event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED) and fails
+    /// - If unlocked: Sets IsOpen=true, plays open animation ("i_opendoor" @ 0x007c86d4), fires OnOpen script event
+    /// - Doors with LinkedToModule and LinkedToFlags bit 1 set trigger module transitions
+    /// - Doors with LinkedToFlags bit 2 set trigger area transitions (linked to waypoint/trigger via LinkedTo field)
+    /// - Use distance: ~2.0 units (InteractRange) based on door interaction radius
     /// </remarks>
     public class ActionOpenDoor : ActionBase
     {
@@ -108,11 +119,13 @@ namespace Odyssey.Core.Actions
 
                 // Check for module/area transition
                 // Based on swkotor2.exe door transition system
-                // Located via string references: "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
+                // Door loading with transitions: FUN_005838d0 @ 0x005838d0 (reads LinkedToModule, LinkedToFlags, TransitionDestination from UTD)
+                // Located via string references: "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788, "TransitionDestination" @ 0x007bd7a4
                 // Original implementation: Doors with LinkedToModule trigger module transitions when opened
-                // Module transitions: LinkedToFlags bit 1 = module transition
-                // Area transitions: LinkedToFlags bit 2 = area transition within module
-                // Use DoorComponent properties which compute from LinkedToFlags
+                // Module transitions: LinkedToFlags bit 1 = module transition (if LinkedToModule non-empty)
+                // Area transitions: LinkedToFlags bit 2 = area transition within module (if LinkedTo waypoint/trigger non-empty)
+                // TransitionDestination: Waypoint tag where actor should spawn after transition
+                // Use DoorComponent properties which compute from LinkedToFlags (IsModuleTransition, IsAreaTransition)
                 bool isModuleTransition = doorState.IsModuleTransition;
                 bool isAreaTransition = doorState.IsAreaTransition;
                 if (isModuleTransition || isAreaTransition)
@@ -141,6 +154,15 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to close a door.
     /// </summary>
+    /// <remarks>
+    /// Close Door Action:
+    /// - Based on swkotor2.exe door interaction system
+    /// - Door loading: FUN_00580ed0 @ 0x00580ed0 (load door OpenState from UTD template)
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT (case 6)
+    /// - Original implementation: Sets IsOpen=false, plays close animation, fires OnClose script event
+    /// - OnClose script event: CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE = 0x17
+    /// - Use distance: ~2.0 units (InteractRange)
+    /// </remarks>
     public class ActionCloseDoor : ActionBase
     {
         private readonly uint _doorObjectId;
