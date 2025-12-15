@@ -13,7 +13,18 @@ namespace Odyssey.Core.Movement
     /// Character Movement System:
     /// - Based on swkotor2.exe character movement system
     /// - Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
+    /// - "MOVERATE" @ 0x007c3988, "WALKRATE" @ 0x007c4b78, "?WalkRate" @ 0x007c3fff
+    /// - "WALKDIST" @ 0x007c5014, "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
     /// - "Combat Movement" @ 0x007c8670, "MOVETO" @ 0x007b6b24 (ActionMoveToLocation action)
+    /// - Movement animations: "DriveAnimWalk" @ 0x007c50bc
+    /// - GUI references: "gui_mp_walkd" @ 0x007b5e64, "gui_mp_walku" @ 0x007b5e74
+    /// - "gui_mp_arwalk00-15" @ 0x007b59cc-0x007b58dc (area walk GUI elements)
+    /// - Movement control: "CB_DISABLEMOVE" @ 0x007d28e8, "BTN_Filter_Move" @ 0x007d2ed0
+    /// - Error messages:
+    ///   - "0@Force Timeout, executing a forced move to point." @ 0x007c0506
+    ///   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
+    ///   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
+    ///   - "aborted walking, Maximum number of bumps happened" @ 0x007c0458
     /// - Original implementation: Point-and-click movement with walkmesh pathfinding
     /// - Movement uses pathfinding system referenced in "nwsareapathfind.cpp" @ 0x007be3ff
     /// - KOTOR Character Movement:
