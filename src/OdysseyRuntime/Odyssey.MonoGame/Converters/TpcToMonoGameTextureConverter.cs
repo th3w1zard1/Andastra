@@ -14,6 +14,21 @@ namespace Odyssey.MonoGame.Converters
     /// <remarks>
     /// TPC to MonoGame Texture Converter:
     /// - Based on swkotor2.exe texture loading system (modern MonoGame adaptation)
+    /// - Located via string references: "Texture" @ 0x007c71b4, "texture" @ 0x007bab24
+    /// - "texturewidth" @ 0x007b6e98, "texturenames" @ 0x007bacb0
+    /// - "texture0" @ 0x007bb018, "texture1" @ 0x007bb00c (texture unit references)
+    /// - "depth_texture" @ 0x007bab5c, "m_sDepthTextureName" @ 0x007baaa8 (depth texture)
+    /// - "envmaptexture" @ 0x007bb284, "bumpmaptexture" @ 0x007bb2a8, "bumpyshinytexture" @ 0x007bb294
+    /// - "dirt_texture" @ 0x007bae9c, "rotatetexture" @ 0x007baf14
+    /// - Texture properties: "TextureVar" @ 0x007c0974, "TextureVariation" @ 0x007c84b4
+    /// - "ALTTEXTURE" @ 0x007cdc04 (alternate texture reference)
+    /// - Texture directories: "TEXTUREPACKS" @ 0x007c6a08, "TEXTUREPACKS:" @ 0x007c7190
+    /// - ".\texturepacks" @ 0x007c6a18, "d:\texturepacks" @ 0x007c6a28
+    /// - "LIVE%d:OVERRIDE\textures" @ 0x007c72ac (override texture path format)
+    /// - "Texture Quality" @ 0x007c7528 (texture quality setting)
+    /// - OpenGL texture functions: glBindTexture, glGenTextures, glDeleteTextures, glIsTexture
+    /// - OpenGL texture extensions: GL_EXT_texture_compression_s3tc, GL_ARB_texture_compression
+    /// - GL_EXT_texture_cube_map, GL_EXT_texture_filter_anisotropic, GL_ARB_multitexture
     /// - Original implementation: KOTOR loads TPC files and creates DirectX textures (D3DTexture8/9)
     /// - TPC format: BioWare texture format supporting DXT1/DXT3/DXT5 compression, RGB/RGBA, grayscale
     /// - Original engine: Uses DirectX texture creation APIs (D3DXCreateTextureFromFileInMemory, etc.)
