@@ -91,12 +91,18 @@ namespace Odyssey.Core.Combat
     /// <remarks>
     /// Effect System:
     /// - Based on swkotor2.exe effect system
-    /// - Located via string references: Effect application functions handle status effects, modifiers, visual effects
+    /// - Located via string references: "EffectList" @ 0x007bebe8, "AreaEffectList" @ 0x007bd0d4
+    /// - "EVENT_APPLY_EFFECT" @ 0x007bcdc8, "EVENT_REMOVE_EFFECT" @ 0x007bcd0c
+    /// - "EVENT_ABILITY_EFFECT_APPLIED" @ 0x007bcc20, "EffectAttacks" @ 0x007bfa28
+    /// - "VisualEffect_01-04" @ 0x007c0210-0x007c01b0, "EffectChance" @ 0x007c07e0
+    /// - "Mod_Effect_NxtId" @ 0x007bea0c (effect ID tracking), "AreaEffectId" @ 0x007c13f8
     /// - Original implementation: Effects applied to entities with duration tracking, stacking rules, removal on expiration
     /// - Effect types: Attribute modifiers (ability, attack, damage, AC, saves), status effects (paralysis, stun, etc.),
     ///   damage effects (resistance, immunity, reduction), Force effects, visual effects
     /// - Effects have duration in rounds or permanent, some are instantaneous
     /// - Effect stacking: Some effects stack, others override
+    /// - Effect bonuses: " + %d (Effect Attack Bonus)" @ 0x007c39d0, " + %d (Effect Damage Bonus)" @ 0x007c3cd8
+    /// - Visual effects: VisualEffectDef @ 0x007c0230, CamVidEffect @ 0x007c3450
     /// </remarks>
     public class EffectSystem
     {

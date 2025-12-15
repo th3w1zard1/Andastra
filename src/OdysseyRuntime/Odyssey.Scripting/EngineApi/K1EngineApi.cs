@@ -2970,30 +2970,8 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
-        /// <summary>
-        /// CancelCombat(object oCreature=OBJECT_SELF) - Cancels combat for the specified creature
-        /// Based on swkotor2.exe: Removes creature from combat, clears combat state and targets
-        /// </summary>
         private Variable Func_CancelCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity creature = ResolveObject(creatureId, ctx);
-            
-            if (creature == null || creature.ObjectType != Core.Enums.ObjectType.Creature)
-            {
-                return Variable.Void();
-            }
-
-            // Access CombatManager through GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-            {
-                if (services.CombatManager != null)
-                {
-                    // End combat for the creature
-                    services.CombatManager.EndCombat(creature);
-                }
-            }
-
             return Variable.Void();
         }
 
@@ -3311,6 +3289,13 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetEffectCreator(effect eEffect) - returns creator of effect
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Effect creator tracking system
+        /// Original implementation: Effects store creator entity ID (who cast the spell/applied the effect)
+        /// Creator tracking: Used for ownership checks, caster level calculations, spell targeting
+        /// Returns: Creator entity object ID or OBJECT_INVALID if effect has no creator
+        /// Search behavior: Iterates through active effects on entity to find matching effect
+        /// </remarks>
         private Variable Func_GetEffectCreator(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
