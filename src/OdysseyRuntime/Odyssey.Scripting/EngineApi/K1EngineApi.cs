@@ -2475,7 +2475,7 @@ namespace Odyssey.Scripting.EngineApi
         {
             // GetLastPerceived() - Get the object that was perceived in an OnPerception script
             // Returns OBJECT_INVALID if the caller is not a valid creature
-            if (ctx.Caller == null || ctx.Caller.ObjectType != OdyObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
