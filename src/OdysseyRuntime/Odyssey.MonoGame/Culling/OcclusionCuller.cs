@@ -23,7 +23,6 @@ namespace Odyssey.MonoGame.Culling
         private readonly GraphicsDevice _graphicsDevice;
         private int _width;
         private int _height;
-        private readonly int _mipLevels;
 
         // Hi-Z buffer for hierarchical depth testing
         private RenderTarget2D _hiZBuffer;
@@ -87,7 +86,7 @@ namespace Odyssey.MonoGame.Culling
             _graphicsDevice = graphicsDevice;
             _width = width;
             _height = height;
-            // Mip levels will be calculated dynamically in CreateHiZBuffer
+            // Mip levels are calculated dynamically in CreateHiZBuffer based on current dimensions
 
             _occlusionCache = new Dictionary<uint, OcclusionInfo>();
             _stats = new OcclusionStats();
