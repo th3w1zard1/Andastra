@@ -129,38 +129,16 @@ namespace CSharpKOTOR.Formats.LIP
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_auto.py:132-155
         // Original: def bytes_lip(lip: LIP, file_format: ResourceType = ResourceType.LIP) -> bytes
+        // Matching BWMAuto.BytesBwm pattern - use constructor with no target and call Data()
         public static byte[] BytesLip(LIP lip, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.LIP;
             if (format == ResourceType.LIP)
             {
-                var ms = new MemoryStream();
-                try
+                using (var writer = new LIPBinaryWriter(lip))
                 {
-                    var writer = new LIPBinaryWriter(lip, ms);
-                    writer.Write(autoClose: false); // Don't auto-close in Write()
-                    // Get data using the underlying RawBinaryWriter's Data() method
-                    // This ensures all buffered writes are included
-                    var rawWriterField = typeof(LIPBinaryWriter).GetField("_writer", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var rawWriter = rawWriterField?.GetValue(writer) as RawBinaryWriter;
-                    byte[] result;
-                    if (rawWriter != null)
-                    {
-                        // Use the writer's Data() method which reads from the stream correctly
-                        result = rawWriter.Data();
-                    }
-                    else
-                    {
-                        // Fallback: read from stream directly
-                        ms.Position = 0;
-                        result = ms.ToArray();
-                    }
-                    writer.Dispose(); // Dispose after we have the data
-                    return result;
-                }
-                finally
-                {
-                    ms.Dispose();
+                    writer.Write();
+                    return writer.Data();
                 }
             }
             else if (format == ResourceType.LIP_XML)

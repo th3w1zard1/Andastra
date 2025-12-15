@@ -63,6 +63,13 @@ namespace CSharpKOTOR.Formats.LIP
         {
             _writer?.Dispose();
         }
+
+        // Matching BWMBinaryWriter pattern for BytesBwm
+        // Get the data from the underlying RawBinaryWriter
+        public byte[] Data()
+        {
+            return _writer?.Data() ?? new byte[0];
+        }
     }
 }
 

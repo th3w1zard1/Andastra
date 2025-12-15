@@ -213,7 +213,11 @@ namespace HolocronToolset.NET.Tests.Editors
             // Build
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
-            data.Length.Should().BeGreaterThan(0, "Built LIP data should not be empty");
+            data.Length.Should().BeGreaterThan(0, $"Built LIP data should not be empty. Actual length: {data.Length}");
+            
+            // LIP format: "LIP " (4) + "V1.0" (4) + Length (4) + Count (4) + frames
+            // Minimum size for 2 frames: 16 + 10 = 26 bytes
+            data.Length.Should().BeGreaterThanOrEqualTo(26, $"LIP data should be at least 26 bytes for 2 frames. Actual: {data.Length}");
             
             // Verify the data can be read back as LIP before loading into editor
             try
@@ -224,7 +228,9 @@ namespace HolocronToolset.NET.Tests.Editors
             }
             catch (Exception ex)
             {
-                throw new Exception($"Built LIP data is invalid and cannot be read: {ex.Message}", ex);
+                // Output first few bytes for debugging
+                string hex = data.Length > 0 ? BitConverter.ToString(data, 0, Math.Min(32, data.Length)) : "empty";
+                throw new Exception($"Built LIP data is invalid and cannot be read (data length: {data.Length}, first bytes: {hex}): {ex.Message}", ex);
             }
 
             // Load it back
