@@ -17,12 +17,16 @@ namespace Odyssey.MonoGame.Culling
     /// <remarks>
     /// Frustum Culling System:
     /// - Based on swkotor2.exe rendering and culling system
-    /// - Located via string references: Room visibility system uses frustum culling
+    /// - Located via string references: "VISIBLEVALUE" @ 0x007b6a58 (visibility value for culling)
+    /// - "VisibleModel" @ 0x007c1c98 (visible model flag), "NonCull" @ 0x007ccb1c (non-cullable objects)
+    /// - "IsBodyBagVisible" @ 0x007c1ff0 (body bag visibility flag)
+    /// - VIS file format: "%s/%s.VIS" @ 0x007b972c (VIS file path format), "visasmarr" @ 0x007bf720 (VIS file reference)
     /// - Original implementation: KOTOR performs frustum culling for rooms and objects
     /// - Frustum planes: 6 planes (left, right, bottom, top, near, far) extracted from view-projection matrix
     /// - Gribb/Hartmann method: Efficient plane extraction from combined view-projection matrix
     /// - Used for: Culling objects outside camera view, optimizing rendering performance
     /// - Combined with VIS files (room visibility) and distance culling for comprehensive culling pipeline
+    /// - VIS files contain room-to-room visibility data for efficient room culling
     /// </remarks>
     public class Frustum
     {
@@ -39,14 +43,14 @@ namespace Odyssey.MonoGame.Culling
             Far = 5
         }
 
-        private readonly Vector4[] _planes;
+        private readonly System.Numerics.Vector4[] _planes;
         private Matrix _cachedViewProjection;
         private bool _planesValid;
 
         /// <summary>
         /// Gets the frustum planes (normal.x, normal.y, normal.z, distance).
         /// </summary>
-        public Vector4[] Planes
+        public System.Numerics.Vector4[] Planes
         {
             get { return _planes; }
         }
@@ -56,7 +60,7 @@ namespace Odyssey.MonoGame.Culling
         /// </summary>
         public Frustum()
         {
-            _planes = new Vector4[6];
+            _planes = new System.Numerics.Vector4[6];
             _cachedViewProjection = Matrix.Identity;
             _planesValid = false;
         }
@@ -83,7 +87,7 @@ namespace Odyssey.MonoGame.Culling
 
             // Extract planes using Gribb/Hartmann method
             // Left plane: row3 + row0
-            _planes[(int)PlaneIndex.Left] = NormalizePlane(new Vector4(
+            _planes[(int)PlaneIndex.Left] = NormalizePlane(new System.Numerics.Vector4(
                 viewProjection.M14 + viewProjection.M11,
                 viewProjection.M24 + viewProjection.M21,
                 viewProjection.M34 + viewProjection.M31,
@@ -91,7 +95,7 @@ namespace Odyssey.MonoGame.Culling
             ));
 
             // Right plane: row3 - row0
-            _planes[(int)PlaneIndex.Right] = NormalizePlane(new Vector4(
+            _planes[(int)PlaneIndex.Right] = NormalizePlane(new System.Numerics.Vector4(
                 viewProjection.M14 - viewProjection.M11,
                 viewProjection.M24 - viewProjection.M21,
                 viewProjection.M34 - viewProjection.M31,
@@ -179,7 +183,8 @@ namespace Odyssey.MonoGame.Culling
         /// This is the primary culling test used for render objects.
         /// Based on PyKotor frustum.py:168 sphere_in_frustum method
         /// </summary>
-        public bool SphereInFrustum(Vector3 center, float radius)
+        public bool
+        SphereInFrustum(System.Numerics.Vector3 center, float radius)
         {
             if (!_planesValid)
             {
@@ -188,7 +193,7 @@ namespace Odyssey.MonoGame.Culling
 
             for (int i = 0; i < 6; i++)
             {
-                Vector4 plane = _planes[i];
+                System.Numerics.Vector4 plane = _planes[i];
                 float distance = plane.X * center.X + plane.Y * center.Y + plane.Z * center.Z + plane.W;
                 // If sphere is completely behind the plane, it's outside
                 if (distance < -radius)
@@ -204,7 +209,7 @@ namespace Odyssey.MonoGame.Culling
         /// Uses plane-AABB intersection test for accurate culling.
         /// Based on PyKotor frustum.py:188 aabb_in_frustum method
         /// </summary>
-        public bool AabbInFrustum(Vector3 minPoint, Vector3 maxPoint)
+        public bool AabbInFrustum(System.Numerics.Vector3 minPoint, System.Numerics.Vector3 maxPoint)
         {
             if (!_planesValid)
             {
@@ -213,9 +218,9 @@ namespace Odyssey.MonoGame.Culling
 
             for (int i = 0; i < 6; i++)
             {
-                Vector4 plane = _planes[i];
+                System.Numerics.Vector4 plane = _planes[i];
                 // Find the positive vertex (furthest in plane normal direction)
-                Vector3 pVertex = new Vector3(
+                System.Numerics.Vector3 pVertex = new System.Numerics.Vector3(
                     plane.X >= 0 ? maxPoint.X : minPoint.X,
                     plane.Y >= 0 ? maxPoint.Y : minPoint.Y,
                     plane.Z >= 0 ? maxPoint.Z : minPoint.Z
@@ -235,7 +240,7 @@ namespace Odyssey.MonoGame.Culling
         /// Useful for level-of-detail calculations.
         /// Based on PyKotor frustum.py:218 sphere_in_frustum_distance method
         /// </summary>
-        public float SphereInFrustumDistance(Vector3 center, float radius)
+        public float SphereInFrustumDistance(System.Numerics.Vector3 center, float radius)
         {
             if (!_planesValid)
             {
@@ -246,7 +251,7 @@ namespace Odyssey.MonoGame.Culling
 
             for (int i = 0; i < 6; i++)
             {
-                Vector4 plane = _planes[i];
+                System.Numerics.Vector4 plane = _planes[i];
                 float distance = plane.X * center.X + plane.Y * center.Y + plane.Z * center.Z + plane.W;
                 float adjustedDistance = distance + radius;
                 minDistance = Math.Min(minDistance, adjustedDistance);
