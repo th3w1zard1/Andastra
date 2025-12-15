@@ -751,9 +751,11 @@ namespace HolocronToolset.NET.Tests.Editors
             int[] testValues = { 0, 10, 20, 30, 40 };
             foreach (int val in testValues)
             {
-                editor.DetectDcSpin.Should().NotBeNull("DetectDcSpin should be initialized");
-                editor.DetectDcSpin.Value = val;
-                editor.DetectDcSpin.Value.Should().Be(val, "DetectDcSpin value should be set correctly");
+                var detectDcSpinField = typeof(UTTEditor).GetField("_detectDcSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var detectDcSpin = detectDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                detectDcSpin.Should().NotBeNull("DetectDcSpin should be initialized");
+                detectDcSpin.Value = val;
+                detectDcSpin.Value.Should().Be(val, "DetectDcSpin value should be set correctly");
 
                 // Save and verify
                 var (data, _) = editor.Build();
@@ -762,7 +764,9 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Load back and verify
                 editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
-                editor.DetectDcSpin.Value.Should().Be(val);
+                detectDcSpin = detectDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                detectDcSpin.Should().NotBeNull();
+                detectDcSpin.Value.Should().Be(val);
             }
         }
 

@@ -533,7 +533,9 @@ namespace HolocronToolset.NET.Editors
             // Matching Python: utt.trap_detect_dc = self.ui.detectDcSpin.value()
             if (_detectDcSpin != null)
             {
-                _utt.TrapDetectDc = (int)_detectDcSpin.Value;
+                // NumericUpDown.Value is decimal?, so we need to handle null and convert to int
+                // Use same pattern as HighlightHeight which works correctly
+                _utt.TrapDetectDc = (int)(_detectDcSpin.Value ?? 0);
             }
             // Matching Python: utt.trap_disarmable = self.ui.disarmableCheckbox.isChecked()
             if (_disarmableCheckbox != null)
@@ -541,9 +543,9 @@ namespace HolocronToolset.NET.Editors
                 _utt.TrapDisarmable = _disarmableCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_disarm_dc = self.ui.disarmDcSpin.value()
-            if (_disarmDcSpin != null)
+            if (_disarmDcSpin != null && _disarmDcSpin.Value.HasValue)
             {
-                _utt.TrapDisarmDc = (int)_disarmDcSpin.Value;
+                _utt.TrapDisarmDc = (int)_disarmDcSpin.Value.Value;
             }
             // Matching Python: utt.trap_type = self.ui.trapSelect.currentIndex()
             if (_trapSelect != null)
