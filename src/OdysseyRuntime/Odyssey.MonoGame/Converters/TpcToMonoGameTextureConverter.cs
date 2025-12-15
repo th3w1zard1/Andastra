@@ -11,6 +11,18 @@ namespace Odyssey.MonoGame.Converters
     /// Handles DXT1/DXT3/DXT5 compressed formats, RGB/RGBA uncompressed,
     /// and grayscale textures.
     /// </summary>
+    /// <remarks>
+    /// TPC to MonoGame Texture Converter:
+    /// - Based on swkotor2.exe texture loading system (modern MonoGame adaptation)
+    /// - Original implementation: KOTOR loads TPC files and creates DirectX textures (D3DTexture8/9)
+    /// - TPC format: BioWare texture format supporting DXT1/DXT3/DXT5 compression, RGB/RGBA, grayscale
+    /// - Original engine: Uses DirectX texture creation APIs (D3DXCreateTextureFromFileInMemory, etc.)
+    /// - This MonoGame implementation: Converts TPC format to MonoGame Texture2D
+    /// - Compression: Handles DXT compression formats, converts to RGBA for MonoGame compatibility
+    /// - Mipmaps: Preserves mipmap chain from TPC or generates mipmaps if missing
+    /// - Cube maps: TPC cube maps converted to MonoGame TextureCube (if supported)
+    /// - Note: Original engine used DirectX APIs, this is a modern MonoGame adaptation
+    /// </remarks>
     public static class TpcToMonoGameTextureConverter
     {
         /// <summary>

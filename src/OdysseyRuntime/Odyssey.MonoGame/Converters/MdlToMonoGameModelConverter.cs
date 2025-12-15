@@ -12,6 +12,18 @@ namespace Odyssey.MonoGame.Converters
     /// Handles trimesh geometry, UV coordinates, and basic material references.
     /// </summary>
     /// <remarks>
+    /// MDL to MonoGame Model Converter:
+    /// - Based on swkotor2.exe model loading system (modern MonoGame adaptation)
+    /// - Original implementation: KOTOR loads MDL/MDX files and renders with DirectX 8/9 APIs
+    /// - MDL format: Binary model format containing trimesh nodes, bones, animations
+    /// - MDX format: Binary geometry format containing vertex positions, normals, UVs, indices
+    /// - Original engine: Uses DirectX vertex/index buffers, materials with Blinn-Phong shading
+    /// - This MonoGame implementation: Converts to MonoGame Model/VertexBuffer/IndexBuffer structures
+    /// - Geometry: Extracts trimesh nodes from MDL, vertex data from MDX, creates MonoGame buffers
+    /// - Materials: Converts KOTOR material references to MonoGame BasicEffect or PBR materials
+    /// - Note: Original engine used DirectX APIs, this is a modern MonoGame adaptation
+    /// </remarks>
+    /// <remarks>
     /// IMPORTANT: For optimal performance, use the new MDL loading pipeline:
     /// 
     /// <code>

@@ -18,6 +18,17 @@ namespace Odyssey.MonoGame.Loading
     /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/gl/scene/async_loader.py:378
     /// Original: class AsyncResourceLoader with ProcessPoolExecutor
     /// </summary>
+    /// <remarks>
+    /// Async Resource Loader:
+    /// - Based on swkotor2.exe resource loading system (modern async enhancement)
+    /// - Original implementation: KOTOR loads resources synchronously from CHITIN keyfiles and modules
+    /// - Resource loading: Loads TPC (texture), MDL (model), MDX (geometry) files from game installation
+    /// - This MonoGame implementation: Modern async Task-based loading for performance (off main thread IO)
+    /// - Resource provider: Uses IGameResourceProvider to resolve resource locations (CHITIN, modules, etc.)
+    /// - Pattern: IO operations off main thread, GPU object creation on main thread with graphics context
+    /// - Note: Original engine loaded resources synchronously during area/module loading
+    /// - This async implementation provides smoother frame rates during resource-heavy operations
+    /// </remarks>
     public class AsyncResourceLoader : IDisposable
     {
         private readonly IGameResourceProvider _resourceProvider;
