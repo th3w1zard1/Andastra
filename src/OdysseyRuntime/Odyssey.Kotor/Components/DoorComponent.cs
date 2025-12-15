@@ -98,6 +98,11 @@ namespace Odyssey.Kotor.Components
         public bool IsOpen { get; set; }
 
         /// <summary>
+        /// Animation state (0=closed, 1=open, 2=destroyed).
+        /// </summary>
+        public int OpenState { get; set; }
+
+        /// <summary>
         /// Whether the door is locked.
         /// </summary>
         public bool IsLocked { get; set; }
@@ -208,9 +213,12 @@ namespace Odyssey.Kotor.Components
         public bool Plot { get; set; }
 
         /// <summary>
-        /// Current animation state.
+        /// Open state (0=closed, 1=open, 2=destroyed).
+        /// Based on swkotor2.exe: OpenState field from UTD template (FUN_00580ed0 @ 0x00580ed0)
+        /// Located via string references: "OpenState" field in door GFF structure
+        /// Original implementation: 0=closed, 1=open, 2=destroyed, 3=locked (but locked is separate IsLocked flag)
         /// </summary>
-        public int AnimationState { get; set; }
+        public int OpenState { get; set; }
 
         /// <summary>
         /// Whether this door is a module transition.
@@ -292,7 +300,7 @@ namespace Odyssey.Kotor.Components
             }
 
             IsOpen = true;
-            AnimationState = 1; // Open state
+            OpenState = 1; // Open state
 
             // Fire OnOpen script event would be handled by action system
         }
@@ -318,7 +326,7 @@ namespace Odyssey.Kotor.Components
             }
 
             IsOpen = false;
-            AnimationState = 0; // Closed state
+            OpenState = 0; // Closed state
 
             // Fire OnClose script event would be handled by action system
         }
@@ -385,7 +393,7 @@ namespace Odyssey.Kotor.Components
         /// - Hardness reduces damage taken (minimum 1 damage per hit, even if hardness exceeds damage)
         /// - Bash damage: Strength modifier + weapon damage (if weapon equipped) vs door Hardness
         /// - Door destruction: When CurrentHP <= 0, door is marked as bashed (IsBashed=true), unlocked, and opened
-        /// - Animation state: Set to 2 (destroyed state) when door is bashed open
+        /// - Open state: Set to 2 (destroyed state) when door is bashed open
         /// </remarks>
         public void ApplyDamage(int damage)
         {
@@ -404,7 +412,7 @@ namespace Odyssey.Kotor.Components
                 IsBashed = true;
                 IsLocked = false;
                 IsOpen = true;
-                AnimationState = 2; // Destroyed state
+                OpenState = 2; // Destroyed state
             }
         }
     }
