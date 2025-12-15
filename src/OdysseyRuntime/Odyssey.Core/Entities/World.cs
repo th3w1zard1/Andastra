@@ -2,9 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Actions;
+using Odyssey.Core.AI;
 using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Module;
+using Odyssey.Core.Perception;
+using Odyssey.Core.Save;
+using Odyssey.Core.Triggers;
 using Odyssey.Core.Templates;
 
 namespace Odyssey.Core.Entities
@@ -41,7 +46,13 @@ namespace Odyssey.Core.Entities
             TimeManager = new TimeManager();
             EventBus = new EventBus();
             DelayScheduler = new DelayScheduler();
+            CombatSystem = new CombatSystem(this);
             EffectSystem = new EffectSystem(this);
+            PerceptionSystem = new PerceptionSystem(this);
+            TriggerSystem = new TriggerSystem(this);
+            AIController = new AIController(this, CombatSystem);
+            // ModuleTransitionSystem will be initialized when SaveSystem and ModuleLoader are available
+            ModuleTransitionSystem = null;
         }
 
         public IArea CurrentArea { get; set; }
@@ -65,7 +76,12 @@ namespace Odyssey.Core.Entities
         public ITimeManager TimeManager { get; }
         public IEventBus EventBus { get; }
         public IDelayScheduler DelayScheduler { get; }
+        public CombatSystem CombatSystem { get; }
         public EffectSystem EffectSystem { get; }
+        public PerceptionSystem PerceptionSystem { get; }
+        public TriggerSystem TriggerSystem { get; }
+        public AIController AIController { get; }
+        public ModuleTransitionSystem ModuleTransitionSystem { get; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
         {
@@ -248,6 +264,18 @@ namespace Odyssey.Core.Entities
 
             // Update delay scheduler
             DelayScheduler.Update(deltaTime);
+
+            // Update perception system
+            PerceptionSystem.Update(deltaTime);
+
+            // Update trigger system
+            TriggerSystem.Update(deltaTime);
+
+            // Update AI controller
+            AIController.Update(deltaTime);
+
+            // Update combat system
+            CombatSystem.Update(deltaTime);
 
             EventBus.DispatchQueuedEvents();
         }

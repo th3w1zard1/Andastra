@@ -85,8 +85,8 @@ namespace Odyssey.Core.AI
             IActionQueueComponent actionQueue = creature.GetComponent<IActionQueueComponent>();
             if (actionQueue != null)
             {
-                actionQueue.Process(deltaTime);
-                if (actionQueue.Current != null)
+                actionQueue.Update(creature, deltaTime);
+                if (actionQueue.CurrentAction != null)
                 {
                     return; // Still processing action
                 }
@@ -108,7 +108,7 @@ namespace Odyssey.Core.AI
                 IEntity nearestEnemy = FindNearestEnemy(creature);
                 if (nearestEnemy != null && actionQueue != null)
                 {
-                    actionQueue.Add(new ActionAttack(nearestEnemy));
+                    actionQueue.Add(new ActionAttack(nearestEnemy.ObjectId));
                 }
             }
         }
