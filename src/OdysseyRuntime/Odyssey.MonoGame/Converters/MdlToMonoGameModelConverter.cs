@@ -14,6 +14,30 @@ namespace Odyssey.MonoGame.Converters
     /// <remarks>
     /// MDL to MonoGame Model Converter:
     /// - Based on swkotor2.exe model loading system (modern MonoGame adaptation)
+    /// - Located via string references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c
+    /// - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
+    /// - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "refModel" @ 0x007babe8
+    /// - "DefaultModel" @ 0x007c4530, "VisibleModel" @ 0x007c1c98
+    /// - Model LOD: "MODEL01" @ 0x007c4b48, "MODELMIN01" @ 0x007c4b50
+    /// - "MODEL02" @ 0x007c4b34, "MODELMIN02" @ 0x007c4b3c
+    /// - "MODEL03" @ 0x007c4b20, "MODELMIN03" @ 0x007c4b28
+    /// - "Model%d" @ 0x007cae00 (model format string)
+    /// - Model directories: "SUPERMODELS" @ 0x007c69b0, ".\supermodels" @ 0x007c69bc, "d:\supermodels" @ 0x007c69cc
+    /// - "SUPERMODELS:smseta" @ 0x007c7380, "SUPERMODELS:smsetb" @ 0x007c7394, "SUPERMODELS:smsetc" @ 0x007c73a8
+    /// - Special models: "ProjModel" @ 0x007c31c0, "StuntModel" @ 0x007c37e0, "CameraModel" @ 0x007c3908
+    /// - "Bullet_Model" @ 0x007cb664, "Gun_Model" @ 0x007cb67c, "RotatingModel" @ 0x007cb928
+    /// - "Models" @ 0x007cb938, "modelhook" @ 0x007cb3b4
+    /// - Model variables: "LongMdlVar" @ 0x007d05f4, "ShortMdlVar" @ 0x007d05e8, "DoubleMdlVar" @ 0x007d05d8
+    /// - GUI: "3D_MODEL" @ 0x007d0954, "3D_MODEL_LS" @ 0x007d0948, "3D_MODEL%d" @ 0x007d1924
+    /// - "3D_PlanetModel" @ 0x007cda04, "MODEL_LBL" @ 0x007d27ac
+    /// - Error messages:
+    ///   - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc
+    ///   - "Model %s nor the default model %s could be loaded." @ 0x007cad14
+    ///   - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8
+    ///   - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
+    ///   - "Cannot load door model '%s'." @ 0x007d2488
+    ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
+    ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     /// - Original implementation: KOTOR loads MDL/MDX files and renders with DirectX 8/9 APIs
     /// - MDL format: Binary model format containing trimesh nodes, bones, animations
     /// - MDX format: Binary geometry format containing vertex positions, normals, UVs, indices
@@ -21,6 +45,8 @@ namespace Odyssey.MonoGame.Converters
     /// - This MonoGame implementation: Converts to MonoGame Model/VertexBuffer/IndexBuffer structures
     /// - Geometry: Extracts trimesh nodes from MDL, vertex data from MDX, creates MonoGame buffers
     /// - Materials: Converts KOTOR material references to MonoGame BasicEffect or PBR materials
+    /// - Model LOD: Models can have multiple LOD levels (MODEL01-03) for distance-based rendering
+    /// - Supermodels: Special model sets (smseta, smsetb, smsetc) for creature appearance variations
     /// - Note: Original engine used DirectX APIs, this is a modern MonoGame adaptation
     /// </remarks>
     /// <remarks>
