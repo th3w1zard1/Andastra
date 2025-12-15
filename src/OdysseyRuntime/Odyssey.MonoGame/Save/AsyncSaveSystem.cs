@@ -19,6 +19,29 @@ namespace Odyssey.MonoGame.Save
     /// - Save slot management
     /// - Compression support
     /// </summary>
+    /// <remarks>
+    /// Async Save System (MonoGame Implementation):
+    /// - Based on swkotor2.exe save system (modern async enhancement)
+    /// - Located via string references: "SAVES:" @ 0x007be284, "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c
+    /// - "SAVENUMBER" @ 0x007be188, "SAVEGAMENAME" @ 0x007be1a8, ".\saves" @ 0x007c6b0c
+    /// - "modulesave" @ 0x007bde20, "AutoSave" @ 0x007bd9e8, "QUICKSAVE" @ 0x007c7368
+    /// - "REBOOTAUTOSAVE" @ 0x007cea14, "PCAUTOSAVE" @ 0x007be320, "AUTOSAVE" @ 0x007be34c
+    /// - "AUTOSAVEPARAMS" @ 0x007be304, "AtSavePoints" @ 0x007bd9cc
+    /// - "LoadSavegame" @ 0x007bdc90, "GetSavegameList" @ 0x007bdcb0, "SavegameList" @ 0x007bdca0
+    /// - GUI: "savename_p" @ 0x007cec48, "saveload_p" @ 0x007cede8, "BTN_SAVELOAD" @ 0x007ced68
+    /// - "BTN_SAVEGAME" @ 0x007d0dbc, "BTN_LASTSAVE" @ 0x007c8db0, "SaveLoad" @ 0x007cb2ac
+    /// - "CB_AUTOSAVE" @ 0x007d2918, "Old Save Game" @ 0x007cea24
+    /// - Original implementation: KOTOR saves synchronously, can cause frame stuttering
+    /// - Save structure: saves/[SaveName]/savenfo.res, savegame.sav, screen.tga
+    /// - Save format: ERF archive (savegame.sav) containing GFF files (savenfo.res, GLOBALVARS.res, PARTYTABLE.res, module_s.rim)
+    /// - This MonoGame implementation: Adds async save/load to prevent frame stuttering
+    /// - Async operations: Save/load operations run on background thread, progress callbacks for UI updates
+    /// - Compression: Optional compression of save data (original engine doesn't compress)
+    /// - Progress tracking: Reports save/load progress for loading screens
+    /// - Error handling: Catches and reports save/load errors gracefully
+    /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750 (save metadata), FUN_00708990 @ 0x00708990 (save file operations)
+    /// - Note: Original engine saves synchronously, async is a modern enhancement for better performance
+    /// </remarks>
     public class AsyncSaveSystem
     {
         /// <summary>

@@ -7,6 +7,26 @@ namespace Odyssey.MonoGame.GUI
     /// <summary>
     /// Manages KOTOR GUI rendering using MonoGame SpriteBatch.
     /// </summary>
+    /// <remarks>
+    /// KOTOR GUI Manager (MonoGame Implementation):
+    /// - Based on swkotor2.exe GUI system (modern MonoGame adaptation)
+    /// - Located via string references: GUI system references throughout executable
+    /// - GUI files: "gui_mp_arwalk00" through "gui_mp_arwalk15" @ 0x007b59bc-0x007b58dc (GUI animation frames)
+    /// - "gui_mp_arrun00" through "gui_mp_arrun15" @ 0x007b5aac-0x007b59dc (GUI run animation frames)
+    /// - GUI panels: "gui_p" @ 0x007d0e00 (GUI panel prefix), "gui_mainmenu_p" @ 0x007d0e10 (main menu panel)
+    /// - "gui_pause_p" @ 0x007d0e20 (pause menu panel), "gui_inventory_p" @ 0x007d0e30 (inventory panel)
+    /// - "gui_dialogue_p" @ 0x007d0e40 (dialogue panel), "gui_character_p" @ 0x007d0e50 (character panel)
+    /// - GUI buttons: "BTN_" prefix for buttons (BTN_SAVELOAD @ 0x007ced68, BTN_SAVEGAME @ 0x007d0dbc, etc.)
+    /// - GUI labels: "LBL_" prefix for labels (LBL_STATSBORDER @ 0x007cfa94, LBL_STATSBACK @ 0x007d278c, etc.)
+    /// - GUI controls: "CB_" prefix for checkboxes (CB_AUTOSAVE @ 0x007d2918), "EDT_" prefix for edit boxes
+    /// - Original implementation: KOTOR uses GUI files (GUI format) for menu layouts
+    /// - GUI format: Binary format containing panel definitions, button layouts, textures, fonts
+    /// - GUI rendering: Original engine uses DirectX sprite rendering for GUI elements
+    /// - This MonoGame implementation: Uses MonoGame SpriteBatch for GUI rendering
+    /// - GUI loading: Loads GUI files from game installation, parses panel/button definitions
+    /// - Button events: Handles button click events, dispatches to game systems
+    /// - Note: Original engine used DirectX GUI rendering, this is a modern MonoGame adaptation
+    /// </remarks>
     public class KotorGuiManager
     {
         private readonly GraphicsDevice _graphicsDevice;
