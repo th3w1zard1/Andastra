@@ -477,19 +477,36 @@ namespace Odyssey.Scripting.VM
             // Get function signature from ScriptDefs to determine argument types
             // Original engine: Function signatures stored in nwscript.nss definitions
             // Function signature lookup: Routine ID maps to function definition with parameter types
+            // Based on swkotor2.exe: ACTION opcode uses function dispatch table indexed by routine ID
+            // Routine IDs match function indices from nwscript.nss compilation (0-based index into function table)
             ScriptFunction functionDef = null;
             try
             {
-                // Try to get function definition from ScriptDefs
+                // Determine which ScriptDefs list to use based on EngineApi type
                 // K1 uses ScriptDefs.KOTOR_FUNCTIONS, K2 uses ScriptDefs.TSL_FUNCTIONS
-                // For now, we'll try both and use the first match
-                if (routineId < ScriptDefs.KOTOR_FUNCTIONS.Count)
+                // Original engine: Each game version has its own function table
+                bool isK1 = _context.EngineApi.GetType().Name.Contains("K1");
+                
+                if (isK1)
                 {
-                    functionDef = ScriptDefs.KOTOR_FUNCTIONS[routineId];
+                    // K1: Use KOTOR_FUNCTIONS list
+                    if (routineId < ScriptDefs.KOTOR_FUNCTIONS.Count)
+                    {
+                        functionDef = ScriptDefs.KOTOR_FUNCTIONS[routineId];
+                    }
                 }
-                else if (routineId < ScriptDefs.TSL_FUNCTIONS.Count)
+                else
                 {
-                    functionDef = ScriptDefs.TSL_FUNCTIONS[routineId];
+                    // K2/TSL: Use TSL_FUNCTIONS list (TSL has more functions than K1)
+                    if (routineId < ScriptDefs.TSL_FUNCTIONS.Count)
+                    {
+                        functionDef = ScriptDefs.TSL_FUNCTIONS[routineId];
+                    }
+                    // Fallback: Try K1 list if TSL lookup fails (some functions are shared)
+                    else if (routineId < ScriptDefs.KOTOR_FUNCTIONS.Count)
+                    {
+                        functionDef = ScriptDefs.KOTOR_FUNCTIONS[routineId];
+                    }
                 }
             }
             catch
@@ -531,14 +548,17 @@ namespace Odyssey.Scripting.VM
                             arg = Variable.FromVector(new System.Numerics.Vector3(x, y, z));
                             break;
                         case DataType.Location:
-                            // Location is stored as 3 floats (position) + 1 float (facing) + 1 object (area)
-                            float facing = PopFloat();
-                            float locZ = PopFloat();
-                            float locY = PopFloat();
-                            float locX = PopFloat();
-                            uint areaId = (uint)PopInt();
-                            // Location creation would require area lookup - simplified for now
-                            arg = Variable.FromInt(0); // Placeholder
+                            // Location is stored on stack as a single object reference (4 bytes = 1 word)
+                            // Based on swkotor2.exe: Location type storage
+                            // Located via string references: "LOCATION" @ 0x007c2850, "ValLocation" @ 0x007c26ac
+                            // Original implementation: Location stored as object reference (off-stack complex object)
+                            // The actual Location object (position, facing, area) is managed by the engine
+                            // We pop the object ID and pass it to the engine function
+                            // Note: Location objects are managed by the engine, so we just pass the ID
+                            // The engine API functions will handle Location object lookup/creation
+                            int locationValue = PopInt();
+                            // Store the location ID as the ComplexValue (engine will resolve it)
+                            arg = Variable.FromLocation((object)locationValue);
                             break;
                         default:
                             // Unknown type, pop as int
