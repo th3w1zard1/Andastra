@@ -38,6 +38,43 @@ namespace Odyssey.Kotor.Loading
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
     /// - GUI: "LB_MODULES" @ 0x007cbff4, ":modules" @ 0x007cc0d8
     /// - Original implementation: FUN_00633270 @ 0x00633270 (sets up all game directories including MODULES)
+    ///   - Function signature: `void FUN_00633270(undefined4 *param_1)`
+    ///   - param_1: Directory alias manager structure pointer
+    ///   - Sets up directory aliases for resource lookup (via FUN_00632f30):
+    ///     - HD0: Maps to "d:\" (absolute) or ".\" (relative) - Hard drive root
+    ///     - CD0: Maps to "d:\" (absolute) or "d:\" (relative) - CD drive root
+    ///     - OVERRIDE: Maps to "d:\override" (absolute) or ".\override" (relative) - Override directory
+    ///     - ERRORTEX: Maps to "d:\errortex" (absolute) or ".\errortex" (relative) - Error texture directory
+    ///     - TEMP: Maps to "d:\temp" (absolute) or ".\temp" (relative) - Temporary files
+    ///     - MODULES: Maps to "d:\modules" (absolute) or ".\modules" (relative) - Module directory
+    ///     - NWMFILES: Maps to "d:\nwm" (absolute) or ".\nwm" (relative) - NWM files directory
+    ///     - LOGS: Maps to "d:\logs" (absolute) or ".\logs" (relative) - Log files directory
+    ///     - LOCALVAULT: Maps to "d:\localvault" (absolute) or ".\localvault" (relative) - Local vault
+    ///     - DMVAULT: Maps to "d:\dmvault" (absolute) or ".\dmvault" (relative) - DM vault
+    ///     - SERVERVAULT: Maps to "d:\servervault" (absolute) or ".\servervault" (relative) - Server vault
+    ///     - SAVES: Maps to "u:\" (absolute) or ".\saves" (relative) - Save game directory
+    ///     - MUSIC: Maps to "d:\music" (absolute) or ".\music" (relative) - Music directory
+    ///     - STREAMMUSIC: Maps to "d:\streammusic" (absolute) or ".\streammusic" (relative) - Streamed music
+    ///     - MOVIES: Maps to "d:\movies" (absolute) or ".\movies" (relative) - Movie files
+    ///     - TEMPCLIENT: Maps to "d:\tempclient" (absolute) or ".\tempclient" (relative) - Client temp files
+    ///     - CURRENTGAME: Maps to "d:\currentgame" (absolute) or ".\currentgame" (relative) - Current game data
+    ///     - HAK: Maps to "d:\hak" (absolute) or ".\hak" (relative) - HAK files directory
+    ///     - TEXTUREPACKS: Maps to "d:\texturepacks" (absolute) or ".\texturepacks" (relative) - Texture packs
+    ///     - STREAMVOICE: Maps to "d:\streamvoice" (absolute) or ".\streamvoice" (relative) - Streamed voice
+    ///     - SUPERMODELS: Maps to "d:\supermodels" (absolute) or ".\supermodels" (relative) - Super models
+    ///     - DOWNLOADS: Maps to "t:\" (absolute) or ".\downloads" (relative) - Downloads directory
+    ///     - OPTIONS: Maps to "t:\" (absolute) or ".\" (relative) - Options directory
+    ///     - AMBIENT: Maps to "d:\ambient" (absolute) or ".\ambient" (relative) - Ambient sounds
+    ///     - PATCH: Maps to "d:\patch" (absolute) or ".\patch" (relative) - Patch files
+    ///     - PORTRAITS: Maps to "d:\portraits" (absolute) or ".\portraits" (relative) - Portrait files
+    ///     - GAMEINPROGRESS: Maps to "z:\gameinprogress" (absolute) or ".\gameinprogress" (relative) - Game in progress
+    ///     - FUTUREGAME: Maps to "z:\futuregame" (absolute) or ".\futuregame" (relative) - Future game data
+    ///     - RIMS: Maps to "d:\rims" (absolute) or ".\rims" (relative) - RIM archive files
+    ///     - RIMSXBOX: Maps to "d:\rimsxbox" (absolute) or ".\rimsxbox" (relative) - Xbox RIM files
+    ///     - REBOOTDATA: Maps to "d:\rebootdata" (absolute) or ".\rebootdata" (relative) - Reboot data
+    ///     - CACHE: Maps to "z:\cache" (absolute) or ".\" (relative) - Cache directory
+    ///     - LIPS: Maps to "d:\lips" (absolute) or ".\lips" (relative) - LIP sync files
+    ///   - Directory aliases used throughout engine for resource path resolution (e.g., "MODULES:\{moduleName}\module.ifo")
     /// 1. Read IFO - Parse module metadata
     /// 2. Check Requirements - Verify Expansion_Pack and MinGameVer
     /// 3. Load HAKs - Mount HAK files in order
