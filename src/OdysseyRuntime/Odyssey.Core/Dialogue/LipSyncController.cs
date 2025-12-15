@@ -11,12 +11,14 @@ namespace Odyssey.Core.Dialogue
     /// <remarks>
     /// Lip Sync Controller:
     /// - Based on swkotor2.exe lip sync system
-    /// - Located via string references: LIP file loading and phoneme animation system
+    /// - Located via string references: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668
+    /// - ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840, "=Lip Delay" @ 0x007c7fb7
     /// - Original implementation: LIP files contain keyframes with time and phoneme shape index
     /// - KOTOR uses approximately 10 phoneme shapes for mouth/face animation
     /// - The controller interpolates between keyframes to produce smooth animation
-    /// - LIP files are loaded by ResRef matching dialogue VO files
+    /// - LIP files are loaded by ResRef matching dialogue VO files (stored in .\lips or d:\lips directories)
     /// - Phoneme shapes drive blend shapes or bone rotations on character models
+    /// - Lip delay: Timing offset for lip sync synchronization with voice-over audio
     /// - Based on LIP file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class LipSyncController : ILipSyncController
