@@ -7,8 +7,14 @@ namespace Odyssey.Kotor.Components
     /// Component for ambient sound entities.
     /// </summary>
     /// <remarks>
-    /// Based on UTS file format documentation.
-    /// Sound entities emit positional audio.
+    /// Sound Component:
+    /// - Based on swkotor2.exe sound system
+    /// - Located via string references: Sound entity functions handle ambient audio emission
+    /// - Original implementation: Sound entities emit positional audio in the game world
+    /// - UTS file format: GFF with "UTS " signature containing sound data
+    /// - Sound entities can be active/inactive, looping, positional, with volume and distance falloff
+    /// - Sounds can randomize position or play random sounds from a list
+    /// - Based on UTS file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class SoundComponent : IComponent
     {

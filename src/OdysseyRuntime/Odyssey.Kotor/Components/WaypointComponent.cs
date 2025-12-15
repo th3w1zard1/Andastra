@@ -6,8 +6,14 @@ namespace Odyssey.Kotor.Components
     /// Component for waypoint entities.
     /// </summary>
     /// <remarks>
-    /// Based on UTW file format documentation.
-    /// Waypoints are invisible markers used for scripting and navigation.
+    /// Waypoint Component:
+    /// - Based on swkotor2.exe waypoint system
+    /// - Located via string references: Waypoint functions handle waypoint lookup and navigation
+    /// - Original implementation: Waypoints are invisible markers used for scripting and navigation
+    /// - UTW file format: GFF with "UTW " signature containing waypoint data
+    /// - Waypoints can have map notes for player reference
+    /// - GetWaypointByTag NWScript function finds waypoints by tag
+    /// - Based on UTW file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class WaypointComponent : IComponent
     {
