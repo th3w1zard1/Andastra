@@ -101,10 +101,33 @@ namespace Odyssey.Core.Actions
             }
 
             // Equip item to slot
+            // Based on swkotor2.exe: Equip item implementation
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594
+            // Original implementation: Sets item in equipment slot, modifies entity stats, fires OnEquipItem script event
+            // OnEquipItem script event: CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM = 0x26 (from FUN_004dcfb0 switch case 0x26)
+            // Item properties from baseitems.2da modify entity stats (AC, attack bonus, damage, abilities, etc.)
             inventory.SetItemInSlot(_inventorySlot, item);
+
+            // Fire equip event
+            IEventBus eventBus = actor.World?.EventBus;
+            if (eventBus != null)
+            {
+                eventBus.Publish(new ItemEquippedEvent { Actor = actor, Item = item, Slot = _inventorySlot });
+            }
 
             return ActionStatus.Complete;
         }
+    }
+
+    /// <summary>
+    /// Event fired when an item is equipped.
+    /// </summary>
+    public class ItemEquippedEvent : IGameEvent
+    {
+        public IEntity Actor { get; set; }
+        public IEntity Item { get; set; }
+        public int Slot { get; set; }
+        public IEntity Entity { get { return Actor; } }
     }
 }
 

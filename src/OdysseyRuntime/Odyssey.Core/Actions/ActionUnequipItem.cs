@@ -11,9 +11,11 @@ namespace Odyssey.Core.Actions
     /// Unequip Item Action:
     /// - Based on swkotor2.exe ActionUnequipItem NWScript function
     /// - Located via string references: "UnequipItem" @ 0x007be4e8, "EquippedItem" @ 0x007c23a0
+    /// - "UnequipHItem" @ 0x007c3870, "UnequipItems" @ 0x007c3880 (unequip operations)
     /// - Inventory system: "Inventory" @ 0x007bd658, "InventorySlot" @ 0x007c49bc, "Item" @ 0x007bc54c
     /// - Equipment slots: "Armor" @ 0x007be1f8, "Helmet" @ 0x007be208, "Implant" @ 0x007be218
     /// - "RightArm" @ 0x007be238, "LeftArm" @ 0x007be248 (equipment slot references)
+    /// - Item animations: "i_unequip" @ 0x007ccdec, "unequip" @ 0x007cdf5c
     /// - Original implementation: Removes item from specified equipment slot, returns it to inventory
     /// - Unequipping item removes stat modifications (AC, damage, abilities, etc.)
     /// - Item remains in entity's inventory after unequipping
@@ -44,10 +46,34 @@ namespace Odyssey.Core.Actions
             }
 
             // Clear the slot (unequip)
+            // Based on swkotor2.exe: Unequip item implementation
+            // Located via string references: "UnequipHItem" @ 0x007c3870, "UnequipItems" @ 0x007c3880
+            // Original implementation: Removes item from equipment slot, removes stat modifications, returns item to inventory
+            // Item remains in entity's inventory after unequipping (does not delete item)
+            // Unequipping removes stat bonuses/penalties from item properties (AC, attack, damage, etc.)
+            IEntity unequippedItem = inventory.GetItemInSlot(_inventorySlot);
             inventory.SetItemInSlot(_inventorySlot, null);
+
+            // Fire unequip event
+            IEventBus eventBus = actor.World?.EventBus;
+            if (eventBus != null && unequippedItem != null)
+            {
+                eventBus.Publish(new ItemUnequippedEvent { Actor = actor, Item = unequippedItem, Slot = _inventorySlot });
+            }
 
             return ActionStatus.Complete;
         }
+    }
+
+    /// <summary>
+    /// Event fired when an item is unequipped.
+    /// </summary>
+    public class ItemUnequippedEvent : IGameEvent
+    {
+        public IEntity Actor { get; set; }
+        public IEntity Item { get; set; }
+        public int Slot { get; set; }
+        public IEntity Entity { get { return Actor; } }
     }
 }
 
