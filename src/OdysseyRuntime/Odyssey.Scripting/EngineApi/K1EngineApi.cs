@@ -63,17 +63,6 @@ namespace Odyssey.Scripting.EngineApi
         // Key: caster entity ID, Value: target entity ID
         private readonly Dictionary<uint, uint> _lastSpellTargets;
 
-        // Track last equipped item for GetLastItemEquipped
-        // Key: creature entity ID, Value: item entity ID
-        private readonly Dictionary<uint, uint> _lastEquippedItems;
-
-        // Track player restriction state
-        private bool _playerRestricted;
-
-        // Track last spell cast metamagic type for GetMetaMagicFeat
-        // Key: caster entity ID, Value: metamagic feat type (METAMAGIC_* constants)
-        private readonly Dictionary<uint, int> _lastMetamagicTypes;
-
         public K1EngineApi()
         {
             _vm = new NcsVm();
@@ -82,8 +71,6 @@ namespace Odyssey.Scripting.EngineApi
             _effectIterations = new Dictionary<uint, EffectIteration>();
             _persistentObjectIterations = new Dictionary<uint, PersistentObjectIteration>();
             _lastSpellTargets = new Dictionary<uint, uint>();
-            _lastEquippedItems = new Dictionary<uint, uint>();
-            _lastMetamagicTypes = new Dictionary<uint, int>();
         }
         
         private class FactionMemberIteration
@@ -918,17 +905,6 @@ namespace Odyssey.Scripting.EngineApi
         /// GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue, location lLocation, int nNth=1, ...)
         /// Returns the nearest creature to a location matching the specified criteria
         /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Creature search system with criteria filtering
-        /// Original implementation: Searches creatures within radius (100m default), filters by multiple criteria, sorts by distance
-        /// Criteria types: CREATURE_TYPE_RACIAL_TYPE (0), CREATURE_TYPE_PLAYER_CHAR (1), CREATURE_TYPE_CLASS (2),
-        ///   CREATURE_TYPE_REPUTATION (3), CREATURE_TYPE_IS_ALIVE (4), CREATURE_TYPE_HAS_SPELL_EFFECT (5),
-        ///   CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT (6), CREATURE_TYPE_PERCEPTION (7)
-        /// Multiple criteria: Supports up to 3 criteria filters (AND logic)
-        /// Nth parameter: 1-indexed (1 = nearest, 2 = second nearest, etc.)
-        /// Search radius: 100 meters default (hardcoded in original engine)
-        /// Returns: Nth nearest matching creature ID or OBJECT_INVALID if not found
-        /// </remarks>
         private Variable Func_GetNearestCreatureToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int firstCriteriaType = args.Count > 0 ? args[0].AsInt() : -1;
@@ -1088,13 +1064,8 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // Check racial type from creature data
-                    if (creature is Core.Entities.Entity entity)
-                    {
-                        int raceId = entity.GetData<int>("RaceId", 0);
-                        return raceId == criteriaValue;
-                    }
-                    return false;
+                    // TODO: Check racial type from creature template
+                    return true; // Placeholder
 
                 case 1: // CREATURE_TYPE_PLAYER_CHAR
                     // PLAYER_CHAR_IS_PC = 0, PLAYER_CHAR_NOT_PC = 1
@@ -1927,11 +1898,6 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
-        /// <summary>
-        /// ActionEquipItem(object oItem, int nInventorySlot) - Queues action to equip an item
-        /// Based on swkotor2.exe: Equips item from inventory to specified equipment slot
-        /// Tracks equipped item for GetLastItemEquipped
-        /// </summary>
         private Variable Func_ActionEquipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionEquipItem(object oItem, int nInventorySlot)
@@ -1941,12 +1907,6 @@ namespace Odyssey.Scripting.EngineApi
             if (ctx.Caller == null)
             {
                 return Variable.Void();
-            }
-
-            // Track equipped item for GetLastItemEquipped
-            if (itemId != ObjectInvalid)
-            {
-                _lastEquippedItems[ctx.Caller.ObjectId] = itemId;
             }
 
             var action = new ActionEquipItem(itemId, inventorySlot);
@@ -2165,8 +2125,8 @@ namespace Odyssey.Scripting.EngineApi
             {
                 if (services.CameraController != null)
                 {
-                    // Set camera facing using SetFacing method (handles both chase and free camera modes)
-                    services.CameraController.SetFacing(direction);
+                    // Set camera yaw rotation (direction is in radians)
+                    services.CameraController.Yaw = direction;
                 }
             }
             
@@ -2864,17 +2824,6 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
-        /// <summary>
-        /// GetItemInSlot(int nInventorySlot, object oCreature=OBJECT_SELF) - returns item in specified inventory slot
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Inventory slot system
-        /// Located via string references: "InventorySlot" @ 0x007bf7d0
-        /// Original implementation: KOTOR uses numbered inventory slots (0-17 for equipment, higher for inventory)
-        /// Inventory slots: Equipment slots (0-17) for armor, weapons, etc., inventory slots (18+) for items
-        /// Returns: Item object ID in specified slot or OBJECT_INVALID if slot is empty
-        /// Slot validation: Invalid slot numbers return OBJECT_INVALID
-        /// </remarks>
         private Variable Func_GetItemInSlot(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetItemInSlot(int nInventorySlot, object oCreature=OBJECT_SELF)
@@ -3011,37 +2960,8 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromEffect(effect);
         }
 
-        /// <summary>
-        /// GetLastItemEquipped() - Returns the last item that was equipped by the caller
-        /// Based on swkotor2.exe: Tracks the last item equipped via ActionEquipItem
-        /// Returns OBJECT_INVALID if no item has been equipped or caller is invalid
-        /// </summary>
         private Variable Func_GetLastItemEquipped(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Retrieve last equipped item for this creature
-            if (_lastEquippedItems.TryGetValue(ctx.Caller.ObjectId, out uint itemId))
-            {
-                // Verify item still exists and is valid
-                if (ctx.World != null)
-                {
-                    IEntity item = ctx.World.GetEntity(itemId);
-                    if (item != null && item.IsValid)
-                    {
-                        return Variable.FromObject(itemId);
-                    }
-                    else
-                    {
-                        // Item no longer exists, remove from tracking
-                        _lastEquippedItems.Remove(ctx.Caller.ObjectId);
-                    }
-                }
-            }
-
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -3124,20 +3044,11 @@ namespace Odyssey.Scripting.EngineApi
             int restrict = args.Count > 0 ? args[0].AsInt() : 0;
             bool shouldRestrict = restrict != 0;
             
-            // Track player restriction state
+            // Player restriction would typically be handled by GameSession or PlayerController
+            // For now, this is a placeholder - player restriction system integration needed
+            // TODO: Implement player restriction mode
             // When restricted, player cannot move, interact, or perform actions
             // Used during cutscenes, dialogues, etc.
-            _playerRestricted = shouldRestrict;
-            
-            // Notify GameSession if available to enforce restriction
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-            {
-                if (services.GameSession != null && services.PlayerEntity != null)
-                {
-                    // Player restriction would be enforced by PlayerController or GameSession
-                    // This flag is now tracked and can be checked by movement/interaction systems
-                }
-            }
             
             return Variable.Void();
         }
@@ -3378,13 +3289,6 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetEffectCreator(effect eEffect) - returns creator of effect
         /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Effect creator tracking system
-        /// Original implementation: Effects store creator entity ID (who cast the spell/applied the effect)
-        /// Creator tracking: Used for ownership checks, caster level calculations, spell targeting
-        /// Returns: Creator entity object ID or OBJECT_INVALID if effect has no creator
-        /// Search behavior: Iterates through active effects on entity to find matching effect
-        /// </remarks>
         private Variable Func_GetEffectCreator(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
@@ -3612,20 +3516,17 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
+            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
+            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
+            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // Retrieve last metamagic type for this caster
-            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
-            {
-                return Variable.FromInt(metamagicType);
-            }
-            
-            // No metamagic tracked, return 0 (no metamagic)
+            // For now, return 0 (no metamagic) until spell casting tracking is implemented
             return Variable.FromInt(0);
         }
 
@@ -3732,8 +3633,6 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// MagicalEffect(effect eEffect) - Wraps an effect as a magical effect (can be dispelled)
-        /// Based on swkotor2.exe: Sets effect subtype to SUBTYPE_MAGICAL (8)
-        /// Magical effects can be dispelled by DispelMagic
         /// </summary>
         private Variable Func_MagicalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3748,11 +3647,13 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromEffect(null);
             }
             
-            // Set subtype to MAGICAL (8)
+            // Magical effects can be dispelled by DispelMagic
+            // The effect itself is unchanged, but marked as magical
+            // For now, just return the effect as-is
+            // TODO: Mark effect as magical type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 8; // SUBTYPE_MAGICAL
                 return Variable.FromEffect(effect);
             }
             
@@ -3761,8 +3662,6 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// SupernaturalEffect(effect eEffect) - Wraps an effect as a supernatural effect (cannot be dispelled)
-        /// Based on swkotor2.exe: Sets effect subtype to SUBTYPE_SUPERNATURAL (16)
-        /// Supernatural effects cannot be dispelled
         /// </summary>
         private Variable Func_SupernaturalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3777,12 +3676,13 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromEffect(null);
             }
             
-            // Set subtype to SUPERNATURAL (16)
+            // Supernatural effects cannot be dispelled
+            // The effect itself is unchanged, but marked as supernatural
+            // For now, just return the effect as-is
+            // TODO: Mark effect as supernatural type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 16; // SUBTYPE_SUPERNATURAL
-                effect.IsSupernatural = true;
                 return Variable.FromEffect(effect);
             }
             
@@ -3805,15 +3705,10 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromEffect(null);
             }
             
-            // Set subtype to EXTRAORDINARY (32)
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            Combat.Effect effect = effectObj as Combat.Effect;
-            if (effect != null)
-            {
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
-                effect.IsSupernatural = false; // Extraordinary is not supernatural
-                return Variable.FromEffect(effect);
-            }
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
