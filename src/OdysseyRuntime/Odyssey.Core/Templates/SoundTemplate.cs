@@ -9,6 +9,18 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Sound template implementation for spawning sounds from UTS data.
     /// </summary>
+    /// <remarks>
+    /// Sound Template:
+    /// - Based on swkotor2.exe sound system
+    /// - Located via string references: Sound entity functions handle ambient audio emission
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references sound templates)
+    /// - Original implementation: UTS (Sound) GFF templates define sound properties
+    /// - UTS file format: GFF with "UTS " signature containing sound data
+    /// - Sound entities emit positional audio in the game world
+    /// - Sounds can be active/inactive, looping, positional, with volume and distance falloff
+    /// - Sounds can randomize position or play random sounds from a list
+    /// - Based on UTS file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class SoundTemplate : ISoundTemplate
     {
         #region Properties

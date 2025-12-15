@@ -10,6 +10,18 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Encounter template implementation for spawning encounters from UTE data.
     /// </summary>
+    /// <remarks>
+    /// Encounter Template:
+    /// - Based on swkotor2.exe encounter system
+    /// - Located via string references: "Encounter" @ 0x007bc524, "Encounter List" @ 0x007bd050
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references encounter templates)
+    /// - Original implementation: UTE (Encounter) GFF templates define encounter properties
+    /// - UTE file format: GFF with "UTE " signature containing encounter data
+    /// - Encounters spawn creatures when hostile creatures enter encounter polygon area
+    /// - Encounters have polygon geometry defining spawn area, creature templates, spawn options
+    /// - SpawnOption 0 = continuous spawn, 1 = single-shot spawn
+    /// - Based on UTE file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class EncounterTemplate : IEncounterTemplate
     {
         #region Properties

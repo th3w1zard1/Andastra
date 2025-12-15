@@ -9,6 +9,18 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Waypoint template implementation for spawning waypoints from UTW data.
     /// </summary>
+    /// <remarks>
+    /// Waypoint Template:
+    /// - Based on swkotor2.exe waypoint system
+    /// - Located via string references: Waypoint functions handle waypoint lookup and navigation
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references waypoint templates)
+    /// - Original implementation: UTW (Waypoint) GFF templates define waypoint properties
+    /// - UTW file format: GFF with "UTW " signature containing waypoint data
+    /// - Waypoints are invisible markers used for scripting and navigation
+    /// - Waypoints can have map notes for player reference (HasMapNote, MapNote)
+    /// - GetWaypointByTag NWScript function finds waypoints by tag
+    /// - Based on UTW file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class WaypointTemplate : IWaypointTemplate
     {
         #region Properties
