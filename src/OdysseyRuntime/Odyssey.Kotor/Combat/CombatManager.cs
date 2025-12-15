@@ -394,6 +394,16 @@ namespace Odyssey.Kotor.Combat
             // Track last attacker
             _lastAttackers[attack.Target.ObjectId] = attack.Attacker;
 
+            // Fire OnPhysicalAttacked script event on target (fires regardless of hit/miss)
+            // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+            // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
+            // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target entity when attacked (before damage is applied)
+            IEventBus eventBus = _world.EventBus;
+            if (eventBus != null)
+            {
+                eventBus.FireScriptEvent(attack.Target, ScriptEvent.OnPhysicalAttacked, attack.Attacker);
+            }
+
             // Fire attack event
             OnAttack?.Invoke(this, new CombatEventArgs
             {
@@ -408,6 +418,14 @@ namespace Odyssey.Kotor.Combat
                 result.Result == AttackResult.AutomaticHit)
             {
                 int actualDamage = _damageCalc.ApplyDamage(attack.Target, result.TotalDamage, attack.DamageType);
+
+                // Fire OnDamaged script event on target
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
+                if (eventBus != null && actualDamage > 0)
+                {
+                    eventBus.FireScriptEvent(attack.Target, ScriptEvent.OnDamaged, attack.Attacker);
+                }
 
                 // Fire damage event
                 OnDamage?.Invoke(this, new CombatEventArgs

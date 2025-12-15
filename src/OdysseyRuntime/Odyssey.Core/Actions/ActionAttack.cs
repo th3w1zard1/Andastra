@@ -148,6 +148,16 @@ namespace Odyssey.Core.Actions
             int attackBonus = attackerStats.BaseAttackBonus;
             int targetAC = targetStats.ArmorClass;
 
+            // Fire OnPhysicalAttacked script event on target (fires regardless of hit/miss)
+            // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+            // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c
+            // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target when attacked
+            IEventBus eventBus = attacker.World.EventBus;
+            if (eventBus != null)
+            {
+                eventBus.FireScriptEvent(target, ScriptEvent.OnPhysicalAttacked, attacker);
+            }
+
             // Natural 20 always hits, natural 1 always misses
             if (attackRoll == 20 || (attackRoll != 1 && attackRoll + attackBonus >= targetAC))
             {
@@ -158,7 +168,6 @@ namespace Odyssey.Core.Actions
                 targetStats.CurrentHP -= damage;
 
                 // Fire damage event
-                IEventBus eventBus = attacker.World.EventBus;
                 if (eventBus != null)
                 {
                     eventBus.Publish(new DamageEvent
@@ -168,6 +177,14 @@ namespace Odyssey.Core.Actions
                         Damage = damage,
                         DamageType = DamageType.Physical
                     });
+                }
+
+                // Fire OnDamaged script event on target
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70
+                if (eventBus != null)
+                {
+                    eventBus.FireScriptEvent(target, ScriptEvent.OnDamaged, attacker);
                 }
             }
         }
