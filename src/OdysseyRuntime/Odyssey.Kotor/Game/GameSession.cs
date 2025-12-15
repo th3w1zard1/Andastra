@@ -33,7 +33,7 @@ namespace Odyssey.Kotor.Game
     /// <summary>
     /// Container for GameSession services accessible from execution context.
     /// </summary>
-    public class GameServicesContext
+    public class GameServicesContext : Odyssey.Core.Interfaces.IGameServicesContext
     {
         public DialogueManager DialogueManager { get; set; }
         public IEntity PlayerEntity { get; set; }
@@ -46,6 +46,16 @@ namespace Odyssey.Kotor.Game
         public GameSession GameSession { get; set; }
         public Core.Camera.CameraController CameraController { get; set; }
         public Core.Audio.ISoundPlayer SoundPlayer { get; set; }
+
+        // IGameServicesContext interface implementation
+        object Odyssey.Core.Interfaces.IGameServicesContext.DialogueManager => DialogueManager;
+        object Odyssey.Core.Interfaces.IGameServicesContext.CombatManager => CombatManager;
+        object Odyssey.Core.Interfaces.IGameServicesContext.PartyManager => PartyManager;
+        object Odyssey.Core.Interfaces.IGameServicesContext.ModuleLoader => ModuleLoader;
+        object Odyssey.Core.Interfaces.IGameServicesContext.FactionManager => FactionManager;
+        object Odyssey.Core.Interfaces.IGameServicesContext.PerceptionManager => PerceptionManager;
+        object Odyssey.Core.Interfaces.IGameServicesContext.GameSession => GameSession;
+        object Odyssey.Core.Interfaces.IGameServicesContext.CameraController => CameraController;
     }
 
     /// <summary>
@@ -59,10 +69,14 @@ namespace Odyssey.Kotor.Game
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
     /// - "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0, "ModuleLoaded" @ 0x007bdd70
+    /// - "GLOBALVARS" @ 0x007c27bc (global variable state storage)
+    /// - "PARTYTABLE" @ 0x007c1910 (party state storage)
     /// - Original engine uses "GAMEINPROGRESS:" prefix for game state directory (z:\gameinprogress, .\gameinprogress)
     /// - Game state stored in: GAMEINPROGRESS:PC, GAMEINPROGRESS:INVENTORY, GAMEINPROGRESS:REPUTE, etc.
     /// - Module loading triggers ON_MODULE_LOAD and ON_MODULE_START script events
     /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up all game directories including GAMEINPROGRESS, MODULES)
+    /// - Global variables: FUN_005ac670 @ 0x005ac670 (serialize), FUN_005ac740 @ 0x005ac740 (deserialize)
+    /// - Party table: FUN_0057bd70 @ 0x0057bd70 (serialize), FUN_0057dcd0 @ 0x0057dcd0 (deserialize)
     /// </remarks>
     public class GameSession : IDisposable
     {
