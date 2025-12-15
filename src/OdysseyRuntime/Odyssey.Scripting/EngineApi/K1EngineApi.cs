@@ -1933,6 +1933,50 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetIsDay() - Returns TRUE if it is currently day time (6:00 AM to 8:00 PM)
+        /// Based on swkotor2.exe: Time of day check for day period
+        /// </summary>
+        private Variable Func_GetIsDay(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int hour = Func_GetTimeHour(new List<Variable>(), ctx).AsInt();
+            // Day is typically 6:00 AM (6) to 8:00 PM (20)
+            return Variable.FromInt((hour >= 6 && hour < 20) ? 1 : 0);
+        }
+
+        /// <summary>
+        /// GetIsNight() - Returns TRUE if it is currently night time (8:00 PM to 6:00 AM)
+        /// Based on swkotor2.exe: Time of day check for night period
+        /// </summary>
+        private Variable Func_GetIsNight(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int hour = Func_GetTimeHour(new List<Variable>(), ctx).AsInt();
+            // Night is typically 8:00 PM (20) to 6:00 AM (6)
+            return Variable.FromInt((hour >= 20 || hour < 6) ? 1 : 0);
+        }
+
+        /// <summary>
+        /// GetIsDawn() - Returns TRUE if it is currently dawn (5:00 AM to 7:00 AM)
+        /// Based on swkotor2.exe: Time of day check for dawn period
+        /// </summary>
+        private Variable Func_GetIsDawn(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int hour = Func_GetTimeHour(new List<Variable>(), ctx).AsInt();
+            // Dawn is typically 5:00 AM (5) to 7:00 AM (7)
+            return Variable.FromInt((hour >= 5 && hour < 7) ? 1 : 0);
+        }
+
+        /// <summary>
+        /// GetIsDusk() - Returns TRUE if it is currently dusk (7:00 PM to 9:00 PM)
+        /// Based on swkotor2.exe: Time of day check for dusk period
+        /// </summary>
+        private Variable Func_GetIsDusk(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int hour = Func_GetTimeHour(new List<Variable>(), ctx).AsInt();
+            // Dusk is typically 7:00 PM (19) to 9:00 PM (21)
+            return Variable.FromInt((hour >= 19 && hour < 21) ? 1 : 0);
+        }
+
         private new Variable Func_GetArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return base.Func_GetArea(args, ctx);
