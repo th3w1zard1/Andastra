@@ -20,6 +20,7 @@ namespace Odyssey.Content.Loaders
     /// GIT Loader:
     /// - Based on swkotor2.exe GIT file loading
     /// - Located via string references: "GIT " signature (GFF file format) in GFF file header
+    /// - "tmpgit" @ 0x007be618 (temporary GIT file reference)
     /// - "Creature List" @ 0x007bd01c (GFF list field name for creature instances)
     /// - "Door List" @ 0x007bd248, "Placeable List" @ 0x007bd260, "TriggerList" @ 0x007bd254
     /// - "WaypointList", "SoundList", "Encounter List" @ 0x007bd050, "StoreList", "CameraList" (GFF list field names)
