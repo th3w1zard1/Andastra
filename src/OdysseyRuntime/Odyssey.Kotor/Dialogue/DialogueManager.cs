@@ -380,6 +380,9 @@ namespace Odyssey.Kotor.Dialogue
             IEntity listener = CurrentState.GetCurrentListener();
 
             // Play voiceover if available
+            // Based on swkotor2.exe: FUN_005e6ac0 @ 0x005e6ac0
+            // Located via string reference: "VO_ResRef" @ 0x007c4eb8, "SoundExists" @ 0x007c4ec8
+            // Original implementation: Plays voiceover and waits for completion before advancing
             string voResRef = GetVoiceoverResRef(entry);
             if (!string.IsNullOrEmpty(voResRef) && _voicePlayer != null && speaker != null)
             {
@@ -387,6 +390,12 @@ namespace Odyssey.Kotor.Dialogue
                 _voicePlayer.Play(voResRef, speaker, () =>
                 {
                     CurrentState.WaitingForVoiceover = false;
+                    // When voiceover completes, check if we should auto-advance
+                    // Based on original engine: voiceover completion triggers node transition
+                    if (CurrentState.TimeRemaining <= 0 && CurrentState.AvailableReplies.Count == 0)
+                    {
+                        AutoAdvance();
+                    }
                 });
             }
 
@@ -398,18 +407,26 @@ namespace Odyssey.Kotor.Dialogue
             }
 
             // Calculate display time based on text length or delay
+            // Based on swkotor2.exe: FUN_005e6ac0 @ 0x005e6ac0
+            // Located via string reference: "Delay" @ 0x007c35b0
+            // Original implementation: If Delay == -1 and voiceover exists, uses voiceover duration
+            // If Delay == -1 and no voiceover, uses default delay from WaitFlags
+            // If Delay >= 0, uses Delay value directly
             if (entry.Delay >= 0)
             {
                 CurrentState.TimeRemaining = entry.Delay;
             }
             else if (CurrentState.WaitingForVoiceover && _voicePlayer != null)
             {
-                // Use voiceover duration if available
-                CurrentState.TimeRemaining = _voicePlayer.CurrentTime + 0.5f; // Add small buffer
+                // Wait for voiceover to complete - don't use a timer based on CurrentTime
+                // The voiceover callback will set WaitingForVoiceover = false when done
+                // Original engine waits for voiceover completion, not a timer
+                CurrentState.TimeRemaining = 0f; // Voiceover callback handles timing
             }
             else
             {
                 // Estimate based on text length (rough approximation)
+                // Original engine uses default delay when Delay == -1 and no voiceover
                 CurrentState.TimeRemaining = Math.Max(2f, text.Length * 0.05f);
             }
 
