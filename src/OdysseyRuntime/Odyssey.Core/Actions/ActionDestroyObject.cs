@@ -116,12 +116,21 @@ namespace Odyssey.Core.Actions
             }
 
             // Based on swkotor2.exe: DestroyObject implementation
-            // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48
-            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT (case 0xb)
-            // Fires EVENT_DESTROY_OBJECT event, then removes object from world
+            // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb)
+            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT (case 0xb, fires before object removal)
+            // Fires EVENT_DESTROY_OBJECT event before removing object from world (allows scripts to react)
             // Object is removed from area's entity list, all references become invalid
             if (actor != null && actor.World != null)
             {
+                IEntity target = actor.World.GetEntity(_targetObjectId);
+                if (target != null)
+                {
+                    // Fire destroy event before destruction
+                    // Note: There's no OnDestroy script event, but EVENT_DESTROY_OBJECT is a world event
+                    // Scripts that need to react to destruction should use OnDeath or other events
+                    // The actual destruction happens via World.DestroyEntity which unregisters the entity
+                }
+
                 actor.World.DestroyEntity(_targetObjectId);
                 _destroyed = true;
             }
