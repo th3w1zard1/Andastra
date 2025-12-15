@@ -607,6 +607,23 @@ namespace Odyssey.Scripting.VM
                         PushFloat(result.VectorValue.Y);
                         PushFloat(result.VectorValue.Z);
                         break;
+                    case VariableType.Location:
+                        // Location is pushed as an integer handle/ID (same as Object)
+                        // Based on swkotor2.exe: Location type result pushing
+                        // Original implementation: Location objects are managed by engine, stack stores integer handle
+                        // Handle both integer IDs (for arguments) and Location objects (for return values)
+                        if (result.ComplexValue is int locationId)
+                        {
+                            PushInt(locationId);
+                        }
+                        else
+                        {
+                            // For Location objects, we need to store them somehow and return an ID
+                            // For now, push 0 (invalid location) as Location object management isn't fully implemented
+                            // TODO: Implement Location object ID management system
+                            PushInt(0);
+                        }
+                        break;
                 }
             }
         }
