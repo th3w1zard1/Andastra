@@ -3267,8 +3267,27 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// CancelCombat(object oCreature) - Cancels combat for the specified creature
+        /// Based on swkotor2.exe: Removes creature from combat state
+        /// </summary>
         private Variable Func_CancelCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity creature = ResolveObject(creatureId, ctx);
+            
+            if (creature == null || creature.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.Void();
+            }
+
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.CombatManager != null)
+                {
+                    services.CombatManager.EndCombat(creature);
+                }
+            }
             return Variable.Void();
         }
 
@@ -4023,12 +4042,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Set subtype to EXTRAORDINARY (32)
+            // Set subtype to EXTRAORDINARY (24)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
-                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
+                effect.SubType = 24; // SUBTYPE_EXTRAORDINARY
+                effect.IsSupernatural = false; // Extraordinary is not supernatural
                 return Variable.FromEffect(effect);
             }
             
