@@ -6,6 +6,16 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for item entities that stores UTI template data.
     /// </summary>
+    /// <remarks>
+    /// Item Component Interface:
+    /// - Based on swkotor2.exe item system
+    /// - Located via string references: Item loading functions handle UTI templates
+    /// - Original implementation: Items have base item ID, properties, upgrades, charges, stack size
+    /// - UTI file format: GFF with "UTI " signature containing item data (BaseItem, Properties, Charges, Cost)
+    /// - Item properties modify item behavior (damage bonuses, AC bonuses, effects, etc.)
+    /// - Upgrades modify item stats (damage, AC, etc.) - crystals, modifications
+    /// - Based on UTI file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public interface IItemComponent : IComponent
     {
         /// <summary>

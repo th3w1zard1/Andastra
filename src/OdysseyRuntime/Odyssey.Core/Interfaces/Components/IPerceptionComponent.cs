@@ -5,6 +5,17 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for creature perception (sight and hearing).
     /// </summary>
+    /// <remarks>
+    /// Perception Component Interface:
+    /// - Based on swkotor2.exe perception system
+    /// - Located via string references: "PERCEPTIONDIST" @ 0x007c4070, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68
+    /// - Original implementation: FUN_005fb0f0 @ 0x005fb0f0 (perception update)
+    /// - Each creature has sight and hearing ranges (SightRange, HearingRange)
+    /// - Perception is updated periodically (not every frame)
+    /// - Events fire when perception state changes: OnPerceive (new object seen/heard), OnVanish (object no longer seen)
+    /// - Sight checks: Distance within sight range, line of sight (optional raycasting), not invisible
+    /// - Hearing checks: Distance within hearing range, sound source is active, not silenced
+    /// </remarks>
     public interface IPerceptionComponent : IComponent
     {
         /// <summary>
