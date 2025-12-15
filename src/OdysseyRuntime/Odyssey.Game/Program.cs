@@ -18,7 +18,7 @@ namespace Odyssey.Game
                 Console.WriteLine();
 
                 // Parse command line arguments
-                var settings = GameSettings.FromCommandLine(args);
+                var settings = GameSettingsExtensions.FromCommandLine(args);
 
                 // Detect KOTOR installation if not specified
                 if (string.IsNullOrEmpty(settings.GamePath))
