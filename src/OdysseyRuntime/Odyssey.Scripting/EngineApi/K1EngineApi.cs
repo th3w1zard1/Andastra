@@ -1117,12 +1117,41 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // TODO: Check class type from creature template
-                    return true; // Placeholder
+                    // Check class type from creature component
+                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp != null && creatureComp.ClassList != null)
+                    {
+                        // Check if any class in the class list matches the criteria value
+                        foreach (CreatureClass cls in creatureComp.ClassList)
+                        {
+                            if (cls.ClassId == criteriaValue)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // TODO: Check reputation type
-                    return true; // Placeholder
+                    // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
+                    if (ctx is VM.ExecutionContext execCtxRep && execCtxRep.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesRep)
+                    {
+                        if (servicesRep.FactionManager != null && servicesRep.PlayerEntity != null)
+                        {
+                            switch (criteriaValue)
+                            {
+                                case 0: // FRIEND
+                                    return servicesRep.FactionManager.IsFriendly(servicesRep.PlayerEntity, creature);
+                                case 1: // ENEMY
+                                    return servicesRep.FactionManager.IsHostile(servicesRep.PlayerEntity, creature);
+                                case 2: // NEUTRAL
+                                    return servicesRep.FactionManager.IsNeutral(servicesRep.PlayerEntity, creature);
+                                default:
+                                    return false;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -1135,16 +1164,58 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
-                    // TODO: Check if creature has specific spell effect
-                    return true; // Placeholder
+                    // Check if creature has specific spell effect
+                    if (ctx.World != null && ctx.World.EffectSystem != null)
+                    {
+                        // criteriaValue is the effect type ID to check for
+                        var effects = ctx.World.EffectSystem.GetEffects(creature);
+                        if (effects != null)
+                        {
+                            foreach (var effect in effects)
+                            {
+                                if (effect != null && (int)effect.Effect.Type == criteriaValue)
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    return false;
 
                 case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
-                    // TODO: Check if creature does not have specific spell effect
-                    return true; // Placeholder
+                    // Check if creature does not have specific spell effect
+                    if (ctx.World != null && ctx.World.EffectSystem != null)
+                    {
+                        // criteriaValue is the effect type ID to check for
+                        var effects = ctx.World.EffectSystem.GetEffects(creature);
+                        if (effects != null)
+                        {
+                            foreach (var effect in effects)
+                            {
+                                if (effect != null && (int)effect.Effect.Type == criteriaValue)
+                                {
+                                    return false; // Has the effect, so doesn't match "does not have"
+                                }
+                            }
+                        }
+                        return true; // Doesn't have the effect
+                    }
+                    return true; // If no effect system, assume doesn't have it
 
                 case 7: // CREATURE_TYPE_PERCEPTION
-                    // TODO: Check perception type
-                    return true; // Placeholder
+                    // Check perception type
+                    // Perception types are typically handled by PerceptionManager
+                    if (ctx is VM.ExecutionContext execCtxPer && execCtxPer.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesPer)
+                    {
+                        if (servicesPer.PerceptionManager != null && servicesPer.PlayerEntity != null)
+                        {
+                            // criteriaValue is the perception type to check
+                            // This would need PerceptionManager to check if creature matches perception type
+                            // For now, return true as a placeholder - full implementation would check perception flags
+                            return true;
+                        }
+                    }
+                    return false;
 
                 default:
                     return true; // Unknown criteria type, accept all
