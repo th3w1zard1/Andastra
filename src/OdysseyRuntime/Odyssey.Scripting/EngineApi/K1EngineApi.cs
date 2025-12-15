@@ -151,7 +151,8 @@ namespace Odyssey.Scripting.EngineApi
 
         protected override void RegisterFunctions()
         {
-            // Register function names from ScriptDefs
+            // Register function names from ScriptDefs.KOTOR_FUNCTIONS
+            // KOTOR_FUNCTIONS contains ~850 K1 engine functions (functions 0-849)
             int idx = 0;
             foreach (ScriptFunction func in ScriptDefs.KOTOR_FUNCTIONS)
             {
@@ -362,6 +363,13 @@ namespace Odyssey.Scripting.EngineApi
                 case 316: return Func_GetAttackTarget(args, ctx);
                 case 319: return Func_GetDistanceBetween2D(args, ctx);
                 case 320: return Func_GetIsInCombat(args, ctx);
+                
+                // Item functions
+                case 150: return Func_SetItemStackSize(args, ctx);
+                case 151: return Func_GetDistanceBetween(args, ctx);
+                
+                // Trigger/Object Query Functions
+                case 326: return Func_GetClickingObject(args, ctx);
 
                 // Dialogue functions
                 case 445: return Func_GetIsInConversation(args, ctx);
