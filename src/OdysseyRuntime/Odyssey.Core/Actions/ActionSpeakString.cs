@@ -42,8 +42,12 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            // The actual UI display would be handled by the game layer
-            // This action completes immediately after being processed
+            // Based on swkotor2.exe: ActionSpeakString implementation
+            // Located via string references: "SpeakString" NWScript function, "TalkString" @ 0x007c14f8
+            // Original implementation: Action completes immediately after queuing speech display
+            // The actual UI display (speech bubble) is handled by the game layer asynchronously
+            // Voice over (VO) playback and lip sync are also handled by game layer
+            // Action doesn't wait for speech bubble to disappear - it completes immediately
             return ActionStatus.Complete;
         }
     }

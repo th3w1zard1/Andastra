@@ -49,6 +49,11 @@ namespace Odyssey.Core.Actions
             }
 
             // Try to find path if we don't have one
+            // Based on swkotor2.exe: Movement pathfinding implementation
+            // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
+            // Original implementation: Uses walkmesh A* pathfinding to find path to destination
+            // Pathfinding searches walkmesh adjacency graph for valid path
+            // If no path found, original engine attempts direct movement (may fail if blocked)
             if (_path == null)
             {
                 IArea area = actor.World.CurrentArea;
@@ -60,6 +65,7 @@ namespace Odyssey.Core.Actions
                 if (_path == null || _path.Count == 0)
                 {
                     // No path found - try direct movement as fallback
+                    // Original engine: Falls back to direct movement if pathfinding fails
                     _path = new List<Vector3> { _destination };
                 }
                 _pathIndex = 0;
