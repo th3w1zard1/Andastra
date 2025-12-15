@@ -3,6 +3,15 @@ namespace Odyssey.Core.Enums
     /// <summary>
     /// Types of actions that can be queued on entities.
     /// </summary>
+    /// <remarks>
+    /// Action Type Enum:
+    /// - Based on swkotor2.exe action system
+    /// - Located via string references: "ActionType" @ 0x007bf7f8, "ActionList" @ 0x007bebdc
+    /// - Original implementation: Action types stored in GFF ActionList structures
+    /// - Action types correspond to NWScript action functions (ActionMoveToLocation, ActionAttack, etc.)
+    /// - Actions stored with parameters (ActionParam1-5, ActionParamStrA/B) for execution
+    /// - FUN_00508260 @ 0x00508260 (load ActionList), FUN_00505bc0 @ 0x00505bc0 (save ActionList)
+    /// </remarks>
     public enum ActionType
     {
         Invalid = 0,

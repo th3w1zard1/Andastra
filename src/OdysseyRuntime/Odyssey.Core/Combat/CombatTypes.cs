@@ -5,6 +5,15 @@ namespace Odyssey.Core.Combat
     /// <summary>
     /// Type of attack.
     /// </summary>
+    /// <remarks>
+    /// Attack Type Enum:
+    /// - Based on swkotor2.exe combat system
+    /// - Located via string references: Combat attack type classification
+    /// - Melee: Unarmed or melee weapon attacks (uses STR modifier)
+    /// - Ranged: Blaster or thrown weapon attacks (uses DEX modifier)
+    /// - Force: Force power attacks (uses WIS modifier for DC)
+    /// - Touch: Touch attacks (ignores armor, uses DEX for AC instead of full AC)
+    /// </remarks>
     public enum AttackType
     {
         /// <summary>
@@ -31,6 +40,18 @@ namespace Odyssey.Core.Combat
     /// <summary>
     /// Type of damage.
     /// </summary>
+    /// <remarks>
+    /// Damage Type Enum:
+    /// - Based on swkotor2.exe damage system
+    /// - Located via string references: "DamageList" @ 0x007c0d08, "DamageValue" @ 0x007c0cdc
+    /// - Physical: Kinetic damage (melee weapons, unarmed)
+    /// - Energy: Energy damage (blasters, lightsabers)
+    /// - Fire/Cold/Electrical/Sonic: Elemental damage types
+    /// - Ion: Ion damage (extra damage vs droids, see combat damage calculations)
+    /// - DarkSide/LightSide: Force damage alignment
+    /// - Universal: Bypasses all resistance (rare, used for special effects)
+    /// - Damage types used for: Resistance/immunity checks, visual effects, damage reduction calculations
+    /// </remarks>
     public enum DamageType
     {
         /// <summary>

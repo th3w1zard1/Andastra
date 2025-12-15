@@ -3,6 +3,15 @@ namespace Odyssey.Core.Enums
     /// <summary>
     /// Status returned by action execution.
     /// </summary>
+    /// <remarks>
+    /// Action Status Enum:
+    /// - Based on swkotor2.exe action execution system
+    /// - Actions return status after Update() call: InProgress (continue), Complete (done), Failed (abort)
+    /// - Action queue processes actions sequentially: current action updates until Complete or Failed
+    /// - InProgress: Action continues execution (called again next frame)
+    /// - Complete: Action finished successfully, next action dequeued
+    /// - Failed: Action failed (e.g., pathfinding failed, target invalid), next action dequeued
+    /// </remarks>
     public enum ActionStatus
     {
         /// <summary>Action is still running and needs more time.</summary>
