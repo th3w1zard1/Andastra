@@ -12,6 +12,10 @@ namespace Odyssey.Scripting.EngineApi
     /// Base Engine API:
     /// - Based on swkotor2.exe NWScript engine API system
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
+    /// - "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString function debug output format)
+    /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
+    /// - PrintString implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format)
+    /// - ActionList loading: FUN_00508260 @ 0x00508260 (loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
     /// - Original implementation: Common NWScript functions shared between K1 and K2
     /// - Object constants: OBJECT_INVALID (0x7F000000), OBJECT_SELF (0x7F000001)
     /// - ACTION opcode: Calls engine function by routine ID (uint16 routineId + uint8 argCount)
@@ -72,6 +76,15 @@ namespace Odyssey.Scripting.EngineApi
 
         #region Common Functions
 
+        /// <summary>
+        /// Random(int nMax) - Returns a random integer between 0 and nMax-1
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Random implementation
+        /// Located via string references: "Random" @ 0x007c1080 (random number generation)
+        /// Original implementation: Returns random integer in range [0, nMax) using engine RNG
+        /// Returns 0 if nMax <= 0
+        /// </remarks>
         protected Variable Func_Random(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int max = args.Count > 0 ? args[0].AsInt() : 0;
@@ -82,6 +95,14 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(_random.Next(max));
         }
 
+        /// <summary>
+        /// PrintString(string sString) - Prints a string to the console/log
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: PrintString implementation
+        /// Located via string references: "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output format)
+        /// Original implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format to console/log)
+        /// </remarks>
         protected Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string msg = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -143,6 +164,15 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromString(string.Empty);
         }
 
+        /// <summary>
+        /// GetObjectByTag(string sTag, int nNth = 0) - Returns the object with the given tag
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetObjectByTag implementation
+        /// Located via string references: "Tag" @ 0x007c1a18 (entity tag field for lookup)
+        /// Original implementation: Searches world for entity with matching tag (case-insensitive), returns nth match
+        /// Returns OBJECT_INVALID (0x7F000000) if not found
+        /// </remarks>
         protected Variable Func_GetObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string tag = args.Count > 0 ? args[0].AsString() : string.Empty;
