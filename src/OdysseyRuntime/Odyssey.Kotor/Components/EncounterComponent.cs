@@ -10,13 +10,23 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Encounter Component:
     /// - Based on swkotor2.exe encounter system
-    /// - Located via string references: "Encounter" @ 0x007bc524, "Encounter List" @ 0x007bd050
+    /// - Located via string references: "Encounter" @ 0x007bc524 (encounter entity type), "Encounter List" @ 0x007bd050 (GIT encounter list)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (encounter exhausted script event, 0x11)
+    /// - Error messages:
+    ///   - "Problem loading encounter with tag '%s'.  It has geometry, but no vertices.  Skipping." @ 0x007c0ae0 (encounter geometry error)
+    ///   - "Encounter template %s doesn't exist.\n" @ 0x007c0df0 (encounter template not found error)
     /// - Original implementation: FUN_004e01a0 @ 0x004e01a0 (load encounter instances from GIT)
-    /// - Encounters spawn creatures when hostile creatures enter encounter polygon area
-    /// - UTE file format: GFF with "UTE " signature containing encounter data
+    /// - Encounters spawn creatures when hostile creatures enter encounter polygon area (SpawnOption 0 = on enter)
+    /// - UTE file format: GFF with "UTE " signature containing encounter data (Active, Geometry, SpawnPointList, MaxCreatures, RecCreatures, SpawnOption)
     /// - Encounters have polygon geometry defining spawn area (Geometry field), creature templates (SpawnPointList)
-    /// - SpawnOption 0 = on enter, 1 = on reset, 2 = continuous spawn
-    /// - FUN_004e01a0 reads XPosition, YPosition, ZPosition, Geometry, SpawnPointList from GFF
+    /// - SpawnOption: 0 = on enter (spawn when entity enters polygon), 1 = on reset (spawn on reset timer), 2 = continuous spawn (spawn continuously)
+    /// - MaxCreatures: Maximum creatures that can be spawned (encounter becomes exhausted when max is reached)
+    /// - RecCreatures: Recommended number of creatures to spawn (used for difficulty scaling)
+    /// - Reset: Whether encounter resets after creatures are defeated (Reset field, ResetTime for reset delay)
+    /// - PlayerOnly: Whether encounter only spawns when player enters (PlayerOnly field)
+    /// - Faction: Faction ID to assign to spawned creatures (Faction field)
+    /// - FUN_004e01a0 reads XPosition, YPosition, ZPosition, Geometry, SpawnPointList from GIT encounter instances
+    /// - Encounter exhausted: Fires ON_ENCOUNTER_EXHAUSTED script event when max creatures spawned
     /// - Based on UTE file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class EncounterComponent : IComponent

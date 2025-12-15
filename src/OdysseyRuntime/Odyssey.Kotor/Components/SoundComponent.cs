@@ -9,9 +9,22 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Sound Component:
     /// - Based on swkotor2.exe sound system
-    /// - Located via string references: "SoundList" @ 0x007bd278 (GIT sound list), "Sound" @ 0x007bc548 (sound entity type)
-    /// - "PlaySound" @ 0x007c5f70 (sound playback function), "Volume" @ 0x007c6110 (sound volume field)
-    /// - "MinVolumeDist" @ 0x007c60c4, "MaxVolumeDist" @ 0x007c60d8 (sound distance falloff fields)
+    /// - Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+    /// - "SoundResRef" @ 0x007b5f70 (sound resource reference field), "PlaySound" @ 0x007c5f70 (sound playback function)
+    /// - "Volume" @ 0x007c6110 (sound volume field), "MinVolumeDist" @ 0x007c60c4, "MaxVolumeDist" @ 0x007c60d8 (sound distance falloff fields)
+    /// - Sound types: "SoundOneShot" @ 0x007c4aa4 (one-shot sound flag), "SoundOneShotPercentage" @ 0x007c4a8c (one-shot percentage)
+    /// - "SoundDuration" @ 0x007c49c0 (sound duration field), "SoundImpact" @ 0x007c49b4 (impact sound field)
+    /// - "AmbientSound" @ 0x007c4c68 (ambient sound flag), "FootstepSounds" @ 0x007c4c8c (footstep sound set)
+    /// - "WeaponSounds" @ 0x007c4c9c (weapon sound set), "InventorySound" @ 0x007c7164 (inventory sound type)
+    /// - "SoundSet" @ 0x007cbd50 (sound set field), "SoundSetType" @ 0x007cbd40 (sound set type field)
+    /// - "SoundSetFile" @ 0x007c41f4 (sound set file field), "SoundAppType" @ 0x007c3028 (sound appearance type)
+    /// - "soundapptype" @ 0x007caf54 (sound appearance type field), "SoundCessation" @ 0x007cd5f0 (sound cessation field)
+    /// - Sound paths: "HD0:STREAMSOUNDS\%s" @ 0x007c61d4 (streaming sound path format), "guisounds" @ 0x007b5f7c (GUI sounds directory)
+    /// - "SOUND" @ 0x007d1628 (sound constant), "Sound Init" @ 0x007c7280 (sound initialization message)
+    /// - "SoundProvider" @ 0x007c6154 (sound provider field), "SoundExists" @ 0x007c3568 (sound existence check)
+    /// - Error messages: "CExoSoundSource %s not freed" @ 0x007c6090 (sound source leak warning)
+    /// - GUI: "Sound Options" @ 0x007b5720, "Disable Sound" @ 0x007b5730, "Sound Effects Volume" @ 0x007c83e0
+    /// - "BTN_SOUND" @ 0x007d0d80 (sound button), "optsound_p" @ 0x007d2134, "optsoundadv_p" @ 0x007d1eb4 (sound option panels)
     /// - Template loading: FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
     /// - Original implementation: Sound entities emit positional audio in the game world
     /// - UTS file format: GFF with "UTS " signature containing sound data (Active, Looping, Positional, ResRef, Volume, MaxDistance, MinDistance)
@@ -22,6 +35,7 @@ namespace Odyssey.Kotor.Components
     /// - Interval: Time between plays for non-looping sounds (Interval field, IntervalVrtn for variation)
     /// - Volume variation: VolumeVrtn field for random volume variation
     /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
+    /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
     /// - Based on UTS file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class SoundComponent : IComponent
