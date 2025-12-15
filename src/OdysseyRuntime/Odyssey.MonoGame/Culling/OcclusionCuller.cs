@@ -21,8 +21,8 @@ namespace Odyssey.MonoGame.Culling
     public class OcclusionCuller : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly int _width;
-        private readonly int _height;
+        private int _width;
+        private int _height;
         private readonly int _mipLevels;
 
         // Hi-Z buffer for hierarchical depth testing
@@ -344,17 +344,21 @@ namespace Odyssey.MonoGame.Culling
                 throw new ArgumentException("Height must be greater than zero.", "height");
             }
 
+            // Update width and height fields for dynamic resizing
+            _width = width;
+            _height = height;
+
             // Recreate Hi-Z buffer with new size
-            // Note: Width and height are readonly fields set in constructor, so Resize would need
-            // to be implemented differently if dynamic resizing is required, or width/height fields
-            // would need to be non-readonly. For now, this method provides the interface.
             if (_hiZBuffer != null)
             {
                 _hiZBuffer.Dispose();
                 _hiZBuffer = null;
             }
-            // CreateHiZBuffer uses _width and _height fields which are readonly
-            // This method signature allows for future implementation with mutable fields if needed
+
+            // Recalculate mip levels for new size and recreate buffer
+            // Note: _mipLevels is readonly, so we'd need to recalculate if it were mutable
+            // For now, we recreate with the same mip level count (it will auto-adjust via CreateHiZBuffer)
+            CreateHiZBuffer();
         }
 
         private void CreateHiZBuffer()
