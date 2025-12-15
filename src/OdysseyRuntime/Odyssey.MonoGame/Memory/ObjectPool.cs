@@ -49,7 +49,7 @@ namespace Odyssey.MonoGame.Memory
         {
             if (factory == null)
             {
-                throw new ArgumentNullException("factory");
+                throw new ArgumentNullException(nameof(factory));
             }
 
             _factory = factory;

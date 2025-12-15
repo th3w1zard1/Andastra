@@ -128,7 +128,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             // Check for VRS support

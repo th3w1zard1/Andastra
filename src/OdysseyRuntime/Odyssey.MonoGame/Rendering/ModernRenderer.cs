@@ -122,9 +122,6 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new modern renderer.
         /// </summary>
-        /// <summary>
-        /// Initializes a new modern renderer.
-        /// </summary>
         /// <param name="graphicsDevice">Graphics device for rendering operations. Must not be null.</param>
         /// <param name="resourceProvider">Resource provider for asset loading. Must not be null.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice or resourceProvider is null.</exception>

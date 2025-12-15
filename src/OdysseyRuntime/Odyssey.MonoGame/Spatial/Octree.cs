@@ -55,7 +55,7 @@ namespace Odyssey.MonoGame.Spatial
         {
             if (getBounds == null)
             {
-                throw new ArgumentNullException("getBounds");
+                throw new ArgumentNullException(nameof(getBounds));
             }
 
             _root = new OctreeNode(bounds, 0);
