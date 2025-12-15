@@ -341,6 +341,7 @@ namespace Odyssey.Kotor.Game
 
             // Subscribe to door events for module transitions
             world.EventBus.Subscribe<DoorOpenedEvent>(OnDoorOpened);
+            world.EventBus.Subscribe<DoorTransitionEvent>(OnDoorTransition);
 
             // Create save system
             string savesDirectory = Path.Combine(_settings.GamePath, "saves");
@@ -377,6 +378,35 @@ namespace Odyssey.Kotor.Game
             if (_moduleTransitionSystem != null && _moduleTransitionSystem.CanDoorTransition(evt.Door))
             {
                 _moduleTransitionSystem.TransitionThroughDoor(evt.Door, evt.Actor);
+            }
+        }
+
+        /// <summary>
+        /// Handles door transition events.
+        /// </summary>
+        /// <remarks>
+        /// Door Transition Handler:
+        /// - Based on swkotor2.exe door transition system
+        /// - Original implementation: Handles module/area transitions triggered by doors
+        /// - Module transitions: Load new module and position player at waypoint
+        /// - Area transitions: Position player at waypoint within current module
+        /// </remarks>
+        private void OnDoorTransition(DoorTransitionEvent evt)
+        {
+            if (evt == null || evt.Door == null || _moduleTransitionSystem == null)
+            {
+                return;
+            }
+
+            // Handle module transition
+            if (evt.IsModuleTransition && !string.IsNullOrEmpty(evt.TargetModule))
+            {
+                _moduleTransitionSystem.TransitionThroughDoor(evt.Door, evt.Actor);
+            }
+            // Handle area transition within module
+            else if (evt.IsAreaTransition && !string.IsNullOrEmpty(evt.TargetWaypoint))
+            {
+                PositionPlayerAtWaypoint(evt.TargetWaypoint);
             }
         }
 

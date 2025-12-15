@@ -102,6 +102,30 @@ namespace Odyssey.Core.Actions
                 {
                     eventBus2.Publish(new DoorOpenedEvent { Actor = actor, Door = door });
                 }
+
+                // Check for module/area transition
+                // Based on swkotor2.exe door transition system
+                // Located via string references: "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
+                // Original implementation: Doors with LinkedToModule trigger module transitions when opened
+                // Module transitions: LinkedToFlags bit 1 = module transition
+                // Area transitions: LinkedToFlags bit 2 = area transition within module
+                if (doorState.IsModuleTransition || doorState.IsAreaTransition)
+                {
+                    // Publish transition event - GameSession will handle the actual transition
+                    IEventBus eventBus3 = actor.World.EventBus;
+                    if (eventBus3 != null)
+                    {
+                        eventBus3.Publish(new DoorTransitionEvent
+                        {
+                            Actor = actor,
+                            Door = door,
+                            TargetModule = doorState.LinkedToModule,
+                            TargetWaypoint = doorState.LinkedTo,
+                            IsModuleTransition = doorState.IsModuleTransition,
+                            IsAreaTransition = doorState.IsAreaTransition
+                        });
+                    }
+                }
             }
 
             return ActionStatus.Complete;
@@ -213,6 +237,27 @@ namespace Odyssey.Core.Actions
     {
         public IEntity Actor { get; set; }
         public IEntity Door { get; set; }
+        public IEntity Entity { get { return Door; } }
+    }
+
+    /// <summary>
+    /// Event fired when a door with a transition is opened.
+    /// </summary>
+    /// <remarks>
+    /// Door Transition Event:
+    /// - Based on swkotor2.exe door transition system
+    /// - Located via string references: "LinkedToModule" @ 0x007bd7bc, "TransitionDestination" @ 0x007bd7a4
+    /// - Original implementation: Doors with LinkedToModule trigger module/area transitions
+    /// - GameSession listens for this event and initiates the transition
+    /// </remarks>
+    public class DoorTransitionEvent : IGameEvent
+    {
+        public IEntity Actor { get; set; }
+        public IEntity Door { get; set; }
+        public string TargetModule { get; set; }
+        public string TargetWaypoint { get; set; }
+        public bool IsModuleTransition { get; set; }
+        public bool IsAreaTransition { get; set; }
         public IEntity Entity { get { return Door; } }
     }
 }
