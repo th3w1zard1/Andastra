@@ -221,6 +221,16 @@ namespace Odyssey.Core.Entities
                 _entitiesByType[entity.ObjectType] = typeList;
             }
             typeList.Add(entity);
+
+            // Fire OnSpawn script event
+            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN fires when entity is spawned/created
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN" @ 0x007bc7d0 (0x8), "ScriptSpawn" @ 0x007bee30
+            // Original implementation: OnSpawn script fires on entity when it's first created/spawned into the world
+            // OnSpawn fires after entity is fully initialized and registered in the world
+            if (EventBus != null)
+            {
+                EventBus.FireScriptEvent(entity, ScriptEvent.OnSpawn, null);
+            }
         }
 
         public void UnregisterEntity(IEntity entity)
