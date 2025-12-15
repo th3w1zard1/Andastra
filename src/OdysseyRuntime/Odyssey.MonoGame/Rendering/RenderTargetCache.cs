@@ -91,7 +91,6 @@ namespace Odyssey.MonoGame.Rendering
             {
                 throw new ArgumentException("Multi-sample count must be non-negative.", nameof(multiSampleCount));
             }
-        {
 
             string key = CreateKey(width, height, format, depthFormat, multiSampleCount);
 

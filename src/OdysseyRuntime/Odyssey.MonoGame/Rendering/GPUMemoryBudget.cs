@@ -88,7 +88,6 @@ namespace Odyssey.MonoGame.Rendering
             {
                 throw new ArgumentException("Total budget must be greater than zero.", nameof(totalBudget));
             }
-        {
 
             _totalBudget = totalBudget;
             _totalUsage = 0;

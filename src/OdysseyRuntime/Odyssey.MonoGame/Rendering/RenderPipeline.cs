@@ -80,7 +80,7 @@ namespace Odyssey.MonoGame.Rendering
             {
                 throw new ArgumentNullException(nameof(outputTarget));
             }
-        {
+
             // Begin frame
             _modernRenderer.BeginFrame(viewMatrix, projectionMatrix, cameraPosition);
             _memoryBudget.UpdateFrame();
@@ -126,7 +126,7 @@ namespace Odyssey.MonoGame.Rendering
         /// </summary>
         /// <param name="outputTarget">Output render target.</param>
         private void ExecuteRendering(RenderTarget2D outputTarget)
-
+        {
             // Execute all rendering passes with optimizations
             // This is the main rendering loop that coordinates all systems:
             // 1. Depth pre-pass (for early-Z rejection)
