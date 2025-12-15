@@ -21,6 +21,12 @@ namespace Odyssey.Core.Interfaces
     /// - Module management: "Module" @ 0x007bc4e0, "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
     /// - Module events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
     /// - Module save: "modulesave" @ 0x007bde20, "LinkedToModule" @ 0x007bd7bc (door/trigger module links)
+    /// - Area management: "AREANAME" @ 0x007be1dc (area name field), "AreaName" @ 0x007be340, "AreaId" @ 0x007bef48
+    /// - "AreaObject" @ 0x007c0b70, "AreaProperties" @ 0x007bd228, "AreaMap" @ 0x007bd118 (area map data)
+    /// - "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100, "AreaMapData" @ 0x007bd0e4, "AreaMapDataSize" @ 0x007bd0f0
+    /// - Area events: "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+    /// - "Mod_Area_list" @ 0x007be748 (module area list), "Mod_Entry_Area" @ 0x007be9b4 (module entry area)
+    /// - "Target_Area" @ 0x007c02d4 (target area for transitions), "NW_MAP_PIN_AREA_%i" @ 0x007bd824 (map pin format)
     /// - CreateEntity: Creates new entity from template or ObjectType, assigns ObjectId automatically
     /// - DestroyEntity: Removes entity from world and cleans up all components
     /// - GetEntitiesInRadius: Spatial query with optional ObjectType filter mask
