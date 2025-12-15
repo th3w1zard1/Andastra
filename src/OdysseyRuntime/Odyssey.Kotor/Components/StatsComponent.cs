@@ -12,8 +12,9 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// KOTOR D20 System:
     /// - Based on swkotor2.exe stats system
-    /// - Located via string references: "CurrentHP" @ 0x007c1b40, "Max_HPs" @ 0x007cb714
-    /// - "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210, "DAM_HP" @ 0x007bf130
+    /// - Located via string references: "CurrentHP" @ 0x007c1b40, "CurrentHP: " @ 0x007cb168 (debug display)
+    /// - "Max_HPs" @ 0x007cb714, "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210
+    /// - "DAM_HP" @ 0x007bf130 (HP damage type identifier)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature stats to GFF)
     /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature stats from GIT)
     /// - Ability scores, HP, BAB, saves stored in creature GFF structures at offsets in creature object
