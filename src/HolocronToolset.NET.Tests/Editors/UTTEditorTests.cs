@@ -2424,5 +2424,73 @@ namespace HolocronToolset.NET.Tests.Editors
             newUtt.OnUserDefinedScript.ToString().Should().Be(originalUtt.OnUserDefinedScript.ToString());
             newUtt.Comment.Should().Be(originalUtt.Comment);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:1005-1034
+        // Original: def test_utt_editor_gff_roundtrip_with_modifications(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorGffRoundtripWithModifications()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+            var editor = new UTTEditor(null, installation);
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Make modifications
+            editor.TagEdit.Text = "modified_gff_test";
+            
+            var highlightHeightSpinField = typeof(UTTEditor).GetField("_highlightHeightSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var highlightHeightSpin = highlightHeightSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+            if (highlightHeightSpin != null)
+            {
+                highlightHeightSpin.Value = 5.0m;
+            }
+
+            // Save
+            var (data, _) = editor.Build();
+
+            // Verify it's valid GFF
+            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            newGff.Should().NotBeNull("GFF should be valid");
+
+            // Verify it's valid UTT
+            var modifiedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+            modifiedUtt.Tag.Should().Be("modified_gff_test");
+            // Use approximate comparison for float due to GFF single-precision serialization
+            Math.Abs(modifiedUtt.HighlightHeight - 5.0f).Should().BeLessThan(0.01f);
+        }
     }
 }
