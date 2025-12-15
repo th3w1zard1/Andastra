@@ -9,7 +9,9 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Destroy Object Action:
     /// - Based on swkotor2.exe DestroyObject NWScript function
-    /// - Located via string references: "DestroyObject" @ NWScript function dispatch table
+    /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48
+    /// - "DestroyObjectDelay" @ 0x007c0248, "IsDestroyable" @ 0x007bf670, "Destroyed" @ 0x007c4bdc
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (player creature destruction event)
     /// - Original implementation: Destroys object after delay, optionally with fade-out effect
     /// - If noFade is FALSE, object fades out before destruction (alpha fade from 1.0 to 0.0)
     /// - delayUntilFade controls when fade starts (if delay > 0, fade starts after delayUntilFade)

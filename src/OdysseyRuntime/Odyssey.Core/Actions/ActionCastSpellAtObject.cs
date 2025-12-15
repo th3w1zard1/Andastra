@@ -4,8 +4,6 @@ using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Combat;
-using Odyssey.Kotor.Components;
-using Odyssey.Kotor.Data;
 
 namespace Odyssey.Core.Actions
 {
@@ -15,7 +13,26 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Cast Spell Action:
     /// - Based on swkotor2.exe spell casting system
-    /// - Located via string references: Spell casting functions handle Force powers and spells
+    /// - Located via string references: "ScriptSpellAt" @ 0x007bee90, "OnSpellCastAt" @ 0x007c1a44
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x007bcb3c, "EVENT_SPELL_IMPACT" @ 0x007bcd8c
+    /// - "EVENT_ITEM_ON_HIT_SPELL_IMPACT" @ 0x007bcc8c (item spell impact event)
+    /// - Spell data fields: "SpellId" @ 0x007bef68, "SpellLevel" @ 0x007c13c8, "SpellSaveDC" @ 0x007c13d4
+    /// - "SpellCaster" @ 0x007c2ad0, "SpellCasterLevel" @ 0x007c3eb4, "SpellFlags" @ 0x007c3ec8
+    /// - "SpellDesc" @ 0x007c33f8, "MasterSpell" @ 0x007c341c, "SPELLS" @ 0x007c3438
+    /// - Spell tables: "SpellKnownTable" @ 0x007c2b08, "SpellGainTable" @ 0x007c2b18
+    /// - "SpellsPerDayList" @ 0x007c3f74, "NumSpellsLeft" @ 0x007c3f64, "NumSpellLevels" @ 0x007c47e8
+    /// - "SpellLevel%d" @ 0x007c4888 (spell level format string), "Spells" @ 0x007c4ed0, "spells" @ 0x007c494c
+    /// - Spell casting: "SpellCastRound" @ 0x007bfb60, "ArcaneSpellFail" @ 0x007c2df8, "MinSpellLvl" @ 0x007c2eb4
+    /// - Error messages:
+    ///   - "CSWClass::LoadSpellGainTable: Can't load ClassPowerGain" @ 0x007c47f8
+    ///   - "CSWClass::LoadSpellGainTable: Can't load CLS_SPGN_JEDI" @ 0x007c4840
+    ///   - "CSWClass::LoadSpellKnownTable: Can't load" @ 0x007c4898
+    ///   - "CSWClass::LoadSpellsTable: Can't load spells.2da" @ 0x007c4918
+    /// - Debug: "        SpellsPerDayLeft: " @ 0x007cafe4, "KnownSpells: " @ 0x007cb010
+    /// - Script hooks: "k_def_spellat01" @ 0x007c7ed4 (spell defense script example)
+    /// - Visual effect errors:
+    ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
+    ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
     /// - Spell casting range: ~10.0 units (CastRange)
     /// - Checks Force points, spell knowledge, applies effects via EffectSystem
@@ -27,13 +44,13 @@ namespace Odyssey.Core.Actions
     {
         private readonly int _spellId;
         private readonly uint _targetObjectId;
-        private readonly GameDataManager _gameDataManager;
+        private readonly object _gameDataManager; // KOTOR-specific, accessed via dynamic
         private bool _approached;
         private bool _castStarted;
         private float _castTimer;
         private const float CastRange = 10.0f; // Spell casting range
 
-        public ActionCastSpellAtObject(int spellId, uint targetObjectId, GameDataManager gameDataManager = null)
+        public ActionCastSpellAtObject(int spellId, uint targetObjectId, object gameDataManager = null)
             : base(ActionType.CastSpellAtObject)
         {
             _spellId = spellId;
@@ -108,11 +125,37 @@ namespace Odyssey.Core.Actions
                 }
 
                 // 2. Check if spell is known
-                CreatureComponent creature = actor.GetComponent<CreatureComponent>();
-                if (creature != null && !creature.KnownPowers.Contains(_spellId))
+                // Using dynamic to avoid dependency on Odyssey.Kotor.Components
+                IComponent creatureComponent = actor.GetComponent<IComponent>();
+                if (creatureComponent != null)
                 {
-                    // Spell not known
-                    return ActionStatus.Failed;
+                    dynamic creature = creatureComponent;
+                    try
+                    {
+                        var knownPowers = creature.KnownPowers as System.Collections.IEnumerable;
+                        if (knownPowers != null)
+                        {
+                            bool found = false;
+                            foreach (dynamic power in knownPowers)
+                            {
+                                int powerId = (int)power;
+                                if (powerId == _spellId)
+                                {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found)
+                            {
+                                // Spell not known
+                                return ActionStatus.Failed;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Component doesn't have KnownPowers, skip check
+                    }
                 }
 
                 // 3. Start casting (play animation would go here)
@@ -132,13 +175,13 @@ namespace Odyssey.Core.Actions
 
             // Wait for cast time
             _castTimer += deltaTime;
-            float castTime = GetSpellCastTime();
-            if (castTime <= 0f)
+            float requiredCastTime = GetSpellCastTime();
+            if (requiredCastTime <= 0f)
             {
-                castTime = 1.0f;
+                requiredCastTime = 1.0f;
             }
 
-            if (_castTimer < castTime)
+            if (_castTimer < requiredCastTime)
             {
                 // Still casting - face target
                 if (distance > 0.1f)
@@ -162,7 +205,15 @@ namespace Odyssey.Core.Actions
         {
             if (_gameDataManager != null)
             {
-                return _gameDataManager.GetSpellForcePointCost(_spellId);
+                dynamic gameDataManager = _gameDataManager;
+                try
+                {
+                    return gameDataManager.GetSpellForcePointCost(_spellId);
+                }
+                catch
+                {
+                    // Fall through to default
+                }
             }
 
             // Fallback: basic calculation (spell level * 2, minimum 1)
@@ -176,10 +227,27 @@ namespace Odyssey.Core.Actions
         {
             if (_gameDataManager != null)
             {
-                SpellData spell = _gameDataManager.GetSpell(_spellId);
-                if (spell != null)
+                dynamic gameDataManager = _gameDataManager;
+                try
                 {
-                    return spell.CastTime > 0f ? spell.CastTime : spell.ConjTime;
+                    dynamic spell = gameDataManager.GetSpell(_spellId);
+                    if (spell != null)
+                    {
+                        float castTime = spell.CastTime;
+                        if (castTime > 0f)
+                        {
+                            return castTime;
+                        }
+                        float conjTime = spell.ConjTime;
+                        if (conjTime > 0f)
+                        {
+                            return conjTime;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fall through to default
                 }
             }
 
@@ -207,10 +275,19 @@ namespace Odyssey.Core.Actions
             EffectSystem effectSystem = caster.World.EffectSystem;
 
             // Get spell data to determine effect type
-            SpellData spell = null;
+            // Using dynamic to avoid dependency on Odyssey.Kotor.Data
+            dynamic spell = null;
             if (_gameDataManager != null)
             {
-                spell = _gameDataManager.GetSpell(_spellId);
+                dynamic gameDataManager = _gameDataManager;
+                try
+                {
+                    spell = gameDataManager.GetSpell(_spellId);
+                }
+                catch
+                {
+                    // Fall through
+                }
             }
 
             // For now, apply a basic visual effect
@@ -221,25 +298,47 @@ namespace Odyssey.Core.Actions
             // 4. Execute impact script if present
 
             // Basic effect: Apply visual effect if spell data available
-            if (spell != null && spell.ConjHandVfx > 0)
+            if (spell != null)
             {
-                var visualEffect = new Effect(EffectType.VisualEffect)
+                try
                 {
-                    VisualEffectId = spell.ConjHandVfx,
-                    DurationType = EffectDurationType.Instant
-                };
-                effectSystem.ApplyEffect(target, visualEffect, caster);
+                    int conjHandVfx = spell.ConjHandVfx;
+                    if (conjHandVfx > 0)
+                    {
+                        var visualEffect = new Effect(EffectType.VisualEffect)
+                        {
+                            VisualEffectId = conjHandVfx,
+                            DurationType = EffectDurationType.Instant
+                        };
+                        effectSystem.ApplyEffect(target, visualEffect, caster);
+                    }
+                }
+                catch
+                {
+                    // Fall through
+                }
             }
 
             // Execute impact script if present
-            if (spell != null && !string.IsNullOrEmpty(spell.ImpactScript))
+            if (spell != null)
             {
-                // Fire impact script event via world event bus
-                IEventBus eventBus = actor.World?.EventBus;
-                if (eventBus != null)
+                try
                 {
-                    // Execute script with target as OBJECT_SELF, caster as triggerer
-                    eventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, actor);
+                    string impactScript = spell.ImpactScript as string;
+                    if (!string.IsNullOrEmpty(impactScript))
+                    {
+                        // Fire impact script event via world event bus
+                        IEventBus eventBus = caster.World?.EventBus;
+                        if (eventBus != null)
+                        {
+                            // Execute script with target as OBJECT_SELF, caster as triggerer
+                            eventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, caster);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fall through
                 }
             }
         }

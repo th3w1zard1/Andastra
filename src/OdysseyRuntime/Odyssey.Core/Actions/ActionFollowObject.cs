@@ -12,10 +12,20 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Follow Object Action:
     /// - Based on swkotor2.exe follow system
+    /// - Located via string references: "FollowObject" @ 0x007bedb8, "FollowLocation" @ 0x007beda8
+    /// - "FollowInfo" @ 0x007beec0, "LastFollowerPos" @ 0x007bed88
+    /// - "PT_FOLLOWSTATE" @ 0x007c1758 (party follow state in PARTYTABLE)
+    /// - GUI references: "gui_mp_followd" @ 0x007b5da4, "gui_mp_followu" @ 0x007b5db4
+    /// - Error messages:
+    ///   - "PathFollowData requesting bad data position %d" @ 0x007ca414
+    ///   - "CSWTrackFollower: Trying to attach gun to a non-existent bank ID: %d" @ 0x007cb4b8
+    ///   - "CSWTrackFollower: Bank ID %d < 0." @ 0x007cb500
+    ///   - "CSWTrackFollower: Could not find bank ID in attach part name %s." @ 0x007cb528
     /// - Original implementation: Moves entity to maintain follow distance from target
     /// - Used for party member following, NPC following behavior
     /// - Follow distance: Default 2.0 units, maintains distance while target moves
     /// - Entity faces target while following, runs if target moves far away
+    /// - "OnHitFollower" @ 0x007cb364 (follower hit event)
     /// </remarks>
     public class ActionFollowObject : ActionBase
     {
