@@ -675,6 +675,9 @@ namespace Odyssey.Kotor.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Door, ToSysVector3(door.Position), door.Bearing);
             entity.Tag = door.Tag;
 
+            // Initialize components
+            Systems.ComponentInitializer.InitializeComponents(entity);
+
             // Load door template
             if (!string.IsNullOrEmpty(door.ResRef?.ToString()))
             {
