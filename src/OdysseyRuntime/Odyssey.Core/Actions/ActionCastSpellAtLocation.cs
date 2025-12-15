@@ -12,19 +12,26 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Cast Spell At Location Action:
     /// - Based on swkotor2.exe spell casting system
-    /// - Located via string references: "ActionCastSpellAtLocation" @ NWScript function
-    /// - Location references: "LOCATION" @ 0x007c2850, "ValLocation" @ 0x007c26ac, "CatLocation" @ 0x007c26dc
-    /// - "FollowLocation" @ 0x007beda8 (follow location action)
+    /// - Located via string references: "ActionCastSpellAtLocation" NWScript function (routine ID varies by game)
+    /// - Location references: "LOCATION" @ 0x007c2850 (location type constant), "ValLocation" @ 0x007c26ac (location value field)
+    /// - "CatLocation" @ 0x007c26dc (location catalog field), "FollowLocation" @ 0x007beda8 (follow location action)
     /// - Location error messages:
-    ///   - "Script var '%s' not a LOCATION!" @ 0x007c25e0
-    ///   - "Script var LOCATION '%s' not in catalogue!" @ 0x007c2600
-    ///   - "ReadTableWithCat(): LOCATION '%s' won't fit!" @ 0x007c2734
+    ///   - "Script var '%s' not a LOCATION!" @ 0x007c25e0 (location type validation error)
+    ///   - "Script var LOCATION '%s' not in catalogue!" @ 0x007c2600 (location catalog lookup error)
+    ///   - "ReadTableWithCat(): LOCATION '%s' won't fit!" @ 0x007c2734 (location data size error)
+    /// - Spell casting: "ScriptSpellAt" @ 0x007bee90 (spell at script), "OnSpellCastAt" @ 0x007c1a44 (spell cast at event)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x007bcb3c (spell cast at script event), "EVENT_SPELL_IMPACT" @ 0x007bcd8c (spell impact event)
+    /// - Force points: "FinalForceCost" @ 0x007bef04 (final force cost field), "CurrentForce" @ 0x007c401c (current force field)
+    /// - "MaxForcePoints" @ 0x007c4278 (max force points field), "ForcePoints" @ 0x007c3410 (force points field)
     /// - Original implementation: Caster moves to range, casts spell at target location
-    /// - Spell effects: Projectile spells create projectiles, area spells create zones
-    /// - Force point cost: Deducted from caster's Force points
-    /// - Spell knowledge: Caster must know the spell (checked via spell list)
-    /// - Range: Spell range from spells.2da, caster must be within range
-    /// - Based on NWScript ActionCastSpellAtLocation semantics
+    /// - Movement: Uses direct movement towards target location until within CastRange (default 20.0 units)
+    /// - Spell effects: Projectile spells create projectiles (projectile system), area spells create zones (area effect system)
+    /// - Force point cost: Deducted from caster's Force points (via IStatsComponent.CurrentFP)
+    /// - Spell knowledge: Caster must know the spell (checked via IStatsComponent.HasSpell method)
+    /// - Range: Spell range from spells.2da (SpellRange column), caster must be within range before casting
+    /// - Cast time: Spell cast time from spells.2da (CastTime or ConjTime column), caster faces target during cast
+    /// - Visual effects: CastHandVisual, CastHeadVisual, CastGrndVisual from spells.2da (visual effects during casting)
+    /// - Based on NWScript ActionCastSpellAtLocation semantics (routine ID varies by game version)
     /// </remarks>
     public class ActionCastSpellAtLocation : ActionBase
     {
