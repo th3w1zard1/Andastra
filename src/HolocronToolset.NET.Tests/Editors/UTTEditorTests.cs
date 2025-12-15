@@ -1401,6 +1401,82 @@ namespace HolocronToolset.NET.Tests.Editors
             modifiedUtt.OnUserDefinedScript.ToString().Should().Be("s_onuserdef");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:647-674
+        // Original: def test_utt_editor_manipulate_all_basic_fields_combination(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateAllBasicFieldsCombination()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Modify ALL basic fields
+            editor.NameEdit.Should().NotBeNull("NameEdit should be initialized");
+            editor.NameEdit.SetLocString(LocalizedString.FromEnglish("Combined Test Trigger"));
+            editor.TagEdit.Should().NotBeNull("TagEdit should be initialized");
+            editor.TagEdit.Text = "combined_test";
+            editor.ResrefEdit.Should().NotBeNull("ResrefEdit should be initialized");
+            editor.ResrefEdit.Text = "combined_resref";
+
+            var cursorSelectField = typeof(UTTEditor).GetField("_cursorSelect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var cursorSelect = cursorSelectField?.GetValue(editor) as HolocronToolset.NET.Widgets.Edit.ComboBox2DA;
+            if (cursorSelect != null && cursorSelect.Items.Count > 0)
+            {
+                cursorSelect.SetSelectedIndex(1);
+            }
+
+            var typeSelectField = typeof(UTTEditor).GetField("_typeSelect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var typeSelect = typeSelectField?.GetValue(editor) as Avalonia.Controls.ComboBox;
+            if (typeSelect != null && typeSelect.Items.Count > 0)
+            {
+                typeSelect.SelectedIndex = 1;
+            }
+
+            // Save and verify all
+            var (data, _) = editor.Build();
+            var modifiedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+
+            modifiedUtt.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("Combined Test Trigger");
+            modifiedUtt.Tag.Should().Be("combined_test");
+            modifiedUtt.ResRef.ToString().Should().Be("combined_resref");
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:713-742
         // Original: def test_utt_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
