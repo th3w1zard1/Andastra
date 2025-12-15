@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using CSharpKOTOR.Formats.LIP;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
@@ -74,6 +76,51 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Lip.Frames.Count.Should().Be(1);
             Math.Abs(editor.Lip.Frames[0].Time - 1.0f).Should().BeLessThan(0.001f);
             editor.Lip.Frames[0].Shape.Should().Be(LIPShape.AH);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:87-118
+        // Original: def test_lip_editor_add_multiple_keyframes(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorAddMultipleKeyframes()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 10.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add multiple keyframes
+            var testKeyframes = new[]
+            {
+                (0.0f, LIPShape.AH),
+                (1.0f, LIPShape.EE),
+                (2.0f, LIPShape.OH),
+                (3.0f, LIPShape.MPB),
+            };
+
+            foreach (var (time, shape) in testKeyframes)
+            {
+                editor.AddKeyframe(time, shape);
+            }
+
+            // Verify all keyframes were added
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(testKeyframes.Length);
+
+            // Verify keyframes are sorted by time
+            var sortedFrames = new List<LIPKeyFrame>(editor.Lip.Frames);
+            sortedFrames.Sort((a, b) => a.Time.CompareTo(b.Time));
+            for (int i = 0; i < testKeyframes.Length; i++)
+            {
+                var (expectedTime, expectedShape) = testKeyframes[i];
+                Math.Abs(sortedFrames[i].Time - expectedTime).Should().BeLessThan(0.001f);
+                sortedFrames[i].Shape.Should().Be(expectedShape);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:669-705
