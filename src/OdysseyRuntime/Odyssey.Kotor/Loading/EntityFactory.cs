@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
@@ -333,6 +334,12 @@ namespace Odyssey.Kotor.Loading
                 { "OnUnlock", ScriptEvent.OnUnlock },
                 { "OnUserDefined", ScriptEvent.OnUserDefined }
             });
+
+            // Load BWM hooks from door walkmesh (DWK)
+            // Based on swkotor2.exe: Doors have walkmesh files (DWK) with hook vectors defining interaction points
+            // Located via string references: "USE1", "USE2" hook vectors in BWM format
+            // Original implementation: Loads DWK file for door model, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
+            LoadBWMHooks(entity, module, templateResRef, true);
         }
 
         /// <summary>
@@ -422,6 +429,12 @@ namespace Odyssey.Kotor.Loading
                 { "OnUsed", ScriptEvent.OnUsed },
                 { "OnUserDefined", ScriptEvent.OnUserDefined }
             });
+
+            // Load BWM hooks from placeable walkmesh (PWK)
+            // Based on swkotor2.exe: Placeables have walkmesh files (PWK) with hook vectors defining interaction points
+            // Located via string references: "USE1", "USE2" hook vectors in BWM format
+            // Original implementation: Loads PWK file for placeable model, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
+            LoadBWMHooks(entity, module, templateResRef, false);
         }
 
         /// <summary>
@@ -768,6 +781,142 @@ namespace Odyssey.Kotor.Loading
                         entity.SetScript(mapping.Value, scriptRef.ToString());
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Loads BWM hook vectors from door/placeable walkmesh files (DWK/PWK).
+        /// Based on swkotor2.exe: Objects have walkmesh files with hook vectors defining interaction points
+        /// Located via string references: "USE1", "USE2" hook vectors in BWM format
+        /// Original implementation: Loads DWK/PWK file, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
+        /// </summary>
+        /// <param name="entity">Entity to store hooks in</param>
+        /// <param name="module">Module to load BWM from</param>
+        /// <param name="templateResRef">Template ResRef (often matches model name)</param>
+        /// <param name="isDoor">True for doors (DWK), false for placeables (PWK)</param>
+        private void LoadBWMHooks(Entity entity, Module module, string templateResRef, bool isDoor)
+        {
+            if (module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return;
+            }
+
+            try
+            {
+                // Try to load BWM file
+                // For doors: try <model>0.dwk (closed state), <model>.dwk
+                // For placeables: try <model>.pwk
+                string bwmResRef = templateResRef;
+                if (isDoor)
+                {
+                    // Try closed door state first (<model>0.dwk)
+                    ModuleResource bwmResource = module.Resource(bwmResRef + "0", ResourceType.DWK);
+                    if (bwmResource == null)
+                    {
+                        // Fallback to <model>.dwk
+                        bwmResource = module.Resource(bwmResRef, ResourceType.DWK);
+                    }
+
+                    if (bwmResource != null)
+                    {
+                        object bwmData = bwmResource.Resource();
+                        if (bwmData != null && bwmData is CSharpKOTOR.Formats.BWM.BWM bwm)
+                        {
+                            // Extract hook vectors
+                            // Prefer absolute hooks if available (world space), otherwise use relative hooks + entity position
+                            System.Numerics.Vector3 hook1 = System.Numerics.Vector3.Zero;
+                            System.Numerics.Vector3 hook2 = System.Numerics.Vector3.Zero;
+                            bool hasHooks = false;
+
+                            // Check if absolute hooks are available (non-zero)
+                            // Vector3.FromNull() returns Zero, so check if hook is not zero
+                            if (bwm.AbsoluteHook1.X != 0f || bwm.AbsoluteHook1.Y != 0f || bwm.AbsoluteHook1.Z != 0f)
+                            {
+                                hook1 = new System.Numerics.Vector3(bwm.AbsoluteHook1.X, bwm.AbsoluteHook1.Y, bwm.AbsoluteHook1.Z);
+                                hasHooks = true;
+                            }
+                            else if (bwm.RelativeHook1.X != 0f || bwm.RelativeHook1.Y != 0f || bwm.RelativeHook1.Z != 0f)
+                            {
+                                // Convert relative hook to world space
+                                System.Numerics.Vector3 entityPos = entity.Position;
+                                hook1 = entityPos + new System.Numerics.Vector3(bwm.RelativeHook1.X, bwm.RelativeHook1.Y, bwm.RelativeHook1.Z);
+                                hasHooks = true;
+                            }
+
+                            if (bwm.AbsoluteHook2.X != 0f || bwm.AbsoluteHook2.Y != 0f || bwm.AbsoluteHook2.Z != 0f)
+                            {
+                                hook2 = new System.Numerics.Vector3(bwm.AbsoluteHook2.X, bwm.AbsoluteHook2.Y, bwm.AbsoluteHook2.Z);
+                            }
+                            else if (bwm.RelativeHook2.X != 0f || bwm.RelativeHook2.Y != 0f || bwm.RelativeHook2.Z != 0f)
+                            {
+                                // Convert relative hook to world space
+                                System.Numerics.Vector3 entityPos = entity.Position;
+                                hook2 = entityPos + new System.Numerics.Vector3(bwm.RelativeHook2.X, bwm.RelativeHook2.Y, bwm.RelativeHook2.Z);
+                            }
+
+                            // Store hooks in entity data
+                            if (hasHooks)
+                            {
+                                entity.SetData("BWMHook1", hook1);
+                                if (hook2 != System.Numerics.Vector3.Zero || (bwm.RelativeHook2.X != 0f || bwm.RelativeHook2.Y != 0f || bwm.RelativeHook2.Z != 0f))
+                                {
+                                    entity.SetData("BWMHook2", hook2);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Placeable: try <model>.pwk
+                    ModuleResource bwmResource = module.Resource(bwmResRef, ResourceType.PWK);
+                    if (bwmResource != null)
+                    {
+                        object bwmData = bwmResource.Resource();
+                        if (bwmData != null && bwmData is CSharpKOTOR.Formats.BWM.BWM bwm)
+                        {
+                            // Extract hook vectors (same logic as doors)
+                            System.Numerics.Vector3 hook1 = System.Numerics.Vector3.Zero;
+                            System.Numerics.Vector3 hook2 = System.Numerics.Vector3.Zero;
+                            bool hasHooks = false;
+
+                            if (bwm.AbsoluteHook1.X != 0f || bwm.AbsoluteHook1.Y != 0f || bwm.AbsoluteHook1.Z != 0f)
+                            {
+                                hook1 = new System.Numerics.Vector3(bwm.AbsoluteHook1.X, bwm.AbsoluteHook1.Y, bwm.AbsoluteHook1.Z);
+                                hasHooks = true;
+                            }
+                            else if (bwm.RelativeHook1.X != 0f || bwm.RelativeHook1.Y != 0f || bwm.RelativeHook1.Z != 0f)
+                            {
+                                System.Numerics.Vector3 entityPos = entity.Position;
+                                hook1 = entityPos + new System.Numerics.Vector3(bwm.RelativeHook1.X, bwm.RelativeHook1.Y, bwm.RelativeHook1.Z);
+                                hasHooks = true;
+                            }
+
+                            if (bwm.AbsoluteHook2.X != 0f || bwm.AbsoluteHook2.Y != 0f || bwm.AbsoluteHook2.Z != 0f)
+                            {
+                                hook2 = new System.Numerics.Vector3(bwm.AbsoluteHook2.X, bwm.AbsoluteHook2.Y, bwm.AbsoluteHook2.Z);
+                            }
+                            else if (bwm.RelativeHook2.X != 0f || bwm.RelativeHook2.Y != 0f || bwm.RelativeHook2.Z != 0f)
+                            {
+                                System.Numerics.Vector3 entityPos = entity.Position;
+                                hook2 = entityPos + new System.Numerics.Vector3(bwm.RelativeHook2.X, bwm.RelativeHook2.Y, bwm.RelativeHook2.Z);
+                            }
+
+                            if (hasHooks)
+                            {
+                                entity.SetData("BWMHook1", hook1);
+                                if (hook2 != System.Numerics.Vector3.Zero || (bwm.RelativeHook2.X != 0f || bwm.RelativeHook2.Y != 0f || bwm.RelativeHook2.Z != 0f))
+                                {
+                                    entity.SetData("BWMHook2", hook2);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Silently fail - hooks are optional, entity will use position as fallback
             }
         }
 

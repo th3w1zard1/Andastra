@@ -2125,8 +2125,8 @@ namespace Odyssey.Scripting.EngineApi
             {
                 if (services.CameraController != null)
                 {
-                    // Set camera yaw rotation (direction is in radians)
-                    services.CameraController.Yaw = direction;
+                    // Set camera facing using SetFacing method (handles both chase and free camera modes)
+                    services.CameraController.SetFacing(direction);
                 }
             }
             
