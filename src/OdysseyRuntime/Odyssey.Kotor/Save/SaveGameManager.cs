@@ -20,8 +20,15 @@ namespace Odyssey.Kotor.Save
     /// Save Game Manager:
     /// - Based on swkotor2.exe save game system
     /// - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
+    /// - "LoadSavegame" @ 0x007bdc90, "SavegameList" @ 0x007bdca0, "GetSavegameList" @ 0x007bdcb0
+    /// - "SAVEGAMENAME" @ 0x007be1a8, "Mod_IsSaveGame" @ 0x007bea48, "BTN_SAVEGAME" @ 0x007d0dbc
     /// - Save function: FUN_004eb750 @ 0x004eb750 creates save game ERF archive
-    /// - Load function: FUN_004e28c0 @ 0x004e28c0 loads save game from ERF archive
+    /// - Load function: FUN_00708990 @ 0x00708990 (main load function, loads ERF archive)
+    /// - FUN_004e28c0 @ 0x004e28c0 loads creature list from module state
+    ///   - Original implementation: Iterates through "Creature List" GFF list, loads each creature via FUN_005226d0
+    ///   - Only loads creatures that are not PC (IsPC == 0) and not destroyed (IsDestroyed == 0)
+    ///   - Creates creature entities from saved ObjectId and GFF data
+    ///   - Saves creature state to GFF structure (position, stats, inventory, scripts, etc.)
     /// - Save file format: ERF archive with "MOD V1.0" signature containing:
     ///   - savenfo.res (GFF with "NFO " signature): Save metadata (AREANAME, TIMEPLAYED, SAVEGAMENAME, etc.)
     ///   - GLOBALVARS.res (GFF with "GLOB" signature): Global variable state
