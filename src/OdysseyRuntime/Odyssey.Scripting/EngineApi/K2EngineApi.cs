@@ -22,8 +22,11 @@ namespace Odyssey.Scripting.EngineApi
     /// </remarks>
     public class K2EngineApi : BaseEngineApi
     {
+        private readonly NcsVm _vm;
+
         public K2EngineApi()
         {
+            _vm = new NcsVm();
         }
 
         protected override void RegisterFunctions()
@@ -178,13 +181,64 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // TODO: Schedule action in delay scheduler
+            // DelayCommand(float fSeconds, action aActionToDelay)
+            float delay = args.Count > 0 ? args[0].AsFloat() : 0f;
+            IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
+
+            if (action != null && ctx.Caller != null && ctx.World != null)
+            {
+                // Schedule the action in the world's delay scheduler
+                ctx.World.DelayScheduler.ScheduleDelay(delay, action, ctx.Caller);
+            }
+
             return Variable.Void();
         }
 
         private Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // TODO: Execute nested script
+            // ExecuteScript(string sScript, object oTarget = OBJECT_SELF)
+            string scriptName = args.Count > 0 ? args[0].AsString() : string.Empty;
+            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return Variable.Void();
+            }
+
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                target = ctx.Caller;
+            }
+
+            if (target == null || ctx.ResourceProvider == null)
+            {
+                return Variable.Void();
+            }
+
+            // Load script bytes
+            byte[] scriptBytes = ctx.ResourceProvider.LoadScript(scriptName);
+            if (scriptBytes == null || scriptBytes.Length == 0)
+            {
+                return Variable.Void();
+            }
+
+            // Execute script on target entity
+            if (ctx is VM.ExecutionContext execCtx)
+            {
+                var scriptCtx = new VM.ExecutionContext(
+                    target,
+                    ctx.World,
+                    execCtx.EngineApi,
+                    ctx.Globals
+                );
+                scriptCtx.SetTriggerer(ctx.Triggerer);
+                scriptCtx.ResourceProvider = ctx.ResourceProvider;
+                scriptCtx.AdditionalContext = execCtx.AdditionalContext;
+
+                execCtx.Vm.Execute(scriptBytes, scriptCtx);
+            }
+
             return Variable.Void();
         }
 
