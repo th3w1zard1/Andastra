@@ -226,6 +226,48 @@ namespace HolocronToolset.NET.Tests.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:367-381
+        // Original: def test_lip_editor_duration_setting(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorDurationSetting()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+
+            // Set duration
+            editor.Duration = 5.5f;
+
+            // Verify duration was set
+            Math.Abs(editor.Duration - 5.5f).Should().BeLessThan(0.001f);
+            if (editor.Lip != null)
+            {
+                Math.Abs(editor.Lip.Length - 5.5f).Should().BeLessThan(0.001f);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:383-401
+        // Original: def test_lip_editor_duration_from_loaded_lip(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorDurationFromLoadedLip()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 10.0f;
+            editor.Lip.Length = 10.0f;
+            // Add at least one frame to make the LIP valid
+            editor.Lip.Add(0.0f, LIPShape.AH);
+
+            // Build and load
+            var (data, _) = editor.Build();
+            data.Length.Should().BeGreaterThan(0, "LIP data should not be empty");
+            editor.Load("test.lip", "test", ResourceType.LIP, data);
+
+            // Verify duration was loaded
+            Math.Abs(editor.Duration - 10.0f).Should().BeLessThan(0.001f);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:669-705
         // Original: def test_lip_editor_headless_ui_load_build(qtbot: QtBot, installation: HTInstallation, test_files_dir: pathlib.Path):
         [Fact]
