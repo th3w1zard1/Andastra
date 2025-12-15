@@ -488,9 +488,19 @@ namespace Odyssey.Core.Module
         private string GetLoadscreenForModule(string moduleResRef)
         {
             // Lookup loadscreen from module IFO
-            // Module IFO contains LoadScreenResRef field, but RuntimeModule doesn't expose it yet
-            // For now, use default loadscreen
-            // TODO: Add LoadScreenResRef property to RuntimeModule when IFO loader is enhanced
+            if (_world.CurrentModule != null)
+            {
+                string loadscreen = null;
+                if (_world.CurrentModule is RuntimeModule runtimeModule)
+                {
+                    loadscreen = runtimeModule.LoadScreenResRef;
+                }
+                
+                if (!string.IsNullOrEmpty(loadscreen))
+                {
+                    return loadscreen;
+                }
+            }
             
             // Fallback to default loadscreen
             return "load_default";

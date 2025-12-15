@@ -183,6 +183,11 @@ namespace Odyssey.Core.Module
         /// </summary>
         public bool CacheNSSData { get; set; }
 
+        /// <summary>
+        /// Loading screen image resource reference (from IFO LoadScreenResRef field).
+        /// </summary>
+        public string LoadScreenResRef { get; set; }
+
         #endregion
 
         #region Area Management
