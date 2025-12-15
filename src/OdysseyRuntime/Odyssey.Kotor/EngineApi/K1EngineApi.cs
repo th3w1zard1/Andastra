@@ -2695,7 +2695,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Get CombatManager from GameServicesContext
-            if (ctx is ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
                 IEntity lastAttacker = combatManager.GetLastAttacker(target);
                 if (lastAttacker != null)
