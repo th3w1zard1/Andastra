@@ -57,6 +57,11 @@ namespace Odyssey.MonoGame.UI
 
         public void HandleInput(bool up, bool down, bool select, bool cancel)
         {
+            if (!_isVisible)
+            {
+                return;
+            }
+
             if (up && _selectedIndex > 0)
             {
                 _selectedIndex--;
@@ -67,13 +72,51 @@ namespace Odyssey.MonoGame.UI
             }
             if (select)
             {
-                // Handle selection
+                HandleSelection();
             }
             if (cancel)
             {
                 _isVisible = false;
+                OnMenuClosed?.Invoke();
             }
         }
+
+        private void HandleSelection()
+        {
+            switch (_selectedIndex)
+            {
+                case 0: // Resume
+                    _isVisible = false;
+                    OnResume?.Invoke();
+                    break;
+                case 1: // Options
+                    OnOptions?.Invoke();
+                    break;
+                case 2: // Exit
+                    OnExit?.Invoke();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Event fired when resume is selected.
+        /// </summary>
+        public event Action OnResume;
+
+        /// <summary>
+        /// Event fired when options is selected.
+        /// </summary>
+        public event Action OnOptions;
+
+        /// <summary>
+        /// Event fired when exit is selected.
+        /// </summary>
+        public event Action OnExit;
+
+        /// <summary>
+        /// Event fired when menu is closed.
+        /// </summary>
+        public event Action OnMenuClosed;
     }
 }
 
