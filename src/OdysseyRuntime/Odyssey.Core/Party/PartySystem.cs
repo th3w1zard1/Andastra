@@ -13,25 +13,63 @@ namespace Odyssey.Core.Party
     /// KOTOR Party System:
     /// - Based on swkotor2.exe party system
     /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
+    /// - "OnPartyDeath" @ 0x007bd9f4 (party member death event)
+    /// - "PartyInteract" @ 0x007c1fc0 (party interaction system)
+    /// - "SetByPlayerParty" @ 0x007c1d04 (party selection flag)
     /// - Original implementation: FUN_0057bd70 @ 0x0057bd70 (save PARTYTABLE.res to GFF)
     /// - FUN_0057dcd0 @ 0x0057dcd0 (load PARTYTABLE.res from GFF)
     /// - FUN_005a8220 @ 0x005a8220 (handle Party network message)
     /// - Party state stored in PARTYTABLE.res GFF file with "PT " signature
-    /// - GFF structure fields:
-    ///   - PT_PCNAME: Player character name
-    ///   - PT_GOLD: Party gold
-    ///   - PT_MEMBERS: List of active party members (PT_MEMBER_ID, PT_IS_LEADER)
-    ///   - PT_NUM_MEMBERS: Number of active members (max 3)
-    ///   - PT_PUPPETS: List of puppets (PT_PUPPET_ID) - controlled NPCs
-    ///   - PT_NUM_PUPPETS: Number of puppets
-    ///   - PT_AVAIL_PUPS: Available puppets list (PT_PUP_AVAIL, PT_PUP_SELECT) - max 3
-    ///   - PT_AVAIL_NPCS: Available NPCs list (PT_NPC_AVAIL, PT_NPC_SELECT) - max 12 (0xc)
-    ///   - PT_INFLUENCE: Influence levels (PT_NPC_INFLUENCE) - K2 only, 12 NPCs
-    ///   - PT_SOLOMODE: Solo mode flag (K2)
-    ///   - PT_CONTROLLED_NPC: Currently controlled NPC (-1 = none)
-    ///   - PT_XP_POOL: Experience point pool
-    ///   - PT_AISTATE: AI state
-    ///   - PT_FOLLOWSTATE: Follow state
+    /// - GFF structure fields (all located via string references):
+    ///   - PT_PCNAME @ 0x007c1904: Player character name
+    ///   - PT_GOLD @ 0x007c18fc: Party gold
+    ///   - PT_ITEM_COMPONENT @ 0x007c18e8: Item component count
+    ///   - PT_ITEM_CHEMICAL @ 0x007c18d4: Item chemical count
+    ///   - PT_SWOOP1-3 @ 0x007c18c8, 0x007c18bc, 0x007c18b0: Swoop race times
+    ///   - PT_XP_POOL @ 0x007c18a4: Experience point pool (float)
+    ///   - PT_PLAYEDSECONDS @ 0x007c1890: Total seconds played
+    ///   - PT_PLAYEDMINUTES @ 0x007c1934: Total minutes played (fallback)
+    ///   - PT_CONTROLLED_NPC @ 0x007c187c: Currently controlled NPC (-1 = none, float)
+    ///   - PT_SOLOMODE @ 0x007c1870: Solo mode flag (K2, byte)
+    ///   - PT_CHEAT_USED @ 0x007c1860: Cheat used flag (byte)
+    ///   - PT_NUM_MEMBERS @ 0x007c1850: Number of active members (max 3, byte)
+    ///   - PT_MEMBERS @ 0x007c1844: List of active party members
+    ///     - PT_MEMBER_ID @ 0x007c1834: Member ID (float, -1 = PC, 0-11 = NPC slots)
+    ///     - PT_IS_LEADER @ 0x007c1824: Whether member is leader (byte)
+    ///   - PT_NUM_PUPPETS @ 0x007c1814: Number of puppets (byte)
+    ///   - PT_PUPPETS @ 0x007c1808: List of puppets
+    ///     - PT_PUPPET_ID @ 0x007c17f8: Puppet object ID (float)
+    ///   - PT_AVAIL_PUPS @ 0x007c17e8: Available puppets list (max 3)
+    ///     - PT_PUP_AVAIL @ 0x007c17d8: Puppet available flag (byte)
+    ///     - PT_PUP_SELECT @ 0x007c17c8: Puppet selectable flag (byte)
+    ///   - PT_AVAIL_NPCS @ 0x007c17b8: Available NPCs list (max 12)
+    ///     - PT_NPC_AVAIL @ 0x007c17a8: NPC available flag (byte)
+    ///     - PT_NPC_SELECT @ 0x007c1798: NPC selectable flag (byte)
+    ///   - PT_INFLUENCE @ 0x007c1788: Influence levels list (K2, max 12)
+    ///     - PT_NPC_INFLUENCE @ 0x007c1774: Influence value (float, 0-100)
+    ///   - PT_AISTATE @ 0x007c1768: AI state (float)
+    ///   - PT_FOLLOWSTATE @ 0x007c1758: Follow state (float)
+    ///   - PT_PAZAAKCARDS @ 0x007c1710: Pazaak cards list (23 entries)
+    ///     - PT_PAZAAKCOUNT @ 0x007c1700: Card count (float)
+    ///   - PT_PAZSIDELIST @ 0x007c16f0: Pazaak side list (10 entries)
+    ///     - PT_PAZSIDECARD @ 0x007c16e0: Side card value (float)
+    ///   - PT_TUT_WND_SHOWN @ 0x007c16cc: Tutorial windows shown (33 bytes)
+    ///   - PT_LAST_GUI_PNL @ 0x007c16bc: Last GUI panel (float)
+    ///   - PT_FB_MSG_LIST @ 0x007c1690: Feedback message list
+    ///     - PT_FB_MSG_MSG @ 0x007c1680: Message text (string)
+    ///     - PT_FB_MSG_TYPE @ 0x007c1670: Message type (int32)
+    ///     - PT_FB_MSG_COLOR @ 0x007c1660: Message color (byte)
+    ///   - PT_DLG_MSG_LIST @ 0x007c1650: Dialogue message list
+    ///     - PT_DLG_MSG_SPKR @ 0x007c1640: Speaker name (string)
+    ///     - PT_DLG_MSG_MSG @ 0x007c1630: Message text (string)
+    ///   - PT_COM_MSG_LIST @ 0x007c1620: Combat message list
+    ///     - PT_COM_MSG_MSG @ 0x007c1610: Message text (string)
+    ///     - PT_COM_MSG_TYPE @ 0x007c1600: Message type (int32)
+    ///     - PT_COM_MSG_COOR @ 0x007c15f0: Message color (byte)
+    ///   - PT_COST_MULT_LIST @ 0x007c15dc: Cost multiplier list
+    ///     - PT_COST_MULT_VALUE @ 0x007c15c8: Multiplier value (float)
+    ///   - PT_DISABLEMAP @ 0x007c15b8: Disable map flag (float)
+    ///   - PT_DISABLEREGEN @ 0x007c15a8: Disable regen flag (float)
     /// - PC is always party slot 0 in PT_MEMBERS
     /// - Max 3 active party members in field (PT_NUM_MEMBERS)
     /// - Max 12 available NPCs (PT_AVAIL_NPCS list size)
