@@ -382,9 +382,33 @@ namespace Odyssey.Kotor.Systems
         /// <summary>
         /// Checks if a creature type has already been spawned.
         /// </summary>
+        /// <remarks>
+        /// Creature Type Spawn Check:
+        /// - Based on swkotor2.exe encounter system
+        /// - Original implementation: Checks if any spawned creature matches the template ResRef
+        /// - SingleSpawn flag prevents spawning the same creature type multiple times
+        /// </remarks>
         private bool IsCreatureTypeSpawned(EncounterComponent encounterComp, string resRef)
         {
-            // TODO: Check spawned creatures to see if any match this resRef
+            if (string.IsNullOrEmpty(resRef) || _world == null)
+            {
+                return false;
+            }
+
+            foreach (uint creatureId in encounterComp.SpawnedCreatures)
+            {
+                IEntity creature = _world.GetEntity(creatureId);
+                if (creature != null)
+                {
+                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp != null && 
+                        string.Equals(creatureComp.TemplateResRef, resRef, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+
             return false;
         }
 

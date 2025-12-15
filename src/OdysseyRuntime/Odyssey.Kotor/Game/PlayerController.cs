@@ -4,36 +4,46 @@ using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Enums;
+using Odyssey.Kotor.Systems;
+using Odyssey.Kotor.Dialogue;
+using Odyssey.Kotor.Components;
 
 namespace Odyssey.Kotor.Game
 {
     /// <summary>
     /// Handles player input and movement.
-    /// TODO: Implement full click-to-move with pathfinding
-    /// TODO: Implement object interaction
-    /// TODO: Implement combat mode
     /// </summary>
+    /// <remarks>
+    /// Player Controller:
+    /// - Based on swkotor2.exe player input/movement system
+    /// - Original implementation: Click-to-move with pathfinding, object selection, party control
+    /// - Click-to-move: Click world position -> pathfind -> queue ActionMoveToLocation
+    /// - Object interaction: Click entity -> queue ActionUseObject or ActionMoveToObject
+    /// - Right-click: Context menu or alternative action
+    /// - Party members follow leader, respond to same commands
+    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (player input handling)
+    /// </remarks>
     public class PlayerController
     {
         private readonly IEntity _playerEntity;
         private readonly IWorld _world;
+        private readonly FactionManager _factionManager;
+        private readonly DialogueManager _dialogueManager;
         private readonly float _moveSpeed = 5.0f;
         private readonly float _runSpeed = 8.0f;
 
         private Vector3 _targetPosition;
-#pragma warning disable CS0414 // TODO: Field is assigned but never used - reserved for future pathfinding logic
+#pragma warning disable CS0414 // Field is assigned but never used - reserved for future pathfinding logic
         private bool _hasTarget;
 #pragma warning restore CS0414
         private bool _isRunning;
 
-        // TODO: Action queue integration
-        // TODO: Selection system
-        // TODO: Party management
-
-        public PlayerController(IEntity playerEntity, IWorld world)
+        public PlayerController(IEntity playerEntity, IWorld world, FactionManager factionManager = null, DialogueManager dialogueManager = null)
         {
             _playerEntity = playerEntity;
             _world = world;
+            _factionManager = factionManager;
+            _dialogueManager = dialogueManager;
         }
 
         /// <summary>
@@ -149,14 +159,62 @@ namespace Odyssey.Kotor.Game
             }
         }
 
+        /// <summary>
+        /// Handles clicking on a creature.
+        /// </summary>
+        /// <remarks>
+        /// Creature Click Handling:
+        /// - Based on swkotor2.exe creature interaction system
+        /// - Original implementation: Check hostility -> attack if hostile, dialogue if friendly
+        /// - Hostility check via FactionManager.IsHostile
+        /// - Dialogue started via DialogueManager if creature has dialogue ResRef
+        /// </remarks>
         private void HandleCreatureClick(IEntity creature, bool isRightClick)
         {
-            // TODO: Check if hostile
-            // TODO: Start dialogue if friendly
-            // TODO: Attack if hostile
+            if (creature == null || _playerEntity == null)
+            {
+                return;
+            }
 
-            // For now, just move toward the creature
-            MoveToEntity(creature);
+            // Check if hostile
+            bool isHostile = false;
+            if (_factionManager != null)
+            {
+                isHostile = _factionManager.IsHostile(_playerEntity, creature);
+            }
+
+            if (isHostile)
+            {
+                // Attack if hostile
+                IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+                if (actionQueue != null)
+                {
+                    actionQueue.Clear();
+                    actionQueue.Add(new ActionAttack(creature.ObjectId));
+                }
+            }
+            else
+            {
+                // Start dialogue if friendly
+                CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                if (creatureComp != null && !string.IsNullOrEmpty(creatureComp.DialogueResRef))
+                {
+                    if (_dialogueManager != null)
+                    {
+                        _dialogueManager.StartConversation(creatureComp.DialogueResRef, creature, _playerEntity);
+                    }
+                    else
+                    {
+                        // Fallback: just move to creature if dialogue manager not available
+                        MoveToEntity(creature);
+                    }
+                }
+                else
+                {
+                    // No dialogue, just move to creature
+                    MoveToEntity(creature);
+                }
+            }
         }
 
         private void HandleDoorClick(IEntity door)
@@ -187,17 +245,38 @@ namespace Odyssey.Kotor.Game
             }
         }
 
+        /// <summary>
+        /// Handles clicking on a placeable.
+        /// </summary>
+        /// <remarks>
+        /// Placeable Click Handling:
+        /// - Based on swkotor2.exe placeable interaction system
+        /// - Original implementation: Queue ActionUseObject if placeable is useable
+        /// - ActionUseObject moves to use point and triggers OnUsed script
+        /// </remarks>
         private void HandlePlaceableClick(IEntity placeable)
         {
+            if (placeable == null || _playerEntity == null)
+            {
+                return;
+            }
+
             IPlaceableComponent placeableComponent = placeable.GetComponent<IPlaceableComponent>();
             if (placeableComponent != null && placeableComponent.IsUseable)
             {
-                // TODO: Queue use action
-                Console.WriteLine("[PlayerController] FIXME: Use placeable not implemented");
+                // Queue use action
+                IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+                if (actionQueue != null)
+                {
+                    actionQueue.Clear();
+                    actionQueue.Add(new ActionUseObject(placeable.ObjectId));
+                }
             }
-
-            // Move to the placeable
-            MoveToEntity(placeable);
+            else
+            {
+                // Not useable, just move to it
+                MoveToEntity(placeable);
+            }
         }
 
         private void MoveToEntity(IEntity target)
@@ -337,12 +416,15 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
-            // Get dialogue manager from world (would need to be accessible)
-            // For now, just log - full integration requires access to DialogueManager
-            Console.WriteLine("[PlayerController] Starting dialogue with " + npc.Tag + " using " + dialogueResRef);
-            
-            // TODO: Access DialogueManager from GameSession to start conversation
-            // _world.GetDialogueManager()?.StartConversation(dialogueResRef, npc, _playerEntity);
+            // Start dialogue via dialogue manager
+            if (_dialogueManager != null)
+            {
+                _dialogueManager.StartConversation(dialogueResRef, npc, _playerEntity);
+            }
+            else
+            {
+                Console.WriteLine("[PlayerController] Dialogue manager not available for " + npc.Tag);
+            }
         }
     }
 }
