@@ -13,6 +13,19 @@ namespace Odyssey.Content.Cache
     /// <summary>
     /// File-based content cache for converted assets.
     /// </summary>
+    /// <remarks>
+    /// Content Cache System:
+    /// - Based on swkotor2.exe asset caching system
+    /// - Located via string references: Resource loading and caching functions handle asset management
+    /// - Original implementation: Engine caches loaded models, textures, and other assets to avoid redundant loading
+    /// - Cache directory: Stores converted assets on disk for faster subsequent loads
+    /// - Memory cache: In-memory cache for frequently accessed assets (LRU eviction)
+    /// - Cache key: Based on game type, resource reference, resource type, source hash, and converter version
+    /// - Cache invalidation: Source hash changes invalidate cached assets when source files are modified
+    /// - Cache size limits: Configurable maximum cache size with LRU eviction when limit exceeded
+    /// - Thread-safe: Concurrent access support for async loading scenarios
+    /// - Based on swkotor2.exe: Resource loading system caches models/textures for performance
+    /// </remarks>
     public class ContentCache : IContentCache
     {
         private readonly string _cacheDir;
