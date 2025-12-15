@@ -57,9 +57,16 @@ namespace Odyssey.Core.Actions
 
         public void Update(float deltaTime)
         {
+            // Based on swkotor2.exe: DelayCommand scheduler implementation
+            // Located via string references: "DelayCommand" @ 0x007be900
+            // Original implementation: Processes delayed actions in order based on execution time
+            // Uses game simulation time to track when actions should execute
+            // STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
             _currentTime += deltaTime;
 
             // Process all actions that are due
+            // Original engine: Actions execute in order (sorted by executeTime)
+            // Actions are queued to target entity's action queue when delay expires
             while (_delayedActions.Count > 0 && _delayedActions[0].ExecuteTime <= _currentTime)
             {
                 DelayedAction delayed = _delayedActions[0];
@@ -70,11 +77,13 @@ namespace Odyssey.Core.Actions
                     IActionQueue actionQueue = delayed.Target.GetComponent<IActionQueue>();
                     if (actionQueue != null)
                     {
+                        // Original engine: Action added to entity's action queue
                         actionQueue.Add(delayed.Action);
                     }
                     else
                     {
                         // Execute immediately if no action queue
+                        // Original engine: If entity has no action queue, execute action directly
                         delayed.Action.Owner = delayed.Target;
                         delayed.Action.Update(delayed.Target, 0);
                         delayed.Action.Dispose();
@@ -82,6 +91,8 @@ namespace Odyssey.Core.Actions
                 }
                 else
                 {
+                    // Target entity invalid - dispose action
+                    // Original engine: Delayed actions for invalid entities are discarded
                     delayed.Action.Dispose();
                 }
             }
