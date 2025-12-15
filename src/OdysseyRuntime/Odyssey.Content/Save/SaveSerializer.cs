@@ -362,10 +362,14 @@ namespace Odyssey.Content.Save
         #region Global Variables
 
         // Serialize global variables to GFF format
-        // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670
+        // Based on swkotor2.exe: FUN_005ab310 @ 0x005ab310 (called from FUN_005ac670 @ 0x005ac670)
         // Located via string reference: "GLOBALVARS" @ 0x007c27bc
-        // Original implementation: Creates GFF file, stores booleans, numbers, and strings as separate lists
-        // Each list entry contains "Name" (string) and "Value" (int32 for bools/ints, string for strings)
+        // Original implementation: Creates GFF with "GVT " signature and "V2.0" version string
+        // Structure: Catalog lists (CatBoolean, CatNumber, CatLocation, CatString) with separate value arrays
+        // - CatBoolean (list of structs with "Name" field) + ValBoolean (binary byte array)
+        // - CatNumber (list of structs with "Name" field) + ValNumber (binary byte array)
+        // - CatLocation (list of structs with "Name" field) + ValLocation (binary float array, 12 floats per location)
+        // - CatString (list of structs with "Name" field) + ValString (list of strings, indexed by CatString entry order)
         private byte[] SerializeGlobalVariables(GlobalVariableState state)
         {
             if (state == null)
@@ -374,44 +378,96 @@ namespace Odyssey.Content.Save
             }
 
             // Use CSharpKOTOR GFF writer
+            // Original creates GFF with "GVT " signature and "V2.0" version
             var gff = new GFF(GFFContent.GFF);
             var root = gff.Root;
 
-            // Store booleans as a list
-            var boolList = root.Acquire<GFFList>("Booleans", new GFFList());
+            // CatBoolean list: Each entry has "Name" field
+            var catBooleanList = root.Acquire<GFFList>("CatBoolean", new GFFList());
+            var boolValues = new List<byte>();
             foreach (KeyValuePair<string, bool> kvp in state.Booleans)
             {
-                GFFStruct entry = boolList.Add();
+                GFFStruct entry = catBooleanList.Add();
                 entry.SetString("Name", kvp.Key);
-                entry.SetInt32("Value", kvp.Value ? 1 : 0);
+                boolValues.Add(kvp.Value ? (byte)1 : (byte)0);
+            }
+            // ValBoolean: Binary byte array
+            if (boolValues.Count > 0)
+            {
+                root.SetBinary("ValBoolean", boolValues.ToArray());
             }
 
-            // Store numbers as a list
-            var numList = root.Acquire<GFFList>("Numbers", new GFFList());
+            // CatNumber list: Each entry has "Name" field
+            var catNumberList = root.Acquire<GFFList>("CatNumber", new GFFList());
+            var numValues = new List<byte>();
             foreach (KeyValuePair<string, int> kvp in state.Numbers)
             {
-                GFFStruct entry = numList.Add();
+                GFFStruct entry = catNumberList.Add();
                 entry.SetString("Name", kvp.Key);
-                entry.SetInt32("Value", kvp.Value);
+                // Store as single byte (original uses byte array)
+                byte numValue = (byte)(kvp.Value & 0xFF);
+                numValues.Add(numValue);
+            }
+            // ValNumber: Binary byte array
+            if (numValues.Count > 0)
+            {
+                root.SetBinary("ValNumber", numValues.ToArray());
             }
 
-            // Store strings as a list
-            var strList = root.Acquire<GFFList>("Strings", new GFFList());
+            // CatLocation list: Each entry has "Name" field
+            var catLocationList = root.Acquire<GFFList>("CatLocation", new GFFList());
+            var locationValues = new List<float>();
+            foreach (KeyValuePair<string, SavedLocation> kvp in state.Locations)
+            {
+                GFFStruct entry = catLocationList.Add();
+                entry.SetString("Name", kvp.Key);
+                SavedLocation loc = kvp.Value;
+                // Store 12 floats per location: x, y, z, oriX, oriY (unused), oriZ (unused), padding (6 floats)
+                locationValues.Add(loc.Position.X);
+                locationValues.Add(loc.Position.Y);
+                locationValues.Add(loc.Position.Z);
+                locationValues.Add(loc.Facing); // oriX
+                locationValues.Add(0.0f); // oriY (unused)
+                locationValues.Add(0.0f); // oriZ (unused)
+                for (int i = 0; i < 6; i++)
+                {
+                    locationValues.Add(0.0f); // padding
+                }
+            }
+            // ValLocation: Binary float array (12 floats per location)
+            if (locationValues.Count > 0)
+            {
+                byte[] locationBytes = new byte[locationValues.Count * 4];
+                System.Buffer.BlockCopy(locationValues.ToArray(), 0, locationBytes, 0, locationBytes.Length);
+                root.SetBinary("ValLocation", locationBytes);
+            }
+
+            // CatString list: Each entry has "Name" field
+            var catStringList = root.Acquire<GFFList>("CatString", new GFFList());
+            var stringValues = new List<string>();
             foreach (KeyValuePair<string, string> kvp in state.Strings)
             {
-                GFFStruct entry = strList.Add();
+                GFFStruct entry = catStringList.Add();
                 entry.SetString("Name", kvp.Key);
-                entry.SetString("Value", kvp.Value ?? "");
+                stringValues.Add(kvp.Value ?? "");
+            }
+            // ValString: List of strings (indexed by CatString entry order)
+            var valStringList = root.Acquire<GFFList>("ValString", new GFFList());
+            foreach (string strValue in stringValues)
+            {
+                GFFStruct entry = valStringList.Add();
+                entry.SetString("String", strValue);
             }
 
             return gff.ToBytes();
         }
 
         // Deserialize global variables from GFF format
-        // Based on swkotor2.exe: FUN_005ac740 @ 0x005ac740
+        // Based on swkotor2.exe: FUN_005ac540 @ 0x005ac540 (called from FUN_005ac740 @ 0x005ac740)
         // Located via string reference: "GLOBALVARS" @ 0x007c27bc
-        // Original implementation: Reads GFF file, extracts "Booleans", "Numbers", and "Strings" lists,
-        // restores each variable by name and value from list entries
+        // Original implementation: Reads GFF with "GVT " signature, extracts catalog lists (CatBoolean, CatNumber, CatLocation, CatString)
+        // and corresponding value arrays (ValBoolean, ValNumber, ValLocation, ValString)
+        // Restores variables by matching catalog entry index with value array index
         private GlobalVariableState DeserializeGlobalVariables(byte[] data)
         {
             var state = new GlobalVariableState();
@@ -432,39 +488,88 @@ namespace Odyssey.Content.Save
 
                 var root = gff.Root;
 
-                // Read booleans
-                GFFList boolList = root.GetList("Booleans");
-                if (boolList != null)
+                // Read booleans: CatBoolean list + ValBoolean binary array
+                GFFList catBooleanList = root.GetList("CatBoolean");
+                byte[] valBoolean = root.GetBinary("ValBoolean");
+                if (catBooleanList != null && valBoolean != null)
                 {
-                    foreach (GFFStruct entry in boolList)
+                    int index = 0;
+                    foreach (GFFStruct entry in catBooleanList)
                     {
-                        string name = entry.GetString("Name");
-                        int value = entry.GetInt32("Value");
-                        state.Booleans[name] = value != 0;
+                        if (index < valBoolean.Length)
+                        {
+                            string name = entry.GetString("Name");
+                            byte value = valBoolean[index];
+                            state.Booleans[name] = value != 0;
+                            index++;
+                        }
                     }
                 }
 
-                // Read numbers
-                GFFList numList = root.GetList("Numbers");
-                if (numList != null)
+                // Read numbers: CatNumber list + ValNumber binary array
+                GFFList catNumberList = root.GetList("CatNumber");
+                byte[] valNumber = root.GetBinary("ValNumber");
+                if (catNumberList != null && valNumber != null)
                 {
-                    foreach (GFFStruct entry in numList)
+                    int index = 0;
+                    foreach (GFFStruct entry in catNumberList)
                     {
-                        string name = entry.GetString("Name");
-                        int value = entry.GetInt32("Value");
-                        state.Numbers[name] = value;
+                        if (index < valNumber.Length)
+                        {
+                            string name = entry.GetString("Name");
+                            byte value = valNumber[index];
+                            state.Numbers[name] = (int)value;
+                            index++;
+                        }
                     }
                 }
 
-                // Read strings
-                GFFList strList = root.GetList("Strings");
-                if (strList != null)
+                // Read locations: CatLocation list + ValLocation binary float array (12 floats per location)
+                GFFList catLocationList = root.GetList("CatLocation");
+                byte[] valLocation = root.GetBinary("ValLocation");
+                if (catLocationList != null && valLocation != null)
                 {
-                    foreach (GFFStruct entry in strList)
+                    float[] locationFloats = new float[valLocation.Length / 4];
+                    System.Buffer.BlockCopy(valLocation, 0, locationFloats, 0, valLocation.Length);
+                    int floatIndex = 0;
+                    foreach (GFFStruct entry in catLocationList)
                     {
-                        string name = entry.GetString("Name");
-                        string value = entry.GetString("Value");
-                        state.Strings[name] = value;
+                        if (floatIndex + 11 < locationFloats.Length)
+                        {
+                            string name = entry.GetString("Name");
+                            float x = locationFloats[floatIndex];
+                            float y = locationFloats[floatIndex + 1];
+                            float z = locationFloats[floatIndex + 2];
+                            float oriX = locationFloats[floatIndex + 3];
+                            // Skip oriY, oriZ, and padding (floats 4-11)
+                            floatIndex += 12;
+                            var loc = new SavedLocation
+                            {
+                                AreaResRef = "", // Area ResRef not stored in global variables
+                                Position = new Vector3(x, y, z),
+                                Facing = oriX
+                            };
+                            state.Locations[name] = loc;
+                        }
+                    }
+                }
+
+                // Read strings: CatString list + ValString list
+                GFFList catStringList = root.GetList("CatString");
+                GFFList valStringList = root.GetList("ValString");
+                if (catStringList != null && valStringList != null)
+                {
+                    int index = 0;
+                    foreach (GFFStruct entry in catStringList)
+                    {
+                        if (index < valStringList.Count)
+                        {
+                            string name = entry.GetString("Name");
+                            GFFStruct stringEntry = valStringList[index];
+                            string value = stringEntry.GetString("String");
+                            state.Strings[name] = value ?? "";
+                            index++;
+                        }
                     }
                 }
             }
