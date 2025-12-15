@@ -11,14 +11,18 @@ namespace Odyssey.Kotor.Dialogue
     /// <remarks>
     /// Conversation Context:
     /// - Based on swkotor2.exe dialogue system
-    /// - Located via string references: Dialogue conversation functions handle participant management
+    /// - Located via string references: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38b0
+    /// - "GetPCSpeaker" @ 0x007c1e98 (NWScript function to get current PC speaker)
+    /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
     /// - Original implementation: Manages conversation participants and speaker lookup
     /// - Conversation participants:
-    ///   - Owner: The object that owns the dialogue (NPC, placeable, etc.)
+    ///   - Owner: The object that owns the dialogue (NPC, placeable, etc.) - used as OBJECT_SELF in scripts
     ///   - PC: The player character
-    ///   - PCSpeaker: The specific party member speaking (may differ from PC)
-    ///   - Additional participants identified by tag
-    /// - Speaker lookup by tag used for dialogue scripts and conditional checks
+    ///   - PCSpeaker: The specific party member speaking (may differ from PC) - returned by GetPCSpeaker()
+    ///   - Additional participants identified by tag (Speaker/Listener fields in DLG entries)
+    /// - Speaker lookup by tag used for dialogue scripts and conditional checks (FindSpeaker searches by tag)
+    /// - FindListener: Returns PC by default, or entity by tag if specified
+    /// - GetObjectSelf: Returns owner entity (OBJECT_SELF constant = 0x7F000001)
     /// - GetPCSpeaker NWScript function returns current PC speaker entity
     /// </remarks>
     public class ConversationContext

@@ -11,7 +11,11 @@ namespace Odyssey.Kotor.Dialogue
     /// <remarks>
     /// Dialogue State:
     /// - Based on swkotor2.exe dialogue system
-    /// - Located via string references: Dialogue state machine and traversal functions
+    /// - Located via string references: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38e0
+    /// - "EndConversation" @ 0x007c38e0, "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+    /// - "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE.  Please contact a Designer!" @ 0x007c3768
+    /// - Dialogue script hooks: "k_level_dlg" @ 0x007c3f88, "000_Level_Dlg_Fired" @ 0x007c3f94 (level-up dialogue)
+    /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
     /// - Original implementation: Tracks current conversation state and node traversal
     /// - Dialogue state progresses through:
     ///   1. StartingList - Initial entry selection
@@ -20,6 +24,8 @@ namespace Odyssey.Kotor.Dialogue
     ///   4. Repeat until no more links or aborted
     /// - State tracks current node, available replies, voice-over playback status
     /// - Dialogue history maintained for conditional checks and script evaluation
+    /// - WaitingForVoiceover: Dialogue waits for voice-over completion before advancing
+    /// - CanSkip: Dialogue nodes can be skipped unless Unskippable flag is set
     /// </remarks>
     public class DialogueState
     {
