@@ -108,7 +108,7 @@ namespace Odyssey.MonoGame.Audio
                         }
 
                         // Parse WAV file
-                        WAV wav = WAVAuto.Read(wavData);
+                        WAV wav = WAVAuto.ReadWav(wavData);
                         if (wav == null || wav.Data == null || wav.Data.Length == 0)
                         {
                             Console.WriteLine($"[MonoGameVoicePlayer] Failed to parse WAV data: {voResRef}");
