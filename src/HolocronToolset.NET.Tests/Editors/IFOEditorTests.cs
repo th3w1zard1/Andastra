@@ -505,5 +505,42 @@ namespace HolocronToolset.NET.Tests.Editors
             newGff.Should().NotBeNull();
             originalGff.Should().NotBeNull();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:168-184
+        // Original: def test_ifo_editor_manipulate_dawn_hour(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateDawnHour()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test all valid hours (0-23)
+            int[] testHours = { 0, 6, 12, 18, 23 };
+            foreach (int hour in testHours)
+            {
+                editor.DawnHourSpin.Value = hour;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.DawnHour.Should().Be(hour, $"DawnHour should be {hour} after setting DawnHourSpin to {hour}");
+            }
+        }
     }
 }
