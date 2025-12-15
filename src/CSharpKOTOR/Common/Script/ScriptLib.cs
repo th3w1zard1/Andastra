@@ -30799,7 +30799,7 @@ int GN_RunDefaultPuppetAIRoutine(object oIntruder)
                     {
                         AurPostString( ""Found wounded droid in party:"" + IntToString(nPercentage) + ""/"" + IntToString( nThreshold ), 20, 21, 4.0f );
                         //Make sure they're within 10 meters.
-                        //TODO: Enable this check once we're confident in the rest.
+                        // Distance check is enabled - verifies droid is within 10 meters before setting as heal target
                         if ( GetDistanceToObject2D(oMember) <= 10.0f )
                         {
                            // AurPostString( ""Setting ohealdroid to:"" + GetTag(oMember),20,24,4.0f );
