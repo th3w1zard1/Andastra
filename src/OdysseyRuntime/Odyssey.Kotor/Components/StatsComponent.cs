@@ -33,6 +33,7 @@ namespace Odyssey.Kotor.Components
     {
         private readonly Dictionary<Ability, int> _abilities;
         private readonly Dictionary<int, int> _skills; // Skill ID -> Skill Rank
+        private readonly HashSet<int> _knownSpells; // Spell ID -> Known
         private int _currentHP;
         private int _maxHP;
         private int _baseLevel;
@@ -50,6 +51,7 @@ namespace Odyssey.Kotor.Components
         {
             _abilities = new Dictionary<Ability, int>();
             _skills = new Dictionary<int, int>();
+            _knownSpells = new HashSet<int>();
             
             // Default ability scores (10 = average human)
             foreach (Ability ability in Enum.GetValues(typeof(Ability)))
@@ -210,6 +212,42 @@ namespace Odyssey.Kotor.Components
             {
                 _skills[skill] = Math.Max(0, rank);
             }
+        }
+
+        #endregion
+
+        #region Spell Knowledge
+
+        /// <summary>
+        /// Checks if the creature knows a spell/Force power.
+        /// </summary>
+        public bool HasSpell(int spellId)
+        {
+            return _knownSpells.Contains(spellId);
+        }
+
+        /// <summary>
+        /// Adds a spell to the creature's known spells list.
+        /// </summary>
+        public void AddSpell(int spellId)
+        {
+            _knownSpells.Add(spellId);
+        }
+
+        /// <summary>
+        /// Removes a spell from the creature's known spells list.
+        /// </summary>
+        public void RemoveSpell(int spellId)
+        {
+            _knownSpells.Remove(spellId);
+        }
+
+        /// <summary>
+        /// Gets all known spells.
+        /// </summary>
+        public System.Collections.Generic.IEnumerable<int> GetKnownSpells()
+        {
+            return _knownSpells;
         }
 
         #endregion

@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
@@ -23,15 +24,17 @@ namespace Odyssey.Core.Actions
     {
         private readonly int _spellId;
         private readonly Vector3 _targetLocation;
+        private readonly object _gameDataManager; // KOTOR-specific, accessed via dynamic
         private bool _approached;
         private bool _spellCast;
         private const float CastRange = 20.0f; // Default spell range
 
-        public ActionCastSpellAtLocation(int spellId, Vector3 targetLocation)
+        public ActionCastSpellAtLocation(int spellId, Vector3 targetLocation, object gameDataManager = null)
             : base(ActionType.CastSpellAtLocation)
         {
             _spellId = spellId;
             _targetLocation = targetLocation;
+            _gameDataManager = gameDataManager;
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
@@ -49,13 +52,22 @@ namespace Odyssey.Core.Actions
                 return ActionStatus.Failed;
             }
 
-            // Get spell data (would need GameDataManager/TwoDA access)
-            // TODO: Check spell knowledge and get Force point cost from spells.2da
-            // This requires:
-            // 1. Access to spells.2da table to get spell data (ForceCost column)
-            // 2. Spell knowledge checking (IStatsComponent.HasSpell or similar method)
-            // 3. Verify caster has sufficient Force points (CurrentFP >= ForceCost)
-            // For now, assume spell is valid if we have Force points
+            // Check spell knowledge and Force point cost before casting
+            if (!_spellCast)
+            {
+                // 1. Check if caster knows the spell
+                if (!stats.HasSpell(_spellId))
+                {
+                    return ActionStatus.Failed; // Spell not known
+                }
+
+                // 2. Get Force point cost from GameDataManager
+                int forcePointCost = GetSpellForcePointCost();
+                if (stats.CurrentFP < forcePointCost)
+                {
+                    return ActionStatus.Failed; // Not enough Force points
+                }
+            }
 
             Vector3 toTarget = _targetLocation - transform.Position;
             toTarget.Y = 0;
@@ -93,6 +105,10 @@ namespace Odyssey.Core.Actions
                 Vector3 direction2 = Vector3.Normalize(toTarget);
                 transform.Facing = (float)System.Math.Atan2(direction2.Y, direction2.X);
 
+                // Consume Force points
+                int forcePointCost = GetSpellForcePointCost();
+                stats.CurrentFP = Math.Max(0, stats.CurrentFP - forcePointCost);
+
                 // Apply spell effects at target location
                 // TODO: Implement full spell casting with projectiles and effects
                 // This requires:
@@ -100,7 +116,6 @@ namespace Odyssey.Core.Actions
                 // 2. Projectile creation and movement (for projectile spells)
                 // 3. Area effect zone creation (for area spells)
                 // 4. Effect application to entities in range
-                // 5. Force point deduction (CurrentFP -= ForceCost from spells.2da)
                 // For now, spell cast event is fired for other systems to handle
 
                 // Fire spell cast event
@@ -117,6 +132,28 @@ namespace Odyssey.Core.Actions
             }
 
             return ActionStatus.Complete;
+        }
+
+        /// <summary>
+        /// Gets the Force point cost for the spell.
+        /// </summary>
+        private int GetSpellForcePointCost()
+        {
+            if (_gameDataManager != null)
+            {
+                dynamic gameDataManager = _gameDataManager;
+                try
+                {
+                    return gameDataManager.GetSpellForcePointCost(_spellId);
+                }
+                catch
+                {
+                    // Fall through to default
+                }
+            }
+
+            // Fallback: basic calculation (spell level * 2, minimum 1)
+            return 2; // Default cost
         }
     }
 

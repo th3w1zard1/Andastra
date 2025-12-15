@@ -103,6 +103,13 @@ namespace Odyssey.Core.Interfaces.Components
         /// <param name="skill">Skill ID (SKILL_SECURITY = 6, etc.)</param>
         /// <returns>Skill rank, or 0 if untrained, or -1 if skill doesn't exist</returns>
         int GetSkillRank(int skill);
+
+        /// <summary>
+        /// Checks if the creature knows a spell/Force power.
+        /// </summary>
+        /// <param name="spellId">Spell ID (row index in spells.2da)</param>
+        /// <returns>True if the creature knows the spell, false otherwise</returns>
+        bool HasSpell(int spellId);
     }
 }
 
