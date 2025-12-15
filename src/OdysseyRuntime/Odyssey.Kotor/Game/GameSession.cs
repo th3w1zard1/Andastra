@@ -41,6 +41,8 @@ namespace Odyssey.Kotor.Game
         public PartyManager PartyManager { get; set; }
         public Loading.ModuleLoader ModuleLoader { get; set; }
         public FactionManager FactionManager { get; set; }
+        public PerceptionManager PerceptionManager { get; set; }
+        public bool IsLoadingFromSave { get; set; }
     }
 
     /// <summary>
@@ -403,7 +405,9 @@ namespace Odyssey.Kotor.Game
                     CombatManager = _combatManager,
                     PartyManager = _partyManager,
                     ModuleLoader = _moduleLoader,
-                    FactionManager = _factionManager
+                    FactionManager = _factionManager,
+                    PerceptionManager = _perceptionManager,
+                    IsLoadingFromSave = false // TODO: Set to true during save loading
                 };
                 ctx.AdditionalContext = gameServices;
 
@@ -953,38 +957,57 @@ namespace Odyssey.Kotor.Game
                 return false;
             }
 
-            bool success = _saveSystem.Load(saveName);
-            if (!success)
+            // Set loading flag before loading
+            bool wasLoading = false;
+            if (_vm != null && _vm.CurrentContext != null && _vm.CurrentContext.AdditionalContext is GameServicesContext services)
             {
-                return false;
+                wasLoading = services.IsLoadingFromSave;
+                services.IsLoadingFromSave = true;
             }
 
-            SaveGameData saveData = _saveSystem.CurrentSave;
-            if (saveData == null)
+            try
             {
-                return false;
-            }
-
-            // Load the module
-            if (!string.IsNullOrEmpty(saveData.CurrentModule))
-            {
-                LoadModule(saveData.CurrentModule);
-            }
-
-            // Restore player position
-            if (saveData.EntryPosition != System.Numerics.Vector3.Zero && _playerEntity != null)
-            {
-                ITransformComponent transform = _playerEntity.GetComponent<ITransformComponent>();
-                if (transform != null)
+                bool success = _saveSystem.Load(saveName);
+                if (!success)
                 {
-                    transform.Position = saveData.EntryPosition;
-                    transform.Facing = saveData.EntryFacing;
+                    return false;
+                }
+
+                SaveGameData saveData = _saveSystem.CurrentSave;
+                if (saveData == null)
+                {
+                    return false;
+                }
+
+                // Load the module
+                if (!string.IsNullOrEmpty(saveData.CurrentModule))
+                {
+                    LoadModule(saveData.CurrentModule);
+                }
+
+                // Restore player position
+                if (saveData.EntryPosition != System.Numerics.Vector3.Zero && _playerEntity != null)
+                {
+                    ITransformComponent transform = _playerEntity.GetComponent<ITransformComponent>();
+                    if (transform != null)
+                    {
+                        transform.Position = saveData.EntryPosition;
+                        transform.Facing = saveData.EntryFacing;
+                    }
+                }
+
+                // Restore global variables (handled by SaveSystem.ApplySaveData)
+
+                return true;
+            }
+            finally
+            {
+                // Restore loading flag
+                if (_vm != null && _vm.CurrentContext != null && _vm.CurrentContext.AdditionalContext is GameServicesContext services2)
+                {
+                    services2.IsLoadingFromSave = wasLoading;
                 }
             }
-
-            // Restore global variables (handled by SaveSystem.ApplySaveData)
-
-            return true;
         }
 
         /// <summary>

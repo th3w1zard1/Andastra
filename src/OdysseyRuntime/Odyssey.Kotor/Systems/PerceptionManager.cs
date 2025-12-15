@@ -110,6 +110,10 @@ namespace Odyssey.Kotor.Systems
         private readonly IWorld _world;
         private readonly EffectSystem _effectSystem;
         private readonly Dictionary<uint, PerceptionData> _perceptionData;
+        
+        // Track last perceived entity per creature (for GetLastPerceived engine API)
+        private readonly Dictionary<uint, IEntity> _lastPerceivedEntity;
+        private readonly Dictionary<uint, bool> _lastPerceptionWasHeard;
 
         /// <summary>
         /// Default sight range in meters.
@@ -138,6 +142,8 @@ namespace Odyssey.Kotor.Systems
             _world = world ?? throw new ArgumentNullException("world");
             _effectSystem = effectSystem ?? throw new ArgumentNullException("effectSystem");
             _perceptionData = new Dictionary<uint, PerceptionData>();
+            _lastPerceivedEntity = new Dictionary<uint, IEntity>();
+            _lastPerceptionWasHeard = new Dictionary<uint, bool>();
             _timeSinceUpdate = 0f;
         }
 
@@ -238,6 +244,47 @@ namespace Odyssey.Kotor.Systems
 
             // Fire events for changes
             FirePerceptionEvents(creature, data);
+            
+            // Update last perceived entity (for GetLastPerceived engine API)
+            // Track the most recently perceived entity (seen or heard)
+            IEntity lastPerceived = null;
+            bool wasHeard = false;
+            
+            // Prioritize seen over heard
+            if (data.SeenObjects.Count > 0)
+            {
+                // Get the most recently seen entity (first in set for now, could be improved with timestamps)
+                foreach (uint seenId in data.SeenObjects)
+                {
+                    IEntity seen = _world.GetEntity(seenId);
+                    if (seen != null)
+                    {
+                        lastPerceived = seen;
+                        wasHeard = data.HeardObjects.Contains(seenId);
+                        break; // Use first seen entity
+                    }
+                }
+            }
+            else if (data.HeardObjects.Count > 0)
+            {
+                // If nothing seen, use first heard entity
+                foreach (uint heardId in data.HeardObjects)
+                {
+                    IEntity heard = _world.GetEntity(heardId);
+                    if (heard != null)
+                    {
+                        lastPerceived = heard;
+                        wasHeard = true;
+                        break; // Use first heard entity
+                    }
+                }
+            }
+            
+            if (lastPerceived != null)
+            {
+                _lastPerceivedEntity[creature.ObjectId] = lastPerceived;
+                _lastPerceptionWasHeard[creature.ObjectId] = wasHeard;
+            }
 
             // Update perception component if present
             if (perception != null)
@@ -505,6 +552,8 @@ namespace Odyssey.Kotor.Systems
             }
 
             _perceptionData.Remove(creature.ObjectId);
+            _lastPerceivedEntity.Remove(creature.ObjectId);
+            _lastPerceptionWasHeard.Remove(creature.ObjectId);
         }
 
         /// <summary>
@@ -513,6 +562,44 @@ namespace Odyssey.Kotor.Systems
         public void ClearAllPerception()
         {
             _perceptionData.Clear();
+            _lastPerceivedEntity.Clear();
+            _lastPerceptionWasHeard.Clear();
+        }
+        
+        /// <summary>
+        /// Gets the last perceived entity for a creature (for GetLastPerceived engine API).
+        /// </summary>
+        public IEntity GetLastPerceived(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return null;
+            }
+            
+            IEntity lastPerceived;
+            if (_lastPerceivedEntity.TryGetValue(creature.ObjectId, out lastPerceived))
+            {
+                return lastPerceived;
+            }
+            return null;
+        }
+        
+        /// <summary>
+        /// Checks if the last perception was heard (for GetLastPerceptionHeard engine API).
+        /// </summary>
+        public bool WasLastPerceptionHeard(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+            
+            bool wasHeard;
+            if (_lastPerceptionWasHeard.TryGetValue(creature.ObjectId, out wasHeard))
+            {
+                return wasHeard;
+            }
+            return false;
         }
 
         /// <summary>
