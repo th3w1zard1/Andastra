@@ -12,6 +12,18 @@ namespace Odyssey.Kotor.Profiles
     /// Game profile for KOTOR 2: The Sith Lords (TSL).
     /// Defines TSL-specific resource paths, table configurations, and feature support.
     /// </summary>
+    /// <remarks>
+    /// KOTOR 2 Game Profile:
+    /// - Based on swkotor2.exe game profile system
+    /// - Located via string references: Game version checking, resource path resolution
+    /// - Original implementation: Defines KOTOR 2 specific configuration (resource paths, 2DA tables, NWScript functions)
+    /// - NWScript functions: K2 has ~950 engine functions (function IDs 0-949)
+    /// - Resource paths: Uses K2-specific texture pack files (swpc_tex_gui.erf, swpc_tex_tpa.erf)
+    /// - Feature support: Influence system, Prestige Classes, Combat Forms, Item Crafting supported in K2 (not in K1)
+    /// - K2-specific features: Workbench, Lab Station, Item Breakdown (crafting system)
+    /// - K2 does not support Pazaak Den (replaced with Pazaak cards), supports Pazaak minigame
+    /// - Based on swkotor2.exe game version detection and resource loading
+    /// </remarks>
     public class K2GameProfile : IGameProfile
     {
         private readonly K2ResourceConfig _resourceConfig;

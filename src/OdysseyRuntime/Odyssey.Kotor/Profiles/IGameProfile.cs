@@ -9,18 +9,23 @@ namespace Odyssey.Kotor.Profiles
     /// Defines game-specific behavior for different Aurora/Odyssey engine games.
     /// </summary>
     /// <remarks>
-    /// The engine is designed for extensibility to support:
-    /// - KOTOR 1 (Odyssey)
-    /// - KOTOR 2 / TSL (Odyssey)
-    /// - Jade Empire (Odyssey variant)
-    /// - NWN (Aurora - future)
-    /// - Mass Effect (Eclipse/Unreal - future)
-    /// 
-    /// Each game profile provides:
-    /// - Resource layout specifics
-    /// - Script function sets (NWScript with variations)
-    /// - Table schemas (2DA columns)
-    /// - Rule variants (combat, dialogue, etc.)
+    /// Game Profile Interface:
+    /// - Based on swkotor2.exe game profile system
+    /// - Located via string references: Game version detection, resource path resolution
+    /// - Original implementation: Provides game-specific configuration for resource loading, NWScript functions, and feature support
+    /// - The engine is designed for extensibility to support:
+    ///   - KOTOR 1 (Odyssey) - K1GameProfile
+    ///   - KOTOR 2 / TSL (Odyssey) - K2GameProfile
+    ///   - Jade Empire (Odyssey variant) - future
+    ///   - NWN (Aurora - future)
+    ///   - Mass Effect (Eclipse/Unreal - future)
+    /// - Each game profile provides:
+    ///   - Resource layout specifics (chitin.key, texture packs, modules directory)
+    ///   - Script function sets (NWScript with game-specific variations, K1 ~850 functions, K2 ~950 functions)
+    ///   - Table schemas (2DA column names and structure)
+    ///   - Rule variants (combat, dialogue, feature support differences)
+    /// - CreateEngineApi() returns game-specific IEngineApi implementation (K1EngineApi or K2EngineApi)
+    /// - SupportsFeature() checks if a game feature is available (e.g., Influence system in K2 only)
     /// </remarks>
     public interface IGameProfile
     {

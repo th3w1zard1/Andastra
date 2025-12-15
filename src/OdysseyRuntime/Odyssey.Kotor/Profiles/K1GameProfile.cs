@@ -8,6 +8,17 @@ namespace Odyssey.Kotor.Profiles
     /// <summary>
     /// Game profile for Star Wars: Knights of the Old Republic (K1).
     /// </summary>
+    /// <remarks>
+    /// KOTOR 1 Game Profile:
+    /// - Based on swkotor.exe game profile system
+    /// - Located via string references: Game version checking, resource path resolution
+    /// - Original implementation: Defines KOTOR 1 specific configuration (resource paths, 2DA tables, NWScript functions)
+    /// - NWScript functions: K1 has ~850 engine functions (function IDs 0-849)
+    /// - Resource paths: Uses K1-specific texture pack files (swpc_tex_tpa.erf, swpc_tex_tpb.erf, swpc_tex_tpc.erf)
+    /// - Feature support: Pazaak, Swoop Racing, Turret minigames supported in K1 (not in K2)
+    /// - Feature differences: K1 does not support Influence system, Prestige Classes, Combat Forms, Item Crafting
+    /// - Based on swkotor.exe game version detection and resource loading
+    /// </remarks>
     public class K1GameProfile : IGameProfile
     {
         private readonly K1ResourceConfig _resourceConfig;

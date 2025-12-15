@@ -16,12 +16,18 @@ namespace Odyssey.Kotor.Data
     /// <remarks>
     /// 2DA Table Manager:
     /// - Based on swkotor2.exe 2DA table loading system
-    /// - Located via string references: "2DA" file format, "appearance.2da", "baseitems.2da", etc.
+    /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
+    /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc
+    /// - "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
+    /// - "CSWClass::LoadSkillsTable: Can't load skills.2da" @ 0x007c47ac
+    /// - "CSWClass::LoadSpellsTable: Can't load spells.2da" @ 0x007c4918
     /// - Original implementation: Loads 2DA files from chitin.key or module archives
     /// - Caches loaded tables for performance (avoid reloading on every lookup)
     /// - Provides typed lookup methods for common tables (appearance, baseitems, feats, spells)
     /// - Based on CSharpKOTOR.Formats.TwoDA.TwoDA for parsing
     /// - Resource precedence: override → module → chitin (via IGameResourceProvider)
+    /// - Table lookup: Uses row label (string) or row index (int) to access data
+    /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)
     /// </remarks>
     public class TwoDATableManager
     {

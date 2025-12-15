@@ -13,13 +13,17 @@ namespace Odyssey.Kotor.Combat
     /// Weapon Damage Calculator:
     /// - Based on swkotor2.exe weapon damage calculation
     /// - Located via string references: "damagedice" @ 0x007c2e60, "damagedie" @ 0x007c2e70, "damagebonus" @ 0x007c2e80
+    /// - "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30 (damage dice fields)
     /// - "BaseItem" @ 0x007c2e90 (base item ID in item GFF), "weapontype" @ 0x007c2ea0
+    /// - "OnHandDamageMod" @ 0x007c2e40, "OffHandDamageMod" @ 0x007c2e18 (damage modifiers)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save item data), FUN_0050c510 @ 0x0050c510 (load item data)
     /// - Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
     /// - Ability modifier: STR for melee, DEX for ranged (or STR if weapon has finesse property)
-    /// - Critical hits: Multiply damage by critmult from baseitems.2da
-    /// - Based on baseitems.2da columns: damagedice, damagedie, damagebonus, crithitmult, critthreat
-    /// - Weapon lookup: Get equipped weapon from inventory, get BaseItem ID, lookup in baseitems.2da
+    /// - Offhand attacks: Get half ability modifier (abilityMod / 2)
+    /// - Critical hits: Multiply damage by critmult from baseitems.2da (crithitmult column)
+    /// - Based on baseitems.2da columns: numdice/damagedice (dice count), dietoroll/damagedie (die size), damagebonus, crithitmult, critthreat
+    /// - Weapon lookup: Get equipped weapon from inventory (RIGHTWEAPON slot 4, LEFTWEAPON slot 5), get BaseItem ID, lookup in baseitems.2da
+    /// - Unarmed damage: 1d3 (1 die, size 3) if no weapon equipped
     /// </remarks>
     public class WeaponDamageCalculator
     {
