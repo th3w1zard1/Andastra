@@ -101,6 +101,26 @@ namespace Odyssey.MonoGame.Audio
         }
 
         /// <summary>
+        /// Creates a new audio emitter and returns its ID.
+        /// </summary>
+        public uint CreateEmitter(Vector3 position, Vector3 velocity, float volume, float minDistance, float maxDistance)
+        {
+            uint emitterId = (uint)(_emitters.Count + 1);
+            var emitter = new AudioEmitter
+            {
+                EmitterId = emitterId,
+                Position = position,
+                Velocity = velocity,
+                Volume = volume,
+                MinDistance = minDistance,
+                MaxDistance = maxDistance,
+                Is3D = true
+            };
+            _emitters[emitterId] = emitter;
+            return emitterId;
+        }
+
+        /// <summary>
         /// Adds or updates an audio emitter.
         /// </summary>
         public void UpdateEmitter(uint emitterId, Vector3 position, Vector3 velocity, float volume, float minDistance, float maxDistance)
@@ -121,6 +141,17 @@ namespace Odyssey.MonoGame.Audio
             emitter.Volume = volume;
             emitter.MinDistance = minDistance;
             emitter.MaxDistance = maxDistance;
+        }
+
+        /// <summary>
+        /// Applies 3D audio parameters to a SoundEffectInstance.
+        /// </summary>
+        public void Apply3D(uint emitterId, Microsoft.Xna.Framework.Audio.SoundEffectInstance instance)
+        {
+            Audio3DParameters parameters = Calculate3DParameters(emitterId);
+            instance.Volume = parameters.Volume;
+            instance.Pan = parameters.Pan;
+            instance.Pitch = parameters.DopplerShift - 1.0f; // Convert Doppler shift to pitch
         }
 
         /// <summary>

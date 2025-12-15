@@ -538,6 +538,47 @@ namespace Odyssey.Core.Camera
 
         #endregion
 
+        #region Camera Facing
+
+        /// <summary>
+        /// Sets the camera facing direction (yaw angle in radians).
+        /// Based on swkotor2.exe: Camera facing control for scripted camera movements
+        /// </summary>
+        /// <param name="facing">Facing angle in radians (0 = north, PI/2 = east, PI = south, -PI/2 = west)</param>
+        public void SetFacing(float facing)
+        {
+            if (Mode == CameraMode.Chase && Target != null)
+            {
+                // Set yaw to match facing direction
+                Yaw = facing;
+                
+                // Normalize yaw to [-PI, PI]
+                const float TwoPi = (float)(Math.PI * 2);
+                while (Yaw > Math.PI) Yaw -= TwoPi;
+                while (Yaw < -Math.PI) Yaw += TwoPi;
+            }
+            else if (Mode == CameraMode.Free)
+            {
+                // For free camera, rotate look-at position around current position
+                Vector3 direction = LookAtPosition - Position;
+                float distance = direction.Length();
+                
+                if (distance > 0.001f)
+                {
+                    direction = Vector3.Normalize(direction);
+                    // Calculate new direction based on facing
+                    var newDirection = new Vector3(
+                        (float)Math.Cos(facing),
+                        (float)Math.Sin(facing),
+                        direction.Z
+                    );
+                    LookAtPosition = Position + newDirection * distance;
+                }
+            }
+        }
+
+        #endregion
+
         #region View Matrix
 
         /// <summary>
