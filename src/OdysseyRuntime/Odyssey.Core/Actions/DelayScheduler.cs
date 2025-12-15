@@ -9,7 +9,15 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Delay Scheduler:
     /// - Based on swkotor2.exe DelayCommand system
-    /// - Located via string references: "DelayCommand" @ 0x007be900
+    /// - Located via string references: "DelayCommand" @ 0x007be900 (NWScript DelayCommand function)
+    /// - Delay-related fields: "Delay" @ 0x007c35b0 (delay field), "DelayReply" @ 0x007c38f0 (delay reply field)
+    /// - "DelayEntry" @ 0x007c38fc (delay entry field), "FadeDelay" @ 0x007c358c (fade delay field)
+    /// - "DestroyObjectDelay" @ 0x007c0248 (destroy object delay field), "FadeDelayOnDeath" @ 0x007bf55c (fade delay on death)
+    /// - "ReaxnDelay" @ 0x007bf94c (reaction delay field), "MusicDelay" @ 0x007c14b4 (music delay field)
+    /// - "ShakeDelay" @ 0x007c49ec (shake delay field), "TooltipDelay Sec" @ 0x007c71dc (tooltip delay)
+    /// - Animation delays: "controlptdelay" @ 0x007ba218, "controlptdelaykey" @ 0x007ba204, "controlptdelaybezierkey" @ 0x007ba1ec
+    /// - "lightningDelay" @ 0x007ba508, "lightningDelaykey" @ 0x007ba4f4, "lightningDelaybezierkey" @ 0x007ba4dc
+    /// - "=Lip Delay" @ 0x007c7fb7 (lip sync delay), "EAX2 reverb delay" @ 0x007c5fc4, "EAX2 reflections delay" @ 0x007c5fe4 (audio delays)
     /// - Original implementation: DelayCommand NWScript function schedules actions to execute after specified delay
     /// - Delay timing: Uses game simulation time (_currentTime) to track when actions should execute
     /// - Priority queue: Uses sorted list by execution time to efficiently process delayed actions in order
@@ -17,6 +25,8 @@ namespace Odyssey.Core.Actions
     /// - STORE_STATE opcode: In NCS VM stores stack/local state for DelayCommand semantics (restores state when action executes)
     /// - Action execution: Actions are queued to target entity's action queue when delay expires
     /// - Entity validation: Checks if target entity is still valid before executing delayed action
+    /// - DelayCommand(float fSeconds, action aActionToDelay): Schedules action to execute after fSeconds delay
+    /// - AssignCommand(object oTarget, action aAction): Executes action immediately on target (different from DelayCommand)
     /// </remarks>
     public class DelayScheduler : IDelayScheduler
     {
