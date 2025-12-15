@@ -267,6 +267,16 @@ namespace Odyssey.Kotor.Loading
                 { "ScriptSpellAt", ScriptEvent.OnSpellCastAt },
                 { "ScriptUserDefine", ScriptEvent.OnUserDefined }
             });
+
+            // Load ScriptDialogue as Conversation property (dialogue ResRef for BeginConversation)
+            // Based on swkotor2.exe: FUN_0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
+            // ScriptDialogue ResRef is the dialogue file (DLG) used for conversations with this creature
+            string scriptDialogue = GetResRefField(root, "ScriptDialogue");
+            if (!string.IsNullOrEmpty(scriptDialogue))
+            {
+                entity.SetData("Conversation", scriptDialogue);
+                entity.SetData("ScriptDialogue", scriptDialogue);
+            }
         }
 
         /// <summary>
@@ -341,6 +351,15 @@ namespace Odyssey.Kotor.Loading
             entity.SetData("HP", GetIntField(root, "HP", 1));
             entity.SetData("CurrentHP", GetIntField(root, "CurrentHP", 1));
             entity.SetData("Static", GetIntField(root, "Static", 0) != 0);
+
+            // Load Conversation field (dialogue ResRef for BeginConversation)
+            // Based on swkotor2.exe: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+            // Located via string reference: "Conversation" @ 0x007c1abc
+            string conversation = GetResRefField(root, "Conversation");
+            if (!string.IsNullOrEmpty(conversation))
+            {
+                entity.SetData("Conversation", conversation);
+            }
 
             SetEntityScripts(entity, root, new Dictionary<string, ScriptEvent>
             {

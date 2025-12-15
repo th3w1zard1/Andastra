@@ -458,7 +458,9 @@ namespace Odyssey.Core.Movement
             }
 
             // Get equipped weapon from main hand (slot 4)
-            Interfaces.Components.IInventoryComponent inventory = leader.GetComponent<Interfaces.Components.IInventoryComponent>();
+            // Note: IInventoryComponent may not be available in Odyssey.Core
+            // For now, return default melee range
+            // TODO: Implement weapon range lookup when inventory system is available
             if (inventory == null)
             {
                 return 2.0f; // Default melee range
