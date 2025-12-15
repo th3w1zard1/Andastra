@@ -25,6 +25,7 @@ namespace Odyssey.Core.Module
     /// - Area properties: "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4
     /// - "AreaEffectId" @ 0x007c13f8 (area-wide effect identifier)
     /// - Events: "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles area events including EVENT_AREA_TRANSITION (case 0x1a) and EVENT_REMOVE_FROM_AREA (case 4)
     /// - Error messages:
     ///   - "X co-ordinate outside of area, should be in [%f, %f]" @ 0x007c224c
     ///   - "Y co-ordinate outside of area, should be in [%f, %f]" @ 0x007c2284
@@ -32,6 +33,8 @@ namespace Odyssey.Core.Module
     ///   - "Area %s not valid." @ 0x007c22dc
     /// - Debug display: "    Area Tag: " @ 0x007cb12c, "Area Name: " @ 0x007cb13c
     /// - GUI: "LBL_Area" @ 0x007cdac0, "LBL_AREANAME" @ 0x007cedb8, "areatrans_p" @ 0x007d0bdc
+    /// - Pathfinding module: "?nwsareapathfind.cpp" @ 0x007be3ff indicates area pathfinding implementation
+    /// - Save game integration: FUN_004eb750 @ 0x004eb750 saves AREANAME to save game NFO file (local_78 variable holds area name)
     /// - Original implementation: Areas contain entities, rooms, walkmesh, visibility data
     /// - Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/
     /// - ARE = Static area properties (lighting, fog, grass) - GFF with "ARE " signature

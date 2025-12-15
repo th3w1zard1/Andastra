@@ -16,6 +16,10 @@ namespace Odyssey.Core.Interfaces
     /// - Error messages: "Area %s is not a valid area." @ 0x007c22bc, "Area %s not valid." @ 0x007c22dc
     /// - Coordinate validation: "X co-ordinate outside of area, should be in [%f, %f]" @ 0x007c224c
     /// - "Y co-ordinate outside of area, should be in [%f, %f]" @ 0x007c2284
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles area events including EVENT_AREA_TRANSITION (case 0x1a) and EVENT_REMOVE_FROM_AREA (case 4)
+    /// - Save game integration: FUN_004eb750 @ 0x004eb750 saves AREANAME to save game NFO file
+    /// - Pathfinding module: "?nwsareapathfind.cpp" @ 0x007be3ff indicates area pathfinding implementation
+    /// - Area number tracking: "AreaNumber" @ 0x007c7324 used for area identification
     /// - Original implementation: Areas loaded from ARE (area properties) and GIT (instances) files
     /// - ARE file format: GFF with "ARE " signature containing area static properties (lighting, fog, grass)
     /// - GIT file format: GFF with "GIT " signature containing dynamic object instances
