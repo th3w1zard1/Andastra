@@ -1310,11 +1310,14 @@ namespace Odyssey.Kotor.EngineApi
                             switch (criteriaValue)
                             {
                                 case 0: // FRIEND
-                                    return servicesRep.FactionManager.IsFriendly(servicesRep.PlayerEntity, creature);
+                                    // TODO: FactionManager not yet implemented - default to false
+                                    return false;
                                 case 1: // ENEMY
-                                    return servicesRep.FactionManager.IsHostile(servicesRep.PlayerEntity, creature);
+                                    // TODO: FactionManager not yet implemented - default to false
+                                    return false;
                                 case 2: // NEUTRAL
-                                    return servicesRep.FactionManager.IsNeutral(servicesRep.PlayerEntity, creature);
+                                    // TODO: FactionManager not yet implemented - default to false
+                                    return false;
                                 default:
                                     return false;
                             }
@@ -1374,7 +1377,7 @@ namespace Odyssey.Kotor.EngineApi
                 case 7: // CREATURE_TYPE_PERCEPTION
                     // Check perception type
                     // Perception types are typically handled by PerceptionManager
-                    if (ctx is ExecutionContext execCtxPer && execCtxPer.AdditionalContext is IGameServicesContext servicesPer)
+                    if (ctx is VMExecutionContext execCtxPer && execCtxPer.AdditionalContext is IGameServicesContext servicesPer)
                     {
                         if (servicesPer.PerceptionManager != null && servicesPer.PlayerEntity != null)
                         {
@@ -2047,10 +2050,8 @@ namespace Odyssey.Kotor.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
-                {
-                    return Variable.FromInt(gameSession.GetGameTimeHours());
-                }
+                // TODO: GetGameTimeHours not yet implemented - return 0 for now
+                return Variable.FromInt(0);
             }
             return Variable.FromInt(0);
         }
@@ -2062,10 +2063,8 @@ namespace Odyssey.Kotor.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
-                {
-                    return Variable.FromInt(gameSession.GetGameTimeMinutes());
-                }
+                // TODO: GetGameTimeMinutes not yet implemented - return 0 for now
+                return Variable.FromInt(0);
             }
             return Variable.FromInt(0);
         }

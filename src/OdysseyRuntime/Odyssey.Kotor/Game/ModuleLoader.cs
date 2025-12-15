@@ -260,6 +260,19 @@ namespace Odyssey.Kotor.Game
                 SpawnEntitiesFromGIT(_currentGit, runtimeArea);
             }
 
+            // Fire OnModuleLoad script event
+            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD fires when module is loaded
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (0x14), "Mod_OnModLoad" @ IFO GFF
+            // Original implementation: OnModuleLoad script fires on module after all resources are loaded and entities are spawned
+            // Module scripts are executed directly (not via entity script hooks), so we need to execute them manually
+            if (_world != null && _world.EventBus != null)
+            {
+                // Module scripts need special handling - they're executed on the module itself (no entity owner)
+                // For now, we'll need a way to execute module scripts. This will need integration with ScriptExecutor.
+                // The event bus FireScriptEvent is for entities, not modules.
+                // TODO: Add module script execution support
+            }
+
             Console.WriteLine("[ModuleLoader] Module loaded: " + moduleName);
         }
 
@@ -500,6 +513,31 @@ namespace Odyssey.Kotor.Game
                 module.EntryArea = _currentIfo.EntryArea?.ToString() ?? moduleName;
                 module.DawnHour = _currentIfo.DawnHour;
                 module.DuskHour = _currentIfo.DuskHour;
+
+                // Load module scripts from IFO
+                // Based on swkotor2.exe: Module scripts loaded from IFO GFF fields
+                // Located via string references: "Mod_OnModLoad" @ IFO GFF, "Mod_OnModStart" @ IFO GFF
+                // Original implementation: IFO GFF contains Mod_OnModLoad and Mod_OnModStart ResRef fields
+                if (_currentIfo.OnLoad != null && !string.IsNullOrEmpty(_currentIfo.OnLoad.ToString()))
+                {
+                    module.SetScript(ScriptEvent.OnModuleLoad, _currentIfo.OnLoad.ToString());
+                }
+                if (_currentIfo.OnStart != null && !string.IsNullOrEmpty(_currentIfo.OnStart.ToString()))
+                {
+                    module.SetScript(ScriptEvent.OnModuleStart, _currentIfo.OnStart.ToString());
+                }
+                if (_currentIfo.OnClientEnter != null && !string.IsNullOrEmpty(_currentIfo.OnClientEnter.ToString()))
+                {
+                    module.SetScript(ScriptEvent.OnClientEnter, _currentIfo.OnClientEnter.ToString());
+                }
+                if (_currentIfo.OnClientLeave != null && !string.IsNullOrEmpty(_currentIfo.OnClientLeave.ToString()))
+                {
+                    module.SetScript(ScriptEvent.OnClientLeave, _currentIfo.OnClientLeave.ToString());
+                }
+                if (_currentIfo.OnHeartbeat != null && !string.IsNullOrEmpty(_currentIfo.OnHeartbeat.ToString()))
+                {
+                    module.SetScript(ScriptEvent.OnModuleHeartbeat, _currentIfo.OnHeartbeat.ToString());
+                }
             }
             else
             {
@@ -1014,7 +1052,7 @@ namespace Odyssey.Kotor.Game
                     DoorComponent doorComponent = entity.GetComponent<DoorComponent>();
                     if (doorComponent != null)
                     {
-                        doorComponent.GenericType = utd.GenericType;
+                        doorComponent.GenericType = utd.AppearanceId;
                         doorComponent.IsLocked = utd.Locked;
                         doorComponent.IsOpen = utd.OpenState > 0;
                         doorComponent.KeyRequired = utd.KeyRequired;
@@ -1025,7 +1063,7 @@ namespace Odyssey.Kotor.Game
                     Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
-                        renderable.AppearanceRow = utd.GenericType;
+                        renderable.AppearanceRow = utd.AppearanceId;
                     }
 
                     // Set scripts
