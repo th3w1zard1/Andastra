@@ -188,6 +188,15 @@ namespace Odyssey.Core.Dialogue
             _pc = initiator;
             _availableReplies = new List<DialogueReply>();
 
+            // Fire OnConversation script event
+            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE fires when conversation begins
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (0x7), "ScriptDialogue" @ 0x007bee40
+            // Original implementation: OnConversation script fires on owner entity (NPC) when conversation starts
+            if (_world != null && _world.EventBus != null)
+            {
+                _world.EventBus.FireScriptEvent(owner, ScriptEvent.OnConversation, initiator);
+            }
+
             // Find first valid entry point
             foreach (int starterIndex in _currentDialogue.StarterIndices)
             {
@@ -398,6 +407,15 @@ namespace Odyssey.Core.Dialogue
             }
 
             State = DialogueState.Ending;
+
+            // Fire OnEndDialogue script event
+            // Based on swkotor2.exe: ScriptEndDialogue fires when conversation ends
+            // Located via string references: "ScriptEndDialogue" @ 0x007bede0
+            // Original implementation: OnEndDialogue script fires on owner entity (NPC) when conversation ends
+            if (_world != null && _world.EventBus != null && _owner != null)
+            {
+                _world.EventBus.FireScriptEvent(_owner, ScriptEvent.OnEndDialogue, _pc);
+            }
 
             // Execute OnEnd script
             if (_currentDialogue != null && !string.IsNullOrEmpty(_currentDialogue.OnEndScript))
