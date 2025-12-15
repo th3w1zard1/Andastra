@@ -51,6 +51,7 @@ namespace Odyssey.Kotor.Game
         private readonly PartySystem _partySystem;
         private readonly ScriptExecutor _scriptExecutor;
         private readonly IEngineApi _engineApi;
+        private readonly Systems.EncounterSystem _encounterSystem;
 
         // Current game state
         private RuntimeModule _currentModule;
@@ -167,6 +168,16 @@ namespace Odyssey.Kotor.Game
                 (waypointTag) => PositionPlayerAtWaypoint(waypointTag)
             );
 
+            // Initialize encounter system
+            _encounterSystem = new Systems.EncounterSystem(
+                _world,
+                _factionManager,
+                FireScriptEvent,
+                _moduleLoader,
+                (entity) => entity == _playerEntity || (entity != null && entity.GetData<bool>("IsPlayer")),
+                () => _currentModule != null ? new CSharpKOTOR.Common.Module(_currentModuleName, _installation) : null
+            );
+
             // Subscribe to door opened events for module transitions
             _world.EventBus.Subscribe<DoorOpenedEvent>(OnDoorOpened);
 
@@ -221,6 +232,12 @@ namespace Odyssey.Kotor.Game
             if (_partySystem != null)
             {
                 _partySystem.Update(deltaTime);
+            }
+
+            // Update encounter system (spawns creatures when triggered)
+            if (_encounterSystem != null)
+            {
+                _encounterSystem.Update(deltaTime);
             }
 
             // Update all entities (action queues, transforms, etc.)
@@ -306,6 +323,18 @@ namespace Odyssey.Kotor.Game
                     if (entryArea != null)
                     {
                         _world.SetCurrentArea(entryArea);
+                        
+                        // Register all encounters in the area
+                        if (_encounterSystem != null)
+                        {
+                            foreach (IEntity entity in entryArea.GetAllEntities())
+                            {
+                                if (entity != null && entity.ObjectType == ObjectType.Encounter)
+                                {
+                                    _encounterSystem.RegisterEncounter(entity);
+                                }
+                            }
+                        }
                     }
                 }
 
