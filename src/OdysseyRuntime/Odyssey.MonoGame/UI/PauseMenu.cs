@@ -7,6 +7,28 @@ namespace Odyssey.MonoGame.UI
     /// <summary>
     /// Pause menu UI component using MonoGame SpriteBatch rendering.
     /// </summary>
+    /// <remarks>
+    /// Pause Menu:
+    /// - Based on swkotor2.exe pause menu system
+    /// - Located via string references: "Pause" @ 0x007c4de8, "PauseTimer" @ 0x007bfad4
+    /// - "InfinitePause" @ 0x007bfae0, "RoundPaused" @ 0x007bfb00, "RoundPausedBy" @ 0x007bfaf0
+    /// - "TIME_PAUSETIME" @ 0x007bdf88, "TIME_PAUSEDAY" @ 0x007bdf98 (pause time tracking)
+    /// - "Mod_PauseTime" @ 0x007be89c, "Mod_PauseDay" @ 0x007be8ac (module pause time)
+    /// - "PauseAndPlay" @ 0x007bda3c (pause/play toggle)
+    /// - Pause sounds: "pause1" @ 0x007c7d74, "pause2" @ 0x007c7d7c, "pause3" @ 0x007c7d3c
+    /// - "pausesh" @ 0x007c7d44, "pausebrd" @ 0x007c7d4c (pause sound effects)
+    /// - GUI: "pause_p" @ 0x007cffb8 (pause panel), "BTN_UNPAUSE" @ 0x007cff90
+    /// - "LBL_PAUSEREASON" @ 0x007cffa8, "TB_PAUSE" @ 0x007cd1f0
+    /// - "Autopause Options" @ 0x007c848c, "BTN_AUTOPAUSE" @ 0x007d0d9c, "optautopause_p" @ 0x007d2a20
+    /// - Options: "Game Options" @ 0x007b5654, "Graphics Options" @ 0x007b56a8, "Sound Options" @ 0x007b5720
+    /// - "Display Options" @ 0x007ca3dc, "PlayOptions" @ 0x007bdaf8
+    /// - "OPTIONS" @ 0x007c698c, "OPTIONS:" @ 0x007ced44, "OPTIONS:OPT" @ 0x007ced38
+    /// - "BTN_OPTIONS" @ 0x007cbfac, "LB_OPTIONS" @ 0x007cf2f8
+    /// - "optionsmain_p" @ 0x007d21ac, "optionsingame_p" @ 0x007d0dcc (options panels)
+    /// - Original implementation: KOTOR pauses game time, displays pause menu with Resume/Options/Exit
+    /// - Autopause: Game can auto-pause on certain events (combat, dialogue, etc.)
+    /// - Pause time: Game time tracking pauses when game is paused
+    /// </remarks>
     public class PauseMenu
     {
         private SpriteBatch _spriteBatch;
