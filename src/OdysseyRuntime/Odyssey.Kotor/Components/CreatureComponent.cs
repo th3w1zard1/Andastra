@@ -11,8 +11,20 @@ namespace Odyssey.Kotor.Components
     /// - Based on swkotor2.exe creature system
     /// - Located via string references: "Creature" @ 0x007bc544, "Creature List" @ 0x007bd01c
     /// - "CreatureSize" @ 0x007bf680, "CreatureSpeed" @ 0x007c4b8c
-    /// - Error: "Creature template '%s' doesn't exist." @ 0x007bf78c
-    /// - "Cannot set creature %s to faction %d because faction does not exist!" @ 0x007bf2a8
+    /// - "CreatureList" @ 0x007c0c80, "RecCreatures" @ 0x007c0cb4, "MaxCreatures" @ 0x007c0cc4 (encounter creature lists)
+    /// - "GetCreatureRadius" @ 0x007bb128 (creature collision radius calculation)
+    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec
+    /// - "EVENT_SUMMON_CREATURE" @ 0x007bcc08 (creature summoning event)
+    /// - Error messages:
+    ///   - "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+    ///   - "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8
+    ///   - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc
+    ///   - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
+    ///   - "Tried to reduce XP of creature '%s' to '%d'. Cannot reduce XP." @ 0x007c3fa8
+    /// - Pathfinding errors:
+    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    ///   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
+    ///   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
     /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature instances from GIT)
     /// - FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
