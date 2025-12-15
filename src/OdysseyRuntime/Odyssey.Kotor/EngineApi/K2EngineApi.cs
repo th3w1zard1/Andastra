@@ -224,32 +224,25 @@ namespace Odyssey.Kotor.EngineApi
                 target = ctx.Caller;
             }
 
-            if (target == null || ctx.ResourceProvider == null)
-            {
-                return Variable.Void();
-            }
-
-            // Load script bytes
-            byte[] scriptBytes = ctx.ResourceProvider.LoadScript(scriptName);
-            if (scriptBytes == null || scriptBytes.Length == 0)
+            if (target == null || ctx.World == null)
             {
                 return Variable.Void();
             }
 
             // Execute script on target entity
-            if (ctx is VM.ExecutionContext execCtx)
+            try
             {
-                var scriptCtx = new VM.ExecutionContext(
-                    target,
-                    ctx.World,
-                    execCtx.EngineApi,
-                    ctx.Globals
-                );
-                scriptCtx.SetTriggerer(ctx.Triggerer);
-                scriptCtx.ResourceProvider = ctx.ResourceProvider;
-                scriptCtx.AdditionalContext = execCtx.AdditionalContext;
-
-                execCtx.Vm.Execute(scriptBytes, scriptCtx);
+                // Use VM to execute script with new context
+                if (ctx.ResourceProvider != null)
+                {
+                    IExecutionContext scriptCtx = ctx.WithCaller(target);
+                    int result = _vm.ExecuteScript(scriptName, scriptCtx);
+                    return Variable.FromInt(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[K2EngineApi] ExecuteScript error: " + ex.Message);
             }
 
             return Variable.Void();
@@ -667,10 +660,24 @@ namespace Odyssey.Kotor.EngineApi
         #region TSL-Specific Functions
 
         // Influence system (TSL only, IDs 800-810)
+        /// <summary>
+        /// GetInfluence(int nNPC) - Returns influence value for NPC (0-100)
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Influence system (TSL only)
+        /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+        /// "BaseInfluence" @ 0x007bf6fc, "Influence" @ 0x007c4f78
+        /// GUI: "LBL_INFLUENCE_RECV" @ 0x007c8b38, "LBL_INFLUENCE_LOST" @ 0x007c8b0c
+        /// Original implementation: Influence values stored in PARTYTABLE.res GFF (PT_INFLUENCE list)
+        /// Each NPC has influence value 0-100 stored in PT_NPC_INFLUENCE field
+        /// Influence affects dialogue options, companion reactions, and story outcomes
+        /// </remarks>
         private Variable Func_GetInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // GetInfluence(int nNPC)
-            // Returns influence value for NPC (0-100)
+            // GetInfluence(int nNPC) - returns influence value for NPC (0-100)
+            // Based on swkotor2.exe: Influence system (TSL only)
+            // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+            // Original implementation: Reads influence from PARTYTABLE.res GFF structure
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Get NPC entity from PartyManager
@@ -692,9 +699,21 @@ namespace Odyssey.Kotor.EngineApi
             return Variable.FromInt(50); // Default neutral influence
         }
 
+        /// <summary>
+        /// SetInfluence(int nNPC, int nInfluence) - Sets influence value for NPC (0-100)
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Influence system (TSL only)
+        /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+        /// Original implementation: Writes influence to PARTYTABLE.res GFF structure (PT_NPC_INFLUENCE field)
+        /// Influence value clamped to 0-100 range
+        /// </remarks>
         private Variable Func_SetInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // SetInfluence(int nNPC, int nInfluence)
+            // SetInfluence(int nNPC, int nInfluence) - sets influence value for NPC (0-100)
+            // Based on swkotor2.exe: Influence system (TSL only)
+            // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+            // Original implementation: Writes influence to PARTYTABLE.res GFF structure
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int influence = args.Count > 1 ? args[1].AsInt() : 50;
             
@@ -714,9 +733,21 @@ namespace Odyssey.Kotor.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// ModifyInfluence(int nNPC, int nModifier) - Modifies influence value for NPC by modifier amount
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Influence system (TSL only)
+        /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+        /// Original implementation: Reads current influence, adds modifier, writes back to PARTYTABLE.res GFF
+        /// Influence value clamped to 0-100 range after modification
+        /// </remarks>
         private Variable Func_ModifyInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // ModifyInfluence(int nNPC, int nModifier)
+            // ModifyInfluence(int nNPC, int nModifier) - modifies influence value for NPC by modifier amount
+            // Based on swkotor2.exe: Influence system (TSL only)
+            // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+            // Original implementation: Reads current influence, adds modifier, writes back to GFF
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int modifier = args.Count > 1 ? args[1].AsInt() : 0;
             
@@ -885,8 +916,24 @@ namespace Odyssey.Kotor.EngineApi
         }
 
         // Remote/stealth functions (TSL only)
+        /// <summary>
+        /// IsStealthed(object oTarget) - Returns TRUE if target is stealthed (has invisibility effect)
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Stealth system (TSL only)
+        /// Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
+        /// "StealthXPCurrent" @ 0x007bd1d8, "StealthXPMax" @ 0x007bd1ec, "StealthXPLoss" @ 0x007bd1c8
+        /// "STEALTHXP" @ 0x007bdf08, "setstealth" @ 0x007c79fc
+        /// GUI: "LBL_STEALTH" @ 0x007c8c0c, "LBL_STEALTHXP" @ 0x007ccd7c, "TB_STEALTH" @ 0x007cd1dc
+        /// Original implementation: Checks if entity has Invisibility effect active
+        /// Stealth system: Entities with stealth can avoid detection, gain stealth XP, lose stealth on damage
+        /// </remarks>
         private Variable Func_IsStealthed(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // IsStealthed(object oTarget) - returns TRUE if target is stealthed (has invisibility effect)
+            // Based on swkotor2.exe: Stealth system (TSL only)
+            // Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
+            // Original implementation: Checks if entity has Invisibility effect active
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
             
