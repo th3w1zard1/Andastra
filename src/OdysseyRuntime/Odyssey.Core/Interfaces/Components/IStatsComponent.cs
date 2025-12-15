@@ -8,7 +8,12 @@ namespace Odyssey.Core.Interfaces.Components
     /// <remarks>
     /// Stats Component Interface:
     /// - Based on swkotor2.exe stats system
-    /// - Located via string references: "CurrentHP" @ 0x007c0960, "Max_HPs" @ 0x007c2e98, "ArmorClassColumn" @ 0x007c1230, "ArmorClass" @ 0x007c0b10
+    /// - Located via string references: "CurrentHP" @ 0x007c1b40, "Max_HPs" @ 0x007cb714, "ArmorClassColumn" @ 0x007c1230, "ArmorClass" @ 0x007c0b10
+    /// - HP fields: "CurrentHP" @ 0x007c1b40 (current HP field), "Max_HPs" @ 0x007cb714 (max HP field)
+    /// - "InCombatHPBase" @ 0x007bf224 (in-combat HP base), "OutOfCombatHPBase" @ 0x007bf210 (out-of-combat HP base)
+    /// - "TimePerHP" @ 0x007bf234 (time per HP regeneration), "Min1HP" @ 0x007c1b28 (minimum 1 HP flag)
+    /// - "DAM_HP" @ 0x007bf130 (HP damage constant), "POISONTRACE: Applying HP damage: %d\n" @ 0x007bf088 (HP damage trace)
+    /// - Debug: "    HP: " @ 0x007caf24, "    MaxHP: " @ 0x007cb15c, "CurrentHP: " @ 0x007cb168
     /// - HP: Current and maximum hit points (D20 system)
     /// - FP: Current and maximum Force points (KOTOR/TSL system)
     /// - Abilities: STR, DEX, CON, INT, WIS, CHA (D20 standard abilities, modifiers = (score - 10) / 2)
@@ -18,6 +23,8 @@ namespace Odyssey.Core.Interfaces.Components
     /// - WalkSpeed/RunSpeed: Movement speeds in meters per second
     /// - Skills: GetSkillRank returns skill rank (0 = untrained, positive = trained rank)
     /// - IsDead: True when CurrentHP <= 0
+    /// - HP regeneration: InCombatHPBase and OutOfCombatHPBase control HP regen rates (TimePerHP for regen timing)
+    /// - Min1HP: Prevents HP from going below 1 (creatures cannot die from ability damage, only HP damage)
     /// - Based on swkotor2.exe stats calculation from classes.2da and appearance.2da tables
     /// </remarks>
     public interface IStatsComponent : IComponent
