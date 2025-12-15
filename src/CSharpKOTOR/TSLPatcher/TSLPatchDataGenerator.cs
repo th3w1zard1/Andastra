@@ -1,6 +1,7 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:68-129
 // Original: class TSLPatchDataGenerator: ...
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
+using CSharpKOTOR.Memory;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Formats.TLK;
@@ -345,13 +347,31 @@ namespace CSharpKOTOR.TSLPatcher
                 if (replaceFile)
                 {
                     // Apply modifications to generate the replacement file
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:131-231
+                    // Original: for modifier in mod_ssf.modifiers: modifier.apply(ssf, memory)
+                    // Note: During generation, we create an empty PatcherMemory since tokens may not be resolved yet.
+                    // The actual token resolution happens during patch application, not during generation.
+                    PatcherMemory memory = new PatcherMemory();
                     foreach (var modifier in modSsf.Modifiers)
                     {
                         if (modifier is CSharpKOTOR.Mods.SSF.ModifySSF modifySsf)
                         {
-                            // TODO: Resolve StrRef token value
-                            // For now, skip applying modifications
-                            // ssf.SetSound(modifySsf.Sound, modifySsf.StringRefValue);
+                            try
+                            {
+                                // Resolve StrRef token value using the same pattern as ModifySSF.Apply
+                                string strRefValue = modifySsf.Stringref.Value(memory);
+                                int strRefInt = int.Parse(strRefValue);
+                                ssf.SetData(modifySsf.Sound, strRefInt);
+                            }
+                            catch (KeyNotFoundException ex)
+                            {
+                                // Token not yet resolved - this is expected during generation
+                                Console.WriteLine($"[DEBUG] StrRef token not resolved during generation: {ex.Message}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[DEBUG] Failed to apply SSF modification: {ex.GetType().Name}: {ex.Message}");
+                            }
                         }
                     }
                 }
