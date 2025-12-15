@@ -5140,8 +5140,22 @@ namespace Odyssey.Kotor.EngineApi
         /// <summary>
         /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Faction relationship system
+        /// Located via string reference: "neutral" @ 0x007c28a0
+        /// Original implementation: FUN_005acc10 @ 0x005acc10 sets faction reputation values including "neutral" (50)
+        /// Neutral determination: Reputation value between HostileThreshold (10) and FriendlyThreshold (90)
+        /// Faction system: Uses repute.2da table for base faction relationships, personal reputation overrides
+        /// Neutral means: Not hostile (reputation > 10) and not friendly (reputation < 90)
+        /// Default neutral: If no faction relationship defined, defaults to 50 (neutral)
+        /// </remarks>
         private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if target is neutral to source
+            // Based on swkotor2.exe: Faction relationship system
+            // Located via string reference: "neutral" @ 0x007c28a0
+            // Original implementation: Checks faction reputation, returns TRUE if reputation is between 11-89 (neutral range)
+            // Neutral range: HostileThreshold (10) < reputation < FriendlyThreshold (90)
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             
@@ -5155,6 +5169,8 @@ namespace Odyssey.Kotor.EngineApi
                 {
                     if (services.FactionManager is FactionManager factionManager)
                     {
+                        // Neutral = not hostile AND not friendly
+                        // Original engine: Neutral if reputation > 10 AND reputation < 90
                         bool isNeutral = !factionManager.IsHostile(source, target) && !factionManager.IsFriendly(source, target);
                         return Variable.FromInt(isNeutral ? 1 : 0);
                     }
