@@ -9,6 +9,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to pick up an item from the world.
     /// </summary>
+    /// <remarks>
+    /// Pick Up Item Action:
+    /// - Based on swkotor2.exe ActionPickUpItem NWScript function
+    /// - Original implementation: Moves entity to item location, then picks up item into inventory
+    /// - Pickup range: ~1.5 units (PickupRange)
+    /// - Item removed from world after being picked up
+    /// - Action fails if inventory is full
+    /// </remarks>
     public class ActionPickUpItem : ActionBase
     {
         private readonly uint _itemObjectId;
@@ -61,7 +69,8 @@ namespace Odyssey.Core.Actions
                 }
 
                 actorTransform.Position += direction * moveDistance;
-                actorTransform.Facing = (float)Math.Atan2(direction.X, direction.Z);
+                // Y-up system: Atan2(Y, X) for 2D plane facing
+                actorTransform.Facing = (float)Math.Atan2(direction.Y, direction.X);
 
                 return ActionStatus.InProgress;
             }

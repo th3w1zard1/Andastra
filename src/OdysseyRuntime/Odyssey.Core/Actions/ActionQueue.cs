@@ -11,10 +11,14 @@ namespace Odyssey.Core.Actions
     /// Action Queue System:
     /// - Based on swkotor2.exe action system
     /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
+    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF)
+    /// - Action structure: ActionId (uint32), GroupActionId (int16), NumParams (int16), Paramaters array
+    /// - Parameter types: 1=int, 2=float, 3=object/uint32, 4=string, 5=location/vector
     /// - Original implementation: Entities maintain action queue with current action and pending actions
     /// - Actions processed sequentially: Current action executes until complete, then next action dequeued
     /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc.
-    /// - Action parameters stored in ActionParam1-5, ActionParamStrA/B fields
+    /// - Action parameters stored in ActionParam1-5, ActionParamStrA/B fields (stored as Type/Value pairs)
     /// </remarks>
     public class ActionQueue : IActionQueue
     {

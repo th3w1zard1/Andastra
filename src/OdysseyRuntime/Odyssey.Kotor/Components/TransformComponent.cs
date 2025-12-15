@@ -11,15 +11,20 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Transform Component:
     /// - Based on swkotor2.exe entity transform system
-    /// - Located via string references: "XPosition" @ 0x007bf744, "YPosition" @ 0x007bf738, "ZPosition" @ 0x007bf730
-    /// - "XOrientation" @ 0x007bf6f8, "YOrientation" @ 0x007bf6ec, "ZOrientation" @ 0x007bf6e0
-    /// - Original implementation: Stores entity position (Vector3) and facing (float) in world space
+    /// - Located via string references: "XPosition" @ 0x007bd000, "YPosition" @ 0x007bcff4, "ZPosition" @ 0x007bcfe8
+    /// - "XOrientation" @ 0x007bcfb8, "YOrientation" @ 0x007bcfc8, "ZOrientation" @ 0x007bcfd8
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save), FUN_004e08e0 @ 0x004e08e0 (load placeable/door)
+    /// - Position stored at offsets 0x94 (X), 0x98 (Y), 0x9c (Z) in creature objects
+    /// - Orientation stored at offsets 0xa0 (X), 0xa4 (Y), 0xa8 (Z) as normalized direction vector
+    /// - FUN_00506550 @ 0x00506550 sets orientation from vector, FUN_004d8390 @ 0x004d8390 normalizes orientation vector
     /// - KOTOR coordinate system:
     ///   - Y-up coordinate system (same as most game engines)
     ///   - Positions in meters
-    ///   - Facing angle in radians (0 = +X axis, counter-clockwise)
+    ///   - Facing angle in radians (0 = +X axis, counter-clockwise) for 2D gameplay
+    ///   - Orientation vector (XOrientation, YOrientation, ZOrientation) used for 3D model rendering
     ///   - Scale typically (1,1,1) but can be modified for effects
     /// - Transform stored in GFF structures as XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation
+    /// - Forward/Right vectors calculated from facing angle for 2D movement (cos/sin pattern matches engine)
     /// </remarks>
     public class TransformComponent : ITransformComponent
     {

@@ -90,7 +90,7 @@ namespace Odyssey.Kotor.Input
                 return;
             }
 
-            var transform = _player.GetComponent<ITransformComponent>();
+            ITransformComponent transform = _player.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return;
@@ -99,7 +99,7 @@ namespace Odyssey.Kotor.Input
             Vector3 start = transform.Position;
 
             // Find path
-            var path = _navMesh.FindPath(start, worldPosition);
+            IList<Vector3> path = _navMesh.FindPath(start, worldPosition);
             if (path == null || path.Count == 0)
             {
                 Console.WriteLine("[PlayerController] No path found to destination");
@@ -149,7 +149,7 @@ namespace Odyssey.Kotor.Input
                 return;
             }
 
-            var transform = _player.GetComponent<ITransformComponent>();
+            ITransformComponent transform = _player.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return;
@@ -207,8 +207,8 @@ namespace Odyssey.Kotor.Input
 
                 transform.Position = newPos;
 
-                // Update facing direction
-                transform.Facing = (float)Math.Atan2(direction.X, direction.Z);
+                // Update facing direction (Y-up system: Atan2(Y, X) for 2D plane facing)
+                transform.Facing = (float)Math.Atan2(direction.Y, direction.X);
             }
         }
 
@@ -223,7 +223,7 @@ namespace Odyssey.Kotor.Input
                 return;
             }
 
-            var targetTransform = target.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             if (targetTransform == null)
             {
                 return;
@@ -233,7 +233,7 @@ namespace Odyssey.Kotor.Input
             Vector3 targetPos = targetTransform.Position;
             Vector3 playerPos = Vector3.Zero;
 
-            var playerTransform = _player.GetComponent<ITransformComponent>();
+            ITransformComponent playerTransform = _player.GetComponent<ITransformComponent>();
             if (playerTransform != null)
             {
                 playerPos = playerTransform.Position;

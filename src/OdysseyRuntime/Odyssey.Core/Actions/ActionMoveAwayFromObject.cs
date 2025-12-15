@@ -78,7 +78,8 @@ namespace Odyssey.Core.Actions
 
             float moveDistance = speed * deltaTime;
             transform.Position += direction * moveDistance;
-            transform.Facing = (float)Math.Atan2(direction.X, direction.Z);
+            // Y-up system: Atan2(Y, X) for 2D plane facing
+            transform.Facing = (float)Math.Atan2(direction.Y, direction.X);
 
             return ActionStatus.InProgress;
         }

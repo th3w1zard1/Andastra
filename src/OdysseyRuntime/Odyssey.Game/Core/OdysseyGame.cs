@@ -43,7 +43,7 @@ namespace Odyssey.Game.Core
         // Menu - Professional MonoGame menu implementation
         private GameState _currentState = GameState.MainMenu;
         private int _selectedMenuIndex = 0;
-        private string[] _menuItems = { "Start Game", "Options", "Exit" };
+        private readonly string[] _menuItems = { "Start Game", "Options", "Exit" };
         private Texture2D _menuTexture; // 1x1 white texture for drawing rectangles
         private KeyboardState _previousMenuKeyboardState;
         private MouseState _previousMenuMouseState;
@@ -807,7 +807,10 @@ namespace Odyssey.Game.Core
             float dx = x2 - x1;
             float dy = y2 - y1;
             float length = (float)Math.Sqrt(dx * dx + dy * dy);
-            if (length < 0.1f) return;
+            if (length < 0.1f)
+            {
+                return;
+            }
 
             float angle = (float)Math.Atan2(dy, dx);
             float halfThickness = thickness / 2.0f;
@@ -1641,7 +1644,8 @@ namespace Odyssey.Game.Core
                             System.Numerics.Vector3 dir = targetPos - new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
                             if (dir.LengthSquared() > 0.01f)
                             {
-                                transform.Facing = (float)Math.Atan2(dir.X, dir.Z);
+                                // Y-up system: Atan2(Y, X) for 2D plane facing
+                                transform.Facing = (float)Math.Atan2(dir.Y, dir.X);
                             }
                             moved = true;
                         }

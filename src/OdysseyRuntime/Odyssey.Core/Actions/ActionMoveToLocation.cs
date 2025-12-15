@@ -13,10 +13,14 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Move To Location Action:
     /// - Based on swkotor2.exe movement action system
+    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - Located via string reference: "ActionList" @ 0x007bebdc, "MOVETO" @ 0x007b6b24
     /// - Original implementation: Uses walkmesh pathfinding to find path to destination
-    /// - Follows path waypoints, facing movement direction
+    /// - Follows path waypoints, facing movement direction (Y-up: Atan2(Y, X))
     /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
     /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
+    /// - Action parameters stored as ActionId, GroupActionId, NumParams, Paramaters (Type/Value pairs)
+    /// - FUN_00505bc0 @ 0x00505bc0 saves ActionList to GFF structure
     /// </remarks>
     public class ActionMoveToLocation : ActionBase
     {
@@ -94,7 +98,8 @@ namespace Odyssey.Core.Actions
             }
 
             transform.Position += direction * moveDistance;
-            transform.Facing = (float)Math.Atan2(direction.X, direction.Z);
+            // Set facing to match movement direction (Y-up system: Atan2(Y, X) for 2D plane)
+            transform.Facing = (float)Math.Atan2(direction.Y, direction.X);
 
             return ActionStatus.InProgress;
         }

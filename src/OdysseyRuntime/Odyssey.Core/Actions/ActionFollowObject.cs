@@ -65,7 +65,8 @@ namespace Odyssey.Core.Actions
                 if (distance > 0.1f)
                 {
                     Vector3 direction = Vector3.Normalize(toTarget);
-                    transform.Facing = (float)Math.Atan2(direction.X, direction.Z);
+                    // Y-up system: Atan2(Y, X) for 2D plane facing
+                    transform.Facing = (float)Math.Atan2(direction.Y, direction.X);
                 }
                 return ActionStatus.InProgress;
             }
@@ -87,7 +88,8 @@ namespace Odyssey.Core.Actions
             }
 
             transform.Position += direction2 * moveDistance;
-            transform.Facing = (float)Math.Atan2(direction2.X, direction2.Z);
+            // Y-up system: Atan2(Y, X) for 2D plane facing
+            transform.Facing = (float)Math.Atan2(direction2.Y, direction2.X);
 
             return ActionStatus.InProgress;
         }
