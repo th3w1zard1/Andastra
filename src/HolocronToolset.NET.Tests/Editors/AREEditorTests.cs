@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
@@ -89,19 +90,93 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1210-1242
+        // Original: def test_are_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
         public void TestAreEditorSaveLoadRoundtrip()
         {
-            var editor = new AREEditor(null, null);
-            editor.New();
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
 
-            // Test save/load roundtrip (will be implemented when ARE format is fully supported)
-            var (data, _) = editor.Build();
-            data.Should().NotBeNull();
+            // Try to find tat001.are
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                // Skip if no installation available (needed for LocalizedString operations)
+                return;
+            }
+
+            var editor = new AREEditor(null, installation);
+            var logMessages = new List<string> { Environment.NewLine };
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1220
+            // Original: original_data = are_file.read_bytes()
+            byte[] data = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1221
+            // Original: original_are = read_are(original_data)
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1222
+            // Original: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            // We'll compare GFF directly instead of ARE object for more comprehensive comparison
+            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1222
+            // Original: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1225
+            // Original: data, _ = editor.build()
+            var (newData, _) = editor.Build();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1226
+            // Original: saved_are = read_are(data)
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1228-1234
+            // Original: assert saved_are.tag == original_are.tag ...
+            // Instead of comparing ARE objects directly, we'll do GFF comparison like UTIEditor test
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:91
+            // Original: diff = old.compare(new, self.log_func, ignore_default_changes=True)
+            Action<string> logFunc = msg => logMessages.Add(msg);
+            bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:92
+            // Original: assert diff, os.linesep.join(self.log_messages)
+            diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
         }
     }
 }
