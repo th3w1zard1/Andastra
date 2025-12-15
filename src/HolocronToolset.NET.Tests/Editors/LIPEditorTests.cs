@@ -268,6 +268,57 @@ namespace HolocronToolset.NET.Tests.Editors
             Math.Abs(editor.Duration - 10.0f).Should().BeLessThan(0.001f);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:519-536
+        // Original: def test_lip_editor_empty_lip_file(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorEmptyLipFile()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+
+            // Build empty file
+            var (data, _) = editor.Build();
+
+            // Empty LIPs may produce header data (16 bytes: "LIP " + "V1.0" + length + count)
+            // The exact behavior depends on implementation
+            // Verify that we can build an empty LIP
+            data.Should().NotBeNull();
+
+            // Verify that empty LIP has no frames
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(0);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:538-574
+        // Original: def test_lip_editor_keyframes_sorted_by_time(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorKeyframesSortedByTime()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 10.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add keyframes out of order
+            editor.AddKeyframe(3.0f, LIPShape.AH);
+            editor.AddKeyframe(1.0f, LIPShape.EE);
+            editor.AddKeyframe(2.0f, LIPShape.OH);
+
+            // Verify keyframes are sorted by time
+            editor.Lip.Frames.Count.Should().Be(3);
+            // LIP.Add automatically sorts frames, so verify they are in order
+            Math.Abs(editor.Lip.Frames[0].Time - 1.0f).Should().BeLessThan(0.001f);
+            Math.Abs(editor.Lip.Frames[1].Time - 2.0f).Should().BeLessThan(0.001f);
+            Math.Abs(editor.Lip.Frames[2].Time - 3.0f).Should().BeLessThan(0.001f);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:669-705
         // Original: def test_lip_editor_headless_ui_load_build(qtbot: QtBot, installation: HTInstallation, test_files_dir: pathlib.Path):
         [Fact]
