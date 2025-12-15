@@ -151,8 +151,7 @@ namespace Odyssey.Scripting.EngineApi
 
         protected override void RegisterFunctions()
         {
-            // Register function names from ScriptDefs.KOTOR_FUNCTIONS
-            // KOTOR_FUNCTIONS contains ~850 K1 engine functions (functions 0-849)
+            // Register function names from ScriptDefs
             int idx = 0;
             foreach (ScriptFunction func in ScriptDefs.KOTOR_FUNCTIONS)
             {
@@ -897,21 +896,72 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetEnteringObject() - Get the object that last entered/triggered the caller
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetEnteringObject implementation (routine ID 25)
+        /// Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (case 2 in FUN_004dcfb0), "OnEnter" @ 0x007bd708
+        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2)
+        /// Original implementation: Returns last entity that entered trigger/door/placeable
+        /// For doors/placeables: Returns object that last triggered it
+        /// For triggers/areas/modules/encounters: Returns object that last entered it
+        /// </remarks>
         private Variable Func_GetEnteringObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx.Triggerer != null)
+            if (ctx.Caller == null)
             {
-                return Variable.FromObject(ctx.Triggerer.ObjectId);
+                return Variable.FromObject(ObjectInvalid);
             }
+
+            // Get from entity's custom data (stored by TriggerSystem)
+            if (ctx.Caller is Entities.Entity callerEntity)
+            {
+                uint enteringId = callerEntity.GetData<uint>("LastEnteringObjectId", 0);
+                if (enteringId != 0)
+                {
+                    IEntity entering = ResolveObject(enteringId, ctx);
+                    if (entering != null && entering.IsValid)
+                    {
+                        return Variable.FromObject(enteringId);
+                    }
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetExitingObject() - Get the object that last exited the caller
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetExitingObject implementation (routine ID 26)
+        /// Located via string references: "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (case 3 in FUN_004dcfb0), "OnExit" @ 0x007bd700
+        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_LEFT_TRIGGER (case 3)
+        /// Original implementation: Returns last entity that exited trigger/door/placeable
+        /// Works on triggers, areas of effect, modules, areas, and encounters
+        /// </remarks>
         private Variable Func_GetExitingObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx.Triggerer != null)
+            if (ctx.Caller == null)
             {
-                return Variable.FromObject(ctx.Triggerer.ObjectId);
+                return Variable.FromObject(ObjectInvalid);
             }
+
+            // Get from entity's custom data (stored by TriggerSystem)
+            if (ctx.Caller is Entities.Entity callerEntity)
+            {
+                uint exitingId = callerEntity.GetData<uint>("LastExitingObjectId", 0);
+                if (exitingId != 0)
+                {
+                    IEntity exiting = ResolveObject(exitingId, ctx);
+                    if (exiting != null && exiting.IsValid)
+                    {
+                        return Variable.FromObject(exitingId);
+                    }
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -6125,6 +6175,128 @@ namespace Odyssey.Scripting.EngineApi
             // No more items - clear iteration state
             _inventoryItemIterations.Remove(callerId);
             return Variable.FromObject(ObjectInvalid);
+        }
+
+        #endregion
+
+        #region Trigger/Object Query Functions
+
+        /// <summary>
+        /// GetClickingObject() - Get the object that last clicked on the caller
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetClickingObject implementation (routine ID 326)
+        /// Located via string references: "OnClick" @ 0x007c1a20, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (case 0x1e in FUN_004dcfb0)
+        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (case 0x1e)
+        /// Original implementation: Returns last entity that clicked trigger/door/placeable
+        /// Note: This is identical to GetEnteringObject for triggers (both return the clicking entity)
+        /// </remarks>
+        private Variable Func_GetClickingObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get from entity's custom data (stored when OnClick fires)
+            if (ctx.Caller is Entities.Entity callerEntity)
+            {
+                uint clickingId = callerEntity.GetData<uint>("LastClickingObjectId", 0);
+                if (clickingId != 0)
+                {
+                    IEntity clicking = ResolveObject(clickingId, ctx);
+                    if (clicking != null && clicking.IsValid)
+                    {
+                        return Variable.FromObject(clickingId);
+                    }
+                }
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        #endregion
+
+        #region Item Functions
+
+        /// <summary>
+        /// SetItemStackSize(object oItem, int nStackSize) - Set the stack size of an item
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: SetItemStackSize implementation (routine ID 150)
+        /// Located via string references: "StackSize" @ 0x007c0a34 (item stack size GFF field)
+        /// Item loading: FUN_0056a820 @ 0x0056a820 loads StackSize from GFF (reads uint16 from "StackSize" field)
+        /// Item saving: FUN_006203c0 @ 0x006203c0 saves StackSize to GFF (writes uint16 to "StackSize" field)
+        /// Original implementation: Clamps stack size between 1 and max stack size from baseitems.2da "stacking" column
+        /// Stack size stored as uint16 in item GFF structure
+        /// </remarks>
+        private Variable Func_SetItemStackSize(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.Void();
+            }
+
+            uint itemId = args[0].AsObjectId();
+            int stackSize = args[1].AsInt();
+            IEntity item = ResolveObject(itemId, ctx);
+
+            if (item == null || item.ObjectType != ObjectType.Item)
+            {
+                return Variable.Void();
+            }
+
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent != null)
+            {
+                // Clamp stack size between 1 and max (from baseitems.2da)
+                // For now, use a reasonable max (100) until we have proper 2DA table access
+                // TODO: Lookup max stack size from baseitems.2da using BaseItem ID
+                int maxStackSize = 100; // Default max, should come from baseitems.2da "stacking" column
+                int clampedSize = Math.Max(1, Math.Min(maxStackSize, stackSize));
+                itemComponent.StackSize = clampedSize;
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// GetDistanceBetween(object oObjectA, object oObjectB) - Get the distance in metres between two objects
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetDistanceBetween implementation (routine ID 151)
+        /// Located via string references: Distance calculation uses object positions from transform components
+        /// Original implementation: Calculates 3D Euclidean distance between object positions (Vector3.Distance)
+        /// Returns 0.0f if either object is invalid or missing transform component
+        /// Distance calculated as sqrt((x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2)
+        /// </remarks>
+        private Variable Func_GetDistanceBetween(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            uint objectAId = args[0].AsObjectId();
+            uint objectBId = args[1].AsObjectId();
+            IEntity objectA = ResolveObject(objectAId, ctx);
+            IEntity objectB = ResolveObject(objectBId, ctx);
+
+            if (objectA == null || objectB == null)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            ITransformComponent transformA = objectA.GetComponent<ITransformComponent>();
+            ITransformComponent transformB = objectB.GetComponent<ITransformComponent>();
+
+            if (transformA != null && transformB != null)
+            {
+                float distance = Vector3.Distance(transformA.Position, transformB.Position);
+                return Variable.FromFloat(distance);
+            }
+
+            return Variable.FromFloat(0f);
         }
 
         #endregion
