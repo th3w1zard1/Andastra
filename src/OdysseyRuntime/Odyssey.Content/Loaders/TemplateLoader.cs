@@ -31,9 +31,31 @@ namespace Odyssey.Content.Loaders
     ///   - "Store template %s doesn't exist.\n" @ 0x007c1228
     ///   - "Item template %s doesn't exist.\n" @ 0x007c2028
     /// - Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates from UTC GFF files
-    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
-    /// - FUN_0050c510 @ 0x0050c510 loads creature data from UTC template including appearance, stats, scripts
+    ///   - Loads UTC GFF with "UTC " signature, falls back to "NW_BADGER" if template not found
+    ///   - Calls FUN_005fb0f0 to load creature data from template
+    ///   - Calls FUN_0050c510 to load creature scripts (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, etc.)
+    ///   - Loads position/orientation: XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation
+    ///   - Loads JoiningXP, PM_IsDisguised, PM_Appearance, StealthMode flags
+    ///   - Sets creature position and orientation, initializes creature state
+    /// - FUN_0050c510 @ 0x0050c510 loads creature script hooks from UTC template
+    ///   - Loads script ResRefs: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged,
+    ///     ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine,
+    ///     ScriptOnBlocked, ScriptEndDialogue
+    ///   - Stores scripts in creature object at specific offsets (0x270, 0x278, 0x280, etc.)
     /// - FUN_00580ed0 @ 0x00580ed0 loads door properties from UTD template
+    ///   - Loads door appearance, generic type, open state, bearing, faction, saves (Fort, Will, Ref), HP
+    ///   - Loads flags: Invulnerable, Plot, Static, NotBlastable, Min1HP, AutoRemoveKey
+    ///   - Loads lock properties: KeyName, KeyRequired, OpenLockDC, CloseLockDC, SecretDoorDC, OpenLockDiff, OpenLockDiffMod
+    ///   - Loads trap properties: TrapType, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, TrapFlag, TrapOneShot
+    ///   - Loads script hooks: OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnLock, OnMeleeAttacked, OnOpen,
+    ///     OnSpellCastAt, OnTrapTriggered, OnUnlock, OnUserDefined, OnClick, OnFailToOpen, OnDialog
+    ///   - Loads transition data: LinkedTo, LinkedToFlags, LinkedToModule, TransitionDestination, LoadScreenID
+    ///   - Loads model data: Appearance (for generic doors), ModelName/Model (for specific doors), VisibleModel
+    ///   - Loads portrait: PortraitId or Portrait string
+    ///   - Loads localization: LocName, Description
+    ///   - Loads conversation: Conversation ResRef
+    ///   - Creates door walkmesh instances for each walkmesh type
+    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
     /// - FUN_005838d0 @ 0x005838d0 loads door template and transition data
     /// - Loads GFF template files, parses entity data, creates template objects
     /// - Templates define base properties for entities (stats, appearance, scripts, etc.)
