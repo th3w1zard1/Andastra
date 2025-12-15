@@ -43,7 +43,24 @@ namespace Odyssey.Kotor.Combat
     /// - Based on swkotor2.exe: CSWSCombatRound class
     /// - Located via string reference: "CombatRoundData" @ 0x007bf6b4
     /// - Original implementation: FUN_00529470 @ 0x00529470 (save CombatRoundData to GFF)
-    /// - FUN_005226d0 @ 0x005226d0 (load CombatRoundData from creature save)
+    ///   - Saves all combat round state fields in specific order:
+    ///     - RoundStarted (byte), SpellCastRound (byte), DeflectArrow (byte), WeaponSucks (byte)
+    ///     - DodgeTarget (int32), NewAttackTarget (int32), Engaged (float), Master (float), MasterID (int32)
+    ///     - RoundPaused (byte), RoundPausedBy (int32), InfinitePause (byte), PauseTimer (float)
+    ///     - Timer (float), RoundLength (float), OverlapAmount (float), BleedTimer (float)
+    ///     - CurrentAttack (byte), AttackID (uint16), AttackGroup (byte), ParryIndex (float)
+    ///     - NumAOOs (float), NumCleaves (float), OnHandAttacks (float), OffHandAttacks (float)
+    ///     - AdditAttacks (float), EffectAttacks (float), ParryActions (byte), OffHandTaken (float), ExtraTaken (float)
+    ///   - AttackList: Saves 5 attack entries (FUN_00527530 saves each attack struct)
+    ///   - SpecAttackList: Saves special attack list (SpecialAttack uint16 per entry)
+    ///   - SpecAttackIdList: Saves special attack ID list (SpecialAttackId uint16 per entry)
+    ///   - SchedActionList: Saves scheduled action list (FUN_005270f0 saves each scheduled action)
+    /// - FUN_005226d0 @ 0x005226d0 (creature save function, saves CombatRoundData if round is active)
+    ///   - Original implementation: Checks if CombatRoundData is active (*(int *)(*(void **)((int)this + 0x10dc) + 0xa84) == 1)
+    ///   - If active, calls FUN_00529470 to save CombatRoundData to GFF structure
+    ///   - Saves creature state including: DetectMode, StealthMode, CreatureSize, IsDestroyable, IsRaiseable, DeadSelectable
+    ///   - Saves all script hooks: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
+    ///   - Saves Equip_ItemList (20 slots), ItemList (inventory items), PerceptionList, CombatRoundData, AreaId, AmbientAnimState, Animation, CreatnScrptFird, PM_IsDisguised, PM_Appearance, Listening, ForceAlwaysUpdate, Position/Orientation, JoiningXP, BonusForcePoints, AssignedPup, PlayerCreated, FollowInfo, ActionList
     /// - FUN_005fb0f0 @ 0x005fb0f0 (reference to CombatRoundData usage)
     /// - CombatRoundData GFF fields (from FUN_00529470):
     ///   - "RoundStarted" (byte): Whether round has started
