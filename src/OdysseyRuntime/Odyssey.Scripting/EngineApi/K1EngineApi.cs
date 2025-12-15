@@ -1397,6 +1397,17 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetLocalNumber(object oObject, int nIndex) - gets local number variable by index
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Local variable system (index-based, not name-based like NWN)
+        /// Original implementation: KOTOR uses index-based local variables, number type limited to index 0
+        /// Index range: 0 only (single number slot per entity)
+        /// Value range: -128 to +127 (signed byte)
+        /// Storage: Stored in entity's local variable component, persisted per-entity
+        /// Returns: Local number value or 0 if variable is unset or index invalid
+        /// </remarks>
         private Variable Func_GetLocalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetLocalNumber(object oObject, int nIndex)
@@ -4012,12 +4023,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Set subtype to EXTRAORDINARY (32)
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
-                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
@@ -4522,6 +4533,47 @@ namespace Odyssey.Scripting.EngineApi
                     if (sourceFaction.FactionId == targetFaction.FactionId)
                     {
                         // Same faction are friends by default
+                        return Variable.FromInt(1);
+                    }
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
+        /// Based on swkotor2.exe: Faction relationship check for neutral status
+        /// </summary>
+        private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            
+            IEntity source = ResolveObject(sourceId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
+            
+            if (source != null && target != null)
+            {
+                // Get FactionManager from GameServicesContext
+                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                {
+                    if (services.FactionManager != null)
+                    {
+                        bool isNeutral = services.FactionManager.IsNeutral(source, target);
+                        return Variable.FromInt(isNeutral ? 1 : 0);
+                    }
+                }
+                
+                // Fallback: Simple faction check if FactionManager not available
+                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                
+                if (sourceFaction != null && targetFaction != null)
+                {
+                    // If different factions and not explicitly friendly/hostile, consider neutral
+                    if (sourceFaction.FactionId != targetFaction.FactionId)
+                    {
+                        // This is a simplified check - full implementation would use FactionManager
                         return Variable.FromInt(1);
                     }
                 }
@@ -5277,3 +5329,5 @@ namespace Odyssey.Scripting.EngineApi
         #endregion
     }
 }
+
+
