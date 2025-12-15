@@ -49,9 +49,13 @@ namespace Odyssey.Core.Actions
                 return ActionStatus.Failed;
             }
 
-            // Get spell data (would need GameDataManager access)
-            // For now, assume spell is valid if we have Force points
+            // Get spell data (would need GameDataManager/TwoDA access)
             // TODO: Check spell knowledge and get Force point cost from spells.2da
+            // This requires:
+            // 1. Access to spells.2da table to get spell data (ForceCost column)
+            // 2. Spell knowledge checking (IStatsComponent.HasSpell or similar method)
+            // 3. Verify caster has sufficient Force points (CurrentFP >= ForceCost)
+            // For now, assume spell is valid if we have Force points
 
             Vector3 toTarget = _targetLocation - transform.Position;
             toTarget.Y = 0;
@@ -90,9 +94,14 @@ namespace Odyssey.Core.Actions
                 transform.Facing = (float)System.Math.Atan2(direction2.Y, direction2.X);
 
                 // Apply spell effects at target location
-                // This would create projectiles, area effects, etc. based on spell type
-                // For now, just deduct Force points
                 // TODO: Implement full spell casting with projectiles and effects
+                // This requires:
+                // 1. Spell effect system (projectiles, area effects, instant effects)
+                // 2. Projectile creation and movement (for projectile spells)
+                // 3. Area effect zone creation (for area spells)
+                // 4. Effect application to entities in range
+                // 5. Force point deduction (CurrentFP -= ForceCost from spells.2da)
+                // For now, spell cast event is fired for other systems to handle
 
                 // Fire spell cast event
                 IEventBus eventBus = actor.World.EventBus;
