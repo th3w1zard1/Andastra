@@ -117,28 +117,34 @@ namespace Odyssey.MonoGame.Rendering
             RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0 
                 ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D 
                 : null;
-            _graphicsDevice.SetRenderTarget(_contactShadowTarget);
-            _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.White); // White = no shadow
 
-            // Render contact shadows using ray-marching in screen space
-            // Full implementation would:
-            // 1. Set shader parameters (depthBuffer, normalBuffer, shadowDistance, shadowThickness, sampleCount)
-            // 2. Render full-screen quad with contact shadow shader
-            // 3. The shader performs screen-space ray-marching to detect contact shadows
-            // For now, this provides the framework and resource management
-            
-            if (effect != null)
+            try
             {
-                // effect.Parameters["DepthTexture"].SetValue(depthBuffer);
-                // effect.Parameters["NormalTexture"].SetValue(normalBuffer);
-                // effect.Parameters["ShadowDistance"].SetValue(_shadowDistance);
-                // effect.Parameters["ShadowThickness"].SetValue(_shadowThickness);
-                // effect.Parameters["SampleCount"].SetValue(_sampleCount);
-                // Render full-screen quad here
-            }
+                _graphicsDevice.SetRenderTarget(_contactShadowTarget);
+                _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.White); // White = no shadow
 
-            // Restore previous render target
-            _graphicsDevice.SetRenderTarget(previousTarget);
+                // Render contact shadows using ray-marching in screen space
+                // Full implementation would:
+                // 1. Set shader parameters (depthBuffer, normalBuffer, shadowDistance, shadowThickness, sampleCount)
+                // 2. Render full-screen quad with contact shadow shader
+                // 3. The shader performs screen-space ray-marching to detect contact shadows
+                // For now, this provides the framework and resource management
+                
+                if (effect != null)
+                {
+                    // effect.Parameters["DepthTexture"].SetValue(depthBuffer);
+                    // effect.Parameters["NormalTexture"].SetValue(normalBuffer ?? Texture2D.BlackTexture);
+                    // effect.Parameters["ShadowDistance"].SetValue(_shadowDistance);
+                    // effect.Parameters["ShadowThickness"].SetValue(_shadowThickness);
+                    // effect.Parameters["SampleCount"].SetValue(_sampleCount);
+                    // Render full-screen quad here
+                }
+            }
+            finally
+            {
+                // Always restore previous render target
+                _graphicsDevice.SetRenderTarget(previousTarget);
+            }
 
             return _contactShadowTarget;
         }

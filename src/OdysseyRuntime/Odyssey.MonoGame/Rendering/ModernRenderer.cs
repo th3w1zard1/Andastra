@@ -387,19 +387,54 @@ namespace Odyssey.MonoGame.Rendering
     }
 
     /// <summary>
-    /// Render object representation.
+    /// Render object representation for rendering pipeline.
     /// </summary>
     public class RenderObject
     {
-        public uint ObjectId;
-        public string ObjectType;
-        public string MeshName;
-        public uint MaterialId;
-        public Matrix WorldMatrix;
-        public Vector3 BoundingCenter;
-        public float BoundingRadius;
-        public IntPtr MeshHandle;
-        public LODSystem.LODLevel LODLevel;
+        /// <summary>
+        /// Gets or sets the unique object identifier.
+        /// </summary>
+        public uint ObjectId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the object type identifier.
+        /// </summary>
+        public string ObjectType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the mesh resource name.
+        /// </summary>
+        public string MeshName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the material identifier.
+        /// </summary>
+        public uint MaterialId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the world transformation matrix.
+        /// </summary>
+        public Matrix WorldMatrix { get; set; }
+
+        /// <summary>
+        /// Gets or sets the bounding sphere center.
+        /// </summary>
+        public Vector3 BoundingCenter { get; set; }
+
+        /// <summary>
+        /// Gets or sets the bounding sphere radius.
+        /// </summary>
+        public float BoundingRadius { get; set; }
+
+        /// <summary>
+        /// Gets or sets the mesh handle pointer (for GPU resources).
+        /// </summary>
+        public IntPtr MeshHandle { get; set; }
+
+        /// <summary>
+        /// Gets or sets the current LOD level.
+        /// </summary>
+        public LODSystem.LODLevel LODLevel { get; set; }
     }
 
     /// <summary>
