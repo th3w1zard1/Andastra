@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
@@ -114,7 +115,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Verify we can read it back
-                var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
                 return;
             }
@@ -144,8 +145,61 @@ namespace HolocronToolset.NET.Tests.Editors
             data2.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff2 = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data2);
+            GFF gff2 = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data2);
             gff2.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_git_editor.py:90-101
+        // Original: def test_save_and_load(self):
+        [Fact]
+        public void TestGitEditorSaveLoadRoundtrip()
+        {
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string gitFile = System.IO.Path.Combine(testFilesDir, "zio001.git");
+            if (!System.IO.File.Exists(gitFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                gitFile = System.IO.Path.Combine(testFilesDir, "zio001.git");
+            }
+
+            if (!System.IO.File.Exists(gitFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available (K2 preferred for GIT files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            var editor = new GITEditor(null, installation);
+            var logMessages = new List<string> { Environment.NewLine };
+
+            byte[] data = System.IO.File.ReadAllBytes(gitFile);
+            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            editor.Load(gitFile, "zio001", ResourceType.GIT, data);
+            var (newData, _) = editor.Build();
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+
+            Action<string> logFunc = msg => logMessages.Add(msg);
+            bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: false);
+            diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
         }
     }
 }
