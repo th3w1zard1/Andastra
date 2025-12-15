@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
+using Vector3 = System.Numerics.Vector3;
 
 namespace CSharpKOTOR.Formats.BWM
 {

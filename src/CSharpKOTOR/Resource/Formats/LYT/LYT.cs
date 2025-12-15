@@ -5,6 +5,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
+using Vector3 = System.Numerics.Vector3;
 using Quaternion = CSharpKOTOR.Common.Quaternion;
 
 namespace CSharpKOTOR.Resource.Formats.LYT

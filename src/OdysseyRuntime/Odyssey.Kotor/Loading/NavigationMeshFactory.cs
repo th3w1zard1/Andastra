@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.BWM;
 using CSharpKOTOR.Installation;
@@ -8,6 +9,7 @@ using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
+using Vector3 = System.Numerics.Vector3;
 
 namespace Odyssey.Kotor.Loading
 {

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
 using Odyssey.Core.Party;
@@ -18,6 +19,7 @@ using Odyssey.Scripting.VM;
 using Odyssey.Scripting.Interfaces;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
+using CSharpKOTOR.Resources;
 using Odyssey.Core;
 
 namespace Odyssey.Kotor.Game
@@ -198,7 +200,7 @@ namespace Odyssey.Kotor.Game
                 _world,
                 _factionManager,
                 FireScriptEvent,
-                _moduleLoader,
+                null, // Loading.ModuleLoader not used - we use Game.ModuleLoader instead
                 (entity) => entity == _playerEntity || (entity != null && entity.GetData<bool>("IsPlayer")),
                 () => _currentModule != null ? new CSharpKOTOR.Common.Module(_currentModuleName, _installation) : null
             );
@@ -253,11 +255,7 @@ namespace Odyssey.Kotor.Game
                 _dialogueManager.Update(deltaTime);
             }
 
-            // Update party system
-            if (_partySystem != null)
-            {
-                _partySystem.Update(deltaTime);
-            }
+            // Party system updates are handled by individual systems
 
             // Update encounter system (spawns creatures when triggered)
             if (_encounterSystem != null)
@@ -289,8 +287,12 @@ namespace Odyssey.Kotor.Game
         {
             Console.WriteLine("[GameSession] Starting new game");
 
-            // Clear world
-            _world.Clear();
+            // Clear world - remove all entities
+            var entities = new System.Collections.Generic.List<IEntity>(_world.GetAllEntities());
+            foreach (IEntity entity in entities)
+            {
+                _world.DestroyEntity(entity.ObjectId);
+            }
 
             // Load starting module (from settings or default)
             string startingModule = _settings.StartModule;
@@ -328,8 +330,9 @@ namespace Odyssey.Kotor.Game
             {
                 Console.WriteLine("[GameSession] Loading module: " + moduleName);
 
-                // Load module
-                RuntimeModule module = _moduleLoader.LoadModule(moduleName);
+                // Load module (LoadModule sets _world.CurrentModule)
+                _moduleLoader.LoadModule(moduleName);
+                RuntimeModule module = _world.CurrentModule;
                 if (module == null)
                 {
                     Console.WriteLine("[GameSession] Module loader returned null for: " + moduleName);
@@ -354,7 +357,7 @@ namespace Odyssey.Kotor.Game
                         {
                             foreach (IEntity entity in entryArea.GetAllEntities())
                             {
-                                if (entity != null && entity.ObjectType == ObjectType.Encounter)
+                                if (entity != null && entity.ObjectType == Odyssey.Core.Enums.ObjectType.Encounter)
                                 {
                                     _encounterSystem.RegisterEncounter(entity);
                                 }
@@ -398,14 +401,14 @@ namespace Odyssey.Kotor.Game
             float entryFacing = (float)Math.Atan2(_currentModule.EntryDirectionY, _currentModule.EntryDirectionX);
 
             // Create player entity
-            _playerEntity = _world.CreateEntity(ObjectType.Creature, entryPos, entryFacing);
+            _playerEntity = _world.CreateEntity(Odyssey.Core.Enums.ObjectType.Creature, entryPos, entryFacing);
             if (_playerEntity != null)
             {
                 _playerEntity.Tag = "Player";
                 _playerEntity.SetData("IsPlayer", true);
 
                 // Add player to party as leader
-                _partySystem?.SetLeader(_playerEntity);
+                _partySystem?.SetPlayerCharacter(_playerEntity);
             }
         }
 
@@ -518,7 +521,7 @@ namespace Odyssey.Kotor.Game
                     return null;
                 }
 
-                return CSharpKOTOR.Resource.Generics.DLG.DLG.FromBytes(resource.Data);
+                return CSharpKOTOR.Resource.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
             }
             catch (Exception ex)
             {

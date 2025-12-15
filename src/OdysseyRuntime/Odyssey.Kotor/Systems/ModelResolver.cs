@@ -1,6 +1,8 @@
 using System;
 using JetBrains.Annotations;
 using Odyssey.Core.Enums;
+using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Data;
 using Odyssey.Kotor.Components;
 

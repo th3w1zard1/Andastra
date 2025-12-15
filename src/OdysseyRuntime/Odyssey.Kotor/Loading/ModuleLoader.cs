@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.LYT;
@@ -13,6 +14,7 @@ using JetBrains.Annotations;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
+using Vector3 = System.Numerics.Vector3;
 
 namespace Odyssey.Kotor.Loading
 {

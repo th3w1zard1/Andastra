@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Resources;
+using Vector3 = System.Numerics.Vector3;
 
 namespace CSharpKOTOR.Formats.LYT
 {
