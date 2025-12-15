@@ -26,6 +26,19 @@ namespace Odyssey.Game.Core
     /// MonoGame-based Odyssey game implementation.
     /// Simplified version focused on getting menu working and game launching.
     /// </summary>
+    /// <remarks>
+    /// Odyssey Game (MonoGame Implementation):
+    /// - Based on swkotor2.exe game loop and rendering system
+    /// - Located via string references: "UpdateScenes" @ 0x007b8b54 (scene update function), "update" @ 0x007bab3c (update constant)
+    /// - "GameObjUpdate" @ 0x007c246c (game object update), "ForceAlwaysUpdate" @ 0x007bf5b4 (force always update flag)
+    /// - Rendering: "DRAWSTYLE" @ 0x007b63d4 (draw style constant), "DRAWMODE" @ 0x007b6a4c (draw mode constant)
+    /// - "glDrawArrays" @ 0x0080aab6, "glDrawElements" @ 0x0080aafe, "glDrawBuffer" @ 0x0080ac4e (OpenGL draw functions)
+    /// - "mgs_drawmain" @ 0x007cc8f0 (main draw function), "hologram_donotdraw" @ 0x007bae78 (hologram don't draw flag)
+    /// - Game loop: Update() called every frame (60 Hz fixed timestep), Draw() renders frame
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 manages game loop, entity updates, rendering
+    /// - MonoGame integration: Wraps MonoGame Game class for window management, input, and rendering
+    /// - Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
+    /// </remarks>
     public class OdysseyGame : Microsoft.Xna.Framework.Game
     {
         private readonly GameSettings _settings;
