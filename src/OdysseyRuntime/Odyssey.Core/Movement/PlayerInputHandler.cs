@@ -413,21 +413,96 @@ namespace Odyssey.Core.Movement
 
         private bool IsHostile(IEntity entity)
         {
-            // TODO: Implement faction hostility check
-            // For now, check if entity has hostile flag or is in combat
+            if (entity == null)
+            {
+                return false;
+            }
+
+            // Check if entity has hostile data flag
+            if (entity.HasData("IsHostile"))
+            {
+                bool isHostile = entity.GetData<bool>("IsHostile", false);
+                if (isHostile)
+                {
+                    return true;
+                }
+            }
+
+            // TODO: Implement full faction hostility check via FactionManager
+            // This requires access to GameServicesContext or FactionManager
+            // For now, check basic hostile flag
             return false;
         }
 
         private bool HasConversation(IEntity entity)
         {
-            // TODO: Check if entity has a DLG file
-            // For now, assume NPCs have conversations
+            if (entity == null)
+            {
+                return false;
+            }
+
+            // Check if entity has dialogue resource reference stored
+            if (entity.HasData("DialogueResRef"))
+            {
+                string dialogueResRef = entity.GetData<string>("DialogueResRef", string.Empty);
+                if (!string.IsNullOrEmpty(dialogueResRef))
+                {
+                    return true;
+                }
+            }
+
+            // Check if entity has conversation data
+            if (entity.HasData("Conversation"))
+            {
+                return true;
+            }
+
+            // For creatures, assume they might have conversations (NPCs typically do)
             return entity.ObjectType == Enums.ObjectType.Creature;
         }
 
         private float GetAttackRange()
         {
-            // TODO: Get from equipped weapon
+            // Get current party leader
+            IEntity leader = _partySystem?.Leader;
+            if (leader == null)
+            {
+                return 2.0f; // Default melee range
+            }
+
+            // Get equipped weapon from main hand (slot 4)
+            Core.Interfaces.Components.IInventoryComponent inventory = leader.GetComponent<Core.Interfaces.Components.IInventoryComponent>();
+            if (inventory == null)
+            {
+                return 2.0f; // Default melee range
+            }
+
+            // INVENTORY_SLOT_RIGHTWEAPON = 4
+            IEntity weapon = inventory.GetItemInSlot(4);
+            if (weapon == null)
+            {
+                return 2.0f; // Default melee range (unarmed)
+            }
+
+            // Check if weapon has range data
+            if (weapon.HasData("Range"))
+            {
+                float range = weapon.GetData<float>("Range", 2.0f);
+                if (range > 0)
+                {
+                    return range;
+                }
+            }
+
+            // Check weapon type to determine range
+            // Ranged weapons typically have longer range than melee
+            if (weapon.HasData("WeaponType"))
+            {
+                int weaponType = weapon.GetData<int>("WeaponType", 0);
+                // Weapon type constants would be defined elsewhere
+                // For now, default to melee range
+            }
+
             // Default melee range
             return 2.0f;
         }
