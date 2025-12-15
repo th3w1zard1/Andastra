@@ -9,12 +9,14 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Delay Scheduler:
     /// - Based on swkotor2.exe DelayCommand system
-    /// - Located via string references: DelayCommand implementation schedules actions for future execution
+    /// - Located via string references: "DelayCommand" @ 0x007be900
     /// - Original implementation: DelayCommand NWScript function schedules actions to execute after specified delay
-    /// - Uses priority queue sorted by execution time to efficiently process delayed actions
-    /// - Delayed actions execute in order based on schedule time
-    /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
-    /// - Actions are queued to target entity's action queue when delay expires
+    /// - Delay timing: Uses game simulation time (_currentTime) to track when actions should execute
+    /// - Priority queue: Uses sorted list by execution time to efficiently process delayed actions in order
+    /// - Delayed actions: Execute in order based on schedule time (ascending by executeTime)
+    /// - STORE_STATE opcode: In NCS VM stores stack/local state for DelayCommand semantics (restores state when action executes)
+    /// - Action execution: Actions are queued to target entity's action queue when delay expires
+    /// - Entity validation: Checks if target entity is still valid before executing delayed action
     /// </remarks>
     public class DelayScheduler : IDelayScheduler
     {

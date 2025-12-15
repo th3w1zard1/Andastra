@@ -11,11 +11,28 @@ namespace Odyssey.Core.Entities
     /// <remarks>
     /// Event Bus System:
     /// - Based on swkotor2.exe event system
-    /// - Located via string references: Event firing functions handle script events and game events
+    /// - Located via string references: "OnHeartbeat" @ 0x007bd720, "Mod_OnHeartbeat" @ 0x007be840
+    /// - Script event types (CSWSSCRIPTEVENT_EVENTTYPE_ON_*): "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620, "CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN" @ 0x007bc64c,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED" @ 0x007bc678, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED" @ 0x007bc6d8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_USED" @ 0x007bc7d8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM" @ 0x007bc7fc,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820, "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc, "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9f8,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT" @ 0x007bca24, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54,
+    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED" @ 0x007bca78
     /// - Original implementation: Events fire for various game state changes (damage, death, perception, etc.)
-    /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, etc. (see ScriptEvent enum)
-    /// - Game events: Damage, death, door opened/closed, combat events, etc.
-    /// - Events are routed to subscribed handlers and can trigger script execution
+    /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, OnModuleLoad, OnModuleStart, etc.
+    /// - Game events: Damage, death, door opened/closed, combat events, inventory changes, etc.
+    /// - Event routing: Events are queued and dispatched each frame, routed to subscribed handlers
+    /// - Script execution: FireScriptEvent method triggers script execution on entities with matching event hooks
     /// </remarks>
     public class EventBus : IEventBus
     {
