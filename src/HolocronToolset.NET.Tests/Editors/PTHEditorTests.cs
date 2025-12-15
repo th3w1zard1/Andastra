@@ -486,5 +486,118 @@ namespace HolocronToolset.NET.Tests.Editors
             // Just verify method doesn't crash
             editor.Should().NotBeNull();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:486-499
+        // Original: def test_pth_editor_empty_pth_file(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorEmptyPthFile()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Build empty file
+            var (data, _) = editor.Build();
+
+            // Load it back (may require LYT file, so just verify build works)
+            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            loadedPth.Should().NotBeNull();
+            loadedPth.Count.Should().Be(0);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:501-516
+        // Original: def test_pth_editor_single_node(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorSingleNode()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Add single node
+            editor.AddNode(0.0f, 0.0f);
+
+            // Build and verify
+            var (data, _) = editor.Build();
+            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            loadedPth.Count.Should().Be(1);
+            Math.Abs(loadedPth[0].X - 0.0f).Should().BeLessThan(0.001f);
+            Math.Abs(loadedPth[0].Y - 0.0f).Should().BeLessThan(0.001f);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:522-554
+        // Original: def test_pth_editor_complex_path(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorComplexPath()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Get internal PTH object using reflection
+            var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+
+            // Create a complex path
+            var nodes = new[]
+            {
+                (0.0f, 0.0f),
+                (10.0f, 10.0f),
+                (20.0f, 10.0f),
+                (30.0f, 0.0f),
+                (20.0f, -10.0f),
+                (10.0f, -10.0f),
+            };
+
+            // Add all nodes
+            foreach (var (x, y) in nodes)
+            {
+                editor.AddNode(x, y);
+            }
+
+            // Add edges creating a loop
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                int nextI = (i + 1) % nodes.Length;
+                editor.AddEdge(i, nextI);
+            }
+
+            // Verify structure
+            pth.Count.Should().Be(nodes.Length);
+
+            // Build and verify
+            var (data, _) = editor.Build();
+            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            loadedPth.Count.Should().Be(nodes.Length);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:556-580
+        // Original: def test_pth_editor_all_operations(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorAllOperations()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Add nodes
+            editor.AddNode(0.0f, 0.0f);
+            editor.AddNode(10.0f, 10.0f);
+            editor.AddNode(20.0f, 20.0f);
+
+            // Add edges
+            editor.AddEdge(0, 1);
+            editor.AddEdge(1, 2);
+
+            // Test camera operations
+            editor.MoveCamera(5.0f, 5.0f);
+            editor.ZoomCamera(1.2f);
+            editor.RotateCamera(0.1f);
+
+            // Build and verify
+            var (data, _) = editor.Build();
+            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            loadedPth.Count.Should().Be(3);
+        }
     }
 }
