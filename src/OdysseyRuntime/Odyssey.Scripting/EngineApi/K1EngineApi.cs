@@ -1118,12 +1118,41 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // TODO: Check class type from creature template
-                    return true; // Placeholder
+                    // Check class type from creature component
+                    CreatureComponent creatureComp2 = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp2 != null && creatureComp2.ClassList != null)
+                    {
+                        // Check if any class in the class list matches the criteria value
+                        foreach (CreatureClass cls in creatureComp2.ClassList)
+                        {
+                            if (cls.ClassId == criteriaValue)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // TODO: Check reputation type
-                    return true; // Placeholder
+                    // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
+                    if (ctx is VM.ExecutionContext execCtxRep && execCtxRep.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesRep)
+                    {
+                        if (servicesRep.FactionManager != null && servicesRep.PlayerEntity != null)
+                        {
+                            switch (criteriaValue)
+                            {
+                                case 0: // FRIEND
+                                    return servicesRep.FactionManager.IsFriendly(servicesRep.PlayerEntity, creature);
+                                case 1: // ENEMY
+                                    return servicesRep.FactionManager.IsHostile(servicesRep.PlayerEntity, creature);
+                                case 2: // NEUTRAL
+                                    return servicesRep.FactionManager.IsNeutral(servicesRep.PlayerEntity, creature);
+                                default:
+                                    return false;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -1136,16 +1165,73 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
-                    // TODO: Check if creature has specific spell effect
-                    return true; // Placeholder
+                    // Check if creature has specific spell effect
+                    if (ctx.World != null && ctx.World.EffectSystem != null)
+                    {
+                        // criteriaValue is the EffectType enum value
+                        EffectType effectType = (EffectType)criteriaValue;
+                        return ctx.World.EffectSystem.HasEffect(creature, effectType);
+                    }
+                    return false;
 
                 case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
-                    // TODO: Check if creature does not have specific spell effect
-                    return true; // Placeholder
+                    // Check if creature does not have specific spell effect
+                    if (ctx.World != null && ctx.World.EffectSystem != null)
+                    {
+                        // criteriaValue is the EffectType enum value
+                        EffectType effectType = (EffectType)criteriaValue;
+                        return !ctx.World.EffectSystem.HasEffect(creature, effectType);
+                    }
+                    return true; // If no effect system, assume effect is not present
 
                 case 7: // CREATURE_TYPE_PERCEPTION
-                    // TODO: Check perception type
-                    return true; // Placeholder
+                    // PERCEPTION_SEEN_AND_HEARD = 0, PERCEPTION_NOT_SEEN_AND_NOT_HEARD = 1, etc.
+                    if (ctx is VM.ExecutionContext execCtxPer && execCtxPer.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesPer)
+                    {
+                        if (servicesPer.PlayerEntity != null && servicesPer.PerceptionManager != null)
+                        {
+                            // Check perception state between player and creature
+                            // Use GetSeenObjects to check if creature is seen
+                            bool canSee = false;
+                            bool canHear = false;
+                            
+                            foreach (IEntity seen in servicesPer.PerceptionManager.GetSeenObjects(servicesPer.PlayerEntity))
+                            {
+                                if (seen.ObjectId == creature.ObjectId)
+                                {
+                                    canSee = true;
+                                    break;
+                                }
+                            }
+                            
+                            // For hearing, we need to check GetHeardObjects if available
+                            // For now, assume if seen, also heard (simplified)
+                            canHear = canSee; // TODO: Implement proper hearing check when GetHeardObjects is available
+                            
+                            switch (criteriaValue)
+                            {
+                                case 0: // SEEN_AND_HEARD
+                                    return canSee && canHear;
+                                case 1: // NOT_SEEN_AND_NOT_HEARD
+                                    return !canSee && !canHear;
+                                case 2: // HEARD_AND_NOT_SEEN
+                                    return canHear && !canSee;
+                                case 3: // SEEN_AND_NOT_HEARD
+                                    return canSee && !canHear;
+                                case 4: // NOT_HEARD
+                                    return !canHear;
+                                case 5: // HEARD
+                                    return canHear;
+                                case 6: // NOT_SEEN
+                                    return !canSee;
+                                case 7: // SEEN
+                                    return canSee;
+                                default:
+                                    return false;
+                            }
+                        }
+                    }
+                    return false
 
                 default:
                     return true; // Unknown criteria type, accept all
@@ -3662,17 +3748,20 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
-            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
-            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
-            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // For now, return 0 (no metamagic) until spell casting tracking is implemented
+            // Retrieve last metamagic type for this caster
+            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
+            {
+                return Variable.FromInt(metamagicType);
+            }
+            
+            // No metamagic tracked, return 0 (no metamagic)
             return Variable.FromInt(0);
         }
 
@@ -3855,12 +3944,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // The effect itself is unchanged, but marked as extraordinary
-            // For now, just return the effect as-is
-            // TODO: Mark effect as extraordinary type if Effect class supports it
+            // Set subtype to EXTRAORDINARY (32)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
+                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
+                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
@@ -4333,40 +4422,32 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameServicesContext
+                // Get FactionManager from GameServicesContext or GameSession
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    if (services.FactionManager != null)
+                    // Try to get FactionManager from CombatManager
+                    if (services.CombatManager != null)
                     {
-                        bool isFriendly = services.FactionManager.IsFriendly(source, target);
-                        return Variable.FromInt(isFriendly ? 1 : 0);
+                        // TODO: Expose FactionManager.IsFriendly through CombatManager or GameServicesContext
                     }
                 }
-            }
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
-        /// Based on swkotor2.exe: Checks faction relationships using FactionManager
-        /// </summary>
-        private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
-            IEntity source = ResolveObject(sourceId, ctx);
-            IEntity target = ResolveObject(targetId, ctx);
-            
-            if (source != null && target != null)
-            {
-                // Get FactionManager from GameServicesContext
-                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                
+                // Alternative: Get from GameSession directly if available
+                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    if (services.FactionManager != null)
+                    // Access FactionManager through reflection or add to GameServicesContext
+                    // For now, use a simple faction check
+                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                    
+                    if (sourceFaction != null && targetFaction != null)
                     {
-                        bool isNeutral = services.FactionManager.IsNeutral(source, target);
-                        return Variable.FromInt(isNeutral ? 1 : 0);
+                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
+                        if (sourceFaction.FactionId == targetFaction.FactionId)
+                        {
+                            // Same faction are friends by default
+                            return Variable.FromInt(1);
+                        }
                     }
                 }
             }
