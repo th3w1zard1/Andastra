@@ -21,7 +21,15 @@ namespace Odyssey.Content.Loaders
     /// - Based on swkotor2.exe template loading system
     /// - Template formats: GFF files with signatures "UTC ", "UTP ", "UTD ", "UTT ", "UTW ", "UTS ", "UTE ", "UTM "
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c (template reference field in GIT instances)
-    /// - Template loading errors: "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+    /// - "TemplateResRef: " @ 0x007caedc (template debug message), "template" @ 0x007d0470, "Template" @ 0x007d05cc
+    /// - "UseTemplates" @ 0x007bd930 (template usage flag)
+    /// - Template directory: "HD0:DATAXBOX\templates" @ 0x007c7590 (Xbox template directory)
+    /// - Template loading error messages:
+    ///   - "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+    ///   - "Encounter template %s doesn't exist.\n" @ 0x007c0df0
+    ///   - "Waypoint template %s doesn't exist.\n" @ 0x007c0f24
+    ///   - "Store template %s doesn't exist.\n" @ 0x007c1228
+    ///   - "Item template %s doesn't exist.\n" @ 0x007c2028
     /// - Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates from UTC GFF files
     /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
     /// - Loads GFF template files, parses entity data, creates template objects
