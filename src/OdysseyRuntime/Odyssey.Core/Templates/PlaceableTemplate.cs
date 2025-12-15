@@ -131,19 +131,38 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
+            // Based on swkotor2.exe: Placeable script hooks from UTP template
+            // Located via string references: "ScriptOnUsed" @ 0x007beeb8, "ScriptOnOpen" @ 0x007c1a54, "ScriptOnClose" @ 0x007c1a8c
+            // Original implementation: FUN_00585ec0 @ 0x00585ec0 loads placeable script hooks from UTP template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
                 if (!string.IsNullOrEmpty(OnUsed))
                     scripts.SetScript(ScriptEvent.OnUsed, OnUsed);
                 if (!string.IsNullOrEmpty(OnClick))
-                    scripts.SetScript(ScriptEvent.OnUsed, OnClick);
+                    scripts.SetScript(ScriptEvent.OnClick, OnClick);
+                if (!string.IsNullOrEmpty(OnOpen))
+                    scripts.SetScript(ScriptEvent.OnOpen, OnOpen);
+                if (!string.IsNullOrEmpty(OnClosed))
+                    scripts.SetScript(ScriptEvent.OnClose, OnClosed);
+                if (!string.IsNullOrEmpty(OnLock))
+                    scripts.SetScript(ScriptEvent.OnLock, OnLock);
+                if (!string.IsNullOrEmpty(OnUnlock))
+                    scripts.SetScript(ScriptEvent.OnUnlock, OnUnlock);
+                if (!string.IsNullOrEmpty(OnInventory))
+                    scripts.SetScript(ScriptEvent.OnDisturbed, OnInventory);
                 if (!string.IsNullOrEmpty(OnDamaged))
                     scripts.SetScript(ScriptEvent.OnDamaged, OnDamaged);
                 if (!string.IsNullOrEmpty(OnDeath))
                     scripts.SetScript(ScriptEvent.OnDeath, OnDeath);
                 if (!string.IsNullOrEmpty(OnHeartbeat))
                     scripts.SetScript(ScriptEvent.OnHeartbeat, OnHeartbeat);
+                if (!string.IsNullOrEmpty(OnMeleeAttacked))
+                    scripts.SetScript(ScriptEvent.OnPhysicalAttacked, OnMeleeAttacked);
+                if (!string.IsNullOrEmpty(OnSpellCastAt))
+                    scripts.SetScript(ScriptEvent.OnSpellCastAt, OnSpellCastAt);
+                if (!string.IsNullOrEmpty(OnEndDialog))
+                    scripts.SetScript(ScriptEvent.OnEndDialogue, OnEndDialog);
                 if (!string.IsNullOrEmpty(OnUserDefined))
                     scripts.SetScript(ScriptEvent.OnUserDefined, OnUserDefined);
             }

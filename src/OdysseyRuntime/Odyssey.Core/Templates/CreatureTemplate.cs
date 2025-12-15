@@ -160,6 +160,9 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
+            // Based on swkotor2.exe: Creature script hooks from UTC template
+            // Located via string references: "ScriptSpawn" @ 0x007bee30, "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0
+            // Original implementation: FUN_0050c510 @ 0x0050c510 loads creature script hooks from UTC template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
@@ -177,6 +180,10 @@ namespace Odyssey.Core.Templates
                     scripts.SetScript(ScriptEvent.OnDamaged, OnDamaged);
                 if (!string.IsNullOrEmpty(OnDeath))
                     scripts.SetScript(ScriptEvent.OnDeath, OnDeath);
+                if (!string.IsNullOrEmpty(OnEndRound))
+                    scripts.SetScript(ScriptEvent.OnEndCombatRound, OnEndRound);
+                if (!string.IsNullOrEmpty(OnBlocked))
+                    scripts.SetScript(ScriptEvent.OnBlocked, OnBlocked);
                 if (!string.IsNullOrEmpty(OnUserDefined))
                     scripts.SetScript(ScriptEvent.OnUserDefined, OnUserDefined);
             }
