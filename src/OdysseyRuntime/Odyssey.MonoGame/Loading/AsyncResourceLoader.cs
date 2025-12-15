@@ -21,6 +21,22 @@ namespace Odyssey.MonoGame.Loading
     /// <remarks>
     /// Async Resource Loader:
     /// - Based on swkotor2.exe resource loading system (modern async enhancement)
+    /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
+    /// - "LoadScreenID" @ 0x007bd54c, "LoadSavegame" @ 0x007bdc90, "LOADMUSIC" @ 0x007be044
+    /// - "load_%s" @ 0x007be32c (load format string), "Mod_OnModLoad" @ 0x007be7bc
+    /// - "SkipOnLoad" @ 0x007c0344 (skip on load flag), "Loadscreens" @ 0x007c4c04
+    /// - "ClientLoad" @ 0x007c4fdc, "Loading" @ 0x007c7e40, "Load Bar = %d" @ 0x007c760c
+    /// - "LoadBar" @ 0x007cb33c, "LBL_LOADING" @ 0x007cbe10, "loadscreen_p" @ 0x007cbe40
+    /// - Error messages:
+    ///   - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc
+    ///   - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8
+    ///   - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
+    ///   - "Model %s nor the default model %s could be loaded." @ 0x007cad14
+    ///   - "Icon %s nor the default icon %s could be loaded." @ 0x007cad48
+    ///   - "Cannot load door model '%s'." @ 0x007d2488
+    ///   - "Problem loading encounter with tag '%s'.  It has geometry, but no vertices.  Skipping." @ 0x007c0ae0
+    /// - Resource management: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
+    /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124, "Resource" @ 0x007c14d4
     /// - Original implementation: KOTOR loads resources synchronously from CHITIN keyfiles and modules
     /// - Resource loading: Loads TPC (texture), MDL (model), MDX (geometry) files from game installation
     /// - This MonoGame implementation: Modern async Task-based loading for performance (off main thread IO)
