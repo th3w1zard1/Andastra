@@ -124,7 +124,7 @@ namespace Odyssey.MonoGame.Rendering
             RenderTargetPool pool;
             if (_pools.TryGetValue(desc, out pool))
             {
-                pool.Return(rt);
+                pool.ReturnRenderTarget(rt);
                 UpdateMemoryUsage();
             }
         }
@@ -136,7 +136,9 @@ namespace Odyssey.MonoGame.Rendering
         {
             foreach (RenderTargetPool pool in _pools.Values)
             {
-                pool.Clear();
+                // TODO: Clear pool when method is implemented
+                // pool.Clear();
+                pool.Dispose();
             }
             _pools.Clear();
             _currentMemoryUsage = 0;
