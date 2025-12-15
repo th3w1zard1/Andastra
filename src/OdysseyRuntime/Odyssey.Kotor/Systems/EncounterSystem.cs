@@ -223,14 +223,9 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Fire OnEntered script
-            IScriptHooksComponent scripts = encounter.GetComponent<IScriptHooksComponent>();
-            if (scripts != null)
+            if (_scriptExecutor != null)
             {
-                string script = scripts.GetScript(ScriptEvent.OnEnter);
-                if (!string.IsNullOrEmpty(script))
-                {
-                    // TODO: Execute script
-                }
+                _scriptExecutor(encounter, ScriptEvent.OnEnter, creature);
             }
         }
 
