@@ -95,6 +95,20 @@ namespace Odyssey.Kotor.Game
 
         // Player and party
         private IEntity _playerEntity;
+        
+        // Game time tracking (in-game time, not real time)
+        private int _gameTimeHours;
+        private int _gameTimeMinutes;
+        private int _gameTimeSeconds;
+        private int _gameTimeMilliseconds;
+        private float _timeAccumulator; // Accumulates real time to advance game time
+        
+        // Game time tracking (in-game time, not real time)
+        private int _gameTimeHours;
+        private int _gameTimeMinutes;
+        private int _gameTimeSeconds;
+        private int _gameTimeMilliseconds;
+        private float _timeAccumulator; // Accumulates real time to advance game time
 
         /// <summary>
         /// Event fired when a module is loaded.
@@ -147,6 +161,49 @@ namespace Odyssey.Kotor.Game
         public CombatManager CombatManager
         {
             get { return _combatManager; }
+        }
+        
+        /// <summary>
+        /// Gets the current game time hours (0-23).
+        /// </summary>
+        public int GetGameTimeHours()
+        {
+            return _gameTimeHours;
+        }
+        
+        /// <summary>
+        /// Gets the current game time minutes (0-59).
+        /// </summary>
+        public int GetGameTimeMinutes()
+        {
+            return _gameTimeMinutes;
+        }
+        
+        /// <summary>
+        /// Gets the current game time seconds (0-59).
+        /// </summary>
+        public int GetGameTimeSeconds()
+        {
+            return _gameTimeSeconds;
+        }
+        
+        /// <summary>
+        /// Gets the current game time milliseconds (0-999).
+        /// </summary>
+        public int GetGameTimeMilliseconds()
+        {
+            return _gameTimeMilliseconds;
+        }
+        
+        /// <summary>
+        /// Sets the game time.
+        /// </summary>
+        public void SetGameTime(int hours, int minutes, int seconds, int milliseconds)
+        {
+            _gameTimeHours = hours % 24;
+            _gameTimeMinutes = minutes % 60;
+            _gameTimeSeconds = seconds % 60;
+            _gameTimeMilliseconds = milliseconds % 1000;
         }
 
         /// <summary>
@@ -417,7 +474,11 @@ namespace Odyssey.Kotor.Game
                     FactionManager = _factionManager,
                     PerceptionManager = _perceptionManager,
                     IsLoadingFromSave = _isLoadingFromSave,
-                    GameSession = this
+                    GameSession = this,
+                    GameTimeHours = _gameTimeHours,
+                    GameTimeMinutes = _gameTimeMinutes,
+                    GameTimeSeconds = _gameTimeSeconds,
+                    GameTimeMilliseconds = _gameTimeMilliseconds
                 };
                 ctx.AdditionalContext = gameServices;
 
@@ -699,6 +760,34 @@ namespace Odyssey.Kotor.Game
             if (!_isRunning || _isPaused)
             {
                 return;
+            }
+            
+            // Update game time (advance in-game time based on real time)
+            // Game time advances at 1:1 ratio with real time when not paused
+            _timeAccumulator += deltaTime;
+            while (_timeAccumulator >= 0.001f) // 1 millisecond
+            {
+                _timeAccumulator -= 0.001f;
+                _gameTimeMilliseconds++;
+                if (_gameTimeMilliseconds >= 1000)
+                {
+                    _gameTimeMilliseconds = 0;
+                    _gameTimeSeconds++;
+                    if (_gameTimeSeconds >= 60)
+                    {
+                        _gameTimeSeconds = 0;
+                        _gameTimeMinutes++;
+                        if (_gameTimeMinutes >= 60)
+                        {
+                            _gameTimeMinutes = 0;
+                            _gameTimeHours++;
+                            if (_gameTimeHours >= 24)
+                            {
+                                _gameTimeHours = 0;
+                            }
+                        }
+                    }
+                }
             }
 
             // Update action queues for all entities

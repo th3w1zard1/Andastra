@@ -1706,8 +1706,24 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// SetTime(int nHour, int nMinute, int nSecond, int nMillisecond) - Sets the game time
+        /// Based on swkotor2.exe: Sets the in-game time (not real time)
+        /// </summary>
         private Variable Func_SetTime(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            int hour = args.Count > 0 ? args[0].AsInt() : 0;
+            int minute = args.Count > 1 ? args[1].AsInt() : 0;
+            int second = args.Count > 2 ? args[2].AsInt() : 0;
+            int millisecond = args.Count > 3 ? args[3].AsInt() : 0;
+            
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.GameSession != null)
+                {
+                    services.GameSession.SetGameTime(hour, minute, second, millisecond);
+                }
+            }
             return Variable.Void();
         }
 
@@ -1857,23 +1873,63 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetTimeHour() - Returns the current game time hour (0-23)
+        /// </summary>
         private Variable Func_GetTimeHour(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromInt(12);
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.GameSession != null)
+                {
+                    return Variable.FromInt(services.GameSession.GetGameTimeHours());
+                }
+            }
+            return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetTimeMinute() - Returns the current game time minute (0-59)
+        /// </summary>
         private Variable Func_GetTimeMinute(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.GameSession != null)
+                {
+                    return Variable.FromInt(services.GameSession.GetGameTimeMinutes());
+                }
+            }
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetTimeSecond() - Returns the current game time second (0-59)
+        /// </summary>
         private Variable Func_GetTimeSecond(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.GameSession != null)
+                {
+                    return Variable.FromInt(services.GameSession.GetGameTimeSeconds());
+                }
+            }
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetTimeMillisecond() - Returns the current game time millisecond (0-999)
+        /// </summary>
         private Variable Func_GetTimeMillisecond(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.GameSession != null)
+                {
+                    return Variable.FromInt(services.GameSession.GetGameTimeMilliseconds());
+                }
+            }
             return Variable.FromInt(0);
         }
 
@@ -4068,12 +4124,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // The effect itself is unchanged, but marked as extraordinary
-            // For now, just return the effect as-is
-            // TODO: Mark effect as extraordinary type if Effect class supports it
+            // Set subtype to EXTRAORDINARY (32)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
+                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
+                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
@@ -4629,18 +4685,6 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetName(object oObject) - returns the name of the object
         /// </summary>
-        /// <summary>
-        /// GetName(object oObject) - returns the display name of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Object name system
-        /// Located via string references: "NameStrRef" @ 0x007c0274, "NAME_STRREF" @ 0x007c8200
-        /// Original implementation: Returns display name from entity's FirstName/LastName or NameStrRef
-        /// Name source: First checks FirstName/LastName from entity data (UTC/UTP/etc.), then falls back to Tag
-        /// Name format: "FirstName LastName" if both present, or "FirstName" or "LastName" if only one
-        /// Tag fallback: If no FirstName/LastName, returns entity's Tag string
-        /// Returns: Display name string or empty string if object is invalid
-        /// </remarks>
         private Variable Func_GetName(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -4846,17 +4890,6 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f) - Destroy oObject (irrevocably)
         /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Object destruction system
-        /// Located via string references: "DestroyObjectDelay" @ 0x007c0248
-        /// Original implementation: Removes entity from world, can be delayed or immediate
-        /// Delay: If fDelay > 0, schedules destruction via DelayCommand system
-        /// Fade: If bNoFade = FALSE, plays fade-out animation before destruction (fDelayUntilFade controls fade timing)
-        /// Immediate: If delay <= 0 and bNoFade = TRUE, destroys immediately without fade
-        /// Restrictions: Cannot destroy modules or areas (these are persistent world objects)
-        /// Action queue: Uses ActionDestroyObject action for fade timing control
-        /// Returns: Void (no return value)
-        /// </remarks>
         private Variable Func_DestroyObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
