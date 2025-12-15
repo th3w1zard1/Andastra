@@ -6300,5 +6300,124 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         #endregion
+
+        #region Door/Placeable Action Checks
+
+        /// <summary>
+        /// GetIsDoorActionPossible(object oTargetDoor, int nDoorAction) - Check if a door action can be performed
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetIsDoorActionPossible implementation
+        /// Located via string references: Door action checking system
+        /// Door actions: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
+        /// Original implementation: Checks if specified door action is valid for the door's current state
+        /// </remarks>
+        private Variable Func_GetIsDoorActionPossible(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.FromInt(0);
+            }
+
+            uint doorId = args[0].AsObjectId();
+            int doorAction = args[1].AsInt();
+            IEntity door = ResolveObject(doorId, ctx);
+
+            if (door == null || door.ObjectType != ObjectType.Door)
+            {
+                return Variable.FromInt(0);
+            }
+
+            IDoorComponent doorComponent = door.GetComponent<IDoorComponent>();
+            if (doorComponent == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Door action constants: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
+            switch (doorAction)
+            {
+                case 0: // DOOR_ACTION_OPEN
+                    // Can open if door is closed and not locked (or lockable by script)
+                    return Variable.FromInt((!doorComponent.IsOpen && (!doorComponent.IsLocked || doorComponent.LockableByScript)) ? 1 : 0);
+
+                case 1: // DOOR_ACTION_UNLOCK
+                    // Can unlock if door is locked and lockable by script
+                    return Variable.FromInt((doorComponent.IsLocked && doorComponent.LockableByScript) ? 1 : 0);
+
+                case 2: // DOOR_ACTION_BASH
+                    // Can bash if door is locked (bash attempts to break the lock)
+                    return Variable.FromInt(doorComponent.IsLocked ? 1 : 0);
+
+                case 3: // DOOR_ACTION_IGNORE
+                    // Ignore action is always possible (does nothing)
+                    return Variable.FromInt(1);
+
+                case 4: // DOOR_ACTION_KNOCK
+                    // Can knock if door is closed (knock on closed door)
+                    return Variable.FromInt(!doorComponent.IsOpen ? 1 : 0);
+
+                default:
+                    return Variable.FromInt(0);
+            }
+        }
+
+        /// <summary>
+        /// GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction) - Check if a placeable action can be performed
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetIsPlaceableObjectActionPossible implementation
+        /// Located via string references: Placeable action checking system
+        /// Placeable actions: PLACEABLE_ACTION_USE (0), PLACEABLE_ACTION_UNLOCK (1), PLACEABLE_ACTION_BASH (2), PLACEABLE_ACTION_KNOCK (4)
+        /// Original implementation: Checks if specified placeable action is valid for the placeable's current state
+        /// </remarks>
+        private Variable Func_GetIsPlaceableObjectActionPossible(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.FromInt(0);
+            }
+
+            uint placeableId = args[0].AsObjectId();
+            int placeableAction = args[1].AsInt();
+            IEntity placeable = ResolveObject(placeableId, ctx);
+
+            if (placeable == null || placeable.ObjectType != ObjectType.Placeable)
+            {
+                return Variable.FromInt(0);
+            }
+
+            IPlaceableComponent placeableComponent = placeable.GetComponent<IPlaceableComponent>();
+            if (placeableComponent == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Placeable action constants: PLACEABLE_ACTION_USE (0), PLACEABLE_ACTION_UNLOCK (1), PLACEABLE_ACTION_BASH (2), PLACEABLE_ACTION_KNOCK (4)
+            switch (placeableAction)
+            {
+                case 0: // PLACEABLE_ACTION_USE
+                    // Can use if placeable is usable (Useable flag from UTP template)
+                    // For now, assume all placeables are usable unless explicitly disabled
+                    return Variable.FromInt(1); // TODO: Check Useable flag from placeable template
+
+                case 1: // PLACEABLE_ACTION_UNLOCK
+                    // Can unlock if placeable is locked and lockable by script
+                    return Variable.FromInt((placeableComponent.IsLocked && placeableComponent.LockableByScript) ? 1 : 0);
+
+                case 2: // PLACEABLE_ACTION_BASH
+                    // Can bash if placeable is locked (bash attempts to break the lock)
+                    return Variable.FromInt(placeableComponent.IsLocked ? 1 : 0);
+
+                case 4: // PLACEABLE_ACTION_KNOCK
+                    // Can knock if placeable is closed (knock on closed placeable)
+                    return Variable.FromInt(!placeableComponent.IsOpen ? 1 : 0);
+
+                default:
+                    return Variable.FromInt(0);
+            }
+        }
+
+        #endregion
     }
 }
