@@ -20,6 +20,8 @@ namespace Odyssey.Core.Entities
     /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
     /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId, Tag
     /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
+    /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+    /// - Script hook fields: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0, plus ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
     /// </remarks>
     public class Entity : IEntity
     {
@@ -44,6 +46,7 @@ namespace Odyssey.Core.Entities
             Tag = string.Empty;
             Position = Vector3.Zero;
             Facing = 0f;
+            AreaId = 0;
         }
 
         /// <summary>
@@ -61,6 +64,7 @@ namespace Odyssey.Core.Entities
             Tag = string.Empty;
             Position = Vector3.Zero;
             Facing = 0f;
+            AreaId = 0;
         }
 
         public uint ObjectId { get; }
@@ -71,13 +75,22 @@ namespace Odyssey.Core.Entities
 
         /// <summary>
         /// Gets or sets the entity position in world space.
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves XPosition, YPosition, ZPosition
         /// </summary>
         public Vector3 Position { get; set; }
 
         /// <summary>
         /// Gets or sets the entity facing angle in radians.
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves XOrientation, YOrientation, ZOrientation
         /// </summary>
         public float Facing { get; set; }
+
+        /// <summary>
+        /// Gets or sets the area ID this entity belongs to.
+        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </summary>
+        public uint AreaId { get; set; }
         
         /// <summary>
         /// The resource reference of the template this entity was spawned from.
