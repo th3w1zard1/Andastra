@@ -72,15 +72,15 @@ namespace Odyssey.MonoGame.Culling
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
             if (width <= 0)
             {
-                throw new ArgumentException("Width must be greater than zero.", "width");
+                throw new ArgumentException("Width must be greater than zero.", nameof(width));
             }
             if (height <= 0)
             {
-                throw new ArgumentException("Height must be greater than zero.", "height");
+                throw new ArgumentException("Height must be greater than zero.", nameof(height));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -118,7 +118,7 @@ namespace Odyssey.MonoGame.Culling
 
             if (depthBuffer == null)
             {
-                throw new ArgumentNullException("depthBuffer");
+                throw new ArgumentNullException(nameof(depthBuffer));
             }
 
             if (_hiZBuffer == null || _spriteBatch == null)
@@ -338,11 +338,11 @@ namespace Odyssey.MonoGame.Culling
         {
             if (width <= 0)
             {
-                throw new ArgumentException("Width must be greater than zero.", "width");
+                throw new ArgumentException("Width must be greater than zero.", nameof(width));
             }
             if (height <= 0)
             {
-                throw new ArgumentException("Height must be greater than zero.", "height");
+                throw new ArgumentException("Height must be greater than zero.", nameof(height));
             }
 
             // Update width and height fields for dynamic resizing
