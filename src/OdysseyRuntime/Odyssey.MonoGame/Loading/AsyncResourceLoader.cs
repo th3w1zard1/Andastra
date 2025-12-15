@@ -84,46 +84,43 @@ namespace Odyssey.MonoGame.Loading
                 try
                 {
                     // Resolve resource using IGameResourceProvider
-                    using (var resourceId = new ResourceIdentifier(
-                        textureName,
-                        ResourceType.TPC))
+                    var resourceId = new ResourceIdentifier(textureName, ResourceType.TPC);
+
+                    // Check if resource exists
+                    bool exists = await _resourceProvider.ExistsAsync(resourceId, _cancellationTokenSource.Token);
+                    if (!exists)
                     {
-                        // Check if resource exists
-                        bool exists = await _resourceProvider.ExistsAsync(resourceId, _cancellationTokenSource.Token);
-                        if (!exists)
-                        {
-                            return new TextureLoadResult
-                            {
-                                TextureName = textureName,
-                                Success = false,
-                                ErrorMessage = $"Texture resource not found: {textureName}"
-                            };
-                        }
-
-                        // Load resource bytes asynchronously (IO operation off main thread)
-                        byte[] fileData = await _resourceProvider.GetResourceBytesAsync(resourceId, _cancellationTokenSource.Token);
-                        
-                        if (fileData == null || fileData.Length == 0)
-                        {
-                            return new TextureLoadResult
-                            {
-                                TextureName = textureName,
-                                Success = false,
-                                ErrorMessage = $"Texture resource is empty: {textureName}"
-                            };
-                        }
-
-                        // Return raw data - actual parsing happens on main thread with graphics context
-                        // This matches PyKotor's pattern where IO+parsing happens in child process,
-                        // but GPU object creation happens on main thread
                         return new TextureLoadResult
                         {
                             TextureName = textureName,
-                            Success = true,
-                            FilePath = null, // Path not needed since we have bytes
-                            FileData = fileData
+                            Success = false,
+                            ErrorMessage = $"Texture resource not found: {textureName}"
                         };
                     }
+
+                    // Load resource bytes asynchronously (IO operation off main thread)
+                    byte[] fileData = await _resourceProvider.GetResourceBytesAsync(resourceId, _cancellationTokenSource.Token);
+                    
+                    if (fileData == null || fileData.Length == 0)
+                    {
+                        return new TextureLoadResult
+                        {
+                            TextureName = textureName,
+                            Success = false,
+                            ErrorMessage = $"Texture resource is empty: {textureName}"
+                        };
+                    }
+
+                    // Return raw data - actual parsing happens on main thread with graphics context
+                    // This matches PyKotor's pattern where IO+parsing happens in child process,
+                    // but GPU object creation happens on main thread
+                    return new TextureLoadResult
+                    {
+                        TextureName = textureName,
+                        Success = true,
+                        FilePath = null, // Path not needed since we have bytes
+                        FileData = fileData
+                    };
                 }
                 catch (OperationCanceledException)
                 {
