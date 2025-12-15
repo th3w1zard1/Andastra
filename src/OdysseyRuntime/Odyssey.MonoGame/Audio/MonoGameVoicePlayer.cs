@@ -24,8 +24,14 @@ namespace Odyssey.MonoGame.Audio
     /// Voice Player (MonoGame Implementation):
     /// - Based on swkotor2.exe voice-over playback system
     /// - Located via string references: "VO_ResRef" @ 0x007c3574, dialogue voice-over playback
+    /// - Voice directories: "STREAMVOICE" @ 0x007c69dc, ".\streamvoice" @ 0x007c69e8, "d:\streamvoice" @ 0x007c69f8
+    /// - "HD0:STREAMVOICE" @ 0x007c771c, "HD0:STREAMVOICE\" @ 0x007c3914
+    /// - "HD0:STREAMVOICE\%s" @ 0x007c3944, "HD0:STREAMVOICE\%s\%s\%s" @ 0x007c3928 (voice path format strings)
+    /// - Voice settings: "Voiceover Volume" @ 0x007c83cc, "Number 3D Voices" @ 0x007c7258, "Number 2D Voices" @ 0x007c726c
+    /// - "VoiceChat" @ 0x007cb2ec (voice chat reference)
     /// - Original implementation: KOTOR plays WAV files for dialogue voice-overs from dialogue entries
     /// - Voice-over files: Stored as WAV resources, referenced by ResRef in DLG entries
+    /// - Voice streaming: Voice files can be streamed from STREAMVOICE directory
     /// - Positional audio: Voice-over plays at speaker entity position (if SpatialAudio provided)
     /// - Playback control: Play, Stop, volume, pan, pitch (original engine uses DirectSound/EAX)
     /// - Lip sync: Voice-over playback timing synchronized with LIP file animation data
