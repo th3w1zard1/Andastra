@@ -1,12 +1,14 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:157-243
 // Original: class TSLPatcherINISerializer: ...
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Mods.GFF;
+using CSharpKOTOR.Mods.NCS;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
@@ -85,7 +87,7 @@ namespace CSharpKOTOR.Mods
             lines.AddRange(Serialize2DAList(modificationsByType.Twoda, verbose));
             lines.AddRange(SerializeGffList(modificationsByType.Gff, verbose));
             lines.AddRange(SerializeSsfList(modificationsByType.Ssf, verbose));
-            // TODO: Add HACKList (NCS) serialization
+            lines.AddRange(SerializeHackList(modificationsByType.Ncs, verbose));
 
             return string.Join("\n", lines);
         }
@@ -837,6 +839,94 @@ namespace CSharpKOTOR.Mods
             }
             // Fallback - shouldn't happen
             return tokenUsage?.ToString() ?? "";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1002-1032
+        // Original: def _serialize_hack_list(...) -> list[str]:
+        /// <summary>
+        /// Serialize [HACKList] section for NCS binary patches.
+        /// </summary>
+        private List<string> SerializeHackList(List<ModificationsNCS> modifications, bool verbose = true)
+        {
+            if (modifications == null || modifications.Count == 0)
+            {
+                if (verbose)
+                {
+                    System.Console.WriteLine("No NCS modifications to serialize");
+                }
+                return new List<string>();
+            }
+
+            if (verbose)
+            {
+                System.Console.WriteLine($"Serializing {modifications.Count} NCS files for HACKList");
+            }
+
+            var lines = new List<string>();
+            lines.Add("[HACKList]");
+
+            for (int idx = 0; idx < modifications.Count; idx++)
+            {
+                ModificationsNCS modNcs = modifications[idx];
+                string prefix = modNcs.ReplaceFile ? "Replace" : "File";
+                if (verbose)
+                {
+                    System.Console.WriteLine($"Adding NCS file {idx}: {prefix}{idx}={modNcs.SourceFile} ({modNcs.Modifiers.Count} 'hacks')");
+                }
+                // Section name references must match section headers exactly (no quotes) - section headers are written as [{sourcefile}]
+                lines.Add($"{prefix}{idx}={modNcs.SourceFile}");
+            }
+            lines.Add("");
+
+            // Generate each NCS file's sections
+            foreach (ModificationsNCS modNcs in modifications)
+            {
+                lines.AddRange(SerializeNcsFile(modNcs));
+            }
+
+            return lines;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1034-1061
+        // Original: def _serialize_ncs_file(...) -> list[str]:
+        /// <summary>
+        /// Serialize a single NCS file's hack modifications.
+        /// </summary>
+        private List<string> SerializeNcsFile(ModificationsNCS modNcs)
+        {
+            var lines = new List<string>();
+            lines.Add($"[{modNcs.SourceFile}]");
+
+            // Serialize each hack entry
+            foreach (ModifyNCS modifier in modNcs.Modifiers)
+            {
+                int offset = modifier.Offset;
+                int tokenIdOrValue = modifier.TokenIdOrValue;
+                NCSTokenType tokenType = modifier.TokenType;
+
+                string valueStr;
+                if (tokenType == NCSTokenType.STRREF || tokenType == NCSTokenType.STRREF32)
+                {
+                    // StrRef token reference
+                    valueStr = $"StrRef{tokenIdOrValue}";
+                }
+                else if (tokenType == NCSTokenType.MEMORY_2DA || tokenType == NCSTokenType.MEMORY_2DA32)
+                {
+                    // 2DAMEMORY token reference
+                    valueStr = $"2DAMEMORY{tokenIdOrValue}";
+                }
+                else
+                {
+                    // Direct value (uint8, uint16, uint32)
+                    valueStr = tokenIdOrValue.ToString();
+                }
+
+                // Format offset as 8-digit hex uppercase (e.g., Hack00001234=value)
+                lines.Add($"Hack{offset:X8}={FormatIniValue(valueStr)}");
+            }
+
+            lines.Add("");
+            return lines;
         }
     }
 }
