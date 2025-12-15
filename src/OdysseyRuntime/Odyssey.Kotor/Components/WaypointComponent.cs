@@ -8,14 +8,18 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Waypoint Component:
     /// - Based on swkotor2.exe waypoint system
-    /// - Located via string references: "WaypointList" @ 0x007bd288 (GIT waypoint list), "Waypoint" @ 0x007bc540 (waypoint entity type)
+    /// - Located via string references: "WaypointList" @ 0x007bd288 (GIT waypoint list), "Waypoint" @ 0x007bc510 (waypoint entity type)
+    /// - "WaypointList" @ 0x007bd060 (waypoint list variant), "STARTWAYPOINT" @ 0x007be034 (start waypoint constant)
     /// - "MapNote" @ 0x007bd10c (map note text field), "MapNoteEnabled" @ 0x007bd118 (map note enabled flag)
+    /// - Error messages: "Waypoint template %s doesn't exist.\n" @ 0x007c0f24 (waypoint template not found error)
     /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
+    /// - Waypoint loading: FUN_004e08e0 @ 0x004e08e0 reads waypoint instances from GIT WaypointList, loads UTW templates
     /// - Waypoints are invisible markers used for scripting and navigation (GetWaypointByTag NWScript function)
     /// - UTW file format: GFF with "UTW " signature containing waypoint data (Tag, XPosition, YPosition, ZPosition, MapNote, MapNoteEnabled)
     /// - Waypoints can have map notes for player reference (displayed on minimap when MapNoteEnabled is true)
     /// - GetWaypointByTag NWScript function finds waypoints by tag (searches all waypoints in current area)
-    /// - Waypoints used for: Module transitions (LinkedTo field), script positioning, area navigation
+    /// - Waypoints used for: Module transitions (LinkedTo field), script positioning, area navigation, party spawning
+    /// - STARTWAYPOINT: Special waypoint tag used for module entry positioning (party spawns at STARTWAYPOINT if no TransitionDestination)
     /// - Based on UTW file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class WaypointComponent : IComponent
