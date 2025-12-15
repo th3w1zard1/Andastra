@@ -45,9 +45,13 @@ namespace Odyssey.Core.Dialogue
     /// - Based on swkotor2.exe dialogue system
     /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
+    /// - "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38e0, "EndConversation" @ 0x007c38e0
+    /// - "Conversation File: " @ 0x007cb1ac (conversation file debug message)
     /// - Dialogue script hooks: "k_level_dlg" @ 0x007c3f88, "000_Level_Dlg_Fired" @ 0x007c3f94 (level-up dialogue)
     /// - Dialogue examples: "k_hen_dialogue01" @ 0x007bf548 (example dialogue ResRef)
-    /// - Error message: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
+    /// - Error messages:
+    ///   - "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
+    ///   - "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE.  Please contact a Designer!" @ 0x007c3768
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data including ScriptDialogue/ScriptEndDialogue),
     ///   FUN_0050c510 @ 0x0050c510 (load creature data and read ScriptDialogue/ScriptEndDialogue fields)
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree
@@ -237,16 +241,10 @@ namespace Odyssey.Core.Dialogue
             }
 
             // Notify UI of dialogue text
-            if (OnDialogueText != null)
-            {
-                OnDialogueText(_owner, text);
-            }
+            OnDialogueText?.Invoke(_owner, text);
 
             // Set camera focus on speaker
-            if (OnCameraFocus != null)
-            {
-                OnCameraFocus(_owner, _pc);
-            }
+            OnCameraFocus?.Invoke(_owner, _pc);
 
             // Gather available replies
             GatherReplies(entry);
@@ -313,10 +311,7 @@ namespace Odyssey.Core.Dialogue
             }
 
             // Notify UI of player's reply text
-            if (OnDialogueText != null && !string.IsNullOrEmpty(reply.Text))
-            {
-                OnDialogueText(_pc, reply.Text);
-            }
+            OnDialogueText?.Invoke(_pc, reply.Text);
 
             // Find next entry
             foreach (int entryIndex in reply.EntryLinks)
@@ -411,15 +406,9 @@ namespace Odyssey.Core.Dialogue
             }
 
             // Stop any playing VO
-            if (_voicePlayer != null)
-            {
-                _voicePlayer.Stop();
-            }
+            _voicePlayer?.Stop();
 
-            if (_lipSyncController != null)
-            {
-                _lipSyncController.Stop();
-            }
+            _lipSyncController?.Stop();
 
             // Cleanup
             _currentDialogue = null;
@@ -430,10 +419,7 @@ namespace Odyssey.Core.Dialogue
 
             State = DialogueState.Inactive;
 
-            if (OnConversationEnded != null)
-            {
-                OnConversationEnded();
-            }
+            OnConversationEnded?.Invoke();
         }
 
         /// <summary>
@@ -455,15 +441,9 @@ namespace Odyssey.Core.Dialogue
             }
 
             // Stop any playing VO
-            if (_voicePlayer != null)
-            {
-                _voicePlayer.Stop();
-            }
+            _voicePlayer?.Stop();
 
-            if (_lipSyncController != null)
-            {
-                _lipSyncController.Stop();
-            }
+            _lipSyncController?.Stop();
 
             // Cleanup
             _currentDialogue = null;
@@ -474,10 +454,7 @@ namespace Odyssey.Core.Dialogue
 
             State = DialogueState.Inactive;
 
-            if (OnConversationEnded != null)
-            {
-                OnConversationEnded();
-            }
+            OnConversationEnded?.Invoke();
         }
 
         /// <summary>
