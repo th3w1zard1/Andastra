@@ -10,6 +10,16 @@ namespace Odyssey.MonoGame.Culling
     /// Culls objects beyond a maximum render distance, reducing both CPU
     /// and GPU work for distant geometry that would be too small to see.
     /// </summary>
+    /// <remarks>
+    /// Distance Culling System:
+    /// - Based on swkotor2.exe rendering optimization system
+    /// - Located via string references: Distance-based rendering optimizations
+    /// - Original implementation: KOTOR culls distant objects to maintain performance
+    /// - Distance thresholds: Per-object-type maximum render distances
+    /// - Used for: Reducing render load for distant geometry that would be imperceptible
+    /// - Combined with frustum culling, VIS-based room culling, and occlusion culling
+    /// - Default max distance: 1000 units (configurable per object type)
+    /// </remarks>
     public class DistanceCuller
     {
         private readonly Dictionary<string, float> _objectMaxDistances;

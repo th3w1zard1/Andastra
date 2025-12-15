@@ -16,6 +16,16 @@ namespace Odyssey.MonoGame.Culling
     /// - GPU occlusion queries
     /// - High performance for large scenes
     /// </summary>
+    /// <remarks>
+    /// GPU Culling System:
+    /// - Based on swkotor2.exe rendering system (modern GPU enhancement)
+    /// - Original engine: CPU-based culling (frustum, distance, VIS-based room culling)
+    /// - This MonoGame implementation: Modern GPU compute shader-based culling for enhanced performance
+    /// - GPU advantages: Parallel culling of thousands of objects, indirect draw call generation
+    /// - Culling types: Frustum culling, occlusion culling, distance culling (all on GPU)
+    /// - Performance: Significantly faster than CPU culling for large scene counts
+    /// - Note: Original KOTOR engine did not use GPU compute shaders (this is a modern enhancement)
+    /// </remarks>
     public class GPUCulling : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;

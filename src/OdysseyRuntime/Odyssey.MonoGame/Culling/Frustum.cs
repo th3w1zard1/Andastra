@@ -14,6 +14,16 @@ namespace Odyssey.MonoGame.Culling
     /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/gl/scene/frustum.py:36
     /// Original: class Frustum with planes and update_from_camera method
     /// </summary>
+    /// <remarks>
+    /// Frustum Culling System:
+    /// - Based on swkotor2.exe rendering and culling system
+    /// - Located via string references: Room visibility system uses frustum culling
+    /// - Original implementation: KOTOR performs frustum culling for rooms and objects
+    /// - Frustum planes: 6 planes (left, right, bottom, top, near, far) extracted from view-projection matrix
+    /// - Gribb/Hartmann method: Efficient plane extraction from combined view-projection matrix
+    /// - Used for: Culling objects outside camera view, optimizing rendering performance
+    /// - Combined with VIS files (room visibility) and distance culling for comprehensive culling pipeline
+    /// </remarks>
     public class Frustum
     {
         /// <summary>
