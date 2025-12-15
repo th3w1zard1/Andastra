@@ -22,7 +22,7 @@ using JetBrains.Annotations;
 
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
-using KotorVector3 = CSharpKOTOR.Common.Vector3;
+using KotorVector3 = System.Numerics.Vector3;
 using OdyObjectType = Odyssey.Core.Enums.ObjectType;
 using InstResourceResult = CSharpKOTOR.Installation.ResourceResult;
 using Odyssey.Kotor.Components;

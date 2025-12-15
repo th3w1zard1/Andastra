@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using CSharpKOTOR.Common;
 
 namespace HolocronToolset.NET.Data
@@ -15,14 +16,14 @@ namespace HolocronToolset.NET.Data
             LocalizedString name = null,
             Color lighting = null,
             string skybox = null,
-            Vector3? warpPoint = null)
+            System.Numerics.Vector3? warpPoint = null)
         {
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
             Name = name ?? LocalizedString.FromEnglish("New Module");
             Lighting = lighting ?? new Color(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
-            WarpPoint = warpPoint ?? Vector3.FromNull();
+            WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
         }
 
         public List<IndoorMapRoom> Rooms { get; set; }
@@ -30,7 +31,7 @@ namespace HolocronToolset.NET.Data
         public LocalizedString Name { get; set; }
         public Color Lighting { get; set; }
         public string Skybox { get; set; }
-        public Vector3 WarpPoint { get; set; }
+        public System.Numerics.Vector3 WarpPoint { get; set; }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1058
@@ -41,7 +42,7 @@ namespace HolocronToolset.NET.Data
         // Original: def __init__(self, component: KitComponent, position: Vector3, rotation: float, *, flip_x: bool, flip_y: bool):
         public IndoorMapRoom(
             KitComponent component,
-            Vector3 position,
+            System.Numerics.Vector3 position,
             float rotation,
             bool flipX = false,
             bool flipY = false)
@@ -62,7 +63,7 @@ namespace HolocronToolset.NET.Data
         }
 
         public KitComponent Component { get; set; }
-        public Vector3 Position { get; set; }
+        public System.Numerics.Vector3 Position { get; set; }
         public float Rotation { get; set; }
         public List<IndoorMapRoom> Hooks { get; set; }
         public bool FlipX { get; set; }

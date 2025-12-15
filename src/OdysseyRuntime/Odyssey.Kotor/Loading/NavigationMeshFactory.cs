@@ -68,15 +68,15 @@ namespace Odyssey.Kotor.Loading
                 Vector3 roomPosition = room.Position;
 
                 // Build vertex index map for this walkmesh
-                var vertexIndexMap = new Dictionary<CSharpKOTOR.Common.Vector3, int>();
+                var vertexIndexMap = new Dictionary<System.Numerics.Vector3, int>();
 
                 // Process faces from this walkmesh
                 foreach (BWMFace face in bwm.Faces)
                 {
                     // Add vertices (with room offset applied)
-                    int idx1 = AddVertex(allVertices, face.V1, roomPosition, vertexIndexMap);
-                    int idx2 = AddVertex(allVertices, face.V2, roomPosition, vertexIndexMap);
-                    int idx3 = AddVertex(allVertices, face.V3, roomPosition, vertexIndexMap);
+                    int idx1 = AddVertex(allVertices, new System.Numerics.Vector3(face.V1.X, face.V1.Y, face.V1.Z), roomPosition, vertexIndexMap);
+                    int idx2 = AddVertex(allVertices, new System.Numerics.Vector3(face.V2.X, face.V2.Y, face.V2.Z), roomPosition, vertexIndexMap);
+                    int idx3 = AddVertex(allVertices, new System.Numerics.Vector3(face.V3.X, face.V3.Y, face.V3.Z), roomPosition, vertexIndexMap);
 
                     // Add face indices
                     allFaceIndices.Add(idx1);
@@ -138,13 +138,13 @@ namespace Odyssey.Kotor.Loading
             var adjacency = new List<int>();
             var surfaceMaterials = new List<int>();
 
-            var vertexIndexMap = new Dictionary<CSharpKOTOR.Common.Vector3, int>();
+            var vertexIndexMap = new Dictionary<System.Numerics.Vector3, int>();
 
             foreach (BWMFace face in bwm.Faces)
             {
-                int idx1 = AddVertex(vertices, face.V1, offset, vertexIndexMap);
-                int idx2 = AddVertex(vertices, face.V2, offset, vertexIndexMap);
-                int idx3 = AddVertex(vertices, face.V3, offset, vertexIndexMap);
+                int idx1 = AddVertex(vertices, new System.Numerics.Vector3(face.V1.X, face.V1.Y, face.V1.Z), offset, vertexIndexMap);
+                int idx2 = AddVertex(vertices, new System.Numerics.Vector3(face.V2.X, face.V2.Y, face.V2.Z), offset, vertexIndexMap);
+                int idx3 = AddVertex(vertices, new System.Numerics.Vector3(face.V3.X, face.V3.Y, face.V3.Z), offset, vertexIndexMap);
 
                 faceIndices.Add(idx1);
                 faceIndices.Add(idx2);
@@ -214,8 +214,8 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Adds a vertex to the list, returning its index.
         /// </summary>
-        private int AddVertex(List<System.Numerics.Vector3> vertices, CSharpKOTOR.Common.Vector3 v, System.Numerics.Vector3 offset,
-            Dictionary<CSharpKOTOR.Common.Vector3, int> indexMap)
+        private int AddVertex(List<System.Numerics.Vector3> vertices, System.Numerics.Vector3 v, System.Numerics.Vector3 offset,
+            Dictionary<System.Numerics.Vector3, int> indexMap)
         {
             // Check if vertex already exists
             if (indexMap.TryGetValue(v, out int existingIndex))

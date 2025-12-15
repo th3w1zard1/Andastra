@@ -5,9 +5,9 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
-using Vector2 = CSharpKOTOR.Common.Vector2;
-using Vector3 = CSharpKOTOR.Common.Vector3;
-using Vector4 = CSharpKOTOR.Common.Vector4;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CSharpKOTOR.Resource.Generics
 {

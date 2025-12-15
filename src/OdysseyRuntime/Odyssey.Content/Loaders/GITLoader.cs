@@ -382,8 +382,8 @@ namespace Odyssey.Content.Loaders
         {
             if (s.Exists(name))
             {
-                CSharpKOTOR.Common.Vector3 v = s.GetVector3(name);
-                return new System.Numerics.Vector3(v.X, v.Y, v.Z);
+                System.Numerics.Vector3 v = s.GetVector3(name);
+                return v;
             }
             return System.Numerics.Vector3.Zero;
         }
@@ -392,7 +392,7 @@ namespace Odyssey.Content.Loaders
         {
             if (s.Exists(name))
             {
-                CSharpKOTOR.Common.Vector4 v = s.GetVector4(name);
+                System.Numerics.Vector4 v = s.GetVector4(name);
                 return new System.Numerics.Quaternion(v.X, v.Y, v.Z, v.W);
             }
             return System.Numerics.Quaternion.Identity;

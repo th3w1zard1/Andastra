@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using JetBrains.Annotations;
 
@@ -87,8 +88,8 @@ namespace CSharpKOTOR.Formats.GFF
         public ResRef GetResRef(string label) => GetValue(label) as ResRef ?? ResRef.FromBlank();
         public LocalizedString GetLocString(string label) => GetValue(label) as LocalizedString ?? LocalizedString.FromInvalid();
         public byte[] GetBinary(string label) => GetValue(label) as byte[] ?? Array.Empty<byte>();
-        public Vector3 GetVector3(string label) => (Vector3)(GetValue(label) ?? new Vector3());
-        public Vector4 GetVector4(string label) => (Vector4)(GetValue(label) ?? new Vector4());
+        public System.Numerics.Vector3 GetVector3(string label) => (System.Numerics.Vector3)(GetValue(label) ?? System.Numerics.Vector3.Zero);
+        public System.Numerics.Vector4 GetVector4(string label) => (System.Numerics.Vector4)(GetValue(label) ?? System.Numerics.Vector4.Zero);
         public GFFStruct GetStruct(string label) => GetValue(label) as GFFStruct ?? new GFFStruct();
         public GFFList GetList(string label) => GetValue(label) as GFFList ?? new GFFList();
 
@@ -143,8 +144,8 @@ namespace CSharpKOTOR.Formats.GFF
         public void SetResRef(string label, ResRef value) => SetField(label, GFFFieldType.ResRef, value);
         public void SetLocString(string label, LocalizedString value) => SetField(label, GFFFieldType.LocalizedString, value);
         public void SetBinary(string label, byte[] value) => SetField(label, GFFFieldType.Binary, value);
-        public void SetVector3(string label, Vector3 value) => SetField(label, GFFFieldType.Vector3, value);
-        public void SetVector4(string label, Vector4 value) => SetField(label, GFFFieldType.Vector4, value);
+        public void SetVector3(string label, System.Numerics.Vector3 value) => SetField(label, GFFFieldType.Vector3, value);
+        public void SetVector4(string label, System.Numerics.Vector4 value) => SetField(label, GFFFieldType.Vector4, value);
         public void SetStruct(string label, GFFStruct value) => SetField(label, GFFFieldType.Struct, value);
         public void SetList(string label, GFFList value) => SetField(label, GFFFieldType.List, value);
 

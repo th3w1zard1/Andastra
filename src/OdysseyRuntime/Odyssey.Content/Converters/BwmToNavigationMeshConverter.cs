@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using CSharpKOTOR.Formats.BWM;
 using Odyssey.Core.Navigation;
-using CSharpKotorVector3 = CSharpKOTOR.Common.Vector3;
 
 namespace Odyssey.Content.Converters
 {
@@ -53,9 +52,9 @@ namespace Odyssey.Content.Converters
             foreach (BWMFace face in bwm.Faces)
             {
                 // Get or add each vertex
-                int v1Idx = GetOrAddVertex(vertexList, vertexMap, face.V1);
-                int v2Idx = GetOrAddVertex(vertexList, vertexMap, face.V2);
-                int v3Idx = GetOrAddVertex(vertexList, vertexMap, face.V3);
+                int v1Idx = GetOrAddVertex(vertexList, vertexMap, new Vector3(face.V1.X, face.V1.Y, face.V1.Z));
+                int v2Idx = GetOrAddVertex(vertexList, vertexMap, new Vector3(face.V2.X, face.V2.Y, face.V2.Z));
+                int v3Idx = GetOrAddVertex(vertexList, vertexMap, new Vector3(face.V3.X, face.V3.Y, face.V3.Z));
 
                 faceIndices.Add(v1Idx);
                 faceIndices.Add(v2Idx);
@@ -111,9 +110,9 @@ namespace Odyssey.Content.Converters
             foreach (BWMFace face in bwm.Faces)
             {
                 // Apply offset when converting vertices
-                int v1Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, face.V1, offset);
-                int v2Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, face.V2, offset);
-                int v3Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, face.V3, offset);
+                int v1Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, new Vector3(face.V1.X, face.V1.Y, face.V1.Z), offset);
+                int v2Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, new Vector3(face.V2.X, face.V2.Y, face.V2.Z), offset);
+                int v3Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, new Vector3(face.V3.X, face.V3.Y, face.V3.Z), offset);
 
                 faceIndices.Add(v1Idx);
                 faceIndices.Add(v2Idx);
@@ -170,7 +169,7 @@ namespace Odyssey.Content.Converters
         private static int GetOrAddVertex(
             List<Vector3> vertices,
             Dictionary<string, int> vertexMap,
-            CSharpKotorVector3 v)
+            Vector3 v)
         {
             string key = string.Format("{0:F6},{1:F6},{2:F6}", v.X, v.Y, v.Z);
             int index;
@@ -180,7 +179,7 @@ namespace Odyssey.Content.Converters
             }
 
             index = vertices.Count;
-            vertices.Add(new Vector3(v.X, v.Y, v.Z));
+            vertices.Add(v);
             vertexMap[key] = index;
             return index;
         }
@@ -188,7 +187,7 @@ namespace Odyssey.Content.Converters
         private static int GetOrAddVertexWithOffset(
             List<Vector3> vertices,
             Dictionary<string, int> vertexMap,
-            CSharpKotorVector3 v,
+            Vector3 v,
             Vector3 offset)
         {
             float x = v.X + offset.X;
