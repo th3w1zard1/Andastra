@@ -2892,17 +2892,6 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
-        /// <summary>
-        /// GetItemStackSize(object oItem) - returns stack size of item
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Item stack size system
-        /// Located via string references: "StackSize" @ 0x007c0a34, "EVENT_DECREMENT_STACKSIZE" @ 0x007bccd8
-        /// Original implementation: Items can stack (e.g., consumables, ammunition) with stack size stored in item data
-        /// Stack size: Default is 1 for non-stackable items, higher values for stackable items (potions, grenades, etc.)
-        /// Stack decrement: When item is used, stack size decrements, EVENT_DECREMENT_STACKSIZE fires when stack reaches 0
-        /// Returns: Stack size (1 or higher) or 0 if item is invalid
-        /// </remarks>
         private Variable Func_GetItemStackSize(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetItemStackSize(object oItem)
@@ -3764,6 +3753,8 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// SupernaturalEffect(effect eEffect) - Wraps an effect as a supernatural effect (cannot be dispelled)
+        /// Based on swkotor2.exe: Sets effect subtype to SUBTYPE_SUPERNATURAL (16)
+        /// Supernatural effects cannot be dispelled
         /// </summary>
         private Variable Func_SupernaturalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3778,13 +3769,12 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromEffect(null);
             }
             
-            // Supernatural effects cannot be dispelled
-            // The effect itself is unchanged, but marked as supernatural
-            // For now, just return the effect as-is
-            // TODO: Mark effect as supernatural type if Effect class supports it
+            // Set subtype to SUPERNATURAL (16)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
+                effect.SubType = 16; // SUBTYPE_SUPERNATURAL
+                effect.IsSupernatural = true;
                 return Variable.FromEffect(effect);
             }
             
@@ -3793,6 +3783,8 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// ExtraordinaryEffect(effect eEffect) - Wraps an effect as an extraordinary effect (cannot be dispelled, not affected by antimagic)
+        /// Based on swkotor2.exe: Sets effect subtype to SUBTYPE_EXTRAORDINARY (24)
+        /// Extraordinary effects cannot be dispelled and are not affected by antimagic fields
         /// </summary>
         private Variable Func_ExtraordinaryEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3807,13 +3799,12 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromEffect(null);
             }
             
-            // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // The effect itself is unchanged, but marked as extraordinary
-            // For now, just return the effect as-is
-            // TODO: Mark effect as extraordinary type if Effect class supports it
+            // Set subtype to EXTRAORDINARY (24)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
+                effect.SubType = 24; // SUBTYPE_EXTRAORDINARY
+                effect.IsSupernatural = false; // Extraordinary is not supernatural
                 return Variable.FromEffect(effect);
             }
             
