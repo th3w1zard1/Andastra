@@ -6649,13 +6649,47 @@ namespace Odyssey.Kotor.EngineApi
 
                 case 2: // DOOR_ACTION_BASH
                     // Bash door: Attempt to break lock via strength check
+                    // Based on swkotor2.exe: Door bashing system
+                    // Original implementation: Performs strength check (d20 + STR modifier vs LockDC), applies damage if successful
                     if (doorComponent.IsLocked && ctx.Caller != null)
                     {
-                        // TODO: Implement strength check (d20 + STR modifier vs LockDC)
-                        // For now, just unlock if lockable by script
-                        if (doorComponent.LockableByScript)
+                        // Get caller's strength ability score
+                        int strengthScore = 10; // Default
+                        int strengthModifier = 0;
+                        if (ctx.Caller.ObjectType == Core.Enums.ObjectType.Creature)
                         {
-                            doorComponent.Unlock();
+                            Core.Interfaces.Components.IStatsComponent stats = ctx.Caller.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                            if (stats != null)
+                            {
+                                // Get strength ability score (0=Strength in D20 system)
+                                strengthScore = stats.GetAbilityScore(0); // 0 = Strength
+                                strengthModifier = (strengthScore - 10) / 2; // D20 ability modifier formula
+                            }
+                        }
+
+                        // Roll d20 + STR modifier vs LockDC
+                        int roll = _random.Next(1, 21); // d20 roll
+                        int total = roll + strengthModifier;
+
+                        // If check succeeds, apply damage
+                        if (total >= doorComponent.LockDC)
+                        {
+                            // Apply bash damage: STR modifier + 1d4 (base bash damage)
+                            int bashDamage = strengthModifier + _random.Next(1, 5); // STR mod + 1d4
+                            if (bashDamage < 1)
+                            {
+                                bashDamage = 1; // Minimum 1 damage
+                            }
+
+                            // Apply damage to door (handles HP reduction, hardness, and destruction)
+                            doorComponent.ApplyDamage(bashDamage);
+
+                            // If door was destroyed (bashed open), it's already unlocked and opened by ApplyDamage
+                            // Fire OnDamaged script event if door still exists
+                            if (doorComponent.CurrentHP > 0 && ctx.World != null && ctx.World.EventBus != null)
+                            {
+                                ctx.World.EventBus.FireScriptEvent(door, Core.Enums.ScriptEvent.OnDamaged, ctx.Caller);
+                            }
                         }
                     }
                     break;
