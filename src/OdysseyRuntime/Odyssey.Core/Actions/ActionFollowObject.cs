@@ -108,7 +108,22 @@ namespace Odyssey.Core.Actions
                 moveDistance = targetDistance;
             }
 
-            transform.Position += direction2 * moveDistance;
+            Vector3 newPosition = transform.Position + direction2 * moveDistance;
+            
+            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
+            IArea area = actor.World.CurrentArea;
+            if (area != null && area.NavigationMesh != null)
+            {
+                Vector3 projectedPos;
+                float height;
+                if (area.NavigationMesh.ProjectToSurface(newPosition, out projectedPos, out height))
+                {
+                    newPosition = projectedPos;
+                }
+            }
+            
+            transform.Position = newPosition;
             // Y-up system: Atan2(Y, X) for 2D plane facing
             transform.Facing = (float)Math.Atan2(direction2.Y, direction2.X);
 
