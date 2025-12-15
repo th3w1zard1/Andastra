@@ -374,6 +374,11 @@ namespace Odyssey.Core.Movement
             CurrentSpeed = baseSpeed;
 
             // Calculate movement
+            // Based on swkotor2.exe: Character movement implementation
+            // Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
+            // "WALKRATE" @ 0x007c4b78, "RUNRATE" @ 0x007c4b84 (walk/run speed from appearance.2da)
+            // Original implementation: Movement speed from appearance.2da WALKRATE/RUNRATE fields
+            // Movement constrained to walkmesh surface, validates position after each movement step
             float moveDistance = baseSpeed * deltaTime;
             if (moveDistance > distanceToWaypoint)
             {
@@ -384,6 +389,13 @@ namespace Odyssey.Core.Movement
             Vector3 newPosition = currentPos + normalizedDir * moveDistance;
 
             // Validate position on navmesh
+            // Based on swkotor2.exe: Movement validation prevents entities from leaving walkmesh
+            // Located via string references: "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
+            // Error messages: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
+            // "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
+            // "aborted walking, Maximum number of bumps happened" @ 0x007c0458
+            // Original implementation: Validates position is on walkmesh after movement, projects to surface if off-mesh
+            // Bumping system: Detects creature collisions, attempts to navigate around blocked creatures
             if (_navMesh != null)
             {
                 if (!_navMesh.IsPointOnMesh(newPosition))
@@ -396,6 +408,8 @@ namespace Odyssey.Core.Movement
                     }
                     else
                     {
+                        // Movement blocked - fire event and stop
+                        // Original engine: Fires pathfinding failure event, may execute "k_def_pathfail01" script
                         if (OnMovementBlocked != null)
                         {
                             OnMovementBlocked(newPosition);
