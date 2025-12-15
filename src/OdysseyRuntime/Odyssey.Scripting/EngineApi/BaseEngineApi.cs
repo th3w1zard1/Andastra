@@ -114,11 +114,17 @@ namespace Odyssey.Scripting.EngineApi
         /// Located via string references: "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output format)
         /// Original implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format to console/log)
         ///   - Original implementation (from decompiled FUN_005c4ff0):
-        ///     - Checks parameter count (param_2), requires at least 2 parameters
-        ///     - Reads parameter value from stack/context
-        ///     - Formats string with "PRINTSTRING: %s\n" format string
-        ///     - Outputs to console/log via engine logging system
-        ///     - Returns 0 on success, 0xfffff82f on failure
+        ///     - Function signature: `undefined4 FUN_005c4ff0(undefined4 param_1, int param_2)`
+        ///     - param_1: Execution context pointer
+        ///     - param_2: Parameter count (requires at least 2 parameters for valid call)
+        ///     - Parameter validation: If param_2 < 2, skips parameter reading and uses default format
+        ///     - Parameter reading: Calls FUN_0061cc20 to read parameter value from execution context
+        ///     - Parameter type check: If parameter type is 1 (string type), uses "PRINTSTRING: %s\n" format
+        ///     - Format string: "PRINTSTRING: %s\n" @ 0x007c29f8 (used when parameter type is string)
+        ///     - Alternative format: Uses different format string (DAT_007b8f34) if parameter type is not string
+        ///     - Output: Calls FUN_006306c0 to output formatted string to console/log via engine logging system
+        ///     - Return value: Returns 0 on success, 0xfffff82f (error code) on failure
+        ///     - Error handling: Returns error code if parameter reading fails or execution context is invalid
         /// </remarks>
         protected Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
