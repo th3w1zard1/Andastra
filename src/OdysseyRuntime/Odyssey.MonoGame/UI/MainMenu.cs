@@ -6,13 +6,26 @@ namespace Odyssey.MonoGame.UI
 {
     /// <summary>
     /// Main menu UI component using MonoGame SpriteBatch rendering.
+    /// Displays main menu options: New Game, Load Game, Options, Exit.
     /// </summary>
+    /// <remarks>
+    /// Main Menu Rendering:
+    /// - Based on swkotor2.exe main menu system
+    /// - Located via string references: Main menu UI rendering functions
+    /// - Original implementation: Renders main menu with game title and menu options
+    /// - Menu options: New Game, Load Game, Options, Exit
+    /// - Based on KOTOR main menu conventions from vendor/PyKotor/wiki/
+    /// </remarks>
     public class MainMenu
     {
         private SpriteBatch _spriteBatch;
         private SpriteFont _font;
         private bool _isVisible = false;
         private string _statusText = "";
+        private int _selectedIndex = 0;
+        private readonly string[] _menuItems = { "New Game", "Load Game", "Options", "Exit" };
+        private Texture2D _backgroundTexture;
+        private Texture2D _pixelTexture;
 
         public bool IsVisible
         {
@@ -20,10 +33,26 @@ namespace Odyssey.MonoGame.UI
             set { _isVisible = value; }
         }
 
+        public int SelectedIndex
+        {
+            get { return _selectedIndex; }
+            set
+            {
+                if (value >= 0 && value < _menuItems.Length)
+                {
+                    _selectedIndex = value;
+                }
+            }
+        }
+
         public MainMenu(GraphicsDevice device, SpriteFont font)
         {
             _spriteBatch = new SpriteBatch(device);
-            _font = font;
+            _font = font ?? throw new System.ArgumentNullException("font");
+            
+            // Create a simple 1x1 texture for drawing rectangles
+            _pixelTexture = new Texture2D(device, 1, 1);
+            _pixelTexture.SetData(new[] { Color.White });
         }
 
         public void Draw(GameTime gameTime)
@@ -33,22 +62,134 @@ namespace Odyssey.MonoGame.UI
                 return;
             }
 
-            _spriteBatch.Begin();
-            
-            // Draw menu background
-            // TODO: Implement full menu rendering
-            
+            int viewportWidth = _spriteBatch.GraphicsDevice.Viewport.Width;
+            int viewportHeight = _spriteBatch.GraphicsDevice.Viewport.Height;
+
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+
+            // Draw semi-transparent background overlay
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(0, 0, viewportWidth, viewportHeight), 
+                new Color(0, 0, 0, 220)); // Dark semi-transparent background
+
+            // Draw game title (centered at top)
+            if (_font != null)
+            {
+                string title = "KNIGHTS OF THE OLD REPUBLIC";
+                Vector2 titleSize = _font.MeasureString(title);
+                Vector2 titlePos = new Vector2(
+                    (viewportWidth - titleSize.X) / 2,
+                    viewportHeight / 4
+                );
+                _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+            }
+
+            // Draw menu items (centered)
+            if (_font != null)
+            {
+                float startY = viewportHeight / 2;
+                float itemSpacing = 50f;
+
+                for (int i = 0; i < _menuItems.Length; i++)
+                {
+                    Color itemColor = (i == _selectedIndex) ? Color.Yellow : Color.White;
+                    string itemText = _menuItems[i];
+                    Vector2 itemSize = _font.MeasureString(itemText);
+                    Vector2 itemPos = new Vector2(
+                        (viewportWidth - itemSize.X) / 2,
+                        startY + (i * itemSpacing)
+                    );
+                    _spriteBatch.DrawString(_font, itemText, itemPos, itemColor);
+                }
+            }
+
+            // Draw status text at bottom
             if (_font != null && !string.IsNullOrEmpty(_statusText))
             {
-                _spriteBatch.DrawString(_font, _statusText, new Vector2(10, 10), Color.White);
+                Vector2 statusSize = _font.MeasureString(_statusText);
+                Vector2 statusPos = new Vector2(10, viewportHeight - statusSize.Y - 10);
+                _spriteBatch.DrawString(_font, _statusText, statusPos, Color.Gray);
             }
 
             _spriteBatch.End();
         }
 
+        public void HandleInput(bool up, bool down, bool select, bool cancel)
+        {
+            if (!_isVisible)
+            {
+                return;
+            }
+
+            if (up && _selectedIndex > 0)
+            {
+                _selectedIndex--;
+            }
+            if (down && _selectedIndex < _menuItems.Length - 1)
+            {
+                _selectedIndex++;
+            }
+            if (select)
+            {
+                HandleSelection();
+            }
+        }
+
+        private void HandleSelection()
+        {
+            switch (_selectedIndex)
+            {
+                case 0: // New Game
+                    OnNewGame?.Invoke();
+                    break;
+                case 1: // Load Game
+                    OnLoadGame?.Invoke();
+                    break;
+                case 2: // Options
+                    OnOptions?.Invoke();
+                    break;
+                case 3: // Exit
+                    OnExit?.Invoke();
+                    break;
+            }
+        }
+
         public void SetStatusText(string text)
         {
-            _statusText = text;
+            _statusText = text ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Event fired when New Game is selected.
+        /// </summary>
+        public event System.Action OnNewGame;
+
+        /// <summary>
+        /// Event fired when Load Game is selected.
+        /// </summary>
+        public event System.Action OnLoadGame;
+
+        /// <summary>
+        /// Event fired when Options is selected.
+        /// </summary>
+        public event System.Action OnOptions;
+
+        /// <summary>
+        /// Event fired when Exit is selected.
+        /// </summary>
+        public event System.Action OnExit;
+
+        public void Dispose()
+        {
+            if (_pixelTexture != null)
+            {
+                _pixelTexture.Dispose();
+                _pixelTexture = null;
+            }
+            if (_backgroundTexture != null)
+            {
+                _backgroundTexture.Dispose();
+                _backgroundTexture = null;
+            }
         }
     }
 }

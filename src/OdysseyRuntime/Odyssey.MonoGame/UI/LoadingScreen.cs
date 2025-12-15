@@ -43,15 +43,20 @@ namespace Odyssey.MonoGame.UI
                 return;
             }
 
-            _spriteBatch.Begin();
+            int viewportWidth = _spriteBatch.GraphicsDevice.Viewport.Width;
+            int viewportHeight = _spriteBatch.GraphicsDevice.Viewport.Height;
 
-            // Draw loading screen background
-            // TODO: Implement loading screen rendering
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
+            // Draw semi-transparent black background overlay
+            Texture2D pixel = new Texture2D(_spriteBatch.GraphicsDevice, 1, 1);
+            pixel.SetData(new[] { Color.Black });
+            _spriteBatch.Draw(pixel, new Rectangle(0, 0, viewportWidth, viewportHeight), 
+                new Color(0, 0, 0, 200)); // Semi-transparent black
+
+            // Draw loading text centered
             if (_font != null)
             {
-                int viewportWidth = _spriteBatch.GraphicsDevice.Viewport.Width;
-                int viewportHeight = _spriteBatch.GraphicsDevice.Viewport.Height;
                 Vector2 textSize = _font.MeasureString(_loadingText);
                 Vector2 position = new Vector2(
                     (viewportWidth - textSize.X) / 2,
@@ -61,6 +66,11 @@ namespace Odyssey.MonoGame.UI
             }
 
             _spriteBatch.End();
+
+            if (pixel != null)
+            {
+                pixel.Dispose();
+            }
         }
     }
 }

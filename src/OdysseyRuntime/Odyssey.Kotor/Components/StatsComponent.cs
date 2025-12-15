@@ -42,6 +42,8 @@ namespace Odyssey.Kotor.Components
         private int _armorBonus;
         private int _naturalArmor;
         private int _deflectionBonus;
+        private int _currentFP;
+        private int _maxFP;
 
         public StatsComponent()
         {
@@ -63,6 +65,8 @@ namespace Odyssey.Kotor.Components
             
             _currentHP = 10;
             _maxHP = 10;
+            _currentFP = 0;
+            _maxFP = 0;
             _baseLevel = 1;
             _baseAttackBonus = 0;
             _baseFortitude = 0;
@@ -228,12 +232,20 @@ namespace Odyssey.Kotor.Components
         /// <summary>
         /// Current force points.
         /// </summary>
-        public int CurrentFP { get; set; }
+        public int CurrentFP
+        {
+            get { return _currentFP; }
+            set { _currentFP = Math.Max(0, Math.Min(value, MaxFP)); }
+        }
 
         /// <summary>
         /// Maximum force points.
         /// </summary>
-        public int MaxFP { get; set; }
+        public int MaxFP
+        {
+            get { return _maxFP; }
+            set { _maxFP = Math.Max(0, value); }
+        }
 
         /// <summary>
         /// Armor bonus from equipped armor.
