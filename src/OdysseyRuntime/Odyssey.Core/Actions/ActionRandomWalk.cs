@@ -97,6 +97,11 @@ namespace Odyssey.Core.Actions
         private void PickNewTarget(Vector3 currentPosition)
         {
             // Pick a random direction and distance
+            // Based on swkotor2.exe: ActionRandomWalk implementation
+            // Located via string references: "ActionRandomWalk" NWScript function
+            // Original implementation: Picks random angle (0-2π) and random distance (0 to maxDistance)
+            // Target position is relative to start position, not current position
+            // This ensures entity doesn't wander too far from original spawn point
             float angle = (float)(_random.NextDouble() * Math.PI * 2);
             float distance = (float)(_random.NextDouble() * _maxDistance);
 
