@@ -102,7 +102,10 @@ namespace Odyssey.Content.Save
         {
             // Use CSharpKOTOR GFF writer
             // Original creates GFF with "NFO " signature and "V2.0" version
-            var gff = new GFF(GFFContent.GFF);
+            // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750 creates GFF with "NFO " signature
+            // Located via string reference: "savenfo" @ 0x007be1f0
+            // Note: CSharpKOTOR GFFBinaryWriter always writes "V3.2" version, but signature is correct
+            var gff = new GFF(GFFContent.NFO);
             GFFStruct root = gff.Root;
 
             // AREANAME - Current area name
@@ -393,7 +396,10 @@ namespace Odyssey.Content.Save
 
             // Use CSharpKOTOR GFF writer
             // Original creates GFF with "GVT " signature and "V2.0" version
-            var gff = new GFF(GFFContent.GFF);
+            // Based on swkotor2.exe: FUN_005ab310 @ 0x005ab310 creates GFF with "GVT " signature
+            // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+            // Note: CSharpKOTOR GFFBinaryWriter always writes "V3.2" version, but signature is correct
+            var gff = new GFF(GFFContent.GVT);
             var root = gff.Root;
 
             // CatBoolean list: Each entry has "Name" field
