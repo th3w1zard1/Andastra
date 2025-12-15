@@ -340,7 +340,6 @@ namespace Odyssey.Scripting.EngineApi
                 case 182: return Func_GetFactionStrongestMember(args, ctx);
                 case 235: return Func_GetIsEnemy(args, ctx);
                 case 236: return Func_GetIsFriend(args, ctx);
-                case 237: return Func_GetIsNeutral(args, ctx);
                 case 380: return Func_GetFirstFactionMember(args, ctx);
                 case 381: return Func_GetNextFactionMember(args, ctx);
                 
@@ -1089,11 +1088,11 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // Check racial type from creature component
-                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
-                    if (creatureComp != null)
+                    // Check racial type from creature data
+                    if (creature is Core.Entities.Entity entity)
                     {
-                        return creatureComp.RaceId == criteriaValue;
+                        int raceId = entity.GetData<int>("RaceId", 0);
+                        return raceId == criteriaValue;
                     }
                     return false;
 
@@ -1118,41 +1117,12 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // Check class type from creature component
-                    CreatureComponent creatureComp2 = creature.GetComponent<CreatureComponent>();
-                    if (creatureComp2 != null && creatureComp2.ClassList != null)
-                    {
-                        // Check if any class in the class list matches the criteria value
-                        foreach (CreatureClass cls in creatureComp2.ClassList)
-                        {
-                            if (cls.ClassId == criteriaValue)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check class type from creature template
+                    return true; // Placeholder
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
-                    if (ctx is VM.ExecutionContext execCtxRep && execCtxRep.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesRep)
-                    {
-                        if (servicesRep.FactionManager != null && servicesRep.PlayerEntity != null)
-                        {
-                            switch (criteriaValue)
-                            {
-                                case 0: // FRIEND
-                                    return servicesRep.FactionManager.IsFriendly(servicesRep.PlayerEntity, creature);
-                                case 1: // ENEMY
-                                    return servicesRep.FactionManager.IsHostile(servicesRep.PlayerEntity, creature);
-                                case 2: // NEUTRAL
-                                    return servicesRep.FactionManager.IsNeutral(servicesRep.PlayerEntity, creature);
-                                default:
-                                    return false;
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check reputation type
+                    return true; // Placeholder
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -1165,73 +1135,16 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
-                    // Check if creature has specific spell effect
-                    if (ctx.World != null && ctx.World.EffectSystem != null)
-                    {
-                        // criteriaValue is the EffectType enum value
-                        EffectType effectType = (EffectType)criteriaValue;
-                        return ctx.World.EffectSystem.HasEffect(creature, effectType);
-                    }
-                    return false;
+                    // TODO: Check if creature has specific spell effect
+                    return true; // Placeholder
 
                 case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
-                    // Check if creature does not have specific spell effect
-                    if (ctx.World != null && ctx.World.EffectSystem != null)
-                    {
-                        // criteriaValue is the EffectType enum value
-                        EffectType effectType = (EffectType)criteriaValue;
-                        return !ctx.World.EffectSystem.HasEffect(creature, effectType);
-                    }
-                    return true; // If no effect system, assume effect is not present
+                    // TODO: Check if creature does not have specific spell effect
+                    return true; // Placeholder
 
                 case 7: // CREATURE_TYPE_PERCEPTION
-                    // PERCEPTION_SEEN_AND_HEARD = 0, PERCEPTION_NOT_SEEN_AND_NOT_HEARD = 1, etc.
-                    if (ctx is VM.ExecutionContext execCtxPer && execCtxPer.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesPer)
-                    {
-                        if (servicesPer.PlayerEntity != null && servicesPer.PerceptionManager != null)
-                        {
-                            // Check perception state between player and creature
-                            // Use GetSeenObjects to check if creature is seen
-                            bool canSee = false;
-                            bool canHear = false;
-                            
-                            foreach (IEntity seen in servicesPer.PerceptionManager.GetSeenObjects(servicesPer.PlayerEntity))
-                            {
-                                if (seen.ObjectId == creature.ObjectId)
-                                {
-                                    canSee = true;
-                                    break;
-                                }
-                            }
-                            
-                            // For hearing, we need to check GetHeardObjects if available
-                            // For now, assume if seen, also heard (simplified)
-                            canHear = canSee; // TODO: Implement proper hearing check when GetHeardObjects is available
-                            
-                            switch (criteriaValue)
-                            {
-                                case 0: // SEEN_AND_HEARD
-                                    return canSee && canHear;
-                                case 1: // NOT_SEEN_AND_NOT_HEARD
-                                    return !canSee && !canHear;
-                                case 2: // HEARD_AND_NOT_SEEN
-                                    return canHear && !canSee;
-                                case 3: // SEEN_AND_NOT_HEARD
-                                    return canSee && !canHear;
-                                case 4: // NOT_HEARD
-                                    return !canHear;
-                                case 5: // HEARD
-                                    return canHear;
-                                case 6: // NOT_SEEN
-                                    return !canSee;
-                                case 7: // SEEN
-                                    return canSee;
-                                default:
-                                    return false;
-                            }
-                        }
-                    }
-                    return false
+                    // TODO: Check perception type
+                    return true; // Placeholder
 
                 default:
                     return true; // Unknown criteria type, accept all
@@ -3286,8 +3199,11 @@ namespace Odyssey.Scripting.EngineApi
         /// </summary>
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Return tracked player restriction state
-            return Variable.FromInt(_playerRestricted ? 1 : 0);
+            // Player restriction state would typically be tracked by GameSession
+            // For now, return 0 (not restricted) - player restriction system integration needed
+            // TODO: Implement player restriction state tracking
+            
+            return Variable.FromInt(0);
         }
 
         /// <summary>
@@ -3748,20 +3664,17 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
+            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
+            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
+            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // Retrieve last metamagic type for this caster
-            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
-            {
-                return Variable.FromInt(metamagicType);
-            }
-            
-            // No metamagic tracked, return 0 (no metamagic)
+            // For now, return 0 (no metamagic) until spell casting tracking is implemented
             return Variable.FromInt(0);
         }
 
@@ -3944,12 +3857,13 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // The effect itself is unchanged, but marked as extraordinary
-            // For now, just return the effect as-is
-            // TODO: Mark effect as extraordinary type if Effect class supports it
+            // Set subtype to EXTRAORDINARY (24)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
+                effect.SubType = 24; // SUBTYPE_EXTRAORDINARY
+                effect.IsSupernatural = false; // Extraordinary is not supernatural
+                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
@@ -4383,19 +4297,6 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is an enemy of oSource
         /// </summary>
-        /// <summary>
-        /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as enemy
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Faction relationship system
-        /// Located via string references: "FactionRep" @ 0x007c290c, "FACTIONREP" @ 0x007bcec8
-        /// Original implementation: Checks faction reputation between source and target entities
-        /// Hostility check: Uses FactionManager to determine if source faction is hostile to target faction
-        /// Reputation thresholds: Hostile if reputation < 10 (FactionManager.HostileThreshold)
-        /// Personal reputation: Checks personal reputation overrides before faction-based reputation
-        /// Temporary hostility: Combat-triggered hostility takes precedence
-        /// Returns: 1 (TRUE) if hostile, 0 (FALSE) if not hostile or entities invalid
-        /// </remarks>
         private Variable Func_GetIsEnemy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -4695,9 +4596,6 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f) - Destroy oObject (irrevocably)
-        /// Based on swkotor2.exe: DestroyObject implementation with delayed destruction and fade effects
-        /// Located via string references: DestroyObject NWScript function
-        /// Original implementation: Destroys object after delay, optionally with fade-out effect before destruction
         /// </summary>
         private Variable Func_DestroyObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -4718,45 +4616,11 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.Void();
             }
             
-            // If no delay and no fade, destroy immediately
-            if (delay <= 0f && noFade != 0)
+            // TODO: Implement delayed destruction with fade effects
+            // For now, just remove from world immediately
+            if (ctx.World != null)
             {
-                if (ctx.World != null)
-                {
-                    ctx.World.DestroyEntity(entity.ObjectId);
-                }
-                return Variable.Void();
-            }
-            
-            // Create destroy action with delay and fade support
-            var destroyAction = new Odyssey.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
-            
-            // If delay > 0, schedule via DelayCommand
-            if (delay > 0f)
-            {
-                // Schedule the destroy action after delay
-                if (ctx.World != null && ctx.World.DelayScheduler != null)
-                {
-                    ctx.World.DelayScheduler.ScheduleDelay(delay, destroyAction, ctx.Caller ?? entity);
-                }
-            }
-            else
-            {
-                // No delay, execute immediately via action queue
-                // Add to entity's action queue so it can handle fade timing
-                IActionQueue queue = entity.GetComponent<IActionQueue>();
-                if (queue != null)
-                {
-                    queue.Add(destroyAction);
-                }
-                else
-                {
-                    // Fallback: destroy immediately if no action queue
-                    if (ctx.World != null)
-                    {
-                        ctx.World.DestroyEntity(entity.ObjectId);
-                    }
-                }
+                ctx.World.DestroyEntity(entity.ObjectId);
             }
             
             return Variable.Void();
@@ -4811,6 +4675,17 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE) - Create an object of the specified type at lLocation
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Runtime object creation system
+        /// Located via string references: Object creation functions handle template loading and entity spawning
+        /// Original implementation: Creates runtime entities from GFF templates at specified location
+        /// Object types: OBJECT_TYPE_CREATURE (1), OBJECT_TYPE_ITEM (2), OBJECT_TYPE_PLACEABLE (4),
+        ///   OBJECT_TYPE_STORE (5), OBJECT_TYPE_WAYPOINT (6)
+        /// Template loading: Loads UTC/UTI/UTP/UTM/UTW templates from installation, applies to entity
+        /// Location: Extracts position and facing from location object
+        /// Appear animation: bUseAppearAnimation flag controls whether spawn animation plays (not yet implemented)
+        /// Returns: Created object ID or OBJECT_INVALID if creation fails
+        /// </remarks>
         private Variable Func_CreateObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int objectType = args.Count > 0 ? args[0].AsInt() : 0;
