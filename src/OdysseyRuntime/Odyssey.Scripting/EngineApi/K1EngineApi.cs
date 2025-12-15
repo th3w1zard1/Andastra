@@ -17,7 +17,9 @@ using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Combat;
 using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Game;
+using Odyssey.Kotor.Loading;
 using Odyssey.Kotor.Systems;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
@@ -1776,9 +1778,9 @@ namespace Odyssey.Scripting.EngineApi
             // Returns the party member at a given index in the party (0 = leader)
             int index = args.Count > 0 ? args[0].AsInt() : 0;
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetMemberAtSlot(index);
+                IEntity member = partyManager.GetMemberAtSlot(index);
                 if (member != null)
                 {
                     return Variable.FromObject(member.ObjectId);
@@ -1799,9 +1801,9 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                bool inParty = services.PartyManager.IsInParty(creature);
+                bool inParty = partyManager.IsInParty(creature);
                 return Variable.FromInt(inParty ? 1 : 0);
             }
             return Variable.FromInt(0);
@@ -1826,16 +1828,16 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 // Add to available members if not already available
-                if (!services.PartyManager.IsAvailable(npcIndex))
+                if (!partyManager.IsAvailable(npcIndex))
                 {
-                    services.PartyManager.AddAvailableMember(npcIndex, creature);
+                    partyManager.AddAvailableMember(npcIndex, creature);
                 }
 
                 // Select member to join active party
-                bool added = services.PartyManager.SelectMember(npcIndex);
+                bool added = partyManager.SelectMember(npcIndex);
                 return Variable.FromInt(added ? 1 : 0);
             }
             return Variable.FromInt(0);
@@ -1853,11 +1855,11 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromInt(0); // Invalid NPC index
             }
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                if (services.PartyManager.IsSelected(npcIndex))
+                if (partyManager.IsSelected(npcIndex))
                 {
-                    services.PartyManager.DeselectMember(npcIndex);
+                    partyManager.DeselectMember(npcIndex);
                     return Variable.FromInt(1);
                 }
             }
@@ -1870,24 +1872,24 @@ namespace Odyssey.Scripting.EngineApi
             // Sets (by NPC constant) which party member should be the controlled character
             int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 if (npcIndex == -1)
                 {
                     // Switch back to original PC
                     if (services.PlayerEntity != null)
                     {
-                        services.PartyManager.SetLeader(services.PlayerEntity);
+                        partyManager.SetLeader(services.PlayerEntity);
                         return Variable.FromInt(1);
                     }
                 }
                 else
                 {
                     // Switch to NPC party member
-                    IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
-                    if (member != null && services.PartyManager.IsSelected(npcIndex))
+                    IEntity member = partyManager.GetAvailableMember(npcIndex);
+                    if (member != null && partyManager.IsSelected(npcIndex))
                     {
-                        services.PartyManager.SetLeader(member);
+                        partyManager.SetLeader(member);
                         return Variable.FromInt(1);
                     }
                 }
@@ -2580,14 +2582,14 @@ namespace Odyssey.Scripting.EngineApi
             IEntity target = ResolveObject(targetId, ctx);
             
             if (target == null)
-        {
-            return Variable.FromObject(ObjectInvalid);
-        }
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
 
             // Get CombatManager from GameServicesContext
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager != null)
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
-                IEntity lastAttacker = services.CombatManager.GetLastAttacker(target);
+                IEntity lastAttacker = combatManager.GetLastAttacker(target);
                 if (lastAttacker != null)
                 {
                     return Variable.FromObject(lastAttacker.ObjectId);
@@ -2610,9 +2612,9 @@ namespace Odyssey.Scripting.EngineApi
             }
 
             // Try to get CombatManager from GameServicesContext
-            if (ctx.AdditionalContext is IGameServicesContext services && services.CombatManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
-                IEntity target = services.CombatManager.GetAttackTarget(creature);
+                IEntity target = combatManager.GetAttackTarget(creature);
                 if (target != null)
                 {
                     return Variable.FromObject(target.ObjectId);
@@ -2670,9 +2672,9 @@ namespace Odyssey.Scripting.EngineApi
             }
 
             // Try to get CombatManager from GameServicesContext
-            if (ctx.AdditionalContext is IGameServicesContext services && services.CombatManager != null)
+            if (ctx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
-                bool inCombat = services.CombatManager.IsInCombat(creature);
+                bool inCombat = combatManager.IsInCombat(creature);
                 // Note: bOnlyCountReal parameter is not yet implemented - would need to distinguish
                 // between "real" combat (actively fighting) vs "fake" combat (just targeted)
                 return Variable.FromInt(inCombat ? 1 : 0);
@@ -2693,10 +2695,10 @@ namespace Odyssey.Scripting.EngineApi
             // Access CameraController through GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.CameraController != null)
+                if (services.CameraController is Core.Camera.CameraController cameraController)
                 {
                     // Set camera facing using SetFacing method (handles both chase and free camera modes)
-                    services.CameraController.SetFacing(direction);
+                    cameraController.SetFacing(direction);
                 }
             }
             
@@ -2948,9 +2950,9 @@ namespace Odyssey.Scripting.EngineApi
             // Access DialogueManager from GameServicesContext to get TLK
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null)
+                if (services.DialogueManager is DialogueManager dialogueManager)
                 {
-                    string text = services.DialogueManager.LookupString(strRef);
+                    string text = dialogueManager.LookupString(strRef);
                     if (!string.IsNullOrEmpty(text))
                     {
                         return Variable.FromString(text);
@@ -2969,11 +2971,10 @@ namespace Odyssey.Scripting.EngineApi
             // Access DialogueManager from GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                dynamic dialogueManager = services.DialogueManager;
-                if (dialogueManager != null && dialogueManager.IsConversationActive)
+                if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
-                    dynamic state = dialogueManager.CurrentState;
-                    if (state != null)
+                    var state = dialogueManager.CurrentState;
+                    if (state != null && state.Context != null)
                     {
                         // Get the speaker (owner of the dialogue)
                         IEntity speaker = state.Context.Owner;
@@ -3004,10 +3005,9 @@ namespace Odyssey.Scripting.EngineApi
             // Access DialogueManager from GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                dynamic dialogueManager = services.DialogueManager;
-                if (dialogueManager != null && dialogueManager.IsConversationActive)
+                if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
-                    dynamic state = dialogueManager.CurrentState;
+                    var state = dialogueManager.CurrentState;
                     if (state != null && state.Context != null)
                     {
                         // Check if entity is the owner, PC, or PC speaker in the conversation
@@ -3037,9 +3037,9 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null)
+                if (services.DialogueManager is DialogueManager dialogueManager)
                 {
-                    return Variable.FromInt(services.DialogueManager.IsConversationActive ? 1 : 0);
+                    return Variable.FromInt(dialogueManager.IsConversationActive ? 1 : 0);
                 }
             }
             
@@ -3053,10 +3053,9 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                dynamic dialogueManager = services.DialogueManager;
-                if (dialogueManager != null && dialogueManager.IsConversationActive)
+                if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
-                    dynamic state = dialogueManager.CurrentState;
+                    var state = dialogueManager.CurrentState;
                     if (state != null && state.CurrentNode != null)
                     {
                         // Get text from current node using DialogueManager's GetNodeText method
@@ -3080,11 +3079,11 @@ namespace Odyssey.Scripting.EngineApi
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 // Try to get PC speaker from active conversation
-                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
-                    if (services.DialogueManager.CurrentState != null)
+                    if (dialogueManager.CurrentState != null)
                     {
-                        IEntity pcSpeaker = services.DialogueManager.CurrentState.Context.GetPCSpeaker();
+                        IEntity pcSpeaker = dialogueManager.CurrentState.Context.GetPCSpeaker();
                         if (pcSpeaker != null)
                         {
                             return Variable.FromObject(pcSpeaker.ObjectId);
@@ -3152,10 +3151,10 @@ namespace Odyssey.Scripting.EngineApi
             // Access DialogueManager from GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null && services.PlayerEntity != null)
+                if (services.DialogueManager is DialogueManager dialogueManager && services.PlayerEntity != null)
                 {
                     // Start conversation using DialogueManager
-                    bool started = services.DialogueManager.StartConversation(resRef, targetEntity, services.PlayerEntity);
+                    bool started = dialogueManager.StartConversation(resRef, targetEntity, services.PlayerEntity);
                     return Variable.FromInt(started ? 1 : 0);
                 }
             }
@@ -3174,9 +3173,9 @@ namespace Odyssey.Scripting.EngineApi
 
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.PerceptionManager != null)
+                if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
-                    IEntity lastPerceived = services.PerceptionManager.GetLastPerceived(ctx.Caller);
+                    IEntity lastPerceived = perceptionManager.GetLastPerceived(ctx.Caller);
                     if (lastPerceived != null)
                     {
                         return Variable.FromObject(lastPerceived.ObjectId);
@@ -3198,9 +3197,9 @@ namespace Odyssey.Scripting.EngineApi
 
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.PerceptionManager != null)
+                if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
-                    bool wasHeard = services.PerceptionManager.WasLastPerceptionHeard(ctx.Caller);
+                    bool wasHeard = perceptionManager.WasLastPerceptionHeard(ctx.Caller);
                     return Variable.FromInt(wasHeard ? 1 : 0);
                 }
             }
@@ -3212,16 +3211,16 @@ namespace Odyssey.Scripting.EngineApi
         {
             // GetLastPerceptionInaudible() - Check if the last perceived object has become inaudible
             // Returns 1 if inaudible, 0 if not inaudible or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != OdyObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
 
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.PerceptionManager != null)
+                if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
-                    bool wasInaudible = services.PerceptionManager.WasLastPerceptionInaudible(ctx.Caller);
+                    bool wasInaudible = perceptionManager.WasLastPerceptionInaudible(ctx.Caller);
                     return Variable.FromInt(wasInaudible ? 1 : 0);
                 }
             }
@@ -3233,16 +3232,16 @@ namespace Odyssey.Scripting.EngineApi
         {
             // GetLastPerceptionSeen() - Check if the last perceived object was seen
             // Returns 1 if seen, 0 if not seen or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != OdyObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
 
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.PerceptionManager != null)
+                if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
-                    bool wasSeen = services.PerceptionManager.WasLastPerceptionSeen(ctx.Caller);
+                    bool wasSeen = perceptionManager.WasLastPerceptionSeen(ctx.Caller);
                     return Variable.FromInt(wasSeen ? 1 : 0);
                 }
             }
@@ -3261,9 +3260,9 @@ namespace Odyssey.Scripting.EngineApi
 
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.PerceptionManager != null)
+                if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
-                    bool wasVanished = services.PerceptionManager.WasLastPerceptionVanished(ctx.Caller);
+                    bool wasVanished = perceptionManager.WasLastPerceptionVanished(ctx.Caller);
                     return Variable.FromInt(wasVanished ? 1 : 0);
                 }
             }
@@ -3945,7 +3944,7 @@ namespace Odyssey.Scripting.EngineApi
                 switch (effect.DurationType)
                 {
                     case Combat.EffectDurationType.Instant:
-            return Variable.FromInt(0);
+                        return Variable.FromInt(0);
                     case Combat.EffectDurationType.Temporary:
                         return Variable.FromInt(1);
                     case Combat.EffectDurationType.Permanent:
@@ -5151,9 +5150,9 @@ namespace Odyssey.Scripting.EngineApi
             string text = "";
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null)
+                if (services.DialogueManager is DialogueManager dialogueManager)
                 {
-                    text = services.DialogueManager.LookupString(strRef);
+                    text = dialogueManager.LookupString(strRef);
                 }
             }
             
@@ -5352,9 +5351,9 @@ namespace Odyssey.Scripting.EngineApi
             // Access ModuleLoader via GameServicesContext to get EntityFactory
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.ModuleLoader != null && services.ModuleLoader.EntityFactory != null)
+                if (services.ModuleLoader is ModuleLoader moduleLoader && moduleLoader.EntityFactory != null)
                 {
-                    CSharpKOTOR.Common.Module csharpKotorModule = services.ModuleLoader.GetCurrentModule();
+                    CSharpKOTOR.Common.Module csharpKotorModule = moduleLoader.GetCurrentModule();
                     if (csharpKotorModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);
@@ -5369,30 +5368,30 @@ namespace Odyssey.Scripting.EngineApi
                         case Core.Enums.ObjectType.Creature:
                             if (!string.IsNullOrEmpty(template))
                             {
-                                entity = services.ModuleLoader.EntityFactory.CreateCreatureFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                                entity = moduleLoader.EntityFactory.CreateCreatureFromTemplate(csharpKotorModule, template, entityPosition, facing);
                             }
                             break;
                         case Core.Enums.ObjectType.Item:
                             if (!string.IsNullOrEmpty(template))
                             {
-                                entity = services.ModuleLoader.EntityFactory.CreateItemFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                                entity = moduleLoader.EntityFactory.CreateItemFromTemplate(csharpKotorModule, template, entityPosition, facing);
                             }
                             break;
                         case Core.Enums.ObjectType.Placeable:
                             if (!string.IsNullOrEmpty(template))
                             {
-                                entity = services.ModuleLoader.EntityFactory.CreatePlaceableFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                                entity = moduleLoader.EntityFactory.CreatePlaceableFromTemplate(csharpKotorModule, template, entityPosition, facing);
                             }
                             break;
                         case Core.Enums.ObjectType.Store:
                             if (!string.IsNullOrEmpty(template))
                             {
-                                entity = services.ModuleLoader.EntityFactory.CreateStoreFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                                entity = moduleLoader.EntityFactory.CreateStoreFromTemplate(csharpKotorModule, template, entityPosition, facing);
                             }
                             break;
                         case Core.Enums.ObjectType.Waypoint:
                             // Waypoints don't have templates in the same way, their "template" is often just their tag
-                            entity = services.ModuleLoader.EntityFactory.CreateWaypointFromTemplate(template, entityPosition, facing);
+                            entity = moduleLoader.EntityFactory.CreateWaypointFromTemplate(template, entityPosition, facing);
                             break;
                     }
                 }
