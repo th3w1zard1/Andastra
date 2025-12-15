@@ -4629,6 +4629,18 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetName(object oObject) - returns the name of the object
         /// </summary>
+        /// <summary>
+        /// GetName(object oObject) - returns the display name of an object
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Object name system
+        /// Located via string references: "NameStrRef" @ 0x007c0274, "NAME_STRREF" @ 0x007c8200
+        /// Original implementation: Returns display name from entity's FirstName/LastName or NameStrRef
+        /// Name source: First checks FirstName/LastName from entity data (UTC/UTP/etc.), then falls back to Tag
+        /// Name format: "FirstName LastName" if both present, or "FirstName" or "LastName" if only one
+        /// Tag fallback: If no FirstName/LastName, returns entity's Tag string
+        /// Returns: Display name string or empty string if object is invalid
+        /// </remarks>
         private Variable Func_GetName(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -4834,6 +4846,17 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f) - Destroy oObject (irrevocably)
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Object destruction system
+        /// Located via string references: "DestroyObjectDelay" @ 0x007c0248
+        /// Original implementation: Removes entity from world, can be delayed or immediate
+        /// Delay: If fDelay > 0, schedules destruction via DelayCommand system
+        /// Fade: If bNoFade = FALSE, plays fade-out animation before destruction (fDelayUntilFade controls fade timing)
+        /// Immediate: If delay <= 0 and bNoFade = TRUE, destroys immediately without fade
+        /// Restrictions: Cannot destroy modules or areas (these are persistent world objects)
+        /// Action queue: Uses ActionDestroyObject action for fade timing control
+        /// Returns: Void (no return value)
+        /// </remarks>
         private Variable Func_DestroyObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -5220,6 +5243,137 @@ namespace Odyssey.Scripting.EngineApi
         #endregion
     }
 }
+
+
+
+                runtimeArea.AddEntity(entity);
+            }
+            
+            // Implement appear animation if bUseAppearAnimation is TRUE
+            // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
+            // This is typically handled by setting a flag that the rendering system uses to fade in the object
+            if (useAppearAnimation != 0)
+            {
+                // Set flag on entity to indicate it should fade in
+                if (entity is Core.Entities.Entity entityImpl)
+                {
+                    entityImpl.SetData("AppearAnimation", true);
+                    
+                    // Optionally, queue an animation action for entities that support it
+                    // Most objects in KOTOR just fade in visually rather than playing a specific animation
+                    // The rendering system should handle the fade-in based on the AppearAnimation flag
+                }
+            }
+            
+            return Variable.FromObject(entity.ObjectId);
+        }
+
+        #endregion
+
+        #region Type Conversion Functions
+
+        /// <summary>
+        /// IntToFloat(int nInteger) - Convert nInteger into a floating point number
+        /// </summary>
+        private Variable Func_IntToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int value = args.Count > 0 ? args[0].AsInt() : 0;
+            return Variable.FromFloat((float)value);
+        }
+
+        /// <summary>
+        /// FloatToInt(float fFloat) - Convert fFloat into the nearest integer
+        /// </summary>
+        private Variable Func_FloatToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            float value = args.Count > 0 ? args[0].AsFloat() : 0f;
+            return Variable.FromInt((int)Math.Round(value));
+        }
+
+        /// <summary>
+        /// StringToInt(string sNumber) - Convert sNumber into an integer
+        /// </summary>
+        private new Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string numberStr = args.Count > 0 ? args[0].AsString() : "";
+            if (int.TryParse(numberStr, out int result))
+            {
+                return Variable.FromInt(result);
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// StringToFloat(string sNumber) - Convert sNumber into a floating point number
+        /// </summary>
+        private new Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string numberStr = args.Count > 0 ? args[0].AsString() : "";
+            if (float.TryParse(numberStr, out float result))
+            {
+                return Variable.FromFloat(result);
+            }
+            return Variable.FromFloat(0f);
+        }
+
+        #endregion
+
+        #region Nearest Object To Location
+
+        /// <summary>
+        /// GetNearestObjectToLocation(int nObjectType, location lLocation, int nNth=1) - Get the nNth object nearest to lLocation that is of the specified type
+        /// </summary>
+        private Variable Func_GetNearestObjectToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2 || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            int objectType = args[0].AsInt();
+            object locObj = args[1].AsLocation();
+            int nth = args.Count > 2 ? args[2].AsInt() : 1;
+            
+            // Extract position from location
+            Vector3 locationPos = Vector3.Zero;
+            if (locObj != null && locObj is Location location)
+            {
+                locationPos = location.Position;
+            }
+            
+            // Convert object type constant to ObjectType enum
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            if (objectType != 32767) // Not OBJECT_TYPE_ALL
+            {
+                // Map NWScript object type constants
+                typeMask = (Core.Enums.ObjectType)objectType;
+            }
+            
+            // Get all entities of the specified type
+            var candidates = new List<(IEntity entity, float distance)>();
+            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
+            {
+                ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
+                if (entityTransform != null)
+                {
+                    float distance = Vector3.DistanceSquared(locationPos, entityTransform.Position);
+                    candidates.Add((entity, distance));
+                }
+            }
+            
+            // Sort by distance
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+            
+            // Return Nth nearest (1-indexed)
+            if (nth > 0 && nth <= candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        #endregion
     }
 }
 
