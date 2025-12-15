@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 
 namespace Odyssey.Core.Combat
@@ -357,9 +358,118 @@ namespace Odyssey.Core.Combat
 
         private void ApplyEffectModifiers(IEntity target, Effect effect, bool apply)
         {
-            // Apply or remove stat modifiers based on effect type
-            // This would integrate with the stats component
-            // Implementation depends on stat system details
+            Interfaces.Components.IStatsComponent stats = target.GetComponent<Interfaces.Components.IStatsComponent>();
+            if (stats == null)
+            {
+                return;
+            }
+
+            int modifier = apply ? effect.Amount : -effect.Amount;
+
+            switch (effect.Type)
+            {
+                case EffectType.AbilityIncrease:
+                case EffectType.AbilityDecrease:
+                    if (effect.SubType >= 0 && effect.SubType < 6)
+                    {
+                        Ability ability = (Ability)effect.SubType;
+                        int current = stats.GetAbility(ability);
+                        stats.SetAbility(ability, current + modifier);
+                    }
+                    break;
+
+                case EffectType.ACIncrease:
+                case EffectType.ACDecrease:
+                    // AC modifiers are applied via deflection bonus
+                    // Note: This requires IStatsComponent to have a DeflectionBonus property
+                    // For now, AC is calculated dynamically, so this is a placeholder
+                    // In a full implementation, we'd track effect bonuses separately
+                    break;
+
+                case EffectType.AttackIncrease:
+                case EffectType.AttackDecrease:
+                    // Attack bonus is calculated dynamically, so we'd need to track this separately
+                    // For now, this is a placeholder - would need effect bonus tracking in StatsComponent
+                    break;
+
+                case EffectType.DamageIncrease:
+                case EffectType.DamageDecrease:
+                    // Damage modifiers are applied during damage calculation
+                    break;
+
+                case EffectType.SaveIncrease:
+                case EffectType.SaveDecrease:
+                    // Save bonuses are calculated dynamically
+                    break;
+
+                case EffectType.DamageResistance:
+                    // Damage resistance is handled during damage calculation
+                    break;
+
+                case EffectType.DamageReduction:
+                    // Damage reduction is handled during damage calculation
+                    break;
+
+                case EffectType.Regeneration:
+                    // Regeneration is handled in UpdateRound
+                    break;
+
+                case EffectType.TemporaryHitpoints:
+                    if (apply)
+                    {
+                        // Temporary HP increases max HP temporarily
+                        stats.MaxHP += effect.Amount;
+                        stats.CurrentHP += effect.Amount;
+                    }
+                    else
+                    {
+                        // Remove temporary HP (may reduce current HP if it was above base max)
+                        int baseMaxHP = stats.MaxHP - effect.Amount;
+                        stats.MaxHP = baseMaxHP;
+                        if (stats.CurrentHP > baseMaxHP)
+                        {
+                            stats.CurrentHP = baseMaxHP;
+                        }
+                    }
+                    break;
+
+                // Status effects don't modify stats directly, they affect behavior
+                case EffectType.Paralysis:
+                case EffectType.Stun:
+                case EffectType.Sleep:
+                case EffectType.Confusion:
+                case EffectType.Frightened:
+                case EffectType.Dazed:
+                case EffectType.Entangle:
+                case EffectType.Slow:
+                case EffectType.Haste:
+                    // Movement speed modifiers (Haste/Slow) are handled by movement system
+                    // Speed is read-only in IStatsComponent, so this would need to be
+                    // tracked separately or via a different mechanism
+                    // For now, this is a placeholder
+                    break;
+
+                case EffectType.Invisibility:
+                case EffectType.TrueSeeing:
+                case EffectType.Charmed:
+                case EffectType.Dominated:
+                case EffectType.Knockdown:
+                    // These are handled by other systems (combat, movement, etc.)
+                    break;
+
+                // Visual effects don't modify stats
+                case EffectType.VisualEffect:
+                case EffectType.Beam:
+                    break;
+
+                // Other effects
+                case EffectType.Polymorph:
+                case EffectType.Sanctuary:
+                case EffectType.Poison:
+                case EffectType.Disease:
+                    // These are handled by other systems
+                    break;
+            }
         }
     }
 
