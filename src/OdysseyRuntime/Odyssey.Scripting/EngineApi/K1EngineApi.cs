@@ -3907,14 +3907,14 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Based on swkotor2.exe: Sets effect subtype to SUBTYPE_EXTRAORDINARY (32)
+            // Based on swkotor2.exe: Sets effect subtype to SUBTYPE_EXTRAORDINARY (24)
             // Extraordinary effects are not magical or supernatural, cannot be dispelled
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
                 // Mark effect as extraordinary by setting subtype
-                // SUBTYPE_EXTRAORDINARY = 32 (based on NWScript effect subtype constants)
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
+                // SUBTYPE_EXTRAORDINARY = 24 (from ScriptDefs.cs)
+                effect.SubType = 24; // SUBTYPE_EXTRAORDINARY
                 effect.IsSupernatural = false; // Extraordinary effects are not supernatural
                 return Variable.FromEffect(effect);
             }
