@@ -43,7 +43,20 @@ namespace Odyssey.Core.Combat
     /// <remarks>
     /// Damage Type Enum:
     /// - Based on swkotor2.exe damage system
-    /// - Located via string references: "DamageList" @ 0x007c0d08, "DamageValue" @ 0x007c0cdc
+    /// - Located via string references: "DamageList" @ 0x007bf89c, "DamageValue" @ 0x007bf890
+    /// - "DamageFlags" @ 0x007c01a4 (damage flags field), "DamageDie" @ 0x007c2d30 (damage die field)
+    /// - "DamageDice" @ 0x007c2d3c (damage dice count field), "OffHandDamageMod" @ 0x007c2e18 (offhand damage modifier)
+    /// - "OnDamaged" @ 0x007c1a80 (damaged script event), "b_damage" @ 0x007c2178 (damage constant)
+    /// - "DamageDebugText" @ 0x007bf82c (damage debug text field)
+    /// - Damage application: "POISONTRACE: Applying HP damage: %d\n" @ 0x007bf088 (HP damage trace)
+    /// - "POISONTRACE: Applying FP damage: %d\n" @ 0x007bf060 (Force point damage trace)
+    /// - Ability damage: "POISONTRACE: Applying STR damage: %d\n" @ 0x007bf038 (Strength damage)
+    /// - "POISONTRACE: Applying DEX damage: %d\n" @ 0x007bf010 (Dexterity damage)
+    /// - "POISONTRACE: Applying CON damage: %d\n" @ 0x007befe8 (Constitution damage)
+    /// - "POISONTRACE: Applying INT damage: %d\n" @ 0x007befc0 (Intelligence damage)
+    /// - "POISONTRACE: Applying WIS damage: %d\n" @ 0x007bef98 (Wisdom damage)
+    /// - "POISONTRACE: Applying CHR damage: %d\n" @ 0x007bef70 (Charisma damage)
+    /// - "POISONTRACE: Ability Damage duration = %d seconds\n" @ 0x007bf0b0 (ability damage duration)
     /// - Physical: Kinetic damage (melee weapons, unarmed)
     /// - Energy: Energy damage (blasters, lightsabers)
     /// - Fire/Cold/Electrical/Sonic: Elemental damage types
@@ -51,6 +64,10 @@ namespace Odyssey.Core.Combat
     /// - DarkSide/LightSide: Force damage alignment
     /// - Universal: Bypasses all resistance (rare, used for special effects)
     /// - Damage types used for: Resistance/immunity checks, visual effects, damage reduction calculations
+    /// - Damage calculation: Base damage from weapon + ability modifier + effect bonuses - damage reduction
+    /// - Damage reduction: Applied per damage type (DR/Physical, DR/Energy, etc.)
+    /// - Event firing: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 fires when entity takes damage
+    /// - "ScriptDamaged" @ 0x007bee70 (damaged script hook field in creature templates)
     /// </remarks>
     public enum DamageType
     {
