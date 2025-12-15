@@ -8,6 +8,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using KotorColor = CSharpKOTOR.Common.Color;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -62,7 +63,7 @@ namespace HolocronToolset.NET.Editors
             // Helper to convert integer color to Avalonia Color
             Avalonia.Media.Color IntColorToAvaloniaColor(int numColor)
             {
-                var kotorColor = CSharpKOTOR.Common.Color.FromRgbaInteger(numColor);
+                var kotorColor = KotorColor.FromRgbaInteger(numColor);
                 return new Avalonia.Media.Color(
                     (byte)(kotorColor.A * 255),
                     (byte)(kotorColor.R * 255),
