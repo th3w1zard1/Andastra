@@ -12,8 +12,16 @@ namespace Odyssey.Core.Movement
     /// Player Input Handler:
     /// - Based on swkotor2.exe input system
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
-    /// - "EnableHardwareMouse" @ 0x007c71c8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
-    /// - Original implementation: Click-to-move, object interaction, party control, pause
+    /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
+    /// - Input system: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908
+    /// - Input class: "CExoInputInternal" (exoinputinternal.cpp @ 0x007c64dc)
+    /// - Error: "CExoInputInternal::GetEvents() Invalid InputClass parameter" @ 0x007c64f4
+    /// - "Unnamed Input Class" @ 0x007c64c8
+    /// - GUI references: ";gui_mouse" @ 0x007b5f93, "optmouse_p" @ 0x007d1f64
+    /// - "LBL_MOUSESEN" @ 0x007d1f44, "SLI_MOUSESEN" @ 0x007d1f54, "BTN_MOUSE" @ 0x007d28a0
+    /// - Original implementation: Uses DirectInput8 (DINPUT8.dll @ 0x0080a6c0, DirectInput8Create @ 0x0080a6ac)
+    /// - Click-to-move, object interaction, party control, pause
     /// - KOTOR Input Model:
     ///   - Left-click: Move to point / Attack target
     ///   - Right-click: Context action (open, talk, etc.)
