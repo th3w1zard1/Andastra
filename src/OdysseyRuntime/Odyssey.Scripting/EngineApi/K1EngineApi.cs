@@ -1228,12 +1228,32 @@ namespace Odyssey.Scripting.EngineApi
 
         #region Global Variable Functions
 
+        /// <summary>
+        /// GetGlobalNumber(string sVarName) - gets global integer variable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Global variable system
+        /// Located via string references: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Global variables stored in GFF file (GLOBALVARS.res), persisted across saves
+        /// Variable storage: GFF structure with variable name as field name, integer as value
+        /// Returns: Global integer value or 0 if variable doesn't exist
+        /// </remarks>
         private new Variable Func_GetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromInt(ctx.Globals.GetGlobalInt(name));
         }
 
+        /// <summary>
+        /// SetGlobalNumber(string sVarName, int nValue) - sets global integer variable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Global variable system
+        /// Located via string references: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Sets global variable value in GFF structure, persists to save file
+        /// Variable storage: Updates GFF field with variable name, writes to GLOBALVARS.res on save
+        /// Returns: Void (no return value)
+        /// </remarks>
         private new Variable Func_SetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -1242,12 +1262,32 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetGlobalBoolean(string sVarName) - gets global boolean variable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Global variable system
+        /// Located via string references: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Global boolean stored as integer (0 = FALSE, non-zero = TRUE) in GFF
+        /// Variable storage: GFF structure with variable name as field name, integer (0/1) as value
+        /// Returns: 1 (TRUE) if variable is non-zero, 0 (FALSE) if variable is zero or doesn't exist
+        /// </remarks>
         private new Variable Func_GetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromInt(ctx.Globals.GetGlobalBool(name) ? 1 : 0);
         }
 
+        /// <summary>
+        /// SetGlobalBoolean(string sVarName, int nValue) - sets global boolean variable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Global variable system
+        /// Located via string references: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Sets global boolean as integer (0 = FALSE, non-zero = TRUE) in GFF
+        /// Variable storage: Updates GFF field with variable name, stores 0 or 1 based on nValue
+        /// Returns: Void (no return value)
+        /// </remarks>
         private new Variable Func_SetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -1256,12 +1296,32 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetGlobalString(string sVarName) - gets global string variable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Global variable system
+        /// Located via string references: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Global string stored in GFF structure as CExoString field
+        /// Variable storage: GFF structure with variable name as field name, string as value
+        /// Returns: Global string value or empty string if variable doesn't exist
+        /// </remarks>
         private new Variable Func_GetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromString(ctx.Globals.GetGlobalString(name));
         }
 
+        /// <summary>
+        /// SetGlobalString(string sVarName, string sValue) - sets global string variable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Global variable system
+        /// Located via string references: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Sets global string value in GFF structure, persists to save file
+        /// Variable storage: Updates GFF field with variable name, writes to GLOBALVARS.res on save
+        /// Returns: Void (no return value)
+        /// </remarks>
         private new Variable Func_SetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -3931,12 +3991,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // The effect itself is unchanged, but marked as extraordinary
-            // For now, just return the effect as-is
-            // TODO: Mark effect as extraordinary type if Effect class supports it
+            // Set subtype to EXTRAORDINARY (32)
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
+                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
+                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
