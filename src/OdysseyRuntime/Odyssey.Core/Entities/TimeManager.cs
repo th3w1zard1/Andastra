@@ -12,10 +12,14 @@ namespace Odyssey.Core.Entities
     /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88, "TIME_SECOND" @ 0x007bdfbc, "TIME_MINUTE" @ 0x007bdfc8,
     ///   "TIME_HOUR" @ 0x007bdfd4, "TIME_DAY" @ 0x007bdfe0, "TIME_MONTH" @ 0x007bdfec, "TIME_YEAR" @ 0x007bdff8,
     ///   "TIMEPLAYED" @ 0x007be1c4, "TimeElapsed" @ 0x007bed5c, "Mod_PauseTime" @ 0x007be89c
-    /// - Original implementation: Fixed timestep simulation for deterministic gameplay (60 Hz)
-    /// - Game time tracking: Day, month, year, time of day (hours, minutes, seconds)
-    /// - Fixed timestep ensures consistent simulation regardless of frame rate
-    /// - Time scale allows for pause, slow-motion, fast-forward effects
+    /// - "GameTime" @ 0x007c1a78, "GameTimeScale" @ 0x007c1a80 (game time scaling)
+    /// - "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668 (frame timing)
+    /// - Original implementation: Fixed timestep simulation for deterministic gameplay (60 Hz = 1/60s = 0.01667s per tick)
+    /// - Game time tracking: Day, month, year, time of day (hours, minutes, seconds) stored in module (IFO) time fields
+    /// - TIMEPLAYED: Total seconds played, stored in save game metadata (NFO.res)
+    /// - Fixed timestep ensures consistent simulation regardless of frame rate (physics, combat, scripts)
+    /// - Time scale allows for pause (TimeScale = 0), slow-motion (TimeScale < 1), fast-forward (TimeScale > 1) effects
+    /// - Original engine uses 60 Hz fixed timestep for game logic, variable timestep for rendering
     /// </remarks>
     public class TimeManager : ITimeManager
     {
