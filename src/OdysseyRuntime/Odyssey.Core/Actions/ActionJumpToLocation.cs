@@ -8,6 +8,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to instantly teleport to a location.
     /// </summary>
+    /// <remarks>
+    /// Jump To Location Action:
+    /// - Based on swkotor2.exe ActionJumpToLocation NWScript function
+    /// - Original implementation: Instantly teleports entity to specified location and facing
+    /// - Used for scripted movement, cutscenes, area transitions
+    /// - Can jump between areas if location specifies different area
+    /// - Position and facing set immediately without animation
+    /// </remarks>
     public class ActionJumpToLocation : ActionBase
     {
         private readonly Vector3 _location;
@@ -22,7 +30,7 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            var transform = actor.GetComponent<ITransformComponent>();
+            ITransformComponent transform = actor.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return ActionStatus.Failed;

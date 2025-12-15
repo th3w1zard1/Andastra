@@ -9,6 +9,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to follow another entity.
     /// </summary>
+    /// <remarks>
+    /// Follow Object Action:
+    /// - Based on swkotor2.exe follow system
+    /// - Original implementation: Moves entity to maintain follow distance from target
+    /// - Used for party member following, NPC following behavior
+    /// - Follow distance: Default 2.0 units, maintains distance while target moves
+    /// - Entity faces target while following, runs if target moves far away
+    /// </remarks>
     public class ActionFollowObject : ActionBase
     {
         private readonly uint _targetObjectId;
@@ -27,20 +35,20 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            var transform = actor.GetComponent<ITransformComponent>();
+            ITransformComponent transform = actor.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return ActionStatus.Failed;
             }
 
             // Get target entity
-            var target = actor.World.GetEntity(_targetObjectId);
+            IEntity target = actor.World.GetEntity(_targetObjectId);
             if (target == null || !target.IsValid)
             {
                 return ActionStatus.Failed;
             }
 
-            var targetTransform = target.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             if (targetTransform == null)
             {
                 return ActionStatus.Failed;
@@ -63,7 +71,7 @@ namespace Odyssey.Core.Actions
             }
 
             // Move towards target
-            var stats = actor.GetComponent<IStatsComponent>();
+            IStatsComponent stats = actor.GetComponent<IStatsComponent>();
             bool run = distance > _followDistance * 2;
             float speed = stats != null
                 ? (run ? stats.RunSpeed : stats.WalkSpeed)
