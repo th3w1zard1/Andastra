@@ -11,6 +11,13 @@ namespace Odyssey.Kotor.Components
     /// - Based on swkotor2.exe door system
     /// - Located via string references: "Door List" @ 0x007bd248, "GenericDoors" @ 0x007c4ba8
     /// - "DoorTypes" @ 0x007c4b9c, "SecretDoorDC" @ 0x007c1acc
+    /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
+    /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition)
+    /// - Door animations: "i_opendoor" @ 0x007c86d4 (open door animation), "i_doorsaber" @ 0x007ccca0 (saber door animation)
+    /// - GUI references: "gui_mp_doordp" @ 0x007b5bdc, "gui_mp_doorup" @ 0x007b5bec, "gui_mp_doord" @ 0x007b5d24, "gui_mp_dooru" @ 0x007b5d34
+    /// - "gui_doorsaber" @ 0x007c2fe4 (saber door GUI)
+    /// - Error messages: "Cannot load door model '%s'." @ 0x007d2488
+    /// - "CSWCAnimBaseDoor::GetAnimationName(): No name for server animation %d" @ 0x007d24a8
     /// - Original implementation: FUN_00584f40 @ 0x00584f40 (save door data to GFF)
     /// - FUN_004e08e0 @ 0x004e08e0 (load door instances from GIT)
     /// - Doors have open/closed states, locks, traps, module transitions
