@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Audio;
 using Odyssey.Core.Dialogue;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Content.Interfaces;
 using CSharpKOTOR.Resources;
 using CSharpKOTOR.Formats.WAV;
@@ -114,15 +115,14 @@ namespace Odyssey.MonoGame.Audio
                 try
                 {
                     // Load WAV resource
-                    using (var resourceId = new ResourceIdentifier(voResRef, ResourceType.WAV))
+                    var resourceId = new ResourceIdentifier(voResRef, ResourceType.WAV);
+                    byte[] wavData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
+                    if (wavData == null || wavData.Length == 0)
                     {
-                        byte[] wavData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
-                        if (wavData == null || wavData.Length == 0)
-                        {
-                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to load WAV resource: {voResRef}");
-                            _onCompleteCallback?.Invoke();
-                            return;
-                        }
+                        Console.WriteLine($"[MonoGameVoicePlayer] Failed to load WAV resource: {voResRef}");
+                        _onCompleteCallback?.Invoke();
+                        return;
+                    }
 
                         // Parse WAV file
                         WAV wav = WAVAuto.ReadWav(wavData);
@@ -194,7 +194,6 @@ namespace Odyssey.MonoGame.Audio
                             // Monitor playback completion
                             MonitorPlayback();
                         }
-                    }
                 }
                 catch (Exception ex)
                 {

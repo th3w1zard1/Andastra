@@ -58,17 +58,17 @@ namespace Odyssey.MonoGame.Lighting
         public LightProbeSystem()
         {
             _probes = new List<LightProbe>();
-            // Create octree for probe lookup
-            BoundingBox worldBounds = new BoundingBox(
-                new Vector3(-1000, -1000, -1000),
-                new Vector3(1000, 1000, 1000)
-            );
-            _probeOctree = new Spatial.Octree<LightProbe>(
-                worldBounds,
-                8,
-                4,
-                probe => GetProbeBounds(probe)
-            );
+            // TODO: Create octree for probe lookup when Octree<T> is implemented
+            // BoundingBox worldBounds = new BoundingBox(
+            //     new Vector3(-1000, -1000, -1000),
+            //     new Vector3(1000, 1000, 1000)
+            // );
+            // _probeOctree = new Spatial.Octree<LightProbe>(
+            //     worldBounds,
+            //     8,
+            //     4,
+            //     probe => GetProbeBounds(probe)
+            // );
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Odyssey.MonoGame.Lighting
         public void AddProbe(LightProbe probe)
         {
             _probes.Add(probe);
-            _probeOctree.Insert(probe);
+            // TODO: _probeOctree.Insert(probe);
         }
 
         /// <summary>
@@ -87,11 +87,22 @@ namespace Odyssey.MonoGame.Lighting
         {
             // Find nearby probes
             List<LightProbe> nearbyProbes = new List<LightProbe>();
-            BoundingBox searchBounds = new BoundingBox(
-                position - new Vector3(10, 10, 10),
-                position + new Vector3(10, 10, 10)
-            );
-            _probeOctree.Query(searchBounds, nearbyProbes);
+            // TODO: Use octree when implemented
+            // BoundingBox searchBounds = new BoundingBox(
+            //     position - new Vector3(10, 10, 10),
+            //     position + new Vector3(10, 10, 10)
+            // );
+            // _probeOctree.Query(searchBounds, nearbyProbes);
+            
+            // For now, use simple distance-based search
+            foreach (var probe in _probes)
+            {
+                float distance = Vector3.Distance(probe.Position, position);
+                if (distance <= 10.0f)
+                {
+                    nearbyProbes.Add(probe);
+                }
+            }
 
             if (nearbyProbes.Count == 0)
             {

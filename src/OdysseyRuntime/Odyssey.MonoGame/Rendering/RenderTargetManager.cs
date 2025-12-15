@@ -96,7 +96,7 @@ namespace Odyssey.MonoGame.Rendering
                 _pools[desc] = pool;
             }
 
-            RenderTarget2D rt = pool.Get(width, height, format, depthFormat, multiSampleCount);
+            RenderTarget2D rt = pool.GetRenderTarget(width, height, format, depthFormat);
             UpdateMemoryUsage();
 
             return rt;

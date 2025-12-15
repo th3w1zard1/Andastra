@@ -89,25 +89,19 @@ namespace Odyssey.MonoGame.Audio
 
             try
             {
-                // Load WAV resource
-                Resource soundResource = _resourceProvider.GetResource(ResourceType.WAV, soundResRef);
-                if (soundResource == null)
+                // Load WAV resource (synchronously for now - TODO: make async)
+                var resourceId = new ResourceIdentifier(soundResRef, ResourceType.WAV);
+                byte[] wavData = _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+                if (wavData == null || wavData.Length == 0)
                 {
                     Console.WriteLine($"[MonoGameSoundPlayer] Sound not found: {soundResRef}");
                     return 0;
                 }
 
-                object soundData = soundResource.Data;
-                if (soundData == null)
-                {
-                    Console.WriteLine($"[MonoGameSoundPlayer] Sound data is null: {soundResRef}");
-                    return 0;
-                }
-
-                WAV wav = soundData as WAV;
+                WAV wav = WAVAuto.ReadWav(wavData);
                 if (wav == null)
                 {
-                    Console.WriteLine($"[MonoGameSoundPlayer] Sound is not a WAV file: {soundResRef}");
+                    Console.WriteLine($"[MonoGameSoundPlayer] Failed to parse WAV: {soundResRef}");
                     return 0;
                 }
 

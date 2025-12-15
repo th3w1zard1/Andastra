@@ -528,7 +528,7 @@ namespace Odyssey.Kotor.Game
             if (moduleEntity == null)
             {
                 // Create a temporary entity for module script execution
-                moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
+                moduleEntity = _world.CreateEntity(Odyssey.Core.Enums.ObjectType.Invalid, System.Numerics.Vector3.Zero, 0f);
                 moduleEntity.Tag = _currentModule.ResRef;
             }
             _scriptExecutor.ExecuteScript(heartbeatScript, moduleEntity, null);

@@ -291,7 +291,7 @@ namespace Odyssey.MonoGame.Converters
 
             IndexBuffer indexBuffer = new IndexBuffer(
                 _device,
-                IndexElementSize.SixteenBit,
+                IndexElementSize.SixteenBits,
                 indices.Length,
                 BufferUsage.WriteOnly
             );

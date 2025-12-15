@@ -241,14 +241,14 @@ namespace Odyssey.MonoGame.Rendering
 
             try
             {
-                ResourceResult result = _installation.Resources.LookupResource(modelResRef, ResourceType.MDL);
+                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, CSharpKOTOR.Resources.ResourceType.MDL);
                 if (result == null || result.Data == null)
                 {
                     return null;
                 }
 
                 // Use CSharpKOTOR MDL parser
-                return MDL.FromBytes(result.Data);
+                return CSharpKOTOR.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

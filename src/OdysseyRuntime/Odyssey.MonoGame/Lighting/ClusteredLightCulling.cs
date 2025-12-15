@@ -202,9 +202,10 @@ namespace Odyssey.MonoGame.Lighting
 
         private void DisposeBuffers()
         {
-            _lightBuffer?.Dispose();
-            _lightIndexBuffer?.Dispose();
-            _lightGridBuffer?.Dispose();
+            // TODO: Dispose buffers when implemented
+            // _lightBuffer?.Dispose();
+            // _lightIndexBuffer?.Dispose();
+            // _lightGridBuffer?.Dispose();
         }
 
         public void Dispose()

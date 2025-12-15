@@ -369,7 +369,7 @@ namespace Odyssey.MonoGame.Models
                     indices32[i * 3 + 1] = face.Vertex1;
                     indices32[i * 3 + 2] = face.Vertex2;
                 }
-                indexBuffer = new IndexBuffer(_device, IndexElementSize.ThirtyTwoBit, indices32.Length, BufferUsage.WriteOnly);
+                indexBuffer = new IndexBuffer(_device, IndexElementSize.ThirtyTwoBits, indices32.Length, BufferUsage.WriteOnly);
                 indexBuffer.SetData(indices32);
             }
             else
@@ -382,7 +382,7 @@ namespace Odyssey.MonoGame.Models
                     indices16[i * 3 + 1] = face.Vertex1;
                     indices16[i * 3 + 2] = face.Vertex2;
                 }
-                indexBuffer = new IndexBuffer(_device, IndexElementSize.SixteenBit, indices16.Length, BufferUsage.WriteOnly);
+                indexBuffer = new IndexBuffer(_device, IndexElementSize.SixteenBits, indices16.Length, BufferUsage.WriteOnly);
                 indexBuffer.SetData(indices16);
             }
 

@@ -68,8 +68,6 @@ namespace Odyssey.MonoGame.UI
 
             if (_font != null)
             {
-                int viewportWidth = _spriteBatch.GraphicsDevice.Viewport.Width;
-                int viewportHeight = _spriteBatch.GraphicsDevice.Viewport.Height;
                 Vector2 position = new Vector2(viewportWidth / 2 - 100, viewportHeight / 2 - 50);
                 for (int i = 0; i < _menuItems.Length; i++)
                 {

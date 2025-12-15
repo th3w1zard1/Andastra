@@ -157,7 +157,7 @@ namespace Odyssey.MonoGame.Converters
             Color meshColor = Color.Gray;
 
             // Transform and add vertices
-            foreach (CSharpKOTOR.Common.Vector3 vertex in mesh.Vertices)
+            foreach (System.Numerics.Vector3 vertex in mesh.Vertices)
             {
                 // Transform vertex position
                 var transformedPos = Microsoft.Xna.Framework.Vector3.Transform(

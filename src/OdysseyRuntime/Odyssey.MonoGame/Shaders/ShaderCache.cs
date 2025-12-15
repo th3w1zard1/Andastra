@@ -84,9 +84,10 @@ namespace Odyssey.MonoGame.Shaders
             string cacheKey = $"{shaderName}_{sourceHash}";
 
             // Check memory cache
+            CacheEntry entry;
+            Task<Effect> compilingTask;
             lock (_lock)
             {
-                CacheEntry entry;
                 if (_memoryCache.TryGetValue(cacheKey, out entry))
                 {
                     entry.LastUsed = DateTime.UtcNow;
@@ -96,11 +97,16 @@ namespace Odyssey.MonoGame.Shaders
                 }
 
                 // Check if already compiling
-                Task<Effect> compilingTask;
                 if (_compilingShaders.TryGetValue(cacheKey, out compilingTask))
                 {
-                    return await compilingTask;
+                    // Release lock before awaiting
                 }
+            }
+            
+            // Await outside of lock
+            if (compilingTask != null)
+            {
+                return await compilingTask;
             }
 
             // Check disk cache
