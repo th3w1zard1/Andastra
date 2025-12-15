@@ -23,6 +23,16 @@ namespace Odyssey.Core.Actions
     /// - "SpellsPerDayList" @ 0x007c3f74, "NumSpellsLeft" @ 0x007c3f64, "NumSpellLevels" @ 0x007c47e8
     /// - "SpellLevel%d" @ 0x007c4888 (spell level format string), "Spells" @ 0x007c4ed0, "spells" @ 0x007c494c
     /// - Spell casting: "SpellCastRound" @ 0x007bfb60, "ArcaneSpellFail" @ 0x007c2df8, "MinSpellLvl" @ 0x007c2eb4
+    /// - Caster fields: "CasterLevel" @ 0x007beb4c, "CasterId" @ 0x007bef5c
+    /// - Cast visuals: "CastGrndVisual" @ 0x007c3240, "CastHandVisual" @ 0x007c325c, "CastHeadVisual" @ 0x007c326c
+    /// - "CastSound" @ 0x007c3250, "CastAnim" @ 0x007c32dc, "CastTime" @ 0x007c32e8
+    /// - "castgroundvisual" @ 0x007cdbb8, "castvisual" @ 0x007cdbd4, "cast01" @ 0x007cdbcc
+    /// - Force points: "ForcePoints" @ 0x007c3410, "CurrentForce" @ 0x007c401c, "MaxForcePoints" @ 0x007c4278
+    /// - "FinalForceCost" @ 0x007bef04, "BonusForcePoints" @ 0x007bf640, "LvlStatForce" @ 0x007c3f28
+    /// - "ForceAdjust" @ 0x007c4e64, "ForceResistance" @ 0x007c2e08, "ForceDie" @ 0x007c2b68
+    /// - Force alignment: "FORCEPASSIVE" @ 0x007c31e0, "FORCEHOSTILE" @ 0x007c31f0, "FORCEFRIENDLY" @ 0x007c3210
+    /// - "FORCEPRIORITY" @ 0x007c3200, "ForceRating" @ 0x007bd45c, "ForceShields" @ 0x007c4f0c
+    /// - Events: "EVENT_FORCED_ACTION" @ 0x007bccac, "EVENT_BROADCAST_SAFE_PROJECTILE" @ 0x007bcc58, "EVENT_BROADCAST_AOO" @ 0x007bcc78
     /// - Error messages:
     ///   - "CSWClass::LoadSpellGainTable: Can't load ClassPowerGain" @ 0x007c47f8
     ///   - "CSWClass::LoadSpellGainTable: Can't load CLS_SPGN_JEDI" @ 0x007c4840
@@ -33,6 +43,8 @@ namespace Odyssey.Core.Actions
     /// - Visual effect errors:
     ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
+    /// - GUI: "LBL_FORCE" @ 0x007cfc30, "LBL_FORCE_STAT" @ 0x007cfc5c, "LBL_FORCEMASTERY" @ 0x007cfd20
+    /// - "PB_FORCE%d" @ 0x007ccf6c (force progress bar format), "ForceDisplay" @ 0x007d2e70
     /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
     /// - Spell casting range: ~10.0 units (CastRange)
     /// - Checks Force points, spell knowledge, applies effects via EffectSystem
