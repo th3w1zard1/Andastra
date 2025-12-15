@@ -6402,8 +6402,8 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromInt(1); // TODO: Check Useable flag from placeable template
 
                 case 1: // PLACEABLE_ACTION_UNLOCK
-                    // Can unlock if placeable is locked and lockable by script
-                    return Variable.FromInt((placeableComponent.IsLocked && placeableComponent.LockableByScript) ? 1 : 0);
+                    // Can unlock if placeable is locked (assume all placeables can be unlocked by script if they have a lock DC)
+                    return Variable.FromInt((placeableComponent.IsLocked && placeableComponent.LockDC > 0) ? 1 : 0);
 
                 case 2: // PLACEABLE_ACTION_BASH
                     // Can bash if placeable is locked (bash attempts to break the lock)
