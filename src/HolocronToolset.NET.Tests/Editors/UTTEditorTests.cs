@@ -1958,5 +1958,85 @@ namespace HolocronToolset.NET.Tests.Editors
             // For now, just verify the test runs without crashing
             modifiedUtt.Should().NotBeNull("Modified UTT should not be null");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:789-821
+        // Original: def test_utt_editor_multiple_save_load_cycles(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorMultipleSaveLoadCycles()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Perform multiple cycles
+            for (int cycle = 0; cycle < 5; cycle++)
+            {
+                // Modify
+                editor.TagEdit.Text = $"cycle_{cycle}";
+                
+                var highlightHeightSpinField = typeof(UTTEditor).GetField("_highlightHeightSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var highlightHeightSpin = highlightHeightSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                if (highlightHeightSpin != null)
+                {
+                    highlightHeightSpin.Value = (decimal)(1.0 + cycle);
+                }
+
+                // Save
+                var (data, _) = editor.Build();
+                var savedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+
+                // Verify
+                savedUtt.Tag.Should().Be($"cycle_{cycle}");
+                // Use approximate comparison for float due to GFF single-precision serialization
+                Math.Abs(savedUtt.HighlightHeight - (float)(1.0 + cycle)).Should().BeLessThan(0.01f);
+
+                // Load back
+                editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
+
+                // Verify loaded
+                editor.TagEdit.Text.Should().Be($"cycle_{cycle}");
+                highlightHeightSpin = highlightHeightSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                if (highlightHeightSpin != null)
+                {
+                    Math.Abs((double)highlightHeightSpin.Value - (1.0 + cycle)).Should().BeLessThan(0.01);
+                }
+            }
+        }
     }
 }
