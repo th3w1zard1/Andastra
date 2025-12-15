@@ -110,11 +110,13 @@ namespace Odyssey.Core.Actions
                 // Original engine: Locked field in UTP template, requires key or lockpick
                 if (placeableState.IsLocked)
                 {
-                    // Fire locked placeable event
-                    // Original engine: Fires EVENT_LOCK_OBJECT, then executes OnLocked script
+                    // Fire OnLock script event
+                    // Based on swkotor2.exe: EVENT_LOCK_OBJECT fires OnLock script event
+                    // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd), "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                     IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
                     {
+                        eventBus.FireScriptEvent(placeable, ScriptEvent.OnLock, actor);
                         eventBus.Publish(new PlaceableLockedEvent { Actor = actor, Placeable = placeable });
                     }
                     return ActionStatus.Failed;
@@ -125,30 +127,37 @@ namespace Odyssey.Core.Actions
                 // Original implementation: Containers toggle open/close state, non-containers fire OnUsed
                 if (placeableState.HasInventory)
                 {
+                    bool wasOpen = placeableState.IsOpen;
                     placeableState.IsOpen = !placeableState.IsOpen;
+                    placeableState.AnimationState = placeableState.IsOpen ? 1 : 0; // 0=closed, 1=open
 
-                    // Fire container opened/closed event
-                    // Original engine: Fires EVENT_OPEN_OBJECT or EVENT_CLOSE_OBJECT, then executes OnOpen/OnClosed script
+                    // Fire OnOpen/OnClose script events
+                    // Based on swkotor2.exe: EVENT_OPEN_OBJECT/EVENT_CLOSE_OBJECT fire OnOpen/OnClose script events
+                    // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6)
                     IEventBus eventBus2 = actor.World.EventBus;
                     if (eventBus2 != null)
                     {
                         if (placeableState.IsOpen)
                         {
+                            eventBus2.FireScriptEvent(placeable, ScriptEvent.OnOpen, actor);
                             eventBus2.Publish(new PlaceableOpenedEvent { Actor = actor, Placeable = placeable });
                         }
                         else
                         {
+                            eventBus2.FireScriptEvent(placeable, ScriptEvent.OnClose, actor);
                             eventBus2.Publish(new PlaceableClosedEvent { Actor = actor, Placeable = placeable });
                         }
                     }
                 }
                 else
                 {
-                    // Fire used event for non-container placeables
-                    // Original engine: Fires EVENT_OPEN_OBJECT, then executes OnUsed script
+                    // Fire OnUsed script event for non-container placeables
+                    // Based on swkotor2.exe: EVENT_OPEN_OBJECT fires OnUsed script event for non-containers
+                    // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "CSWSSCRIPTEVENT_EVENTTYPE_ON_USED" @ 0x007bc7d8 (0x19), "OnUsed" @ 0x007c1f70
                     IEventBus eventBus3 = actor.World.EventBus;
                     if (eventBus3 != null)
                     {
+                        eventBus3.FireScriptEvent(placeable, ScriptEvent.OnUsed, actor);
                         eventBus3.Publish(new PlaceableUsedEvent { Actor = actor, Placeable = placeable });
                     }
                 }

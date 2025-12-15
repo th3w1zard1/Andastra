@@ -172,6 +172,7 @@ namespace Odyssey.Kotor.Components
         public void Open()
         {
             IsOpen = true;
+            AnimationState = 1; // Open state
         }
 
         /// <summary>
@@ -180,6 +181,7 @@ namespace Odyssey.Kotor.Components
         public void Close()
         {
             IsOpen = false;
+            AnimationState = 0; // Closed state
         }
 
         /// <summary>
