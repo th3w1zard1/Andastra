@@ -2034,8 +2034,19 @@ namespace Odyssey.Game.Core
                         // Auto-remove key if configured
                         if (doorComponent.AutoRemoveKey)
                         {
-                            // TODO: Remove key from inventory (requires item removal implementation)
-                            Console.WriteLine($"[Odyssey] Key {doorComponent.KeyName} should be removed (auto-remove enabled)");
+                            // Find and remove the key item from inventory
+                            foreach (IEntity item in playerInventory.GetAllItems())
+                            {
+                                if (item != null && item.Tag != null && 
+                                    item.Tag.Equals(doorComponent.KeyName, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (playerInventory.RemoveItem(item))
+                                    {
+                                        Console.WriteLine($"[Odyssey] Key {doorComponent.KeyName} removed from inventory (auto-remove)");
+                                    }
+                                    break; // Only remove one key
+                                }
+                            }
                         }
                     }
                     else
@@ -2047,12 +2058,41 @@ namespace Odyssey.Game.Core
                 else if (doorComponent.Lockable && doorComponent.LockDC > 0)
                 {
                     // Door can be lockpicked (Security skill check)
-                    // TODO: Implement Security skill check vs LockDC
-                    // For now, allow lockpicking if door is not key-required
-                    Console.WriteLine($"[Odyssey] Door can be lockpicked (DC: {doorComponent.LockDC})");
-                    // Placeholder: In full implementation, would check player's Security skill
-                    // and roll d20 + Security modifier vs LockDC
-                    return;
+                    // Based on swkotor2.exe lockpicking system
+                    // Security skill check: d20 + Security skill rank vs LockDC
+                    // Skill constant: SKILL_SECURITY = 6
+                    Odyssey.Core.Interfaces.Components.IStatsComponent playerStats = 
+                        _session.PlayerEntity?.GetComponent<Odyssey.Core.Interfaces.Components.IStatsComponent>();
+                    
+                    if (playerStats != null)
+                    {
+                        // Get Security skill rank (skill 6)
+                        int securitySkill = playerStats.GetSkillRank(6);
+                        
+                        // Roll d20 (1-20)
+                        Random random = new Random();
+                        int roll = random.Next(1, 21);
+                        int total = roll + securitySkill;
+                        
+                        if (total >= doorComponent.LockDC)
+                        {
+                            // Lockpicking successful
+                            doorComponent.Unlock();
+                            Console.WriteLine($"[Odyssey] Door lockpicked (roll: {roll} + skill: {securitySkill} = {total} >= DC: {doorComponent.LockDC})");
+                        }
+                        else
+                        {
+                            // Lockpicking failed
+                            Console.WriteLine($"[Odyssey] Lockpicking failed (roll: {roll} + skill: {securitySkill} = {total} < DC: {doorComponent.LockDC})");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        // Player has no stats component, cannot lockpick
+                        Console.WriteLine("[Odyssey] Cannot lockpick - player has no stats component");
+                        return;
+                    }
                 }
                 else
                 {
