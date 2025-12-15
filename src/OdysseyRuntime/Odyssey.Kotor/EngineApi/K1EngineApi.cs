@@ -6682,12 +6682,19 @@ namespace Odyssey.Kotor.EngineApi
                             }
 
                             // Apply damage to door (handles HP reduction, hardness, and destruction)
-                            // Apply damage to door (handles HP reduction, hardness, and destruction)
                             // Based on swkotor2.exe: Door bashing damage application
                             // Original implementation: ApplyDamage handles HP reduction, hardness, and sets bashed state
-                            doorComponent.ApplyDamage(bashDamage);
+                            // TODO: ApplyDamage not yet implemented on IDoorComponent - manually reduce HP for now
+                            int actualDamage = Math.Max(1, bashDamage - doorComponent.Hardness); // Hardness reduces damage
+                            doorComponent.HitPoints = Math.Max(0, doorComponent.HitPoints - actualDamage);
+                            if (doorComponent.HitPoints <= 0)
+                            {
+                                doorComponent.IsBashed = true;
+                                doorComponent.IsOpen = true;
+                                doorComponent.OpenState = 2; // Destroyed
+                            }
 
-                            // If door was destroyed (bashed open), it's already unlocked and opened by ApplyDamage
+                            // If door was destroyed (bashed open), it's already unlocked and opened
                             // Fire OnDamaged script event if door still exists (HP > 0 means door wasn't destroyed)
                             if (doorComponent.HitPoints > 0 && ctx.World != null && ctx.World.EventBus != null)
                             {
