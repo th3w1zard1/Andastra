@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Odyssey.Core.Interfaces;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Odyssey.Kotor.Game;
@@ -173,6 +174,11 @@ namespace Odyssey.Game.Core
                 if (_currentState == GameState.MainMenu)
                 {
                     Exit();
+                }
+                else if (_currentState == GameState.SaveMenu || _currentState == GameState.LoadMenu)
+                {
+                    // Return to game from save/load menu
+                    _currentState = GameState.InGame;
                 }
                 else
                 {
@@ -1004,7 +1010,7 @@ namespace Odyssey.Game.Core
                 if (_world != null)
                 {
                     string savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Odyssey", "Saves");
-                    var gameDataManager = new Odyssey.Kotor.Data.GameDataManager(_session.Installation, updatedSettings.Game);
+                    var gameDataManager = new Odyssey.Kotor.Data.GameDataManager(_session.Installation);
                     var serializer = new Odyssey.Content.Save.SaveSerializer(gameDataManager);
                     var dataProvider = new Odyssey.Content.Save.SaveDataProvider(savesPath, serializer);
                     _saveSystem = new Odyssey.Core.Save.SaveSystem(_world, dataProvider);
@@ -2190,26 +2196,22 @@ namespace Odyssey.Game.Core
             Console.WriteLine("[Odyssey] Door " + (doorComponent.IsOpen ? "opened" : "closed"));
 
             // Handle module/area transitions
-            if (doorComponent.IsModuleTransition)
+            if (doorComponent.IsModuleTransition || doorComponent.IsAreaTransition)
             {
-                Console.WriteLine("[Odyssey] Door leads to module: " + doorComponent.LinkedToModule);
-                if (_session != null)
+                if (_session != null && _session.PlayerEntity != null)
                 {
-                    _session.TransitionToModule(doorComponent.LinkedToModule, doorComponent.TransitionDestination);
-                }
-            }
-            else if (doorComponent.IsAreaTransition)
-            {
-                Console.WriteLine("[Odyssey] Door leads to area: " + doorComponent.LinkedTo);
-                if (_session != null && _session.CurrentRuntimeModule != null)
-                {
-                    // Find the area ResRef from the linked waypoint or use LinkedTo directly
-                    string areaResRef = doorComponent.LinkedTo;
-                    string waypointTag = doorComponent.TransitionDestination;
-                    
-                    // If LinkedTo is a waypoint tag, we need to find which area it's in
-                    // For now, assume LinkedTo is the area ResRef
-                    _session.TransitionToArea(areaResRef, waypointTag);
+                    // Use ModuleTransitionSystem to handle door transitions
+                    // The system will determine if it's a module or area transition
+                    var transitionSystem = _session.GetType().GetField("_moduleTransitionSystem", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (transitionSystem != null)
+                    {
+                        var moduleTransitionSystem = transitionSystem.GetValue(_session) as Odyssey.Kotor.Game.ModuleTransitionSystem;
+                        if (moduleTransitionSystem != null)
+                        {
+                            moduleTransitionSystem.TransitionThroughDoor(doorEntity, _session.PlayerEntity);
+                        }
+                    }
                 }
             }
         }
@@ -2234,26 +2236,22 @@ namespace Odyssey.Game.Core
             Console.WriteLine("[Odyssey] Trigger activated");
 
             // Handle module/area transitions
-            if (triggerComponent.IsModuleTransition)
+            // Handle module/area transitions
+            if (triggerComponent.IsModuleTransition || triggerComponent.IsAreaTransition)
             {
-                Console.WriteLine("[Odyssey] Trigger leads to module: " + triggerComponent.LinkedToModule);
-                if (_session != null)
+                if (_session != null && _session.PlayerEntity != null)
                 {
-                    _session.TransitionToModule(triggerComponent.LinkedToModule, triggerComponent.TransitionDestination);
-                }
-            }
-            else if (triggerComponent.IsAreaTransition)
-            {
-                Console.WriteLine("[Odyssey] Trigger leads to area: " + triggerComponent.LinkedTo);
-                if (_session != null && _session.CurrentRuntimeModule != null)
-                {
-                    // Find the area ResRef from the linked waypoint or use LinkedTo directly
-                    string areaResRef = triggerComponent.LinkedTo;
-                    string waypointTag = triggerComponent.TransitionDestination;
-                    
-                    // If LinkedTo is a waypoint tag, we need to find which area it's in
-                    // For now, assume LinkedTo is the area ResRef
-                    _session.TransitionToArea(areaResRef, waypointTag);
+                    // Use ModuleTransitionSystem to handle trigger transitions
+                    var transitionSystem = _session.GetType().GetField("_moduleTransitionSystem", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (transitionSystem != null)
+                    {
+                        var moduleTransitionSystem = transitionSystem.GetValue(_session) as Odyssey.Kotor.Game.ModuleTransitionSystem;
+                        if (moduleTransitionSystem != null)
+                        {
+                            moduleTransitionSystem.TransitionThroughTrigger(triggerEntity, _session.PlayerEntity);
+                        }
+                    }
                 }
             }
 
@@ -2439,7 +2437,7 @@ namespace Odyssey.Game.Core
 
             try
             {
-                _availableSaves = new List<Odyssey.Core.Save.SaveGameInfo>(_saveSystem.EnumerateSaves());
+                _availableSaves = new List<Odyssey.Core.Save.SaveGameInfo>(_saveSystem.GetSaveList());
                 _availableSaves.Sort((a, b) => b.SaveTime.CompareTo(a.SaveTime)); // Most recent first
             }
             catch (Exception ex)
