@@ -1344,6 +1344,16 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetLocalBoolean(object oObject, int nIndex) - gets local boolean variable by index
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Local variable system (index-based, not name-based like NWN)
+        /// Original implementation: KOTOR uses index-based local variables instead of name-based
+        /// Index range: 0-63 (64 boolean slots per entity)
+        /// Storage: Stored in entity's local variable component, persisted per-entity
+        /// Returns: 1 (TRUE) if variable is set, 0 (FALSE) if variable is unset or index invalid
+        /// </remarks>
         // KOTOR Local Boolean/Number functions (index-based, not name-based like NWN)
         private Variable Func_GetLocalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3991,12 +4001,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Set subtype to EXTRAORDINARY (32)
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
-                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
@@ -5123,87 +5133,6 @@ namespace Odyssey.Scripting.EngineApi
         #endregion
     }
 }
-
-
-
-                runtimeArea.AddEntity(entity);
-            }
-            
-            // Implement appear animation if bUseAppearAnimation is TRUE
-            // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
-            // This is typically handled by setting a flag that the rendering system uses to fade in the object
-            if (useAppearAnimation != 0)
-            {
-                // Set flag on entity to indicate it should fade in
-                if (entity is Core.Entities.Entity entityImpl)
-                {
-                    entityImpl.SetData("AppearAnimation", true);
-                    
-                    // Optionally, queue an animation action for entities that support it
-                    // Most objects in KOTOR just fade in visually rather than playing a specific animation
-                    // The rendering system should handle the fade-in based on the AppearAnimation flag
-                }
-            }
-            
-            return Variable.FromObject(entity.ObjectId);
-        }
-
-        #endregion
-
-        #region Type Conversion Functions
-
-        /// <summary>
-        /// IntToFloat(int nInteger) - Convert nInteger into a floating point number
-        /// </summary>
-        private Variable Func_IntToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            int value = args.Count > 0 ? args[0].AsInt() : 0;
-            return Variable.FromFloat((float)value);
-        }
-
-        /// <summary>
-        /// FloatToInt(float fFloat) - Convert fFloat into the nearest integer
-        /// </summary>
-        private Variable Func_FloatToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            float value = args.Count > 0 ? args[0].AsFloat() : 0f;
-            return Variable.FromInt((int)Math.Round(value));
-        }
-
-        /// <summary>
-        /// StringToInt(string sNumber) - Convert sNumber into an integer
-        /// </summary>
-        private new Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            string numberStr = args.Count > 0 ? args[0].AsString() : "";
-            if (int.TryParse(numberStr, out int result))
-            {
-                return Variable.FromInt(result);
-            }
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// StringToFloat(string sNumber) - Convert sNumber into a floating point number
-        /// </summary>
-        private new Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            string numberStr = args.Count > 0 ? args[0].AsString() : "";
-            if (float.TryParse(numberStr, out float result))
-            {
-                return Variable.FromFloat(result);
-            }
-            return Variable.FromFloat(0f);
-        }
-
-        #endregion
-
-        #region Nearest Object To Location
-
-        /// <summary>
-        /// GetNearestObjectToLocation(int nObjectType, location lLocation, int nNth=1) - Get the nNth object nearest to lLocation that is of the specified type
-        /// </summary>
-        private Variable Func_GetNearestObjectToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             if (args.Count < 2 || ctx.World == null)
             {
