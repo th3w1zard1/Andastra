@@ -87,7 +87,10 @@ namespace HolocronToolset.NET.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:72
             // Original: self.ui.textEdit.setPlainText(decode_bytes_with_fallbacks(data))
             // Decode bytes with fallbacks (UTF-8 -> Windows-1252 -> Latin-1)
+            // QPlainTextEdit normalizes \r\n to \n internally, so we normalize here to match
+            // This ensures consistent behavior: Load normalizes to \n, Build converts \n to Environment.NewLine
             string text = DecodeBytesWithFallbacks(data);
+            text = text.Replace("\r\n", "\n").Replace("\r", "\n");
             _textEdit.Text = text;
         }
 
@@ -100,7 +103,13 @@ namespace HolocronToolset.NET.Editors
             string text = _textEdit?.Text ?? string.Empty;
             
             // Normalize line endings to Environment.NewLine (C# equivalent of os.linesep)
-            text = text.Replace("\r\n", Environment.NewLine).Replace("\n", Environment.NewLine);
+            // TextBox uses \n internally (from Load normalization), so we convert \n to Environment.NewLine
+            // This matches Python: QPlainTextEdit uses \n internally, build() converts to os.linesep
+            // Process in order: first normalize \r\n to \n, then convert all \n to Environment.NewLine
+            // This prevents double conversion
+            text = text.Replace("\r\n", "\n");
+            text = text.Replace("\r", "\n");
+            text = text.Replace("\n", Environment.NewLine);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:77-83
             // Original: try/except encoding with errors="replace"
