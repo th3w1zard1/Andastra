@@ -184,6 +184,9 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
+            // Update world (time manager, delay scheduler, event bus)
+            _world.Update(deltaTime);
+
             // Update trigger system (checks for entity entry/exit)
             if (_triggerSystem != null)
             {
