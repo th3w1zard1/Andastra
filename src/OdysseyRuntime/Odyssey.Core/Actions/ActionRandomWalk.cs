@@ -10,10 +10,18 @@ namespace Odyssey.Core.Actions
     /// Action to make an entity randomly walk around.
     /// Based on NWScript ActionRandomWalk semantics.
     /// </summary>
+    /// <remarks>
+    /// Random Walk Action:
+    /// - Based on swkotor2.exe ActionRandomWalk NWScript function
+    /// - Original implementation: Entity randomly walks within max distance from start position
+    /// - Used for idle NPC behavior, wandering creatures, ambient activity
+    /// - Picks random direction and distance, walks to target, then picks new target
+    /// - Duration parameter limits how long random walking continues
+    /// </remarks>
     public class ActionRandomWalk : ActionBase
     {
-        private readonly float _maxDistance;
-        private readonly float _duration;
+        private float _maxDistance;
+        private float _duration;
         private Vector3 _startPosition;
         private Vector3 _targetPosition;
         private bool _hasTarget;

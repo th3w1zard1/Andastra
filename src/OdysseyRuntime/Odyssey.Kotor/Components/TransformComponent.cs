@@ -9,11 +9,17 @@ namespace Odyssey.Kotor.Components
     /// Concrete implementation of transform component for KOTOR.
     /// </summary>
     /// <remarks>
-    /// KOTOR coordinate system:
-    /// - Y-up coordinate system (same as most game engines)
-    /// - Positions in meters
-    /// - Facing angle in radians (0 = +X axis, counter-clockwise)
-    /// - Scale typically (1,1,1) but can be modified for effects
+    /// Transform Component:
+    /// - Based on swkotor2.exe entity transform system
+    /// - Located via string references: "XPosition" @ 0x007bf744, "YPosition" @ 0x007bf738, "ZPosition" @ 0x007bf730
+    /// - "XOrientation" @ 0x007bf6f8, "YOrientation" @ 0x007bf6ec, "ZOrientation" @ 0x007bf6e0
+    /// - Original implementation: Stores entity position (Vector3) and facing (float) in world space
+    /// - KOTOR coordinate system:
+    ///   - Y-up coordinate system (same as most game engines)
+    ///   - Positions in meters
+    ///   - Facing angle in radians (0 = +X axis, counter-clockwise)
+    ///   - Scale typically (1,1,1) but can be modified for effects
+    /// - Transform stored in GFF structures as XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation
     /// </remarks>
     public class TransformComponent : ITransformComponent
     {
@@ -213,7 +219,7 @@ namespace Odyssey.Kotor.Components
             // Apply parent transform if present
             if (_parent != null)
             {
-                var parentTransform = _parent.GetComponent<ITransformComponent>();
+                ITransformComponent parentTransform = _parent.GetComponent<ITransformComponent>();
                 if (parentTransform != null)
                 {
                     _worldMatrixCache = localMatrix * parentTransform.WorldMatrix;
@@ -301,7 +307,7 @@ namespace Odyssey.Kotor.Components
         {
             float angleToTarget = AngleTo(targetPosition);
             float angleDiff = Math.Abs(angleToTarget - _facing);
-            
+
             // Normalize to [0, π]
             if (angleDiff > Math.PI)
             {

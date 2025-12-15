@@ -8,6 +8,14 @@ namespace Odyssey.Core.Actions
     /// Action that executes a stored script action.
     /// This is used by DelayCommand and AssignCommand.
     /// </summary>
+    /// <remarks>
+    /// Do Command Action:
+    /// - Based on swkotor2.exe AssignCommand/DelayCommand system
+    /// - Original implementation: Executes a stored action/script command on entity
+    /// - Used by AssignCommand (execute on different entity) and DelayCommand (execute after delay)
+    /// - Stores command as closure/action delegate, executes when action runs
+    /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
+    /// </remarks>
     public class ActionDoCommand : ActionBase
     {
         private readonly Action<IEntity> _command;

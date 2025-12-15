@@ -10,6 +10,13 @@ namespace Odyssey.Core.Actions
     /// Action to move an entity away from another object.
     /// Based on NWScript ActionMoveAwayFromObject semantics.
     /// </summary>
+    /// <remarks>
+    /// Move Away From Object Action:
+    /// - Based on swkotor2.exe ActionMoveAwayFromObject NWScript function
+    /// - Original implementation: Moves entity away from target to maintain minimum distance
+    /// - Used for backing away from threats, maintaining personal space, retreat behavior
+    /// - Moves in opposite direction from target until distance threshold reached
+    /// </remarks>
     public class ActionMoveAwayFromObject : ActionBase
     {
         private readonly uint _targetObjectId;
