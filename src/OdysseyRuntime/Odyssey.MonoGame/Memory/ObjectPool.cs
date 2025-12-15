@@ -68,6 +68,7 @@ namespace Odyssey.MonoGame.Memory
         /// <summary>
         /// Returns an object to the pool.
         /// </summary>
+        /// <param name="obj">Object to return to the pool. Can be null (no-op).</param>
         public void Return(T obj)
         {
             if (obj == null)

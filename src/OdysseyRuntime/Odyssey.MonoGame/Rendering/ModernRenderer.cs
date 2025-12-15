@@ -107,15 +107,21 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new modern renderer.
         /// </summary>
+        /// <summary>
+        /// Initializes a new modern renderer.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations. Must not be null.</param>
+        /// <param name="resourceProvider">Resource provider for asset loading. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice or resourceProvider is null.</exception>
         public ModernRenderer(GraphicsDevice graphicsDevice, IGameResourceProvider resourceProvider)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
             if (resourceProvider == null)
             {
-                throw new ArgumentNullException("resourceProvider");
+                throw new ArgumentNullException(nameof(resourceProvider));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -203,7 +209,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (objects == null)
             {
-                throw new ArgumentNullException("objects");
+                throw new ArgumentNullException(nameof(objects));
             }
 
             List<RenderObject> visibleObjects = _renderListPool.Get();

@@ -51,13 +51,14 @@ namespace Odyssey.MonoGame.Loading
         /// <summary>
         /// Initializes a new async resource loader.
         /// </summary>
-        /// <param name="resourceProvider">Resource provider for resolving file locations.</param>
-        /// <param name="maxConcurrentLoads">Maximum concurrent loads (default: number of CPU cores).</param>
+        /// <param name="resourceProvider">Resource provider for resolving file locations. Must not be null.</param>
+        /// <param name="maxConcurrentLoads">Maximum concurrent loads (default: number of CPU cores). Must be greater than zero if specified.</param>
+        /// <exception cref="ArgumentNullException">Thrown if resourceProvider is null.</exception>
         public AsyncResourceLoader([NotNull] IGameResourceProvider resourceProvider, int maxConcurrentLoads = 0)
         {
             if (resourceProvider == null)
             {
-                throw new ArgumentNullException("resourceProvider");
+                throw new ArgumentNullException(nameof(resourceProvider));
             }
 
             _resourceProvider = resourceProvider;
