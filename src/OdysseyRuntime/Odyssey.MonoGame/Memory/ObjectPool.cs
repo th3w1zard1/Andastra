@@ -11,6 +11,17 @@ namespace Odyssey.MonoGame.Memory
     /// 
     /// Based on modern AAA game practices for memory management.
     /// </summary>
+    /// <remarks>
+    /// Object Pool:
+    /// - Based on swkotor2.exe memory management system
+    /// - Located via string references: "SpawnPoolActive" @ 0x007c0bdc (spawn pool active flag)
+    /// - "PT_XP_POOL" @ 0x007c18a4 (XP pool in PARTYTABLE)
+    /// - Memory allocation: wglAllocateMemoryNV, wglFreeMemoryNV (OpenGL memory management)
+    /// - "GlobalMemoryStatus" @ 0x0080afa4 (Windows memory status API)
+    /// - Original implementation: KOTOR uses object pooling for entities, effects, and render objects
+    /// - Pool management: Objects are reused to reduce allocation overhead and GC pressure
+    /// - Spawn pools: Active spawn pools track available objects for reuse
+    /// </remarks>
     /// <typeparam name="T">Type of object to pool.</typeparam>
     public class ObjectPool<T> where T : class
     {
