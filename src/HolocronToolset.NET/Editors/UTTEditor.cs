@@ -521,7 +521,10 @@ namespace HolocronToolset.NET.Editors
                 _utt.IsTrap = _isTrapCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_once = self.ui.activateOnceCheckbox.isChecked()
-            _utt.TrapOnce = _activateOnceCheckbox?.IsChecked ?? false;
+            if (_activateOnceCheckbox != null)
+            {
+                _utt.TrapOnce = _activateOnceCheckbox.IsChecked == true;
+            }
             // Matching Python: utt.trap_detectable = self.ui.detectableCheckbox.isChecked()
             _utt.TrapDetectable = _detectableCheckbox?.IsChecked ?? false;
             // Matching Python: utt.trap_detect_dc = self.ui.detectDcSpin.value()
@@ -714,6 +717,7 @@ namespace HolocronToolset.NET.Editors
         public TextBox ResrefEdit => _resrefEdit;
         public Avalonia.Controls.CheckBox AutoRemoveKeyCheckbox => _autoRemoveKeyCheckbox;
         public Avalonia.Controls.CheckBox IsTrapCheckbox => _isTrapCheckbox;
+        public Avalonia.Controls.CheckBox ActivateOnceCheckbox => _activateOnceCheckbox;
         public Avalonia.Controls.NumericUpDown DetectDcSpin => _detectDcSpin;
         public UTT Utt => _utt;
     }
