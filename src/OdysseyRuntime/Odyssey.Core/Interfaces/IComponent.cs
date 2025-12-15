@@ -3,6 +3,15 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Base interface for all entity components.
     /// </summary>
+    /// <remarks>
+    /// Component Interface:
+    /// - Based on swkotor2.exe component-based entity system
+    /// - Located via string references: Component system used throughout entity management
+    /// - Original implementation: Entities use component-based architecture for modular functionality
+    /// - Components attached to entities provide specific functionality (Transform, Stats, Inventory, etc.)
+    /// - Components have lifecycle hooks: OnAttach (when added to entity), OnDetach (when removed)
+    /// - Component system allows flexible entity composition without inheritance hierarchies
+    /// </remarks>
     public interface IComponent
     {
         /// <summary>
