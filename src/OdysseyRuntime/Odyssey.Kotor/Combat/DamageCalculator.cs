@@ -48,23 +48,28 @@ namespace Odyssey.Kotor.Combat
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14
     /// - Damage types: "DAM_HP" @ 0x007bf130, "DAM_STR" @ 0x007bf120 (ability damage)
     /// - Original implementation: D20 attack/damage resolution with critical hits, resistances
+    /// - Damage calculation functions in combat system handle d20 rolls, modifiers, criticals
     ///
     /// Attack Roll:
     /// - Roll d20 + Attack Bonus vs Defense
-    /// - Natural 1 always misses
-    /// - Natural 20 always hits (and threatens critical)
+    /// - Natural 1 always misses (automatic miss)
+    /// - Natural 20 always hits (automatic hit) and threatens critical
+    /// - Critical threat confirmed with second d20 roll + attack bonus vs defense
     ///
-    /// Attack Bonus = BAB + STR mod (melee) or DEX mod (ranged) + modifiers
-    /// Defense = 10 + DEX mod + Armor + Deflection + Class bonus
+    /// Attack Bonus = BAB + STR mod (melee) or DEX mod (ranged/finesse) + weapon bonus + modifiers
+    /// Defense = 10 + DEX mod + Armor bonus + Natural AC + Deflection + Class bonus + shield bonus
     ///
     /// Critical Hits:
-    /// - Threat range (usually 19-20 or 20)
-    /// - Confirmation roll: d20 + attack bonus vs defense
-    /// - If confirmed: damage x multiplier (usually x2)
+    /// - Threat range (usually 19-20 or 20, from weapon properties)
+    /// - Confirmation roll: d20 + attack bonus vs defense (must hit to confirm)
+    /// - If confirmed: damage x multiplier (usually x2, from weapon properties)
     ///
     /// Damage:
-    /// - Weapon dice + STR mod (melee) + bonuses
-    /// - Resistances reduce damage
+    /// - Weapon dice (e.g., 1d8) + STR mod (melee) or DEX mod (ranged) + bonuses
+    /// - Two-handed weapons: 1.5x STR bonus
+    /// - Offhand weapons: 0.5x STR bonus
+    /// - Resistances reduce damage (stacking, minimum 0)
+    /// - Immunities negate damage completely
     /// </remarks>
     public class DamageCalculator
     {

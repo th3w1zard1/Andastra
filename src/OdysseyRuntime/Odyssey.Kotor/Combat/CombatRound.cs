@@ -41,10 +41,12 @@ namespace Odyssey.Kotor.Combat
     /// <remarks>
     /// KOTOR Combat Round (~3 seconds):
     /// - Based on swkotor2.exe: CSWSCombatRound class
-    /// - Located via string reference: "CombatRoundData" @ 0x007bf6b4, "End Of Combat Round" @ 0x007c843c
-    /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management)
-    /// - Original implementation: 3-second rounds with timer-based attack scheduling
-    /// - Round timing: "CSWSCombatRound::IncrementTimer" checks timer expiration at 0.5s, 1.5s, 2.5s, 3.0s
+    /// - Located via string reference: "CombatRoundData" @ 0x007bf6b4
+    /// - Original implementation: FUN_00529470 @ 0x00529470 (save CombatRoundData to GFF)
+    /// - FUN_005226d0 @ 0x005226d0 (load CombatRoundData from creature save)
+    /// - FUN_005fb0f0 @ 0x005fb0f0 (reference to CombatRoundData usage)
+    /// - 3-second rounds with timer-based attack scheduling
+    /// - Round timing: Timer checks at 0.5s, 1.5s, 2.5s, 3.0s
     /// - Starting (0.0s): Initialize animations
     /// - FirstAttack (0.5s): Primary attack
     /// - SecondAttack (1.5s): Offhand/counter if dual wielding
@@ -53,11 +55,13 @@ namespace Odyssey.Kotor.Combat
     /// 
     /// Attacks per round based on BAB:
     /// - BAB 1-5: 1 attack
-    /// - BAB 6-10: 2 attacks
-    /// - BAB 11-15: 3 attacks
-    /// - BAB 16+: 4 attacks
+    /// - BAB 6-10: 2 attacks (iterative: +0, -5)
+    /// - BAB 11-15: 3 attacks (iterative: +0, -5, -10)
+    /// - BAB 16+: 4 attacks (iterative: +0, -5, -10, -15)
     /// 
-    /// Dual wielding adds extra attacks but with penalties.
+    /// Dual wielding adds extra attacks but with penalties:
+    /// - Offhand: -10 base penalty, -4 with Two-Weapon Fighting feat
+    /// - Main hand with offhand: -6 base penalty, -2 with TWF feat
     /// </remarks>
     public class CombatRound
     {
