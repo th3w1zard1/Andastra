@@ -569,11 +569,11 @@ namespace Odyssey.Core.Combat
             Interfaces.Components.IStatsComponent statsComponent = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (statsComponent != null)
             {
-                stats.AttackBonus = statsComponent.GetAbility(Ability.Strength); // Simplified
-                stats.Defense = 10 + statsComponent.GetAbility(Ability.Dexterity); // Simplified AC
-                stats.FortitudeSave = statsComponent.GetAbility(Ability.Constitution);
-                stats.ReflexSave = statsComponent.GetAbility(Ability.Dexterity);
-                stats.WillSave = statsComponent.GetAbility(Ability.Wisdom);
+                stats.AttackBonus = statsComponent.BaseAttackBonus;
+                stats.Defense = statsComponent.ArmorClass;
+                stats.FortitudeSave = statsComponent.FortitudeSave;
+                stats.ReflexSave = statsComponent.ReflexSave;
+                stats.WillSave = statsComponent.WillSave;
             }
 
             stats.CriticalThreatRange = 20; // Default critical threat on natural 20
