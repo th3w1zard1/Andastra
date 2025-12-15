@@ -5,6 +5,15 @@ namespace Odyssey.Core.Interfaces.Components
     /// <summary>
     /// Component for entities that have an action queue.
     /// </summary>
+    /// <remarks>
+    /// Action Queue Component Interface:
+    /// - Based on swkotor2.exe action system
+    /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0
+    /// - Original implementation: Entities maintain action queue with current action and pending actions
+    /// - Actions processed sequentially: Current action executes until complete, then next action dequeued
+    /// - Update processes current action, returns number of script instructions executed
+    /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc.
+    /// </remarks>
     public interface IActionQueueComponent : IComponent
     {
         /// <summary>
