@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
@@ -50,25 +52,30 @@ namespace HolocronToolset.NET.Editors
 
         private void SetupProgrammaticUI()
         {
-            // Create a simple text box if XAML doesn't exist
+            // Create a multiline text box if XAML doesn't exist
+            // Matching PyKotor implementation: QPlainTextEdit with Courier New font
             _textEdit = new TextBox
             {
                 AcceptsReturn = true,
                 AcceptsTab = true,
-                TextWrapping = Avalonia.Media.TextWrapping.NoWrap
+                TextWrapping = Avalonia.Media.TextWrapping.NoWrap,
+                FontFamily = "Courier New"
             };
             Content = _textEdit;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:41
+        // Original: supported: list[ResourceType] = [member for member in ResourceType if member.contents == "plaintext"]
         private static ResourceType[] GetSupportedTypes()
         {
             // Get all resource types that are plaintext
-            // For now, return common text types
-            return new[]
-            {
-                ResourceType.TXT,
-                ResourceType.NSS
-            };
+            // Matching PyKotor: filter ResourceType members where contents == "plaintext"
+            // Use reflection to get all static ResourceType fields, similar to FromId/FromExtension
+            return typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                .Where(f => f.FieldType == typeof(ResourceType))
+                .Select(f => (ResourceType)f.GetValue(null))
+                .Where(rt => rt != null && rt.Contents == "plaintext")
+                .ToArray();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:64-72
@@ -77,6 +84,8 @@ namespace HolocronToolset.NET.Editors
         {
             base.Load(filepath, resref, restype, data);
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:72
+            // Original: self.ui.textEdit.setPlainText(decode_bytes_with_fallbacks(data))
             // Decode bytes with fallbacks (UTF-8 -> Windows-1252 -> Latin-1)
             string text = DecodeBytesWithFallbacks(data);
             _textEdit.Text = text;
@@ -86,22 +95,39 @@ namespace HolocronToolset.NET.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:75
+            // Original: text = self.ui.textEdit.toPlainText().replace("\r\n", os.linesep).replace("\n", os.linesep)
             string text = _textEdit?.Text ?? string.Empty;
+            
+            // Normalize line endings to Environment.NewLine (C# equivalent of os.linesep)
+            text = text.Replace("\r\n", Environment.NewLine).Replace("\n", Environment.NewLine);
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:77-83
+            // Original: try/except encoding with errors="replace"
             // Try UTF-8 first, then Windows-1252, then Latin-1
             try
             {
                 return Tuple.Create(Encoding.UTF8.GetBytes(text), new byte[0]);
             }
-            catch
+            catch (EncoderFallbackException)
             {
                 try
                 {
-                    return Tuple.Create(Encoding.GetEncoding("windows-1252").GetBytes(text), new byte[0]);
+                    // Use Encoding.GetEncoding with error handling
+                    Encoding win1252 = Encoding.GetEncoding("windows-1252");
+                    Encoder encoder = win1252.GetEncoder();
+                    byte[] result = new byte[encoder.GetByteCount(text.ToCharArray(), 0, text.Length, true)];
+                    encoder.GetBytes(text.ToCharArray(), 0, text.Length, result, 0, true);
+                    return Tuple.Create(result, new byte[0]);
                 }
                 catch
                 {
-                    return Tuple.Create(Encoding.GetEncoding("latin-1").GetBytes(text), new byte[0]);
+                    // Fall back to Latin-1
+                    Encoding latin1 = Encoding.GetEncoding("latin-1");
+                    Encoder encoder = latin1.GetEncoder();
+                    byte[] result = new byte[encoder.GetByteCount(text.ToCharArray(), 0, text.Length, true)];
+                    encoder.GetBytes(text.ToCharArray(), 0, text.Length, result, 0, true);
+                    return Tuple.Create(result, new byte[0]);
                 }
             }
         }
@@ -111,6 +137,8 @@ namespace HolocronToolset.NET.Editors
         public override void New()
         {
             base.New();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:87
+            // Original: self.ui.textEdit.setPlainText("")
             _textEdit.Text = "";
         }
 
@@ -118,7 +146,13 @@ namespace HolocronToolset.NET.Editors
         // Original: def toggle_word_wrap(self):
         public void ToggleWordWrap()
         {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:90
+            // Original: self._word_wrap = not self._word_wrap
             _wordWrap = !_wordWrap;
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:91-95
+            // Original: self.ui.actionWord_Wrap.setChecked(self._word_wrap)
+            // Original: self.ui.textEdit.setLineWrapMode(...)
             _textEdit.TextWrapping = _wordWrap
                 ? Avalonia.Media.TextWrapping.Wrap
                 : Avalonia.Media.TextWrapping.NoWrap;
@@ -130,8 +164,15 @@ namespace HolocronToolset.NET.Editors
             Save();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/txt.py:72
+        // Original: decode_bytes_with_fallbacks(data)
         private string DecodeBytesWithFallbacks(byte[] data)
         {
+            if (data == null || data.Length == 0)
+            {
+                return string.Empty;
+            }
+
             // Try UTF-8 first
             try
             {
