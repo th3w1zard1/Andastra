@@ -22,6 +22,21 @@ namespace Odyssey.Kotor.Loading
     /// </summary>
     /// <remarks>
     /// Module Loading Sequence (from IFO spec):
+    /// - Based on swkotor2.exe module loading system
+    /// - Located via string references: "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258
+    /// - "Module" @ 0x007bc4e0, "MODULE" @ 0x007beab8, "ModuleName" @ 0x007bde2c
+    /// - "LASTMODULE" @ 0x007be1d0, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
+    /// - "ModuleList" @ 0x007bdd3c, "GetModuleList" @ 0x007bdd48
+    /// - "MODULES" @ 0x007c6bc4, ".\modules" @ 0x007c6bcc, "d:\modules" @ 0x007c6bd8
+    /// - "LIVE%d:MODULES\" @ 0x007be680 (live module directory format)
+    /// - Module save: "modulesave" @ 0x007bde20, ":: Module savegame list: %s.\n" @ 0x007cbbb4
+    /// - ":: Server module list: " @ 0x007cbc2c, ":: Server mode: Module Running.\n" @ 0x007cbc44
+    /// - ":: Server mode: Module Loaded.\n" @ 0x007cbc68, "Module: %s" @ 0x007c79c8
+    /// - "module000" @ 0x007cb9cc (module save prefix), "PlayModuleCharacterList" @ 0x007c2428
+    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
+    /// - GUI: "LB_MODULES" @ 0x007cbff4, ":modules" @ 0x007cc0d8
+    /// - Original implementation: FUN_00633270 @ 0x00633270 (sets up all game directories including MODULES)
     /// 1. Read IFO - Parse module metadata
     /// 2. Check Requirements - Verify Expansion_Pack and MinGameVer
     /// 3. Load HAKs - Mount HAK files in order
