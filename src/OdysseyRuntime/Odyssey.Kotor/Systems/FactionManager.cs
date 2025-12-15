@@ -39,23 +39,29 @@ namespace Odyssey.Kotor.Systems
     /// Manages faction relationships and hostility.
     /// </summary>
     /// <remarks>
-    /// Faction system uses:
+    /// Faction Manager System:
     /// - Based on swkotor2.exe faction system
     /// - Located via string references: "FactionRep" @ 0x007c290c, "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
-    /// - "FACTIONREP" @ 0x007bcec8, "FactionList" @ 0x007be604
+    /// - "FACTIONREP" @ 0x007bcec8, "FactionList" @ 0x007be604, "Faction" @ 0x007c24dc
+    /// - "repute.2da" @ 0x007c2900 (faction relationship table file), "FACTIONREP" @ 0x007bcec8 (faction reputation field)
     /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
-    /// - repute.2da: Defines faction relationships (FactionID1, FactionID2, FactionRep)
-    /// - Personal reputation: Individual entity overrides
-    /// - Temporary hostility: Combat-triggered hostility
+    /// - repute.2da: Defines faction relationships in 2DA table format (FactionID1, FactionID2, FactionRep columns)
+    /// - Faction IDs: Integer identifiers (0-255 range), defined in repute.2da
+    /// - Standard factions: Player (1), Hostile (2), Commoner (3), Merchant (4), Gizka (5), etc.
+    /// - Personal reputation: Individual entity overrides (stored per entity pair, overrides faction reputation)
+    /// - Temporary hostility: Combat-triggered hostility (cleared on combat end or entity death)
     ///
-    /// Reputation values:
-    /// - 0-10: Hostile
-    /// - 11-89: Neutral
-    /// - 90-100: Friendly
+    /// Reputation values (0-100 range):
+    /// - 0-10: Hostile (will attack on sight)
+    /// - 11-89: Neutral (will not attack, but not friendly)
+    /// - 90-100: Friendly (allied, will assist in combat)
     ///
     /// Combat triggers:
-    /// - Attacking a creature makes you hostile to their faction
-    /// - Can be permanent or temporary
+    /// - Attacking a creature makes attacker hostile to target's faction
+    /// - Temporary hostility set immediately on attack (SetTemporaryHostile)
+    /// - Faction-wide hostility: All members of target's faction become hostile to attacker
+    /// - Hostility can be permanent (persists after combat) or temporary (cleared on combat end)
+    /// - Personal reputation can override faction reputation for specific entity pairs
     /// </remarks>
     public class FactionManager
     {

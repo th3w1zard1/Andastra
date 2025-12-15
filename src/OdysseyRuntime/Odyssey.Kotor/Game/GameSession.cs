@@ -25,10 +25,21 @@ namespace Odyssey.Kotor.Game
     /// <remarks>
     /// Game Session System:
     /// - Based on swkotor2.exe game session management
-    /// - Coordinates: Module loading, entity management, script execution, combat, AI, triggers
-    /// - Game loop integration: Update() called every frame to update all systems
-    /// - Module transitions: Handles loading new modules and positioning player
-    /// - Script execution: Manages NCS VM and engine API integration
+    /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "GameSession" @ 0x007be620
+    /// - "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58 (module state tracking)
+    /// - Coordinates: Module loading, entity management, script execution, combat, AI, triggers, dialogue, party
+    /// - Game loop integration: Update() called every frame to update all systems (60 Hz fixed timestep)
+    /// - Module transitions: Handles loading new modules and positioning player at entry waypoint
+    /// - Script execution: Manages NCS VM and engine API integration (K1 vs K2 API based on game version)
+    /// - System initialization order:
+    ///   1. Installation/ModuleLoader setup
+    ///   2. FactionManager (faction relationships)
+    ///   3. PerceptionManager (perception system)
+    ///   4. CombatManager (combat resolution)
+    ///   5. PartySystem (party management)
+    ///   6. Engine API (K1EngineApi or K2EngineApi based on game version)
+    ///   7. ScriptExecutor (NCS VM execution)
+    ///   8. TriggerSystem, AIController, DialogueManager, EncounterSystem
     /// - Based on game loop specification in monogame_odyssey_engine_e8927e4a.plan.md
     /// </remarks>
     public class GameSession

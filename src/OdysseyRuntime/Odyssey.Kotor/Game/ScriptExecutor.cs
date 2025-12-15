@@ -15,8 +15,15 @@ namespace Odyssey.Kotor.Game
     /// <remarks>
     /// Script Executor:
     /// - Based on swkotor2.exe script execution system
-    /// - Loads NCS files from installation and executes them via NCS VM
-    /// - Returns script return value (0 = FALSE, non-zero = TRUE)
+    /// - Located via string references: Script loading and execution functions handle NCS bytecode files
+    /// - NCS file format: Compiled NWScript bytecode with "NCS " signature, "V1.0" version string
+    /// - Script loading: Loads NCS files from installation via ResourceLookup (ResourceType.NCS)
+    /// - Execution context: Creates ExecutionContext with owner (OBJECT_SELF), world, engine API, globals
+    /// - OBJECT_SELF: Set to owner entity ObjectId (0x7F000001 = OBJECT_SELF constant)
+    /// - OBJECT_INVALID: 0x7F000000 (invalid object reference constant)
+    /// - Triggerer: Optional triggering entity (for event-driven scripts like OnEnter, OnClick, etc.)
+    /// - Return value: Script return value (0 = FALSE, non-zero = TRUE) for condition scripts
+    /// - Error handling: Returns 0 (FALSE) on script load failure or execution error
     /// - Based on NCS VM execution in vendor/PyKotor/wiki/NCS-File-Format.md
     /// </remarks>
     public class ScriptExecutor : IScriptExecutor
