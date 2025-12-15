@@ -7,6 +7,7 @@ using Odyssey.Core.Interfaces;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Odyssey.Kotor.Game;
+using Odyssey.Kotor.EngineApi;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.VM;
 using Odyssey.Core.Entities;
@@ -41,7 +42,7 @@ namespace Odyssey.Game.Core
     /// </remarks>
     public class OdysseyGame : Microsoft.Xna.Framework.Game
     {
-        private readonly GameSettings _settings;
+        private readonly Odyssey.Core.GameSettings _settings;
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private SpriteFont _font;
@@ -93,7 +94,7 @@ namespace Odyssey.Game.Core
         // Input tracking
         private Microsoft.Xna.Framework.Input.MouseState _previousMouseState;
 
-        public OdysseyGame(GameSettings settings)
+        public OdysseyGame(Odyssey.Core.GameSettings settings)
         {
             _settings = settings;
             _graphics = new GraphicsDeviceManager(this);
