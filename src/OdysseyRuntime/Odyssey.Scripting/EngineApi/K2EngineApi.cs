@@ -833,17 +833,21 @@ namespace Odyssey.Scripting.EngineApi
         {
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             
-            // TODO: Return NPC selectability status
-            // This requires PartySystem which has SetSelectability method
-            // PartyManager doesn't track selectability, only availability
-            // Full implementation would use: services.GameSession.PartySystem.GetMemberBySlot(npcIndex).IsSelectable
-            
-            // For now, if NPC is available, assume selectable
+            // Get NPC entity from PartyManager
             if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
             {
-                if (services.PartyManager.IsAvailable(npcIndex))
+                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                if (member != null)
                 {
-                    return Variable.FromInt(1); // Available and assumed selectable
+                    // Get selectability from entity data (stored as "IsSelectable")
+                    // Default to true if available but not explicitly set
+                    if (member.HasData("IsSelectable"))
+                    {
+                        bool isSelectable = member.GetData<bool>("IsSelectable", true);
+                        return Variable.FromInt(isSelectable ? 1 : 0);
+                    }
+                    // If available but selectability not set, default to selectable
+                    return Variable.FromInt(1);
                 }
             }
             return Variable.FromInt(0); // Not available/selectable
@@ -854,12 +858,16 @@ namespace Odyssey.Scripting.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int selectable = args.Count > 1 ? args[1].AsInt() : 1;
             
-            // TODO: Set NPC selectability
-            // This requires PartySystem which has SetSelectability method
-            // PartyManager doesn't track selectability, only availability
-            // Full implementation would use: services.GameSession.PartySystem.SetSelectability(entity, selectable != 0)
-            
-            // For now, this is a no-op as PartyManager doesn't support selectability
+            // Get NPC entity from PartyManager and set selectability
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            {
+                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                if (member != null)
+                {
+                    // Store selectability in entity data
+                    member.SetData("IsSelectable", selectable != 0);
+                }
+            }
             return Variable.Void();
         }
 
