@@ -6,6 +6,21 @@ namespace Odyssey.Scripting.VM
     /// <summary>
     /// Execution context for a script run.
     /// </summary>
+    /// <remarks>
+    /// Script Execution Context:
+    /// - Based on swkotor2.exe script execution context system
+    /// - Located via string references: Script execution functions maintain context for each script run
+    /// - OBJECT_SELF: Set to caller entity ObjectId (constant 0x7F000001)
+    /// - OBJECT_INVALID: Invalid object reference constant (0x7F000000)
+    /// - Original implementation: Each script execution maintains:
+    ///   - Caller: The entity that owns the script (OBJECT_SELF)
+    ///   - Triggerer: The entity that triggered the script (for event scripts like OnEnter, OnClick)
+    ///   - World: Reference to game world for entity lookups and engine API calls
+    ///   - EngineApi: Reference to NWScript engine API implementation (K1EngineApi or K2EngineApi)
+    ///   - Globals: Reference to script globals system for global/local variable access
+    /// - Script context is passed to NCS VM for ACTION opcode execution (engine function calls)
+    /// - Based on NCS VM execution model in vendor/PyKotor/wiki/NCS-File-Format.md
+    /// </remarks>
     public class ExecutionContext : IExecutionContext
     {
         public ExecutionContext(IEntity caller, IWorld world, IEngineApi engineApi, IScriptGlobals globals)

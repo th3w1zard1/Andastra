@@ -13,10 +13,15 @@ namespace Odyssey.Kotor.Systems
     /// Model Resolver:
     /// - Based on swkotor2.exe model resolution system
     /// - Located via string references: Model loading from appearance.2da, placeables.2da, genericdoors.2da
+    /// - "Appearance_Type" @ 0x007c40f0 (appearance type field), "ModelResRef" @ 0x007c2f6c (model resource reference)
+    /// - Model resolution: FUN_005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
+    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
     /// - Original implementation: Resolves model ResRefs from appearance IDs using 2DA tables
-    /// - appearance.2da: modela/modelb columns for creatures
-    /// - placeables.2da: modelname column for placeables
-    /// - genericdoors.2da: modelname column for doors
+    /// - appearance.2da: modela/modelb columns for creatures (ModelA for variation 0, ModelB for variation 1)
+    /// - placeables.2da: modelname column for placeables (placeable model ResRef)
+    /// - genericdoors.2da: modelname column for doors (door model ResRef)
+    /// - Body variation determines which model variant to use (0 = ModelA, 1 = ModelB, etc.)
+    /// - Model resolution order: 1) RenderableComponent.ModelResRef (if set), 2) Resolve from appearance.2da/placeables.2da/genericdoors.2da
     /// - Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (resolve creature model from appearance)
     /// </remarks>
     public static class ModelResolver

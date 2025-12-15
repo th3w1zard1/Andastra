@@ -6,13 +6,17 @@ namespace Odyssey.Core.Interfaces.Components
     /// <remarks>
     /// Renderable Component Interface:
     /// - Based on swkotor2.exe rendering system
-    /// - Located via string references: Model loading and rendering functions
+    /// - Located via string references: Model loading and rendering functions handle entity models
+    /// - "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
+    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da row
+    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
     /// - Original implementation: Entities with models can be rendered in the game world
-    /// - ModelResRef: MDL file resource reference for 3D model
-    /// - AppearanceRow: Index into appearance.2da for creature appearance customization
-    /// - Visible: Controls whether entity is rendered (can be hidden for scripting/cutscenes)
-    /// - IsLoaded: Indicates whether model data has been loaded into memory
-    /// - Models loaded from MDL/MDX files, textures from TPC files
+    /// - ModelResRef: MDL file resource reference for 3D model (loaded from installation resources)
+    /// - AppearanceRow: Index into appearance.2da for creature appearance customization (Appearance_Type field)
+    /// - Visible: Controls whether entity is rendered (can be hidden for scripting/cutscenes, stealth effects, invisibility)
+    /// - IsLoaded: Indicates whether model data has been loaded into memory (used for async loading optimization)
+    /// - Models loaded from MDL/MDX files (model geometry/animation), textures from TPC files (texture data)
+    /// - Appearance.2da defines: ModelA, ModelB (model variants), TexA, TexB (texture variants), Race (race model base)
     /// </remarks>
     public interface IRenderableComponent : IComponent
     {
