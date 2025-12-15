@@ -22,16 +22,20 @@ namespace Odyssey.Kotor.Loading
     /// - "tmpgit" @ 0x007be618 (temporary GIT structure references)
     /// - Original implementation: Creates runtime entities from GIT instance data and GFF templates
     /// - Entities created from GIT instances override template values with instance-specific data
+    /// - ObjectId assignment: Sequential uint32 starting from 1 (OBJECT_INVALID = 0x7F000000)
+    /// - Position/Orientation: GIT instances specify XPosition, YPosition, ZPosition, XOrientation, YOrientation
+    /// - Tag: GIT instances can override template Tag field
     ///
-    /// GFF Template Types:
+    /// GFF Template Types (GFF signatures):
     /// - UTC → Creature (Appearance_Type, Faction, HP, Attributes, Feats, Scripts)
     /// - UTP → Placeable (Appearance, Useable, Locked, OnUsed)
-    /// - UTD → Door (GenericType, Locked, OnOpen, OnClose)
-    /// - UTT → Trigger (Geometry polygon, OnEnter, OnExit)
-    /// - UTW → Waypoint (Tag, position)
+    /// - UTD → Door (GenericType, Locked, OnOpen, OnClose, LinkedToModule, LinkedTo)
+    /// - UTT → Trigger (Geometry polygon, OnEnter, OnExit, LinkedToModule)
+    /// - UTW → Waypoint (Tag, position, MapNote, MapNoteEnabled)
     /// - UTS → Sound (Active, Looping, Positional, ResRef)
-    /// - UTE → Encounter (Creature list, spawn conditions)
+    /// - UTE → Encounter (Creature list, spawn conditions, Geometry, SpawnPointList)
     /// - UTI → Item (BaseItem, Properties, Charges)
+    /// - UTM → Store (merchant inventory)
     /// </remarks>
     public class EntityFactory
     {
