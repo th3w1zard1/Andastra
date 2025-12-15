@@ -10,15 +10,25 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Action Queue System:
     /// - Based on swkotor2.exe action system
-    /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
-    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
-    /// - FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF)
+    /// - Located via string references: "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0 (action ID field)
+    /// - "ActionType" @ 0x007bf7f8 (action type field), "GroupActionId" @ 0x007bebc0 (group action ID field)
+    /// - "ActionTimer" @ 0x007bf820 (action timer field), "SchedActionList" @ 0x007bf99c (scheduled action list field)
+    /// - "ParryActions" @ 0x007bfa18 (parry actions field), "Action" @ 0x007c7150 (action field), "ACTION" @ 0x007cd138 (action constant)
+    /// - Action parameter fields: "ActionParam1" @ 0x007c36c8, "ActionParam2" @ 0x007c36b8, "ActionParam3" @ 0x007c36a8
+    /// - "ActionParam4" @ 0x007c3698, "ActionParam5" @ 0x007c3688 (action parameter fields)
+    /// - "ActionParam1b" @ 0x007c3670, "ActionParam2b" @ 0x007c3660, "ActionParam3b" @ 0x007c3650
+    /// - "ActionParam4b" @ 0x007c3640, "ActionParam5b" @ 0x007c3630 (action parameter boolean fields)
+    /// - "ActionParamStrA" @ 0x007c3620, "ActionParamStrB" @ 0x007c3610 (action parameter string fields)
+    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
+    /// - FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF, writes ActionId, GroupActionId, NumParams, Paramaters array)
     /// - Action structure: ActionId (uint32), GroupActionId (int16), NumParams (int16), Paramaters array
     /// - Parameter types: 1=int, 2=float, 3=object/uint32, 4=string, 5=location/vector
     /// - Original implementation: Entities maintain action queue with current action and pending actions
     /// - Actions processed sequentially: Current action executes until complete, then next action dequeued
-    /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc.
-    /// - Action parameters stored in ActionParam1-5, ActionParamStrA/B fields (stored as Type/Value pairs)
+    /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc. (defined in ActionType enum)
+    /// - Action parameters stored in ActionParam1-5, ActionParamStrA/B, ActionParam1b-5b fields (stored as Type/Value pairs in GFF)
+    /// - GroupActionId: Allows batching/clearing related actions together (ClearAllActions clears actions by group ID)
+    /// - ClearAllActions NWScript function: Clears all actions from entity's action queue
     /// </remarks>
     public class ActionQueue : IActionQueue
     {
