@@ -16,6 +16,14 @@ namespace HolocronToolset.NET.Editors
     {
         private PTH _pth;
         private GITSettings _settings;
+        
+        // Status bar labels
+        public Avalonia.Controls.TextBlock LeftLabel { get; private set; }
+        public Avalonia.Controls.TextBlock CenterLabel { get; private set; }
+        public Avalonia.Controls.TextBlock RightLabel { get; private set; }
+        
+        // Status output handler
+        public PTHStatusOut StatusOut { get; private set; }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:121-177
         // Original: def __init__(self, parent, installation):
@@ -29,6 +37,8 @@ namespace HolocronToolset.NET.Editors
             _settings = new GITSettings();
 
             InitializeComponent();
+            SetupStatusBar();
+            StatusOut = new PTHStatusOut(this);
             SetupUI();
             New();
         }
@@ -61,6 +71,38 @@ namespace HolocronToolset.NET.Editors
         private void SetupUI()
         {
             // UI setup - will be implemented when XAML is available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:179-207
+        // Original: def setup_status_bar(self):
+        private void SetupStatusBar()
+        {
+            // Create labels for the different parts of the status message
+            LeftLabel = new Avalonia.Controls.TextBlock { Text = "Left Status" };
+            CenterLabel = new Avalonia.Controls.TextBlock 
+            { 
+                Text = "Center Status",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            };
+            RightLabel = new Avalonia.Controls.TextBlock { Text = "Right Status" };
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:209-212
+        // Original: def update_status_bar(self, left: str = "", center: str = "", right: str = ""):
+        public void UpdateStatusBar(string left = "", string center = "", string right = "")
+        {
+            if (LeftLabel != null)
+            {
+                LeftLabel.Text = left ?? "";
+            }
+            if (CenterLabel != null)
+            {
+                CenterLabel.Text = center ?? "";
+            }
+            if (RightLabel != null)
+            {
+                RightLabel.Text = right ?? "";
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:340-342
@@ -197,6 +239,52 @@ namespace HolocronToolset.NET.Editors
         public override void SaveAs()
         {
             Save();
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:42-76
+    // Original: class CustomStdout:
+    public class PTHStatusOut
+    {
+        private string _prevStatusOut = "";
+        private string _prevStatusError = "";
+        private Vector2 _mousePos = Vector2.Zero;
+        private PTHEditor _editor;
+
+        public PTHStatusOut(PTHEditor editor)
+        {
+            _editor = editor;
+        }
+
+        public void Write(string text)
+        {
+            UpdateStatusBar(stdout: text);
+        }
+
+        public void Flush()
+        {
+            // Required for compatibility
+        }
+
+        public void UpdateStatusBar(string stdout = "", string stderr = "")
+        {
+            // Update stderr if provided
+            if (!string.IsNullOrEmpty(stderr))
+            {
+                _prevStatusError = stderr;
+            }
+
+            // If a message is provided, use it as the last stdout
+            if (!string.IsNullOrEmpty(stdout))
+            {
+                _prevStatusOut = stdout;
+            }
+
+            // Construct the status text using last known values
+            string leftStatus = _mousePos.ToString();
+            string centerStatus = _prevStatusOut;
+            string rightStatus = _prevStatusError;
+            _editor.UpdateStatusBar(leftStatus, centerStatus, rightStatus);
         }
     }
 }

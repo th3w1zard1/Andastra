@@ -599,5 +599,63 @@ namespace HolocronToolset.NET.Tests.Editors
             var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Count.Should().Be(3);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:401-412
+        // Original: def test_pth_editor_status_bar_setup(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorStatusBarSetup()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new PTHEditor(null, installation);
+
+            // Verify status bar labels exist
+            editor.LeftLabel.Should().NotBeNull("LeftLabel should be initialized");
+            editor.CenterLabel.Should().NotBeNull("CenterLabel should be initialized");
+            editor.RightLabel.Should().NotBeNull("RightLabel should be initialized");
+
+            // Verify status_out exists
+            editor.StatusOut.Should().NotBeNull("StatusOut should be initialized");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:414-426
+        // Original: def test_pth_editor_update_status_bar(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorUpdateStatusBar()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new PTHEditor(null, installation);
+
+            // Test updating status bar
+            editor.UpdateStatusBar("Left", "Center", "Right");
+
+            // Verify labels have text
+            editor.LeftLabel.Text.Should().Be("Left", "LeftLabel should have correct text");
+            editor.CenterLabel.Text.Should().Be("Center", "CenterLabel should have correct text");
+            editor.RightLabel.Text.Should().Be("Right", "RightLabel should have correct text");
+        }
     }
 }
