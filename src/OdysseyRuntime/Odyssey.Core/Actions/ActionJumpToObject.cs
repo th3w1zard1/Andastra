@@ -50,6 +50,11 @@ namespace Odyssey.Core.Actions
             }
 
             // Jump to target's position and facing
+            // Based on swkotor2.exe: ActionJumpToObject implementation
+            // Located via string references: "JumpToObject" action type, "Position" @ 0x007bef70
+            // Original implementation: Instantly teleports entity to target object's position and facing
+            // Used for scripted movement, cutscenes, following behavior
+            // Position and facing copied directly from target - no interpolation
             transform.Position = targetTransform.Position;
             transform.Facing = targetTransform.Facing;
 

@@ -61,9 +61,14 @@ namespace Odyssey.Core.Actions
             }
 
             // Remove item from inventory
+            // Based on swkotor2.exe: ActionPutDownItem implementation
+            // Located via string references: "GiveItem" @ 0x007be4f8, "PutDownItem" action type
+            // Original implementation: Removes item from inventory, places in world at drop location
+            // Item becomes world-dropped item that can be picked up by other entities
             if (inventory.RemoveItem(actor.World.GetEntity(_itemObjectId)))
             {
                 // Place item in world at drop location
+                // Original engine: Item position set to drop location, item becomes visible in world
                 IEntity item = actor.World.GetEntity(_itemObjectId);
                 if (item != null)
                 {

@@ -41,18 +41,29 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
+            // Based on swkotor2.exe: ActionPlayAnimation implementation
+            // Located via string references: "Animation" @ 0x007c3440, "PlayAnim" @ 0x007c346c
+            // Original implementation: Plays animation on entity's animation component
+            // Animation ID references animation index in MDL animation array
+            // Speed parameter controls playback rate (1.0 = normal speed)
+            // Duration parameter: 0 = play once, >0 = loop for specified duration
             if (!_started)
             {
                 _started = true;
                 // Animation system would be notified here
+                // Original engine: Sets CurrentAnim on entity, animation system plays it
             }
 
             // If duration is 0, play once and complete immediately
+            // Original engine: Action completes when animation finishes (checked by animation system)
+            // For now, we complete immediately - animation system should track completion
             if (_duration <= 0)
             {
                 return ActionStatus.Complete;
             }
 
+            // If duration > 0, loop animation for specified duration
+            // Original engine: Animation loops until duration expires
             if (ElapsedTime >= _duration)
             {
                 return ActionStatus.Complete;

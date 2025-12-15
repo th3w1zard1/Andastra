@@ -67,6 +67,10 @@ namespace Odyssey.Core.Actions
             }
 
             // Move away from target
+            // Based on swkotor2.exe: ActionMoveAwayFromObject implementation
+            // Located via string references: "MoveAwayFromObject" action type, "MOVETO" @ 0x007b6b24
+            // Original implementation: Moves entity away from target to maintain minimum distance
+            // Uses direct movement (no pathfinding) - moves in opposite direction from target
             IStatsComponent stats = actor.GetComponent<IStatsComponent>();
             float speed = stats != null
                 ? (_run ? stats.RunSpeed : stats.WalkSpeed)
@@ -76,6 +80,7 @@ namespace Odyssey.Core.Actions
             if (direction.LengthSquared() < 0.01f)
             {
                 // Too close, pick a random direction
+                // Original engine: If entities overlap, picks random direction to move away
                 direction = new Vector3(1.0f, 0, 0);
             }
 

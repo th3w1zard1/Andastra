@@ -28,6 +28,12 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
+            // Based on swkotor2.exe: AssignCommand/DelayCommand implementation
+            // Located via string references: "AssignCommand" NWScript function, "DelayCommand" NWScript function
+            // Original implementation: Executes stored action/script command on entity
+            // Used by AssignCommand (execute on different entity) and DelayCommand (execute after delay)
+            // STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
+            // Command executes immediately when action runs (no delay in ActionDoCommand itself)
             if (_command != null)
             {
                 try

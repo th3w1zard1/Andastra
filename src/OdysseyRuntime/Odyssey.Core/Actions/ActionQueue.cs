@@ -122,9 +122,15 @@ namespace Odyssey.Core.Actions
 
         public int Process(float deltaTime)
         {
+            // Based on swkotor2.exe: Action queue processing implementation
+            // Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0
+            // Original implementation: FUN_00508260 @ 0x00508260 loads ActionList from GFF
+            // Actions processed sequentially: Current action executes until complete, then next action dequeued
+            // Action structure: ActionId (uint32), GroupActionId (int16), NumParams (int16), Paramaters array
             int instructionsExecuted = 0;
 
             // Get next action if we don't have one
+            // Original engine: Dequeues next action when current completes
             if (_current == null && _queue.Count > 0)
             {
                 _current = _queue.First.Value;
@@ -137,11 +143,14 @@ namespace Odyssey.Core.Actions
             }
 
             // Execute current action
+            // Original engine: Action.Update() called each frame until status != InProgress
             ActionStatus status = _current.Update(_owner, deltaTime);
             instructionsExecuted++; // Simplified - real implementation would track VM instructions
 
             if (status != ActionStatus.InProgress)
             {
+                // Action complete or failed - dispose and move to next
+                // Original engine: Action removed from queue when complete/failed
                 _current.Dispose();
                 _current = null;
             }

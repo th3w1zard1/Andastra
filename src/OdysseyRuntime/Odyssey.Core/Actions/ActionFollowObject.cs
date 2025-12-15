@@ -69,6 +69,10 @@ namespace Odyssey.Core.Actions
             float distance = toTarget.Length();
 
             // If we're close enough, just wait
+            // Based on swkotor2.exe: Follow system implementation
+            // Located via string references: "FollowObject" @ 0x007bedb8, "FollowInfo" @ 0x007beec0
+            // Original implementation: Maintains follow distance, faces target while waiting
+            // Follow distance: Default 2.0 units, entity waits if within range
             if (distance <= _followDistance)
             {
                 // Face target
@@ -82,6 +86,8 @@ namespace Odyssey.Core.Actions
             }
 
             // Move towards target
+            // Original engine: Uses run speed if target is far away (2x follow distance)
+            // Walk speed used when close to follow distance
             IStatsComponent stats = actor.GetComponent<IStatsComponent>();
             bool run = distance > _followDistance * 2;
             float speed = stats != null

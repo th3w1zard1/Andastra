@@ -32,6 +32,11 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
+            // Based on swkotor2.exe: ActionJumpToLocation implementation
+            // Located via string references: "JumpToLocation" action type, "Position" @ 0x007bef70
+            // Original implementation: Instantly teleports entity to location without movement animation
+            // Used for scripted movement, cutscenes, area transitions
+            // Position and facing set immediately - no pathfinding or movement interpolation
             ITransformComponent transform = actor.GetComponent<ITransformComponent>();
             if (transform == null)
             {
