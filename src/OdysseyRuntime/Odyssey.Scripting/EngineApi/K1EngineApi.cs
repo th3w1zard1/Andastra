@@ -3907,14 +3907,14 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Based on swkotor2.exe: Sets effect subtype to SUBTYPE_EXTRAORDINARY (24)
+            // Based on swkotor2.exe: Sets effect subtype to SUBTYPE_EXTRAORDINARY (32)
             // Extraordinary effects are not magical or supernatural, cannot be dispelled
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
                 // Mark effect as extraordinary by setting subtype
-                // SUBTYPE_EXTRAORDINARY = 24 (from ScriptDefs.cs)
-                effect.SubType = 24; // SUBTYPE_EXTRAORDINARY
+                // SUBTYPE_EXTRAORDINARY = 32 (based on NWScript effect subtype constants)
+                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
                 effect.IsSupernatural = false; // Extraordinary effects are not supernatural
                 return Variable.FromEffect(effect);
             }
@@ -4373,11 +4373,18 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
-        /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as friend
-        /// </summary>
-        /// <summary>
         /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is a friend of oSource
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Faction relationship system
+        /// Located via string references: "FactionRep" @ 0x007c290c, "FACTIONREP" @ 0x007bcec8
+        /// Original implementation: Checks faction reputation between source and target entities
+        /// Friend check: Uses FactionManager to determine if source faction is friendly to target faction
+        /// Reputation thresholds: Friendly if reputation >= 90 (FactionManager.FriendlyThreshold)
+        /// Personal reputation: Checks personal reputation overrides before faction-based reputation
+        /// Same faction: Entities with same faction ID are considered friendly
+        /// Returns: 1 (TRUE) if friendly, 0 (FALSE) if not friendly or entities invalid
+        /// </remarks>
         private Variable Func_GetIsFriend(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
