@@ -20,10 +20,13 @@ namespace Odyssey.Content.Loaders
     /// GIT Loader:
     /// - Based on swkotor2.exe GIT file loading
     /// - Located via string references: "GIT " signature (GFF file format)
+    /// - "Creature List" @ 0x007bd01c (GFF list field name for creature instances)
     /// - GIT file format: GFF with "GIT " signature containing area instance data
-    /// - Lists: "Creature List", "Door List", "Placeable List", "TriggerList", "WaypointList", "SoundList", "Encounter List"
+    /// - Lists: "Creature List", "Door List", "Placeable List", "TriggerList", "WaypointList", "SoundList", "Encounter List", "StoreList", "CameraList"
     /// - Original implementation: Parses GIT GFF structure, spawns entities at specified positions
     /// - Based on GIT file format documentation in vendor/PyKotor/wiki/GFF-GIT.md
+    /// - GIT files define all spawned instances in an area (creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, cameras)
+    /// - Each instance contains: TemplateResRef, Tag, Position (X/Y/Z), Orientation, and type-specific fields
     /// </remarks>
     public class GITLoader
     {
