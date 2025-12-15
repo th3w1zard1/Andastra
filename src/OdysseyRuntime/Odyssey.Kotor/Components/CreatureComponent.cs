@@ -52,6 +52,11 @@ namespace Odyssey.Kotor.Components
         #region Appearance
 
         /// <summary>
+        /// Racial type ID (index into racialtypes.2da).
+        /// </summary>
+        public int RaceId { get; set; }
+
+        /// <summary>
         /// Appearance type (index into appearance.2da).
         /// </summary>
         public int AppearanceType { get; set; }

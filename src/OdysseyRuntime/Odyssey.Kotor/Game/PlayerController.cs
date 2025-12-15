@@ -306,11 +306,16 @@ namespace Odyssey.Kotor.Game
                 IStatsComponent stats = _playerEntity.GetComponent<IStatsComponent>();
                 if (stats != null)
                 {
-                    // Simplified: Use Security skill + d20 roll vs LockDC
-                    // Full implementation would use proper skill system
+                    // Get Security skill from stats component
+                    IStatsComponent stats = _playerEntity.GetComponent<IStatsComponent>();
                     Random random = new Random();
                     int roll = random.Next(1, 21);
-                    int securitySkill = 0; // TODO: Get actual Security skill from stats component
+                    int securitySkill = 0;
+                    if (stats != null)
+                    {
+                        // SKILL_SECURITY = 6
+                        securitySkill = stats.GetSkillRank(6);
+                    }
                     int total = roll + securitySkill;
 
                     if (total >= doorComponent.LockDC)

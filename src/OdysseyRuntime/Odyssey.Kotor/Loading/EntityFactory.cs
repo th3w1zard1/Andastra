@@ -128,12 +128,34 @@ namespace Odyssey.Kotor.Loading
             entity.SetData("TemplateResRef", templateResRef);
             entity.SetData("FirstName", GetLocStringField(root, "FirstName"));
             entity.SetData("LastName", GetLocStringField(root, "LastName"));
+            entity.SetData("RaceId", GetIntField(root, "Race", 0)); // Race field in UTC
             entity.SetData("Appearance_Type", GetIntField(root, "Appearance_Type", 0));
             entity.SetData("FactionID", GetIntField(root, "FactionID", 0));
             entity.SetData("CurrentHitPoints", GetIntField(root, "CurrentHitPoints", 1));
             entity.SetData("MaxHitPoints", GetIntField(root, "MaxHitPoints", 1));
             entity.SetData("ForcePoints", GetIntField(root, "ForcePoints", 0));
             entity.SetData("MaxForcePoints", GetIntField(root, "MaxForcePoints", 0));
+
+            // Load class list from UTC Classes field
+            if (root.Exists("ClassList"))
+            {
+                GFFList classList = root.GetList("ClassList");
+                if (classList != null)
+                {
+                    var classes = new List<Components.CreatureClass>();
+                    for (int i = 0; i < classList.Count; i++)
+                    {
+                        GFFStruct classStruct = classList.GetStruct(i);
+                        if (classStruct != null)
+                        {
+                            int classId = GetIntField(classStruct, "Class", 0);
+                            int classLevel = GetIntField(classStruct, "ClassLevel", 1);
+                            classes.Add(new Components.CreatureClass { ClassId = classId, Level = classLevel });
+                        }
+                    }
+                    entity.SetData("ClassList", classes);
+                }
+            }
 
             // Attributes
             entity.SetData("Str", GetIntField(root, "Str", 10));
