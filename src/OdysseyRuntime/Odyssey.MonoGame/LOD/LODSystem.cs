@@ -12,6 +12,16 @@ namespace Odyssey.MonoGame.LOD
     /// while maintaining visual quality. Different LOD levels are used based
     /// on distance from camera.
     /// </summary>
+    /// <remarks>
+    /// LOD System (Based on Original Engine):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: Original engine uses distance-based LOD for models
+    /// - Original implementation: KOTOR performs distance culling and LOD selection for rendering optimization
+    /// - Distance-based rendering: Objects beyond certain distance thresholds are rendered at lower detail or culled
+    /// - Original behavior: MDL models may have multiple LOD meshes, engine selects based on camera distance
+    /// - Modern enhancement: This system provides configurable LOD thresholds and bias for flexible LOD control
+    /// - Original engine: Fixed LOD distances based on model type, no user-configurable bias
+    /// </remarks>
     public class LODSystem
     {
         /// <summary>
