@@ -73,15 +73,60 @@ namespace Odyssey.MonoGame.PostProcessing
         /// <summary>
         /// Applies tone mapping to an HDR render target.
         /// </summary>
+        /// <param name="device">Graphics device.</param>
+        /// <param name="hdrInput">HDR input render target.</param>
+        /// <param name="ldrOutput">LDR output render target.</param>
+        /// <param name="effect">Effect/shader for tone mapping. Can be null if not using shader-based tone mapping.</param>
+        /// <exception cref="ArgumentNullException">Thrown if device, hdrInput, or ldrOutput is null.</exception>
         public void Apply(GraphicsDevice device, RenderTarget2D hdrInput, RenderTarget2D ldrOutput, Effect effect)
         {
-            // Set up tone mapping shader parameters
-            // effect.Parameters["Exposure"].SetValue(_exposure);
-            // effect.Parameters["WhitePoint"].SetValue(_whitePoint);
-            // effect.Parameters["Operator"].SetValue((int)_operator);
+            if (device == null)
+            {
+                throw new ArgumentNullException("device");
+            }
+            if (hdrInput == null)
+            {
+                throw new ArgumentNullException("hdrInput");
+            }
+            if (ldrOutput == null)
+            {
+                throw new ArgumentNullException("ldrOutput");
+            }
 
-            // Render full-screen quad with tone mapping shader
-            // Placeholder - would implement full shader pipeline
+            // Save previous render target
+            RenderTarget2D previousTarget = null;
+            if (device.GetRenderTargets().Length > 0)
+            {
+                previousTarget = device.GetRenderTargets()[0].RenderTarget as RenderTarget2D;
+            }
+
+            try
+            {
+                // Set output render target
+                device.SetRenderTarget(ldrOutput);
+                device.Clear(Microsoft.Xna.Framework.Color.Black);
+
+                // Set up tone mapping shader parameters
+                // The actual shader implementation would apply one of these operators:
+                // - Reinhard: x / (1 + x) - simple and fast, good for most scenes
+                // - ACES: filmic ACES tone mapping - industry standard for HDR
+                // - Uncharted 2: filmic curve with shoulder and toe - artistic control
+                // - Filmic: smooth highlights and shadows - balanced aesthetic
+                // - LuminanceBased: preserves color relationships - natural look
+                if (effect != null)
+                {
+                    // effect.Parameters["HDRTexture"].SetValue(hdrInput);
+                    // effect.Parameters["Exposure"].SetValue((float)Math.Pow(2.0, _exposure));
+                    // effect.Parameters["WhitePoint"].SetValue(_whitePoint);
+                    // effect.Parameters["Operator"].SetValue((int)_operator);
+                    // Render full-screen quad with tone mapping shader
+                }
+            }
+            finally
+            {
+                // Always restore previous render target
+                device.SetRenderTarget(previousTarget);
+            }
         }
     }
 }

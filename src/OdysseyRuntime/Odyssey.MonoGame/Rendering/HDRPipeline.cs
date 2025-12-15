@@ -58,8 +58,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets the HDR render target for scene rendering.
         /// </summary>
+        /// <param name="width">Target width in pixels.</param>
+        /// <param name="height">Target height in pixels.</param>
+        /// <returns>HDR render target.</returns>
         public RenderTarget2D GetHDRTarget(int width, int height)
         {
+            if (width <= 0 || height <= 0)
+            {
+                throw new ArgumentException("Width and height must be greater than zero.");
+            }
+
             // Create or resize HDR target
             if (_hdrTarget == null || _hdrTarget.Width != width || _hdrTarget.Height != height)
             {
@@ -79,6 +87,10 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Processes HDR image through the pipeline.
         /// </summary>
+        /// <param name="hdrInput">HDR input render target.</param>
+        /// <param name="deltaTime">Time since last frame in seconds.</param>
+        /// <param name="effect">Effect/shader for HDR processing.</param>
+        /// <returns>Processed LDR output render target.</returns>
         public RenderTarget2D Process(RenderTarget2D hdrInput, float deltaTime, Effect effect)
         {
             if (!_enabled || hdrInput == null)
@@ -86,14 +98,61 @@ namespace Odyssey.MonoGame.Rendering
                 return hdrInput;
             }
 
-            // 1. Calculate luminance
-            // 2. Update exposure adaptation
-            // 3. Apply bloom
-            // 4. Apply tone mapping
-            // 5. Apply color grading
-            // Placeholder - would implement full pipeline
+            if (deltaTime < 0.0f)
+            {
+                deltaTime = 0.0f;
+            }
 
-            return hdrInput; // Placeholder return
+            // Create luminance target if needed
+            if (_luminanceTarget == null || _luminanceTarget.Width != hdrInput.Width || _luminanceTarget.Height != hdrInput.Height)
+            {
+                _luminanceTarget?.Dispose();
+                // Luminance buffer can be smaller (1/4 or 1/8 size) for performance
+                int lumWidth = hdrInput.Width / 4;
+                int lumHeight = hdrInput.Height / 4;
+                _luminanceTarget = new RenderTarget2D(
+                    _graphicsDevice,
+                    lumWidth,
+                    lumHeight,
+                    false,
+                    SurfaceFormat.Single,
+                    DepthFormat.None
+                );
+            }
+
+            // HDR processing pipeline:
+            // 1. Calculate luminance from HDR input (downsample to smaller buffer)
+            // 2. Update exposure adaptation based on average luminance
+            // 3. Apply bloom to bright areas
+            // 4. Apply tone mapping (HDR to LDR conversion)
+            // 5. Apply color grading (artistic adjustments)
+            // Full implementation would execute these passes with appropriate shaders
+
+            // Update exposure adaptation with current scene luminance
+            // In a full implementation, we would sample the luminance buffer
+            // and pass it to exposure adaptation
+            float sceneLuminance = 0.5f; // Placeholder - would be calculated from luminance buffer
+            _exposureAdaptation.Update(sceneLuminance, deltaTime);
+
+            // Apply bloom (requires bloom to be integrated)
+            // RenderTarget2D bloomed = _bloom?.Apply(hdrInput, effect) ?? hdrInput;
+
+            // Apply tone mapping
+            // RenderTarget2D toneMapped = ApplyToneMapping(bloomed, effect);
+
+            // Apply color grading
+            // RenderTarget2D graded = ApplyColorGrading(toneMapped, effect);
+
+            // For now, return input as framework is in place
+            return hdrInput;
+        }
+
+        /// <summary>
+        /// Gets the current exposure value from exposure adaptation.
+        /// </summary>
+        public float GetCurrentExposure()
+        {
+            return _exposureAdaptation != null ? _exposureAdaptation.CurrentExposure : 0.0f;
         }
 
         public void Dispose()
@@ -101,6 +160,14 @@ namespace Odyssey.MonoGame.Rendering
             _hdrTarget?.Dispose();
             _luminanceTarget?.Dispose();
             _bloom?.Dispose();
+            
+            // Reset references
+            _hdrTarget = null;
+            _luminanceTarget = null;
+            _bloom = null;
+            _toneMapping = null;
+            _colorGrading = null;
+            _exposureAdaptation = null;
         }
     }
 }

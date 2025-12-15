@@ -50,6 +50,13 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Performs GPU-based culling on a set of instances.
         /// </summary>
+        /// <param name="instanceBuffer">Buffer containing instance data to cull.</param>
+        /// <param name="instanceCount">Number of instances in the buffer.</param>
+        /// <param name="viewProjectionMatrix">Current view-projection matrix for frustum culling.</param>
+        /// <param name="cameraPosition">Camera position for distance culling.</param>
+        /// <param name="cullDistance">Maximum distance for culling.</param>
+        /// <param name="computeShader">Compute shader for GPU culling. Can be null if not using GPU culling.</param>
+        /// <exception cref="ArgumentException">Thrown if instanceCount is less than 0.</exception>
         public void CullInstances(
             object instanceBuffer,
             int instanceCount,
@@ -63,10 +70,35 @@ namespace Odyssey.MonoGame.Culling
                 return;
             }
 
-            // Dispatch compute shader for culling
-            // Placeholder - would implement full compute shader pipeline
+            if (instanceCount < 0)
+            {
+                throw new ArgumentException("Instance count must be non-negative.", "instanceCount");
+            }
 
-            // Generate indirect draw commands from cull results
+            if (instanceCount == 0)
+            {
+                return;
+            }
+
+            // Store reference to instance buffer
+            _instanceBuffer = instanceBuffer;
+
+            // GPU-based culling pipeline:
+            // 1. Upload instance data and culling parameters to GPU
+            // 2. Dispatch compute shader to perform frustum, occlusion, and distance culling
+            // 3. Generate indirect draw commands from cull results
+            // 4. Store results in indirect draw buffer for rendering
+            // Full implementation would require compute shader support and graphics API integration
+
+            if (computeShader != null)
+            {
+                // computeShader.Parameters["InstanceBuffer"].SetValue(instanceBuffer);
+                // computeShader.Parameters["ViewProjectionMatrix"].SetValue(viewProjectionMatrix);
+                // computeShader.Parameters["CameraPosition"].SetValue(cameraPosition);
+                // computeShader.Parameters["CullDistance"].SetValue(cullDistance);
+                // computeShader.Parameters["InstanceCount"].SetValue(instanceCount);
+                // _graphicsDevice.DispatchCompute((instanceCount + 63) / 64, 1, 1); // 64 threads per group
+            }
         }
 
         /// <summary>
