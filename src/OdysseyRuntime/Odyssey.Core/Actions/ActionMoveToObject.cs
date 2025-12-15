@@ -64,7 +64,10 @@ namespace Odyssey.Core.Actions
             // If we're within range, we're done
             // Based on swkotor2.exe: ActionMoveToObject implementation
             // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
+            // Walking collision checking: FUN_0054be70 @ 0x0054be70
+            // Located via string reference: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             // Original implementation: Moves directly to target (no pathfinding), follows if target moves
+            // Walking collision function handles creature bump detection, maximum bump count (5), and total blocking
             // Action completes when within specified range of target object
             if (distance <= _range)
             {

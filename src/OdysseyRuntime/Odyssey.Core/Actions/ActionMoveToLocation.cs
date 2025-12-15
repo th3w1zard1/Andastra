@@ -51,8 +51,11 @@ namespace Odyssey.Core.Actions
             // Try to find path if we don't have one
             // Based on swkotor2.exe: Movement pathfinding implementation
             // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
+            // Walking collision checking: FUN_0054be70 @ 0x0054be70
+            // Located via string reference: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             // Original implementation: Uses walkmesh A* pathfinding to find path to destination
             // Pathfinding searches walkmesh adjacency graph for valid path
+            // Walking collision function checks for creature collisions, maximum bump count (5), and total blocking
             // If no path found, original engine attempts direct movement (may fail if blocked)
             if (_path == null)
             {

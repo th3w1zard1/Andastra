@@ -136,17 +136,25 @@ namespace Odyssey.Core.Actions
                 return;
             }
 
-            // Simple attack calculation (to be expanded with proper combat system)
-            // Attack roll: d20 + attack bonus vs target AC
+            // Attack calculation based on swkotor2.exe combat system
+            // Located via string references: "AttackBonusTable" @ 0x007c2b54, "Base Attack Bonus" @ 0x007c3b44
+            // "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "OnMeleeAttacked" @ 0x007c1a5c
+            // Original implementation: d20 roll + attack bonus vs target AC
+            // Natural 20 = automatic hit (check for critical), natural 1 = automatic miss
+            // Attack bonus includes: Base Attack Bonus + Strength/Dexterity modifier + effect bonuses
+            // Target AC includes: Base AC + armor + shield + dexterity modifier + effect bonuses
             Random rand = new Random();
             int attackRoll = rand.Next(1, 21);
             int attackBonus = attackerStats.BaseAttackBonus;
             int targetAC = targetStats.ArmorClass;
 
-            if (attackRoll == 20 || attackRoll + attackBonus >= targetAC)
+            // Natural 20 always hits, natural 1 always misses
+            if (attackRoll == 20 || (attackRoll != 1 && attackRoll + attackBonus >= targetAC))
             {
                 // Hit - deal damage
-                int damage = 1 + rand.Next(0, 8); // 1d8 base damage
+                // Based on swkotor2.exe: Damage calculation includes weapon damage + strength modifier
+                // Original engine: Base weapon damage + strength modifier + effect bonuses
+                int damage = 1 + rand.Next(0, 8); // 1d8 base damage (simplified - should use weapon damage)
                 targetStats.CurrentHP -= damage;
 
                 // Fire damage event
