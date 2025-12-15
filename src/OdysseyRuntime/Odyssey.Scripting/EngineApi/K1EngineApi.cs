@@ -1088,11 +1088,11 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // Check racial type from creature data
-                    if (creature is Core.Entities.Entity entity)
+                    // Check racial type from creature component
+                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp != null)
                     {
-                        int raceId = entity.GetData<int>("RaceId", 0);
-                        return raceId == criteriaValue;
+                        return creatureComp.RaceId == criteriaValue;
                     }
                     return false;
 
