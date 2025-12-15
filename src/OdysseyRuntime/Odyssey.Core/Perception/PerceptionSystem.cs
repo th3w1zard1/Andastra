@@ -161,10 +161,35 @@ namespace Odyssey.Core.Perception
             // Line-of-sight check through walkmesh
             Vector3 eyePos = subjectTransform.Position + Vector3.UnitY * DefaultEyeHeight;
             Vector3 targetEyePos = targetTransform.Position + Vector3.UnitY * DefaultEyeHeight;
+            Vector3 direction = targetEyePos - eyePos;
+            float distance = direction.Length();
 
-            // TODO: Implement walkmesh raycast for line-of-sight
-            // For now, assume line-of-sight is clear if within range
-            // Full implementation would use INavigationMesh.Raycast
+            // Raycast through walkmesh to check line-of-sight
+            // Based on swkotor2.exe: Line-of-sight raycast implementation
+            // Located via string references: "Raycast" @ navigation mesh functions
+            // Original implementation: FUN_0054be70 @ 0x0054be70 performs walkmesh raycasts for visibility checks
+            if (_world.CurrentArea != null && _world.CurrentArea.NavigationMesh != null)
+            {
+                if (distance > 0.1f)
+                {
+                    direction = Vector3.Normalize(direction);
+                    Vector3 hitPoint;
+                    int hitFace;
+                    if (_world.CurrentArea.NavigationMesh.Raycast(eyePos, direction, distance, out hitPoint, out hitFace))
+                    {
+                        // Something blocked the line-of-sight
+                        // Check if the hit point is very close to the target (within tolerance)
+                        float hitDist = Vector3.Distance(eyePos, hitPoint);
+                        float targetDist = Vector3.Distance(eyePos, targetEyePos);
+                        // Allow small tolerance for walkmesh precision
+                        return (targetDist - hitDist) < 0.5f;
+                    }
+                }
+                // Raycast didn't hit anything, line-of-sight is clear
+                return true;
+            }
+
+            // No navigation mesh available, assume line-of-sight is clear if within range
             return true;
         }
 
@@ -173,7 +198,14 @@ namespace Odyssey.Core.Perception
         /// </summary>
         private bool CanHear(IEntity subject, IEntity target, float range)
         {
-            float dist = Vector3.Distance(subject.Position, target.Position);
+            ITransformComponent subjectTransform = subject.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
+            if (subjectTransform == null || targetTransform == null)
+            {
+                return false;
+            }
+            
+            float dist = Vector3.Distance(subjectTransform.Position, targetTransform.Position);
             if (dist > range)
             {
                 return false;
@@ -190,11 +222,18 @@ namespace Odyssey.Core.Perception
         private void FirePerceptionEvent(IEntity subject, IEntity target, PerceptionType type)
         {
             // Fire OnPerception script
-            string script = subject.GetScript(ScriptEvent.OnPerception);
+            IScriptHooksComponent scriptHooks = subject.GetComponent<IScriptHooksComponent>();
+            string script = scriptHooks?.GetScript(ScriptEvent.OnPerception);
             if (!string.IsNullOrEmpty(script))
             {
-                // TODO: Execute script with perception context
-                // ScriptExecutor.ExecuteScript(script, subject, target, perceptionType)
+                // Execute perception script with subject as owner and target as triggerer
+                // Based on swkotor2.exe: Perception script execution
+                // Located via string references: "OnPerception" @ 0x007bee80, "OnNotice" @ 0x007beea0
+                // Original implementation: FUN_004dfbb0 @ 0x004dfbb0 executes perception scripts when entities are detected
+                if (_world.EventBus != null)
+                {
+                    _world.EventBus.FireScriptEvent(subject, ScriptEvent.OnPerception, target);
+                }
             }
 
             // Fire world event
@@ -262,11 +301,16 @@ namespace Odyssey.Core.Perception
     /// <summary>
     /// Perception event.
     /// </summary>
-    public class PerceptionEvent
+    public class PerceptionEvent : Interfaces.IGameEvent
     {
         public IEntity Subject { get; set; }
         public IEntity Target { get; set; }
         public PerceptionType Type { get; set; }
+        
+        /// <summary>
+        /// The entity this event relates to (the subject).
+        /// </summary>
+        public IEntity Entity { get { return Subject; } }
     }
 }
 
