@@ -13,16 +13,23 @@ namespace Odyssey.Core.Triggers
     /// <remarks>
     /// Trigger System:
     /// - Based on swkotor2.exe trigger system
-    /// - Located via string references: "OnEnter" @ 0x007bee60, "OnExit" @ 0x007bee70
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENTER" @ 0x007bc9b8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_EXIT" @ 0x007bc9cc
-    /// - "Trigger" @ 0x007c1a80, "TriggerType" @ 0x007c38d0, "TriggerActive" @ 0x007c38dc
+    /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
+    /// - Script events: "OnEnter" @ 0x007bd708, "OnExit" @ 0x007bd700, "OnClick" @ 0x007c1a20
+    /// - "ScriptOnEnter" @ 0x007c1d40, "ScriptOnExit" @ 0x007c1d30 (trigger script ResRef fields)
+    /// - Event types: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9b8 (0xc), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc (0xd)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc9e0 (0x1e), "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (event type 2)
+    /// - "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (event type 3), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching (case 2 = EVENT_ENTERED_TRIGGER, case 3 = EVENT_LEFT_TRIGGER)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves trigger data including polygon geometry
-    /// - Trigger geometry: Polygon defined by vertices in 2D (X/Z plane, Y is height)
+    /// - FUN_004e10b0 @ 0x004e10b0 loads trigger instances from GIT
+    /// - Trigger geometry: Polygon defined by vertices in 2D (X/Z plane, Y is height) stored in UTT template Geometry field
     /// - Point-in-polygon test: Uses ray casting algorithm to determine if point is inside polygon
-    /// - Trigger events: OnEnter fires when entity enters trigger volume, OnExit when entity leaves
-    /// - FireOnce: If true, trigger only fires once and then becomes inactive
-    /// - Trigger activation: Triggers can be activated/deactivated via script
+    /// - Trigger events: OnEnter fires when entity enters trigger volume, OnExit when entity leaves, OnClick when trigger is clicked
+    /// - FireOnce: If true, trigger only fires once and then becomes inactive (HasFired flag prevents multiple firings)
+    /// - Trigger activation: Triggers can be activated/deactivated via script (IsEnabled flag)
     /// - Trigger detection: Checks all creatures in area against all triggers each frame
+    /// - Trigger types: 0=generic, 1=transition, 2=trap (TriggerType field in UTT template)
+    /// - Trap triggers: Can be disarmed via Security skill check, fire OnDisarm script event
     /// </remarks>
     public class TriggerSystem
     {
@@ -198,11 +205,21 @@ namespace Odyssey.Core.Triggers
         /// </summary>
         private void FireOnEnter(IEntity triggerEntity, IEntity entity)
         {
-            string script = triggerEntity.GetScript(ScriptEvent.OnEnter);
-            if (!string.IsNullOrEmpty(script))
+            IScriptHooksComponent scriptHooks = triggerEntity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks != null)
             {
-                // TODO: Execute script with trigger and entering entity context
-                // ScriptExecutor.ExecuteScript(script, triggerEntity, entity)
+                string script = scriptHooks.GetScript(ScriptEvent.OnEnter);
+                if (!string.IsNullOrEmpty(script))
+                {
+                    // Execute script with trigger as owner and entering entity as triggerer
+                    // Based on swkotor2.exe: Trigger OnEnter script execution
+                    // Located via string references: "OnEnter" @ 0x007bee60
+                    // Original implementation: FUN_005226d0 @ 0x005226d0 executes trigger scripts with entity context
+                    if (_world.EventBus != null)
+                    {
+                        _world.EventBus.FireScriptEvent(triggerEntity, ScriptEvent.OnEnter, entity);
+                    }
+                }
             }
 
             // Fire world event
@@ -222,11 +239,15 @@ namespace Odyssey.Core.Triggers
         /// </summary>
         private void FireOnExit(IEntity triggerEntity, IEntity entity)
         {
-            string script = triggerEntity.GetScript(ScriptEvent.OnExit);
-            if (!string.IsNullOrEmpty(script))
+            IScriptHooksComponent scriptHooks = triggerEntity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks != null)
             {
-                // TODO: Execute script with trigger and exiting entity context
-                // ScriptExecutor.ExecuteScript(script, triggerEntity, entity)
+                string script = scriptHooks.GetScript(ScriptEvent.OnExit);
+                if (!string.IsNullOrEmpty(script))
+                {
+                    // TODO: Execute script with trigger and exiting entity context
+                    // ScriptExecutor.ExecuteScript(script, triggerEntity, entity)
+                }
             }
 
             // Fire world event
@@ -254,7 +275,7 @@ namespace Odyssey.Core.Triggers
     /// <summary>
     /// Trigger event.
     /// </summary>
-    public class TriggerEvent
+    public class TriggerEvent : Interfaces.IGameEvent
     {
         public IEntity Trigger { get; set; }
         public IEntity Entity { get; set; }
