@@ -11,14 +11,18 @@ namespace Odyssey.Core.Dialogue
     /// <remarks>
     /// Lip Sync Controller:
     /// - Based on swkotor2.exe lip sync system
-    /// - Located via string references: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668
-    /// - ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840, "=Lip Delay" @ 0x007c7fb7
-    /// - Original implementation: LIP files contain keyframes with time and phoneme shape index
-    /// - KOTOR uses approximately 10 phoneme shapes for mouth/face animation
-    /// - The controller interpolates between keyframes to produce smooth animation
-    /// - LIP files are loaded by ResRef matching dialogue VO files (stored in .\lips or d:\lips directories)
-    /// - Phoneme shapes drive blend shapes or bone rotations on character models
-    /// - Lip delay: Timing offset for lip sync synchronization with voice-over audio
+    /// - Located via string references: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668 (LIP file path format)
+    /// - LIP directories: ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840 (LIP file search directories)
+    /// - "=Lip Delay" @ 0x007c7fb7 (lip sync timing offset parameter)
+    /// - Original implementation: LIP files contain keyframes with time (float, seconds) and phoneme shape index (byte, 0-9)
+    /// - KOTOR uses approximately 10 phoneme shapes for mouth/face animation (PhonemeShapeNames array)
+    /// - The controller interpolates between keyframes to produce smooth animation transitions
+    /// - LIP files are loaded by ResRef matching dialogue VO files (voice-over WAV files)
+    /// - LIP file naming: "{dialogueResRef}_{entryIndex}.lip" or "{VOFileName}.lip" (stored in .\lips or d:\lips directories)
+    /// - Phoneme shapes drive blend shapes or bone rotations on character models (facial animation)
+    /// - Lip delay: Timing offset for lip sync synchronization with voice-over audio playback
+    /// - Duration: LIP files store total duration, controller stops when playback time exceeds duration
+    /// - Keyframe interpolation: Linear interpolation between adjacent keyframes based on current playback time
     /// - Based on LIP file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class LipSyncController : ILipSyncController

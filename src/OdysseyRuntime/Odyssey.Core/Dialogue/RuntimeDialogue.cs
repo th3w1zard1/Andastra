@@ -10,12 +10,19 @@ namespace Odyssey.Core.Dialogue
     /// <remarks>
     /// Runtime Dialogue:
     /// - Based on swkotor2.exe dialogue system
-    /// - Located via string references: Dialogue loading and traversal functions
+    /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (dialogue script event type, 0x7)
+    /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
+    /// - Dialogue script hooks: "k_hen_dialogue01" @ 0x007bf548 (example dialogue script)
+    /// - "OnEndDialogue" @ 0x007c1f60 (dialogue end script hook)
     /// - Original implementation: Runtime representation of DLG file structure for conversation execution
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
     /// - Dialogue entries (NPC lines) and replies (player options) linked by indices
-    /// - Starter entries define conversation entry points
-    /// - Dialogue nodes contain text (StrRef), scripts, conditions, and voice-over data
+    /// - Starter entries define conversation entry points (StartingList field in DLG GFF)
+    /// - Dialogue nodes contain text (StrRef), scripts (Script1, Script2), conditions (Active1, Active2), and voice-over data
+    /// - Entry scripts: Script1 fires when node entered, Script2 fires when node exited
+    /// - Reply conditions: Active1/Active2 scripts must return TRUE for reply to be available
+    /// - DLG scripts: OnEnd fires when conversation ends normally, OnAbort fires if conversation is aborted
     /// - Based on DLG file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class RuntimeDialogue
