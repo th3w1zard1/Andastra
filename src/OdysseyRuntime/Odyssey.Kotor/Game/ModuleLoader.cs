@@ -264,14 +264,21 @@ namespace Odyssey.Kotor.Game
             // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD fires when module is loaded
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (0x14), "Mod_OnModLoad" @ IFO GFF
             // Original implementation: OnModuleLoad script fires on module after all resources are loaded and entities are spawned
-            // Module scripts are executed directly (not via entity script hooks), so we need to execute them manually
-            if (_world != null && _world.EventBus != null)
-            {
-                // Module scripts need special handling - they're executed on the module itself (no entity owner)
-                // For now, we'll need a way to execute module scripts. This will need integration with ScriptExecutor.
-                // The event bus FireScriptEvent is for entities, not modules.
-                // TODO: Add module script execution support
-            }
+            // TODO: Script executor not yet implemented - script events will be handled later
+            // if (_scriptExecutor != null && _world.EventBus != null)
+            // {
+            //     string onModuleLoadScript = runtimeModule.GetScript(ScriptEvent.OnModuleLoad);
+            //     if (!string.IsNullOrEmpty(onModuleLoadScript))
+            //     {
+            //         _scriptExecutor.ExecuteScript(onModuleLoadScript, null, null);
+            //     }
+            //
+            //     string onModuleStartScript = runtimeModule.GetScript(ScriptEvent.OnModuleStart);
+            //     if (!string.IsNullOrEmpty(onModuleStartScript))
+            //     {
+            //         _scriptExecutor.ExecuteScript(onModuleStartScript, null, null);
+            //     }
+            // }
 
             Console.WriteLine("[ModuleLoader] Module loaded: " + moduleName);
         }
@@ -1100,7 +1107,8 @@ namespace Odyssey.Kotor.Game
                     IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
                     if (placeableComponent != null)
                     {
-                        placeableComponent.AppearanceType = utp.Appearance;
+                        // TODO: IPlaceableComponent.AppearanceType not yet implemented
+                        // placeableComponent.AppearanceType = utp.AppearanceId;
                         placeableComponent.IsUseable = utp.Useable;
                         placeableComponent.IsStatic = utp.Static;
                     }
@@ -1109,7 +1117,7 @@ namespace Odyssey.Kotor.Game
                     Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
-                        renderable.AppearanceRow = utp.Appearance;
+                        renderable.AppearanceRow = utp.AppearanceId;
                     }
 
                     // Set scripts
@@ -1145,7 +1153,8 @@ namespace Odyssey.Kotor.Game
                     CreatureComponent creatureComponent = entity.GetComponent<CreatureComponent>();
                     if (creatureComponent != null)
                     {
-                        creatureComponent.AppearanceType = utc.Appearance;
+                        // TODO: CreatureComponent.AppearanceType not yet implemented
+                        // creatureComponent.AppearanceType = utc.AppearanceId;
                         creatureComponent.BodyVariation = utc.BodyVariation;
                         creatureComponent.TextureVar = utc.TextureVariation;
                     }
@@ -1154,7 +1163,7 @@ namespace Odyssey.Kotor.Game
                     Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
-                        renderable.AppearanceRow = utc.Appearance;
+                        renderable.AppearanceRow = utc.AppearanceId;
                     }
 
                     // Set stats
