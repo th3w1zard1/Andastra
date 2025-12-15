@@ -45,6 +45,9 @@ namespace CSharpKOTOR.Resource.Generics
             are.OnExit = root.Acquire<ResRef>("OnExit", ResRef.FromBlank());
             are.OnHeartbeat = root.Acquire<ResRef>("OnHeartbeat", ResRef.FromBlank());
             are.OnUserDefined = root.Acquire<ResRef>("OnUserDefined", ResRef.FromBlank());
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:496
+            // Original: are.loadscreen_id = root.acquire("LoadScreenID", 0)
+            are.LoadScreenID = root.Acquire<int>("LoadScreenID", 0);
 
             // Extract color fields (as RGB integers)
             int sunAmbientInt = root.Acquire<int>("SunAmbientColor", 0);
@@ -99,6 +102,9 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetResRef("OnExit", are.OnExit);
             root.SetResRef("OnHeartbeat", are.OnHeartbeat);
             root.SetResRef("OnUserDefined", are.OnUserDefined);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:673
+            // Original: root.set_uint16("LoadScreenID", are.loadscreen_id)
+            root.SetUInt16("LoadScreenID", (ushort)are.LoadScreenID);
 
             // Set color fields (as RGB integers)
             // root.SetUInt32("SunAmbientColor", are.SunAmbient.RgbInteger());

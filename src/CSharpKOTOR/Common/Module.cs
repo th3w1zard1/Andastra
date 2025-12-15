@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
@@ -1092,6 +1093,8 @@ namespace CSharpKOTOR.Common
             }
 
             // Read the ARE to get LoadScreenID
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1645-1649
+            // Original: are_data = are_resource.resource()
             object areData = areResource.Resource();
             if (areData == null)
             {
@@ -1099,12 +1102,94 @@ namespace CSharpKOTOR.Common
                 return null;
             }
 
-            // TODO: Implement loadscreen logic once ARE class has LoadScreenID property
-            // This requires:
-            // 1. ARE class to have LoadScreenID property
-            // 2. TwoDA reading capability
-            // 3. Installation.resource() method for loading loadscreens.2da
-            new RobustLogger().Warning("Loadscreen() method not fully implemented - requires ARE.LoadScreenID and TwoDA support");
+            // Cast to ARE type
+            Resource.Generics.ARE are = areData as Resource.Generics.ARE;
+            if (are == null)
+            {
+                new RobustLogger().Warning(string.Format("ARE resource for module '{0}' is not of type ARE", _root));
+                return null;
+            }
+
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1651-1654
+            // Original: loadscreen_id = are_data.loadscreen_id
+            int loadscreenId = are.LoadScreenID;
+            if (loadscreenId == 0)
+            {
+                new RobustLogger().Debug(string.Format("Module '{0}' has LoadScreenID=0, no loadscreen specified", _root));
+                return null;
+            }
+
+            // Load loadscreens.2da from installation
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1656-1664
+            // Original: loadscreens_result = self._installation.resource("loadscreens", ResourceType.TwoDA, [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
+            Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
+                "loadscreens",
+                ResourceType.TwoDA,
+                new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN }
+            );
+            if (loadscreensResult == null || loadscreensResult.Data == null)
+            {
+                new RobustLogger().Warning("loadscreens.2da not found in installation");
+                return null;
+            }
+
+            // Parse TwoDA file
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1666
+            // Original: loadscreens_2da = read_2da(loadscreens_result.data)
+            Formats.TwoDA.TwoDA loadscreens2da = new Formats.TwoDA.TwoDABinaryReader(loadscreensResult.Data).Load();
+
+            // Get the bmpresref from loadscreens.2da using LoadScreenID as row index
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1668-1677
+            // Original: loadscreen_row = loadscreens_2da.get_row(loadscreen_id)
+            string bmpresref = null;
+            try
+            {
+                Formats.TwoDA.TwoDARow loadscreenRow = loadscreens2da.GetRow(loadscreenId);
+                bmpresref = loadscreenRow.GetString("bmpresref");
+                if (string.IsNullOrWhiteSpace(bmpresref) || bmpresref == "****")
+                {
+                    new RobustLogger().Debug(string.Format("Module '{0}' loadscreen row {1} has no bmpresref", _root, loadscreenId));
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                new RobustLogger().Warning(string.Format("Failed to get bmpresref from loadscreens.2da row {0}: {1}", loadscreenId, e.Message));
+                return null;
+            }
+
+            // Search for the texture (TGA or TPC) using installation.locations()
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1679-1703
+            // Original: texture_queries = [ResourceIdentifier(bmpresref, ResourceType.TPC), ResourceIdentifier(bmpresref, ResourceType.TGA)]
+            var textureQueries = new List<ResourceIdentifier>
+            {
+                new ResourceIdentifier(bmpresref, ResourceType.TPC),
+                new ResourceIdentifier(bmpresref, ResourceType.TGA)
+            };
+            SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN, SearchLocation.TEXTURES_TPA };
+            Dictionary<ResourceIdentifier, List<LocationResult>> textureLocations = _installation.Locations(textureQueries, searchOrder);
+
+            // Return the FileResource from the first location found
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1689-1703
+            // Original: for query in texture_queries: if query in texture_locations and texture_locations[query]: location = texture_locations[query][0]; return location.as_file_resource()
+            foreach (ResourceIdentifier query in textureQueries)
+            {
+                if (textureLocations.ContainsKey(query) && textureLocations[query].Count > 0)
+                {
+                    LocationResult location = textureLocations[query][0];
+                    FileResource fileResource = location.FileResource;
+                    if (fileResource != null)
+                    {
+                        return fileResource;
+                    }
+                    // If FileResource wasn't set, create one from the location
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1696-1702
+                    // Original: return FileResource(resname=bmpresref, restype=query.restype, size=location.size, offset=location.offset, filepath=location.filepath)
+                    return new FileResource(bmpresref, query.ResType, location.Size, location.Offset, location.FilePath);
+                }
+            }
+
+            new RobustLogger().Debug(string.Format("Loadscreen texture '{0}' not found for module '{1}'", bmpresref, _root));
             return null;
         }
 

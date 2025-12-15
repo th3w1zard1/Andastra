@@ -147,7 +147,8 @@ namespace CSharpKOTOR.Tools
                 {
                     ScanSSF(identifier, data);
                 }
-                // NCS files - FIXME: TEMPORARILY DISABLED (will revisit later)
+                // NCS files - NCS scanning temporarily disabled pending bytecode analysis implementation
+                // NCS files contain compiled NWScript bytecode which requires specialized parsing
                 // GFF files
                 else if (restype.IsGff())
                 {

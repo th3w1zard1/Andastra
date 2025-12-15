@@ -771,11 +771,10 @@ namespace Odyssey.Core.Party
                 // The entity will be a placeholder until template loading is properly architected
                 entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
                 
-                // Set tag from member data
-                if (entity != null && !string.IsNullOrEmpty(member.Tag))
-                {
-                    entity.Tag = member.Tag;
-                }
+                // Tag is set from entity template when entity is created via EntityFactory.CreateCreatureFromTemplate
+                // The template (UTC file) contains the Tag field which is applied during entity creation
+                // If entity was created without template, tag will be empty until template is loaded
+                // Note: PartyMember doesn't store tag separately - it comes from the entity's template
             }
             else
             {

@@ -87,6 +87,15 @@ namespace CSharpKOTOR.Resource.Generics
         public List<string> AreaList { get; set; } = new List<string>();
         public List<ResRef> MapList { get; set; } = new List<ResRef>();
 
+        /// <summary>
+        /// Load screen ID (index into loadscreens.2da).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:104,293
+        /// Original: loadscreen_id: "LoadScreenID" field. Not used by the game engine.
+        /// </remarks>
+        public int LoadScreenID { get; set; }
+
         public ARE()
         {
         }
