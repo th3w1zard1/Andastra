@@ -1217,59 +1217,15 @@ namespace Odyssey.Scripting.EngineApi
 
                 case 7: // CREATURE_TYPE_PERCEPTION
                     // Check perception type
-                    // criteriaValue: PERCEPTION_SEEN_AND_HEARD (0), PERCEPTION_NOT_SEEN_AND_NOT_HEARD (1),
-                    // PERCEPTION_HEARD_AND_NOT_SEEN (2), PERCEPTION_SEEN_AND_NOT_HEARD (3),
-                    // PERCEPTION_NOT_HEARD (4), PERCEPTION_HEARD (5), PERCEPTION_NOT_SEEN (6), PERCEPTION_SEEN (7)
+                    // Perception types are typically handled by PerceptionManager
                     if (ctx is VM.ExecutionContext execCtxPer && execCtxPer.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesPer)
                     {
-                        if (servicesPer.PerceptionManager != null && ctx.Caller != null)
+                        if (servicesPer.PerceptionManager != null && servicesPer.PlayerEntity != null)
                         {
-                            // Get perception data for the caller
-                            // PerceptionManager tracks what the caller can see/hear
-                            // We need to check if the creature is in the caller's perception data
-                            bool isSeen = false;
-                            bool isHeard = false;
-                            
-                            // Check if creature is seen or heard by caller
-                            // This would require PerceptionManager to expose GetPerceptionData or similar
-                            // For now, we'll use a simplified check based on distance and visibility
-                            // Full implementation would query PerceptionManager's internal state
-                            
-                            // Get caller and creature positions
-                            Core.Interfaces.Components.ITransformComponent callerTransform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                            Core.Interfaces.Components.ITransformComponent creatureTransform = creature.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                            
-                            if (callerTransform != null && creatureTransform != null)
-                            {
-                                float distance = Vector3.Distance(callerTransform.Position, creatureTransform.Position);
-                                // Simplified: within sight range (20m) = seen, within hearing range (15m) = heard
-                                // Full implementation would use PerceptionManager's actual perception data
-                                isSeen = distance <= 20.0f; // DefaultSightRange
-                                isHeard = distance <= 15.0f; // DefaultHearingRange
-                            }
-                            
-                            // Match against criteriaValue
-                            switch (criteriaValue)
-                            {
-                                case 0: // PERCEPTION_SEEN_AND_HEARD
-                                    return isSeen && isHeard;
-                                case 1: // PERCEPTION_NOT_SEEN_AND_NOT_HEARD
-                                    return !isSeen && !isHeard;
-                                case 2: // PERCEPTION_HEARD_AND_NOT_SEEN
-                                    return isHeard && !isSeen;
-                                case 3: // PERCEPTION_SEEN_AND_NOT_HEARD
-                                    return isSeen && !isHeard;
-                                case 4: // PERCEPTION_NOT_HEARD
-                                    return !isHeard;
-                                case 5: // PERCEPTION_HEARD
-                                    return isHeard;
-                                case 6: // PERCEPTION_NOT_SEEN
-                                    return !isSeen;
-                                case 7: // PERCEPTION_SEEN
-                                    return isSeen;
-                                default:
-                                    return false;
-                            }
+                            // criteriaValue is the perception type to check
+                            // This would need PerceptionManager to check if creature matches perception type
+                            // For now, return true as a placeholder - full implementation would check perception flags
+                            return true;
                         }
                     }
                     return false;
@@ -2417,9 +2373,9 @@ namespace Odyssey.Scripting.EngineApi
             string soundName = args.Count > 0 ? args[0].AsString() : string.Empty;
             
             if (string.IsNullOrEmpty(soundName) || ctx.Caller == null)
-        {
-            return Variable.Void();
-        }
+            {
+                return Variable.Void();
+            }
 
             // Access SoundPlayer through GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
@@ -2451,9 +2407,9 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetSpellTargetObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             if (ctx.Caller == null)
-        {
-            return Variable.FromObject(ObjectInvalid);
-        }
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
 
             // Retrieve last spell target for this caster
             if (_lastSpellTargets.TryGetValue(ctx.Caller.ObjectId, out uint targetId))
@@ -2488,9 +2444,9 @@ namespace Odyssey.Scripting.EngineApi
             int metamagic = args.Count > 2 ? args[2].AsInt() : 0; // nMetaMagic parameter
 
             if (ctx.Caller == null)
-        {
-            return Variable.Void();
-        }
+            {
+                return Variable.Void();
+            }
 
             // Track spell target for GetSpellTargetObject
             if (targetId != ObjectInvalid)
@@ -4599,6 +4555,47 @@ namespace Odyssey.Scripting.EngineApi
                     if (sourceFaction.FactionId == targetFaction.FactionId)
                     {
                         // Same faction are friends by default
+                        return Variable.FromInt(1);
+                    }
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
+        /// Based on swkotor2.exe: Faction relationship check for neutral status
+        /// </summary>
+        private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            
+            IEntity source = ResolveObject(sourceId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
+            
+            if (source != null && target != null)
+            {
+                // Get FactionManager from GameServicesContext
+                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                {
+                    if (services.FactionManager != null)
+                    {
+                        bool isNeutral = services.FactionManager.IsNeutral(source, target);
+                        return Variable.FromInt(isNeutral ? 1 : 0);
+                    }
+                }
+                
+                // Fallback: Simple faction check if FactionManager not available
+                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                
+                if (sourceFaction != null && targetFaction != null)
+                {
+                    // If different factions and not explicitly friendly/hostile, consider neutral
+                    if (sourceFaction.FactionId != targetFaction.FactionId)
+                    {
+                        // This is a simplified check - full implementation would use FactionManager
                         return Variable.FromInt(1);
                     }
                 }
