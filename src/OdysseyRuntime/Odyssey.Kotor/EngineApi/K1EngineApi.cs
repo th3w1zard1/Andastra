@@ -5787,9 +5787,11 @@ namespace Odyssey.Kotor.EngineApi
             // Access ModuleLoader via GameServicesContext to get EntityFactory
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.ModuleLoader is Odyssey.Kotor.Game.ModuleLoader moduleLoader)
+                // TODO: EntityFactory is not yet implemented in ModuleLoader
+                // if (services.ModuleLoader is Odyssey.Kotor.Loading.ModuleLoader moduleLoader)
+                if (false)
                 {
-                    CSharpKOTOR.Common.Module csharpKotorModule = moduleLoader.GetCurrentModule();
+                    CSharpKOTOR.Common.Module csharpKotorModule = null; // moduleLoader.GetCSharpKotorModule();
                     if (csharpKotorModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);
