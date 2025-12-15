@@ -17,16 +17,22 @@ namespace Odyssey.Kotor.Systems
     /// Trigger System:
     /// - Based on swkotor2.exe trigger system
     /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
-    /// - Script events: "OnEnter" @ 0x007be1bc, "OnExit" @ 0x007be1c0 (trigger script event hooks)
+    /// - "$tItrigger" @ 0x007bb979 (trigger variable name), "CB_TRIGGERS" @ 0x007d29c8 (trigger checkbox GUI)
+    /// - Script events: "OnEnter" @ 0x007c1d40, "OnExit" @ 0x007c1d30 (trigger script event hooks)
     /// - "ScriptOnEnter" @ 0x007beebc, "ScriptOnExit" @ 0x007beec0 (trigger script ResRef fields)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac, "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 0x9) and EVENT_LEFT_TRIGGER (case 0xa)
+    /// - "OnTrapTriggered" @ 0x007c1a34 (trap triggered script event), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
+    /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2) and EVENT_LEFT_TRIGGER (case 3)
+    /// - Trigger loading: FUN_004e08e0 @ 0x004e08e0 loads trigger instances from GIT TriggerList, reads UTT templates
     /// - Original implementation: Triggers have polygon geometry, detect creature entry/exit
     /// - Trigger detection: Updates every frame, checks if creature position is inside trigger polygon
     /// - Script events: OnEnter (entity enters), OnExit (entity exits), OnClick, OnDisarm, OnTrapTriggered
     /// - Trigger geometry stored as polygon vertices in GFF structure (Geometry field in UTT template)
     /// - Trigger types: 0=generic, 1=transition, 2=trap (TriggerType field)
     /// - FireOnce triggers: Only fire once (HasFired flag prevents multiple firings)
+    /// - Trigger polygon: 2D polygon projected onto walkmesh, point-in-polygon test for entry/exit detection
+    /// - Transition triggers: TriggerType=1 triggers can link to waypoints/areas for area transitions
+    /// - Trap triggers: TriggerType=2 triggers can have trap scripts (OnTrapTriggered) and disarm DC
     /// </remarks>
     public class TriggerSystem
     {
