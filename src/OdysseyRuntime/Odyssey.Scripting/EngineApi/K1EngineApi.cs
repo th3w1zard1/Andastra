@@ -1045,22 +1045,8 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // Check racial type from creature component
-                    Components.CreatureComponent racialComp = creature.GetComponent<Components.CreatureComponent>();
-                    if (racialComp != null)
-                    {
-                        return racialComp.RaceId == criteriaValue;
-                    }
-                    // Fallback: try entity data
-                    if (creature is Core.Entities.Entity racialEntity)
-                    {
-                        object raceIdObj = racialEntity.GetData("RaceId");
-                        if (raceIdObj is int raceId)
-                        {
-                            return raceId == criteriaValue;
-                        }
-                    }
-                    return false;
+                    // TODO: Check racial type from creature template
+                    return true; // Placeholder
 
                 case 1: // CREATURE_TYPE_PLAYER_CHAR
                     // PLAYER_CHAR_IS_PC = 0, PLAYER_CHAR_NOT_PC = 1
@@ -1083,39 +1069,12 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // Check if creature has the specified class (any position)
-                    Components.CreatureComponent classComp = creature.GetComponent<Components.CreatureComponent>();
-                    if (classComp != null && classComp.ClassList != null)
-                    {
-                        foreach (Components.CreatureClass cls in classComp.ClassList)
-                        {
-                            if (cls.ClassId == criteriaValue)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check class type from creature template
+                    return true; // Placeholder
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // Check reputation between caller and creature
-                    // REPUTATION_TYPE_ENEMY = 0, REPUTATION_TYPE_FRIEND = 1, REPUTATION_TYPE_NEUTRAL = 2
-                    if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-                    {
-                        if (services.FactionManager != null && ctx.Caller != null)
-                        {
-                            Components.FactionComponent callerFaction = ctx.Caller.GetComponent<Components.FactionComponent>();
-                            Components.FactionComponent creatureFaction = creature.GetComponent<Components.FactionComponent>();
-                            if (callerFaction != null && creatureFaction != null)
-                            {
-                                int reputation = services.FactionManager.GetFactionReputation(callerFaction.FactionId, creatureFaction.FactionId);
-                                // Map reputation to type: <= -50 = enemy, >= 50 = friend, else neutral
-                                int repType = reputation <= -50 ? 0 : (reputation >= 50 ? 1 : 2);
-                                return repType == criteriaValue;
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check reputation type
+                    return true; // Placeholder
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -1128,42 +1087,16 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
-                    // Check if creature has specific spell effect (spell ID = criteriaValue)
-                    if (creature.World != null && creature.World.EffectSystem != null)
-                    {
-                        Core.Combat.EffectSystem effectSystem = creature.World.EffectSystem;
-                        // Check if any active effect has the spell ID
-                        foreach (Core.Combat.ActiveEffect effect in effectSystem.GetEffects(creature))
-                        {
-                            if (effect.Effect.VisualEffectId == criteriaValue)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check if creature has specific spell effect
+                    return true; // Placeholder
 
                 case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
-                    // Check if creature does NOT have specific spell effect
-                    if (creature.World != null && creature.World.EffectSystem != null)
-                    {
-                        Core.Combat.EffectSystem effectSystem = creature.World.EffectSystem;
-                        // Check if any active effect has the spell ID
-                        foreach (Core.Combat.ActiveEffect effect in effectSystem.GetEffects(creature))
-                        {
-                            if (effect.Effect.VisualEffectId == criteriaValue)
-                            {
-                                return false; // Has the effect
-                            }
-                        }
-                        return true; // Does not have the effect
-                    }
-                    return true; // No effect system, assume doesn't have it
+                    // TODO: Check if creature does not have specific spell effect
+                    return true; // Placeholder
 
                 case 7: // CREATURE_TYPE_PERCEPTION
-                    // Perception type check (simplified - would need perception component)
-                    // For now, return true (accept all)
-                    return true;
+                    // TODO: Check perception type
+                    return true; // Placeholder
 
                 default:
                     return true; // Unknown criteria type, accept all
@@ -2566,7 +2499,7 @@ namespace Odyssey.Scripting.EngineApi
         {
             // GetLastPerceptionHeard() - Check if the last perception was heard
             // Returns 1 if heard, 0 if not heard or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != OdyObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
