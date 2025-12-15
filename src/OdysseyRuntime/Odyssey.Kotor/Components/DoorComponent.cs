@@ -1,5 +1,6 @@
 using System;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Kotor.Components
 {
@@ -19,7 +20,20 @@ namespace Odyssey.Kotor.Components
     /// - Error messages:
     ///   - "Cannot load door model '%s'." @ 0x007d2488 (door model loading error)
     ///   - "CSWCAnimBaseDoor::GetAnimationName(): No name for server animation %d" @ 0x007d24a8 (door animation name error)
-    /// - Original implementation: FUN_00584f40 @ 0x00584f40 (save door data to GFF including state, HP, lock status)
+    /// - Original implementation: FUN_00584f40 @ 0x00584f40 (load door data from GFF)
+    ///   - Loads PortraitId/Portrait, CreatorId, script hooks (ScriptHeartbeat, ScriptOnEnter, ScriptOnExit, ScriptUserDefine, OnTrapTriggered, OnDisarm, OnClick)
+    ///   - Loads TrapType, TrapOneShot, LinkedTo, LinkedToFlags, LinkedToModule, AutoRemoveKey, Tag, LocalizedName, Faction, KeyName
+    ///   - Loads TrapDisarmable, TrapDetectable, OwnerDemolitionsSkill, DisarmDCMod, DetectDCMod, Cursor, TransitionDestination, Type, HighlightHeight
+    ///   - Loads position (XPosition, YPosition, ZPosition), orientation (XOrientation, YOrientation, ZOrientation), Geometry polygon vertices
+    ///   - Loads LoadScreenID, SetByPlayerParty
+    ///   - Geometry vertices are transformed by door position/orientation (relative to door transform)
+    /// - FUN_00585ec0 @ 0x00585ec0 (save door data to GFF)
+    ///   - Saves script hooks (ScriptHeartbeat, ScriptOnEnter, ScriptOnExit, ScriptUserDefine, OnTrapTriggered, OnDisarm, OnClick)
+    ///   - Saves TrapType, TrapOneShot, CreatorId, LinkedTo, LinkedToFlags, LinkedToModule, AutoRemoveKey, Tag, LocalizedName, Faction, Cursor, KeyName
+    ///   - Saves TrapDisarmable, TrapDetectable, OwnerDemolitionsSkill, PortraitId/Portrait, Type, HighlightHeight
+    ///   - Saves position (XPosition, YPosition, ZPosition), orientation (XOrientation, YOrientation, ZOrientation)
+    ///   - Saves Geometry polygon vertices (PointX, PointY, PointZ) relative to door position
+    ///   - Saves LoadScreenID, TransitionDestination, SetByPlayerParty
     /// - FUN_004e08e0 @ 0x004e08e0 (load door instances from GIT including position, linked transitions)
     /// - FUN_00580ed0 @ 0x00580ed0 (door loading function), FUN_005838d0 @ 0x005838d0 (door initialization)
     /// - Doors have open/closed states, locks, traps, module transitions
@@ -31,7 +45,7 @@ namespace Odyssey.Kotor.Components
     /// - Door HP: Doors can be destroyed (CurrentHP <= 0), have Hardness (damage reduction), saves (Fort/Reflex/Will)
     /// - Secret doors: SecretDoorDC determines detection difficulty for hidden doors
     /// </remarks>
-    public class DoorComponent : IComponent
+    public class DoorComponent : IComponent, IDoorComponent
     {
         public IEntity Owner { get; set; }
 
