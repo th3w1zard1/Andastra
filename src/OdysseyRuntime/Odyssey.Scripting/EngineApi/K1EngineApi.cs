@@ -1646,7 +1646,18 @@ namespace Odyssey.Scripting.EngineApi
 
         private new Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return base.Func_GetModule(args, ctx);
+            // GetModule() - Get the module object
+            // Returns OBJECT_INVALID on error
+            // In KOTOR, modules are special objects with a fixed object ID
+            // The module object ID is typically 0x7F000002 (as per base implementation)
+            // However, we should verify the current module exists
+            if (ctx.World != null && ctx.World.CurrentModule != null)
+            {
+                // Return the standard module object ID
+                // This matches the base implementation and KOTOR conventions
+                return Variable.FromObject(0x7F000002);
+            }
+            return Variable.FromObject(ObjectInvalid);
         }
 
         private new Variable Func_ObjectToString(IReadOnlyList<Variable> args, IExecutionContext ctx)
