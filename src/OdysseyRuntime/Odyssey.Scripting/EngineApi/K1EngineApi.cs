@@ -84,6 +84,7 @@ namespace Odyssey.Scripting.EngineApi
             _lastSpellTargets = new Dictionary<uint, uint>();
             _lastEquippedItems = new Dictionary<uint, uint>();
             _lastMetamagicTypes = new Dictionary<uint, int>();
+            _playerRestricted = false; // Initialize player restriction state
         }
         
         private class FactionMemberIteration
@@ -3271,11 +3272,9 @@ namespace Odyssey.Scripting.EngineApi
         /// </summary>
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Player restriction state would typically be tracked by GameSession
-            // For now, return 0 (not restricted) - player restriction system integration needed
-            // TODO: Implement player restriction state tracking
-            
-            return Variable.FromInt(0);
+            // Player restriction state is tracked by _playerRestricted field
+            // Based on swkotor2.exe: Player restriction mode prevents player movement/actions
+            return Variable.FromInt(_playerRestricted ? 1 : 0);
         }
 
         /// <summary>
@@ -4422,32 +4421,27 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameServicesContext or GameSession
+                // Get FactionManager from GameServicesContext
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    // Try to get FactionManager from CombatManager
-                    if (services.CombatManager != null)
+                    if (services.FactionManager != null)
                     {
-                        // TODO: Expose FactionManager.IsFriendly through CombatManager or GameServicesContext
+                        bool isFriendly = services.FactionManager.IsFriendly(source, target);
+                        return Variable.FromInt(isFriendly ? 1 : 0);
                     }
                 }
                 
-                // Alternative: Get from GameSession directly if available
-                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
+                // Fallback: Simple faction check if FactionManager not available
+                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                
+                if (sourceFaction != null && targetFaction != null)
                 {
-                    // Access FactionManager through reflection or add to GameServicesContext
-                    // For now, use a simple faction check
-                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                    
-                    if (sourceFaction != null && targetFaction != null)
+                    // Check if same faction (simplified - would need FactionManager for proper friendliness)
+                    if (sourceFaction.FactionId == targetFaction.FactionId)
                     {
-                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
-                        if (sourceFaction.FactionId == targetFaction.FactionId)
-                        {
-                            // Same faction are friends by default
-                            return Variable.FromInt(1);
-                        }
+                        // Same faction are friends by default
+                        return Variable.FromInt(1);
                     }
                 }
             }
