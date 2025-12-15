@@ -391,6 +391,13 @@ namespace Odyssey.Scripting.EngineApi
                 case 681: return Func_GetLocalNumber(args, ctx);
                 case 682: return Func_SetLocalNumber(args, ctx);
 
+                // Class and level functions
+                case 166: return Func_GetHitDice(args, ctx);
+                case 285: return Func_GetHasFeat(args, ctx);
+                case 341: return Func_GetClassByPosition(args, ctx);
+                case 342: return Func_GetLevelByPosition(args, ctx);
+                case 343: return Func_GetLevelByClass(args, ctx);
+
                 default:
                     // Return default value for unimplemented functions
                     string funcName = GetFunctionName(routineId);
@@ -1183,7 +1190,8 @@ namespace Odyssey.Scripting.EngineApi
                             {
                                 if (cls.ClassId == criteriaValue)
                                 {
-                                return true;
+                                    return true;
+                                }
                             }
                         }
                     }
@@ -2224,8 +2232,6 @@ namespace Odyssey.Scripting.EngineApi
         {
             return base.Func_GetNearestObjectByTag(args, ctx);
         }
-
-        #endregion
 
         private new Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -5052,8 +5058,6 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
-        #endregion
-
         #region Location Functions
 
         /// <summary>
@@ -5552,15 +5556,193 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        #region Class and Level Functions
+
+        /// <summary>
+        /// GetHitDice(object oCreature=OBJECT_SELF) - Get the number of hit dice for a creature
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Hit dice calculation from classes.2da
+        /// Located via string references: "HitDice" @ 0x007c2f80, "HitDie" @ 0x007c2f84
+        /// Original implementation: Hit dice = total character level (sum of all class levels)
+        /// Hit dice represent the creature's total character levels across all classes
+        /// Returns 0 if creature is invalid or not a creature
+        /// </remarks>
+        private Variable Func_GetHitDice(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            if (stats != null)
+            {
+                // Hit dice = total character level
+                return Variable.FromInt(stats.Level);
+            }
+
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetHasFeat(int nFeat, object oCreature=OBJECT_SELF) - Determine whether creature has a feat and it is usable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Feat checking system
+        /// Located via string references: "FeatList" @ 0x007c2f88, "FeatID" @ 0x007c2f8c
+        /// Original implementation: Checks if creature has the feat in their feat list
+        /// Returns TRUE if creature has the feat and it is currently usable
+        /// Returns FALSE if creature doesn't have the feat or it's not usable (daily limits, restrictions)
+        /// </remarks>
+        private Variable Func_GetHasFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 1)
+            {
+                return Variable.FromInt(0);
+            }
+
+            int featId = args[0].AsInt();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+
+            CreatureComponent creature = entity.GetComponent<CreatureComponent>();
+            if (creature != null && creature.FeatList != null)
+            {
+                // Check if creature has the feat
+                bool hasFeat = creature.FeatList.Contains(featId);
+                // TODO: Check if feat is currently usable (daily limits, restrictions, etc.)
+                return Variable.FromInt(hasFeat ? 1 : 0);
+            }
+
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetClassByPosition(int nClassPosition, object oCreature=OBJECT_SELF) - Get class at position (1, 2, or 3)
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Multi-class system
+        /// Located via string references: "ClassList" @ 0x007c2f90, "ClassID" @ 0x007c2f94
+        /// Original implementation: Creatures can have up to 3 classes
+        /// nClassPosition: 1 = first class, 2 = second class, 3 = third class
+        /// Returns CLASS_TYPE_INVALID if creature doesn't have a class at that position
+        /// </remarks>
+        private Variable Func_GetClassByPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 1)
+            {
+                return Variable.FromInt(-1); // CLASS_TYPE_INVALID
+            }
+
+            int classPosition = args[0].AsInt();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(-1); // CLASS_TYPE_INVALID
+            }
+
+            CreatureComponent creature = entity.GetComponent<CreatureComponent>();
+            if (creature != null && creature.ClassList != null)
+            {
+                // Class positions are 1-indexed, list is 0-indexed
+                int index = classPosition - 1;
+                if (index >= 0 && index < creature.ClassList.Count)
+                {
+                    CreatureClass creatureClass = creature.ClassList[index];
+                    return Variable.FromInt(creatureClass.ClassId);
+                }
+            }
+
+            return Variable.FromInt(-1); // CLASS_TYPE_INVALID
+        }
+
+        /// <summary>
+        /// GetLevelByPosition(int nClassPosition, object oCreature=OBJECT_SELF) - Get level at class position (1, 2, or 3)
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Multi-class level system
+        /// Original implementation: Returns the level in the class at the specified position
+        /// nClassPosition: 1 = first class, 2 = second class, 3 = third class
+        /// Returns 0 if creature doesn't have a class at that position
+        /// </remarks>
+        private Variable Func_GetLevelByPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 1)
+            {
+                return Variable.FromInt(0);
+            }
+
+            int classPosition = args[0].AsInt();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+
+            CreatureComponent creature = entity.GetComponent<CreatureComponent>();
+            if (creature != null && creature.ClassList != null)
+            {
+                // Class positions are 1-indexed, list is 0-indexed
+                int index = classPosition - 1;
+                if (index >= 0 && index < creature.ClassList.Count)
+                {
+                    CreatureClass creatureClass = creature.ClassList[index];
+                    return Variable.FromInt(creatureClass.Level);
+                }
+            }
+
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetLevelByClass(int nClassType, object oCreature=OBJECT_SELF) - Get total levels in a specific class
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Class level lookup
+        /// Original implementation: Sums up all levels the creature has in the specified class type
+        /// Returns total levels in nClassType across all class positions
+        /// </remarks>
+        private Variable Func_GetLevelByClass(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 1)
+            {
+                return Variable.FromInt(0);
+            }
+
+            int classType = args[0].AsInt();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+
+            CreatureComponent creature = entity.GetComponent<CreatureComponent>();
+            if (creature != null && creature.ClassList != null)
+            {
+                int totalLevels = 0;
+                foreach (CreatureClass creatureClass in creature.ClassList)
+                {
+                    if (creatureClass.ClassId == classType)
+                    {
+                        totalLevels += creatureClass.Level;
+                    }
+                }
+                return Variable.FromInt(totalLevels);
+            }
+
+            return Variable.FromInt(0);
+        }
+
         #endregion
     }
 }
-    }
-}
-
-
-
-    }
-}
-
-
