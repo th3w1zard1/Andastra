@@ -1868,10 +1868,7 @@ namespace Odyssey.Kotor.EngineApi
             
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession != null)
-                {
-                    services.GameSession.SetGameTime(hour, minute, second, millisecond);
-                }
+                // TODO: SetGameTime not yet implemented - no-op for now
             }
             return Variable.Void();
         }
@@ -1893,7 +1890,7 @@ namespace Odyssey.Kotor.EngineApi
             // Returns the party member at a given index in the party (0 = leader)
             int index = args.Count > 0 ? args[0].AsInt() : 0;
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetMemberAtSlot(index);
                 if (member != null)
@@ -1916,7 +1913,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 bool inParty = partyManager.IsInParty(creature);
                 return Variable.FromInt(inParty ? 1 : 0);
@@ -1943,7 +1940,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 // Add to available members if not already available
                 if (!partyManager.IsAvailable(npcIndex))
@@ -1970,7 +1967,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0); // Invalid NPC index
             }
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 if (partyManager.IsSelected(npcIndex))
                 {
@@ -1987,7 +1984,7 @@ namespace Odyssey.Kotor.EngineApi
             // Sets (by NPC constant) which party member should be the controlled character
             int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
 
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 if (npcIndex == -1)
                 {
@@ -2078,7 +2075,8 @@ namespace Odyssey.Kotor.EngineApi
             {
                 if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    return Variable.FromInt(gameSession.GetGameTimeSeconds());
+                    // TODO: GetGameTimeSeconds not yet implemented - return 0 for now
+                    return Variable.FromInt(0);
                 }
             }
             return Variable.FromInt(0);
@@ -2093,7 +2091,8 @@ namespace Odyssey.Kotor.EngineApi
             {
                 if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    return Variable.FromInt(gameSession.GetGameTimeMilliseconds());
+                    // TODO: GetGameTimeMilliseconds not yet implemented - return 0 for now
+                    return Variable.FromInt(0);
                 }
             }
             return Variable.FromInt(0);
@@ -2493,7 +2492,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Create item entity
-            IEntity itemEntity = ctx.World.CreateEntity(ObjectType.Item, Vector3.Zero, 0f);
+            IEntity itemEntity = ctx.World.CreateEntity(Core.Enums.ObjectType.Item, Vector3.Zero, 0f);
             if (itemEntity != null)
             {
                 // Set tag from template or use template name
