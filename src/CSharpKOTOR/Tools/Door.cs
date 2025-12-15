@@ -131,7 +131,7 @@ namespace CSharpKOTOR.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:240-297
         // Original: def _load_mdl_with_variations(model_name: str, installation: Installation, logger: RobustLogger | None = None) -> tuple[MDL | None, bytes | None]:
-        private static (Formats.MDL.MDL mdl, byte[] mdlData) LoadMdlWithVariations(
+        private static (Formats.MDLData.MDL mdl, byte[] mdlData) LoadMdlWithVariations(
             string modelName,
             Installation.Installation installation,
             RobustLogger logger = null)
@@ -206,7 +206,7 @@ namespace CSharpKOTOR.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:300-387
         // Original: def _get_door_dimensions_from_model(mdl: MDL, model_name: str, door_name: str | None = None, logger: RobustLogger | None = None) -> tuple[float, float] | None:
         private static (float width, float height)? GetDoorDimensionsFromModel(
-            Formats.MDL.MDL mdl,
+            Formats.MDLData.MDL mdl,
             string modelName,
             string doorName = null,
             RobustLogger logger = null)
@@ -225,7 +225,7 @@ namespace CSharpKOTOR.Tools
             var bbMax = new System.Numerics.Vector3(-1000000, -1000000, -1000000);
             
             // Iterate through all nodes and their meshes
-            var nodesToCheck = new List<Formats.MDL.MDLNode> { mdl.Root };
+            var nodesToCheck = new List<Formats.MDLData.MDLNode> { mdl.Root };
             int meshCount = 0;
             while (nodesToCheck.Count > 0)
             {
@@ -234,22 +234,20 @@ namespace CSharpKOTOR.Tools
                 if (node.Mesh != null)
                 {
                     meshCount++;
-                    // Use mesh bounding box if available
-                    if (node.Mesh.BoundingBoxMin.HasValue && node.Mesh.BoundingBoxMax.HasValue)
+                    // Use mesh bounding box if available (BBoxMinX/Y/Z and BBoxMaxX/Y/Z properties)
+                    if (node.Mesh.BBoxMinX < 1000000 && node.Mesh.BBoxMaxX > -1000000)
                     {
-                        var min = node.Mesh.BoundingBoxMin.Value;
-                        var max = node.Mesh.BoundingBoxMax.Value;
-                        bbMin.X = Math.Min(bbMin.X, min.X);
-                        bbMin.Y = Math.Min(bbMin.Y, min.Y);
-                        bbMin.Z = Math.Min(bbMin.Z, min.Z);
-                        bbMax.X = Math.Max(bbMax.X, max.X);
-                        bbMax.Y = Math.Max(bbMax.Y, max.Y);
-                        bbMax.Z = Math.Max(bbMax.Z, max.Z);
+                        bbMin.X = Math.Min(bbMin.X, node.Mesh.BBoxMinX);
+                        bbMin.Y = Math.Min(bbMin.Y, node.Mesh.BBoxMinY);
+                        bbMin.Z = Math.Min(bbMin.Z, node.Mesh.BBoxMinZ);
+                        bbMax.X = Math.Max(bbMax.X, node.Mesh.BBoxMaxX);
+                        bbMax.Y = Math.Max(bbMax.Y, node.Mesh.BBoxMaxY);
+                        bbMax.Z = Math.Max(bbMax.Z, node.Mesh.BBoxMaxZ);
                     }
                     // Fallback: calculate from vertex positions if bounding box not set
-                    else if (node.Mesh.VertexPositions != null && node.Mesh.VertexPositions.Count > 0)
+                    else if (node.Mesh.Vertices != null && node.Mesh.Vertices.Count > 0)
                     {
-                        foreach (var vertex in node.Mesh.VertexPositions)
+                        foreach (var vertex in node.Mesh.Vertices)
                         {
                             bbMin.X = Math.Min(bbMin.X, vertex.X);
                             bbMin.Y = Math.Min(bbMin.Y, vertex.Y);
@@ -328,7 +326,7 @@ namespace CSharpKOTOR.Tools
                     var mdlResult = installation.Resources.LookupResource(modelVar, ResourceType.MDL);
                     if (mdlResult != null && mdlResult.Data != null)
                     {
-                        textureNames = CSharpKOTOR.Tools.Model.IterateTextures(mdlResult.Data).ToList();
+                        textureNames = CSharpKOTOR.Tools.ModelTools.IterateTextures(mdlResult.Data).ToList();
                         break;
                     }
                 }
