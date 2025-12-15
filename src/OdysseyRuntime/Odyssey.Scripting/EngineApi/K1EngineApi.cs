@@ -785,42 +785,172 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, ...)
+        /// Returns the nearest creature matching the specified criteria
+        /// </summary>
         private Variable Func_GetNearestCreature(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, ...)
-            // Simplified implementation
-            if (ctx.Caller != null)
+            int firstCriteriaType = args.Count > 0 ? args[0].AsInt() : -1;
+            int firstCriteriaValue = args.Count > 1 ? args[1].AsInt() : -1;
+            uint targetId = args.Count > 2 ? args[2].AsObjectId() : ObjectSelf;
+            int nth = args.Count > 3 ? args[3].AsInt() : 1;
+            int secondCriteriaType = args.Count > 4 ? args[4].AsInt() : -1;
+            int secondCriteriaValue = args.Count > 5 ? args[5].AsInt() : -1;
+            int thirdCriteriaType = args.Count > 6 ? args[6].AsInt() : -1;
+            int thirdCriteriaValue = args.Count > 7 ? args[7].AsInt() : -1;
+
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
             {
-                Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                if (transform != null)
+                target = ctx.Caller;
+            }
+
+            if (target == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            if (targetTransform == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get all creatures in radius
+            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(targetTransform.Position, 100f, ObjectType.Creature);
+            
+            // Filter and sort by criteria
+            List<IEntity> matchingCreatures = new List<IEntity>();
+            
+            foreach (IEntity entity in entities)
+            {
+                if (entity == target) continue;
+                if (entity.ObjectType != ObjectType.Creature) continue;
+
+                // Check first criteria
+                if (!MatchesCreatureCriteria(entity, firstCriteriaType, firstCriteriaValue, ctx))
                 {
-                    IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(transform.Position, 100f, ObjectType.Creature);
-                    float nearestDist = float.MaxValue;
-                    IEntity nearest = null;
+                    continue;
+                }
 
-                    foreach (IEntity e in entities)
-                    {
-                        if (e == ctx.Caller) continue;
+                // Check second criteria (if specified)
+                if (secondCriteriaType >= 0 && !MatchesCreatureCriteria(entity, secondCriteriaType, secondCriteriaValue, ctx))
+                {
+                    continue;
+                }
 
-                        Core.Interfaces.Components.ITransformComponent t = e.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                        if (t != null)
-                        {
-                            float dist = Vector3.DistanceSquared(transform.Position, t.Position);
-                            if (dist < nearestDist)
-                            {
-                                nearestDist = dist;
-                                nearest = e;
-                            }
-                        }
-                    }
+                // Check third criteria (if specified)
+                if (thirdCriteriaType >= 0 && !MatchesCreatureCriteria(entity, thirdCriteriaType, thirdCriteriaValue, ctx))
+                {
+                    continue;
+                }
 
-                    if (nearest != null)
-                    {
-                        return Variable.FromObject(nearest.ObjectId);
-                    }
+                matchingCreatures.Add(entity);
+            }
+
+            // Sort by distance and return Nth nearest
+            if (matchingCreatures.Count > 0)
+            {
+                matchingCreatures.Sort((a, b) =>
+                {
+                    Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    if (aTransform == null || bTransform == null) return 0;
+                    
+                    float distA = Vector3.DistanceSquared(targetTransform.Position, aTransform.Position);
+                    float distB = Vector3.DistanceSquared(targetTransform.Position, bTransform.Position);
+                    return distA.CompareTo(distB);
+                });
+
+                int index = nth - 1; // nth is 1-based
+                if (index >= 0 && index < matchingCreatures.Count)
+                {
+                    return Variable.FromObject(matchingCreatures[index].ObjectId);
                 }
             }
+
             return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// Helper method to check if a creature matches the specified criteria
+        /// </summary>
+        private bool MatchesCreatureCriteria(IEntity creature, int criteriaType, int criteriaValue, IExecutionContext ctx)
+        {
+            // CREATURE_TYPE_RACIAL_TYPE = 0
+            // CREATURE_TYPE_PLAYER_CHAR = 1
+            // CREATURE_TYPE_CLASS = 2
+            // CREATURE_TYPE_REPUTATION = 3
+            // CREATURE_TYPE_IS_ALIVE = 4
+            // CREATURE_TYPE_HAS_SPELL_EFFECT = 5
+            // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT = 6
+            // CREATURE_TYPE_PERCEPTION = 7
+
+            if (criteriaType < 0)
+            {
+                return true; // No criteria specified
+            }
+
+            switch (criteriaType)
+            {
+                case 0: // CREATURE_TYPE_RACIAL_TYPE
+                    // TODO: Check racial type from creature template
+                    return true; // Placeholder
+
+                case 1: // CREATURE_TYPE_PLAYER_CHAR
+                    // PLAYER_CHAR_IS_PC = 0, PLAYER_CHAR_NOT_PC = 1
+                    if (criteriaValue == 0)
+                    {
+                        // Is PC
+                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                        {
+                            return services.PlayerEntity != null && services.PlayerEntity.ObjectId == creature.ObjectId;
+                        }
+                    }
+                    else if (criteriaValue == 1)
+                    {
+                        // Not PC
+                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                        {
+                            return services.PlayerEntity == null || services.PlayerEntity.ObjectId != creature.ObjectId;
+                        }
+                    }
+                    return false;
+
+                case 2: // CREATURE_TYPE_CLASS
+                    // TODO: Check class type from creature template
+                    return true; // Placeholder
+
+                case 3: // CREATURE_TYPE_REPUTATION
+                    // TODO: Check reputation type
+                    return true; // Placeholder
+
+                case 4: // CREATURE_TYPE_IS_ALIVE
+                    // TRUE = alive, FALSE = dead
+                    Core.Interfaces.Components.IStatsComponent stats = creature.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                    if (stats != null)
+                    {
+                        bool isAlive = !stats.IsDead;
+                        return (criteriaValue != 0) == isAlive;
+                    }
+                    return false;
+
+                case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
+                    // TODO: Check if creature has specific spell effect
+                    return true; // Placeholder
+
+                case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
+                    // TODO: Check if creature does not have specific spell effect
+                    return true; // Placeholder
+
+                case 7: // CREATURE_TYPE_PERCEPTION
+                    // TODO: Check perception type
+                    return true; // Placeholder
+
+                default:
+                    return true; // Unknown criteria type, accept all
+            }
         }
 
         #endregion
