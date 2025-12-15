@@ -29,6 +29,21 @@ namespace Odyssey.MonoGame.Rendering
     /// 
     /// This integrates all modern rendering optimizations into a unified pipeline.
     /// </summary>
+    /// <remarks>
+    /// Modern Renderer:
+    /// - Based on swkotor2.exe rendering system
+    /// - Located via string references: "Render Window" @ 0x007b5680, "render" @ 0x007bab34
+    /// - "renderorder" @ 0x007bab50 (render order sorting), "Apropagaterender" @ 0x007bb10f (render propagation)
+    /// - "renderbmlmtype" @ 0x007bb26c (render billboard/lightmap type)
+    /// - Draw modes: "DRAWSTYLE" @ 0x007b63d4, "DRAWMODE" @ 0x007b6a4c
+    /// - "WillNotRender" @ 0x007c418c (object will not render flag)
+    /// - "hologram_donotdraw" @ 0x007bae78 (hologram do not draw flag)
+    /// - GUI: "mgs_drawmain" @ 0x007cc8f0 (main menu draw function)
+    /// - OpenGL functions: glDrawArrays, glDrawElements, glDrawBuffer (OpenGL rendering primitives)
+    /// - Original implementation: KOTOR uses render order sorting, frustum culling, and distance-based LOD
+    /// - Render order: Objects sorted by material/shader for efficient batching
+    /// - Combined with VIS files for room visibility culling
+    /// </remarks>
     public class ModernRenderer : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -233,7 +248,7 @@ namespace Odyssey.MonoGame.Rendering
                 if (FrustumCullingEnabled)
                 {
                     // Convert XNA Vector3 to System.Numerics.Vector3 for frustum
-                    System.Numerics.Vector3 center = new System.Numerics.Vector3(
+                    var center = new System.Numerics.Vector3(
                         obj.BoundingCenter.X,
                         obj.BoundingCenter.Y,
                         obj.BoundingCenter.Z
