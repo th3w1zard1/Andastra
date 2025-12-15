@@ -6685,8 +6685,9 @@ namespace Odyssey.Kotor.EngineApi
                             doorComponent.ApplyDamage(bashDamage);
 
                             // If door was destroyed (bashed open), it's already unlocked and opened by ApplyDamage
-                            // Fire OnDamaged script event if door still exists
-                            if (doorComponent.HitPoints > 0 && ctx.World != null && ctx.World.EventBus != null)
+                            // Fire OnDamaged script event if door still exists (HP > 0 means door wasn't destroyed)
+                            // Note: DoorComponent uses CurrentHP, but we check via door component directly
+                            if (doorComponent.CurrentHP > 0 && ctx.World != null && ctx.World.EventBus != null)
                             {
                                 ctx.World.EventBus.FireScriptEvent(door, Core.Enums.ScriptEvent.OnDamaged, ctx.Caller);
                             }
