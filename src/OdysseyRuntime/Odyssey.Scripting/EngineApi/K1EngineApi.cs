@@ -54,12 +54,17 @@ namespace Odyssey.Scripting.EngineApi
         // Key: caller entity ID, Value: list of effects and current index
         private readonly Dictionary<uint, EffectIteration> _effectIterations;
 
+        // Iteration state for GetFirstInPersistentObject/GetNextInPersistentObject
+        // Key: caller entity ID, Value: list of persistent objects and current index
+        private readonly Dictionary<uint, PersistentObjectIteration> _persistentObjectIterations;
+
         public K1EngineApi()
         {
             _vm = new NcsVm();
             _factionMemberIterations = new Dictionary<uint, FactionMemberIteration>();
             _areaObjectIterations = new Dictionary<uint, AreaObjectIteration>();
             _effectIterations = new Dictionary<uint, EffectIteration>();
+            _persistentObjectIterations = new Dictionary<uint, PersistentObjectIteration>();
         }
         
         private class FactionMemberIteration
@@ -77,6 +82,12 @@ namespace Odyssey.Scripting.EngineApi
         private class EffectIteration
         {
             public List<Odyssey.Core.Combat.ActiveEffect> Effects { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+
+        private class PersistentObjectIteration
+        {
+            public List<IEntity> Objects { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -269,6 +280,8 @@ namespace Odyssey.Scripting.EngineApi
                 case 258: return Func_GetLastPerceptionInaudible(args, ctx);
                 case 259: return Func_GetLastPerceptionSeen(args, ctx);
                 case 261: return Func_GetLastPerceptionVanished(args, ctx);
+                case 262: return Func_GetFirstInPersistentObject(args, ctx);
+                case 263: return Func_GetNextInPersistentObject(args, ctx);
 
                 // Module
                 case 242: return Func_GetModule(args, ctx);

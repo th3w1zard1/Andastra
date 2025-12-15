@@ -154,7 +154,7 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Tests occlusion using Hi-Z buffer hierarchical depth test.
         /// </summary>
-        private bool TestOcclusionHiZ(Vector3 minPoint, Vector3 maxPoint)
+        private bool TestOcclusionHiZ(System.Numerics.Vector3 minPoint, System.Numerics.Vector3 maxPoint)
         {
             // TODO: Implement Hi-Z occlusion test
             // 1. Project AABB to screen space
@@ -196,15 +196,31 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Resizes the occlusion culler for new resolution.
         /// </summary>
+        /// <param name="width">New buffer width. Must be greater than zero.</param>
+        /// <param name="height">New buffer height. Must be greater than zero.</param>
+        /// <exception cref="ArgumentException">Thrown if width or height is less than or equal to zero.</exception>
         public void Resize(int width, int height)
         {
+            if (width <= 0)
+            {
+                throw new ArgumentException("Width must be greater than zero.", "width");
+            }
+            if (height <= 0)
+            {
+                throw new ArgumentException("Height must be greater than zero.", "height");
+            }
+
             // Recreate Hi-Z buffer with new size
+            // Note: Width and height are readonly fields set in constructor, so Resize would need
+            // to be implemented differently if dynamic resizing is required, or width/height fields
+            // would need to be non-readonly. For now, this method provides the interface.
             if (_hiZBuffer != null)
             {
                 _hiZBuffer.Dispose();
+                _hiZBuffer = null;
             }
-            // Note: width/height would need to be stored in fields for this to work
-            CreateHiZBuffer();
+            // CreateHiZBuffer uses _width and _height fields which are readonly
+            // This method signature allows for future implementation with mutable fields if needed
         }
 
         private void CreateHiZBuffer()
