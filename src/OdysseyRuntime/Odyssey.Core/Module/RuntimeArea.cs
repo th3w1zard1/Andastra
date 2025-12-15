@@ -57,6 +57,7 @@ namespace Odyssey.Core.Module
             DisplayName = string.Empty;
             Tag = string.Empty;
             Rooms = new List<RoomInfo>();
+            IsUnescapable = false; // Areas are escapable by default
         }
 
         #region IArea Implementation

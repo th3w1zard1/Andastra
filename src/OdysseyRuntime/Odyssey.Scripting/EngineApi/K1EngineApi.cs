@@ -1863,14 +1863,35 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// SetAreaUnescapable(int bUnescapable) - Sets whether the current area is escapable or not
+        /// Based on swkotor2.exe: Controls whether players can leave the area
+        /// TRUE means you can not escape the area, FALSE means you can escape the area
+        /// </summary>
         private Variable Func_SetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            int unescapable = args.Count > 0 ? args[0].AsInt() : 0;
+            bool isUnescapable = unescapable != 0;
+            
+            if (ctx.World != null && ctx.World.CurrentArea != null)
+            {
+                ctx.World.CurrentArea.IsUnescapable = isUnescapable;
+            }
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetAreaUnescapable() - Returns whether the current area is escapable or not
+        /// Based on swkotor2.exe: Returns the unescapable flag for the current area
+        /// TRUE means you can not escape the area, FALSE means you can escape the area
+        /// </summary>
         private Variable Func_GetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromInt(0);
+            if (ctx.World != null && ctx.World.CurrentArea != null)
+            {
+                return Variable.FromInt(ctx.World.CurrentArea.IsUnescapable ? 1 : 0);
+            }
+            return Variable.FromInt(0); // Default to escapable if no area
         }
 
         /// <summary>

@@ -83,6 +83,12 @@ namespace Odyssey.Core.Interfaces
         /// Projects a point onto the walkmesh.
         /// </summary>
         bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height);
+
+        /// <summary>
+        /// Gets or sets whether the area is unescapable (players cannot leave).
+        /// TRUE means the area cannot be escaped, FALSE means it can be escaped.
+        /// </summary>
+        bool IsUnescapable { get; set; }
     }
 }
 
