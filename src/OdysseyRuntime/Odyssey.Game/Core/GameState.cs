@@ -23,6 +23,16 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Paused - game is paused (in-game menu).
         /// </summary>
-        Paused
+        Paused,
+
+        /// <summary>
+        /// Save menu - player is selecting a save slot.
+        /// </summary>
+        SaveMenu,
+
+        /// <summary>
+        /// Load menu - player is selecting a save to load.
+        /// </summary>
+        LoadMenu
     }
 }

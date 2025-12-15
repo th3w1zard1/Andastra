@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -70,6 +71,13 @@ namespace Odyssey.Game.Core
 
         // Entity model rendering
         private Odyssey.MonoGame.Rendering.EntityModelRenderer _entityModelRenderer;
+
+        // Save/Load system
+        private Odyssey.Core.Save.SaveSystem _saveSystem;
+        private List<Odyssey.Core.Save.SaveGameInfo> _availableSaves;
+        private int _selectedSaveIndex = 0;
+        private bool _isSaving = false;
+        private string _newSaveName = string.Empty;
 
         // Input tracking
         private Microsoft.Xna.Framework.Input.MouseState _previousMouseState;
@@ -179,10 +187,43 @@ namespace Odyssey.Game.Core
                 _menuAnimationTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
                 UpdateMainMenu(gameTime);
             }
+            else if (_currentState == GameState.SaveMenu)
+            {
+                UpdateSaveMenu(gameTime);
+            }
+            else if (_currentState == GameState.LoadMenu)
+            {
+                UpdateLoadMenu(gameTime);
+            }
 
             // Update game systems if in game
             if (_currentState == GameState.InGame)
             {
+                // Handle save/load shortcuts
+                KeyboardState keyboardState = Keyboard.GetState();
+                if (keyboardState.IsKeyDown(Keys.F5) && !_previousKeyboardState.IsKeyDown(Keys.F5))
+                {
+                    // Quick save
+                    QuickSave();
+                }
+                if (keyboardState.IsKeyDown(Keys.F9) && !_previousKeyboardState.IsKeyDown(Keys.F9))
+                {
+                    // Quick load
+                    QuickLoad();
+                }
+                if (keyboardState.IsKeyDown(Keys.S) && keyboardState.IsKeyDown(Keys.LeftControl) && 
+                    !_previousKeyboardState.IsKeyDown(Keys.S))
+                {
+                    // Ctrl+S - Open save menu
+                    OpenSaveMenu();
+                }
+                if (keyboardState.IsKeyDown(Keys.L) && keyboardState.IsKeyDown(Keys.LeftControl) && 
+                    !_previousKeyboardState.IsKeyDown(Keys.L))
+                {
+                    // Ctrl+L - Open load menu
+                    OpenLoadMenu();
+                }
+
                 // Update game session
                 if (_session != null)
                 {
@@ -193,6 +234,8 @@ namespace Odyssey.Game.Core
                 // Update camera to follow player
                 UpdateCamera();
             }
+
+            _previousKeyboardState = Keyboard.GetState();
 
             base.Update(gameTime);
         }
@@ -956,6 +999,18 @@ namespace Odyssey.Game.Core
 
                 // Create new session
                 _session = new GameSession(updatedSettings, _world, _vm, _globals);
+
+                // Initialize save system
+                if (_world != null)
+                {
+                    string savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Odyssey", "Saves");
+                    var gameDataManager = new Odyssey.Kotor.Data.GameDataManager(_session.Installation, updatedSettings.Game);
+                    var serializer = new Odyssey.Content.Save.SaveSerializer(gameDataManager);
+                    var dataProvider = new Odyssey.Content.Save.SaveDataProvider(savesPath, serializer);
+                    _saveSystem = new Odyssey.Core.Save.SaveSystem(_world, dataProvider);
+                    _saveSystem.SetScriptGlobals(_globals);
+                    RefreshSaveList();
+                }
 
                 // Start the game session
                 _session.StartNewGame();
@@ -2368,6 +2423,350 @@ namespace Odyssey.Game.Core
                 _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
             }
         }
+
+        #region Save/Load Menu
+
+        /// <summary>
+        /// Refreshes the list of available saves.
+        /// </summary>
+        private void RefreshSaveList()
+        {
+            if (_saveSystem == null)
+            {
+                _availableSaves = new List<Odyssey.Core.Save.SaveGameInfo>();
+                return;
+            }
+
+            try
+            {
+                _availableSaves = new List<Odyssey.Core.Save.SaveGameInfo>(_saveSystem.EnumerateSaves());
+                _availableSaves.Sort((a, b) => b.SaveTime.CompareTo(a.SaveTime)); // Most recent first
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] Failed to enumerate saves: " + ex.Message);
+                _availableSaves = new List<Odyssey.Core.Save.SaveGameInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Opens the save menu.
+        /// </summary>
+        private void OpenSaveMenu()
+        {
+            if (_currentState != GameState.InGame)
+            {
+                return;
+            }
+
+            RefreshSaveList();
+            _selectedSaveIndex = 0;
+            _isSaving = true;
+            _newSaveName = string.Empty;
+            _currentState = GameState.SaveMenu;
+        }
+
+        /// <summary>
+        /// Opens the load menu.
+        /// </summary>
+        private void OpenLoadMenu()
+        {
+            if (_currentState != GameState.InGame)
+            {
+                return;
+            }
+
+            RefreshSaveList();
+            _selectedSaveIndex = 0;
+            _currentState = GameState.LoadMenu;
+        }
+
+        /// <summary>
+        /// Performs a quick save.
+        /// </summary>
+        private void QuickSave()
+        {
+            if (_saveSystem == null || _session == null)
+            {
+                return;
+            }
+
+            string quickSaveName = "QuickSave";
+            bool success = _saveSystem.Save(quickSaveName, Odyssey.Core.Save.SaveType.Quick);
+            if (success)
+            {
+                Console.WriteLine("[Odyssey] Quick save successful: " + quickSaveName);
+            }
+            else
+            {
+                Console.WriteLine("[Odyssey] Quick save failed: " + quickSaveName);
+            }
+        }
+
+        /// <summary>
+        /// Performs a quick load.
+        /// </summary>
+        private void QuickLoad()
+        {
+            if (_saveSystem == null)
+            {
+                return;
+            }
+
+            string quickSaveName = "QuickSave";
+            if (_saveSystem.SaveExists(quickSaveName))
+            {
+                LoadGame(quickSaveName);
+            }
+            else
+            {
+                Console.WriteLine("[Odyssey] No quick save found");
+            }
+        }
+
+        /// <summary>
+        /// Loads a game from a save name.
+        /// </summary>
+        private void LoadGame(string saveName)
+        {
+            if (_saveSystem == null || _session == null)
+            {
+                return;
+            }
+
+            try
+            {
+                Console.WriteLine("[Odyssey] Loading game: " + saveName);
+                bool success = _saveSystem.Load(saveName);
+                if (success)
+                {
+                    Console.WriteLine("[Odyssey] Game loaded successfully");
+                    _currentState = GameState.InGame;
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] Failed to load game: " + saveName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] Error loading game: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Updates the save menu.
+        /// </summary>
+        private void UpdateSaveMenu(GameTime gameTime)
+        {
+            KeyboardState currentKeyboard = Keyboard.GetState();
+            MouseState currentMouse = Mouse.GetState();
+
+            // Handle ESC to cancel
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
+            {
+                _currentState = GameState.InGame;
+                return;
+            }
+
+            // Navigation
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Up))
+            {
+                _selectedSaveIndex = Math.Max(0, _selectedSaveIndex - 1);
+            }
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Down))
+            {
+                _selectedSaveIndex = Math.Min(_availableSaves.Count, _selectedSaveIndex + 1);
+            }
+
+            // Selection
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Enter))
+            {
+                if (_selectedSaveIndex < _availableSaves.Count)
+                {
+                    // Overwrite existing save
+                    string saveName = _availableSaves[_selectedSaveIndex].Name;
+                    if (_saveSystem != null)
+                    {
+                        _saveSystem.Save(saveName, Odyssey.Core.Save.SaveType.Manual);
+                        RefreshSaveList();
+                        _currentState = GameState.InGame;
+                    }
+                }
+                else
+                {
+                    // New save - prompt for name (simplified: use timestamp)
+                    string newSaveName = "Save_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    if (_saveSystem != null)
+                    {
+                        _saveSystem.Save(newSaveName, Odyssey.Core.Save.SaveType.Manual);
+                        RefreshSaveList();
+                        _currentState = GameState.InGame;
+                    }
+                }
+            }
+
+            _previousKeyboardState = currentKeyboard;
+        }
+
+        /// <summary>
+        /// Updates the load menu.
+        /// </summary>
+        private void UpdateLoadMenu(GameTime gameTime)
+        {
+            KeyboardState currentKeyboard = Keyboard.GetState();
+            MouseState currentMouse = Mouse.GetState();
+
+            // Handle ESC to cancel
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
+            {
+                _currentState = GameState.InGame;
+                return;
+            }
+
+            // Navigation
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Up))
+            {
+                _selectedSaveIndex = Math.Max(0, _selectedSaveIndex - 1);
+            }
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Down))
+            {
+                _selectedSaveIndex = Math.Min(_availableSaves.Count - 1, _selectedSaveIndex + 1);
+            }
+
+            // Selection
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Enter))
+            {
+                if (_selectedSaveIndex >= 0 && _selectedSaveIndex < _availableSaves.Count)
+                {
+                    string saveName = _availableSaves[_selectedSaveIndex].Name;
+                    LoadGame(saveName);
+                }
+            }
+
+            _previousKeyboardState = currentKeyboard;
+        }
+
+        /// <summary>
+        /// Draws the save menu.
+        /// </summary>
+        private void DrawSaveMenu(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(new Color(20, 20, 30));
+
+            if (_spriteBatch == null || _font == null || _menuTexture == null)
+            {
+                return;
+            }
+
+            _spriteBatch.Begin();
+
+            int viewportWidth = GraphicsDevice.Viewport.Width;
+            int viewportHeight = GraphicsDevice.Viewport.Height;
+
+            // Title
+            string title = "Save Game";
+            Vector2 titleSize = _font.MeasureString(title);
+            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+
+            // Save list
+            int startY = 150;
+            int itemHeight = 60;
+            int itemSpacing = 10;
+            int maxVisible = Math.Min(10, (viewportHeight - startY - 100) / (itemHeight + itemSpacing));
+            int startIdx = Math.Max(0, _selectedSaveIndex - maxVisible / 2);
+            int endIdx = Math.Min(_availableSaves.Count + 1, startIdx + maxVisible);
+
+            for (int i = startIdx; i < endIdx; i++)
+            {
+                int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
+                bool isSelected = (i == _selectedSaveIndex);
+                Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
+
+                Rectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
+                _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
+
+                if (i < _availableSaves.Count)
+                {
+                    Odyssey.Core.Save.SaveGameInfo save = _availableSaves[i];
+                    string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
+                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                    _spriteBatch.DrawString(_font, saveText, textPos, Color.White);
+                }
+                else
+                {
+                    string newSaveText = "New Save";
+                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                    _spriteBatch.DrawString(_font, newSaveText, textPos, Color.LightGray);
+                }
+            }
+
+            // Instructions
+            string instructions = "Select a save slot or create a new save. Press Escape to cancel.";
+            Vector2 instSize = _font.MeasureString(instructions);
+            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            _spriteBatch.DrawString(_font, instructions, instPos, Color.LightGray);
+
+            _spriteBatch.End();
+        }
+
+        /// <summary>
+        /// Draws the load menu.
+        /// </summary>
+        private void DrawLoadMenu(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(new Color(20, 20, 30));
+
+            if (_spriteBatch == null || _font == null || _menuTexture == null)
+            {
+                return;
+            }
+
+            _spriteBatch.Begin();
+
+            int viewportWidth = GraphicsDevice.Viewport.Width;
+            int viewportHeight = GraphicsDevice.Viewport.Height;
+
+            // Title
+            string title = "Load Game";
+            Vector2 titleSize = _font.MeasureString(title);
+            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+
+            // Save list
+            int startY = 150;
+            int itemHeight = 60;
+            int itemSpacing = 10;
+            int maxVisible = Math.Min(10, (viewportHeight - startY - 100) / (itemHeight + itemSpacing));
+            int startIdx = Math.Max(0, _selectedSaveIndex - maxVisible / 2);
+            int endIdx = Math.Min(_availableSaves.Count, startIdx + maxVisible);
+
+            for (int i = startIdx; i < endIdx; i++)
+            {
+                int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
+                bool isSelected = (i == _selectedSaveIndex);
+                Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
+
+                Rectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
+                _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
+
+                Odyssey.Core.Save.SaveGameInfo save = _availableSaves[i];
+                string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
+                Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                _spriteBatch.DrawString(_font, saveText, textPos, Color.White);
+            }
+
+            // Instructions
+            string instructions = "Select a save to load. Press Escape to cancel.";
+            Vector2 instSize = _font.MeasureString(instructions);
+            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            _spriteBatch.DrawString(_font, instructions, instPos, Color.LightGray);
+
+            _spriteBatch.End();
+        }
+
+        #endregion
     }
 }
 
