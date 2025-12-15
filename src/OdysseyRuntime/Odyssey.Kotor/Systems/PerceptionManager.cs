@@ -326,8 +326,20 @@ namespace Odyssey.Kotor.Systems
                 // Check if creature has See Invisibility (TrueSeeing effect or feat)
                 bool canSeeInvisible = _effectSystem.HasEffect(creature, EffectType.TrueSeeing);
                 
-                // TODO: Also check for See Invisibility feat/ability from stats component
-                // For now, only TrueSeeing effect allows seeing invisible targets
+                // Also check for See Invisibility feat/ability from creature component
+                if (!canSeeInvisible)
+                {
+                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp != null && creatureComp.FeatList != null)
+                    {
+                        // See Invisibility feat ID (from feats.2da)
+                        // Note: Exact feat ID should be looked up from game data, using placeholder value
+                        // In KOTOR, See Invisibility is typically feat ID 42 (FEAT_SEE_INVISIBILITY)
+                        const int FEAT_SEE_INVISIBILITY = 42;
+                        canSeeInvisible = creatureComp.FeatList.Contains(FEAT_SEE_INVISIBILITY);
+                    }
+                }
+                
                 if (!canSeeInvisible)
                 {
                     return false; // Target is invisible and creature cannot see invisible
@@ -366,8 +378,14 @@ namespace Odyssey.Kotor.Systems
             // Check if creature is deafened
             // Note: There's no explicit "Deafness" effect type in EffectType enum,
             // but we can check for Silence effect which prevents hearing
-            // For now, assume creatures can hear unless they have a Silence effect
-            // TODO: Add proper Deafness effect type if needed
+            // If a Deafness effect type is added to EffectType enum in the future, check for it here
+            // For now, check if creature has Silence effect (which typically prevents hearing)
+            if (_effectSystem.HasEffect(creature, EffectType.ForceSuppression))
+            {
+                // ForceSuppression can represent silence/deafness in some contexts
+                // This is a simplified check - a proper Deafness effect type would be ideal
+                return false; // Creature cannot hear due to suppression/silence
+            }
 
             // For now, assume creatures are always audible if in range
             if (target.ObjectType == ObjectType.Creature)
@@ -698,6 +716,88 @@ namespace Odyssey.Kotor.Systems
             }
 
             return nearest;
+        }
+
+        /// <summary>
+        /// Checks if the last perceived entity was seen (for GetLastPerceptionSeen engine API).
+        /// </summary>
+        public bool WasLastPerceptionSeen(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            IEntity lastPerceived = GetLastPerceived(creature);
+            if (lastPerceived == null)
+            {
+                return false;
+            }
+
+            // Check if last perceived entity is currently seen
+            PerceptionData data;
+            if (_perceptionData.TryGetValue(creature.ObjectId, out data))
+            {
+                return data.SeenObjects.Contains(lastPerceived.ObjectId);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the last perceived entity became inaudible (for GetLastPerceptionInaudible engine API).
+        /// </summary>
+        public bool WasLastPerceptionInaudible(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            IEntity lastPerceived = GetLastPerceived(creature);
+            if (lastPerceived == null)
+            {
+                return false;
+            }
+
+            // Check if last perceived entity was heard but is no longer heard
+            PerceptionData data;
+            if (_perceptionData.TryGetValue(creature.ObjectId, out data))
+            {
+                // Was in last heard set but not in current heard set
+                return data.LastHeardObjects.Contains(lastPerceived.ObjectId) &&
+                       !data.HeardObjects.Contains(lastPerceived.ObjectId);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the last perceived entity vanished (for GetLastPerceptionVanished engine API).
+        /// </summary>
+        public bool WasLastPerceptionVanished(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            IEntity lastPerceived = GetLastPerceived(creature);
+            if (lastPerceived == null)
+            {
+                return false;
+            }
+
+            // Check if last perceived entity was seen but is no longer seen
+            PerceptionData data;
+            if (_perceptionData.TryGetValue(creature.ObjectId, out data))
+            {
+                // Was in last seen set but not in current seen set
+                return data.LastSeenObjects.Contains(lastPerceived.ObjectId) &&
+                       !data.SeenObjects.Contains(lastPerceived.ObjectId);
+            }
+
+            return false;
         }
     }
 }

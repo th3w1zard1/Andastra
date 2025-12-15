@@ -18,6 +18,9 @@ namespace HolocronToolset.NET.Editors
     {
         private IFO _ifo;
 
+        // Public property to access IFO for testing (matching Python's self.ifo)
+        public IFO Ifo => _ifo;
+
         // UI Controls - Basic Info
         private TextBox _nameEdit;
         private Button _nameEditBtn;

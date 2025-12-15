@@ -38,19 +38,121 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Should().NotBeNull();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:783-815
+        // Original: def test_ifo_editor_load_from_test_files(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
         public void TestIfoEditorLoadExistingFile()
         {
-            var editor = new IFOEditor(null, null);
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
 
-            // Create minimal IFO data (simplified for testing)
-            byte[] testData = new byte[0]; // Will be implemented when IFO format is fully supported
+            // Try to find IFO files
+            List<string> ifoFiles = new List<string>();
+            if (Directory.Exists(testFilesDir))
+            {
+                ifoFiles.AddRange(Directory.GetFiles(testFilesDir, "*.ifo", SearchOption.AllDirectories));
+            }
 
-            editor.Load("test.ifo", "test", ResourceType.IFO, testData);
+            if (ifoFiles.Count == 0)
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                if (Directory.Exists(testFilesDir))
+                {
+                    ifoFiles.AddRange(Directory.GetFiles(testFilesDir, "*.ifo", SearchOption.AllDirectories));
+                }
+            }
 
-            // Verify content loaded (will be implemented when UI is complete)
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            byte[] originalData = null;
+            string ifoFile = null;
+
+            // Try to get IFO file from test files or installation
+            if (ifoFiles.Count > 0)
+            {
+                ifoFile = ifoFiles[0];
+                originalData = System.IO.File.ReadAllBytes(ifoFile);
+            }
+            else if (installation != null)
+            {
+                // Try to get IFO from installation
+                var allResources = installation.Installation.CoreResources();
+                foreach (var resource in allResources)
+                {
+                    if (resource.ResType == ResourceType.IFO)
+                    {
+                        var resourceResult = installation.Resource(resource.ResName, ResourceType.IFO);
+                        if (resourceResult != null && resourceResult.Data != null && resourceResult.Data.Length > 0)
+                        {
+                            originalData = resourceResult.Data;
+                            ifoFile = "module.ifo";
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (originalData == null || originalData.Length == 0)
+            {
+                // Skip if no IFO files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            // Load original IFO for comparison
+            var originalGff = GFF.FromBytes(originalData);
+            var originalIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(originalGff);
+
+            // Load the IFO file
+            string resname = ifoFile != null ? System.IO.Path.GetFileNameWithoutExtension(ifoFile) : "module";
+            editor.Load(ifoFile ?? "module.ifo", resname, ResourceType.IFO, originalData);
+
+            // Verify editor loaded the data (matching Python: assert editor.ifo is not None)
+            editor.Ifo.Should().NotBeNull();
+
+            // Build and verify it works
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
+            data.Length.Should().BeGreaterThan(0);
+
+            // Verify we can read it back (matching Python: loaded_ifo = read_ifo(data))
+            var newGff = GFF.FromBytes(data);
+            var loadedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(newGff);
+            loadedIfo.Should().NotBeNull();
+
+            // Verify tag matches (matching Python: assert loaded_ifo.tag == original_ifo.tag)
+            loadedIfo.Tag.Should().Be(originalIfo.Tag);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:1060-1102
