@@ -15,10 +15,12 @@ namespace Odyssey.Core.Movement
     /// - Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
     /// - "MOVERATE" @ 0x007c3988, "WALKRATE" @ 0x007c4b78, "?WalkRate" @ 0x007c3fff
     /// - "WALKDIST" @ 0x007c5014, "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
+    /// - "RUNRATE" @ 0x007c4b84, "RUNDIST" @ 0x007c5030, "Running" @ 0x007c4de0 (run speed/distance)
     /// - "Combat Movement" @ 0x007c8670, "MOVETO" @ 0x007b6b24 (ActionMoveToLocation action)
-    /// - Movement animations: "DriveAnimWalk" @ 0x007c50bc
+    /// - Movement animations: "DriveAnimWalk" @ 0x007c50bc, "DriveAnimRun_PC" @ 0x007c50cc
     /// - GUI references: "gui_mp_walkd" @ 0x007b5e64, "gui_mp_walku" @ 0x007b5e74
     /// - "gui_mp_arwalk00-15" @ 0x007b59cc-0x007b58dc (area walk GUI elements)
+    /// - "gui_mp_arrun00-15" @ 0x007b5acc-0x007b59dc (area run GUI elements)
     /// - Movement control: "CB_DISABLEMOVE" @ 0x007d28e8, "BTN_Filter_Move" @ 0x007d2ed0
     /// - Error messages:
     ///   - "0@Force Timeout, executing a forced move to point." @ 0x007c0506
