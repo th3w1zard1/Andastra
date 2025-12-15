@@ -39,6 +39,8 @@ namespace Odyssey.Kotor.Game
         public IEntity PlayerEntity { get; set; }
         public CombatManager CombatManager { get; set; }
         public PartyManager PartyManager { get; set; }
+        public Loading.ModuleLoader ModuleLoader { get; set; }
+        public FactionManager FactionManager { get; set; }
     }
 
     /// <summary>

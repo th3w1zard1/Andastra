@@ -3649,34 +3649,13 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameServicesContext or GameSession
+                // Get FactionManager from GameServicesContext
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    // Try to get FactionManager from CombatManager (which has a reference)
-                    if (services.CombatManager != null)
+                    if (services.FactionManager != null)
                     {
-                        // CombatManager has access to FactionManager internally
-                        // For now, check if entities are in different factions or hostile
-                        // TODO: Expose FactionManager.IsHostile through CombatManager or GameServicesContext
-                    }
-                }
-                
-                // Alternative: Get from GameSession directly if available
-                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
-                {
-                    // Access FactionManager through reflection or add to GameServicesContext
-                    // For now, use a simple faction check
-                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                    
-                    if (sourceFaction != null && targetFaction != null)
-                    {
-                        // Check if different factions (simplified - would need FactionManager for proper hostility)
-                        if (sourceFaction.FactionId != targetFaction.FactionId)
-                        {
-                            // Different factions are enemies by default
-                            return Variable.FromInt(1);
-                        }
+                        bool isHostile = services.FactionManager.IsHostile(source, target);
+                        return Variable.FromInt(isHostile ? 1 : 0);
                     }
                 }
             }
