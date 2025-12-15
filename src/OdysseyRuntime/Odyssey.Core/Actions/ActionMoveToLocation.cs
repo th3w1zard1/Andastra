@@ -52,10 +52,19 @@ namespace Odyssey.Core.Actions
             // Based on swkotor2.exe: Movement pathfinding implementation
             // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
             // Walking collision checking: FUN_0054be70 @ 0x0054be70
-            // Located via string reference: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
-            // Original implementation: Uses walkmesh A* pathfinding to find path to destination
-            // Pathfinding searches walkmesh adjacency graph for valid path
-            // Walking collision function checks for creature collisions, maximum bump count (5), and total blocking
+            // Located via string references:
+            //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
+            //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
+            //   - "aborted walking, Maximum number of bumps happened" @ 0x007c0458
+            // Original implementation (from decompiled FUN_0054be70):
+            // 1. Path following: Iterates through path waypoints, checks distance to each waypoint
+            // 2. Creature collision: Checks for collisions with other creatures along path
+            // 3. Bump counter: Tracks number of creature bumps (stored at offset 0x268 in entity structure)
+            // 4. Maximum bumps: If bump count exceeds 5, aborts movement and clears path
+            // 5. Total blocking: If same creature blocks repeatedly, aborts movement
+            // 6. Position projection: Projects position to walkmesh surface using FUN_004f5070
+            // 7. Distance calculation: Uses 2D distance (X/Z plane, ignores Y) for movement calculations
+            // 8. Pathfinding searches walkmesh adjacency graph for valid path
             // If no path found, original engine attempts direct movement (may fail if blocked)
             if (_path == null)
             {
