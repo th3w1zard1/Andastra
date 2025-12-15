@@ -17,6 +17,17 @@ namespace Odyssey.MonoGame.Audio
     /// - Occlusion/obstruction
     /// - Reverb zones
     /// </summary>
+    /// <remarks>
+    /// Spatial Audio System:
+    /// - Based on swkotor2.exe audio system (modern 3D enhancement)
+    /// - Located via string references: "SoundList" @ 0x007bd080, "SoundResRef" @ 0x007b5f70, "Sound" @ 0x007bc500
+    /// - Original implementation: KOTOR uses EAX audio for 3D spatial positioning ("EAX2 room", "EAX3 room LF" @ 0x007c6010)
+    /// - Sound entities: UTS templates define sound emitters with position and properties
+    /// - Distance attenuation: Sounds fade with distance (MinDistance, MaxDistance)
+    /// - Doppler effect: Frequency shift based on relative velocity (this MonoGame implementation)
+    /// - Reverb zones: Room-based audio effects (original uses EAX room types)
+    /// - Note: Original engine used EAX audio API, this MonoGame implementation provides modern 3D audio
+    /// </remarks>
     public class SpatialAudio
     {
         /// <summary>
