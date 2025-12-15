@@ -7,8 +7,8 @@ namespace Odyssey.MonoGame.Rendering
     /// <summary>
     /// Render target pool for efficient render target reuse.
     /// 
-    /// Render target pooling reduces allocation overhead by reusing
-    /// render targets instead of creating new ones each frame.
+    /// Render target pooling reduces allocation overhead by reusing render targets
+    /// across frames, preventing GC pressure and improving performance.
     /// 
     /// Features:
     /// - Automatic render target reuse
@@ -19,34 +19,28 @@ namespace Odyssey.MonoGame.Rendering
     public class RenderTargetPool : IDisposable
     {
         /// <summary>
-        /// Pool key for render targets.
+        /// Render target pool entry.
         /// </summary>
-        private struct PoolKey
+        private class PoolEntry
         {
-            public int Width;
-            public int Height;
-            public SurfaceFormat Format;
-            public DepthFormat DepthFormat;
-            public int MultiSampleCount;
+            public RenderTarget2D RenderTarget;
+            public bool InUse;
+            public int LastUsedFrame;
         }
 
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly Dictionary<PoolKey, Stack<RenderTarget2D>> _pools;
-        private readonly List<RenderTarget2D> _allTargets;
+        private readonly Dictionary<string, List<PoolEntry>> _pools;
         private readonly object _lock;
+        private int _currentFrame;
+        private int _maxFramesToKeep;
 
         /// <summary>
-        /// Gets the total number of pooled render targets.
+        /// Gets or sets the maximum frames to keep unused render targets.
         /// </summary>
-        public int PoolSize
+        public int MaxFramesToKeep
         {
-            get
-            {
-                lock (_lock)
-                {
-                    return _allTargets.Count;
-                }
-            }
+            get { return _maxFramesToKeep; }
+            set { _maxFramesToKeep = Math.Max(1, value); }
         }
 
         /// <summary>
@@ -60,119 +54,154 @@ namespace Odyssey.MonoGame.Rendering
             }
 
             _graphicsDevice = graphicsDevice;
-            _pools = new Dictionary<PoolKey, Stack<RenderTarget2D>>();
-            _allTargets = new List<RenderTarget2D>();
+            _pools = new Dictionary<string, List<PoolEntry>>();
             _lock = new object();
+            _currentFrame = 0;
+            _maxFramesToKeep = 60; // Keep for 1 second at 60 FPS
         }
 
         /// <summary>
         /// Gets a render target from the pool or creates a new one.
         /// </summary>
-        public RenderTarget2D Get(int width, int height, SurfaceFormat format = SurfaceFormat.Color, DepthFormat depthFormat = DepthFormat.None, int multiSampleCount = 0)
+        public RenderTarget2D GetRenderTarget(int width, int height, SurfaceFormat format, DepthFormat depthFormat)
         {
-            PoolKey key = new PoolKey
-            {
-                Width = width,
-                Height = height,
-                Format = format,
-                DepthFormat = depthFormat,
-                MultiSampleCount = multiSampleCount
-            };
+            string key = CreateKey(width, height, format, depthFormat);
 
             lock (_lock)
             {
-                Stack<RenderTarget2D> pool;
-                if (_pools.TryGetValue(key, out pool) && pool.Count > 0)
+                List<PoolEntry> pool;
+                if (_pools.TryGetValue(key, out pool))
                 {
-                    return pool.Pop();
+                    // Find unused render target
+                    foreach (PoolEntry entry in pool)
+                    {
+                        if (!entry.InUse)
+                        {
+                            entry.InUse = true;
+                            entry.LastUsedFrame = _currentFrame;
+                            return entry.RenderTarget;
+                        }
+                    }
                 }
+                else
+                {
+                    pool = new List<PoolEntry>();
+                    _pools[key] = pool;
+                }
+
+                // Create new render target
+                RenderTarget2D rt = new RenderTarget2D(
+                    _graphicsDevice,
+                    width,
+                    height,
+                    false,
+                    format,
+                    depthFormat
+                );
+
+                PoolEntry newEntry = new PoolEntry
+                {
+                    RenderTarget = rt,
+                    InUse = true,
+                    LastUsedFrame = _currentFrame
+                };
+                pool.Add(newEntry);
+
+                return rt;
             }
-
-            // Create new render target
-            RenderTarget2D target = new RenderTarget2D(
-                _graphicsDevice,
-                width,
-                height,
-                false,
-                format,
-                depthFormat,
-                multiSampleCount,
-                RenderTargetUsage.DiscardContents
-            );
-
-            lock (_lock)
-            {
-                _allTargets.Add(target);
-            }
-
-            return target;
         }
 
         /// <summary>
         /// Returns a render target to the pool.
         /// </summary>
-        public void Return(RenderTarget2D target)
+        public void ReturnRenderTarget(RenderTarget2D renderTarget)
         {
-            if (target == null || target.IsDisposed)
+            if (renderTarget == null)
             {
                 return;
             }
 
-            PoolKey key = new PoolKey
-            {
-                Width = target.Width,
-                Height = target.Height,
-                Format = target.Format,
-                DepthFormat = target.DepthStencilFormat,
-                MultiSampleCount = target.MultiSampleCount
-            };
-
             lock (_lock)
             {
-                Stack<RenderTarget2D> pool;
-                if (!_pools.TryGetValue(key, out pool))
+                foreach (List<PoolEntry> pool in _pools.Values)
                 {
-                    pool = new Stack<RenderTarget2D>();
-                    _pools[key] = pool;
-                }
-
-                // Limit pool size to prevent unbounded growth
-                if (pool.Count < 4)
-                {
-                    pool.Push(target);
-                }
-                else
-                {
-                    // Dispose excess targets
-                    target.Dispose();
-                    _allTargets.Remove(target);
+                    foreach (PoolEntry entry in pool)
+                    {
+                        if (entry.RenderTarget == renderTarget)
+                        {
+                            entry.InUse = false;
+                            entry.LastUsedFrame = _currentFrame;
+                            return;
+                        }
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Clears all pooled render targets.
+        /// Advances to the next frame and cleans up old render targets.
         /// </summary>
-        public void Clear()
+        public void AdvanceFrame()
         {
+            _currentFrame++;
+
             lock (_lock)
             {
-                foreach (Stack<RenderTarget2D> pool in _pools.Values)
+                // Clean up old unused render targets
+                var keysToRemove = new List<string>();
+                foreach (var kvp in _pools)
                 {
-                    while (pool.Count > 0)
+                    List<PoolEntry> pool = kvp.Value;
+                    var entriesToRemove = new List<PoolEntry>();
+
+                    foreach (PoolEntry entry in pool)
                     {
-                        pool.Pop().Dispose();
+                        if (!entry.InUse && (_currentFrame - entry.LastUsedFrame) > _maxFramesToKeep)
+                        {
+                            entriesToRemove.Add(entry);
+                        }
+                    }
+
+                    foreach (PoolEntry entry in entriesToRemove)
+                    {
+                        entry.RenderTarget.Dispose();
+                        pool.Remove(entry);
+                    }
+
+                    if (pool.Count == 0)
+                    {
+                        keysToRemove.Add(kvp.Key);
                     }
                 }
-                _pools.Clear();
-                _allTargets.Clear();
+
+                foreach (string key in keysToRemove)
+                {
+                    _pools.Remove(key);
+                }
             }
+        }
+
+        /// <summary>
+        /// Creates a key for render target lookup.
+        /// </summary>
+        private string CreateKey(int width, int height, SurfaceFormat format, DepthFormat depthFormat)
+        {
+            return $"{width}x{height}_{format}_{depthFormat}";
         }
 
         public void Dispose()
         {
-            Clear();
+            lock (_lock)
+            {
+                foreach (List<PoolEntry> pool in _pools.Values)
+                {
+                    foreach (PoolEntry entry in pool)
+                    {
+                        entry.RenderTarget?.Dispose();
+                    }
+                }
+                _pools.Clear();
+            }
         }
     }
 }
-
