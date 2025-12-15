@@ -23,9 +23,24 @@ namespace Odyssey.Content.Save
     ///   - [module]_s.rim files
     ///
     /// Based on swkotor2.exe save serialization:
+    /// - Located via string references: "savenfo" @ 0x007be1f0 (save info file), "SAVES:" @ 0x007be284 (save directory)
+    /// - "SAVEGAME" @ 0x007be28c (save game directory), "SAVES:%06d - %s" @ 0x007be298 (save name format)
+    /// - "LoadSavegame" @ 0x007bdc90 (load save game function), "SavegameList" @ 0x007bdca0 (save game list)
+    /// - "GetSavegameList" @ 0x007bdcb0 (get save game list function), "SaveLoad" @ 0x007cb2ac (save/load system)
+    /// - "AutoSave" @ 0x007bd9e8 (auto-save flag), "AutoSaveOnEnter" @ 0x007be248 (auto-save on enter flag)
+    /// - "PCAUTOSAVE" @ 0x007be320 (PC auto-save flag), "AUTOSAVE" @ 0x007be34c (auto-save flag)
+    /// - "AUTOSAVEPARAMS" @ 0x007be304 (auto-save parameters), "REBOOTAUTOSAVE" @ 0x007cea14 (reboot auto-save)
+    /// - "QUICKSAVE" @ 0x007c7368 (quick save identifier), "Old Save Game" @ 0x007cea24 (old save game message)
+    /// - "modulesave" @ 0x007bde20 (module save reference), "Mod_IsSaveGame" @ 0x007bea48 (module is save game flag)
+    /// - "IncludeInSave" @ 0x007bde10 (include in save flag), "SaveGroup" @ 0x007bde38 (save group field)
+    /// - "DeleteSaveGroupOnEnter" @ 0x007bde54 (delete save group on enter flag), "AtSavePoints" @ 0x007bd9cc (at save points flag)
+    /// - GUI: "savename_p" @ 0x007cec48 (save name panel), "saveload_p" @ 0x007cede8 (save/load panel)
+    /// - "BTN_SAVELOAD" @ 0x007ced68 (save/load button), "BTN_SAVEGAME" @ 0x007d0dbc (save game button)
+    /// - "BTN_LASTSAVE" @ 0x007c8db0 (last save button), "CB_AUTOSAVE" @ 0x007d2918 (auto-save checkbox)
+    /// - Save directory paths: ".\saves" @ 0x007c6b0c (saves directory)
     /// - Save NFO: FUN_004eb750 @ 0x004eb750 (creates GFF with "NFO " signature, "V2.0" version)
     /// - Save archive: FUN_004eb750 @ 0x004eb750 (creates ERF with "MOD V1.0" signature @ 0x007be0d4)
-    /// - GLOBALVARS serialization: FUN_005ac670 @ 0x005ac670
+    /// - GLOBALVARS serialization: FUN_005ac670 @ 0x005ac670 (saves global variables to GFF)
     /// - PARTYTABLE serialization: FUN_0057bd70 @ 0x0057bd70 (creates GFF with "PT  " signature)
     /// </remarks>
     public class SaveSerializer : ISaveSerializer
