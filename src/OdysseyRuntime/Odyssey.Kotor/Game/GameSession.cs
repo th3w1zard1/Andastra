@@ -123,6 +123,15 @@ namespace Odyssey.Kotor.Game
         }
 
         /// <summary>
+        /// Gets the installation for resource access.
+        /// </summary>
+        [CanBeNull]
+        public Installation Installation
+        {
+            get { return _installation; }
+        }
+
+        /// <summary>
         /// Creates a new game session.
         /// </summary>
         public GameSession(GameSettings settings, World world, NcsVm vm, IScriptGlobals globals)

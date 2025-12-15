@@ -1,0 +1,291 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Systems;
+using Odyssey.Kotor.Data;
+using Odyssey.MonoGame.Converters;
+using CSharpKOTOR.Formats.MDLData;
+using CSharpKOTOR.Resources;
+using CSharpKOTOR.Installation;
+using JetBrains.Annotations;
+
+namespace Odyssey.MonoGame.Rendering
+{
+    /// <summary>
+    /// Renders entity models (creatures, doors, placeables) using MDL models.
+    /// </summary>
+    /// <remarks>
+    /// Entity Model Renderer:
+    /// - Based on swkotor2.exe entity rendering system
+    /// - Located via string references: Model loading and rendering for entities
+    /// - Original implementation: Loads MDL models for entities and renders with transforms
+    /// - Models resolved from appearance.2da, placeables.2da, genericdoors.2da
+    /// - Caches loaded models to avoid reloading
+    /// - Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (load creature model)
+    /// </remarks>
+    public class EntityModelRenderer
+    {
+        private readonly GraphicsDevice _graphicsDevice;
+        private readonly Dictionary<string, MdlToMonoGameModelConverter.ConversionResult> _modelCache;
+        private readonly Dictionary<string, BasicEffect> _materialCache;
+        private readonly GameDataManager _gameDataManager;
+        private readonly Installation _installation;
+        private readonly Func<string, BasicEffect> _materialResolver;
+
+        public EntityModelRenderer(
+            [NotNull] GraphicsDevice device,
+            [NotNull] GameDataManager gameDataManager,
+            [NotNull] Installation installation)
+        {
+            if (device == null)
+            {
+                throw new ArgumentNullException("device");
+            }
+            if (gameDataManager == null)
+            {
+                throw new ArgumentNullException("gameDataManager");
+            }
+            if (installation == null)
+            {
+                throw new ArgumentNullException("installation");
+            }
+
+            _graphicsDevice = device;
+            _gameDataManager = gameDataManager;
+            _installation = installation;
+            _modelCache = new Dictionary<string, MdlToMonoGameModelConverter.ConversionResult>(StringComparer.OrdinalIgnoreCase);
+            _materialCache = new Dictionary<string, BasicEffect>(StringComparer.OrdinalIgnoreCase);
+
+            // Material resolver: creates BasicEffect for texture names
+            _materialResolver = (textureName) =>
+            {
+                if (string.IsNullOrEmpty(textureName))
+                {
+                    return CreateDefaultEffect();
+                }
+
+                if (_materialCache.TryGetValue(textureName, out BasicEffect cached))
+                {
+                    return cached;
+                }
+
+                // Create new effect (texture loading would go here)
+                BasicEffect effect = CreateDefaultEffect();
+                _materialCache[textureName] = effect;
+                return effect;
+            };
+        }
+
+        /// <summary>
+        /// Gets or loads a model for an entity.
+        /// </summary>
+        [CanBeNull]
+        public MdlToMonoGameModelConverter.ConversionResult GetEntityModel([NotNull] IEntity entity)
+        {
+            if (entity == null)
+            {
+                throw new ArgumentNullException("entity");
+            }
+
+            // Check renderable component first
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            string modelResRef = null;
+
+            if (renderable != null && !string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                modelResRef = renderable.ModelResRef;
+            }
+            else
+            {
+                // Resolve model from appearance
+                modelResRef = ModelResolver.ResolveEntityModel(_gameDataManager, entity);
+            }
+
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return null;
+            }
+
+            // Check cache
+            if (_modelCache.TryGetValue(modelResRef, out MdlToMonoGameModelConverter.ConversionResult cached))
+            {
+                return cached;
+            }
+
+            // Load model
+            try
+            {
+                MDL mdl = LoadMDLModel(modelResRef);
+                if (mdl == null)
+                {
+                    return null;
+                }
+
+                var converter = new MdlToMonoGameModelConverter(_graphicsDevice, _materialResolver);
+                MdlToMonoGameModelConverter.ConversionResult result = converter.Convert(mdl);
+                
+                if (result != null && result.Meshes.Count > 0)
+                {
+                    _modelCache[modelResRef] = result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[EntityModelRenderer] Failed to load model " + modelResRef + ": " + ex.Message);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Renders an entity model at the given transform.
+        /// </summary>
+        public void RenderEntity(
+            [NotNull] IEntity entity,
+            Matrix viewMatrix,
+            Matrix projectionMatrix)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            if (renderable != null && !renderable.Visible)
+            {
+                return;
+            }
+
+            MdlToMonoGameModelConverter.ConversionResult model = GetEntityModel(entity);
+            if (model == null || model.Meshes.Count == 0)
+            {
+                return;
+            }
+
+            // Get entity transform
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+            if (transform == null)
+            {
+                return;
+            }
+
+            // Build world matrix from entity transform
+            // Y-up system: facing is rotation around Y axis
+            Matrix rotation = Matrix.CreateRotationY(transform.Facing);
+            Matrix translation = Matrix.CreateTranslation(
+                transform.Position.X,
+                transform.Position.Y,
+                transform.Position.Z
+            );
+            Matrix worldMatrix = rotation * translation;
+
+            // Render all meshes
+            foreach (MdlToMonoGameModelConverter.MeshData mesh in model.Meshes)
+            {
+                if (mesh.VertexBuffer == null || mesh.IndexBuffer == null)
+                {
+                    continue;
+                }
+
+                // Combine mesh transform with entity transform
+                Matrix finalWorld = mesh.WorldTransform * worldMatrix;
+
+                // Set up rendering state
+                _graphicsDevice.SetVertexBuffer(mesh.VertexBuffer);
+                _graphicsDevice.Indices = mesh.IndexBuffer;
+
+                // Use mesh effect or default
+                BasicEffect effect = mesh.Effect ?? CreateDefaultEffect();
+                effect.View = viewMatrix;
+                effect.Projection = projectionMatrix;
+                effect.World = finalWorld;
+                effect.VertexColorEnabled = false;
+                effect.TextureEnabled = true;
+                effect.LightingEnabled = true;
+
+                // Render mesh
+                foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    _graphicsDevice.DrawIndexedPrimitives(
+                        PrimitiveType.TriangleList,
+                        0,
+                        0,
+                        mesh.IndexCount / 3
+                    );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads an MDL model from the installation.
+        /// </summary>
+        [CanBeNull]
+        private MDL LoadMDLModel(string modelResRef)
+        {
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return null;
+            }
+
+            try
+            {
+                ResourceResult result = _installation.Resources.LookupResource(modelResRef, ResourceType.MDL);
+                if (result == null || result.Data == null)
+                {
+                    return null;
+                }
+
+                // Use CSharpKOTOR MDL parser
+                return MDL.FromBytes(result.Data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[EntityModelRenderer] Error loading MDL " + modelResRef + ": " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Creates a default BasicEffect for rendering.
+        /// </summary>
+        private BasicEffect CreateDefaultEffect()
+        {
+            var effect = new BasicEffect(_graphicsDevice);
+            effect.VertexColorEnabled = false;
+            effect.TextureEnabled = true;
+            effect.LightingEnabled = true;
+            effect.AmbientLightColor = new Vector3(0.3f, 0.3f, 0.3f);
+            effect.DirectionalLight0.Enabled = true;
+            effect.DirectionalLight0.Direction = new Vector3(-0.5f, -1.0f, -0.3f);
+            effect.DirectionalLight0.DiffuseColor = new Vector3(0.8f, 0.8f, 0.7f);
+            return effect;
+        }
+
+        /// <summary>
+        /// Clears the model cache.
+        /// </summary>
+        public void ClearCache()
+        {
+            foreach (MdlToMonoGameModelConverter.ConversionResult result in _modelCache.Values)
+            {
+                if (result != null && result.Meshes != null)
+                {
+                    foreach (MdlToMonoGameModelConverter.MeshData mesh in result.Meshes)
+                    {
+                        mesh.VertexBuffer?.Dispose();
+                        mesh.IndexBuffer?.Dispose();
+                    }
+                }
+            }
+            _modelCache.Clear();
+            _materialCache.Clear();
+        }
+    }
+}
+

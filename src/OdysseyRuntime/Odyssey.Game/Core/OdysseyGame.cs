@@ -68,6 +68,9 @@ namespace Odyssey.Game.Core
         private Odyssey.MonoGame.Converters.RoomMeshRenderer _roomRenderer;
         private Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData> _roomMeshes;
 
+        // Entity model rendering
+        private Odyssey.MonoGame.Rendering.EntityModelRenderer _entityModelRenderer;
+
         // Input tracking
         private Microsoft.Xna.Framework.Input.MouseState _previousMouseState;
 
@@ -146,6 +149,9 @@ namespace Odyssey.Game.Core
             // Initialize room renderer
             _roomRenderer = new Odyssey.MonoGame.Converters.RoomMeshRenderer(GraphicsDevice);
             _roomMeshes = new Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData>();
+
+            // Initialize entity model renderer (will be initialized when module loads)
+            _entityModelRenderer = null;
 
             Console.WriteLine("[Odyssey] Content loaded");
         }
@@ -1295,7 +1301,7 @@ namespace Odyssey.Game.Core
         }
 
         /// <summary>
-        /// Draws a single entity as a simple representation.
+        /// Draws a single entity using model renderer if available, otherwise as a simple box.
         /// </summary>
         private void DrawEntity(Odyssey.Core.Interfaces.IEntity entity)
         {
@@ -1310,7 +1316,22 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            // Choose color based on entity type
+            // Try to render with model renderer first
+            if (_entityModelRenderer != null)
+            {
+                try
+                {
+                    _entityModelRenderer.RenderEntity(entity, _viewMatrix, _projectionMatrix);
+                    return; // Successfully rendered with model
+                }
+                catch (Exception ex)
+                {
+                    // Fall back to box rendering if model rendering fails
+                    Console.WriteLine("[Odyssey] Model rendering failed for entity " + entity.Tag + ": " + ex.Message);
+                }
+            }
+
+            // Fallback: Draw as simple colored box
             Color entityColor = Color.Gray;
             float entityHeight = 1f;
             float entityWidth = 0.5f;
