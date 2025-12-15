@@ -11,9 +11,15 @@ namespace Odyssey.MonoGame.UI
     /// <remarks>
     /// Main Menu Rendering:
     /// - Based on swkotor2.exe main menu system
-    /// - Located via string references: Main menu UI rendering functions
+    /// - Located via string references: "MAINMENU" @ 0x007cc030, "RIMS:MAINMENU" @ 0x007b6044
+    /// - "mainmenu_p" @ 0x007cc000, "mainmenu8x6_p" @ 0x007cc00c (main menu panel GUI)
+    /// - "mainmenu01-05" @ 0x007cc108-0x007cc114 (main menu button GUI elements)
+    /// - "Action Menu" @ 0x007c8480, "CB_ACTIONMENU" @ 0x007d29d4 (action menu checkbox)
+    /// - "LBL_MENUBG" @ 0x007cbf80 (menu background label)
+    /// - "mgs_drawmain" @ 0x007cc8f0 (main menu draw function reference)
     /// - Original implementation: Renders main menu with game title and menu options
     /// - Menu options: New Game, Load Game, Options, Exit
+    /// - Main menu uses GUI system with panel files (mainmenu_p.gui)
     /// - Based on KOTOR main menu conventions from vendor/PyKotor/wiki/
     /// </remarks>
     public class MainMenu
