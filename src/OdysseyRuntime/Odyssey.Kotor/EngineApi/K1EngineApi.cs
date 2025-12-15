@@ -452,8 +452,10 @@ namespace Odyssey.Kotor.EngineApi
         private new Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // PrintString(string sString) - outputs to console/log
+            // Based on swkotor2.exe: FUN_005c4ff0 @ 0x005c4ff0
+            // Located via string reference: "PRINTSTRING: %s\n" @ 0x007c29f8
             string message = args.Count > 0 ? args[0].AsString() : "";
-            Console.WriteLine("[SCRIPT] " + message);
+            Console.WriteLine("PRINTSTRING: {0}\n", message);
             return Variable.Void();
         }
 

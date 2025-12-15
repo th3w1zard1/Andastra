@@ -105,8 +105,10 @@ namespace Odyssey.Scripting.EngineApi
         /// </remarks>
         protected Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // Based on swkotor2.exe: FUN_005c4ff0 @ 0x005c4ff0
+            // Located via string reference: "PRINTSTRING: %s\n" @ 0x007c29f8
             string msg = args.Count > 0 ? args[0].AsString() : string.Empty;
-            Console.WriteLine("[Script] " + msg);
+            Console.WriteLine("PRINTSTRING: {0}\n", msg);
             return Variable.Void();
         }
 
