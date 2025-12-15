@@ -18,9 +18,6 @@ using CSharpKOTOR.Resources;
 using CSharpKOTOR.Formats.MDL;
 using Game = Microsoft.Xna.Framework.Game;
 using Matrix = Microsoft.Xna.Framework.Matrix;
-using Vector4 = Microsoft.Xna.Framework.Vector4;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
-using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Odyssey.Game.Core

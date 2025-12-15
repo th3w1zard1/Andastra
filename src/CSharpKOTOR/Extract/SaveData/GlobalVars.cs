@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using CSharpKOTOR.Common;

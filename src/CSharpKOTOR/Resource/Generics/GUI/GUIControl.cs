@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using JetBrains.Annotations;
 

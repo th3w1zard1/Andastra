@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace CSharpKOTOR.Formats.GFF
 {
@@ -48,9 +49,9 @@ namespace CSharpKOTOR.Formats.GFF
                 case GFFFieldType.ResRef:
                     return typeof(Common.ResRef);
                 case GFFFieldType.Vector3:
-                    return typeof(Common.Vector3);
+                    return typeof(Vector3);
                 case GFFFieldType.Vector4:
-                    return typeof(Common.Vector4);
+                    return typeof(Vector4);
                 case GFFFieldType.LocalizedString:
                     return typeof(Common.LocalizedString);
                 case GFFFieldType.Struct:

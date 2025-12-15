@@ -1,0 +1,197 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Numerics;
+using System.Threading;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Common.Script;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resource.Generics;
+using CSharpKOTOR.Resources;
+using Odyssey.Content.Interfaces;
+using Odyssey.Core.Actions;
+using Odyssey.Core.Audio;
+using Odyssey.Core.Combat;
+using Odyssey.Core.Enums;
+using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Combat;
+using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Dialogue;
+using Odyssey.Kotor.Game;
+using Odyssey.Kotor.Loading;
+using Odyssey.Kotor.Systems;
+using Odyssey.Scripting.Interfaces;
+using Odyssey.Scripting.Types;
+using Odyssey.Scripting.VM;
+
+namespace Odyssey.Scripting.EngineApi
+{
+    /// <summary>
+    /// KOTOR 1 engine API implementation.
+    /// </summary>
+    /// <remarks>
+    /// Engine API (NWScript Functions):
+    /// - Based on swkotor2.exe NWScript engine API implementation
+    /// - Located via string references: Script function dispatch system handles ACTION opcodes in NCS VM
+    /// - Original implementation: NCS VM executes ACTION opcode (0x2A) with routine ID, calls engine function handlers
+    /// - Function IDs match nwscript.nss definitions (ScriptDefs.KOTOR_FUNCTIONS)
+    /// - K1 has ~850 engine functions, K2 has ~950 engine functions
+    /// - Original engine uses function dispatch table indexed by routine ID
+    /// - Function implementations must match NWScript semantics (parameter types, return types, behavior)
+    /// </remarks>
+    public class K1EngineApi : BaseEngineApi
+    {
+        private readonly NcsVm _vm;
+        
+        // Iteration state for GetFirstFactionMember/GetNextFactionMember
+        // Key: caller entity ID, Value: list of faction members and current index
+        private readonly Dictionary<uint, FactionMemberIteration> _factionMemberIterations;
+        
+        // Iteration state for GetFirstObjectInArea/GetNextObjectInArea
+        // Key: caller entity ID, Value: list of area objects and current index
+        private readonly Dictionary<uint, AreaObjectIteration> _areaObjectIterations;
+        
+        // Iteration state for GetFirstEffect/GetNextEffect
+        // Key: caller entity ID, Value: list of effects and current index
+        private readonly Dictionary<uint, EffectIteration> _effectIterations;
+
+        // Iteration state for GetFirstInPersistentObject/GetNextInPersistentObject
+        // Key: caller entity ID, Value: list of persistent objects and current index
+        private readonly Dictionary<uint, PersistentObjectIteration> _persistentObjectIterations;
+        
+        // Iteration state for GetFirstItemInInventory/GetNextItemInInventory
+        // Key: caller entity ID, Value: list of inventory items and current index
+        private readonly Dictionary<uint, InventoryItemIteration> _inventoryItemIterations;
+
+        // Track last spell target for GetSpellTargetObject
+        // Key: caster entity ID, Value: target entity ID
+        private readonly Dictionary<uint, uint> _lastSpellTargets;
+
+        // Track last equipped item for GetLastItemEquipped
+        // Key: creature entity ID, Value: item entity ID
+        private readonly Dictionary<uint, uint> _lastEquippedItems;
+
+        // Track player restriction state
+        private bool _playerRestricted;
+
+        // Track last spell cast metamagic type for GetMetaMagicFeat
+        // Key: caster entity ID, Value: metamagic feat type (METAMAGIC_* constants)
+        private readonly Dictionary<uint, int> _lastMetamagicTypes;
+
+        // Track last spell ID for GetSpellId
+        // Key: caster entity ID, Value: spell ID
+        private readonly Dictionary<uint, int> _lastSpellIds;
+
+        // Track last spell caster for GetLastSpellCaster
+        // Key: target entity ID, Value: caster entity ID
+        private readonly Dictionary<uint, uint> _lastSpellCasters;
+
+        // Track last spell target location for GetSpellTargetLocation
+        // Key: caster entity ID, Value: target location
+        private readonly Dictionary<uint, Location> _lastSpellTargetLocations;
+
+        // Track user-defined event number for GetUserDefinedEventNumber
+        private int _userDefinedEventNumber;
+
+        // Track run script variable for GetRunScriptVar
+        private Variable _runScriptVar;
+
+        public K1EngineApi()
+        {
+            _vm = new NcsVm();
+            _factionMemberIterations = new Dictionary<uint, FactionMemberIteration>();
+            _areaObjectIterations = new Dictionary<uint, AreaObjectIteration>();
+            _effectIterations = new Dictionary<uint, EffectIteration>();
+            _persistentObjectIterations = new Dictionary<uint, PersistentObjectIteration>();
+            _inventoryItemIterations = new Dictionary<uint, InventoryItemIteration>();
+            _lastSpellTargets = new Dictionary<uint, uint>();
+            _lastEquippedItems = new Dictionary<uint, uint>();
+            _lastMetamagicTypes = new Dictionary<uint, int>();
+            _lastSpellIds = new Dictionary<uint, int>();
+            _lastSpellCasters = new Dictionary<uint, uint>();
+            _lastSpellTargetLocations = new Dictionary<uint, Location>();
+            _userDefinedEventNumber = 0;
+            _runScriptVar = Variable.Void();
+            _playerRestricted = false; // Initialize player restriction state
+        }
+        
+        private class FactionMemberIteration
+        {
+            public List<IEntity> Members { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        private class AreaObjectIteration
+        {
+            public List<IEntity> Objects { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        private class EffectIteration
+        {
+            public List<Odyssey.Core.Combat.ActiveEffect> Effects { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+
+        private class PersistentObjectIteration
+        {
+            public List<IEntity> Objects { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        private class InventoryItemIteration
+        {
+            public List<IEntity> Items { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+
+        protected override void RegisterFunctions()
+        {
+            // Register function names from ScriptDefs
+            int idx = 0;
+            foreach (ScriptFunction func in ScriptDefs.KOTOR_FUNCTIONS)
+            {
+                _functionNames[idx] = func.Name;
+                idx++;
+            }
+
+            // Mark implemented functions
+            _implementedFunctions.Add(0);   // Random
+            _implementedFunctions.Add(1);   // PrintString
+            _implementedFunctions.Add(168); // GetTag
+            // Note: GetLocalInt/SetLocalInt are handled by the KOTOR-specific local variable functions
+            // which use different IDs (679-682 for boolean/number locals)
+        }
+
+        public override Variable CallEngineFunction(int routineId, IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Dispatch to the appropriate handler based on routine ID
+            // The routine IDs are in the order they appear in nwscript.nss
+            switch (routineId)
+            {
+                case 0: return Func_Random(args, ctx);
+                case 1: return Func_PrintString(args, ctx);
+                case 2: return Func_PrintFloat(args, ctx);
+                case 3: return Func_FloatToString(args, ctx);
+                case 4: return Func_PrintInteger(args, ctx);
+                case 5: return Func_PrintObject(args, ctx);
+                case 6: return Func_AssignCommand(args, ctx);
+                case 7: return Func_DelayCommand(args, ctx);
+                case 8: return Func_ExecuteScript(args, ctx);
+                case 9: return Func_ClearAllActions(args, ctx);
+                case 10: return Func_SetFacing(args, ctx);
+                case 11: return Func_SwitchPlayerCharacter(args, ctx);
+                case 12: return Func_SetTime(args, ctx);
+                case 13: return Func_SetPartyLeader(args, ctx);
+                case 14: return Func_SetAreaUnescapable(args, ctx);
+                case 15: return Func_GetAreaUnescapable(args, ctx);
+                case 16: return Func_GetTimeHour(args, ctx);
+                case 17: return Func_GetTimeMinute(args, ctx);
+                case 18: return Func_GetTimeSecond(args, ctx);
+                case 19: return Func_GetTimeMillisecond(args, ctx);
+                case 20: return Func_ActionRandomWalk(args, ctx);
+                case 21: return Func_ActionMoveToLocation(args, ctx);
+                case 22: return Func_ActionMoveToObject(args, ctx);
+                case 23: return Func_ActionMoveAwayFromObject(args, ctx);
+                case 24: return Func_GetArea(args, ctx);

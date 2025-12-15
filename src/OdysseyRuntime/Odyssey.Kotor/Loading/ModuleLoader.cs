@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
-using Vector3 = System.Numerics.Vector3;
 using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using Odyssey.Content.Interfaces;

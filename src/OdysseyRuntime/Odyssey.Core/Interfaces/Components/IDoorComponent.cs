@@ -86,6 +86,16 @@ namespace Odyssey.Core.Interfaces.Components
         string LinkedToModule { get; set; }
 
         /// <summary>
+        /// Whether this door is a module transition.
+        /// </summary>
+        bool IsModuleTransition { get; }
+
+        /// <summary>
+        /// Whether this door is an area transition.
+        /// </summary>
+        bool IsAreaTransition { get; }
+
+        /// <summary>
         /// Opens the door.
         /// </summary>
         void Open();

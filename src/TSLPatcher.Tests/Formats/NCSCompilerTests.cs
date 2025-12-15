@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;

@@ -552,7 +552,8 @@ namespace Odyssey.Core.Camera
                         direction = Vector3.Normalize(direction);
                         
                         Vector3 hitPoint;
-                        if (navMesh.Raycast(target, direction, distance, out hitPoint))
+                        int hitFace;
+                        if (navMesh.Raycast(target, direction, distance, out hitPoint, out hitFace))
                         {
                             // Collision detected - move camera closer to target
                             float safeDistance = (hitPoint - target).Length() - 0.5f; // 0.5m buffer

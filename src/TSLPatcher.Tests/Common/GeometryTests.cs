@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using FluentAssertions;
 using Xunit;

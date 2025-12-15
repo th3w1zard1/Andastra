@@ -5,9 +5,6 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
-using Vector2 = System.Numerics.Vector2;
-using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
 
 namespace CSharpKOTOR.Resource.Generics
 {
@@ -133,8 +130,8 @@ namespace CSharpKOTOR.Resource.Generics
                 store.Position = new Vector3(x, y, z);
                 float rotX = storeStruct.Acquire<float>("XOrientation", 0.0f);
                 float rotY = storeStruct.Acquire<float>("YOrientation", 0.0f);
-                var vec2 = new Vector2(rotX, rotY);
-                store.Bearing = vec2.Angle() - (float)(Math.PI / 2);
+                // Bearing is calculated as arctangent of YOrientation over XOrientation, minus 90 degrees
+                store.Bearing = (float)Math.Atan2(rotY, rotX) - (float)(Math.PI / 2);
                 git.Stores.Add(store);
             }
 
@@ -194,8 +191,8 @@ namespace CSharpKOTOR.Resource.Generics
                 }
                 else
                 {
-                    var vec2 = new Vector2(rotX, rotY);
-                    waypoint.Bearing = vec2.Angle() - (float)(Math.PI / 2);
+                    // Math.Atan2 calculates the angle in radians between the X axis and the point (rotX, rotY)
+                    waypoint.Bearing = (float)Math.Atan2(rotY, rotX) - (float)(Math.PI / 2);
                 }
                 git.Waypoints.Add(waypoint);
             }

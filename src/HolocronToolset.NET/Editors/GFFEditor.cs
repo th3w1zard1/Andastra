@@ -13,8 +13,6 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Common;
 using HolocronToolset.NET.Data;
-using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
 
 namespace HolocronToolset.NET.Editors
 {

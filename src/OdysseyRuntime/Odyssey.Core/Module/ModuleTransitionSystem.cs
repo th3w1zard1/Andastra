@@ -103,7 +103,7 @@ namespace Odyssey.Core.Module
                         if (moduleEntity == null)
                         {
                             // Create a temporary entity for module script execution
-                            moduleEntity = _world.CreateEntity(ObjectType.None, Vector3.Zero, 0f);
+                            moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
                             moduleEntity.Tag = _world.CurrentModule.ResRef;
                         }
                         _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLeave, null);

@@ -1,9 +1,47 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
 
 namespace CSharpKOTOR.Common
 {
+    /// <summary>
+    /// Extension methods for Vector3 and Vector4.
+    /// </summary>
+    public static class VectorExtensions
+    {
+        /// <summary>
+        /// Checks if a Vector3 is within a list of vectors (within epsilon distance).
+        /// </summary>
+        public static bool Within(this Vector3 vector, List<Vector3> vectors, float epsilon = 1e-6f)
+        {
+            foreach (var v in vectors)
+            {
+                if (Vector3.Distance(vector, v) < epsilon)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Computes the dot product of two vectors.
+        /// </summary>
+        public static float Dot(this Vector3 vector, Vector3 other)
+        {
+            return Vector3.Dot(vector, other);
+        }
+
+        /// <summary>
+        /// Gets the magnitude (length) of a vector.
+        /// </summary>
+        public static float Magnitude(this Vector3 vector)
+        {
+            return vector.Length();
+        }
+    }
 
     /// <summary>
     /// Extension methods for BinaryReader and BinaryWriter to handle complex game types.

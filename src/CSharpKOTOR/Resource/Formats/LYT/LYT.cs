@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
+using Quaternion = CSharpKOTOR.Common.Quaternion;
 
 namespace CSharpKOTOR.Resource.Formats.LYT
 {
@@ -130,6 +132,6 @@ namespace CSharpKOTOR.Resource.Formats.LYT
         public string Room { get; set; }
         public string Door { get; set; }
         public Vector3 Position { get; set; }
-        public Quaternion Orientation { get; set; }
+        public CSharpKOTOR.Common.Quaternion Orientation { get; set; }
     }
 }

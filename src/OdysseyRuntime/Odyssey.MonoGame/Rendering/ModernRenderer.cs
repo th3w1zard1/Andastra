@@ -7,7 +7,6 @@ using Odyssey.MonoGame.LOD;
 using Odyssey.MonoGame.Loading;
 using Odyssey.MonoGame.Memory;
 using Odyssey.Content.Interfaces;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Odyssey.MonoGame.Rendering
 {

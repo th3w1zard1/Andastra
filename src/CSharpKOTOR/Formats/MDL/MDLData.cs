@@ -809,7 +809,7 @@ namespace CSharpKOTOR.Formats.MDLData
             Name = string.Empty;
             ModelName = string.Empty;
             Position = Vector3.Zero;
-            Orientation = Vector4.Identity;
+            Orientation = new Vector4(0, 0, 0, 1);
             Children = new List<MDLNode>();
             Controllers = new List<MDLController>();
         }
