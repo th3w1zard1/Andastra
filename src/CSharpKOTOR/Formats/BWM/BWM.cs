@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
+using Vector3 = CSharpKOTOR.Common.Vector3;
 
 namespace CSharpKOTOR.Formats.BWM
 {
@@ -23,11 +24,11 @@ namespace CSharpKOTOR.Formats.BWM
             // Original: def __init__(self)
             WalkmeshType = BWMType.AreaModel;
             Faces = new List<BWMFace>();
-            Position = Vector3.FromNull();
-            RelativeHook1 = Vector3.FromNull();
-            RelativeHook2 = Vector3.FromNull();
-            AbsoluteHook1 = Vector3.FromNull();
-            AbsoluteHook2 = Vector3.FromNull();
+            Position = new Vector3(0, 0, 0);
+            RelativeHook1 = new Vector3(0, 0, 0);
+            RelativeHook2 = new Vector3(0, 0, 0);
+            AbsoluteHook1 = new Vector3(0, 0, 0);
+            AbsoluteHook2 = new Vector3(0, 0, 0);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:228-239
@@ -146,7 +147,7 @@ namespace CSharpKOTOR.Formats.BWM
             // Calculate bounding box
             Vector3 bbmin = new Vector3(100000.0f, 100000.0f, 100000.0f);
             Vector3 bbmax = new Vector3(-100000.0f, -100000.0f, -100000.0f);
-            Vector3 bbcentre = Vector3.FromNull();
+            Vector3 bbcentre = new Vector3(0, 0, 0);
             foreach (var face in faces)
             {
                 foreach (var vertex in new[] { face.V1, face.V2, face.V3 })

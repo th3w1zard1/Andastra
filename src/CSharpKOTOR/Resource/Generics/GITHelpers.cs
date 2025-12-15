@@ -1,9 +1,13 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
+using Vector2 = CSharpKOTOR.Common.Vector2;
+using Vector3 = CSharpKOTOR.Common.Vector3;
+using Vector4 = CSharpKOTOR.Common.Vector4;
 
 namespace CSharpKOTOR.Resource.Generics
 {
@@ -240,7 +244,8 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetList("Creature List", creatureList);
             foreach (var creature in git.Creatures)
             {
-                var bearing = Vector2.FromAngle(creature.Bearing + (float)(Math.PI / 2));
+                float angle = creature.Bearing + (float)(Math.PI / 2);
+                var bearing = System.Numerics.Vector2.Normalize(new System.Numerics.Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)));
                 var creatureStruct = creatureList.Add(GITCreature.GffStructId);
                 if (creature.ResRef != null && !string.IsNullOrEmpty(creature.ResRef.ToString()))
                 {
@@ -323,7 +328,8 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetList("StoreList", storeList);
             foreach (var store in git.Stores)
             {
-                var bearing = Vector2.FromAngle(store.Bearing + (float)(Math.PI / 2));
+                float angle = store.Bearing + (float)(Math.PI / 2);
+                var bearing = System.Numerics.Vector2.Normalize(new System.Numerics.Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)));
                 var storeStruct = storeList.Add(GITStore.GffStructId);
                 if (store.ResRef != null && !string.IsNullOrEmpty(store.ResRef.ToString()))
                 {
@@ -377,7 +383,8 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetList("WaypointList", waypointList);
             foreach (var waypoint in git.Waypoints)
             {
-                var bearing = Vector2.FromAngle(waypoint.Bearing + (float)(Math.PI / 2));
+                float angle = waypoint.Bearing + (float)(Math.PI / 2);
+                var bearing = System.Numerics.Vector2.Normalize(new System.Numerics.Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)));
                 var waypointStruct = waypointList.Add(GITWaypoint.GffStructId);
                 waypointStruct.SetLocString("LocalizedName", waypoint.Name);
                 waypointStruct.SetString("Tag", waypoint.Tag);

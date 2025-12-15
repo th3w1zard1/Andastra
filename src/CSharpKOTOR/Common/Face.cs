@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace CSharpKOTOR.Common
 {
@@ -26,13 +27,12 @@ namespace CSharpKOTOR.Common
             Vector3 u = V2 - V1;
             Vector3 v = V3 - V2;
 
-            Vector3 normal = Vector3.Zero;
-            normal.SetVectorCoords(
+            Vector3 normal = new Vector3(
                 (u.Y * v.Z) - (u.Z * v.Y),
                 (u.Z * v.X) - (u.X * v.Z),
                 (u.X * v.Y) - (u.Y * v.X)
             );
-            normal.Normalize();
+            normal = normal.Normalize();
 
             return normal;
         }
@@ -51,7 +51,8 @@ namespace CSharpKOTOR.Common
         // Original: def planar_distance(self) -> float
         public float PlanarDistance()
         {
-            return -1.0f * Normal().Dot(V1);
+            var normal = Normal();
+            return -1.0f * normal.Dot(V1);
         }
 
         // Matching PyKotor implementation at vendor/HoloLSP/vendor/pykotor/common/geometry.py:1150-1153

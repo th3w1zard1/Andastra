@@ -8,6 +8,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using CSharpKOTOR.Common;
+using System.Numerics;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Common;
@@ -469,11 +470,11 @@ namespace HolocronToolset.NET.Editors
                 }
                 else if (ftype == GFFFieldType.Vector3)
                 {
-                    gffStruct.SetVector3(label, value is Vector3 v3 ? v3 : Vector3.Zero);
+                    gffStruct.SetVector3(label, value is Vector3 v3 ? v3 : System.Numerics.Vector3.Zero);
                 }
                 else if (ftype == GFFFieldType.Vector4)
                 {
-                    gffStruct.SetVector4(label, value is Vector4 v4 ? v4 : Vector4.FromNull());
+                    gffStruct.SetVector4(label, value is System.Numerics.Vector4 v4 ? v4 : System.Numerics.Vector4.Zero);
                 }
                 else if (ftype == GFFFieldType.Struct && value is GFFStruct childStruct)
                 {
@@ -592,7 +593,7 @@ namespace HolocronToolset.NET.Editors
                     _textEdit.Text = item.Value?.ToString() ?? "";
                 }
             }
-            else if (item.FieldType == GFFFieldType.Vector3 && item.Value is Vector3 vec3)
+            else if (item.FieldType == GFFFieldType.Vector3 && item.Value is System.Numerics.Vector3 vec3)
             {
                 if (_xVec3Spin != null)
                 {
@@ -607,7 +608,7 @@ namespace HolocronToolset.NET.Editors
                     _zVec3Spin.Value = Convert.ToDecimal(vec3.Z);
                 }
             }
-            else if (item.FieldType == GFFFieldType.Vector4 && item.Value is Vector4 vec4)
+            else if (item.FieldType == GFFFieldType.Vector4 && item.Value is System.Numerics.Vector4 vec4)
             {
                 if (_xVec4Spin != null)
                 {
@@ -682,7 +683,7 @@ namespace HolocronToolset.NET.Editors
             {
                 if (_xVec3Spin != null && _yVec3Spin != null && _zVec3Spin != null)
                 {
-                    _selectedNode.Value = new Vector3(
+                    _selectedNode.Value = new System.Numerics.Vector3(
                         Convert.ToSingle(_xVec3Spin.Value ?? 0),
                         Convert.ToSingle(_yVec3Spin.Value ?? 0),
                         Convert.ToSingle(_zVec3Spin.Value ?? 0));
@@ -692,7 +693,7 @@ namespace HolocronToolset.NET.Editors
             {
                 if (_xVec4Spin != null && _yVec4Spin != null && _zVec4Spin != null && _wVec4Spin != null)
                 {
-                    _selectedNode.Value = new Vector4(
+                    _selectedNode.Value = new System.Numerics.Vector4(
                         Convert.ToSingle(_xVec4Spin.Value ?? 0),
                         Convert.ToSingle(_yVec4Spin.Value ?? 0),
                         Convert.ToSingle(_zVec4Spin.Value ?? 0),
