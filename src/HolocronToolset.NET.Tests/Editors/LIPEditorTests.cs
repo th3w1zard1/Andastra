@@ -48,6 +48,34 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Should().NotBeNull();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:62-85
+        // Original: def test_lip_editor_add_keyframe(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorAddKeyframe()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+
+            // Set duration first
+            editor.Duration = 10.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add keyframe
+            editor.AddKeyframe(1.0f, LIPShape.AH);
+
+            // Verify keyframe was added
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(1);
+            Math.Abs(editor.Lip.Frames[0].Time - 1.0f).Should().BeLessThan(0.001f);
+            editor.Lip.Frames[0].Shape.Should().Be(LIPShape.AH);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:669-705
         // Original: def test_lip_editor_headless_ui_load_build(qtbot: QtBot, installation: HTInstallation, test_files_dir: pathlib.Path):
         [Fact]
