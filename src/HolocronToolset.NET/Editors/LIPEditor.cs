@@ -121,5 +121,39 @@ namespace HolocronToolset.NET.Editors
             // Note: In Python, lip.length is set to duration when creating, not based on max keyframe time
             // The duration property is separate from the max keyframe time
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:328-352
+        // Original: def update_keyframe(self):
+        // Helper method for tests to update keyframes
+        public void UpdateKeyframe(int index, float time, LIPShape shape)
+        {
+            if (_lip == null || _lip.Frames.Count == 0)
+            {
+                return;
+            }
+
+            if (index >= 0 && index < _lip.Frames.Count)
+            {
+                // Remove old keyframe and add updated one
+                _lip.Remove(index);
+                _lip.Add(time, shape);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:354-367
+        // Original: def delete_keyframe(self):
+        // Helper method for tests to delete keyframes
+        public void DeleteKeyframe(int index)
+        {
+            if (_lip == null || _lip.Frames.Count == 0)
+            {
+                return;
+            }
+
+            if (index >= 0 && index < _lip.Frames.Count)
+            {
+                _lip.Remove(index);
+            }
+        }
     }
 }

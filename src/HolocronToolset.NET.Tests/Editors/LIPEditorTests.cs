@@ -123,6 +123,64 @@ namespace HolocronToolset.NET.Tests.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:120-149
+        // Original: def test_lip_editor_update_keyframe(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorUpdateKeyframe()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 10.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add keyframe
+            editor.AddKeyframe(1.0f, LIPShape.AH);
+
+            // Update keyframe (index 0)
+            editor.UpdateKeyframe(0, 1.5f, LIPShape.EE);
+
+            // Verify keyframe was updated
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(1);
+            Math.Abs(editor.Lip.Frames[0].Time - 1.5f).Should().BeLessThan(0.001f);
+            editor.Lip.Frames[0].Shape.Should().Be(LIPShape.EE);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:151-178
+        // Original: def test_lip_editor_delete_keyframe(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorDeleteKeyframe()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 10.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add keyframes
+            editor.AddKeyframe(1.0f, LIPShape.AH);
+            editor.AddKeyframe(2.0f, LIPShape.EE);
+
+            // Delete first keyframe (index 0)
+            editor.DeleteKeyframe(0);
+
+            // Verify keyframe was deleted
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(1);
+            editor.Lip.Frames[0].Shape.Should().Be(LIPShape.EE);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:669-705
         // Original: def test_lip_editor_headless_ui_load_build(qtbot: QtBot, installation: HTInstallation, test_files_dir: pathlib.Path):
         [Fact]
