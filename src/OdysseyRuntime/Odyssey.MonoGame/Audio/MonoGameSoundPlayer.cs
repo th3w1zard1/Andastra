@@ -22,7 +22,9 @@ namespace Odyssey.MonoGame.Audio
     /// <remarks>
     /// Sound Player (MonoGame Implementation):
     /// - Based on swkotor2.exe sound effect playback system
-    /// - Located via string references: "PlaySound" @ 0x007c5f70, sound effect playback
+    /// - Located via string references: "SoundResRef" @ 0x007b5f70, "SoundList" @ 0x007bd080, "Sounds" @ 0x007c1038
+    /// - "PlaySound" NWScript function, "SoundOptions" @ 0x007b5720, "DisableSound" @ 0x007b5730
+    /// - "AmbientSound" @ 0x007c4c68, "FootstepSounds" @ 0x007c4c8c, "WeaponSounds" @ 0x007c4c9c
     /// - Original implementation: KOTOR plays WAV files for sound effects (ambient, combat, UI, etc.)
     /// - Sound files: Stored as WAV resources, referenced by ResRef
     /// - Positional audio: Sounds can be played at entity positions (3D spatial audio)
@@ -45,7 +47,7 @@ namespace Odyssey.MonoGame.Audio
         /// <param name="spatialAudio">Optional spatial audio system for 3D positioning.</param>
         public MonoGameSoundPlayer(IGameResourceProvider resourceProvider, SpatialAudio spatialAudio = null)
         {
-            _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
+            _resourceProvider = resourceProvider ?? throw new ArgumentNullException(nameof(resourceProvider));
             _spatialAudio = spatialAudio;
             _playingSounds = new Dictionary<uint, SoundEffectInstance>();
             _loadedSounds = new Dictionary<uint, SoundEffect>();

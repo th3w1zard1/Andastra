@@ -11,7 +11,7 @@ namespace Odyssey.Scripting.VM
     /// <remarks>
     /// Script Globals System:
     /// - Based on swkotor2.exe script variable system
-    /// - Located via string references: Global variables stored in GLOBALVARS.res GFF file (see SaveSerializer)
+    /// - Located via string references: "GLOBALVARS" @ 0x007c27bc (save file global variables GFF)
     /// - Original implementation: Global variables persist across saves, local variables are per-entity
     /// - Global variables: Case-insensitive string keys, typed values (int, bool, string, location)
     /// - Local variables: Stored per entity (by ObjectId), accessed via GetLocalInt/SetLocalInt NWScript functions
