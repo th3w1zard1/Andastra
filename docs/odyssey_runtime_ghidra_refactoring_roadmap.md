@@ -2354,12 +2354,14 @@ When processing a file:
 - [ ] Resource\Generics\PTHHelpers.cs
   - Target: Odyssey.Engines.Odyssey.Module\PTHHelpers.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-- [ ] Resource\Generics\UTC.cs
+- [x] Resource\Generics\UTC.cs
   - Target: Odyssey.Engines.Odyssey.Templates\UTC.cs
-  - Status: [ ] Move, [ ] Update references
-- [ ] Resource\Generics\UTCHelpers.cs
+  - Status: [x] Move, [x] Update references in Odyssey.Engines.Odyssey
+  - Note: Original file kept in AuroraEngine.Common for patcher tools compatibility
+- [x] Resource\Generics\UTCHelpers.cs
   - Target: Odyssey.Engines.Odyssey.Templates\UTCHelpers.cs
-  - Status: [ ] Move, [ ] Update references
+  - Status: [x] Move, [x] Update references in Odyssey.Engines.Odyssey
+  - Note: Original file kept in AuroraEngine.Common for patcher tools compatibility
 - [ ] Resource\Generics\UTD.cs
   - Target: Odyssey.Engines.Odyssey.Templates\UTD.cs
   - Status: [ ] Move, [ ] Update references
