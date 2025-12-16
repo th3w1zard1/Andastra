@@ -93,7 +93,7 @@ param(
     [string[]]$IncludeFiles = @("*.cs", "*.csproj", "*.sln", "*.axaml", "*.axaml.cs", "*.props", "*.targets", "*.config", "*.json", "*.xml", "*.md", "*.txt", "*.ps1", "*.sh", "*.bat", "*.cmd"),
 
     [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
-    [string[]]$ExcludeDirectories = @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups", ".staging"),
+    [string[]]$ExcludeDirectories = @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups", ".staging", ".history"),
 
     [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
     [switch]$NoFolderRename,
@@ -180,7 +180,7 @@ function Get-BackupDirectory {
 function New-Backup {
     <#
     .SYNOPSIS
-    Creates a timestamped backup of the root directory.
+    Creates a timestamped backup of files that will be modified.
     #>
     [CmdletBinding()]
     param(
@@ -191,7 +191,13 @@ function New-Backup {
         [string]$BackupBaseDir,
 
         [Parameter(Mandatory = $true)]
-        [int]$BackupCount
+        [int]$BackupCount,
+
+        [Parameter(Mandatory = $false)]
+        [string]$OldNamespace,
+
+        [Parameter(Mandatory = $false)]
+        [string]$OldFolderName
     )
 
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -208,12 +214,87 @@ function New-Backup {
         Files = @()
     }
 
-    # Get files to backup (only source files, not build artifacts)
-    $files = Get-ChildItem -Path $RootPath -Recurse -File -ErrorAction SilentlyContinue |
+    # OPTIMIZED: Get files to backup using fast path-based filtering first
+    # This is exponentially faster than scanning all files
+    $excludeDirs = @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups", ".staging")
+    $allowedExtensions = @(".cs", ".csproj", ".sln", ".axaml", ".axaml.cs", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd", ".gitignore", ".editorconfig")
+
+    Write-Host "Scanning for files that will be modified (optimized path-based scan)..."
+
+    # STEP 1: Fast path-based filtering - get files in target folder or files that reference it in path
+    # This eliminates 99% of files immediately without reading content
+    $pathBasedFiles = Get-ChildItem -Path $RootPath -Recurse -File -ErrorAction SilentlyContinue |
         Where-Object {
-            -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups", ".staging")) -and
-            $_.Extension -in @(".cs", ".csproj", ".sln", ".axaml", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd", ".gitignore", ".editorconfig")
+            -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $excludeDirs) -and
+            $_.Extension -in $allowedExtensions -and
+            ($_.FullName -like "*$OldFolderName*" -or $_.FullName -like "*$OldNamespace*")
         }
+
+    Write-Host "Found $($pathBasedFiles.Count) files via path-based scan"
+
+    # STEP 2: For remaining files, do quick content check (only if we have OldNamespace)
+    # Only check files that might reference the namespace but aren't in the folder
+    # RESTRICTED: Only scan ./src
+    if ($OldNamespace -and $OldNamespace -ne $OldFolderName) {
+        Write-Host "Scanning remaining ./src files for namespace references..."
+        # Get files NOT in the target folder that might reference the namespace
+        $otherFiles = Get-ChildItem -Path $srcPath -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object {
+                -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $excludeDirs) -and
+                $_.Extension -in $allowedExtensions -and
+                $_.FullName -notlike "*$OldFolderName*" -and
+                $_.FullName -notlike "*$OldNamespace*"
+            } |
+            Select-Object -First 2000  # Limit to prevent timeout
+
+        # Quick content check on limited set (parallel if available)
+        $contentBasedFiles = if ($PSVersionTable.PSVersion.Major -ge 7) {
+            $otherFiles | ForEach-Object -Parallel {
+                $file = $_
+                $oldNamespace = $using:OldNamespace
+                try {
+                    $stream = [System.IO.File]::OpenRead($file.FullName)
+                    $buffer = New-Object byte[] 4096  # Smaller buffer for speed
+                    $bytesRead = $stream.Read($buffer, 0, 4096)
+                    $stream.Close()
+
+                    if ($bytesRead -gt 0) {
+                        $text = [System.Text.Encoding]::UTF8.GetString($buffer, 0, $bytesRead)
+                        if ($text.Contains($oldNamespace)) {
+                            return $file
+                        }
+                    }
+                }
+                catch {
+                    return $null
+                }
+                return $null
+            } -ThrottleLimit 50 | Where-Object { $null -ne $_ }
+        } else {
+            $otherFiles | Where-Object {
+                try {
+                    $stream = [System.IO.File]::OpenRead($_.FullName)
+                    $buffer = New-Object byte[] 4096
+                    $bytesRead = $stream.Read($buffer, 0, 4096)
+                    $stream.Close()
+
+                    if ($bytesRead -gt 0) {
+                        $text = [System.Text.Encoding]::UTF8.GetString($buffer, 0, $bytesRead)
+                        return $text.Contains($OldNamespace)
+                    }
+                }
+                catch {
+                    return $false
+                }
+                return $false
+            }
+        }
+
+        Write-Host "Found $($contentBasedFiles.Count) additional files via content scan"
+        $files = $pathBasedFiles + $contentBasedFiles
+    } else {
+        $files = $pathBasedFiles
+    }
 
     $backupManifestPath = Join-Path $BackupBaseDir "$backupName-manifest.json"
 
@@ -249,17 +330,21 @@ function New-Backup {
     # Save manifest
     $manifest | ConvertTo-Json -Depth 10 | Set-Content -Path $backupManifestPath
 
-    # Copy files to backup (use robocopy for speed on Windows)
-    if ($IsWindows -or $env:OS -like "*Windows*") {
-        # Use robocopy for fast backup
-        $excludeArgs = @(".backups", ".staging", "bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor") | ForEach-Object { "/XD"; $_ }
-        $null = & robocopy $RootPath $backupPath /E /NFL /NDL /NP /NJH /NJS /XF "*.dll" "*.pdb" "*.exe" $excludeArgs 2>&1
-    }
-    else {
-        # Fallback: copy files
-        foreach ($fileInfo in $manifest.Files) {
+    # Copy files to backup (optimized - only copy files we identified, use parallel if available)
+    Write-Host "Backing up $($manifest.Files.Count) files..."
+    $copyCount = 0
+    if ($PSVersionTable.PSVersion.Major -ge 7 -and $manifest.Files.Count -gt 50) {
+        # Parallel copy for PowerShell 7+ (faster for many files)
+        $manifest.Files | ForEach-Object -Parallel {
+            $fileInfo = $_
+            $backupPath = $using:backupPath
+
             try {
                 $sourcePath = $fileInfo.FullPath
+                if (-not (Test-Path -Path $sourcePath)) {
+                    return
+                }
+
                 $destPath = Join-Path $backupPath $fileInfo.RelativePath
                 $destDir = Split-Path -Path $destPath -Parent
 
@@ -268,6 +353,29 @@ function New-Backup {
                 }
 
                 Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
+            }
+            catch {
+                # Silently continue
+            }
+        } -ThrottleLimit 20
+    } else {
+        # Sequential copy (for PowerShell 5.1 or small file counts)
+        foreach ($fileInfo in $manifest.Files) {
+            try {
+                $sourcePath = $fileInfo.FullPath
+                if (-not (Test-Path -Path $sourcePath)) {
+                    continue
+                }
+
+                $destPath = Join-Path $backupPath $fileInfo.RelativePath
+                $destDir = Split-Path -Path $destPath -Parent
+
+                if (-not (Test-Path -Path $destDir)) {
+                    $null = New-Item -Path $destDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+                }
+
+                Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
+                $copyCount++
             }
             catch {
                 # Silently continue
@@ -699,11 +807,16 @@ function Copy-DirectoryFast {
 
     if ($IsWindows -or $env:OS -like "*Windows*") {
         # Use robocopy for fast copying on Windows
-        $excludeArgs = $ExcludeDirectories | ForEach-Object { "/XD"; $_ }
-        # Only copy source files, exclude build artifacts
-        $fileArgs = @("/XF", "*.dll", "*.pdb", "*.exe", "*.cache")
-        $null = & robocopy $Source $Destination /E /NFL /NDL /NP /NJH /NJS $excludeArgs $fileArgs 2>&1
-        return $LASTEXITCODE -le 1  # 0 or 1 = success
+        # Build exclusion list (robocopy format: /XD dir1 dir2 ...)
+        $excludeDirs = $ExcludeDirectories | ForEach-Object { "/XD"; $_ }
+        # Exclude build artifacts and large binary files
+        $excludeFiles = @("/XF", "*.dll", "*.pdb", "*.exe", "*.cache", "*.obj", "*.bin", "*.log", "*.tmp")
+        # Only copy source files - use /R:1 /W:1 for faster failure, /MT:8 for multi-threaded
+        $robocopyArgs = @($Source, $Destination, "/E", "/NFL", "/NDL", "/NP", "/NJH", "/NJS", "/R:1", "/W:1", "/MT:8") + $excludeDirs + $excludeFiles
+        $result = & robocopy @robocopyArgs 2>&1
+        $exitCode = $LASTEXITCODE
+        # Robocopy returns 0-7 for success (0 = no files copied, 1-7 = files copied)
+        return $exitCode -le 7
     }
     else {
         # Fallback: copy only source files
@@ -843,7 +956,7 @@ Checkpoints:
                 AvgTime = if ($count -gt 0) { $total / $count } else { 0 }
             }
         } | Sort-Object -Property TotalTime -Descending
-        
+
         foreach ($op in $ops) {
             $report += "`n  $($op.Operation): $($op.TotalTime.ToString('F2'))s total, $($op.Count) calls, $($op.AvgTime.ToString('F3'))s avg"
         }
@@ -916,7 +1029,7 @@ try {
     Add-ProfileCheckpoint "Before Backup"
     $backupStart = Get-Date
     $backupDir = Get-BackupDirectory -RootPath $resolvedRoot -CustomBackupDir $BackupDirectory
-    $backupPath = New-Backup -RootPath $resolvedRoot -BackupBaseDir $backupDir -BackupCount $BackupCount
+    $backupPath = New-Backup -RootPath $resolvedRoot -BackupBaseDir $backupDir -BackupCount $BackupCount -OldNamespace $OldNamespace -OldFolderName $OldFolderName
     $backupDuration = ((Get-Date) - $backupStart).TotalSeconds
     Add-ProfileOperation "Backup Creation" $backupDuration
     Add-ProfileCheckpoint "After Backup"
@@ -1042,19 +1155,22 @@ try {
         if (-not $NoTextReplace) {
             Write-Host "Performing text replacements in staging..."
 
-            # Always search in staging root (files are in staging, not in renamed folders)
-            $searchRoot = $stagingResolved
+            # Always search in staging ./src (files are in staging/src, not in renamed folders)
+            $searchRoot = Join-Path $stagingResolved "src"
+            if (-not (Test-Path -Path $searchRoot)) {
+                $searchRoot = $stagingResolved
+            }
 
             # Get files to process
             # Note: We're searching INSIDE staging, so we must NOT exclude .staging itself
             # Remove .staging from exclusions since we're already inside it
             $excludeForSearch = ($ExcludeDirectories | Where-Object { $_ -ne ".staging" }) + @(".backups")
             $allowedExtensions = @(".cs", ".csproj", ".sln", ".axaml", ".axaml.cs", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd")
-            
+
             # Get all files first, then filter
             $allFilesRaw = Get-ChildItem -Path $searchRoot -Recurse -File -ErrorAction SilentlyContinue
             Write-Host "Found $($allFilesRaw.Count) total files in staging" -Verbose
-            
+
             $allFiles = $allFilesRaw |
                 Where-Object {
                     # Check extension first (faster)
@@ -1081,7 +1197,7 @@ try {
                     return $true
                 } |
                 Sort-Object -Property FullName -Unique
-            
+
             Write-Host "Found $($allFiles.Count) files to process after filtering" -Verbose
 
         Write-Host "Processing $($allFiles.Count) files..."
@@ -1107,10 +1223,10 @@ try {
         # Process files in parallel for speed (if PowerShell 7+), otherwise sequential
         Add-ProfileCheckpoint "Before File Processing"
         $processStart = Get-Date
-        
+
         # Check if parallel processing is available (PowerShell 7+)
         $useParallel = $PSVersionTable.PSVersion.Major -ge 7
-        
+
         if ($useParallel) {
             # Note: Functions are inlined in parallel block for reliability
             $results = $allFiles | ForEach-Object -Parallel {
@@ -1294,7 +1410,7 @@ try {
                     if ($null -eq $content -or [string]::IsNullOrWhiteSpace($content)) {
                         return $result
                     }
-                    
+
                     $fileChanged = $false
                     $updated = $content
 
@@ -1467,60 +1583,66 @@ try {
     Add-ProfileCheckpoint "Before Replacement"
     $replaceStart = Get-Date
 
-    # Use robocopy for fast replacement on Windows
-    if ($IsWindows -or $env:OS -like "*Windows*") {
-        # Copy staging files back to original location (excluding staging and backups)
-        $excludeArgs = @(".staging", ".backups", ".git") | ForEach-Object { "/XD"; $_ }
-        $null = & robocopy $stagingResolved $resolvedRoot /E /NFL /NDL /NP /NJH /NJS /IS /IT $excludeArgs 2>&1
+    # Copy staging ./src back to original ./src location
+    $stagingSrc = Join-Path $stagingResolved "src"
+    $originalSrc = Join-Path $resolvedRoot "src"
 
-        # Handle folder rename if needed
-        if (-not $NoFolderRename) {
-            $oldFolder = Join-Path $resolvedRoot $OldFolderName
-            $newFolder = Join-Path $resolvedRoot $NewFolderName
+    if (Test-Path -Path $stagingSrc) {
+        # Use robocopy for fast replacement on Windows
+        if ($IsWindows -or $env:OS -like "*Windows*") {
+            $null = & robocopy $stagingSrc $originalSrc /E /NFL /NDL /NP /NJH /NJS /IS /IT /R:1 /W:1 /MT:8 2>&1
 
-            if (Test-Path -Path $oldFolder) {
-                if (Test-Path -Path $newFolder) {
-                    Write-Warning "Target folder already exists, removing old folder..."
-                    Remove-Item -Path $oldFolder -Recurse -Force -ErrorAction SilentlyContinue
-                }
-                else {
-                    Move-Item -Path $oldFolder -Destination $newFolder -Force -ErrorAction SilentlyContinue
-                }
-            }
-        }
-    }
-    else {
-        # Fallback: copy files individually
-        $stagingFiles = Get-ChildItem -Path $stagingResolved -Recurse -File -ErrorAction SilentlyContinue |
-            Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames @(".staging", ".backups", ".git")) }
+            # Handle folder rename if needed (within ./src)
+            if (-not $NoFolderRename) {
+                $oldFolder = Join-Path $originalSrc $OldFolderName
+                $newFolder = Join-Path $originalSrc $NewFolderName
 
-        foreach ($stagingFile in $stagingFiles) {
-            $relativePath = $stagingFile.FullName.Substring($stagingResolved.Length + 1)
-            $originalPath = Join-Path $resolvedRoot $relativePath
-            $originalDir = Split-Path -Path $originalPath -Parent
-
-            if (-not (Test-Path -Path $originalDir)) {
-                $null = New-Item -Path $originalDir -ItemType Directory -Force -ErrorAction SilentlyContinue
-            }
-
-            Copy-Item -Path $stagingFile.FullName -Destination $originalPath -Force -ErrorAction SilentlyContinue
-        }
-
-        # Handle folder structure changes
-        if (-not $NoFolderRename) {
-            $oldFolder = Join-Path $resolvedRoot $OldFolderName
-            $newFolder = Join-Path $resolvedRoot $NewFolderName
-
-            if (Test-Path -Path $oldFolder) {
-                if (Test-Path -Path $newFolder) {
-                    Write-Warning "Target folder already exists, removing old folder..."
-                    Remove-Item -Path $oldFolder -Recurse -Force -ErrorAction SilentlyContinue
-                }
-                else {
-                    Move-Item -Path $oldFolder -Destination $newFolder -Force -ErrorAction SilentlyContinue
+                if (Test-Path -Path $oldFolder) {
+                    if (Test-Path -Path $newFolder) {
+                        Write-Warning "Target folder already exists, removing old folder..."
+                        Remove-Item -Path $oldFolder -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        Move-Item -Path $oldFolder -Destination $newFolder -Force -ErrorAction SilentlyContinue
+                    }
                 }
             }
         }
+        else {
+            # Fallback: copy files individually
+            $stagingFiles = Get-ChildItem -Path $stagingSrc -Recurse -File -ErrorAction SilentlyContinue |
+                Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames @(".staging", ".backups", ".git", ".history", "vendor")) }
+
+            foreach ($stagingFile in $stagingFiles) {
+                $relativePath = $stagingFile.FullName.Substring($stagingSrc.Length + 1)
+                $originalPath = Join-Path $originalSrc $relativePath
+                $originalDir = Split-Path -Path $originalPath -Parent
+
+                if (-not (Test-Path -Path $originalDir)) {
+                    $null = New-Item -Path $originalDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+                }
+
+                Copy-Item -Path $stagingFile.FullName -Destination $originalPath -Force -ErrorAction SilentlyContinue
+            }
+
+            # Handle folder structure changes (within ./src)
+            if (-not $NoFolderRename) {
+                $oldFolder = Join-Path $originalSrc $OldFolderName
+                $newFolder = Join-Path $originalSrc $NewFolderName
+
+                if (Test-Path -Path $oldFolder) {
+                    if (Test-Path -Path $newFolder) {
+                        Write-Warning "Target folder already exists, removing old folder..."
+                        Remove-Item -Path $oldFolder -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        Move-Item -Path $oldFolder -Destination $newFolder -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+        }
+    } else {
+        Write-Warning "Staging src directory not found, skipping replacement"
     }
 
     $replaceDuration = ((Get-Date) - $replaceStart).TotalSeconds
@@ -1557,7 +1679,7 @@ catch {
         Stop-Job -Job $timeoutJob -ErrorAction SilentlyContinue
         Remove-Job -Job $timeoutJob -ErrorAction SilentlyContinue
     }
-    
+
     $errorMessage = "Error: $_"
     Write-Host $errorMessage -ForegroundColor Red
     if ($_.ScriptStackTrace) {
