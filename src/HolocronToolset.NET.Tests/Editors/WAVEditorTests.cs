@@ -704,5 +704,101 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Should().BeEmpty("Build() should return empty data after new()");
             extra.Should().BeEmpty("Build() should return empty extra data");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:263-268
+        // Original: def test_load_mp3_file(self, wav_editor, sample_mp3_data: bytes):
+        [Fact]
+        public void TestWavEditorLoadMp3File()
+        {
+            // Create minimal MP3-like data with ID3 header for testing (matching Python fixture)
+            byte[] sampleMp3Data = new byte[107];
+            System.Text.Encoding.ASCII.GetBytes("ID3").CopyTo(sampleMp3Data, 0);
+            sampleMp3Data[3] = 0x03;
+            sampleMp3Data[4] = 0x00;
+            sampleMp3Data[5] = 0x00;
+            sampleMp3Data[6] = 0x00;
+            sampleMp3Data[7] = 0x00;
+            sampleMp3Data[8] = 0x00;
+            sampleMp3Data[9] = 0x00;
+            sampleMp3Data[10] = 0xFF;
+            sampleMp3Data[11] = 0xFB;
+            sampleMp3Data[12] = 0x90;
+            sampleMp3Data[13] = 0x00;
+            // Rest is zeros (already initialized)
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:265
+            // Original: wav_editor.load(Path("test.mp3"), "test", ResourceType.MP3, sample_mp3_data)
+            editor.Load("test.mp3", "test", ResourceType.MP3, sampleMp3Data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:267-268
+            // Original: assert wav_editor._audio_data == sample_mp3_data
+            // Original: assert "MP3" in wav_editor._detected_format
+            editor.AudioData.Should().Equal(sampleMp3Data, "AudioData should match loaded MP3 data");
+            editor.DetectedFormat.Should().Contain("MP3", "DetectedFormat should contain 'MP3'");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:293-300
+        // Original: def test_load_with_bytearray(self, wav_editor, sample_wav_data: bytes):
+        [Fact]
+        public void TestWavEditorLoadWithByteArray()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:295-296
+            // Original: bytearray_data = bytearray(sample_wav_data)
+            // Original: wav_editor.load(Path("test.wav"), "test", ResourceType.WAV, bytearray_data)
+            // In C#, byte[] is already used, so we just pass the array directly (C# Load method accepts byte[])
+            editor.Load("test.wav", "test", ResourceType.WAV, sampleWavData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:299-300
+            // Original: assert isinstance(wav_editor._audio_data, bytes)
+            // Original: assert wav_editor._audio_data == sample_wav_data
+            // In C#, AudioData is already byte[], so we just verify it matches
+            editor.AudioData.Should().Equal(sampleWavData, "AudioData should match loaded WAV data");
+        }
     }
 }
