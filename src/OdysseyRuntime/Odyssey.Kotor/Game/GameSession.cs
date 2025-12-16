@@ -60,7 +60,7 @@ namespace Odyssey.Kotor.Game
         private readonly NcsVm _vm;
         private readonly IScriptGlobals _globals;
         private readonly Installation _installation;
-        private readonly ModuleLoader _moduleLoader;
+        private readonly Loading.ModuleLoader _moduleLoader;
 
         // Game systems
         private readonly TriggerSystem _triggerSystem;
@@ -159,7 +159,7 @@ namespace Odyssey.Kotor.Game
             try
             {
                 _installation = new Installation(_settings.GamePath);
-                _moduleLoader = new ModuleLoader(_installation);
+                _moduleLoader = new Loading.ModuleLoader(_installation);
             }
             catch (Exception ex)
             {
@@ -353,8 +353,7 @@ namespace Odyssey.Kotor.Game
                             {
                                 if (entity != null && entity.IsValid)
                                 {
-                                    // Set entity's World reference and register in world
-                                    entity.World = _world;
+                                    // Register entity in world (World is set during entity creation)
                                     _world.RegisterEntity(entity);
                                     
                                     // Register encounters with encounter system

@@ -80,7 +80,7 @@ namespace Odyssey.Kotor.Loading
         private uint GetObjectIdFromGit(GFFStruct gitStruct)
         {
             // Try to read ObjectId from GIT (may not always be present)
-            uint objectId = GetIntField(gitStruct, "ObjectId", 0);
+            uint objectId = (uint)GetIntField(gitStruct, "ObjectId", 0);
             if (objectId != 0 && objectId != 0x7F000000) // 0x7F000000 = OBJECT_INVALID
             {
                 return objectId;

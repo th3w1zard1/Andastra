@@ -72,7 +72,7 @@ namespace Odyssey.Core.Interfaces
         /// <summary>
         /// The world this entity belongs to.
         /// </summary>
-        IWorld World { get; }
+        IWorld World { get; set; }
 
         /// <summary>
         /// Sets arbitrary data on this entity.
