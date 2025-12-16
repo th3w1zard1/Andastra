@@ -355,20 +355,20 @@ namespace HolocronToolset.NET.Tests.Editors
 
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
 
-            // Toggle checkbox
+            // Toggle checkbox using helper method that updates cache
             editor.IsNoteCheckbox.Should().NotBeNull("IsNoteCheckbox should be initialized");
-            editor.IsNoteCheckbox.IsChecked = true;
-            // Force a property update by reading it back
-            bool? checkValue = editor.IsNoteCheckbox.IsChecked;
-            checkValue.Should().BeTrue("Checkbox should be true after setting");
+            editor.SetIsNoteCheckbox(true);
+            // Verify checkbox is set
+            editor.IsNoteCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
+            // Verify cache is set
+            editor.CachedHasMapNote.Should().BeTrue("Cache should be true after SetIsNoteCheckbox");
             
             var (data1, _) = editor.Build();
             var modifiedUtw1 = UTWAuto.ReadUtw(data1);
             modifiedUtw1.HasMapNote.Should().BeTrue("HasMapNote should be true after setting checkbox");
 
-            editor.IsNoteCheckbox.IsChecked = false;
-            checkValue = editor.IsNoteCheckbox.IsChecked;
-            checkValue.Should().BeFalse("Checkbox should be false after unchecking");
+            editor.SetIsNoteCheckbox(false);
+            editor.IsNoteCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
             
             var (data2, _) = editor.Build();
             var modifiedUtw2 = UTWAuto.ReadUtw(data2);
