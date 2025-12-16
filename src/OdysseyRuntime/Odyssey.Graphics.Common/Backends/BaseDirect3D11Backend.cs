@@ -7,10 +7,10 @@ namespace Odyssey.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for DirectX 11 backend implementations.
-    /// 
+    ///
     /// Provides shared D3D11 logic that can be inherited by both
     /// MonoGame and Stride implementations.
-    /// 
+    ///
     /// Features:
     /// - DirectX 11 rendering (Windows 7+)
     /// - Shader Model 5.0/5.1 support
@@ -18,7 +18,7 @@ namespace Odyssey.Graphics.Common.Backends
     /// - Tessellation (hull and domain shaders)
     /// - Multi-threaded resource creation
     /// - Feature level fallback (11_1, 11_0, 10_1, 10_0)
-    /// 
+    ///
     /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/direct3d11/
     /// </summary>
     public abstract class BaseDirect3D11Backend : BaseGraphicsBackend, IComputeBackend
@@ -168,11 +168,11 @@ namespace Odyssey.Graphics.Common.Backends
         /// Draws instanced geometry.
         /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-drawindexedinstanced
         /// </summary>
-        public virtual void DrawIndexedInstanced(int indexCountPerInstance, int instanceCount, 
+        public virtual void DrawIndexedInstanced(int indexCountPerInstance, int instanceCount,
             int startIndexLocation, int baseVertexLocation, int startInstanceLocation)
         {
             if (!_initialized) return;
-            OnDrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, 
+            OnDrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation,
                 baseVertexLocation, startInstanceLocation);
             TrackDrawCall((indexCountPerInstance / 3) * instanceCount);
         }
@@ -188,7 +188,7 @@ namespace Odyssey.Graphics.Common.Backends
         protected abstract void OnDrawIndexed(int indexCount, int startIndexLocation, int baseVertexLocation);
         protected abstract void OnDrawIndexedInstanced(int indexCountPerInstance, int instanceCount,
             int startIndexLocation, int baseVertexLocation, int startInstanceLocation);
-        protected abstract ResourceInfo CreateStructuredBufferInternal(int elementCount, int elementStride, 
+        protected abstract ResourceInfo CreateStructuredBufferInternal(int elementCount, int elementStride,
             bool cpuWritable, IntPtr handle);
 
         #endregion

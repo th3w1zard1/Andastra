@@ -10,7 +10,7 @@ namespace Odyssey.Graphics.Common.Backends
     /// <summary>
     /// Abstract base class for graphics backends.
     /// Contains shared implementation logic for DirectX 9/10/11/12, Vulkan, OpenGL, Metal.
-    /// 
+    ///
     /// Derived classes (MonoGame, Stride) implement only the platform-specific portions.
     /// </summary>
     public abstract class BaseGraphicsBackend : ILowLevelBackend

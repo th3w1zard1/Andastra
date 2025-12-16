@@ -105,7 +105,11 @@ namespace AuroraEngine.Common.Formats.NCS
             }
 
             // Validate size field
-            int actualFileSize = _reader.Size;
+            // CRITICAL: Use TrueSize() to get the actual file size, not Size which may be constrained
+            // This ensures we can read all instructions even if the size field is incorrect
+            int actualFileSize = _reader.TrueSize();
+            int readerSize = _reader.Size;
+            Console.WriteLine($"DEBUG NCSBinaryReader: TrueSize()={actualFileSize}, Size={readerSize}, totalSize={totalSize}");
             if (totalSize > actualFileSize)
             {
                 throw new InvalidDataException(
@@ -127,16 +131,17 @@ namespace AuroraEngine.Common.Formats.NCS
             int codeEndPosition = (int)totalSize;
 
             // CRITICAL: Some NCS files have incorrect size fields that are smaller than the actual file size
-            // This causes instructions to be missed. We should read to the actual file size if it's larger
-            // than the size field, but only if the size field is significantly smaller (more than header size difference)
-            // This matches behavior needed for roundtrip tests where external compiler may write incorrect size fields
+            // This causes instructions to be missed. We should ALWAYS read to the actual file size if it's larger
+            // than the size field, regardless of the difference. This matches behavior needed for roundtrip tests
+            // where external compiler may write incorrect size fields.
+            // The size field is just a hint - the actual file size is authoritative.
             Console.WriteLine($"DEBUG NCSBinaryReader: Size field={codeEndPosition}, actualFileSize={actualFileSize}, difference={actualFileSize - codeEndPosition}, headerSize={NCS_HEADER_SIZE}");
             int safeEndPosition = codeEndPosition;
-            if (actualFileSize > codeEndPosition && (actualFileSize - codeEndPosition) > NCS_HEADER_SIZE)
+            if (actualFileSize > codeEndPosition)
             {
-                // Size field is significantly smaller than actual file - use actual file size
+                // Size field is smaller than actual file - use actual file size
                 // This handles cases where external compiler writes incorrect size fields
-                Console.WriteLine($"DEBUG NCSBinaryReader: Size field ({codeEndPosition}) is smaller than actual file size ({actualFileSize}), using actual file size");
+                Console.WriteLine($"DEBUG NCSBinaryReader: Size field ({codeEndPosition}) is smaller than actual file size ({actualFileSize}), using actual file size to read all instructions");
                 safeEndPosition = actualFileSize;
             }
             else

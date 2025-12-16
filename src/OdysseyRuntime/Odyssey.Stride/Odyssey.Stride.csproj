@@ -2,31 +2,33 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>7.3</LangVersion>
-    <Nullable>disable</Nullable>
-    <OutputType>Library</OutputType>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Odyssey.Stride</RootNamespace>
     <AssemblyName>Odyssey.Stride</AssemblyName>
-    <Description>Stride 3D engine adapters for Odyssey Engine - cross-platform rendering with support for textures, models, and UI.</Description>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>Stride game engine backend for Odyssey Runtime</Description>
+    <Authors>HoloPatcher Team</Authors>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
-    <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="Stride.Engine" Version="4.3.0.2605" />
+    <PackageReference Include="Stride.Audio" Version="4.3.0.2605" />
+    <PackageReference Include="Stride.Graphics" Version="4.3.0.2605" />
+    <PackageReference Include="Stride.Input" Version="4.3.0.2605" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-    <!-- Stride 3D engine packages -->
-    <PackageReference Include="Stride.Core" Version="4.2.0.2371" />
-    <PackageReference Include="Stride.Engine" Version="4.2.0.2371" />
-    <PackageReference Include="Stride.Graphics" Version="4.2.0.2371" />
-    <PackageReference Include="Stride.Input" Version="4.2.0.2371" />
-    <PackageReference Include="Stride.UI" Version="4.2.0.2371" />
+    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
+    <ProjectReference Include="..\Odyssey.Graphics.Common\Odyssey.Graphics.Common.csproj" />
+    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
   </ItemGroup>
 
 </Project>

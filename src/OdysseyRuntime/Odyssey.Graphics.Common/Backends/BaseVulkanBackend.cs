@@ -7,10 +7,10 @@ namespace Odyssey.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for Vulkan backend implementations.
-    /// 
+    ///
     /// Provides shared Vulkan logic that can be inherited by both
     /// MonoGame and Stride implementations.
-    /// 
+    ///
     /// Features:
     /// - Vulkan 1.2+ rendering
     /// - VK_KHR_ray_tracing_pipeline support
@@ -19,7 +19,7 @@ namespace Odyssey.Graphics.Common.Backends
     /// - Async compute and transfer queues
     /// - Bindless resources (VK_EXT_descriptor_indexing)
     /// - Dynamic rendering (VK_KHR_dynamic_rendering)
-    /// 
+    ///
     /// Based on Vulkan API: https://www.khronos.org/vulkan/
     /// </summary>
     public abstract class BaseVulkanBackend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend

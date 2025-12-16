@@ -1,15 +1,22 @@
-// DEPRECATED: This file is kept for backward compatibility with patcher tools
-// The UTC class has been moved to Odyssey.Engines.Odyssey.Templates.UTC
-// This file provides a type alias to maintain compatibility
-using UTC = Odyssey.Engines.Odyssey.Templates.UTC;
-using UTCClass = Odyssey.Engines.Odyssey.Templates.UTCClass;
+using System.Collections.Generic;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
+using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace Odyssey.Engines.Odyssey.Templates
 {
-    // DEPRECATED: This namespace is kept for backward compatibility
-    // The UTC class has been moved to Odyssey.Engines.Odyssey.Templates.UTC
-    // Patcher tools can continue using AuroraEngine.Common.Resource.Generics.UTC, which is now an alias
-    // Future: Update patcher tools to use Odyssey.Engines.Odyssey.Templates.UTC directly
+    // Moved from AuroraEngine.Common.Resource.Generics.UTC to Odyssey.Engines.Odyssey.Templates
+    // This is KOTOR/Odyssey-specific GFF template structure
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
+    /// <summary>
+    /// Stores creature data.
+    ///
+    /// UTC files are GFF-based format files that store creature definitions including
+    /// stats, appearance, inventory, feats, and script hooks.
+    /// </summary>
+    [PublicAPI]
+    public sealed class UTC
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
         // Original: BINARY_TYPE = ResourceType.UTC
@@ -151,3 +158,4 @@ namespace AuroraEngine.Common.Resource.Generics
         }
     }
 }
+
