@@ -40,11 +40,11 @@ namespace Odyssey.Graphics
             {
                 case GraphicsBackendType.MonoGame:
                     assemblyName = "Odyssey.MonoGame";
-                    typeName = "Odyssey.MonoGame.MonoGameGraphicsBackend";
+                    typeName = "Odyssey.MonoGame.Graphics.MonoGameGraphicsBackend";
                     break;
                 case GraphicsBackendType.Stride:
                     assemblyName = "Odyssey.Stride";
-                    typeName = "Odyssey.Stride.StrideGraphicsBackend";
+                    typeName = "Odyssey.Stride.Graphics.StrideGraphicsBackend";
                     break;
                 default:
                     throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));

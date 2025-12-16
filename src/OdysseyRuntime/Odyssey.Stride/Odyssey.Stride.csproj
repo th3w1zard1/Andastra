@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Odyssey.Stride</RootNamespace>
+    <AssemblyName>Odyssey.Stride</AssemblyName>
+    <Description>Stride 3D engine adapters for Odyssey Engine - cross-platform rendering with support for textures, models, and UI.</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
+    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
+    <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <!-- Stride 3D engine packages -->
+    <PackageReference Include="Stride.Core" Version="4.2.0.2345" />
+    <PackageReference Include="Stride.Engine" Version="4.2.0.2345" />
+    <PackageReference Include="Stride.Graphics" Version="4.2.0.2345" />
+    <PackageReference Include="Stride.Input" Version="4.2.0.2345" />
+    <PackageReference Include="Stride.UI" Version="4.2.0.2345" />
+  </ItemGroup>
+
+</Project>
+
