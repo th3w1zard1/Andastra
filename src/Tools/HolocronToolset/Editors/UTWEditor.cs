@@ -423,12 +423,16 @@ namespace HolocronToolset.Editors
                 
                 // Use checkbox/cache value to update UTW
                 // Always use the cache value if available (it's the source of truth)
+                // CRITICAL: The cache is the authoritative source - always use it if it has a value
                 if (checkboxValue.HasValue)
                 {
                     // Always use checkbox/cache value to update UTW
                     // The cache is the source of truth (updated by SetNoteEnabledCheckbox or PropertyChanged)
                     // Force update UTW even if it's already set (ensures consistency)
                     // This ensures the UTW value matches the cache value exactly
+                    // IMPORTANT: Set the value directly on the UTW object to ensure it's serialized correctly
+                    // CRITICAL: The cache value MUST be used - it's the authoritative source for headless tests
+                    // If cache is true, UTW MUST be true (regardless of what checkbox reads)
                     _utw.MapNoteEnabled = checkboxValue.Value;
                 }
                 else
