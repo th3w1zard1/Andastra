@@ -333,13 +333,24 @@ namespace AuroraEngine.Common.Formats.NCS
                 {
                     // Unknown bytecode/qualifier combination - the bytecode exists but this specific
                     // combination with the qualifier is not recognized
-                    string msg =
-                        $"Unknown NCS instruction type combination: " +
-                        $"bytecode=0x{byteCodeValue:X2} ({byteCode}), " +
-                        $"qualifier=0x{qualifier:X2} at offset {instructionOffset}.\n" +
-                        "  The bytecode is recognized but this qualifier combination is not supported.";
+                    // CRITICAL: For ACTION bytecode, we should always return ACTION type regardless of qualifier
+                    // This handles ACTION instructions with non-zero qualifiers (e.g., 0x01, 0x19)
+                    if (byteCode == NCSByteCode.ACTION)
+                    {
+                        Console.WriteLine($"DEBUG NCSBinaryReader: ArgumentException for ACTION bytecode at offset {instructionOffset} with qualifier 0x{qualifier:X2}, forcing ACTION type");
+                        Console.Error.WriteLine($"DEBUG NCSBinaryReader: ArgumentException for ACTION bytecode at offset {instructionOffset} with qualifier 0x{qualifier:X2}, forcing ACTION type");
+                        instruction.InsType = NCSInstructionType.ACTION;
+                    }
+                    else
+                    {
+                        string msg =
+                            $"Unknown NCS instruction type combination: " +
+                            $"bytecode=0x{byteCodeValue:X2} ({byteCode}), " +
+                            $"qualifier=0x{qualifier:X2} at offset {instructionOffset}.\n" +
+                            "  The bytecode is recognized but this qualifier combination is not supported.";
 
-                    throw new InvalidDataException(msg, e);
+                        throw new InvalidDataException(msg, e);
+                    }
                 }
             }
 
