@@ -151,7 +151,9 @@ namespace Odyssey.Core.Actions
             // Fire OnPhysicalAttacked script event on target (fires regardless of hit/miss)
             // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
             // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c
+            // "ScriptAttacked" @ 0x007bee80 (script ResRef field in creature template)
             // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target when attacked
+            // ScriptAttacked script is loaded from creature template and executed when attack occurs
             IEventBus eventBus = attacker.World.EventBus;
             if (eventBus != null)
             {
@@ -182,6 +184,8 @@ namespace Odyssey.Core.Actions
                 // Fire OnDamaged script event on target
                 // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70
+                // ScriptDamaged script is loaded from creature template and executed when damage is dealt
+                // FUN_005226d0 @ 0x005226d0 saves ScriptDamaged field, FUN_0050c510 @ 0x0050c510 loads ScriptDamaged field
                 if (eventBus != null)
                 {
                     eventBus.FireScriptEvent(target, ScriptEvent.OnDamaged, attacker);

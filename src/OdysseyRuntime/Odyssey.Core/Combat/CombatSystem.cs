@@ -45,15 +45,19 @@ namespace Odyssey.Core.Combat
     /// - "CSWSCombatRound::IncrementTimer - %s Master IS found (%x) and round has expired (%d %d); Resetting" @ 0x007bfc28
     /// - "CSWSCombatRound::IncrementTimer - %s Master cannot be found and round has expired; Resetting" @ 0x007bfc90
     /// - "CSWSCombatRound::DecrementPauseTimer - %s Master cannot be found expire the round; Resetting" @ 0x007bfcf0
-    /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management), FUN_005fb0f0 @ 0x005fb0f0 (load CombatRoundData from GFF)
+    /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (creature save, saves CombatRoundData if active), FUN_00529470 @ 0x00529470 (save CombatRoundData to GFF)
+    /// - FUN_005fb0f0 @ 0x005fb0f0 (load creature template, references CombatRoundData)
     /// - Original implementation: 3-second combat rounds with timer-based attack scheduling
     /// - Round timer: Increments each frame, expires after RoundDuration (3.0 seconds)
-    /// - Master/Slave: Combat encounters have master entity that controls round timing
+    /// - Master/Slave: Combat encounters have master entity that controls round timing (MasterID field in CombatRoundData)
     /// - Timer validation: Original engine checks for negative timers and resets if invalid
     /// - Master tracking: If master entity is not found, round is reset
-    /// - D20 attack roll + attack bonus vs defense
-    /// - Critical hits on natural 20 (threatened), confirm with second roll
+    /// - CombatRoundData fields: RoundStarted (byte), Timer (float), RoundLength (float), MasterID (int32), RoundPaused (byte), RoundPausedBy (int32), PauseTimer (float), CurrentAttack (byte), AttackID (uint16), AttackList (5 entries), SpecAttackList, SchedActionList
+    /// - D20 attack roll + attack bonus vs defense (ArmorClass)
+    /// - Natural 20 always hits (critical threat), natural 1 always misses
+    /// - Critical hits on natural 20 (threatened), confirm with second roll vs defense
     /// - Damage = weapon damage + modifiers - damage reduction
+    /// - Script hooks: "ScriptAttacked" @ 0x007bee80 fires on attack, "ScriptDamaged" @ 0x007bee70 fires on damage
     /// - Effects have duration in rounds or permanent
     /// 
     /// Combat Round Phases:
