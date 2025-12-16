@@ -106,6 +106,29 @@ namespace Odyssey.Stride.Graphics
             // Stride handles presentation automatically
         }
 
+        public IRoomMeshRenderer CreateRoomMeshRenderer()
+        {
+            if (!_isInitialized || _graphicsDevice == null)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+            return new StrideRoomMeshRenderer(_game.GraphicsDevice);
+        }
+
+        public IEntityModelRenderer CreateEntityModelRenderer(object gameDataManager = null, object installation = null)
+        {
+            if (!_isInitialized || _graphicsDevice == null)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+            return new StrideEntityModelRenderer(_game.GraphicsDevice, gameDataManager, installation);
+        }
+
+        public ISpatialAudio CreateSpatialAudio()
+        {
+            return new StrideSpatialAudio();
+        }
+
         public void Dispose()
         {
             if (_graphicsDevice != null)

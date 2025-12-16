@@ -113,6 +113,29 @@ namespace Odyssey.MonoGame.Graphics
             // MonoGame handles presentation automatically in Game.Tick()
         }
 
+        public IRoomMeshRenderer CreateRoomMeshRenderer()
+        {
+            if (!_isInitialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+            return new MonoGameRoomMeshRenderer(_game.GraphicsDevice);
+        }
+
+        public IEntityModelRenderer CreateEntityModelRenderer(object gameDataManager = null, object installation = null)
+        {
+            if (!_isInitialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+            return new MonoGameEntityModelRenderer(_game.GraphicsDevice, gameDataManager, installation);
+        }
+
+        public ISpatialAudio CreateSpatialAudio()
+        {
+            return new MonoGameSpatialAudio();
+        }
+
         public void Dispose()
         {
             if (_graphicsDevice != null)

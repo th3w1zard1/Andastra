@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.MDL;
 using AuroraEngine.Common.Installation;
@@ -15,7 +16,6 @@ using Odyssey.Kotor.EngineApi;
 using Odyssey.Kotor.Game;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.VM;
-using JetBrains.Annotations;
 using Color = Odyssey.Graphics.Color;
 using Rectangle = Odyssey.Graphics.Rectangle;
 using Vector2 = Odyssey.Graphics.Vector2;
@@ -81,12 +81,12 @@ namespace Odyssey.Game.Core
         private System.Numerics.Matrix4x4 _projectionMatrix;
         private float _cameraAngle = 0f;
 
-        // Room rendering
-        private Odyssey.MonoGame.Converters.RoomMeshRenderer _roomRenderer;
-        private Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData> _roomMeshes;
+        // Room rendering (using abstraction layer)
+        private IRoomMeshRenderer _roomRenderer;
+        private Dictionary<string, IRoomMeshData> _roomMeshes;
 
-        // Entity model rendering
-        private Odyssey.MonoGame.Rendering.EntityModelRenderer _entityModelRenderer;
+        // Entity model rendering (using abstraction layer)
+        private IEntityModelRenderer _entityModelRenderer;
 
         // Save/Load system
         private Odyssey.Core.Save.SaveSystem _saveSystem;
@@ -168,13 +168,12 @@ namespace Odyssey.Game.Core
             // Initialize game rendering
             InitializeGameRendering();
 
-            // Initialize room renderer
-            // TODO: RoomMeshRenderer needs to be abstracted or work with IGraphicsDevice
-            // For now, this will need MonoGame-specific implementation
-            // _roomRenderer = new Odyssey.MonoGame.Converters.RoomMeshRenderer(_graphicsDevice);
-            _roomMeshes = new Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData>();
+            // Initialize room renderer using abstraction layer
+            _roomRenderer = _graphicsBackend.CreateRoomMeshRenderer();
+            _roomMeshes = new Dictionary<string, IRoomMeshData>();
 
-            // Initialize entity model renderer (will be initialized when module loads)
+            // Initialize entity model renderer using abstraction layer
+            // Will be created when module loads with proper dependencies
             _entityModelRenderer = null;
 
             Console.WriteLine("[Odyssey] Content loaded");
@@ -1247,15 +1246,16 @@ namespace Odyssey.Game.Core
 
         private void DrawAreaRooms(Odyssey.Core.Module.RuntimeArea area)
         {
-            // TODO: 3D room rendering needs abstraction (BasicEffect, RoomMeshRenderer)
-            // For now, room rendering is disabled until 3D abstraction is complete
+            // Room rendering using abstraction layer
             if (area.Rooms == null || area.Rooms.Count == 0)
             {
                 return;
             }
 
-            // Room rendering disabled - needs 3D abstraction
-            return;
+            if (_roomRenderer == null)
+            {
+                return; // Room renderer not initialized
+            }
 
             // Determine which room the player is in for VIS culling
             int currentRoomIndex = -1;
@@ -1278,8 +1278,8 @@ namespace Odyssey.Game.Core
                     continue;
                 }
 
-                // Get or load room mesh
-                Odyssey.MonoGame.Converters.RoomMeshData meshData;
+                // Get or load room mesh using abstraction layer
+                IRoomMeshData meshData;
                 if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
                 {
                     // Try to load actual MDL model from module resources
@@ -1308,13 +1308,13 @@ namespace Odyssey.Game.Core
                     continue; // Need at least one triangle
                 }
 
-                // Set up transform
-                var roomPos = new Vector3(room.Position.X, room.Position.Y, room.Position.Z);
-                var roomWorld = Matrix.CreateTranslation(roomPos);
+                // Set up transform using abstraction layer
+                var roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
+                var roomWorld = MatrixHelper.CreateTranslation(roomPos);
 
-                // Set up rendering state
-                GraphicsDevice.SetVertexBuffer(meshData.VertexBuffer);
-                GraphicsDevice.Indices = meshData.IndexBuffer;
+                // Set up rendering state using abstraction layer
+                _graphicsDevice.SetVertexBuffer(meshData.VertexBuffer);
+                _graphicsDevice.SetIndexBuffer(meshData.IndexBuffer);
 
                 _basicEffect.View = _viewMatrix;
                 _basicEffect.Projection = _projectionMatrix;
@@ -1322,13 +1322,15 @@ namespace Odyssey.Game.Core
                 _basicEffect.VertexColorEnabled = true;
                 _basicEffect.LightingEnabled = true; // Ensure lighting is enabled
 
-                // Draw the mesh
-                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                // Draw the mesh using abstraction layer
+                foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    GraphicsDevice.DrawIndexedPrimitives(
+                    _graphicsDevice.DrawIndexedPrimitives(
                         PrimitiveType.TriangleList,
                         0,
+                        0,
+                        meshData.IndexCount,
                         0,
                         meshData.IndexCount / 3 // Number of triangles
                     );
@@ -1357,9 +1359,7 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void DrawEntity(Odyssey.Core.Interfaces.IEntity entity)
         {
-            // TODO: 3D entity rendering needs abstraction
-            // For now, entity rendering is disabled until 3D abstraction is complete
-            return;
+            // Entity rendering using abstraction layer
 
             Kotor.Components.TransformComponent transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
@@ -1416,23 +1416,23 @@ namespace Odyssey.Game.Core
                     break;
             }
 
-            var entityPos = new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
-            var entityWorld = Matrix.CreateTranslation(entityPos);
+            var entityPos = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+            var entityWorld = MatrixHelper.CreateTranslation(entityPos);
 
-            // Create a simple box for the entity
+            // Create a simple box for the entity using abstraction layer
             float hw = entityWidth * 0.5f;
             var entityVertices = new VertexPositionColor[]
             {
                 // Bottom face
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, -hw, 0), entityColor),
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, -hw, 0), entityColor),
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, hw, 0), entityColor),
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, hw, 0), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(-hw, -hw, 0), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(hw, -hw, 0), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(hw, hw, 0), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(-hw, hw, 0), entityColor),
                 // Top face
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, -hw, entityHeight), entityColor),
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, -hw, entityHeight), entityColor),
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, hw, entityHeight), entityColor),
-                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, hw, entityHeight), entityColor)
+                new VertexPositionColor(new System.Numerics.Vector3(-hw, -hw, entityHeight), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(hw, -hw, entityHeight), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(hw, hw, entityHeight), entityColor),
+                new VertexPositionColor(new System.Numerics.Vector3(-hw, hw, entityHeight), entityColor)
             };
 
             short[] entityIndices = new short[]
@@ -1448,31 +1448,36 @@ namespace Odyssey.Game.Core
                 3, 7, 4, 3, 4, 0
             };
 
-            // Create temporary buffers for entity
-            using (var entityVb = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), entityVertices.Length, BufferUsage.WriteOnly))
-            using (var entityIb = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, entityIndices.Length, BufferUsage.WriteOnly))
+            // Create temporary buffers for entity using abstraction layer
+            var entityVb = _graphicsDevice.CreateVertexBuffer(entityVertices);
+            var entityIb = _graphicsDevice.CreateIndexBuffer(entityIndices, true);
+            try
             {
-                entityVb.SetData(entityVertices);
-                entityIb.SetData(entityIndices);
-
-                GraphicsDevice.SetVertexBuffer(entityVb);
-                GraphicsDevice.Indices = entityIb;
+                _graphicsDevice.SetVertexBuffer(entityVb);
+                _graphicsDevice.SetIndexBuffer(entityIb);
 
                 _basicEffect.View = _viewMatrix;
                 _basicEffect.Projection = _projectionMatrix;
                 _basicEffect.World = entityWorld;
                 _basicEffect.VertexColorEnabled = true;
 
-                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    GraphicsDevice.DrawIndexedPrimitives(
+                    _graphicsDevice.DrawIndexedPrimitives(
                         PrimitiveType.TriangleList,
                         0,
+                        0,
+                        entityVertices.Length,
                         0,
                         entityIndices.Length / 3
                     );
                 }
+            }
+            finally
+            {
+                entityVb?.Dispose();
+                entityIb?.Dispose();
             }
         }
 
@@ -1481,9 +1486,7 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void DrawPlayerEntity(Odyssey.Core.Interfaces.IEntity playerEntity)
         {
-            // TODO: 3D player rendering needs abstraction
-            // For now, player rendering is disabled until 3D abstraction is complete
-            return;
+            // Player rendering using abstraction layer
 
             Kotor.Components.TransformComponent transform = playerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
@@ -1493,8 +1496,8 @@ namespace Odyssey.Game.Core
 
             // Create a simple representation of the player (colored box)
             // TODO: Replace with actual player model rendering
-            var playerPos = new Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
-            var playerWorld = Matrix.CreateTranslation(playerPos);
+            var playerPos = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+            var playerWorld = MatrixHelper.CreateTranslation(playerPos);
 
             // Create a simple box for the player (1x2x1 units - humanoid shape)
             var playerVertices = new VertexPositionColor[]
@@ -1524,33 +1527,37 @@ namespace Odyssey.Game.Core
                 3, 7, 4, 3, 4, 0
             };
 
-            // Create temporary buffers for player
-            using (var playerVb = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), playerVertices.Length, BufferUsage.WriteOnly))
-            using (var playerIb = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, playerIndices.Length, BufferUsage.WriteOnly))
+            // Create temporary buffers for player using abstraction layer
+            var playerVb = _graphicsDevice.CreateVertexBuffer(playerVertices);
+            var playerIb = _graphicsDevice.CreateIndexBuffer(playerIndices, true);
+            try
             {
-                playerVb.SetData(playerVertices);
-                playerIb.SetData(playerIndices);
-
-                GraphicsDevice.SetVertexBuffer(playerVb);
-                GraphicsDevice.Indices = playerIb;
+                _graphicsDevice.SetVertexBuffer(playerVb);
+                _graphicsDevice.SetIndexBuffer(playerIb);
 
                 _basicEffect.View = _viewMatrix;
                 _basicEffect.Projection = _projectionMatrix;
                 _basicEffect.World = playerWorld;
                 _basicEffect.VertexColorEnabled = true;
                 _basicEffect.LightingEnabled = true; // Ensure lighting is enabled
-                _basicEffect.VertexColorEnabled = true;
 
-                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    GraphicsDevice.DrawIndexedPrimitives(
+                    _graphicsDevice.DrawIndexedPrimitives(
                         PrimitiveType.TriangleList,
                         0,
+                        0,
+                        playerVertices.Length,
                         0,
                         playerIndices.Length / 3
                     );
                 }
+            }
+            finally
+            {
+                playerVb?.Dispose();
+                playerIb?.Dispose();
             }
         }
 
@@ -2373,8 +2380,8 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            int screenWidth = GraphicsDevice.Viewport.Width;
-            int screenHeight = GraphicsDevice.Viewport.Height;
+            int screenWidth = _graphicsDevice.Viewport.Width;
+            int screenHeight = _graphicsDevice.Viewport.Height;
 
             // Draw dialogue box at bottom of screen
             float dialogueBoxY = screenHeight - 200; // Bottom of screen

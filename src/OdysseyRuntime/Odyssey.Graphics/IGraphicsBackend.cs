@@ -63,6 +63,26 @@ namespace Odyssey.Graphics
         /// Ends the current frame and presents to screen.
         /// </summary>
         void EndFrame();
+
+        /// <summary>
+        /// Creates a room mesh renderer.
+        /// </summary>
+        /// <returns>Created room mesh renderer.</returns>
+        IRoomMeshRenderer CreateRoomMeshRenderer();
+
+        /// <summary>
+        /// Creates an entity model renderer.
+        /// </summary>
+        /// <param name="gameDataManager">Game data manager for resolving models (can be null).</param>
+        /// <param name="installation">Installation for loading resources (can be null).</param>
+        /// <returns>Created entity model renderer.</returns>
+        IEntityModelRenderer CreateEntityModelRenderer(object gameDataManager = null, object installation = null);
+
+        /// <summary>
+        /// Creates a spatial audio system.
+        /// </summary>
+        /// <returns>Created spatial audio system.</returns>
+        ISpatialAudio CreateSpatialAudio();
     }
 }
 
