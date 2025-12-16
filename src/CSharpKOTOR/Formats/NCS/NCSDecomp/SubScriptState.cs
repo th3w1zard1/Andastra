@@ -2343,6 +2343,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     {
                         ScriptNode.AExpression exp = this.RemoveLastExp(false);
                         JavaSystem.@out.Println("DEBUG removeActionParams: removed param " + (i + 1) + "=" + exp.GetType().Name);
+                        
+                        // Matching DeNCS behavior: when AModifyExp is used as a parameter, extract just the expression part
+                        if (exp is AModifyExp modifyExp)
+                        {
+                            JavaSystem.@out.Println("DEBUG removeActionParams: unwrapping AModifyExp to extract expression part (metadata missing case)");
+                            AExpression unwrappedExp = modifyExp.GetExpression();
+                            if (unwrappedExp != null)
+                            {
+                                unwrappedExp.Parent(null);
+                                exp = unwrappedExp;
+                                JavaSystem.@out.Println("DEBUG removeActionParams: unwrapped to " + exp.GetType().Name);
+                            }
+                        }
+                        
                         @params.Add(exp);
                     }
                     catch (Exception expEx)
@@ -2396,6 +2410,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         exp = this.RemoveLastExp(false);
                     }
                     JavaSystem.@out.Println("DEBUG removeActionParams: successfully removed param " + (i + 1) + "=" + exp.GetType().Name);
+                    
+                    // Matching DeNCS behavior: when AModifyExp is used as a parameter, extract just the expression part
+                    // This prevents creating assignments inside function parameters (e.g., SetGlobalNumber(nGlobal = GetGlobalNumber(...), ...))
+                    // Instead, we want: SetGlobalNumber(GetGlobalNumber(...), ...)
+                    if (exp is AModifyExp modifyExp)
+                    {
+                        JavaSystem.@out.Println("DEBUG removeActionParams: unwrapping AModifyExp to extract expression part");
+                        AExpression unwrappedExp = modifyExp.GetExpression();
+                        if (unwrappedExp != null)
+                        {
+                            // Clear parent relationship since we're extracting the expression
+                            unwrappedExp.Parent(null);
+                            exp = unwrappedExp;
+                            JavaSystem.@out.Println("DEBUG removeActionParams: unwrapped to " + exp.GetType().Name);
+                        }
+                    }
                 }
                 catch (Exception expEx)
                 {
