@@ -24,7 +24,7 @@ namespace Odyssey.Core.Triggers
     ///   - Case 3 = EVENT_LEFT_TRIGGER (fires OnExit scripts)
     ///   - Case 0x1e (30) = CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (fires OnClick scripts for doors/placeables/triggers)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves trigger data including polygon geometry
-    /// - FUN_004e10b0 @ 0x004e10b0 loads trigger instances from GIT
+    /// - FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT TriggerList (see Odyssey.Kotor/Systems/TriggerSystem.cs for detailed function analysis)
     /// - Trigger geometry: Polygon defined by vertices in 2D (X/Z plane, Y is height) stored in UTT template Geometry field
     /// - Point-in-polygon test: Uses ray casting algorithm to determine if point is inside polygon
     /// - Trigger events: OnEnter fires when entity enters trigger volume, OnExit when entity leaves, OnClick when trigger is clicked
