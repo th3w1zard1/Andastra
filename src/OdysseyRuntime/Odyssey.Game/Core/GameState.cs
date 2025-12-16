@@ -14,7 +14,12 @@ namespace Odyssey.Game.Core
     /// - "Action Menu" @ 0x007c8480 (action menu), "CB_ACTIONMENU" @ 0x007d29d4 (action menu checkbox)
     /// - Original implementation: Game state tracks current UI/mode (main menu, loading, in-game, paused, save/load menus)
     /// - State transitions: MainMenu -> Loading -> InGame, InGame -> Paused/SaveMenu/LoadMenu
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 manages game state transitions
+    /// - Module state management: FUN_006caab0 @ 0x006caab0 sets module state flags in DAT_008283d4 structure
+    ///   - State 0 (Idle): Sets `*(undefined2 *)(DAT_008283d4 + 4) = 0`, sets bit flag `*puVar6 | 1`
+    ///   - State 1 (ModuleLoaded): Sets `*(undefined2 *)(DAT_008283d4 + 4) = 1`, sets bit flag `*puVar6 | 0x11` (0x10 | 0x1)
+    ///   - State 2 (ModuleRunning): Sets `*(undefined2 *)(DAT_008283d4 + 4) = 2`, sets bit flag `*puVar6 | 0x1`
+    ///   - Located via string references: "ModuleLoaded" @ 0x00826e24, "ModuleRunning" @ 0x00826e2c, "ServerStatus" @ 0x00826e1c
+    ///   - Function signature: `undefined4 FUN_006caab0(char *param_1, int param_2)` - Parses server command strings like "S.Module.ModuleLoaded" or "S.Module.ModuleRunning"
     /// </remarks>
     public enum GameState
     {
