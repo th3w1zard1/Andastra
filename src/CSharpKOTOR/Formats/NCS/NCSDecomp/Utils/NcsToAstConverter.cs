@@ -394,27 +394,106 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 else
                 {
-                    // Main start is after globals - create normal globals subroutine
-                    // Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
-                    // For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
-                    int globalsSubEnd = savebpIndex + 1;
-                    // If entry stub exists, extend globals to include it (but not main)
-                    int entryStubCheck = globalsSubEnd;
-                    if (instructions.Count > entryStubCheck + 1 &&
-                        instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                        (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN ||
-                         instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP))
+                    // Main start is at or after entry stub end
+                    // CRITICAL: When entry JSR targets last RETN and mainStart = entryStubEnd,
+                    // the main function code might actually be in the globals range (before entryStubEnd)
+                    // Check if there's actual code between entryStubEnd and the last RETN
+                    // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
+                    bool mainCodeInGlobals = false;
+                    if (entryJsrTargetIsLastRetn && mainStart == entryStubEnd)
                     {
-                        // Entry stub exists - extend globals to include SAVEBP + entry stub pattern
-                        // But NOT the cleanup code after entry stub (MOVSP+RETN before main)
-                        globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN/RESTOREBP
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Extended globals to include entry stub, globalsSubEnd={globalsSubEnd}");
+                        // Check if there are ACTION instructions between entryStubEnd and last RETN
+                        // If not, the main function code is in the globals range
+                        int actionCount = 0;
+                        for (int i = entryStubEnd; i < instructions.Count - 1; i++)
+                        {
+                            if (instructions[i].InsType == NCSInstructionType.ACTION)
+                            {
+                                actionCount++;
+                            }
+                        }
+                        if (actionCount == 0)
+                        {
+                            // No ACTION instructions between entryStubEnd and last RETN
+                            // Main function code is in globals range - need to split
+                            mainCodeInGlobals = true;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between entryStubEnd ({entryStubEnd}) and last RETN, main code is in globals range - will split globals");
+                        }
+                        else
+                        {
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {actionCount} ACTION instructions between entryStubEnd ({entryStubEnd}) and last RETN, main code is after entry stub");
+                        }
                     }
-                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsSubEnd, 0);
-                    if (globalsSub != null)
+                    
+                    if (mainCodeInGlobals)
                     {
-                        program.GetSubroutine().Add(globalsSub);
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created globals subroutine (range 0-{globalsSubEnd})");
+                        // Main function code is in globals range - split globals
+                        // Find where the main function code actually starts (after globals initialization)
+                        // Typically, globals initialization ends at SAVEBP, and main code starts after SAVEBP
+                        // But we need to find the actual boundary
+                        int globalsInitEnd = savebpIndex + 1;
+                        // Check for entry stub and adjust
+                        if (instructions.Count > globalsInitEnd + 1 &&
+                            instructions[globalsInitEnd].InsType == NCSInstructionType.JSR &&
+                            (instructions[globalsInitEnd + 1].InsType == NCSInstructionType.RETN ||
+                             instructions[globalsInitEnd + 1].InsType == NCSInstructionType.RESTOREBP))
+                        {
+                            globalsInitEnd += 2; // Skip entry stub
+                        }
+                        // For now, use a heuristic: if entryStubEnd is close to SAVEBP+1, 
+                        // the main code might start right after SAVEBP
+                        // Actually, if mainStart = entryStubEnd and there's no code after it,
+                        // the main code must be before entryStubEnd
+                        // Use entryStubEnd as the split point: globals = 0 to entryStubEnd, main = entryStubEnd to last RETN
+                        // But wait - if mainStart = entryStubEnd, and we want main to include code before entryStubEnd,
+                        // we need to set mainStart to where the main code actually starts
+                        // This is complex - for now, let's try using savebpIndex+1 as the split point
+                        int splitPoint = savebpIndex + 1;
+                        // Check if there's an entry stub
+                        if (instructions.Count > splitPoint + 1 &&
+                            instructions[splitPoint].InsType == NCSInstructionType.JSR &&
+                            (instructions[splitPoint + 1].InsType == NCSInstructionType.RETN ||
+                             instructions[splitPoint + 1].InsType == NCSInstructionType.RESTOREBP))
+                        {
+                            // Entry stub exists - main code is after entry stub
+                            splitPoint += 2;
+                        }
+                        // Create globals subroutine (globals initialization only)
+                        ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, splitPoint, 0);
+                        if (globalsSub != null)
+                        {
+                            program.GetSubroutine().Add(globalsSub);
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{splitPoint}, globals initialization only)");
+                        }
+                        // Update mainStart to include the main function code
+                        mainStart = splitPoint;
+                        mainEnd = instructions.Count; // Include all instructions from splitPoint to last RETN
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (main includes all code from {mainStart} to last RETN)");
+                    }
+                    else
+                    {
+                        // Main start is after globals - create normal globals subroutine
+                        // Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
+                        // For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
+                        int globalsSubEnd = savebpIndex + 1;
+                        // If entry stub exists, extend globals to include it (but not main)
+                        int entryStubCheck = globalsSubEnd;
+                        if (instructions.Count > entryStubCheck + 1 &&
+                            instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
+                            (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN ||
+                             instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP))
+                        {
+                            // Entry stub exists - extend globals to include SAVEBP + entry stub pattern
+                            // But NOT the cleanup code after entry stub (MOVSP+RETN before main)
+                            globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN/RESTOREBP
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Extended globals to include entry stub, globalsSubEnd={globalsSubEnd}");
+                        }
+                        ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsSubEnd, 0);
+                        if (globalsSub != null)
+                        {
+                            program.GetSubroutine().Add(globalsSub);
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created globals subroutine (range 0-{globalsSubEnd})");
+                        }
                     }
                 }
             }
