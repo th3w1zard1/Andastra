@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Odyssey.Core.Save;
+using Odyssey.Graphics;
+using Vector2 = Odyssey.Graphics.Vector2;
+using Rectangle = Odyssey.Graphics.Rectangle;
+using Color = Odyssey.Graphics.Color;
 
 namespace Odyssey.Game.GUI
 {
@@ -33,11 +34,11 @@ namespace Odyssey.Game.GUI
         /// Updates save menu state and handles input.
         /// </summary>
         public static void UpdateSaveMenu(
-            Microsoft.Xna.Framework.GameTime gameTime,
-            KeyboardState currentKeyboard,
-            KeyboardState previousKeyboard,
-            MouseState currentMouse,
-            MouseState previousMouse,
+            float deltaTime,
+            IKeyboardState currentKeyboard,
+            IKeyboardState previousKeyboard,
+            IMouseState currentMouse,
+            IMouseState previousMouse,
             ref int selectedIndex,
             ref string newSaveName,
             ref bool isEnteringName,
@@ -91,11 +92,11 @@ namespace Odyssey.Game.GUI
         /// Updates load menu state and handles input.
         /// </summary>
         public static void UpdateLoadMenu(
-            Microsoft.Xna.Framework.GameTime gameTime,
-            KeyboardState currentKeyboard,
-            KeyboardState previousKeyboard,
-            MouseState currentMouse,
-            MouseState previousMouse,
+            float deltaTime,
+            IKeyboardState currentKeyboard,
+            IKeyboardState previousKeyboard,
+            IMouseState currentMouse,
+            IMouseState previousMouse,
             ref int selectedIndex,
             List<SaveGameInfo> availableSaves,
             Action<int> onLoad,
@@ -132,9 +133,10 @@ namespace Odyssey.Game.GUI
         /// Draws the save menu.
         /// </summary>
         public static void DrawSaveMenu(
-            SpriteBatch spriteBatch,
-            SpriteFont font,
-            Texture2D menuTexture,
+            ISpriteBatch spriteBatch,
+            IFont font,
+            ITexture2D menuTexture,
+            IGraphicsDevice graphicsDevice,
             int viewportWidth,
             int viewportHeight,
             int selectedIndex,
@@ -143,8 +145,7 @@ namespace Odyssey.Game.GUI
             List<SaveGameInfo> availableSaves)
         {
             // Clear to dark background
-            GraphicsDevice device = spriteBatch.GraphicsDevice;
-            device.Clear(new Color(20, 20, 30));
+            graphicsDevice.Clear(new Color(20, 20, 30, 255));
 
             spriteBatch.Begin();
 
@@ -176,13 +177,13 @@ namespace Odyssey.Game.GUI
                     SaveGameInfo save = availableSaves[i];
                     string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
                     Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
-                    spriteBatch.DrawString(font, saveText, textPos, Color.White);
+                    spriteBatch.DrawString(font, saveText, textPos, new Color(255, 255, 255, 255));
                 }
                 else
                 {
                     string newSaveText = isEnteringName ? $"New Save: {newSaveName}_" : "New Save";
                     Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
-                    spriteBatch.DrawString(font, newSaveText, textPos, Color.LightGray);
+                    spriteBatch.DrawString(font, newSaveText, textPos, new Color(211, 211, 211, 255));
                 }
             }
 
@@ -192,7 +193,7 @@ namespace Odyssey.Game.GUI
                 : "Select a save slot or create a new save. Press Escape to cancel.";
             Vector2 instSize = font.MeasureString(instructions);
             Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
-            spriteBatch.DrawString(font, instructions, instPos, Color.LightGray);
+            spriteBatch.DrawString(font, instructions, instPos, new Color(211, 211, 211, 255));
 
             spriteBatch.End();
         }
@@ -201,17 +202,17 @@ namespace Odyssey.Game.GUI
         /// Draws the load menu.
         /// </summary>
         public static void DrawLoadMenu(
-            SpriteBatch spriteBatch,
-            SpriteFont font,
-            Texture2D menuTexture,
+            ISpriteBatch spriteBatch,
+            IFont font,
+            ITexture2D menuTexture,
+            IGraphicsDevice graphicsDevice,
             int viewportWidth,
             int viewportHeight,
             int selectedIndex,
             List<SaveGameInfo> availableSaves)
         {
             // Clear to dark background
-            GraphicsDevice device = spriteBatch.GraphicsDevice;
-            device.Clear(new Color(20, 20, 30));
+            graphicsDevice.Clear(new Color(20, 20, 30, 255));
 
             spriteBatch.Begin();
 
@@ -241,14 +242,14 @@ namespace Odyssey.Game.GUI
                 SaveGameInfo save = availableSaves[i];
                 string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
                 Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
-                spriteBatch.DrawString(font, saveText, textPos, Color.White);
+                spriteBatch.DrawString(font, saveText, textPos, new Color(255, 255, 255, 255));
             }
 
             // Instructions
             string instructions = "Select a save to load. Press Escape to cancel.";
             Vector2 instSize = font.MeasureString(instructions);
             Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
-            spriteBatch.DrawString(font, instructions, instPos, Color.LightGray);
+            spriteBatch.DrawString(font, instructions, instPos, new Color(211, 211, 211, 255));
 
             spriteBatch.End();
         }
@@ -257,8 +258,8 @@ namespace Odyssey.Game.GUI
         /// Handles text input for save name entry.
         /// </summary>
         private static void HandleTextInput(
-            KeyboardState current,
-            KeyboardState previous,
+            IKeyboardState current,
+            IKeyboardState previous,
             ref string text,
             Action<string> onConfirm,
             Action onCancel)
@@ -300,7 +301,7 @@ namespace Odyssey.Game.GUI
             }
         }
 
-        private static bool IsKeyJustPressed(KeyboardState previous, KeyboardState current, Keys key)
+        private static bool IsKeyJustPressed(IKeyboardState previous, IKeyboardState current, Keys key)
         {
             return previous.IsKeyUp(key) && current.IsKeyDown(key);
         }

@@ -65,18 +65,18 @@ Odyssey.Game (uses abstraction, selects backend)
 
 ## Phase 4: Refactor Existing Code (IN PROGRESS)
 
-- [ ] Update Odyssey.Game.csproj to reference Odyssey.Graphics instead of direct MonoGame
-- [ ] Refactor OdysseyGame to use IGraphicsBackend instead of inheriting from MonoGame.Game
-- [ ] Replace GraphicsDevice with IGraphicsDevice throughout OdysseyGame
-- [ ] Replace SpriteBatch with ISpriteBatch throughout OdysseyGame
-- [ ] Replace SpriteFont with IFont throughout OdysseyGame
-- [ ] Replace Texture2D with ITexture2D throughout OdysseyGame
-- [ ] Replace Content.Load with IContentManager.Load
-- [ ] Replace Keyboard/Mouse state with IInputManager
+- [x] Update Odyssey.Game.csproj to reference Odyssey.Graphics instead of direct MonoGame
+- [x] Refactor OdysseyGame to use IGraphicsBackend instead of inheriting from MonoGame.Game
+- [x] Replace GraphicsDevice with IGraphicsDevice throughout OdysseyGame
+- [x] Replace SpriteBatch with ISpriteBatch throughout OdysseyGame
+- [x] Replace SpriteFont with IFont throughout OdysseyGame
+- [x] Replace Texture2D with ITexture2D throughout OdysseyGame
+- [x] Replace Content.Load with IContentManager.Load
+- [x] Replace Keyboard/Mouse state with IInputManager
 - [ ] Refactor MenuRenderer.cs to use abstraction (12 MonoGame references)
 - [ ] Refactor SaveLoadMenu.cs to use abstraction (8 MonoGame references)
-- [ ] Refactor OdysseyGame.cs to use abstraction (63 MonoGame references)
-- [ ] Update Program.cs to use GraphicsBackendFactory for backend selection
+- [x] Refactor OdysseyGame.cs to use abstraction (63 MonoGame references)
+- [x] Update Program.cs to use GraphicsBackendFactory for backend selection
 
 ## Phase 5: Feature Parity Verification
 

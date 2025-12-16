@@ -1,12 +1,13 @@
 using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+using Odyssey.Graphics;
+using Vector2 = Odyssey.Graphics.Vector2;
+using Rectangle = Odyssey.Graphics.Rectangle;
+using Color = Odyssey.Graphics.Color;
 
 namespace Odyssey.Game.GUI
 {
     /// <summary>
-    /// Simple MonoGame-based menu renderer with text labels and click handling.
+    /// Menu renderer with text labels and click handling using graphics abstraction layer.
     /// </summary>
     /// <remarks>
     /// Menu Renderer:
@@ -30,13 +31,13 @@ namespace Odyssey.Game.GUI
         private readonly MenuButton[] _menuButtons;
 
         // Input state
-        private KeyboardState _previousKeyboardState;
-        private MouseState _previousMouseState;
+        private IKeyboardState _previousKeyboardState;
+        private IMouseState _previousMouseState;
 
         // Rendering resources
-        private SpriteBatch _spriteBatch;
-        private SpriteFont _font;
-        private Texture2D _whiteTexture; // 1x1 white texture for drawing rectangles
+        private ISpriteBatch _spriteBatch;
+        private IFont _font;
+        private ITexture2D _whiteTexture; // 1x1 white texture for drawing rectangles
 
         // Layout
         private Vector2 _screenCenter;
@@ -49,7 +50,7 @@ namespace Odyssey.Game.GUI
         private readonly Color _backgroundColor = new Color(20, 30, 60, 255); // Dark blue background
         private readonly Color _panelBackgroundColor = new Color(40, 50, 80, 255); // Panel background
         private readonly Color _headerColor = new Color(255, 200, 50, 255); // Bright gold header
-        private readonly Color _borderColor = Color.White;
+        private readonly Color _borderColor = new Color(255, 255, 255, 255);
 
         // Button colors
         private readonly Color _buttonStartColor = new Color(100, 255, 100, 255); // Bright green
@@ -78,19 +79,19 @@ namespace Odyssey.Game.GUI
             }
         }
 
-        public MenuRenderer(GraphicsDevice graphicsDevice, SpriteFont font)
+        public MenuRenderer(IGraphicsDevice graphicsDevice, IFont font)
         {
             if (graphicsDevice == null)
             {
                 throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
-            _spriteBatch = new SpriteBatch(graphicsDevice);
+            _spriteBatch = graphicsDevice.CreateSpriteBatch();
             _font = font; // Can be null - we'll handle it in rendering
 
             // Create 1x1 white texture for drawing rectangles
-            _whiteTexture = new Texture2D(graphicsDevice, 1, 1);
-            _whiteTexture.SetData(new[] { Color.White });
+            byte[] whitePixel = new byte[] { 255, 255, 255, 255 }; // RGBA white
+            _whiteTexture = graphicsDevice.CreateTexture2D(1, 1, whitePixel);
 
             // Initialize menu buttons (will be positioned in CalculateLayout)
             // Create default buttons - they'll be repositioned in CalculateLayout
@@ -99,15 +100,15 @@ namespace Odyssey.Game.GUI
             {
                 _menuButtons[i] = new MenuButton(
                     new Rectangle(0, 0, 0, 0), // Will be set in CalculateLayout
-                    Color.White,
-                    Color.White,
+                    new Color(255, 255, 255, 255),
+                    new Color(255, 255, 255, 255),
                     i == 0 ? "Start Game" : (i == 1 ? "Options" : "Exit")
                 );
             }
 
-            // Initialize input states
-            _previousKeyboardState = Keyboard.GetState();
-            _previousMouseState = Mouse.GetState();
+            // Initialize input states - these will be set by Update method
+            _previousKeyboardState = null;
+            _previousMouseState = null;
 
             Console.WriteLine("[MenuRenderer] Initialized successfully");
             Console.WriteLine($"[MenuRenderer] Font available: {_font != null}");
@@ -174,7 +175,7 @@ namespace Odyssey.Game.GUI
             }
         }
 
-        public void Update(GameTime gameTime, GraphicsDevice graphicsDevice)
+        public void Update(float deltaTime, IGraphicsDevice graphicsDevice, IInputManager inputManager)
         {
             if (!_isVisible)
             {
@@ -182,10 +183,7 @@ namespace Odyssey.Game.GUI
             }
 
             // Log first update to verify Update is being called
-            if (gameTime.TotalGameTime.TotalSeconds < 0.1)
-            {
-                Console.WriteLine("[MenuRenderer] Update called - menu is visible and active");
-            }
+            // (removed gameTime check - deltaTime is sufficient)
 
             // Ensure layout is calculated before handling input
             // Layout needs to be up-to-date for click detection to work
@@ -208,8 +206,24 @@ namespace Odyssey.Game.GUI
                 return;
             }
 
-            KeyboardState currentKeyboardState = Keyboard.GetState();
-            MouseState currentMouseState = Mouse.GetState();
+            if (inputManager == null)
+            {
+                Console.WriteLine("[MenuRenderer] WARNING: InputManager is null in Update!");
+                return;
+            }
+
+            IKeyboardState currentKeyboardState = inputManager.KeyboardState;
+            IMouseState currentMouseState = inputManager.MouseState;
+
+            // Initialize previous states if null
+            if (_previousKeyboardState == null)
+            {
+                _previousKeyboardState = currentKeyboardState;
+            }
+            if (_previousMouseState == null)
+            {
+                _previousMouseState = currentMouseState;
+            }
 
             // Handle keyboard navigation
             if (IsKeyPressed(_previousKeyboardState, currentKeyboardState, Keys.Up))
@@ -239,16 +253,18 @@ namespace Odyssey.Game.GUI
 
             if (mouseJustPressed)
             {
-                Point mousePos = currentMouseState.Position;
+                int mouseX = currentMouseState.X;
+                int mouseY = currentMouseState.Y;
                 Console.WriteLine($"[MenuRenderer] ====== MOUSE CLICK DETECTED ======");
-                Console.WriteLine($"[MenuRenderer] Mouse clicked at: {mousePos.X}, {mousePos.Y}");
+                Console.WriteLine($"[MenuRenderer] Mouse clicked at: {mouseX}, {mouseY}");
                 Console.WriteLine($"[MenuRenderer] Number of buttons: {_menuButtons.Length}");
 
                 bool clicked = false;
                 for (int i = 0; i < _menuButtons.Length; i++)
                 {
                     MenuButton button = _menuButtons[i];
-                    bool contains = button.Rect.Contains(mousePos);
+                    bool contains = mouseX >= button.Rect.X && mouseX < button.Rect.X + button.Rect.Width &&
+                                    mouseY >= button.Rect.Y && mouseY < button.Rect.Y + button.Rect.Height;
                     Console.WriteLine($"[MenuRenderer] Button {i} ({button.Label}) rect: X={button.Rect.X}, Y={button.Rect.Y}, W={button.Rect.Width}, H={button.Rect.Height}, Contains={contains}");
 
                     if (contains)
@@ -282,12 +298,12 @@ namespace Odyssey.Game.GUI
             _previousMouseState = currentMouseState;
         }
 
-        private bool IsKeyPressed(KeyboardState previous, KeyboardState current, Keys key)
+        private bool IsKeyPressed(IKeyboardState previous, IKeyboardState current, Keys key)
         {
             return previous.IsKeyUp(key) && current.IsKeyDown(key);
         }
 
-        public void Draw(GameTime gameTime, GraphicsDevice graphicsDevice)
+        public void Draw(IGraphicsDevice graphicsDevice)
         {
             if (!_isVisible)
             {
@@ -360,7 +376,7 @@ namespace Odyssey.Game.GUI
                         button.Rect.X + (button.Rect.Width - textSize.X) * 0.5f,
                         button.Rect.Y + (button.Rect.Height - textSize.Y) * 0.5f
                     );
-                    _spriteBatch.DrawString(_font, button.Label, textPosition, Color.White);
+                    _spriteBatch.DrawString(_font, button.Label, textPosition, new Color(255, 255, 255, 255));
                 }
                 else
                 {
@@ -377,16 +393,16 @@ namespace Odyssey.Game.GUI
                         // Draw a filled circle (approximated as a square with rounded appearance)
                         _spriteBatch.Draw(_whiteTexture,
                             new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
-                            Color.White);
+                            new Color(255, 255, 255, 255));
                     }
                     else if (i == 1) // Options - blue square with border
                     {
                         // Draw a square
                         _spriteBatch.Draw(_whiteTexture,
                             new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
-                            Color.White);
+                            new Color(255, 255, 255, 255));
                         // Draw border
-                        DrawBorder(_spriteBatch, new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 2, Color.Black);
+                        DrawBorder(_spriteBatch, new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 2, new Color(0, 0, 0, 255));
                     }
                     else if (i == 2) // Exit - red X shape
                     {
@@ -396,11 +412,11 @@ namespace Odyssey.Game.GUI
                         // Diagonal line 1
                         _spriteBatch.Draw(_whiteTexture,
                             new Rectangle(indicatorX + xSize / 2 - xThickness / 2, indicatorY, xThickness, xSize),
-                            Color.White);
+                            new Color(255, 255, 255, 255));
                         // Diagonal line 2 (rotated - approximate with offset)
                         _spriteBatch.Draw(_whiteTexture,
                             new Rectangle(indicatorX, indicatorY + xSize / 2 - xThickness / 2, xSize, xThickness),
-                            Color.White);
+                            new Color(255, 255, 255, 255));
                     }
                 }
             }
@@ -409,7 +425,7 @@ namespace Odyssey.Game.GUI
             _spriteBatch.End();
         }
 
-        private void DrawBorder(SpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
+        private void DrawBorder(ISpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
         {
             // Top border
             spriteBatch.Draw(_whiteTexture,
@@ -440,7 +456,7 @@ namespace Odyssey.Game.GUI
         /// <summary>
         /// Gets the white texture used for drawing rectangles.
         /// </summary>
-        public Texture2D GetWhiteTexture()
+        public ITexture2D GetWhiteTexture()
         {
             return _whiteTexture;
         }
