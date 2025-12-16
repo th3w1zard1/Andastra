@@ -1,18 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
 using JetBrains.Annotations;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
+using LocalizedString = AuroraEngine.Common.Common.LocalizedString;
 
 namespace HolocronToolset.NET.Editors
 {

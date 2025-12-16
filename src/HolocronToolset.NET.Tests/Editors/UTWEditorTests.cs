@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -99,13 +99,13 @@ namespace HolocronToolset.NET.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(utwFile);
-            var oldGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var oldGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
 
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, data);
 
             var (newData, _) = editor.Build();
 
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = oldGff.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
@@ -169,14 +169,14 @@ namespace HolocronToolset.NET.Tests.Editors
             // Save and verify
             var (data, _) = editor.Build();
             var modifiedUtw = UTWAuto.ReadUtw(data);
-            modifiedUtw.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("Modified Waypoint Name");
-            modifiedUtw.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().NotBe(originalUtw.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male));
+            modifiedUtw.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("Modified Waypoint Name");
+            modifiedUtw.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().NotBe(originalUtw.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male));
 
             // Load back and verify
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, data);
             if (editor.NameEdit != null)
             {
-                editor.NameEdit.GetLocString().Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("Modified Waypoint Name");
+                editor.NameEdit.GetLocString().Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("Modified Waypoint Name");
             }
         }
 
@@ -704,12 +704,83 @@ namespace HolocronToolset.NET.Tests.Editors
             // Original: assert modified_utw.comment == "Combined test comment"
             var (data, _) = editor.Build();
             var modifiedUtw = UTWAuto.ReadUtw(data);
-            modifiedUtw.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("Combined Test Waypoint", "Name should be set correctly");
+            modifiedUtw.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("Combined Test Waypoint", "Name should be set correctly");
             modifiedUtw.Tag.Should().Be("combined_test", "Tag should be set correctly");
             modifiedUtw.ResRef?.ToString().Should().Be("combined_resref", "ResRef should be set correctly");
             modifiedUtw.HasMapNote.Should().BeTrue("HasMapNote should be true");
             modifiedUtw.MapNoteEnabled.Should().BeTrue("MapNoteEnabled should be true");
             modifiedUtw.Comment.Should().Be("Combined test comment", "Comment should be set correctly");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:151-180
+        // Original: def test_utw_editor_manipulate_map_note_locstring(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtwEditorManipulateMapNoteLocstring()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            if (!System.IO.File.Exists(utwFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            }
+
+            if (!System.IO.File.Exists(utwFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTWEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(utwFile);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:161
+            // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, original_data)
+            editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:164-173
+            // Original: new_note = LocalizedString.from_english("Modified Map Note")
+            // Original: if hasattr(editor.ui.noteEdit, 'set_locstring'):
+            // Original:     editor.ui.noteEdit.set_locstring(new_note)
+            // Original: elif hasattr(editor.ui.noteEdit, 'setText'):
+            // Original:     editor.ui.noteEdit.setText("Modified Map Note")
+            // Original: else:
+            // Original:     editor.change_note()
+            // In C#, noteEdit is a TextBox, so we use Text property
+            if (editor.NoteEdit != null)
+            {
+                editor.NoteEdit.Text = "Modified Map Note";
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:176-180
+            // Original: data, _ = editor.build()
+            // Original: modified_utw = read_utw(data)
+            // Original: assert isinstance(modified_utw.map_note, LocalizedString)
+            var (data, _) = editor.Build();
+            var modifiedUtw = UTWAuto.ReadUtw(data);
+            modifiedUtw.MapNote.Should().NotBeNull("MapNote should not be null");
+            modifiedUtw.MapNote.Should().BeOfType<LocalizedString>("MapNote should be a LocalizedString");
         }
     }
 }
