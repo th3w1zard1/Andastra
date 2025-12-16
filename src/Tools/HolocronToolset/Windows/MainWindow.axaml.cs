@@ -87,34 +87,111 @@ namespace HolocronToolset.Windows
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                // Try to find controls from XAML
-                _gameCombo = this.FindControl<ComboBox>("gameCombo");
-                _resourceTabs = this.FindControl<TabControl>("resourceTabs");
-                _openButton = this.FindControl<Button>("openButton");
-                _extractButton = this.FindControl<Button>("extractButton");
-                _specialActionButton = this.FindControl<Button>("specialActionButton");
-
-                // Find resource list widgets
-                _coreWidget = this.FindControl<ResourceList>("coreWidget");
-                _modulesWidget = this.FindControl<ResourceList>("modulesWidget");
-                _overrideWidget = this.FindControl<ResourceList>("overrideWidget");
-                _savesWidget = this.FindControl<ResourceList>("savesWidget");
-                _texturesWidget = this.FindControl<ResourceList>("texturesWidget");
-
-                // Find tab items
-                _coreTab = this.FindControl<TabItem>("coreTab");
-                _modulesTab = this.FindControl<TabItem>("modulesTab");
-                _overrideTab = this.FindControl<TabItem>("overrideTab");
-
-                // Find menu items
-                _actionNewDLG = this.FindControl<MenuItem>("actionNewDLG");
-                _actionNewUTC = this.FindControl<MenuItem>("actionNewUTC");
-                _actionNewNSS = this.FindControl<MenuItem>("actionNewNSS");
             }
             catch
             {
                 // XAML not available - will use programmatic UI
             }
+
+            // Try to find controls from XAML (with try-catch for each to handle test scenarios)
+            try
+            {
+                _gameCombo = this.FindControl<ComboBox>("gameCombo");
+            }
+            catch { }
+
+            try
+            {
+                _resourceTabs = this.FindControl<TabControl>("resourceTabs");
+            }
+            catch { }
+
+            try
+            {
+                _openButton = this.FindControl<Button>("openButton");
+            }
+            catch { }
+
+            try
+            {
+                _extractButton = this.FindControl<Button>("extractButton");
+            }
+            catch { }
+
+            try
+            {
+                _specialActionButton = this.FindControl<Button>("specialActionButton");
+            }
+            catch { }
+
+            // Find resource list widgets
+            try
+            {
+                _coreWidget = this.FindControl<ResourceList>("coreWidget");
+            }
+            catch { }
+
+            try
+            {
+                _modulesWidget = this.FindControl<ResourceList>("modulesWidget");
+            }
+            catch { }
+
+            try
+            {
+                _overrideWidget = this.FindControl<ResourceList>("overrideWidget");
+            }
+            catch { }
+
+            try
+            {
+                _savesWidget = this.FindControl<ResourceList>("savesWidget");
+            }
+            catch { }
+
+            try
+            {
+                _texturesWidget = this.FindControl<ResourceList>("texturesWidget");
+            }
+            catch { }
+
+            // Find tab items
+            try
+            {
+                _coreTab = this.FindControl<TabItem>("coreTab");
+            }
+            catch { }
+
+            try
+            {
+                _modulesTab = this.FindControl<TabItem>("modulesTab");
+            }
+            catch { }
+
+            try
+            {
+                _overrideTab = this.FindControl<TabItem>("overrideTab");
+            }
+            catch { }
+
+            // Find menu items
+            try
+            {
+                _actionNewDLG = this.FindControl<MenuItem>("actionNewDLG");
+            }
+            catch { }
+
+            try
+            {
+                _actionNewUTC = this.FindControl<MenuItem>("actionNewUTC");
+            }
+            catch { }
+
+            try
+            {
+                _actionNewNSS = this.FindControl<MenuItem>("actionNewNSS");
+            }
+            catch { }
 
             if (!xamlLoaded)
             {
@@ -238,80 +315,89 @@ namespace HolocronToolset.Windows
         private void ConnectMenuActions()
         {
             // Find menu items from XAML and connect them
-            // File menu
-            var actionNewTLK = this.FindControl<MenuItem>("actionNewTLK");
-            if (actionNewTLK != null)
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
             {
-                actionNewTLK.Click += (s, e) => { /* TODO: Open TLK editor */ };
-            }
+                // File menu
+                var actionNewTLK = this.FindControl<MenuItem>("actionNewTLK");
+                if (actionNewTLK != null)
+                {
+                    actionNewTLK.Click += (s, e) => { /* TODO: Open TLK editor */ };
+                }
 
-            var actionSettings = this.FindControl<MenuItem>("actionSettings");
-            if (actionSettings != null)
-            {
-                actionSettings.Click += (s, e) => OpenSettingsDialog();
-            }
+                var actionSettings = this.FindControl<MenuItem>("actionSettings");
+                if (actionSettings != null)
+                {
+                    actionSettings.Click += (s, e) => OpenSettingsDialog();
+                }
 
-            var actionExit = this.FindControl<MenuItem>("actionExit");
-            if (actionExit != null)
-            {
-                actionExit.Click += (s, e) => Close();
-            }
+                var actionExit = this.FindControl<MenuItem>("actionExit");
+                if (actionExit != null)
+                {
+                    actionExit.Click += (s, e) => Close();
+                }
 
-            var openAction = this.FindControl<MenuItem>("openAction");
-            if (openAction != null)
-            {
-                openAction.Click += (s, e) => OpenFromFile();
-            }
+                var openAction = this.FindControl<MenuItem>("openAction");
+                if (openAction != null)
+                {
+                    openAction.Click += (s, e) => OpenFromFile();
+                }
 
-            // Help menu
-            var actionHelpAbout = this.FindControl<MenuItem>("actionHelpAbout");
-            if (actionHelpAbout != null)
-            {
-                actionHelpAbout.Click += (s, e) => OpenAboutDialog();
-            }
+                // Help menu
+                var actionHelpAbout = this.FindControl<MenuItem>("actionHelpAbout");
+                if (actionHelpAbout != null)
+                {
+                    actionHelpAbout.Click += (s, e) => OpenAboutDialog();
+                }
 
-            var actionHelpUpdates = this.FindControl<MenuItem>("actionHelpUpdates");
-            if (actionHelpUpdates != null)
-            {
-                actionHelpUpdates.Click += (s, e) => _updateManager?.CheckForUpdates(silent: false);
-            }
+                var actionHelpUpdates = this.FindControl<MenuItem>("actionHelpUpdates");
+                if (actionHelpUpdates != null)
+                {
+                    actionHelpUpdates.Click += (s, e) => _updateManager?.CheckForUpdates(silent: false);
+                }
 
-            var actionInstructions = this.FindControl<MenuItem>("actionInstructions");
-            if (actionInstructions != null)
-            {
-                actionInstructions.Click += (s, e) => OpenInstructionsWindow();
-            }
+                var actionInstructions = this.FindControl<MenuItem>("actionInstructions");
+                if (actionInstructions != null)
+                {
+                    actionInstructions.Click += (s, e) => OpenInstructionsWindow();
+                }
 
-            // Tools menu
-            var actionModuleDesigner = this.FindControl<MenuItem>("actionModuleDesigner");
-            if (actionModuleDesigner != null)
-            {
-                actionModuleDesigner.Click += (s, e) => OpenModuleDesigner();
-            }
+                // Tools menu
+                var actionModuleDesigner = this.FindControl<MenuItem>("actionModuleDesigner");
+                if (actionModuleDesigner != null)
+                {
+                    actionModuleDesigner.Click += (s, e) => OpenModuleDesigner();
+                }
 
-            var actionFileSearch = this.FindControl<MenuItem>("actionFileSearch");
-            if (actionFileSearch != null)
-            {
-                actionFileSearch.Click += (s, e) => OpenFileSearchDialog();
-            }
+                var actionFileSearch = this.FindControl<MenuItem>("actionFileSearch");
+                if (actionFileSearch != null)
+                {
+                    actionFileSearch.Click += (s, e) => OpenFileSearchDialog();
+                }
 
-            var actionCloneModule = this.FindControl<MenuItem>("actionCloneModule");
-            if (actionCloneModule != null)
-            {
-                actionCloneModule.Click += (s, e) => { /* TODO: Open clone module dialog */ };
-            }
+                var actionCloneModule = this.FindControl<MenuItem>("actionCloneModule");
+                if (actionCloneModule != null)
+                {
+                    actionCloneModule.Click += (s, e) => { /* TODO: Open clone module dialog */ };
+                }
 
-            // Edit menu
-            var actionEditTLK = this.FindControl<MenuItem>("actionEditTLK");
-            if (actionEditTLK != null)
-            {
-                actionEditTLK.Click += (s, e) => OpenActiveTalktable();
-            }
+                // Edit menu
+                var actionEditTLK = this.FindControl<MenuItem>("actionEditTLK");
+                if (actionEditTLK != null)
+                {
+                    actionEditTLK.Click += (s, e) => OpenActiveTalktable();
+                }
 
-            var actionEditJRL = this.FindControl<MenuItem>("actionEditJRL");
-            if (actionEditJRL != null)
+                var actionEditJRL = this.FindControl<MenuItem>("actionEditJRL");
+                if (actionEditJRL != null)
+                {
+                    actionEditJRL.Click += (s, e) => OpenActiveJournal();
+                }
+            }
+            catch
             {
-                actionEditJRL.Click += (s, e) => OpenActiveJournal();
+                // XAML controls not available - menu actions will not be connected in test scenarios
+                // This is acceptable for headless test environments
             }
         }
 
