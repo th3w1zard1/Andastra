@@ -100,12 +100,12 @@
   <!-- NuGet Package Configuration -->
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>CSharpKOTOR</PackageId>
+    <PackageId>AuroraEngine.Common</PackageId>
     <Version>2.0.0-alpha3</Version>
     <Authors>th3w1zard1</Authors>
     <Company>bolabaden</Company>
-    <Product>CSharpKOTOR</Product>
-    <Description>Core patching engine and logic for TSLPatcher/HoloPatcher. Provides functionality for installing mods, applying patches to game files (2DA, GFF, TLK, SSF, NSS, NCS), and managing game installations.</Description>
+    <Product>AuroraEngine.Common</Product>
+    <Description>Common shared library for BioWare Aurora engine family games. Provides file format parsers, installation management, and resource access. No dependencies on MonoGame/Stride rendering frameworks.</Description>
     <PackageTags>kotor;tsl;patcher;mod;gff;2da;tlk;nss;ncs</PackageTags>
     <PackageProjectUrl>https://github.com/th3w1zard1/HoloPatcher.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/th3w1zard1/HoloPatcher.NET</RepositoryUrl>
@@ -137,7 +137,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Formats\NCS\NCSDecomp\lexer.dat" />
     <EmbeddedResource Include="Formats\NCS\NCSDecomp\parser.dat">
-      <LogicalName>CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat</LogicalName>
+      <LogicalName>AuroraEngine.Common.Formats.NCS.NCSDecomp.parser.dat</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

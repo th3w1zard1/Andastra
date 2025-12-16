@@ -22,11 +22,11 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <!-- Stride 3D engine packages -->
-    <PackageReference Include="Stride.Core" Version="4.2.0.2345" />
-    <PackageReference Include="Stride.Engine" Version="4.2.0.2345" />
-    <PackageReference Include="Stride.Graphics" Version="4.2.0.2345" />
-    <PackageReference Include="Stride.Input" Version="4.2.0.2345" />
-    <PackageReference Include="Stride.UI" Version="4.2.0.2345" />
+    <PackageReference Include="Stride.Core" Version="4.2.0.2371" />
+    <PackageReference Include="Stride.Engine" Version="4.2.0.2371" />
+    <PackageReference Include="Stride.Graphics" Version="4.2.0.2371" />
+    <PackageReference Include="Stride.Input" Version="4.2.0.2371" />
+    <PackageReference Include="Stride.UI" Version="4.2.0.2371" />
   </ItemGroup>
 
 </Project>

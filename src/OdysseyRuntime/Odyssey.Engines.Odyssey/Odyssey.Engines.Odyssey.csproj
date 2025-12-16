@@ -16,7 +16,7 @@
     <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
     <ProjectReference Include="..\Odyssey.Engines.Common\Odyssey.Engines.Common.csproj" />
     <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
-    <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
+    <ProjectReference Include="..\..\CSharpKOTOR\AuroraEngine.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

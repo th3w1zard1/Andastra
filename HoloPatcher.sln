@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoloPatcher", "src\HoloPatcher\HoloPatcher.csproj", "{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpKOTOR", "src\CSharpKOTOR\CSharpKOTOR.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuroraEngine.Common", "src\CSharpKOTOR\AuroraEngine.Common.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSLPatcher.Tests", "src\TSLPatcher.Tests\TSLPatcher.Tests.csproj", "{9B1E2F3A-4D5C-6F7B-8E9C-0A1B2C3D4E5F}"
 EndProject

@@ -13,7 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
     <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
+    <ProjectReference Include="..\..\CSharpKOTOR\AuroraEngine.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
