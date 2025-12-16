@@ -900,5 +900,70 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:344-391
+        // Original: def test_ifo_editor_manipulate_all_basic_fields_combination(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateAllBasicFieldsCombination()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Modify ALL basic fields
+            editor.TagEdit.Text = "combined_test";
+            editor.VoIdEdit.Text = "vo_combined";
+            editor.HakEdit.Text = "hak_combined";
+            editor.EntryResrefEdit.Text = "area_combined";
+            editor.EntryXSpin.Value = 10.0m;
+            editor.EntryYSpin.Value = 20.0m;
+            editor.EntryZSpin.Value = 5.0m;
+            editor.EntryDirSpin.Value = 1.57m;
+            editor.DawnHourSpin.Value = 6;
+            editor.DuskHourSpin.Value = 18;
+            editor.TimeScaleSpin.Value = 50;
+            editor.StartMonthSpin.Value = 1;
+            editor.StartDaySpin.Value = 1;
+            editor.StartHourSpin.Value = 12;
+            editor.StartYearSpin.Value = 3956;
+            editor.XpScaleSpin.Value = 100;
+
+            editor.OnValueChanged();
+
+            // Save and verify all
+            var (data, _) = editor.Build();
+            var modifiedGff = GFF.FromBytes(data);
+            var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+
+            modifiedIfo.Tag.Should().Be("combined_test");
+            modifiedIfo.VoId.Should().Be("vo_combined");
+            modifiedIfo.Hak.Should().Be("hak_combined");
+            modifiedIfo.EntryAreaResRef.ToString().Should().Be("area_combined");
+            Math.Abs(modifiedIfo.EntryX - 10.0f).Should().BeLessThan(0.001f);
+            Math.Abs(modifiedIfo.EntryY - 20.0f).Should().BeLessThan(0.001f);
+            Math.Abs(modifiedIfo.EntryZ - 5.0f).Should().BeLessThan(0.001f);
+            Math.Abs(modifiedIfo.EntryDirection - 1.57f).Should().BeLessThan(0.001f);
+            modifiedIfo.DawnHour.Should().Be(6);
+            modifiedIfo.DuskHour.Should().Be(18);
+            modifiedIfo.TimeScale.Should().Be(50);
+            modifiedIfo.StartMonth.Should().Be(1);
+            modifiedIfo.StartDay.Should().Be(1);
+            modifiedIfo.StartHour.Should().Be(12);
+            modifiedIfo.StartYear.Should().Be(3956);
+            modifiedIfo.XpScale.Should().Be(100);
+        }
     }
 }
