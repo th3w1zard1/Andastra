@@ -58,14 +58,35 @@ namespace Odyssey.Kotor.Loading
     /// </remarks>
     public class EntityFactory
     {
-        private uint _nextObjectId = 1;
+        // Based on swkotor2.exe: ObjectId assignment system
+        // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+        // Original implementation: FUN_004e5920 @ 0x004e5920 reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
+        // ObjectIds should be unique across all entities. Use high range (1000000+) to avoid conflicts with World.CreateEntity counter
+        private uint _nextObjectId = 1000000;
 
         /// <summary>
         /// Gets the next available object ID.
+        /// Uses high range to avoid conflicts with Entity's static counter (used by World.CreateEntity).
         /// </summary>
         private uint GetNextObjectId()
         {
             return _nextObjectId++;
+        }
+
+        /// <summary>
+        /// Reads ObjectId from GIT struct if present, otherwise generates new one.
+        /// Based on swkotor2.exe: FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+        /// </summary>
+        private uint GetObjectIdFromGit(GFFStruct gitStruct)
+        {
+            // Try to read ObjectId from GIT (may not always be present)
+            uint objectId = GetIntField(gitStruct, "ObjectId", 0);
+            if (objectId != 0 && objectId != 0x7F000000) // 0x7F000000 = OBJECT_INVALID
+            {
+                return objectId;
+            }
+            // Generate new ObjectId if not present or invalid
+            return GetNextObjectId();
         }
 
         /// <summary>
@@ -74,7 +95,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateCreatureFromGit(GFFStruct gitStruct, Module module)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Creature);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Creature);
 
             // Get position
             System.Numerics.Vector3 position = GetPosition(gitStruct);
@@ -304,7 +326,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateDoorFromGit(GFFStruct gitStruct, Module module)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Door);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Door);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
@@ -410,7 +433,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreatePlaceableFromGit(GFFStruct gitStruct, Module module)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Placeable);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Placeable);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
@@ -586,7 +610,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateTriggerFromGit(GFFStruct gitStruct)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Trigger);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Trigger);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
@@ -651,7 +676,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateWaypointFromGit(GFFStruct gitStruct)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Waypoint);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Waypoint);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
             float facing = GetFacing(gitStruct);
@@ -676,7 +702,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateSoundFromGit(GFFStruct gitStruct)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Sound);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Sound);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
@@ -723,7 +750,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateStoreFromGit(GFFStruct gitStruct, Module module)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Store);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Store);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
@@ -796,7 +824,8 @@ namespace Odyssey.Kotor.Loading
         [CanBeNull]
         public IEntity CreateEncounterFromGit(GFFStruct gitStruct)
         {
-            var entity = new Entity(GetNextObjectId(), ObjectType.Encounter);
+            uint objectId = GetObjectIdFromGit(gitStruct);
+            var entity = new Entity(objectId, ObjectType.Encounter);
 
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
