@@ -28,15 +28,15 @@ When processing a file:
 
 ### Odyssey.Content (18 files)
 
-- [ ] Cache\ContentCache.cs
+- [x] Cache\ContentCache.cs - CACHE @ 0x007c6848, z:\cache @ 0x007c6850, CExoKeyTable resource management
 - [ ] Converters\BwmToNavigationMeshConverter.cs
-- [ ] Interfaces\IContentCache.cs
-- [ ] Interfaces\IContentConverter.cs
+- [x] Interfaces\IContentCache.cs - CACHE @ 0x007c6848, z:\cache @ 0x007c6850, CExoKeyTable resource management
+- [x] Interfaces\IContentConverter.cs - Resource @ 0x007c14d4, Loading @ 0x007c7e40, CExoKeyTable resource loading
 - [ ] Interfaces\IGameResourceProvider.cs
 - [ ] Interfaces\IResourceProvider.cs
 - [ ] Loaders\GITLoader.cs
 - [ ] Loaders\TemplateLoader.cs
-- [ ] MDL\MDLBulkReader.cs
+- [x] MDL\MDLBulkReader.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
 - [ ] MDL\MDLCache.cs
 - [ ] MDL\MDLConstants.cs
 - [ ] MDL\MDLDataTypes.cs

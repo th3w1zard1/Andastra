@@ -7,6 +7,15 @@ namespace Odyssey.Content.MDL
     /// Lightweight vector types for MDL data without external dependencies.
     /// These are used for intermediate parsing before conversion to rendering-specific types.
     /// </summary>
+    /// <remarks>
+    /// MDL Data Types:
+    /// - Based on swkotor2.exe MDL/MDX file format
+    /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, model loading functions
+    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models, parses MDL vertex/face data
+    /// - Original implementation: MDL file format uses Vector3 (position/normal), Vector2 (UV), Color (vertex colors)
+    /// - Data structures: Match original engine's internal MDL data structures for vertex positions, normals, UVs, colors
+    /// - Intermediate types: Used for parsing before conversion to rendering-specific types (MonoGame, Stride, etc.)
+    /// </remarks>
     /// <summary>
     /// Represents a 2D vector with X and Y components.
     /// Used for texture coordinates in MDL mesh data.

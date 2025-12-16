@@ -7,9 +7,18 @@ namespace Odyssey.Content.MDL
     /// <summary>
     /// Thread-safe model cache for loaded MDL models.
     /// Implements LRU-style eviction when cache size exceeds maximum.
-    /// 
-    /// Reference: KotOR.js MDLLoader.ts - ModelCache pattern
     /// </summary>
+    /// <remarks>
+    /// MDL Model Cache:
+    /// - Based on swkotor2.exe model caching system
+    /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, CExoKeyTable resource management
+    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
+    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models from appearance.2da
+    /// - Original implementation: CExoKeyTable caches loaded models in memory to avoid redundant loading
+    /// - Cache eviction: LRU-style eviction when cache size exceeds maximum (prevents memory issues)
+    /// - Thread-safe: Concurrent access support for async loading scenarios
+    /// - Reference: KotOR.js MDLLoader.ts - ModelCache pattern
+    /// </remarks>
     public sealed class MDLCache
     {
         private static readonly Lazy<MDLCache> _instance = new Lazy<MDLCache>(() => new MDLCache());
