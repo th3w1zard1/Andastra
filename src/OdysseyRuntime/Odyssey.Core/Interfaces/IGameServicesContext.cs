@@ -77,6 +77,11 @@ namespace Odyssey.Core.Interfaces
         /// Gets the sound player.
         /// </summary>
         Audio.ISoundPlayer SoundPlayer { get; }
+
+        /// <summary>
+        /// Gets the journal system (KOTOR-specific, accessed as object to avoid dependency).
+        /// </summary>
+        object JournalSystem { get; }
     }
 }
 

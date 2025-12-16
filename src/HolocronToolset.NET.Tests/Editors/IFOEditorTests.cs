@@ -965,5 +965,116 @@ namespace HolocronToolset.NET.Tests.Editors
             modifiedIfo.StartYear.Should().Be(3956);
             modifiedIfo.XpScale.Should().Be(100);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:396-436
+        // Original: def test_ifo_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorSaveLoadRoundtripIdentity()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            // Create new
+            editor.New();
+
+            // Set some values
+            editor.TagEdit.Text = "roundtrip_test";
+            editor.EntryXSpin.Value = 15.5m;
+            editor.EntryYSpin.Value = 25.5m;
+            editor.EntryZSpin.Value = 10.0m;
+            editor.DawnHourSpin.Value = 7;
+            editor.DuskHourSpin.Value = 19;
+            editor.OnValueChanged();
+
+            // Save
+            var (data1, _) = editor.Build();
+            var savedIfo1 = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data1));
+
+            // Load saved data
+            editor.Load("test.ifo", "test", ResourceType.IFO, data1);
+
+            // Verify modifications preserved
+            editor.TagEdit.Text.Should().Be("roundtrip_test");
+            if (editor.EntryXSpin.Value.HasValue)
+                Math.Abs((float)editor.EntryXSpin.Value.Value - 15.5f).Should().BeLessThan(0.001f);
+            if (editor.EntryYSpin.Value.HasValue)
+                Math.Abs((float)editor.EntryYSpin.Value.Value - 25.5f).Should().BeLessThan(0.001f);
+            if (editor.EntryZSpin.Value.HasValue)
+                Math.Abs((float)editor.EntryZSpin.Value.Value - 10.0f).Should().BeLessThan(0.001f);
+            editor.DawnHourSpin.Value.Should().Be(7);
+            editor.DuskHourSpin.Value.Should().Be(19);
+
+            // Save again
+            var (data2, _) = editor.Build();
+            var savedIfo2 = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data2));
+
+            // Verify second save matches first
+            savedIfo2.Tag.Should().Be(savedIfo1.Tag);
+            Math.Abs(savedIfo2.EntryX - savedIfo1.EntryX).Should().BeLessThan(0.001f);
+            savedIfo2.DawnHour.Should().Be(savedIfo1.DawnHour);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:437-468
+        // Original: def test_ifo_editor_multiple_save_load_cycles(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorMultipleSaveLoadCycles()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Perform multiple cycles
+            for (int cycle = 0; cycle < 5; cycle++)
+            {
+                // Modify
+                editor.TagEdit.Text = $"cycle_{cycle}";
+                editor.EntryXSpin.Value = 10.0m + cycle;
+                editor.TimeScaleSpin.Value = 50 + cycle * 10;
+                editor.OnValueChanged();
+
+                // Save
+                var (data, _) = editor.Build();
+                var savedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data));
+
+                // Verify
+                savedIfo.Tag.Should().Be($"cycle_{cycle}");
+                Math.Abs(savedIfo.EntryX - (10.0f + cycle)).Should().BeLessThan(0.001f);
+                savedIfo.TimeScale.Should().Be(50 + cycle * 10);
+
+                // Load back
+                editor.Load("test.ifo", "test", ResourceType.IFO, data);
+
+                // Verify loaded
+                editor.TagEdit.Text.Should().Be($"cycle_{cycle}");
+                if (editor.EntryXSpin.Value.HasValue)
+                    Math.Abs((float)editor.EntryXSpin.Value.Value - (10.0f + cycle)).Should().BeLessThan(0.001f);
+                editor.TimeScaleSpin.Value.Should().Be(50 + cycle * 10);
+            }
+        }
     }
 }

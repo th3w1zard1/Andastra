@@ -8,11 +8,15 @@ namespace Odyssey.Game
     /// </summary>
     /// <remarks>
     /// Program Entry Point:
-    /// - Based on swkotor2.exe main entry point
+    /// - Based on swkotor2.exe: entry @ 0x0076e2dd (PE entry point)
+    /// - Main initialization: FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Located via string references: "swkotor2" @ 0x007b575c (executable name), "KotOR2" @ 0x0080c210 (game title)
-    /// - Original implementation: Main entry point initializes game, parses command-line arguments, starts game loop
+    /// - Original implementation: Entry point calls GetVersionExA, initializes heap, calls FUN_00404250
+    /// - FUN_00404250: Creates mutex "swkotor2", loads config.txt (FUN_00460ff0), loads swKotor2.ini, initializes engine, runs game loop
+    /// - Config loading: FUN_00460ff0 @ 0x00460ff0 loads and executes text files (config.txt, startup.txt)
+    /// - INI loading: FUN_00630a90 @ 0x00630a90 loads INI file values, FUN_00631ea0 parses INI sections
     /// - Game initialization: Detects KOTOR installation path, loads configuration, creates game instance
-    /// - Based on swkotor2.exe: Main entry point initializes engine, loads resources, starts game loop
+    /// - Command line: DAT_008ba024 = GetCommandLineA() stores command-line arguments
     /// </remarks>
     public static class Program
     {
