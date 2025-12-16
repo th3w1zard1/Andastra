@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Avalonia.Controls;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
@@ -355,14 +356,17 @@ namespace HolocronToolset.NET.Tests.Editors
             // Toggle checkbox
             editor.IsNoteCheckbox.Should().NotBeNull("IsNoteCheckbox should be initialized");
             editor.IsNoteCheckbox.IsChecked = true;
-            editor.IsNoteCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
+            // Force a property update by reading it back
+            bool? checkValue = editor.IsNoteCheckbox.IsChecked;
+            checkValue.Should().BeTrue("Checkbox should be true after setting");
             
             var (data1, _) = editor.Build();
             var modifiedUtw1 = UTWAuto.ReadUtw(data1);
             modifiedUtw1.HasMapNote.Should().BeTrue("HasMapNote should be true after setting checkbox");
 
             editor.IsNoteCheckbox.IsChecked = false;
-            editor.IsNoteCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
+            checkValue = editor.IsNoteCheckbox.IsChecked;
+            checkValue.Should().BeFalse("Checkbox should be false after unchecking");
             
             var (data2, _) = editor.Build();
             var modifiedUtw2 = UTWAuto.ReadUtw(data2);
