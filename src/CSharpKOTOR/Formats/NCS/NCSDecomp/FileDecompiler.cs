@@ -3010,24 +3010,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                                 throw new InvalidOperationException("Main subroutine state is null. This should not happen - AddSubState should have been called in AddMain.");
                             }
                             mainpass = new MainPass(mainState, nodedata, subdata, this.actions);
-                                // Even if apply fails, try to get the state
-                                try
-                                {
-                                    mainsub.Apply(mainpass);
-                                }
-                                catch (Exception e2)
-                                {
-                                    JavaSystem.@out.Println("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
-                                }
-                                SubScriptState minimalMain = mainpass.GetState();
-                                if (minimalMain != null)
-                                {
-                                    minimalMain.IsMain(true);
-                                    data.AddSub(minimalMain);
-                                    JavaSystem.@out.Println("Created minimal main subroutine stub.");
-                                }
-                                mainpass.Done();
+                            // Even if apply fails, try to get the state
+                            try
+                            {
+                                mainsub.Apply(mainpass);
                             }
+                            catch (Exception e2)
+                            {
+                                JavaSystem.@out.Println("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                            }
+                            SubScriptState minimalMain = mainpass.GetState();
+                            if (minimalMain != null)
+                            {
+                                minimalMain.IsMain(true);
+                                data.AddSub(minimalMain);
+                                JavaSystem.@out.Println("Created minimal main subroutine stub.");
+                            }
+                            mainpass.Done();
                         }
                         catch (Exception e2)
                         {
