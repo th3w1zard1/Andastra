@@ -244,6 +244,80 @@ namespace Odyssey.Stride.Backends
 
         #endregion
 
+        #region IMeshShaderBackend Implementation
+
+        protected override ResourceInfo CreateMeshShaderPipelineInternal(byte[] amplificationShader, byte[] meshShader,
+            byte[] pixelShader, MeshPipelineDescription desc, IntPtr handle)
+        {
+            // Create mesh shader pipeline state object through Stride
+            // D3D12_GRAPHICS_PIPELINE_STATE_DESC with mesh/amplification shaders
+            // Would use Stride's pipeline creation API with mesh shader support
+
+            return new ResourceInfo
+            {
+                Type = ResourceType.Pipeline,
+                Handle = handle,
+                NativeHandle = IntPtr.Zero,
+                DebugName = desc.DebugName ?? "MeshShaderPipeline"
+            };
+        }
+
+        protected override void OnDispatchMesh(int x, int y, int z)
+        {
+            // Dispatch mesh shader work
+            // D3D12_COMMAND_LIST_TYPE_DIRECT -> DispatchMesh(x, y, z)
+            // Through Stride's command list: DispatchMesh equivalent
+            Console.WriteLine($"[StrideDX12] DispatchMesh: {x}x{y}x{z}");
+        }
+
+        protected override void OnDispatchMeshIndirect(IntPtr indirectBuffer, int offset)
+        {
+            // Dispatch mesh shader with indirect arguments
+            // D3D12_COMMAND_LIST_TYPE_DIRECT -> DispatchMeshIndirect
+            Console.WriteLine($"[StrideDX12] DispatchMeshIndirect: buffer {indirectBuffer}, offset {offset}");
+        }
+
+        #endregion
+
+        #region IVariableRateShadingBackend Implementation
+
+        protected override void OnSetShadingRate(VrsShadingRate rate)
+        {
+            // Set per-draw shading rate
+            // RSSetShadingRate(D3D12_SHADING_RATE)
+            Console.WriteLine($"[StrideDX12] SetShadingRate: {rate}");
+        }
+
+        protected override void OnSetShadingRateCombiner(VrsCombiner combiner0, VrsCombiner combiner1, VrsShadingRate rate)
+        {
+            // Set shading rate combiner (Tier 1)
+            // RSSetShadingRate(D3D12_SHADING_RATE, D3D12_SHADING_RATE_COMBINER[])
+            Console.WriteLine($"[StrideDX12] SetShadingRateCombiner: {combiner0}/{combiner1}, rate {rate}");
+        }
+
+        protected override void OnSetPerPrimitiveShadingRate(bool enable)
+        {
+            // Enable/disable per-primitive shading rate (Tier 1)
+            // Requires SV_ShadingRate in shader output
+            Console.WriteLine($"[StrideDX12] SetPerPrimitiveShadingRate: {enable}");
+        }
+
+        protected override void OnSetShadingRateImage(IntPtr shadingRateImage, int width, int height)
+        {
+            // Set screen-space shading rate image (Tier 2)
+            // RSSetShadingRateImage with texture
+            Console.WriteLine($"[StrideDX12] SetShadingRateImage: {width}x{height} tiles");
+        }
+
+        protected override int QueryVrsTier()
+        {
+            // Query VRS tier from Stride device capabilities
+            // Would check D3D12_FEATURE_DATA_D3D12_OPTIONS6.VariableShadingRateTier
+            return 2; // Assume Tier 2 for DirectX 12 Ultimate
+        }
+
+        #endregion
+
         #region Capability Queries
 
         protected override bool QueryRaytracingSupport()

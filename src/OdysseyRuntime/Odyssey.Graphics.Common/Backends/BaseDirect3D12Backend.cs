@@ -22,6 +22,15 @@ namespace Odyssey.Graphics.Common.Backends
     /// 
     /// Based on D3D12 API: https://docs.microsoft.com/en-us/windows/win32/direct3d12/
     /// </summary>
+    /// <remarks>
+    /// DirectX 12 Backend:
+    /// - This is a modern graphics API abstraction (DirectX 12 was released after KOTOR2)
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game did not use DirectX 12; this is a modern enhancement for raytracing and advanced features
+    /// - Raytracing: Original game did not support raytracing; this is a modern enhancement
+    /// - This abstraction: Provides DirectX 12 backend for modern Windows systems, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     public abstract class BaseDirect3D12Backend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend
     {
         protected IntPtr _factory;
