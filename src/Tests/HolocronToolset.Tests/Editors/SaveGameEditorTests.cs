@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Andastra.Formats.Extract.SaveData;
-using Andastra.Formats.Formats.ERF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Extract.SaveData;
+using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -99,7 +99,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 // Matching PyKotor implementation: Create minimal but valid save files
                 // Original: save_info = SaveInfo(str(save_folder)); save_info.savegame_name = "Test Save"; etc.
-                var saveInfo = new Andastra.Formats.Extract.SaveData.SaveInfo(saveFolder);
+                var saveInfo = new Andastra.Parsing.Extract.SaveData.SaveInfo(saveFolder);
                 saveInfo.SavegameName = "Test Save";
                 saveInfo.PcName = "TestPlayer";
                 saveInfo.AreaName = "Test Area";
@@ -109,8 +109,8 @@ namespace HolocronToolset.Tests.Editors
 
                 // Matching PyKotor implementation: party_table = PartyTable(str(save_folder)); etc.
                 // Original: party_table.pt_members = [pc_member]; party_table.pt_gold = 1000; party_table.pt_xp_pool = 5000
-                var partyTable = new Andastra.Formats.Extract.SaveData.PartyTable(saveFolder);
-                var pcMember = new Andastra.Formats.Extract.SaveData.PartyMemberEntry
+                var partyTable = new Andastra.Parsing.Extract.SaveData.PartyTable(saveFolder);
+                var pcMember = new Andastra.Parsing.Extract.SaveData.PartyMemberEntry
                 {
                     Index = -1,
                     IsLeader = true
@@ -129,7 +129,7 @@ namespace HolocronToolset.Tests.Editors
                 partyTable.Save();
 
                 // Matching PyKotor implementation: global_vars = GlobalVars(str(save_folder)); etc.
-                var globalVars = new Andastra.Formats.Extract.SaveData.GlobalVars(saveFolder);
+                var globalVars = new Andastra.Parsing.Extract.SaveData.GlobalVars(saveFolder);
                 globalVars.SetBool("TEST_BOOL", true);
                 globalVars.SetNumber("TEST_NUM", 42);
                 globalVars.SetString("TEST_STR", "test string");
@@ -138,22 +138,22 @@ namespace HolocronToolset.Tests.Editors
                 // Matching PyKotor implementation: Create minimal valid SAVEGAME.sav (ERF file)
                 // Original: erf_data = (b"SAV V1.0" + ...)
                 // Create empty ERF file using ERF class
-                var erf = new Andastra.Formats.Formats.ERF.ERF(Andastra.Formats.Formats.ERF.ERFType.ERF, isSave: true);
-                byte[] erfData = Andastra.Formats.Formats.ERF.ERFAuto.BytesErf(erf, Andastra.Formats.Resources.ResourceType.SAV);
+                var erf = new Andastra.Parsing.Formats.ERF.ERF(Andastra.Parsing.Formats.ERF.ERFType.ERF, isSave: true);
+                byte[] erfData = Andastra.Parsing.Formats.ERF.ERFAuto.BytesErf(erf, Andastra.Parsing.Resources.ResourceType.SAV);
                 System.IO.File.WriteAllBytes(System.IO.Path.Combine(saveFolder, "SAVEGAME.sav"), erfData);
 
                 // Matching PyKotor implementation: Load save components directly (skip SAVEGAME.sav which requires valid ERF)
                 // Original: save_info = SaveInfo(str(real_save_folder)); save_info.load()
-                var loadedSaveInfo = new Andastra.Formats.Extract.SaveData.SaveInfo(saveFolder);
+                var loadedSaveInfo = new Andastra.Parsing.Extract.SaveData.SaveInfo(saveFolder);
                 loadedSaveInfo.Load();
-                var loadedPartyTable = new Andastra.Formats.Extract.SaveData.PartyTable(saveFolder);
+                var loadedPartyTable = new Andastra.Parsing.Extract.SaveData.PartyTable(saveFolder);
                 loadedPartyTable.Load();
-                var loadedGlobalVars = new Andastra.Formats.Extract.SaveData.GlobalVars(saveFolder);
+                var loadedGlobalVars = new Andastra.Parsing.Extract.SaveData.GlobalVars(saveFolder);
                 loadedGlobalVars.Load();
 
                 // Matching PyKotor implementation: Create nested capsule manually (without loading invalid SAVEGAME.sav)
                 // Original: nested_capsule = MagicMock(spec=SaveNestedCapsule); nested_capsule.cached_characters = {}
-                var nestedCapsule = new Andastra.Formats.Extract.SaveData.SaveNestedCapsule(saveFolder);
+                var nestedCapsule = new Andastra.Parsing.Extract.SaveData.SaveNestedCapsule(saveFolder);
                 // Don't call Load() to avoid loading invalid SAVEGAME.sav
 
                 // Matching PyKotor implementation: Set up editor with loaded data

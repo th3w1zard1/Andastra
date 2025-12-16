@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -115,7 +115,7 @@ namespace HolocronToolset.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Verify we can read it back
-                GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+                GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
                 return;
             }
@@ -145,7 +145,7 @@ namespace HolocronToolset.Tests.Editors
             data2.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff2 = Andastra.Formats.Formats.GFF.GFF.FromBytes(data2);
+            GFF gff2 = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data2);
             gff2.Should().NotBeNull();
         }
 
@@ -192,10 +192,10 @@ namespace HolocronToolset.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(gitFile);
-            var old = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var old = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             editor.Load(gitFile, "zio001", ResourceType.GIT, data);
             var (newData, _) = editor.Build();
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: false);

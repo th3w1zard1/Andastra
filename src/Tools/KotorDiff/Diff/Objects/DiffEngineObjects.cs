@@ -2,10 +2,10 @@
 // Original: class DiffEngine: ... class DiffResourceType(Enum): ...
 using System;
 using System.Collections.Generic;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.TLK;
-using Andastra.Formats.Formats.TwoDA;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Resources;
 
 namespace KotorDiff.Diff.Objects
 {

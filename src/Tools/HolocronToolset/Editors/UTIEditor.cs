@@ -4,16 +4,16 @@ using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.TwoDA;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using JetBrains.Annotations;
-using GFFAuto = Andastra.Formats.Formats.GFF.GFFAuto;
-using LocalizedString = Andastra.Formats.LocalizedString;
+using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using LocalizedString = Andastra.Parsing.LocalizedString;
 
 namespace HolocronToolset.Editors
 {

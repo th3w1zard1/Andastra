@@ -5,8 +5,8 @@ using System.Linq;
 using Avalonia.Controls;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
-using Andastra.Formats.Resources;
-using FileResource = Andastra.Formats.Resources.FileResource;
+using Andastra.Parsing.Resources;
+using FileResource = Andastra.Parsing.Resources.FileResource;
 using JetBrains.Annotations;
 using NSSEditor = HolocronToolset.Editors.NSSEditor;
 
@@ -107,7 +107,7 @@ namespace HolocronToolset.Utils
         public static Tuple<string, Window> OpenResourceEditor(
             string filepath = null,
             string resname = null,
-            Andastra.Formats.Resources.ResourceType restype = null,
+            Andastra.Parsing.Resources.ResourceType restype = null,
             byte[] data = null,
             HTInstallation installation = null,
             Window parentWindow = null,
@@ -129,23 +129,23 @@ namespace HolocronToolset.Utils
             var targetType = restype.TargetType();
 
             // Route to appropriate editor based on resource type
-            if (targetType == Andastra.Formats.Resources.ResourceType.TwoDA)
+            if (targetType == Andastra.Parsing.Resources.ResourceType.TwoDA)
             {
                 editor = new TwoDAEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.SSF)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.SSF)
             {
                 editor = new SSFEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.TLK)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.TLK)
             {
                 editor = new TLKEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.LTR)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.LTR)
             {
                 editor = new LTREditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.LIP)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.LIP)
             {
                 editor = new LIPEditor(parentWindow, installation);
             }
@@ -153,13 +153,13 @@ namespace HolocronToolset.Utils
             {
                 editor = new BWMEditor(parentWindow, installation);
             }
-            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != Andastra.Formats.Resources.ResourceType.TXI)
+            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != Andastra.Parsing.Resources.ResourceType.TXI)
             {
                 editor = new TPCEditor(parentWindow, installation);
             }
-            else if (restype == Andastra.Formats.Resources.ResourceType.NSS || restype == Andastra.Formats.Resources.ResourceType.NCS)
+            else if (restype == Andastra.Parsing.Resources.ResourceType.NSS || restype == Andastra.Parsing.Resources.ResourceType.NCS)
             {
-                if (installation == null && restype == Andastra.Formats.Resources.ResourceType.NCS)
+                if (installation == null && restype == Andastra.Parsing.Resources.ResourceType.NCS)
                 {
                     // Show warning for NCS without installation
                     // TODO: Show MessageBox when MessageBox.Avalonia is available
@@ -167,7 +167,7 @@ namespace HolocronToolset.Utils
                 }
                 editor = new NSSEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.DLG)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.DLG)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -178,7 +178,7 @@ namespace HolocronToolset.Utils
                     editor = new DLGEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTC || targetType == Andastra.Formats.Resources.ResourceType.BTC || targetType == Andastra.Formats.Resources.ResourceType.BIC)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTC || targetType == Andastra.Parsing.Resources.ResourceType.BTC || targetType == Andastra.Parsing.Resources.ResourceType.BIC)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -189,7 +189,7 @@ namespace HolocronToolset.Utils
                     editor = new UTCEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTP || targetType == Andastra.Formats.Resources.ResourceType.BTP)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTP || targetType == Andastra.Parsing.Resources.ResourceType.BTP)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -200,7 +200,7 @@ namespace HolocronToolset.Utils
                     editor = new UTPEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTD || targetType == Andastra.Formats.Resources.ResourceType.BTD)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTD || targetType == Andastra.Parsing.Resources.ResourceType.BTD)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -211,11 +211,11 @@ namespace HolocronToolset.Utils
                     editor = new UTDEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.IFO)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.IFO)
             {
                 editor = new IFOEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTS)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTS)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -226,7 +226,7 @@ namespace HolocronToolset.Utils
                     editor = new UTSEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTT || targetType == Andastra.Formats.Resources.ResourceType.BTT)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTT || targetType == Andastra.Parsing.Resources.ResourceType.BTT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -237,7 +237,7 @@ namespace HolocronToolset.Utils
                     editor = new UTTEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTM || targetType == Andastra.Formats.Resources.ResourceType.BTM)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTM || targetType == Andastra.Parsing.Resources.ResourceType.BTM)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -248,7 +248,7 @@ namespace HolocronToolset.Utils
                     editor = new UTMEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTW)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTW)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -259,7 +259,7 @@ namespace HolocronToolset.Utils
                     editor = new UTWEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTE || targetType == Andastra.Formats.Resources.ResourceType.BTE)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTE || targetType == Andastra.Parsing.Resources.ResourceType.BTE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -270,7 +270,7 @@ namespace HolocronToolset.Utils
                     editor = new UTEEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.UTI || targetType == Andastra.Formats.Resources.ResourceType.BTI)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.UTI || targetType == Andastra.Parsing.Resources.ResourceType.BTI)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -281,7 +281,7 @@ namespace HolocronToolset.Utils
                     editor = new UTIEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.JRL)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.JRL)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -292,7 +292,7 @@ namespace HolocronToolset.Utils
                     editor = new JRLEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.ARE)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.ARE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -303,7 +303,7 @@ namespace HolocronToolset.Utils
                     editor = new AREEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.PTH)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.PTH)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -314,7 +314,7 @@ namespace HolocronToolset.Utils
                     editor = new PTHEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Formats.Resources.ResourceType.GIT)
+            else if (targetType == Andastra.Parsing.Resources.ResourceType.GIT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -329,13 +329,13 @@ namespace HolocronToolset.Utils
             {
                 editor = new WAVEditor(parentWindow, installation);
             }
-            else if (restype == Andastra.Formats.Resources.ResourceType.ERF || restype == Andastra.Formats.Resources.ResourceType.SAV ||
-                     restype == Andastra.Formats.Resources.ResourceType.MOD || restype == Andastra.Formats.Resources.ResourceType.RIM ||
-                     restype == Andastra.Formats.Resources.ResourceType.BIF)
+            else if (restype == Andastra.Parsing.Resources.ResourceType.ERF || restype == Andastra.Parsing.Resources.ResourceType.SAV ||
+                     restype == Andastra.Parsing.Resources.ResourceType.MOD || restype == Andastra.Parsing.Resources.ResourceType.RIM ||
+                     restype == Andastra.Parsing.Resources.ResourceType.BIF)
             {
                 editor = new ERFEditor(parentWindow, installation);
             }
-            else if (restype == Andastra.Formats.Resources.ResourceType.MDL || restype == Andastra.Formats.Resources.ResourceType.MDX)
+            else if (restype == Andastra.Parsing.Resources.ResourceType.MDL || restype == Andastra.Parsing.Resources.ResourceType.MDX)
             {
                 editor = new MDLEditor(parentWindow, installation);
             }

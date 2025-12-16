@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Resources;
 
 namespace HolocronToolset.Dialogs
 {

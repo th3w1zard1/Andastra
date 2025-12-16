@@ -16,7 +16,7 @@
     <ProjectReference Include="..\..\Andastra\Runtime\Content\Andastra.Runtime.Content.csproj" />
     <ProjectReference Include="..\..\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj" />
     <ProjectReference Include="..\..\Andastra\Runtime\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj" />
-    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Formats.csproj" />
+    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Parsing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

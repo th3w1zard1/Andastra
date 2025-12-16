@@ -3,8 +3,8 @@ using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Andastra.Formats;
-using Andastra.Formats.Formats.LYT;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.LYT;
 
 namespace HolocronToolset.Dialogs
 {

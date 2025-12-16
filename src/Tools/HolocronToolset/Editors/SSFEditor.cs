@@ -6,9 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Extract;
-using Andastra.Formats.Formats.SSF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.SSF;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

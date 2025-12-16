@@ -4,9 +4,9 @@ using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats;
-using Andastra.Formats.Formats.LYT;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

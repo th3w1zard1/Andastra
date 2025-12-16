@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
-using FileResource = Andastra.Formats.Resources.FileResource;
-using Module = Andastra.Formats.Module;
+using FileResource = Andastra.Parsing.Resources.FileResource;
+using Module = Andastra.Parsing.Module;
 
 namespace HolocronToolset.Dialogs
 {

@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Formats;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Mods;
-using Andastra.Formats.Tools;
-using Andastra.Formats.Utility;
+using Andastra.Parsing;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Mods;
+using Andastra.Parsing.Tools;
+using Andastra.Parsing.Utility;
 using KotorDiff.Diff;
-using Andastra.Formats.TSLPatcher;
+using Andastra.Parsing.TSLPatcher;
 using Tuple = System.Tuple;
 using SystemTextEncoding = System.Text.Encoding;
 
@@ -629,7 +629,7 @@ namespace KotorDiff.App
             }
 
             // Use TSLPatchDataGenerator for batch generation
-            var generator = new Andastra.Formats.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
+            var generator = new Andastra.Parsing.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
 
             var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
 
@@ -647,7 +647,7 @@ namespace KotorDiff.App
             LogOutput($"\nGenerating {iniFilename} at: {iniPath}");
 
             // Use TSLPatcher INI serializer
-            var serializer = new Andastra.Formats.Mods.TSLPatcherINISerializer();
+            var serializer = new Andastra.Parsing.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
                 File.WriteAllText(iniPath, iniContent, SystemTextEncoding.UTF8);
 

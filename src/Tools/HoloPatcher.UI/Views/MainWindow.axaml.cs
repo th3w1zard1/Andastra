@@ -491,13 +491,13 @@ namespace HoloPatcher.UI.Views
                     // Set as plain text content - not as a log entry
                     // This matches Python's set_stripped_rtf_text behavior
                     viewModel.ClearLogText();
-                    viewModel.AddLogEntry(stripped, Andastra.Formats.Logger.LogType.Note);
+                    viewModel.AddLogEntry(stripped, Andastra.Parsing.Logger.LogType.Note);
                 }
                 catch (Exception stripEx)
                 {
                     Console.WriteLine($"[RTF] ERROR: Failed to strip RTF: {stripEx.Message}");
                     viewModel.IsRtfContent = false;
-                    viewModel.AddLogEntry("Failed to load RTF content. Please check the console for details.", Andastra.Formats.Logger.LogType.Error);
+                    viewModel.AddLogEntry("Failed to load RTF content. Please check the console for details.", Andastra.Parsing.Logger.LogType.Error);
                 }
             }
         }

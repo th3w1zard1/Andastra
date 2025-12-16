@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Andastra.Formats.Diff;
+using Andastra.Parsing.Diff;
 
 namespace KotorDiff.Diff
 {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -108,7 +108,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -181,7 +181,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1064
             // Original: original_gff = read_gff(original_data)
-            var old = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var old = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1065
             // Original: editor.load(uts_file, "low_air_01", ResourceType.UTS, original_data)
@@ -193,7 +193,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1069
             // Original: new_gff = read_gff(data)
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1076
             // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)

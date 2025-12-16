@@ -80,7 +80,7 @@ namespace HolocronToolset.Utils
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:221-262
         // Original: def get_resource_from_file(filepath, resname, restype) -> bytes:
-        public static byte[] GetResourceFromFile(string filepath, string resname, Andastra.Formats.Resources.ResourceType restype)
+        public static byte[] GetResourceFromFile(string filepath, string resname, Andastra.Parsing.Resources.ResourceType restype)
         {
             if (string.IsNullOrEmpty(filepath) || !System.IO.File.Exists(filepath))
             {

@@ -9,14 +9,14 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats;
-using Andastra.Formats.Formats.ERF;
-using Andastra.Formats.Formats.RIM;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Formats.RIM;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
-using ERFResource = Andastra.Formats.Formats.ERF.ERFResource;
-using RIMResource = Andastra.Formats.Formats.RIM.RIMResource;
+using ERFResource = Andastra.Parsing.Formats.ERF.ERFResource;
+using RIMResource = Andastra.Parsing.Formats.RIM.RIMResource;
 
 namespace HolocronToolset.Editors
 {

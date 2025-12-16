@@ -225,7 +225,7 @@ namespace HolocronToolset.Dialogs
                     string filename = kvp.Key;
                     string name = kvp.Value ?? "";
                     // Matching PyKotor: Module.filepath_to_root(filename)
-                    string root = Andastra.Formats.Installation.Installation.GetModuleRoot(filename);
+                    string root = Andastra.Parsing.Installation.Installation.GetModuleRoot(filename);
                     if (!options.ContainsKey(root))
                     {
                         options[root] = new ModuleOption(name, root, new List<string>(), installation);

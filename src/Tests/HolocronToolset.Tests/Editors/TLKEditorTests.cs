@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -78,7 +78,7 @@ namespace HolocronToolset.Tests.Editors
             fileData.Length.Should().BeGreaterThan(0, "TLK file should not be empty");
 
             // Verify we can read it before loading in editor
-            var testTlk = Andastra.Formats.Formats.TLK.TLKAuto.ReadTlk(fileData);
+            var testTlk = Andastra.Parsing.Formats.TLK.TLKAuto.ReadTlk(fileData);
             testTlk.Count.Should().BeGreaterThan(0, "TLK should have entries");
 
             // Load in editor
@@ -103,7 +103,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
 
             // Verify the built TLK can be read back
-            var builtTlk = Andastra.Formats.Formats.TLK.TLKAuto.ReadTlk(data);
+            var builtTlk = Andastra.Parsing.Formats.TLK.TLKAuto.ReadTlk(data);
             builtTlk.Should().NotBeNull("Built TLK should not be null");
             builtTlk.Count.Should().Be(testTlk.Count, "Built TLK should have same entry count");
         }

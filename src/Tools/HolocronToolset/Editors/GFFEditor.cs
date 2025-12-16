@@ -7,10 +7,10 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats;
+using Andastra.Parsing;
 using System.Numerics;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

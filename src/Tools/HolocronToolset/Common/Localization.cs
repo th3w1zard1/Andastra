@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Andastra.Formats;
+using Andastra.Parsing;
 
 namespace HolocronToolset.Common
 {

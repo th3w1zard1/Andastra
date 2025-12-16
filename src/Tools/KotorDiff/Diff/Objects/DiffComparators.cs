@@ -2,10 +2,10 @@
 // Original: class DiffComparator(ABC, Generic[T]): ... class BytesDiffComparator, GFFDiffComparator, TwoDADiffComparator, TLKDiffComparator, LIPDiffComparator
 using System;
 using System.Collections.Generic;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.LIP;
-using Andastra.Formats.Formats.TLK;
-using Andastra.Formats.Formats.TwoDA;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.LIP;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.TwoDA;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff.Objects
@@ -114,7 +114,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing GffDiff.Compare method
-                var compareResult = Andastra.Formats.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
+                var compareResult = Andastra.Parsing.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
 
                 DiffType diffType = compareResult.Differences.Count == 0 ? DiffType.Identical : DiffType.Modified;
 
@@ -175,8 +175,8 @@ namespace KotorDiff.Diff.Objects
                 // Use StructuredDiffEngine for 2DA comparison
                 var structuredEngine = new StructuredDiffEngine();
                 var result = structuredEngine.Compare2Da(
-                    Andastra.Formats.Formats.TwoDA.TwoDAAuto.BytesTwoDA(left2da, Andastra.Formats.Resources.ResourceType.TwoDA),
-                    Andastra.Formats.Formats.TwoDA.TwoDAAuto.BytesTwoDA(right2da, Andastra.Formats.Resources.ResourceType.TwoDA),
+                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.BytesTwoDA(left2da, Andastra.Parsing.Resources.ResourceType.TwoDA),
+                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.BytesTwoDA(right2da, Andastra.Parsing.Resources.ResourceType.TwoDA),
                     leftId,
                     rightId);
 
@@ -221,7 +221,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing TlkDiff.Compare method
-                var compareResult = Andastra.Formats.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = Andastra.Parsing.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 var entryDiffs = new List<TLKEntryDiff>();
 

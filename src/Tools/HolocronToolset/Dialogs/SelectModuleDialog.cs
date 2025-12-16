@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using Andastra.Formats;
+using Andastra.Parsing;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Dialogs
@@ -149,7 +149,7 @@ namespace HolocronToolset.Dialogs
             foreach (var module in modulesList)
             {
                 // Matching Python: Module.filepath_to_root(module)
-                string moduleRoot = Andastra.Formats.Installation.Installation.GetModuleRoot(module);
+                string moduleRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(module);
                 string casefoldModuleFileName = (moduleRoot + System.IO.Path.GetExtension(module)).ToLowerInvariant().Trim();
                 
                 if (listedModules.Contains(casefoldModuleFileName))
@@ -252,7 +252,7 @@ namespace HolocronToolset.Dialogs
             }
 
             // Matching Python: Module.filepath_to_root(filepath)
-            string moduleRoot = Andastra.Formats.Installation.Installation.GetModuleRoot(filepath);
+            string moduleRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(filepath);
             _selectedModule = moduleRoot;
             Confirm();
         }

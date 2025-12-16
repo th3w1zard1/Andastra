@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -108,7 +108,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -180,7 +180,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1211
             // Original: original_utp = read_utp(original_data)
-            var originalGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var originalGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             UTP originalUtp = UTPHelpers.ConstructUtp(originalGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1212
@@ -193,7 +193,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1216
             // Original: new_utp = read_utp(data)
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
             UTP newUtp = UTPHelpers.ConstructUtp(newGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1221-1264

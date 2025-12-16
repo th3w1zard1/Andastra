@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
-using GFFAuto = Andastra.Formats.Formats.GFF.GFFAuto;
+using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -94,7 +94,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -166,7 +166,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1379
             // Original: original_utc = read_utc(original_data)
-            var originalGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var originalGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             UTC originalUtc = UTCHelpers.ConstructUtc(originalGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1380
@@ -179,7 +179,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1384
             // Original: new_utc = read_utc(data)
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
             UTC newUtc = UTCHelpers.ConstructUtc(newGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1389-1465

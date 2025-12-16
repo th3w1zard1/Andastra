@@ -6,12 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Formats;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Resources;
-using Andastra.Formats.Mods;
+using Andastra.Parsing;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resources;
+using Andastra.Parsing.Mods;
 using KotorDiff.Diff;
-using Andastra.Formats.TSLPatcher;
+using Andastra.Parsing.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution

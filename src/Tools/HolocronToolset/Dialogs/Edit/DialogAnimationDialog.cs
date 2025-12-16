@@ -1,7 +1,7 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Resource.Generics.DLG;
+using Andastra.Parsing.Resource.Generics.DLG;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Dialogs.Edit

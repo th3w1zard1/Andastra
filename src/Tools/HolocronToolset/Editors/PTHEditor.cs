@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using Andastra.Formats;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
-using KotorColor = Andastra.Formats.Color;
+using KotorColor = Andastra.Parsing.Color;
 
 namespace HolocronToolset.Editors
 {

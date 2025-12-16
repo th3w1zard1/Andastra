@@ -6,7 +6,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Widgets

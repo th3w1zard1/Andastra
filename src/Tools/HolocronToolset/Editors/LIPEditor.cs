@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Formats.LIP;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.LIP;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

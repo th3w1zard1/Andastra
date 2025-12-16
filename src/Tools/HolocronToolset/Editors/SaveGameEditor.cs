@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Extract.SaveData;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Extract.SaveData;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

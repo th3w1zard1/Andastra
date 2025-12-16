@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Formats;
-using Andastra.Formats.Formats.BWM;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.MDL;
-using Andastra.Formats.Resource.Generics;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.BWM;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Resource.Generics;
 
 namespace HolocronToolset.Data
 {

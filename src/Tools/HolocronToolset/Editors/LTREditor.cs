@@ -7,8 +7,8 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Formats.LTR;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.LTR;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

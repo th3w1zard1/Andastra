@@ -209,8 +209,8 @@ namespace HolocronToolset.Tests.Dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:135-137
             // Original: capsules = [] # No capsules for now
             var capsules = new List<object>(); // No capsules for now
-            var inventory = new List<Andastra.Formats.InventoryItem>();
-            var equipment = new Dictionary<Andastra.Formats.EquipmentSlot, Andastra.Formats.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
+            var inventory = new List<Andastra.Parsing.InventoryItem>();
+            var equipment = new Dictionary<Andastra.Parsing.EquipmentSlot, Andastra.Parsing.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:139
             // Original: dialog = InventoryEditor(parent, installation, capsules, [], inventory, equipment, droid=False)
@@ -246,9 +246,9 @@ namespace HolocronToolset.Tests.Dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:162-172
             // Original: mock_resource: FileResource = cast(FileResource, MagicMock(spec=FileResource))
             // Create a mock FileResource for testing
-            var mockResource = new Andastra.Formats.Resources.FileResource(
+            var mockResource = new Andastra.Parsing.Resources.FileResource(
                 "test_resource",
-                Andastra.Formats.Resources.ResourceType.UTC,
+                Andastra.Parsing.Resources.ResourceType.UTC,
                 0,
                 100,
                 System.IO.Path.Combine(_installation.Path, "test.utc")
@@ -257,7 +257,7 @@ namespace HolocronToolset.Tests.Dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:171-172
             // Original: search_results: list[FileResource] = []
             // Create LoadFromLocationResultDialog with resources list
-            var searchResults = new List<Andastra.Formats.Resources.FileResource> { mockResource };
+            var searchResults = new List<Andastra.Parsing.Resources.FileResource> { mockResource };
             var parent = new Window();
             parent.Show(); // Ensure parent is shown for name scope
             var window = new LoadFromLocationResultDialog(parent, searchResults);

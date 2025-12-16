@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Tools\NCSDecomp\NCSDecomp.csproj" />
-    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Formats.csproj" />
+    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Parsing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

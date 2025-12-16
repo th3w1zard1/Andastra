@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -120,13 +120,13 @@ namespace HolocronToolset.Tests.Editors
 
                 // Try to get a TPC resource from installation
                 // Matching PyKotor implementation: installation.resources([ResourceIdentifier(resname="", restype=ResourceType.TPC), ResourceIdentifier(resname="", restype=ResourceType.TGA)])
-                var queries = new List<Andastra.Formats.Resources.ResourceIdentifier>
+                var queries = new List<Andastra.Parsing.Resources.ResourceIdentifier>
                 {
-                    new Andastra.Formats.Resources.ResourceIdentifier("", ResourceType.TPC),
-                    new Andastra.Formats.Resources.ResourceIdentifier("", ResourceType.TGA)
+                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.TPC),
+                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.TGA)
                 };
                 var tpcResourcesDict = installation.Resources(queries);
-                var tpcResources = new List<Andastra.Formats.Installation.ResourceResult>();
+                var tpcResources = new List<Andastra.Parsing.Installation.ResourceResult>();
                 foreach (var kvp in tpcResourcesDict)
                 {
                     if (kvp.Value != null)
@@ -142,7 +142,7 @@ namespace HolocronToolset.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: tpc_resource: ResourceResult | None = tpc_resources[0]
-                Andastra.Formats.Installation.ResourceResult tpcResource = tpcResources[0];
+                Andastra.Parsing.Installation.ResourceResult tpcResource = tpcResources[0];
                 // Matching PyKotor implementation: tpc_data: bytes | None = installation.resource(resname=tpc_resource.resname, restype=tpc_resource.restype)
                 var resourceResult = installation.Resource(tpcResource.ResName, tpcResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
@@ -171,7 +171,7 @@ namespace HolocronToolset.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                Andastra.Formats.Formats.TPC.TPC loadedTpc = Andastra.Formats.Formats.TPC.TPCAuto.ReadTpc(data);
+                Andastra.Parsing.Formats.TPC.TPC loadedTpc = Andastra.Parsing.Formats.TPC.TPCAuto.ReadTpc(data);
                 loadedTpc.Should().NotBeNull();
             }
             else
@@ -195,7 +195,7 @@ namespace HolocronToolset.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                Andastra.Formats.Formats.TPC.TPC loadedTpc = Andastra.Formats.Formats.TPC.TPCAuto.ReadTpc(data);
+                Andastra.Parsing.Formats.TPC.TPC loadedTpc = Andastra.Parsing.Formats.TPC.TPCAuto.ReadTpc(data);
                 loadedTpc.Should().NotBeNull();
             }
         }

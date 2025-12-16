@@ -6,17 +6,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Formats.Formats.Capsule;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.SSF;
-using Andastra.Formats.Formats.TwoDA;
-using Andastra.Formats.Mods;
-using Andastra.Formats.Mods.GFF;
-using Andastra.Formats.Mods.SSF;
-using Andastra.Formats.Mods.TwoDA;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.SSF;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Mods;
+using Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Mods.SSF;
+using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Resources;
 using KotorDiff.Diff;
-using Andastra.Formats.TSLPatcher;
+using Andastra.Parsing.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution
@@ -264,18 +264,18 @@ namespace KotorDiff.Resolution
                 modifications.Destination = folder;
                 modifications.SourceFile = resourceName;
 
-                if (modifications is Andastra.Formats.Mods.TwoDA.Modifications2DA mod2da)
+                if (modifications is Andastra.Parsing.Mods.TwoDA.Modifications2DA mod2da)
                 {
                     modificationsByType.Twoda.Add(mod2da);
                     logFunc("  |-- Type: [2DAList]");
                 }
-                else if (modifications is Andastra.Formats.Mods.GFF.ModificationsGFF modGff)
+                else if (modifications is Andastra.Parsing.Mods.GFF.ModificationsGFF modGff)
                 {
                     modGff.SaveAs = resourceName;
                     modificationsByType.Gff.Add(modGff);
                     logFunc("  |-- Type: [GFFList]");
                 }
-                else if (modifications is Andastra.Formats.Mods.SSF.ModificationsSSF modSsf)
+                else if (modifications is Andastra.Parsing.Mods.SSF.ModificationsSSF modSsf)
                 {
                     modificationsByType.Ssf.Add(modSsf);
                     logFunc("  |-- Type: [SSFList]");
@@ -288,15 +288,15 @@ namespace KotorDiff.Resolution
 
                 // Get modifier count based on type
                 int modifiersCount = 0;
-                if (modifications is Andastra.Formats.Mods.TwoDA.Modifications2DA mod2daCount)
+                if (modifications is Andastra.Parsing.Mods.TwoDA.Modifications2DA mod2daCount)
                 {
                     modifiersCount = mod2daCount.Modifiers != null ? mod2daCount.Modifiers.Count : 0;
                 }
-                else if (modifications is Andastra.Formats.Mods.GFF.ModificationsGFF modGff2)
+                else if (modifications is Andastra.Parsing.Mods.GFF.ModificationsGFF modGff2)
                 {
                     modifiersCount = modGff2.Modifiers != null ? modGff2.Modifiers.Count : 0;
                 }
-                else if (modifications is Andastra.Formats.Mods.SSF.ModificationsSSF modSsf2)
+                else if (modifications is Andastra.Parsing.Mods.SSF.ModificationsSSF modSsf2)
                 {
                     modifiersCount = modSsf2.Modifiers != null ? modSsf2.Modifiers.Count : 0;
                 }
@@ -340,15 +340,15 @@ namespace KotorDiff.Resolution
                 // For 2DA files, create empty TwoDA
                 if (extLower == "2da")
                 {
-                    var empty2da = new Andastra.Formats.Formats.TwoDA.TwoDA();
-                    return Andastra.Formats.Formats.TwoDA.TwoDAAuto.BytesTwoDA(empty2da, ResourceType.TwoDA);
+                    var empty2da = new Andastra.Parsing.Formats.TwoDA.TwoDA();
+                    return Andastra.Parsing.Formats.TwoDA.TwoDAAuto.BytesTwoDA(empty2da, ResourceType.TwoDA);
                 }
 
                 // For SSF files, create empty SSF
                 if (extLower == "ssf")
                 {
-                    var emptySsf = new Andastra.Formats.Formats.SSF.SSF();
-                    return Andastra.Formats.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
+                    var emptySsf = new Andastra.Parsing.Formats.SSF.SSF();
+                    return Andastra.Parsing.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
                 }
 
                 // For GFF files, create empty GFF with appropriate content type based on extension
@@ -360,22 +360,22 @@ namespace KotorDiff.Resolution
                 if (gffTypes.Contains(extLower))
                 {
                     // Try to determine GFFContent from extension
-                    Andastra.Formats.Formats.GFF.GFFContent gffContent;
+                    Andastra.Parsing.Formats.GFF.GFFContent gffContent;
                     try
                     {
                         // Map extension to GFFContent enum using FromResName (pass filename with extension)
                         string filename = $"dummy.{ext}";
-                        gffContent = Andastra.Formats.Formats.GFF.GFFContentExtensions.FromResName(filename);
+                        gffContent = Andastra.Parsing.Formats.GFF.GFFContentExtensions.FromResName(filename);
                     }
                     catch
                     {
                         // Fallback to generic GFF content type
-                        gffContent = Andastra.Formats.Formats.GFF.GFFContent.GFF;
+                        gffContent = Andastra.Parsing.Formats.GFF.GFFContent.GFF;
                     }
 
                     // Create empty GFF with determined content type
-                    var emptyGff = new Andastra.Formats.Formats.GFF.GFF(gffContent);
-                    return Andastra.Formats.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
+                    var emptyGff = new Andastra.Parsing.Formats.GFF.GFF(gffContent);
+                    return Andastra.Parsing.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
                 }
             }
             catch (Exception e)
@@ -400,7 +400,7 @@ namespace KotorDiff.Resolution
         {
             try
             {
-                var capsule = new Andastra.Formats.Formats.Capsule.Capsule(capsulePath);
+                var capsule = new Andastra.Parsing.Formats.Capsule.Capsule(capsulePath);
                 string capsuleName = Path.GetFileName(capsulePath);
 
                 // Determine destination based on capsule location and type

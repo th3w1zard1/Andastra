@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Formats;
+using Andastra.Parsing;
 
 namespace HolocronToolset.Data
 {

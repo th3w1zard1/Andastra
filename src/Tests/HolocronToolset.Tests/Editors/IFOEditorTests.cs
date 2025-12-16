@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -94,7 +94,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.VoId.Should().Be(voId);
 
                 // Load back and verify
@@ -135,7 +135,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.Hak.Should().Be(hak);
             }
         }
@@ -172,7 +172,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.ResRef.ToString().Should().Be(resref);
 
                 // Load back and verify
@@ -222,7 +222,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 Math.Abs(modifiedIfo.EntryX - (float)x).Should().BeLessThan(0.001f);
                 Math.Abs(modifiedIfo.EntryY - (float)y).Should().BeLessThan(0.001f);
                 Math.Abs(modifiedIfo.EntryZ - (float)z).Should().BeLessThan(0.001f);
@@ -270,7 +270,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 Math.Abs(modifiedIfo.EntryDirection - (float)direction).Should().BeLessThan(0.001f);
 
                 // Load back and verify
@@ -374,7 +374,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Load original IFO for comparison
             var originalGff = GFF.FromBytes(originalData);
-            Andastra.Formats.Resource.Generics.IFO originalIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(originalGff);
+            Andastra.Parsing.Resource.Generics.IFO originalIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(originalGff);
 
             // Load the IFO file
             string resname = ifoFile != null ? System.IO.Path.GetFileNameWithoutExtension(ifoFile) : "module";
@@ -390,7 +390,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Verify we can read it back (matching Python: loaded_ifo = read_ifo(data))
             var newGff = GFF.FromBytes(data);
-            var loadedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(newGff);
+            var loadedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(newGff);
             loadedIfo.Should().NotBeNull();
 
             // Verify tag matches (matching Python: assert loaded_ifo.tag == original_ifo.tag)
@@ -549,7 +549,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.DawnHour.Should().Be(hour, $"DawnHour should be {hour} after setting DawnHourSpin to {hour}");
             }
         }
@@ -586,7 +586,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.DuskHour.Should().Be(hour, $"DuskHour should be {hour} after setting DuskHourSpin to {hour}");
             }
         }
@@ -623,7 +623,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.TimeScale.Should().Be(scale, $"TimeScale should be {scale} after setting TimeScaleSpin to {scale}");
             }
         }
@@ -673,7 +673,7 @@ namespace HolocronToolset.Tests.Editors
                             // Build and verify
                             var (data, _) = editor.Build();
                             var modifiedGff = GFF.FromBytes(data);
-                            var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                            var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                             modifiedIfo.StartMonth.Should().Be(month, $"StartMonth should be {month}");
                             modifiedIfo.StartDay.Should().Be(day, $"StartDay should be {day}");
                             modifiedIfo.StartHour.Should().Be(hour, $"StartHour should be {hour}");
@@ -716,7 +716,7 @@ namespace HolocronToolset.Tests.Editors
                 // Build and verify
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
-                var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
                 modifiedIfo.XpScale.Should().Be(scale, $"XpScale should be {scale} after setting XpScaleSpin to {scale}");
             }
         }
@@ -748,7 +748,7 @@ namespace HolocronToolset.Tests.Editors
 
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);
-            var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
             modifiedIfo.OnHeartbeat.ToString().Should().Be("test_heartbeat", "OnHeartbeat should be 'test_heartbeat'");
         }
 
@@ -779,7 +779,7 @@ namespace HolocronToolset.Tests.Editors
 
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);
-            var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
             modifiedIfo.OnLoad.ToString().Should().Be("test_on_load", "OnLoad should be 'test_on_load'");
         }
 
@@ -810,7 +810,7 @@ namespace HolocronToolset.Tests.Editors
 
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);
-            var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
             modifiedIfo.OnStart.ToString().Should().Be("test_on_start", "OnStart should be 'test_on_start'");
         }
 
@@ -865,10 +865,10 @@ namespace HolocronToolset.Tests.Editors
             // Build and verify
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);
-            var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
 
             // Verify all scripts - match Python test pattern using reflection (like Python's getattr)
-            var ifoType = typeof(Andastra.Formats.Resource.Generics.IFO);
+            var ifoType = typeof(Andastra.Parsing.Resource.Generics.IFO);
             foreach (var scriptName in editor.ScriptFields.Keys)
             {
                 string expectedValue = scriptTestValues.ContainsKey(scriptName)
@@ -957,7 +957,7 @@ namespace HolocronToolset.Tests.Editors
             // Save and verify all
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);
-            var modifiedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            var modifiedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
 
             modifiedIfo.Tag.Should().Be("combined_test");
             modifiedIfo.VoId.Should().Be("vo_combined");
@@ -1011,7 +1011,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save
             var (data1, _) = editor.Build();
-            var savedIfo1 = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data1));
+            var savedIfo1 = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data1));
 
             // Load saved data
             editor.Load("test.ifo", "test", ResourceType.IFO, data1);
@@ -1029,7 +1029,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save again
             var (data2, _) = editor.Build();
-            var savedIfo2 = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data2));
+            var savedIfo2 = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data2));
 
             // Verify second save matches first
             savedIfo2.Tag.Should().Be(savedIfo1.Tag);
@@ -1070,7 +1070,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save
                 var (data, _) = editor.Build();
-                var savedIfo = Andastra.Formats.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data));
+                var savedIfo = Andastra.Parsing.Resource.Generics.IFOHelpers.ConstructIfo(GFF.FromBytes(data));
 
                 // Verify
                 savedIfo.Tag.Should().Be($"cycle_{cycle}");

@@ -1,5 +1,5 @@
 using System;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -117,12 +117,12 @@ namespace HolocronToolset.Tests.Editors
                 }
 
                 // Try to get a UTE resource from installation
-                var queries = new System.Collections.Generic.List<Andastra.Formats.Resources.ResourceIdentifier>
+                var queries = new System.Collections.Generic.List<Andastra.Parsing.Resources.ResourceIdentifier>
                 {
-                    new Andastra.Formats.Resources.ResourceIdentifier("", ResourceType.UTE)
+                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.UTE)
                 };
                 var uteResourcesDict = installation.Resources(queries);
-                var uteResources = new System.Collections.Generic.List<Andastra.Formats.Installation.ResourceResult>();
+                var uteResources = new System.Collections.Generic.List<Andastra.Parsing.Installation.ResourceResult>();
                 foreach (var kvp in uteResourcesDict)
                 {
                     if (kvp.Value != null)
@@ -138,7 +138,7 @@ namespace HolocronToolset.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: Use first UTE resource
-                Andastra.Formats.Installation.ResourceResult uteResource = uteResources[0];
+                Andastra.Parsing.Installation.ResourceResult uteResource = uteResources[0];
                 var resourceResult = installation.Resource(uteResource.ResName, uteResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
@@ -164,7 +164,7 @@ namespace HolocronToolset.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                Andastra.Formats.Formats.GFF.GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+                Andastra.Parsing.Formats.GFF.GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
             else
@@ -187,7 +187,7 @@ namespace HolocronToolset.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                Andastra.Formats.Formats.GFF.GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+                Andastra.Parsing.Formats.GFF.GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
         }

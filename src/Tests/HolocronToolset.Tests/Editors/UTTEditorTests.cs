@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -66,9 +66,9 @@ namespace HolocronToolset.Tests.Editors
 
             // Build and verify
             var (data, _) = editor.Build();
-            var newUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var newUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            newUtt.Name.Get(Andastra.Formats.Language.English, Andastra.Formats.Gender.Male).Should().Be("New Trigger");
+            newUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("New Trigger");
             newUtt.Tag.Should().Be("new_trigger");
             // Use approximate comparison for float due to GFF single-precision serialization
             Math.Abs(newUtt.HighlightHeight - 2.0f).Should().BeLessThan(0.01f);
@@ -130,7 +130,7 @@ namespace HolocronToolset.Tests.Editors
 
             var editor = new UTTEditor(null, installation);
             byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
-            var originalUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(originalData);
+            var originalUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(originalData);
 
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
 
@@ -141,13 +141,13 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
-            modifiedUtt.Name.Get(Andastra.Formats.Language.English, Andastra.Formats.Gender.Male).Should().Be("Modified Trigger Name");
-            modifiedUtt.Name.Get(Andastra.Formats.Language.English, Andastra.Formats.Gender.Male).Should().NotBe(originalUtt.Name.Get(Andastra.Formats.Language.English, Andastra.Formats.Gender.Male));
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
+            modifiedUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("Modified Trigger Name");
+            modifiedUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().NotBe(originalUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male));
 
             // Load back and verify
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
-            editor.NameEdit.GetLocString().Get(Andastra.Formats.Language.English, Andastra.Formats.Gender.Male).Should().Be("Modified Trigger Name");
+            editor.NameEdit.GetLocString().Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("Modified Trigger Name");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:51-75
@@ -192,7 +192,7 @@ namespace HolocronToolset.Tests.Editors
 
             var editor = new UTTEditor(null, installation);
             byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
-            var originalUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(originalData);
+            var originalUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(originalData);
 
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
 
@@ -202,7 +202,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.Tag.Should().Be("modified_tag");
             modifiedUtt.Tag.Should().NotBe(originalUtt.Tag);
 
@@ -262,7 +262,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.ResRef.ToString().Should().Be("modified_resref");
 
             // Load back and verify
@@ -329,7 +329,7 @@ namespace HolocronToolset.Tests.Editors
 
                     // Save and verify
                     var (data, _) = editor.Build();
-                    var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                    var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                     modifiedUtt.Cursor.Should().Be(i);
 
                     // Load back and verify
@@ -400,7 +400,7 @@ namespace HolocronToolset.Tests.Editors
 
                     // Save and verify
                     var (data, _) = editor.Build();
-                    var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                    var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                     modifiedUtt.TypeId.Should().Be(i);
 
                     // Load back and verify
@@ -466,7 +466,7 @@ namespace HolocronToolset.Tests.Editors
             
             // Build and verify
             var (data1, _) = editor.Build();
-            var modifiedUtt1 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data1);
+            var modifiedUtt1 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data1);
             modifiedUtt1.AutoRemoveKey.Should().BeTrue("AutoRemoveKey should be true after setting checkbox to true");
 
             // Set checkbox to false and verify it's set
@@ -475,7 +475,7 @@ namespace HolocronToolset.Tests.Editors
             
             // Build and verify
             var (data2, _) = editor.Build();
-            var modifiedUtt2 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data2);
+            var modifiedUtt2 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data2);
             modifiedUtt2.AutoRemoveKey.Should().BeFalse("AutoRemoveKey should be false after setting checkbox to false");
         }
 
@@ -535,7 +535,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save and verify
                 var (data, _) = editor.Build();
-                var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                 modifiedUtt.KeyName.Should().Be(key);
 
                 // Load back and verify
@@ -605,7 +605,7 @@ namespace HolocronToolset.Tests.Editors
 
                     // Save and verify
                     var (data, _) = editor.Build();
-                    var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                    var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                     modifiedUtt.FactionId.Should().Be(i);
                 }
             }
@@ -667,7 +667,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save and verify
                 var (data, _) = editor.Build();
-                var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                 // Use approximate comparison for float due to GFF single-precision serialization
                 Math.Abs(modifiedUtt.HighlightHeight - (float)val).Should().BeLessThan(0.01f);
 
@@ -730,13 +730,13 @@ namespace HolocronToolset.Tests.Editors
             editor.IsTrapCheckbox.IsChecked = true;
             editor.IsTrapCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
             var (data1, _) = editor.Build();
-            var modifiedUtt1 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data1);
+            var modifiedUtt1 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data1);
             modifiedUtt1.IsTrap.Should().BeTrue("IsTrap should be true after setting checkbox to true");
 
             editor.IsTrapCheckbox.IsChecked = false;
             editor.IsTrapCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
             var (data2, _) = editor.Build();
-            var modifiedUtt2 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data2);
+            var modifiedUtt2 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data2);
             modifiedUtt2.IsTrap.Should().BeFalse("IsTrap should be false after setting checkbox to false");
         }
 
@@ -799,7 +799,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save and verify
                 var (data, _) = editor.Build();
-                var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                 modifiedUtt.TrapDetectDc.Should().Be(val, $"TrapDetectDc should be {val} after setting DetectDcSpin to {val}");
 
                 // Load back and verify
@@ -868,7 +868,7 @@ namespace HolocronToolset.Tests.Editors
 
                     // Save and verify
                     var (data, _) = editor.Build();
-                    var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                    var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                     modifiedUtt.TrapType.Should().Be(i);
 
                     // Load back and verify
@@ -933,7 +933,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnClickScript.ToString().Should().Be("test_on_click");
         }
 
@@ -990,7 +990,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnDisarmScript.ToString().Should().Be("test_on_disarm");
         }
 
@@ -1047,7 +1047,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnEnterScript.ToString().Should().Be("test_on_enter");
         }
 
@@ -1104,7 +1104,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnExitScript.ToString().Should().Be("test_on_exit");
         }
 
@@ -1161,7 +1161,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnHeartbeatScript.ToString().Should().Be("test_heartbeat");
         }
 
@@ -1218,7 +1218,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnTrapTriggeredScript.ToString().Should().Be("test_trap_trig");
         }
 
@@ -1275,7 +1275,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.OnUserDefinedScript.ToString().Should().Be("test_user_def");
         }
 
@@ -1342,7 +1342,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save and verify
                 var (data, _) = editor.Build();
-                var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                 modifiedUtt.Comment.Should().Be(comment);
 
                 // Load back and verify
@@ -1433,7 +1433,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify all
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             modifiedUtt.OnClickScript.ToString().Should().Be("s_onclick");
             modifiedUtt.OnDisarmScript.ToString().Should().Be("s_ondisarm");
@@ -1513,9 +1513,9 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify all
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            modifiedUtt.Name.Get(Andastra.Formats.Language.English, Andastra.Formats.Gender.Male).Should().Be("Combined Test Trigger");
+            modifiedUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("Combined Test Trigger");
             modifiedUtt.Tag.Should().Be("combined_test");
             modifiedUtt.ResRef.ToString().Should().Be("combined_resref");
         }
@@ -1565,13 +1565,13 @@ namespace HolocronToolset.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(uttFile);
-            var oldGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var oldGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
 
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
 
             var (newData, _) = editor.Build();
 
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = oldGff.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
@@ -1643,7 +1643,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save
             var (data1, _) = editor.Build();
-            var savedUtt1 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data1);
+            var savedUtt1 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data1);
 
             // Load saved data
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, data1);
@@ -1713,13 +1713,13 @@ namespace HolocronToolset.Tests.Editors
             editor.ActivateOnceCheckbox.IsChecked = true;
             editor.ActivateOnceCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
             var (data1, _) = editor.Build();
-            var modifiedUtt1 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data1);
+            var modifiedUtt1 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data1);
             modifiedUtt1.TrapOnce.Should().BeTrue("TrapOnce should be true after setting checkbox to true");
 
             editor.ActivateOnceCheckbox.IsChecked = false;
             editor.ActivateOnceCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
             var (data2, _) = editor.Build();
-            var modifiedUtt2 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data2);
+            var modifiedUtt2 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data2);
             modifiedUtt2.TrapOnce.Should().BeFalse("TrapOnce should be false after setting checkbox to false");
         }
 
@@ -1775,12 +1775,12 @@ namespace HolocronToolset.Tests.Editors
 
             detectableCheckbox.IsChecked = true;
             var (data1, _) = editor.Build();
-            var modifiedUtt1 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data1);
+            var modifiedUtt1 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data1);
             modifiedUtt1.TrapDetectable.Should().BeTrue();
 
             detectableCheckbox.IsChecked = false;
             var (data2, _) = editor.Build();
-            var modifiedUtt2 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data2);
+            var modifiedUtt2 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data2);
             modifiedUtt2.TrapDetectable.Should().BeFalse();
         }
 
@@ -1836,12 +1836,12 @@ namespace HolocronToolset.Tests.Editors
 
             disarmableCheckbox.IsChecked = true;
             var (data1, _) = editor.Build();
-            var modifiedUtt1 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data1);
+            var modifiedUtt1 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data1);
             modifiedUtt1.TrapDisarmable.Should().BeTrue();
 
             disarmableCheckbox.IsChecked = false;
             var (data2, _) = editor.Build();
-            var modifiedUtt2 = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data2);
+            var modifiedUtt2 = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data2);
             modifiedUtt2.TrapDisarmable.Should().BeFalse();
         }
 
@@ -1903,7 +1903,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save and verify
                 var (data, _) = editor.Build();
-                var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
                 modifiedUtt.TrapDisarmDc.Should().Be(val, $"TrapDisarmDc should be {val} after setting DisarmDcSpin to {val}");
 
                 // Load back and verify
@@ -1986,7 +1986,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify all (only fields that work)
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             // Note: Checkbox and NumericUpDown fields will fail due to known issue
             // TrapType may also fail if ComboBox2DA SetSelectedIndex doesn't work correctly
@@ -2054,7 +2054,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Save
                 var (data, _) = editor.Build();
-                var savedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+                var savedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
                 // Verify
                 savedUtt.Tag.Should().Be($"cycle_{cycle}");
@@ -2139,7 +2139,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify (only fields that work - skip DetectDc/DisarmDc due to known issue)
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             modifiedUtt.Tag.Should().Be("");
             Math.Abs(modifiedUtt.HighlightHeight - 0.0f).Should().BeLessThan(0.01f);
@@ -2202,7 +2202,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify (only fields that work - skip DetectDc/DisarmDc due to known issue)
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             // Use approximate comparison for float due to GFF single-precision serialization
             if (highlightHeightSpin != null)
@@ -2304,7 +2304,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             modifiedUtt.Tag.Should().Be("");
             modifiedUtt.ResRef.ToString().Should().Be("");
@@ -2375,7 +2375,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Save and verify
             var (data, _) = editor.Build();
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             modifiedUtt.Tag.Should().Be(specialTag);
             modifiedUtt.Comment.Should().Be(specialComment);
@@ -2423,14 +2423,14 @@ namespace HolocronToolset.Tests.Editors
 
             // Load original
             byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
-            var originalUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(originalData);
+            var originalUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(originalData);
             
             var editor = new UTTEditor(null, installation);
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
 
             // Save without modifications
             var (data, _) = editor.Build();
-            var newUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var newUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             // Compare UTT objects functionally (not raw GFF structures)
             // This ensures the roundtrip preserves all data correctly, even if the GFF
@@ -2518,11 +2518,11 @@ namespace HolocronToolset.Tests.Editors
             var (data, _) = editor.Build();
 
             // Verify it's valid GFF
-            var newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             newGff.Should().NotBeNull("GFF should be valid");
 
             // Verify it's valid UTT
-            var modifiedUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
             modifiedUtt.Tag.Should().Be("modified_gff_test");
             // Use approximate comparison for float due to GFF single-precision serialization
             Math.Abs(modifiedUtt.HighlightHeight - 5.0f).Should().BeLessThan(0.01f);
@@ -2552,7 +2552,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Build and verify defaults
             var (data, _) = editor.Build();
-            var newUtt = Andastra.Formats.Resource.Generics.UTTAuto.ReadUtt(data);
+            var newUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
             // Verify defaults (may vary, but should be consistent)
             // Just verify the UTT object was created successfully with valid types

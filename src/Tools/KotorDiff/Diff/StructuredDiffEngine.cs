@@ -3,9 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.TLK;
-using Andastra.Formats.Formats.TwoDA;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.TwoDA;
 using KotorDiff.Diff.Objects;
 using JetBrains.Annotations;
 
@@ -29,8 +29,8 @@ namespace KotorDiff.Diff
         {
             try
             {
-                var leftReader = new Andastra.Formats.Formats.TwoDA.TwoDABinaryReader(leftData);
-                var rightReader = new Andastra.Formats.Formats.TwoDA.TwoDABinaryReader(rightData);
+                var leftReader = new Andastra.Parsing.Formats.TwoDA.TwoDABinaryReader(leftData);
+                var rightReader = new Andastra.Parsing.Formats.TwoDA.TwoDABinaryReader(rightData);
                 var left2da = leftReader.Load();
                 var right2da = rightReader.Load();
 
@@ -268,8 +268,8 @@ namespace KotorDiff.Diff
         {
             try
             {
-                var leftReader = new Andastra.Formats.Formats.GFF.GFFBinaryReader(leftData);
-                var rightReader = new Andastra.Formats.Formats.GFF.GFFBinaryReader(rightData);
+                var leftReader = new Andastra.Parsing.Formats.GFF.GFFBinaryReader(leftData);
+                var rightReader = new Andastra.Parsing.Formats.GFF.GFFBinaryReader(rightData);
                 var leftGff = leftReader.Load();
                 var rightGff = rightReader.Load();
 
@@ -582,8 +582,8 @@ namespace KotorDiff.Diff
         {
             try
             {
-                var leftReader = new Andastra.Formats.Formats.TLK.TLKBinaryReader(leftData);
-                var rightReader = new Andastra.Formats.Formats.TLK.TLKBinaryReader(rightData);
+                var leftReader = new Andastra.Parsing.Formats.TLK.TLKBinaryReader(leftData);
+                var rightReader = new Andastra.Parsing.Formats.TLK.TLKBinaryReader(rightData);
                 var leftTlk = leftReader.Load();
                 var rightTlk = rightReader.Load();
 

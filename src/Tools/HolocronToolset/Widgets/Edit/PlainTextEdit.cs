@@ -2,7 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats;
+using Andastra.Parsing;
 
 namespace HolocronToolset.Widgets.Edit
 {

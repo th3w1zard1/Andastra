@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Formats.Diff;
-using Andastra.Formats.Mods;
+using Andastra.Parsing.Diff;
+using Andastra.Parsing.Mods;
 
 namespace KotorDiff.Diff
 {
@@ -80,7 +80,7 @@ namespace KotorDiff.Diff
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
         {
-            var analyzer = new Andastra.Formats.Diff.GffDiffAnalyzer();
+            var analyzer = new Andastra.Parsing.Diff.GffDiffAnalyzer();
             return analyzer.Analyze(leftData, rightData, identifier);
         }
     }
@@ -93,17 +93,17 @@ namespace KotorDiff.Diff
             try
             {
                 // Read TLK files
-                var leftReader = new Andastra.Formats.Formats.TLK.TLKBinaryReader(leftData);
-                var rightReader = new Andastra.Formats.Formats.TLK.TLKBinaryReader(rightData);
+                var leftReader = new Andastra.Parsing.Formats.TLK.TLKBinaryReader(leftData);
+                var rightReader = new Andastra.Parsing.Formats.TLK.TLKBinaryReader(rightData);
                 var leftTlk = leftReader.Load();
                 var rightTlk = rightReader.Load();
 
                 // Use existing TlkDiff comparison
-                var compareResult = Andastra.Formats.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = Andastra.Parsing.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 // Generate ModificationsTLK from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
-                var modifications = new Andastra.Formats.Mods.TLK.ModificationsTLK("append.tlk", false);
+                var modifications = new Andastra.Parsing.Mods.TLK.ModificationsTLK("append.tlk", false);
                 modifications.SaveAs = filename;
 
                 int tokenId = 0;
@@ -114,7 +114,7 @@ namespace KotorDiff.Diff
                 {
                     int idx = kvp.Key;
                     var entry = kvp.Value;
-                    var modify = new Andastra.Formats.Mods.TLK.ModifyTLK(tokenId, false);
+                    var modify = new Andastra.Parsing.Mods.TLK.ModifyTLK(tokenId, false);
                     modify.ModIndex = idx;
                     modify.Text = entry.Text ?? "";
                     modify.Sound = entry.Sound ?? "";
@@ -128,7 +128,7 @@ namespace KotorDiff.Diff
                 {
                     int idx = kvp.Key;
                     var (text, sound) = kvp.Value;
-                    var modify = new Andastra.Formats.Mods.TLK.ModifyTLK(tokenId, false);
+                    var modify = new Andastra.Parsing.Mods.TLK.ModifyTLK(tokenId, false);
                     modify.ModIndex = idx;
                     modify.Text = text ?? "";
                     modify.Sound = sound ?? "";
@@ -160,24 +160,24 @@ namespace KotorDiff.Diff
             try
             {
                 // Read SSF files
-                var leftReader = new Andastra.Formats.Formats.SSF.SSFBinaryReader(leftData);
-                var rightReader = new Andastra.Formats.Formats.SSF.SSFBinaryReader(rightData);
+                var leftReader = new Andastra.Parsing.Formats.SSF.SSFBinaryReader(leftData);
+                var rightReader = new Andastra.Parsing.Formats.SSF.SSFBinaryReader(rightData);
                 var leftSsf = leftReader.Load();
                 var rightSsf = rightReader.Load();
 
                 // Use existing SsfDiff comparison
-                var compareResult = Andastra.Formats.Diff.SsfDiff.Compare(leftSsf, rightSsf);
+                var compareResult = Andastra.Parsing.Diff.SsfDiff.Compare(leftSsf, rightSsf);
 
                 // Generate ModificationsSSF from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
-                var modifications = new Andastra.Formats.Mods.SSF.ModificationsSSF(filename, false);
+                var modifications = new Andastra.Parsing.Mods.SSF.ModificationsSSF(filename, false);
 
                 // Process changed sounds
                 foreach (var kvp in compareResult.ChangedSounds)
                 {
                     var sound = kvp.Key;
                     int stringref = kvp.Value;
-                    var modify = new Andastra.Formats.Mods.SSF.ModifySSF(sound, new Andastra.Formats.Memory.NoTokenUsage(stringref.ToString()));
+                    var modify = new Andastra.Parsing.Mods.SSF.ModifySSF(sound, new Andastra.Parsing.Memory.NoTokenUsage(stringref.ToString()));
                     modifications.Modifiers.Add(modify);
                 }
 

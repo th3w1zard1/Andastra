@@ -3,8 +3,8 @@
 using System;
 using System.IO;
 using System.Diagnostics;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Mods;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Mods;
 using KotorDiff.Resolution;
 using KotorDiff.Diff;
 using Xunit;

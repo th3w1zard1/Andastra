@@ -74,6 +74,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Formats.csproj" />
+    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Parsing.csproj" />
   </ItemGroup>
 </Project>

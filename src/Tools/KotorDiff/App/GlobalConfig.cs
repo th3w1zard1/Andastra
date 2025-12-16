@@ -13,7 +13,7 @@ namespace KotorDiff.App
         public FileInfo OutputLog { get; set; }
         public bool? LoggingEnabled { get; set; }
         public KotorDiffConfig Config { get; set; }
-        public Andastra.Formats.Mods.ModificationsByType ModificationsByType { get; set; }
+        public Andastra.Parsing.Mods.ModificationsByType ModificationsByType { get; set; }
     }
 }
 

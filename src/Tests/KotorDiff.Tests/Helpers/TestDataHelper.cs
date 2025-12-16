@@ -6,16 +6,16 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using static Andastra.Formats.Formats.GFF.GFFAuto;
-using Andastra.Formats.Formats.SSF;
-using static Andastra.Formats.Formats.SSF.SSFAuto;
-using Andastra.Formats.Formats.TwoDA;
-using static Andastra.Formats.Formats.TwoDA.TwoDAAuto;
-using Andastra.Formats.Formats.TLK;
-using static Andastra.Formats.Formats.TLK.TLKAuto;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using static Andastra.Parsing.Formats.GFF.GFFAuto;
+using Andastra.Parsing.Formats.SSF;
+using static Andastra.Parsing.Formats.SSF.SSFAuto;
+using Andastra.Parsing.Formats.TwoDA;
+using static Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
+using Andastra.Parsing.Formats.TLK;
+using static Andastra.Parsing.Formats.TLK.TLKAuto;
+using Andastra.Parsing.Resources;
 using KotorDiff.App;
 
 namespace KotorDiff.Tests.Helpers

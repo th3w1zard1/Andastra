@@ -5,23 +5,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Formats;
-using Andastra.Formats.Diff;
-using Andastra.Formats.Extract;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Formats.NCS;
-using Andastra.Formats.Formats.SSF;
-using Andastra.Formats.Formats.TwoDA;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Mods;
-using Andastra.Formats.Mods.GFF;
-using Andastra.Formats.Mods.TLK;
-using Andastra.Formats.Mods.NCS;
-using Andastra.Formats.Mods.SSF;
-using Andastra.Formats.Mods.TwoDA;
-using Andastra.Formats.Memory;
-using Andastra.Formats.Resources;
-using Andastra.Formats.Tools;
+using Andastra.Parsing;
+using Andastra.Parsing.Diff;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Formats.SSF;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Mods;
+using Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Mods.TLK;
+using Andastra.Parsing.Mods.NCS;
+using Andastra.Parsing.Mods.SSF;
+using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resources;
+using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -94,7 +94,7 @@ namespace KotorDiff.Diff
             var offsets = new List<int>();
             try
             {
-                using (var reader = Andastra.Formats.BinaryReader.FromBytes(ncsData))
+                using (var reader = Andastra.Parsing.BinaryReader.FromBytes(ncsData))
                 {
                     // Skip NCS header (13 bytes)
                     string signature = reader.ReadString(4);

@@ -31,7 +31,7 @@ When creating ANY new `.md` files, always follow these guidelines:
 
 - Always place within `docs`
 - Never report on progression (changes and what still remains to be done).
-- Exclusively provide public-facing documentation, something an end user will need to read if they want to either develop for PyKotor or work with it.
+- Exclusively provide public-facing documentation, something an end user will need to read if they want to either develop for Andastra.NET or work with it.
 
 Please do not create .md documentation unless it delivers public-facing information or authoritative gameplay/platform references that an end user or developer genuinely needs for PyKotor or the games themselves.
 
@@ -92,99 +92,6 @@ When fixing code, convert C# 8+ syntax to C# 7.3 compatible alternatives, includ
 - `using var x = ...` → `using (var x = ...) { }`
 - `namespace SomeNamespace;` → `namespace SomeNamespace { ... }`
 
-## 1:1 Porting Requirements
-
-When porting code from Python (vendor/PyKotor) to C#:
-
-1. **Exact Code Matching**: All code must match the Python source 1:1, including:
-   - Logic and control flow
-   - Variable names (converted to C# naming conventions where necessary)
-   - Comments (exact text, no additional comments)
-   - Whitespace structure (where applicable)
-
-2. **Comments**:
-   - DO NOT add explanatory comments about how Python works
-   - DO NOT add comments explaining the conversion
-   - DO NOT add "1:1 port" comments
-   - DO NOT add "TODO" comments unless they exist in Python
-   - ONLY include comments that exist in the Python source
-   - Match comment text exactly, including docstrings
-
-3. **No Additional Code**:
-   - DO NOT add helper methods unless they exist in Python
-   - DO NOT add validation unless it exists in Python
-   - DO NOT add error handling unless it exists in Python
-   - DO NOT add optimizations unless they exist in Python
-
-4. **Assumptions**:
-   - If Python tests pass, the Python implementation is correct
-   - If C# tests fail, the C# code does not match Python
-   - Fix failures by matching Python exactly, not by "improving" the code
-
-5. **File Structure**:
-   - Match Python file organization where possible
-   - Match class/method organization where possible
-
-6. **Error Messages**:
-   - Match Python error messages exactly (converted to C# string formatting)
-
-## Testing
-
-- All ported tests must pass
-- Failing tests indicate the C# code does not match Python
-- Fix by matching Python exactly, not by changing test expectations
-
-## Matching Implementations
-
-**CRITICAL: Source Lookup & Commenting**
-
-Before making ANY edit to ANY file, you MUST locate the corresponding source code in the `vendor` directory to ensure 1:1 parity.
-
-1. **Identify the Source of Truth**:
-   - **General Logic / Compiler**: Use `vendor/PyKotor` (e.g., `Libraries/PyKotor/...`).
-   - **Decompiler (NCS -> NSS)**: Use `vendor/DeNCS` or `vendor/NCSDecomp`. **IGNORE PyKotor** for decompilation logic.
-
-2. **Add Precise Reference Comments**:
-   Every ported method or logic block MUST have a comment with:
-   - **EXACT Relative Path**: Path to the source file (e.g., `Libraries/PyKotor/src/pykotor/extract/twoda.py`).
-   - **EXACT Line Numbers**: Specific line number or range.
-   - **Code Snippet**: Include 1-2 lines of the ORIGINAL source code to prove you checked it.
-
-   **Format**:
-
-   ```csharp
-   // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/module/module.py:45
-   // Original: self._name = name
-   this._name = name;
-   ```
-
-## Running PyKotor Python Code
-
-**CRITICAL: Virtual Environment Setup for Python Execution**
-
-When running ANY Python code or tests in `vendor/PyKotor`, you MUST use the following pattern to ensure the correct virtual environment is activated and environment variables are loaded:
-
-**PowerShell Command Pattern**:
-
-```powershell
-cd <workspace_path>/vendor/PyKotor; & "<workspace_path>/vendor/PyKotor/.venv_3.13/Scripts/Activate.ps1"; Get-Content .env | ForEach-Object { if ($_ -match '^([^#][^=]*)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] } }; <your_python_command>
-```
-
-**Components Explained**:
-
-1. **Change Directory**: `cd <workspace_path>/vendor/PyKotor` - Changes to the PyKotor directory
-2. **Activate Virtual Environment**: `& "<workspace_path>/vendor/PyKotor/.venv_3.13/Scripts/Activate.ps1"` - Activates the Python virtual environment (the `&` operator executes the script in PowerShell)
-3. **Load Environment Variables**: `Get-Content .env | ForEach-Object { if ($_ -match '^([^#][^=]*)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] } }` - Parses the `.env` file and loads environment variables (skips comment lines, extracts KEY=VALUE pairs)
-4. **Execute Python Command**: Your actual Python command (e.g., `python -m pytest Libraries/PyKotor/tests/resource/formats/test_ncs.py -v --tb=short 2>&1`)
-
-**Examples**:
-
-- Running pytest: Replace `<your_python_command>` with `python -m pytest Libraries/PyKotor/tests/resource/formats/test_ncs.py -v --tb=short 2>&1`
-- Running a Python script: Replace `<your_python_command>` with `python path/to/script.py`
-- Running a Python module: Replace `<your_python_command>` with `python -m module.name`
-
-**IMPORTANT**: Always replace `<workspace_path>` with the actual workspace root path (e.g., `G:\GitHub\HoloPatcher.NET`). All commands are chained with semicolons (`;`) to execute as a single PowerShell command.
-
 ## NCS/NSS File Operations
 
 The `scripts` directory contains a comprehensive unified PowerShell tool for all NCS/NSS file operations:
@@ -228,37 +135,16 @@ The tool supports `-WhatIf` for dry-run testing, `-Verbose` for detailed output,
 
 ## NCSDecomp.NET - External Compiler Prohibition
 
-**CRITICAL: ABSOLUTE PROHIBITION OF EXTERNAL COMPILERS**
+**CRITICAL: Ghidra MCP Usage for Andastra Code (Aurora/Eclipse/Infinity/Odyssey)**
 
-**FOR NCSDecomp.NET ONLY**: Under NO circumstances should NCSDecomp.NET use external compilers, especially NOT `nwnnsscomp.exe` or any other external compiler tool.
-
-**The entire purpose of NCSDecomp.NET is to implement its own self-contained compiler/decompiler.**
-
-**This means:**
-
-- DO NOT call `nwnnsscomp.exe` from NCSDecomp.NET code
-- DO NOT invoke any external compiler executables
-- DO NOT use `CompilerUtil`, `NWScriptLocator`, or any compiler wrapper classes
-- DO NOT implement compiler execution methods (`externalCompile`, `externalDecompile`, etc.)
-- DO NOT depend on external compiler availability for decompilation to work
-- NCSDecomp.NET must be completely self-contained and functional without any external tools
-
-**Note**: This restriction applies ONLY to `src/NCSDecomp` and `src/CSharpKOTOR/Formats/NCS/NCSDecomp`. Other parts of HoloPatcher.NET (e.g., tests, round-trip validation utilities) MAY use external compilers, but the core decompiler library must NOT.
-
-**If you see code in NCSDecomp.NET that calls external compilers, it should be removed or refactored to use internal implementations only.**
-
-## Odyssey Engine Development
-
-**CRITICAL: Ghidra MCP Usage for Engine-Related Code**
-
-When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agents MUST:
+When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MUST:
 
 1. **Use Ghidra MCP** for understanding original engine behavior:
    - **ALL executables loaded in Ghidra** are assumed to be BioWare engine games and are necessary for reverse engineering
    - Use `mcp_ghidra_*` tools to discover, search, and analyze functions across ALL loaded executables
    - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh", "GLOBALVARS", "PARTYTABLE")
    - Verify implementation faithfulness against original engine behavior
-   - **MANDATORY**: When modifying ANY code in `src/OdysseyRuntime/`, AI agents MUST:
+   - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
      - Search Ghidra for related functions using string searches and function name searches across ALL loaded executables
      - Decompile relevant functions to understand original implementation
      - Add detailed comments with Ghidra function addresses and context
@@ -301,7 +187,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - Roadmap: `docs/engine_roadmap.md`
 
 3. **CRITICAL: External API Documentation Research**:
-   When implementing ANY external API usage (MonoGame, .NET Framework, third-party libraries) in `src/OdysseyRuntime/`, AI agents MUST:
+   When implementing ANY external API usage (MonoGame, .NET Framework, third-party libraries) in `src/Andastra/`, AI agents MUST:
 
    **Required Workflow**:
    1. **Search**: Use `mcp_context7_get-library-docs`, `mcp_firecrawl_firecrawl_search`, `mcp_tavily_tavily-search`, or `web_search` to find official API documentation
@@ -343,7 +229,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - Use Context7 for library docs, Firecrawl/Tavily for web search, web_search as fallback
 
 4. **CRITICAL: Ghidra MCP Documentation for Engine Code**:
-   When implementing or modifying ANY code in `src/OdysseyRuntime/`, AI agents MUST:
+   When implementing or modifying ANY code in `src/Andastra/`, AI agents MUST:
 
    **Required Workflow**:
    1. **Search**: Use `mcp_ghidra_list_strings`, `mcp_ghidra_search_functions_by_name`, `mcp_ghidra_list_functions`, or `mcp_ghidra_get_xrefs_to` to find relevant engine functions across ALL loaded executables
@@ -435,7 +321,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - `Odyssey.MonoGame` - MonoGame rendering adapters
    - `Odyssey.Game` - Executable launcher
 
-7. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
+7. **Maintain C# 7.3 Compatibility**: Even in Andastra projects
 
 ### Engine Architecture Principles
 

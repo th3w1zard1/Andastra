@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Formats.Installation;
+using Andastra.Parsing.Installation;
 using KotorDiff.App;
 
 namespace KotorDiff.Cli
@@ -75,7 +75,7 @@ namespace KotorDiff.Cli
                 {
                     // Try to create an Installation object (for KOTOR installations)
                     // Matching Python: installation = Installation(path_obj)
-                    var installation = new Andastra.Formats.Installation.Installation(pathStr);
+                    var installation = new Andastra.Parsing.Installation.Installation(pathStr);
                     resolvedPaths.Add(installation);
                     Console.WriteLine($"[DEBUG] Loaded Installation for: {pathStr}");
                 }

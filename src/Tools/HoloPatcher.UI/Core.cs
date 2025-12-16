@@ -6,14 +6,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Formats;
-using Andastra.Formats.Config;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Logger;
-using Andastra.Formats.Namespaces;
-using Andastra.Formats.Patcher;
-using Andastra.Formats.Reader;
-using Andastra.Formats.Uninstall;
+using Andastra.Parsing;
+using Andastra.Parsing.Config;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Logger;
+using Andastra.Parsing.Namespaces;
+using Andastra.Parsing.Patcher;
+using Andastra.Parsing.Reader;
+using Andastra.Parsing.Uninstall;
 using JetBrains.Annotations;
 #if WINDOWS
 using Microsoft.Win32;
@@ -24,7 +24,7 @@ namespace HoloPatcher.UI
 
     /// <summary>
     /// Core functionality for HoloPatcher.
-    /// Equivalent to holopatcher/Andastra.Formats.py
+    /// Equivalent to holopatcher/Andastra.Parsing.py
     /// </summary>
     public static class Core
     {

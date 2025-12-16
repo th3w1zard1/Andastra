@@ -2,9 +2,9 @@
 // Original: @dataclass class ResolvedResource: ...
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Formats;
-using Andastra.Formats.Extract;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Resources;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
-using Andastra.Formats.Common;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -99,13 +99,13 @@ namespace HolocronToolset.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(utwFile);
-            var oldGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var oldGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
 
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, data);
 
             var (newData, _) = editor.Build();
 
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = oldGff.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
@@ -248,14 +248,14 @@ namespace HolocronToolset.Tests.Editors
             // Save and verify
             var (data, _) = editor.Build();
             var modifiedUtw = UTWAuto.ReadUtw(data);
-            modifiedUtw.Name.Get(Andastra.Formats.Common.Language.English, Andastra.Formats.Common.Gender.Male).Should().Be("Modified Waypoint Name");
-            modifiedUtw.Name.Get(Andastra.Formats.Common.Language.English, Andastra.Formats.Common.Gender.Male).Should().NotBe(originalUtw.Name.Get(Andastra.Formats.Common.Language.English, Andastra.Formats.Common.Gender.Male));
+            modifiedUtw.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("Modified Waypoint Name");
+            modifiedUtw.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().NotBe(originalUtw.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male));
 
             // Load back and verify
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, data);
             if (editor.NameEdit != null)
             {
-                editor.NameEdit.GetLocString().Get(Andastra.Formats.Common.Language.English, Andastra.Formats.Common.Gender.Male).Should().Be("Modified Waypoint Name");
+                editor.NameEdit.GetLocString().Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("Modified Waypoint Name");
             }
         }
 
@@ -783,7 +783,7 @@ namespace HolocronToolset.Tests.Editors
             // Original: assert modified_utw.comment == "Combined test comment"
             var (data, _) = editor.Build();
             var modifiedUtw = UTWAuto.ReadUtw(data);
-            modifiedUtw.Name.Get(Andastra.Formats.Common.Language.English, Andastra.Formats.Common.Gender.Male).Should().Be("Combined Test Waypoint", "Name should be set correctly");
+            modifiedUtw.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("Combined Test Waypoint", "Name should be set correctly");
             modifiedUtw.Tag.Should().Be("combined_test", "Tag should be set correctly");
             modifiedUtw.ResRef?.ToString().Should().Be("combined_resref", "ResRef should be set correctly");
             modifiedUtw.HasMapNote.Should().BeTrue("HasMapNote should be true");
@@ -1421,14 +1421,14 @@ namespace HolocronToolset.Tests.Editors
             // Original: original_gff = read_gff(original_data)
             // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, original_data)
             byte[] originalData = System.IO.File.ReadAllBytes(utwFile);
-            var originalGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(originalData);
+            var originalGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(originalData);
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:480-481
             // Original: data, _ = editor.build()
             // Original: new_gff = read_gff(data)
             var (data, _) = editor.Build();
-            var newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:484-490
             // Original: log_messages = []
@@ -1521,7 +1521,7 @@ namespace HolocronToolset.Tests.Editors
             // Original: assert modified_utw.tag == "modified_gff_test"
             // Original: assert modified_utw.has_map_note
             var (data, _) = editor.Build();
-            var newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             newGff.Should().NotBeNull("New GFF should not be null");
             var modifiedUtw = UTWAuto.ReadUtw(data);
             modifiedUtw.Tag.Should().Be("modified_gff_test", "Tag should be modified");

@@ -1,6 +1,6 @@
 using System;
-using Andastra.Formats.Formats.LTR;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.LTR;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;

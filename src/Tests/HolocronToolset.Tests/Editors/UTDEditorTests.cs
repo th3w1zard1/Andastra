@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
-using GFFAuto = Andastra.Formats.Formats.GFF.GFFAuto;
+using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -99,7 +99,7 @@ namespace HolocronToolset.Tests.Editors
             editor.Load(utdFile, "naldoor001", ResourceType.UTD, originalData);
 
             // Matching PyKotor implementation: original_utd = read_utd(original_data)
-            UTD originalUtd = UTDHelpers.ConstructUtd(Andastra.Formats.Formats.GFF.GFF.FromBytes(originalData));
+            UTD originalUtd = UTDHelpers.ConstructUtd(Andastra.Parsing.Formats.GFF.GFF.FromBytes(originalData));
 
             // Modify tag
             // Matching PyKotor implementation: editor.ui.tagEdit.setText("modified_tag")
@@ -110,7 +110,7 @@ namespace HolocronToolset.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching PyKotor implementation: modified_utd = read_utd(data)
-            UTD modifiedUtd = UTDHelpers.ConstructUtd(Andastra.Formats.Formats.GFF.GFF.FromBytes(data));
+            UTD modifiedUtd = UTDHelpers.ConstructUtd(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data));
 
             // Matching PyKotor implementation: assert modified_utd.tag == "modified_tag"
             // Matching PyKotor implementation: assert modified_utd.tag != original_utd.tag
@@ -208,7 +208,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -281,7 +281,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1141
             // Original: original_gff = read_gff(original_data)
-            var old = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var old = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1142
             // Original: editor.load(utd_file, "naldoor001", ResourceType.UTD, original_data)
@@ -293,7 +293,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1146
             // Original: new_gff = read_gff(data)
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1153
             // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)

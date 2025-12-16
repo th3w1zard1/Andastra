@@ -4,9 +4,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Formats;
-using Andastra.Formats.Formats.Capsule;
-using Andastra.Formats.Installation;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Installation;
 
 namespace KotorDiff.Diff
 {

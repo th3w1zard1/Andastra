@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -153,10 +153,10 @@ namespace HolocronToolset.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(jrlFile);
-            var old = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var old = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             editor.Load(jrlFile, "global", ResourceType.JRL, data);
             var (newData, _) = editor.Build();
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: false);

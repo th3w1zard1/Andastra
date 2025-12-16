@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Andastra.Formats;
-using Andastra.Formats.Formats.TLK;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.TLK;
 
 namespace HolocronToolset.Editors
 {

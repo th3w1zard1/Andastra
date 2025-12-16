@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Andastra.Formats;
-using Andastra.Formats.Formats.NCS;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.NCS;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
 

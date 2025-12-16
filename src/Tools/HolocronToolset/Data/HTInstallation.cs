@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Formats;
-using Andastra.Formats.Formats.Capsule;
-using Andastra.Formats.Formats.TwoDA;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Resources;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resources;
 using JetBrains.Annotations;
-using ResourceResult = Andastra.Formats.Installation.ResourceResult;
-using LocationResult = Andastra.Formats.Resources.LocationResult;
+using ResourceResult = Andastra.Parsing.Installation.ResourceResult;
+using LocationResult = Andastra.Parsing.Resources.LocationResult;
 
 namespace HolocronToolset.Data
 {
@@ -65,7 +65,7 @@ namespace HolocronToolset.Data
 
         private readonly Installation _installation;
         private readonly Dictionary<string, TwoDA> _cache2da = new Dictionary<string, TwoDA>();
-        private readonly Dictionary<string, Andastra.Formats.Formats.TPC.TPC> _cacheTpc = new Dictionary<string, Andastra.Formats.Formats.TPC.TPC>();
+        private readonly Dictionary<string, Andastra.Parsing.Formats.TPC.TPC> _cacheTpc = new Dictionary<string, Andastra.Parsing.Formats.TPC.TPC>();
         private bool? _tsl;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:93-120
@@ -288,7 +288,7 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:554-567
         // Original: def ht_get_cache_tpc(self, resname: str) -> TPC | None:
         [CanBeNull]
-        public Andastra.Formats.Formats.TPC.TPC HtGetCacheTpc(string resname)
+        public Andastra.Parsing.Formats.TPC.TPC HtGetCacheTpc(string resname)
         {
             resname = resname.ToLowerInvariant();
             if (!_cacheTpc.ContainsKey(resname))
@@ -407,7 +407,7 @@ namespace HolocronToolset.Data
             {
                 // Extract just the filename (basename) and convert to lowercase
                 string resname = System.IO.Path.GetFileName(iconPath).ToLowerInvariant();
-                Andastra.Formats.Formats.TPC.TPC texture = HtGetCacheTpc(resname);
+                Andastra.Parsing.Formats.TPC.TPC texture = HtGetCacheTpc(resname);
                 if (texture == null)
                 {
                     return null;
@@ -568,7 +568,7 @@ namespace HolocronToolset.Data
             try
             {
                 // Use LazyCapsule to read module resources
-                var capsule = new Andastra.Formats.Formats.Capsule.LazyCapsule(moduleFile);
+                var capsule = new Andastra.Parsing.Formats.Capsule.LazyCapsule(moduleFile);
                 resources.AddRange(capsule.GetResources());
             }
             catch (Exception ex)
@@ -631,17 +631,17 @@ namespace HolocronToolset.Data
 
             try
             {
-                var talkTable = new Andastra.Formats.Extract.TalkTable(tlkPath);
+                var talkTable = new Andastra.Parsing.Extract.TalkTable(tlkPath);
                 var stringrefs = queries.Select(q => q.StringRef).ToList();
                 var batch = talkTable.Batch(stringrefs);
 
                 string femaleTlkPath = System.IO.Path.Combine(Path, "dialogf.tlk");
-                Dictionary<int, Andastra.Formats.Extract.StringResult> femaleBatch = new Dictionary<int, Andastra.Formats.Extract.StringResult>();
+                Dictionary<int, Andastra.Parsing.Extract.StringResult> femaleBatch = new Dictionary<int, Andastra.Parsing.Extract.StringResult>();
                 if (File.Exists(femaleTlkPath))
                 {
                     try
                     {
-                        var femaleTalkTable = new Andastra.Formats.Extract.TalkTable(femaleTlkPath);
+                        var femaleTalkTable = new Andastra.Parsing.Extract.TalkTable(femaleTlkPath);
                         var femaleBatchDict = femaleTalkTable.Batch(stringrefs);
                         foreach (var kvp in femaleBatchDict)
                         {
@@ -714,7 +714,7 @@ namespace HolocronToolset.Data
 
             try
             {
-                var talkTable = new Andastra.Formats.Extract.TalkTable(tlkPath);
+                var talkTable = new Andastra.Parsing.Extract.TalkTable(tlkPath);
                 return talkTable.GetString(stringref);
             }
             catch
@@ -752,7 +752,7 @@ namespace HolocronToolset.Data
         public string ModuleId(string moduleFileName, bool useAlternate = false)
         {
             // Extract module root from filename
-            string root = Andastra.Formats.Installation.Installation.GetModuleRoot(moduleFileName);
+            string root = Andastra.Parsing.Installation.Installation.GetModuleRoot(moduleFileName);
             if (useAlternate)
             {
                 // Try to get area name from module
@@ -782,18 +782,18 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1807-1843
         // Original: def texture(self, resname: str, order: Sequence[SearchLocation] | None = None, ...) -> TPC | None:
         [CanBeNull]
-        public Andastra.Formats.Formats.TPC.TPC Texture(string resname, SearchLocation[] searchOrder = null)
+        public Andastra.Parsing.Formats.TPC.TPC Texture(string resname, SearchLocation[] searchOrder = null)
         {
             return _installation.Texture(resname, searchOrder);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
         // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
-        public Andastra.Formats.Utility.CaseInsensitiveDict<Andastra.Formats.Formats.TPC.TPC> Textures(
+        public Andastra.Parsing.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC> Textures(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var textures = new Andastra.Formats.Utility.CaseInsensitiveDict<Andastra.Formats.Formats.TPC.TPC>();
+            var textures = new Andastra.Parsing.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC>();
             if (resnames == null)
             {
                 return textures;
@@ -822,11 +822,11 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
         // Original: def sounds(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[bytes | None]:
-        public Andastra.Formats.Utility.CaseInsensitiveDict<byte[]> Sounds(
+        public Andastra.Parsing.Utility.CaseInsensitiveDict<byte[]> Sounds(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var sounds = new Andastra.Formats.Utility.CaseInsensitiveDict<byte[]>();
+            var sounds = new Andastra.Parsing.Utility.CaseInsensitiveDict<byte[]>();
             if (resnames == null)
             {
                 return sounds;
@@ -1147,7 +1147,7 @@ namespace HolocronToolset.Data
             try
             {
                 // Read the outer ERF (SAVEGAME.sav)
-                var outerErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(savegameSav);
+                var outerErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(savegameSav);
 
                 // Check each .sav resource (cached modules) for EventQueue corruption
                 foreach (var resource in outerErf)
@@ -1160,7 +1160,7 @@ namespace HolocronToolset.Data
                     try
                     {
                         // Read the nested module ERF
-                        var innerErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(resource.Data);
+                        var innerErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(resource.Data);
 
                         // Look for module.ifo in this cached module
                         foreach (var innerResource in innerErf)
@@ -1168,7 +1168,7 @@ namespace HolocronToolset.Data
                             if (innerResource.ResRef.ToString().ToLowerInvariant() == "module" && innerResource.ResType == ResourceType.IFO)
                             {
                                 // Check for EventQueue
-                                var ifoGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(innerResource.Data);
+                                var ifoGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(innerResource.Data);
                                 if (ifoGff.Root.Exists("EventQueue"))
                                 {
                                     var eventQueue = ifoGff.Root.GetList("EventQueue");
@@ -1208,7 +1208,7 @@ namespace HolocronToolset.Data
             try
             {
                 // Read the outer ERF (SAVEGAME.sav)
-                var outerErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(savegameSav);
+                var outerErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(savegameSav);
                 bool anyFixed = false;
 
                 // Process each .sav resource (cached modules)
@@ -1221,7 +1221,7 @@ namespace HolocronToolset.Data
 
                     try
                     {
-                        var innerErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(resource.Data);
+                        var innerErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(resource.Data);
                         bool innerModified = false;
 
                         // Look for module.ifo in this cached module
@@ -1230,16 +1230,16 @@ namespace HolocronToolset.Data
                             if (innerResource.ResRef.ToString().ToLowerInvariant() == "module" && innerResource.ResType == ResourceType.IFO)
                             {
                                 // Check and clear EventQueue
-                                var ifoGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(innerResource.Data);
+                                var ifoGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(innerResource.Data);
                                 if (ifoGff.Root.Exists("EventQueue"))
                                 {
                                     var eventQueue = ifoGff.Root.GetList("EventQueue");
                                     if (eventQueue != null && eventQueue.Count > 0)
                                     {
                                         // Clear the EventQueue
-                                        ifoGff.Root.SetList("EventQueue", new Andastra.Formats.Formats.GFF.GFFList());
+                                        ifoGff.Root.SetList("EventQueue", new Andastra.Parsing.Formats.GFF.GFFList());
                                         // Update the resource data
-                                        byte[] ifoData = Andastra.Formats.Formats.GFF.GFFAuto.BytesGff(ifoGff, ResourceType.IFO);
+                                        byte[] ifoData = Andastra.Parsing.Formats.GFF.GFFAuto.BytesGff(ifoGff, ResourceType.IFO);
                                         innerErf.SetData(innerResource.ResRef.ToString(), innerResource.ResType, ifoData);
                                         innerModified = true;
                                         anyFixed = true;
@@ -1252,7 +1252,7 @@ namespace HolocronToolset.Data
                         if (innerModified)
                         {
                             // Update the outer ERF with the modified inner ERF
-                            byte[] innerErfData = Andastra.Formats.Formats.ERF.ERFAuto.BytesErf(innerErf, ResourceType.SAV);
+                            byte[] innerErfData = Andastra.Parsing.Formats.ERF.ERFAuto.BytesErf(innerErf, ResourceType.SAV);
                             outerErf.SetData(resource.ResRef.ToString(), resource.ResType, innerErfData);
                         }
                     }
@@ -1266,7 +1266,7 @@ namespace HolocronToolset.Data
                 if (anyFixed)
                 {
                     // Write the fixed outer ERF back to disk
-                    Andastra.Formats.Formats.ERF.ERFAuto.WriteErf(outerErf, savegameSav, ResourceType.SAV);
+                    Andastra.Parsing.Formats.ERF.ERFAuto.WriteErf(outerErf, savegameSav, ResourceType.SAV);
                     System.Console.WriteLine($"Fixed EventQueue corruption in save: {System.IO.Path.GetFileName(savePath)}");
                     return true;
                 }

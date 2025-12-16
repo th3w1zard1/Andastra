@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
-using Andastra.Formats;
+using Andastra.Parsing;
 using SettingsBase = HolocronToolset.Data.Settings;
 
 namespace HolocronToolset.Widgets.Settings

@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Text;
-using Andastra.Formats;
-using Andastra.Formats.Formats.NCS;
-using Andastra.Formats.Formats.NCS.NCSDecomp;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
-using NcsFile = Andastra.Formats.Formats.NCS.NCSDecomp.NcsFile;
+using NcsFile = Andastra.Parsing.Formats.NCS.NCSDecomp.NcsFile;
 
 namespace HolocronToolset.Utils
 {

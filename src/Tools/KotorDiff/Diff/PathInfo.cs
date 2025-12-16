@@ -2,7 +2,7 @@
 // Original: @dataclass class PathInfo: ...
 using System;
 using System.IO;
-using Andastra.Formats.Installation;
+using Andastra.Parsing.Installation;
 
 namespace KotorDiff.Diff
 {

@@ -13,7 +13,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>HoloPatcher.UI</PackageId>
     <Authors>th3w1zard1</Authors>
-    <Company>HoloPatcher.NET</Company>
+    <Company>OldRepublicDevs</Company>
     <Product>HoloPatcher.UI</Product>
     <Description>Avalonia UI components for HoloPatcher.NET, providing a graphical interface for installing and managing KOTOR mods.</Description>
     <PackageTags>kotor;tsl;patcher;mod;gui;avalonia;holopatcher;ui</PackageTags>
@@ -119,7 +119,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Formats.csproj" />
+    <ProjectReference Include="..\..\Andastra\Formats\Andastra.Parsing.csproj" />
   </ItemGroup>
 
 </Project>

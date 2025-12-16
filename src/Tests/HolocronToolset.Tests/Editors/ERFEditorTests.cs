@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -84,7 +84,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
 
             // Verify the ERF was loaded correctly by checking it can be read back
-            var loadedErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(data);
+            var loadedErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(data);
             loadedErf.Should().NotBeNull("Loaded ERF should not be null");
             loadedErf.Count.Should().BeGreaterThan(0, "Loaded ERF should contain resources");
         }
@@ -131,12 +131,12 @@ namespace HolocronToolset.Tests.Editors
 
             var editor = new ERFEditor(null, installation);
             byte[] originalData = System.IO.File.ReadAllBytes(erfFile);
-            var oldErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(originalData);
+            var oldErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(originalData);
 
             editor.Load(erfFile, "001EBO_dlg", ResourceType.ERF, originalData);
 
             var (newData, _) = editor.Build();
-            var newErf = Andastra.Formats.Formats.ERF.ERFAuto.ReadErf(newData);
+            var newErf = Andastra.Parsing.Formats.ERF.ERFAuto.ReadErf(newData);
 
             // Compare ERF files - check resource count
             oldErf.Count.Should().Be(newErf.Count, "Resource count should match");

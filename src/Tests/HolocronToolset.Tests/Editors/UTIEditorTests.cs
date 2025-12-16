@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats.Formats.GFF;
-using Andastra.Formats.Resource.Generics;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resources;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -343,7 +343,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: data, _ = editor.build()
             var (data, _) = editor.Build();
             // Matching Python: uti = read_uti(data)
-            UTI uti = UTIHelpers.ConstructUti(Andastra.Formats.Formats.GFF.GFF.FromBytes(data));
+            UTI uti = UTIHelpers.ConstructUti(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data));
             // Matching Python: assert uti.comment == "Test comment\nLine 2\nLine 3"
             uti.Comment.Should().Be(testComment);
 
@@ -395,7 +395,7 @@ namespace HolocronToolset.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching Python: uti = read_uti(data)
-            UTI uti = UTIHelpers.ConstructUti(Andastra.Formats.Formats.GFF.GFF.FromBytes(data));
+            UTI uti = UTIHelpers.ConstructUti(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data));
 
             // Verify all values were saved correctly
             // Matching Python: assert uti.tag == "test_tag"
@@ -557,7 +557,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -630,7 +630,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:85
             // Original: old = read_gff(data)
-            var old = Andastra.Formats.Formats.GFF.GFF.FromBytes(data);
+            var old = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:86
             // Original: self.editor.load(filepath, "baragwin", ResourceType.UTI, data)
@@ -642,7 +642,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:89
             // Original: new = read_gff(data)
-            GFF newGff = Andastra.Formats.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:91
             // Original: diff = old.compare(new, self.log_func, ignore_default_changes=True)

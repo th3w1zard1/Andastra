@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Formats;
-using KotorColor = Andastra.Formats.Color;
+using Andastra.Parsing;
+using KotorColor = Andastra.Parsing.Color;
 
 namespace HolocronToolset.Data
 {

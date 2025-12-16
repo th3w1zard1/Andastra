@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Andastra.Formats.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using NCSDecomp.Tests.TestHelpers;
 using Xunit;

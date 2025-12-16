@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Formats;
+using Andastra.Parsing;
 using KotorDiff.Diff;
 using JetBrains.Annotations;
 

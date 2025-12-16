@@ -2,13 +2,13 @@ using System;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Formats.Extract;
-using Andastra.Formats.Formats.ERF;
-using Andastra.Formats.Formats.MDL;
-using Andastra.Formats.Formats.MDLData;
-using Andastra.Formats.Formats.RIM;
-using Andastra.Formats.Installation;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.RIM;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 
@@ -114,17 +114,17 @@ namespace HolocronToolset.Editors
                         mdxData = File.ReadAllBytes(mdxPath);
                     }
                 }
-                else if (Andastra.Formats.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
                 {
                     ERF erf = ERFAuto.ReadErf(filepath);
                     mdxData = erf.Get(resref, ResourceType.MDX);
                 }
-                else if (Andastra.Formats.Tools.FileHelpers.IsRimFile(filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(filepath))
                 {
                     RIM rim = RIMAuto.ReadRim(filepath);
                     mdxData = rim.Get(resref, ResourceType.MDX);
                 }
-                else if (Andastra.Formats.Tools.FileHelpers.IsBifFile(filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(filepath))
                 {
                     if (_installation != null)
                     {
@@ -148,17 +148,17 @@ namespace HolocronToolset.Editors
                         mdlData = File.ReadAllBytes(mdlPath);
                     }
                 }
-                else if (Andastra.Formats.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
                 {
                     ERF erf = ERFAuto.ReadErf(filepath);
                     mdlData = erf.Get(resref, ResourceType.MDL);
                 }
-                else if (Andastra.Formats.Tools.FileHelpers.IsRimFile(filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(filepath))
                 {
                     RIM rim = RIMAuto.ReadRim(filepath);
                     mdlData = rim.Get(resref, ResourceType.MDL);
                 }
-                else if (Andastra.Formats.Tools.FileHelpers.IsBifFile(filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(filepath))
                 {
                     if (_installation != null)
                     {

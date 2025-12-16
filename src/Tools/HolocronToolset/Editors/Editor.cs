@@ -7,7 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
-using Andastra.Formats.Resources;
+using Andastra.Parsing.Resources;
 using HolocronToolset.Data;
 using JetBrains.Annotations;
 
