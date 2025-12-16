@@ -83,6 +83,17 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
                 this.state.TransformRSAdd(node);
                 var = null;
             }
+            else
+            {
+                // CRITICAL: Even when freezeStack is true, we must still process RSADDI to ensure it's in the AST
+                // Otherwise, the instruction will be missing from the decompiled output
+                // Matching DeNCS behavior: RSADDI should always be processed, freezeStack only affects stack operations
+                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand: freezeStack is true, but still processing RSADDI to ensure it's in AST");
+                Variable var = new Variable(NodeUtils.GetType(node));
+                this.stack.Push(var);
+                this.state.TransformRSAdd(node);
+                var = null;
+            }
         }
 
         // Override CaseARsaddCmd to ensure RSADD commands from NcsToAstConverter are visited
