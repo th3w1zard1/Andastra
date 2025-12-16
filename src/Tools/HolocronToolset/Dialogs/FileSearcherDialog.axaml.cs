@@ -59,6 +59,44 @@ namespace HolocronToolset.Dialogs
             Width = 500;
             Height = 400;
 
+            // Initialize Ui if not already initialized
+            if (Ui == null)
+            {
+                Ui = new FileSearcherDialogUi();
+            }
+
+            // Create all UI controls programmatically for test scenarios
+            Ui.InstallationSelect = new ComboBox();
+            Ui.SearchTextEdit = new TextBox();
+            Ui.CaseSensitiveRadio = new RadioButton { Content = "Case Sensitive" };
+            Ui.CaseInsensitiveRadio = new RadioButton { Content = "Case Insensitive", IsChecked = true };
+            Ui.FilenamesOnlyCheck = new CheckBox { Content = "Filenames Only" };
+            Ui.CoreCheck = new CheckBox { Content = "Core" };
+            Ui.ModulesCheck = new CheckBox { Content = "Modules" };
+            Ui.OverrideCheck = new CheckBox { Content = "Override" };
+            Ui.SelectAllCheck = new CheckBox { Content = "Select All" };
+            Ui.TypeARECheck = new CheckBox { Content = "ARE" };
+            Ui.TypeGITCheck = new CheckBox { Content = "GIT" };
+            Ui.TypeIFOCheck = new CheckBox { Content = "IFO" };
+            Ui.TypeVISCheck = new CheckBox { Content = "VIS" };
+            Ui.TypeLYTCheck = new CheckBox { Content = "LYT" };
+            Ui.TypeDLGCheck = new CheckBox { Content = "DLG" };
+            Ui.TypeJRLCheck = new CheckBox { Content = "JRL" };
+            Ui.TypeUTCCheck = new CheckBox { Content = "UTC" };
+            Ui.TypeUTDCheck = new CheckBox { Content = "UTD" };
+            Ui.TypeUTECheck = new CheckBox { Content = "UTE" };
+            Ui.TypeUTICheck = new CheckBox { Content = "UTI" };
+            Ui.TypeUTPCheck = new CheckBox { Content = "UTP" };
+            Ui.TypeUTMCheck = new CheckBox { Content = "UTM" };
+            Ui.TypeUTSCheck = new CheckBox { Content = "UTS" };
+            Ui.TypeUTTCheck = new CheckBox { Content = "UTT" };
+            Ui.TypeUTWCheck = new CheckBox { Content = "UTW" };
+            Ui.Type2DACheck = new CheckBox { Content = "2DA" };
+            Ui.TypeNSSCheck = new CheckBox { Content = "NSS" };
+            Ui.TypeNCSCheck = new CheckBox { Content = "NCS" };
+            Ui.SearchButton = new Button { Content = "Search" };
+            Ui.CancelButton = new Button { Content = "Cancel" };
+
             var panel = new StackPanel();
             var titleLabel = new TextBlock
             {
@@ -67,6 +105,36 @@ namespace HolocronToolset.Dialogs
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
             panel.Children.Add(titleLabel);
+            panel.Children.Add(Ui.InstallationSelect);
+            panel.Children.Add(Ui.SearchTextEdit);
+            panel.Children.Add(Ui.CaseSensitiveRadio);
+            panel.Children.Add(Ui.CaseInsensitiveRadio);
+            panel.Children.Add(Ui.FilenamesOnlyCheck);
+            panel.Children.Add(Ui.CoreCheck);
+            panel.Children.Add(Ui.ModulesCheck);
+            panel.Children.Add(Ui.OverrideCheck);
+            panel.Children.Add(Ui.SelectAllCheck);
+            panel.Children.Add(Ui.TypeARECheck);
+            panel.Children.Add(Ui.TypeGITCheck);
+            panel.Children.Add(Ui.TypeIFOCheck);
+            panel.Children.Add(Ui.TypeVISCheck);
+            panel.Children.Add(Ui.TypeLYTCheck);
+            panel.Children.Add(Ui.TypeDLGCheck);
+            panel.Children.Add(Ui.TypeJRLCheck);
+            panel.Children.Add(Ui.TypeUTCCheck);
+            panel.Children.Add(Ui.TypeUTDCheck);
+            panel.Children.Add(Ui.TypeUTECheck);
+            panel.Children.Add(Ui.TypeUTICheck);
+            panel.Children.Add(Ui.TypeUTPCheck);
+            panel.Children.Add(Ui.TypeUTMCheck);
+            panel.Children.Add(Ui.TypeUTSCheck);
+            panel.Children.Add(Ui.TypeUTTCheck);
+            panel.Children.Add(Ui.TypeUTWCheck);
+            panel.Children.Add(Ui.Type2DACheck);
+            panel.Children.Add(Ui.TypeNSSCheck);
+            panel.Children.Add(Ui.TypeNCSCheck);
+            panel.Children.Add(Ui.SearchButton);
+            panel.Children.Add(Ui.CancelButton);
             Content = panel;
         }
 
@@ -75,39 +143,47 @@ namespace HolocronToolset.Dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
             // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
-            Ui = new FileSearcherDialogUi
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            Ui = new FileSearcherDialogUi();
+            
+            try
             {
-                InstallationSelect = this.FindControl<ComboBox>("installationSelect"),
-                SearchTextEdit = this.FindControl<TextBox>("searchTextEdit"),
-                CaseSensitiveRadio = this.FindControl<RadioButton>("caseSensitiveRadio"),
-                CaseInsensitiveRadio = this.FindControl<RadioButton>("caseInsensitiveRadio"),
-                FilenamesOnlyCheck = this.FindControl<CheckBox>("filenamesOnlyCheck"),
-                CoreCheck = this.FindControl<CheckBox>("coreCheck"),
-                ModulesCheck = this.FindControl<CheckBox>("modulesCheck"),
-                OverrideCheck = this.FindControl<CheckBox>("overrideCheck"),
-                SelectAllCheck = this.FindControl<CheckBox>("selectAllCheck"),
-                TypeARECheck = this.FindControl<CheckBox>("typeARECheck"),
-                TypeGITCheck = this.FindControl<CheckBox>("typeGITCheck"),
-                TypeIFOCheck = this.FindControl<CheckBox>("typeIFOCheck"),
-                TypeVISCheck = this.FindControl<CheckBox>("typeVISCheck"),
-                TypeLYTCheck = this.FindControl<CheckBox>("typeLYTCheck"),
-                TypeDLGCheck = this.FindControl<CheckBox>("typeDLGCheck"),
-                TypeJRLCheck = this.FindControl<CheckBox>("typeJRLCheck"),
-                TypeUTCCheck = this.FindControl<CheckBox>("typeUTCCheck"),
-                TypeUTDCheck = this.FindControl<CheckBox>("typeUTDCheck"),
-                TypeUTECheck = this.FindControl<CheckBox>("typeUTECheck"),
-                TypeUTICheck = this.FindControl<CheckBox>("typeUTICheck"),
-                TypeUTPCheck = this.FindControl<CheckBox>("typeUTPCheck"),
-                TypeUTMCheck = this.FindControl<CheckBox>("typeUTMCheck"),
-                TypeUTSCheck = this.FindControl<CheckBox>("typeUTSCheck"),
-                TypeUTTCheck = this.FindControl<CheckBox>("typeUTTCheck"),
-                TypeUTWCheck = this.FindControl<CheckBox>("typeUTWCheck"),
-                Type2DACheck = this.FindControl<CheckBox>("type2DACheck"),
-                TypeNSSCheck = this.FindControl<CheckBox>("typeNSSCheck"),
-                TypeNCSCheck = this.FindControl<CheckBox>("typeNCSCheck"),
-                SearchButton = this.FindControl<Button>("searchButton"),
-                CancelButton = this.FindControl<Button>("cancelButton")
-            };
+                Ui.InstallationSelect = this.FindControl<ComboBox>("installationSelect");
+                Ui.SearchTextEdit = this.FindControl<TextBox>("searchTextEdit");
+                Ui.CaseSensitiveRadio = this.FindControl<RadioButton>("caseSensitiveRadio");
+                Ui.CaseInsensitiveRadio = this.FindControl<RadioButton>("caseInsensitiveRadio");
+                Ui.FilenamesOnlyCheck = this.FindControl<CheckBox>("filenamesOnlyCheck");
+                Ui.CoreCheck = this.FindControl<CheckBox>("coreCheck");
+                Ui.ModulesCheck = this.FindControl<CheckBox>("modulesCheck");
+                Ui.OverrideCheck = this.FindControl<CheckBox>("overrideCheck");
+                Ui.SelectAllCheck = this.FindControl<CheckBox>("selectAllCheck");
+                Ui.TypeARECheck = this.FindControl<CheckBox>("typeARECheck");
+                Ui.TypeGITCheck = this.FindControl<CheckBox>("typeGITCheck");
+                Ui.TypeIFOCheck = this.FindControl<CheckBox>("typeIFOCheck");
+                Ui.TypeVISCheck = this.FindControl<CheckBox>("typeVISCheck");
+                Ui.TypeLYTCheck = this.FindControl<CheckBox>("typeLYTCheck");
+                Ui.TypeDLGCheck = this.FindControl<CheckBox>("typeDLGCheck");
+                Ui.TypeJRLCheck = this.FindControl<CheckBox>("typeJRLCheck");
+                Ui.TypeUTCCheck = this.FindControl<CheckBox>("typeUTCCheck");
+                Ui.TypeUTDCheck = this.FindControl<CheckBox>("typeUTDCheck");
+                Ui.TypeUTECheck = this.FindControl<CheckBox>("typeUTECheck");
+                Ui.TypeUTICheck = this.FindControl<CheckBox>("typeUTICheck");
+                Ui.TypeUTPCheck = this.FindControl<CheckBox>("typeUTPCheck");
+                Ui.TypeUTMCheck = this.FindControl<CheckBox>("typeUTMCheck");
+                Ui.TypeUTSCheck = this.FindControl<CheckBox>("typeUTSCheck");
+                Ui.TypeUTTCheck = this.FindControl<CheckBox>("typeUTTCheck");
+                Ui.TypeUTWCheck = this.FindControl<CheckBox>("typeUTWCheck");
+                Ui.Type2DACheck = this.FindControl<CheckBox>("type2DACheck");
+                Ui.TypeNSSCheck = this.FindControl<CheckBox>("typeNSSCheck");
+                Ui.TypeNCSCheck = this.FindControl<CheckBox>("typeNCSCheck");
+                Ui.SearchButton = this.FindControl<Button>("searchButton");
+                Ui.CancelButton = this.FindControl<Button>("cancelButton");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+            }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:64-72
             // Original: Setup installations in combo box - store installation as data
