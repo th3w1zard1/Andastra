@@ -603,5 +603,179 @@ namespace Odyssey.Kotor.Game
                 return null;
             }
         }
+
+        #region Input Handler Event Handlers
+
+        /// <summary>
+        /// Handles move command from input handler.
+        /// </summary>
+        private void OnMoveCommand(System.Numerics.Vector3 destination)
+        {
+            if (_playerEntity == null)
+            {
+                return;
+            }
+
+            // Get character controller for player
+            CharacterController controller = GetCharacterController(_playerEntity);
+            if (controller != null)
+            {
+                controller.MoveTo(destination, true);
+            }
+        }
+
+        /// <summary>
+        /// Handles attack command from input handler.
+        /// </summary>
+        private void OnAttackCommand(IEntity target)
+        {
+            if (_playerEntity == null || target == null)
+            {
+                return;
+            }
+
+            // Queue attack action
+            IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                actionQueue.Add(new ActionAttack(target.ObjectId));
+            }
+        }
+
+        /// <summary>
+        /// Handles interact command from input handler.
+        /// </summary>
+        private void OnInteractCommand(IEntity target)
+        {
+            if (_playerEntity == null || target == null)
+            {
+                return;
+            }
+
+            // Queue use object action
+            IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                actionQueue.Add(new ActionUseObject(target.ObjectId));
+            }
+        }
+
+        /// <summary>
+        /// Handles talk command from input handler.
+        /// </summary>
+        private void OnTalkCommand(IEntity target)
+        {
+            if (_playerEntity == null || target == null || _dialogueManager == null)
+            {
+                return;
+            }
+
+            // Start conversation with target
+            // Get dialogue ResRef from target entity (stored in entity data or component)
+            string dialogueResRef = null;
+            if (target is Entity concreteEntity)
+            {
+                dialogueResRef = concreteEntity.GetData<string>("Conversation", null);
+            }
+            
+            if (string.IsNullOrEmpty(dialogueResRef))
+            {
+                // Try to get from creature component
+                // Based on swkotor2.exe: Conversation ResRef stored in creature template
+                // Located via string references: "Conversation" @ creature template fields
+                // Original implementation: Conversation field in UTC template contains dialogue ResRef
+                Console.WriteLine("[GameSession] No conversation found for entity: " + target.Tag);
+                return;
+            }
+            
+            _dialogueManager.StartConversation(dialogueResRef, target, _playerEntity);
+        }
+
+        /// <summary>
+        /// Handles pause state change from input handler.
+        /// </summary>
+        private void OnPauseChanged(bool isPaused)
+        {
+            // Update world time manager pause state
+            if (_world != null && _world.TimeManager != null)
+            {
+                _world.TimeManager.IsPaused = isPaused;
+            }
+        }
+
+        /// <summary>
+        /// Handles leader cycle from input handler.
+        /// </summary>
+        private void OnLeaderCycled()
+        {
+            // Update input handler controller for new leader
+            if (_inputHandler != null && _partySystem != null && _partySystem.Leader != null)
+            {
+                IEntity leaderEntity = _partySystem.Leader.Entity;
+                if (leaderEntity != null)
+                {
+                    CharacterController controller = GetCharacterController(leaderEntity);
+                    _inputHandler.SetController(controller);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles quick slot usage from input handler.
+        /// </summary>
+        private void OnQuickSlotUsed(int slotIndex)
+        {
+            if (_playerEntity == null)
+            {
+                return;
+            }
+
+            // Get quick slot item/ability and use it
+            // Based on swkotor2.exe: Quick slot system
+            // Located via string references: "QuickSlot" @ inventory/ability system
+            // Original implementation: Quick slots store items/abilities, using slot triggers use action
+            // For now, this is a placeholder - full implementation would retrieve quick slot content and use it
+            Console.WriteLine("[GameSession] Quick slot " + slotIndex + " used (placeholder)");
+        }
+
+        /// <summary>
+        /// Gets or creates a character controller for an entity.
+        /// </summary>
+        private CharacterController GetCharacterController(IEntity entity)
+        {
+            if (entity == null || _world == null || _world.CurrentArea == null)
+            {
+                return null;
+            }
+
+            // Check if entity already has a controller stored
+            if (entity is Entity concreteEntity && concreteEntity.HasData("CharacterController"))
+            {
+                return concreteEntity.GetData<CharacterController>("CharacterController");
+            }
+
+            // Create new controller
+            INavigationMesh navMesh = _world.CurrentArea.NavigationMesh;
+            if (navMesh == null)
+            {
+                return null;
+            }
+
+            CharacterController controller = new CharacterController(
+                entity,
+                _world,
+                navMesh as NavigationMesh
+            );
+
+            // Store controller in entity data
+            if (entity is Entity concreteEntity2)
+            {
+                concreteEntity2.SetData("CharacterController", controller);
+            }
+
+            return controller;
+        }
+
+        #endregion
     }
 }
