@@ -11,7 +11,11 @@ namespace Odyssey.Content.MDL
     /// <remarks>
     /// MDL/MDX Binary Reader:
     /// - Based on swkotor2.exe MDL/MDX file format and loading system
-    /// - Located via string references: Model loading functions parse MDL/MDX binary format
+    /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, "ModelResRef" @ 0x007c2f6c
+    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
+    /// - "Model %s nor the default model %s could be loaded." @ 0x007cad14 (model loading fallback error)
+    /// - "DoubleMdlVar" @ 0x007d05d8, "ShortMdlVar" @ 0x007d05e8, "LongMdlVar" @ 0x007d05f4 (MDL variable types)
+    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models from appearance.2da
     /// - Original implementation: Reads MDL (model definition) and MDX (geometry) binary files
     /// - MDL file structure: Header, geometry header, model header, names header, node tree, animations
     /// - MDX file structure: Vertex data arrays (positions, normals, UVs, face indices)
