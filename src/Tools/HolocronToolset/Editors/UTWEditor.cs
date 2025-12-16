@@ -461,13 +461,17 @@ namespace HolocronToolset.Editors
             // This is a defensive check to ensure the value is correct before serialization
             // ALWAYS use cache if it has a value - it's the authoritative source for headless tests
             // This MUST happen right before serialization to ensure the value is correct
+            // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
+            // Python directly reads from checkbox, but in C# we use cache for headless tests
             if (_utw != null)
             {
                 // Priority 1: Use cache if available (it's the source of truth for headless tests)
+                // The cache is set by SetNoteEnabledCheckbox(true) and is the authoritative source
                 if (_cachedMapNoteEnabled.HasValue)
                 {
                     // Cache is the source of truth - always use it, no matter what
                     // This ensures that SetNoteEnabledCheckbox(true) always works, even in headless tests
+                    // CRITICAL: Set this value RIGHT before serialization to prevent any interference
                     _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
                 }
                 else if (_noteEnabledCheckbox != null)
@@ -491,6 +495,12 @@ namespace HolocronToolset.Editors
             // Serialize UTW to bytes
             // IMPORTANT: At this point, _utw.MapNoteEnabled should be set correctly
             // DismantleUtw will read utw.MapNoteEnabled directly, so it must be correct here
+            // CRITICAL: Read the cache value one more time right before serialization as a final safeguard
+            // This ensures that even if something reset the UTW value, we fix it one last time
+            if (_utw != null && _cachedMapNoteEnabled.HasValue)
+            {
+                _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
+            }
             byte[] data = UTWAuto.BytesUtw(_utw);
             return Tuple.Create(data, new byte[0]);
         }
