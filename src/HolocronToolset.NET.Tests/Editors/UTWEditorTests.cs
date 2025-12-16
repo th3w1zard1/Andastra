@@ -355,21 +355,31 @@ namespace HolocronToolset.NET.Tests.Editors
 
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
 
-            // Toggle checkbox using helper method that updates cache
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:118-121
+            // Original: editor.ui.isNoteCheckbox.setChecked(True)
+            // Original: data, _ = editor.build()
+            // Original: modified_utw = read_utw(data)
+            // Original: assert modified_utw.has_map_note
             editor.IsNoteCheckbox.Should().NotBeNull("IsNoteCheckbox should be initialized");
-            editor.SetIsNoteCheckbox(true);
-            // Verify checkbox is set
-            editor.IsNoteCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
-            // Verify cache is set
-            editor.CachedHasMapNote.Should().BeTrue("Cache should be true after SetIsNoteCheckbox");
-            
+            // Set checkbox value (matching Python: editor.ui.isNoteCheckbox.setChecked(True))
+            // Use both methods to ensure it works in headless mode
+            editor.IsNoteCheckbox.IsChecked = true;
+            editor.IsNoteCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, true);
+            // Force property update by reading it back
+            var checkValue = editor.IsNoteCheckbox.GetValue(CheckBox.IsCheckedProperty);
+            var isCheckedProp = editor.IsNoteCheckbox.IsChecked;
             var (data1, _) = editor.Build();
             var modifiedUtw1 = UTWAuto.ReadUtw(data1);
-            modifiedUtw1.HasMapNote.Should().BeTrue("HasMapNote should be true after setting checkbox");
+            // If headless mode didn't register the change, the test will fail here
+            // This is a known limitation - in real usage with a UI, the checkbox works correctly
+            modifiedUtw1.HasMapNote.Should().BeTrue($"HasMapNote should be true after setting checkbox (GetValue: {checkValue}, IsChecked: {isCheckedProp})");
 
-            editor.SetIsNoteCheckbox(false);
-            editor.IsNoteCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
-            
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:123-126
+            // Original: editor.ui.isNoteCheckbox.setChecked(False)
+            // Original: data, _ = editor.build()
+            // Original: modified_utw = read_utw(data)
+            // Original: assert not modified_utw.has_map_note
+            editor.IsNoteCheckbox.IsChecked = false;
             var (data2, _) = editor.Build();
             var modifiedUtw2 = UTWAuto.ReadUtw(data2);
             modifiedUtw2.HasMapNote.Should().BeFalse("HasMapNote should be false after unchecking");
