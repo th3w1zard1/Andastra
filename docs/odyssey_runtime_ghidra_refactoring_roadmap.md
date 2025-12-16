@@ -193,28 +193,28 @@ When processing a file:
 
 ### Odyssey.Graphics (22 files)
 
-- [ ] GraphicsBackend.cs
-- [ ] IContentManager.cs
-- [ ] IDepthStencilBuffer.cs
-- [ ] IEffect.cs
-- [ ] IEntityModelRenderer.cs
-- [ ] IFont.cs
-- [ ] IGraphicsBackend.cs
-- [ ] IGraphicsDevice.cs
-- [ ] IIndexBuffer.cs
-- [ ] IInputManager.cs
-- [ ] IModel.cs
-- [ ] IRenderState.cs
-- [ ] IRenderTarget.cs
-- [ ] IRoomMeshRenderer.cs
-- [ ] ISpatialAudio.cs
-- [ ] ISpriteBatch.cs
-- [ ] ITexture2D.cs
-- [ ] IVertexBuffer.cs
-- [ ] IVertexDeclaration.cs
-- [ ] IWindow.cs
-- [ ] MatrixHelper.cs
-- [ ] VertexPositionColor.cs
+- [x] GraphicsBackend.cs - Graphics Options @ 0x007b56a8, BTN_GRAPHICS @ 0x007d0d8c, optgraphics_p @ 0x007d2064, 2D3DBias @ 0x007c612c, 2D3D Bias @ 0x007c71f8
+- [x] IContentManager.cs - Resource @ 0x007c14d4, Loading @ 0x007c7e40, CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270
+- [x] IDepthStencilBuffer.cs - GL_ARB_depth_texture @ 0x007b8848, m_sDepthTextureName @ 0x007baaa8, depth_texture @ 0x007bab5c, glDepthMask @ 0x0080aa38, glDepthFunc @ 0x0080ad96, glStencilOp @ 0x0080a9f0, glStencilMask @ 0x0080aa0c, glStencilFunc @ 0x0080aa68, glClearStencil @ 0x0080ada4, GL_EXT_stencil_two_side @ 0x007b8a68
+- [x] IEffect.cs - Vertex program for skinned animations @ 0x0081c228, 0x0081fe20, DirectX 8/9 fixed-function pipeline
+- [x] IEntityModelRenderer.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, VisibleModel @ 0x007c1c98, ModelType @ 0x007c4568, MODELTYPE @ 0x007c036c, ModelVariation @ 0x007c0990, ModelPart @ 0x007bd42c, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
+- [x] IFont.cs - dialogfont16x16 @ 0x007b6380, fontheight @ 0x007b6eb8, Use Small Fonts @ 0x007c8538
+- [x] IGraphicsBackend.cs - Graphics Options @ 0x007b56a8, BTN_GRAPHICS @ 0x007d0d8c, optgraphics_p @ 0x007d2064, Render Window @ 0x007b5680, render @ 0x007bab34, renderorder @ 0x007bab50, FUN_00404250 @ 0x00404250
+- [x] IGraphicsDevice.cs - Render Window @ 0x007b5680, render @ 0x007bab34, WGL_NV_render_texture_rectangle @ 0x007b880c, WGL_ARB_render_texture @ 0x007b8890, DirectX 8/9 device
+- [x] IIndexBuffer.cs - GetNextIndex: Duplicate triangle @ 0x007bb308, 0x007bb330, GetNextIndex: Triangle doesn't have all of its vertices @ 0x007bb36c
+- [x] IInputManager.cs - Already has comprehensive Ghidra references
+- [x] IModel.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, VisibleModel @ 0x007c1c98, ModelType @ 0x007c4568, MODELTYPE @ 0x007c036c, ModelVariation @ 0x007c0990, ModelPart @ 0x007bd42c, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
+- [x] IRenderState.cs - GL_ARB_depth_texture @ 0x007b8848, glDepthMask @ 0x0080aa38, glDepthFunc @ 0x0080ad96, glStencilOp @ 0x0080a9f0, glStencilMask @ 0x0080aa0c, glStencilFunc @ 0x0080aa68, glClearStencil @ 0x0080ada4, GL_EXT_stencil_two_side @ 0x007b8a68
+- [x] IRenderTarget.cs - WGL_NV_render_texture_rectangle @ 0x007b880c, WGL_ARB_render_texture @ 0x007b8890, m_sDepthTextureName @ 0x007baaa8, depth_texture @ 0x007bab5c
+- [x] IRoomMeshRenderer.cs - roomcount @ 0x007b96c0, RoomName @ 0x007bd484, Rooms @ 0x007bd490, trimesh @ 0x007bac30, animmesh @ 0x007bac24, danglymesh @ 0x007bac18, VISIBLEVALUE @ 0x007b6a58, %s/%s.VIS @ 0x007b972c, VisibleModel @ 0x007c1c98, render @ 0x007bab34, renderorder @ 0x007bab50, AREANAME @ 0x007be1dc, AreaName @ 0x007be340
+- [x] ISpatialAudio.cs - EnvAudio @ 0x007bd478, EAX2 room rolloff @ 0x007c5f24, EAX3 room LF @ 0x007c6010, EAX2 room HF @ 0x007c6040, EAX2 room @ 0x007c6050, EAX3 modulation depth @ 0x007c5f74, EAX3 echo depth @ 0x007c5fa4, _AIL_set_digital_master_room_type@8 @ 0x0080a0f6, _AIL_set_3D_room_type@8 @ 0x0080a11c, _AIL_3D_room_type@4 @ 0x0080a1ec
+- [x] ISpriteBatch.cs - gui3D_room @ 0x007cc144, Render Window @ 0x007b5680, DirectX 8/9 sprite rendering
+- [x] ITexture2D.cs - texturewidth @ 0x007b6e98, GL_ARB_texture_compression @ 0x007b88fc, GL_EXT_texture_compression_s3tc @ 0x007b88dc, GL_EXT_texture_filter_anisotropic @ 0x007b8974, GL_EXT_texture_cube_map @ 0x007b89dc, GL_EXT_texture_env_combine @ 0x007b8a2c, GL_ARB_multitexture @ 0x007b8a48, glActiveTextureARB @ 0x007b8738, glClientActiveTextureARB @ 0x007b871c, glBindTextureUnitParameterEXT @ 0x007b7774
+- [x] IVertexBuffer.cs - Disable Vertex Buffer Objects @ 0x007b56bc, glVertexArrayRangeNV @ 0x007b7ce8, glVertexAttrib4fvNV @ 0x007b7d24, glVertexAttrib3fvNV @ 0x007b7d38, glVertexAttrib2fvNV @ 0x007b7d4c, glDeleteVertexShadersEXT @ 0x007b7974, glGenVertexShadersEXT @ 0x007b7990, glBindVertexShaderEXT @ 0x007b79a8
+- [x] IVertexDeclaration.cs - Disable Vertex Buffer Objects @ 0x007b56bc, glVertexAttrib4fvNV @ 0x007b7d24, glVertexAttrib3fvNV @ 0x007b7d38, glVertexAttrib2fvNV @ 0x007b7d4c, DirectX 8/9 FVF
+- [x] IWindow.cs - Render Window @ 0x007b5680, SW Movie Player Window @ 0x007b57dc, SWMovieWindow @ 0x007b57f4, Exo Base Window @ 0x007b74a0, AllowWindowedMode @ 0x007c75d0, GetProcessWindowStation @ 0x007d95f4, GetActiveWindow @ 0x007d963c, SetWindowTextA @ 0x00809e1a, DestroyWindow @ 0x00809e8a, ShowWindow @ 0x00809e9a
+- [x] MatrixHelper.cs - DirectX 8/9 matrix operations (D3DXMatrix* functions)
+- [x] VertexPositionColor.cs - Disable Vertex Buffer Objects @ 0x007b56bc, DirectX 8/9 FVF D3DFVF_XYZ | D3DFVF_DIFFUSE
 
 ### Odyssey.Graphics.Common (15 files)
 
