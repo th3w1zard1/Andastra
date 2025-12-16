@@ -32,7 +32,7 @@ namespace Odyssey.Graphics.Common.Backends
     /// - This abstraction: Provides DirectX 12 backend for modern Windows systems, not directly mapped to swkotor2.exe functions
     /// </remarks>
     public abstract class BaseDirect3D12Backend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend,
-        IMeshShaderBackend, IVariableRateShadingBackend
+        IMeshShaderBackend, IVariableRateShadingBackend, ISamplerFeedbackBackend, IBindlessResourcesBackend
     {
         protected IntPtr _factory;
         protected IntPtr _adapter;
@@ -345,6 +345,111 @@ namespace Odyssey.Graphics.Common.Backends
         protected abstract void OnSetPerPrimitiveShadingRate(bool enable);
         protected abstract void OnSetShadingRateImage(IntPtr shadingRateImage, int width, int height);
         protected virtual int QueryVrsTier() => VariableRateShadingAvailable ? 2 : 0;
+
+        #endregion
+
+        #region ISamplerFeedbackBackend Implementation
+
+        public virtual bool SamplerFeedbackAvailable => QuerySamplerFeedbackSupport();
+
+        public virtual IntPtr CreateSamplerFeedbackTexture(int width, int height, TextureFormat format)
+        {
+            if (!SamplerFeedbackAvailable || !_initialized) return IntPtr.Zero;
+            var handle = AllocateHandle();
+            var resource = CreateSamplerFeedbackTextureInternal(width, height, format, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual void SetSamplerFeedbackTexture(IntPtr feedbackTexture, int slot)
+        {
+            if (!SamplerFeedbackAvailable || !_initialized) return;
+            OnSetSamplerFeedbackTexture(feedbackTexture, slot);
+        }
+
+        public virtual void ReadSamplerFeedback(IntPtr feedbackTexture, byte[] data, int sizeInBytes)
+        {
+            if (!SamplerFeedbackAvailable || !_initialized) return;
+            OnReadSamplerFeedback(feedbackTexture, data, sizeInBytes);
+        }
+
+        protected abstract ResourceInfo CreateSamplerFeedbackTextureInternal(int width, int height, TextureFormat format, IntPtr handle);
+        protected abstract void OnSetSamplerFeedbackTexture(IntPtr feedbackTexture, int slot);
+        protected abstract void OnReadSamplerFeedback(IntPtr feedbackTexture, byte[] data, int sizeInBytes);
+        protected virtual bool QuerySamplerFeedbackSupport() => true;
+
+        #endregion
+
+        #region IBindlessResourcesBackend Implementation
+
+        public virtual bool BindlessResourcesAvailable => QueryBindlessResourcesSupport();
+        public virtual int MaxBindlessResources => 1000000; // D3D12 default limit
+
+        public virtual IntPtr CreateBindlessTextureHeap(int capacity)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return IntPtr.Zero;
+            var handle = AllocateHandle();
+            var resource = CreateBindlessTextureHeapInternal(capacity, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual IntPtr CreateBindlessSamplerHeap(int capacity)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return IntPtr.Zero;
+            var handle = AllocateHandle();
+            var resource = CreateBindlessSamplerHeapInternal(capacity, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual int AddBindlessTexture(IntPtr heap, IntPtr texture)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return -1;
+            return OnAddBindlessTexture(heap, texture);
+        }
+
+        public virtual int AddBindlessSampler(IntPtr heap, IntPtr sampler)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return -1;
+            return OnAddBindlessSampler(heap, sampler);
+        }
+
+        public virtual void RemoveBindlessTexture(IntPtr heap, int index)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return;
+            OnRemoveBindlessTexture(heap, index);
+        }
+
+        public virtual void RemoveBindlessSampler(IntPtr heap, int index)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return;
+            OnRemoveBindlessSampler(heap, index);
+        }
+
+        public virtual void SetBindlessHeap(IntPtr heap, int slot, ShaderStage stage)
+        {
+            if (!BindlessResourcesAvailable || !_initialized) return;
+            OnSetBindlessHeap(heap, slot, stage);
+        }
+
+        protected abstract ResourceInfo CreateBindlessTextureHeapInternal(int capacity, IntPtr handle);
+        protected abstract ResourceInfo CreateBindlessSamplerHeapInternal(int capacity, IntPtr handle);
+        protected abstract int OnAddBindlessTexture(IntPtr heap, IntPtr texture);
+        protected abstract int OnAddBindlessSampler(IntPtr heap, IntPtr sampler);
+        protected abstract void OnRemoveBindlessTexture(IntPtr heap, int index);
+        protected abstract void OnRemoveBindlessSampler(IntPtr heap, int index);
+        protected abstract void OnSetBindlessHeap(IntPtr heap, int slot, ShaderStage stage);
+        protected virtual bool QueryBindlessResourcesSupport() => true;
 
         #endregion
 
