@@ -8,6 +8,15 @@ namespace Odyssey.Engines.Common
     /// <summary>
     /// Base interface for game session management across all engines.
     /// </summary>
+    /// <remarks>
+    /// Engine Game Interface:
+    /// - Based on swkotor2.exe game session management
+    /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58, module loading functions
+    /// - Module loading: FUN_006caab0 @ 0x006caab0 sets module state flags, manages module transitions
+    /// - Game session: Manages current module, player entity, world state
+    /// - Original implementation: Game session loads modules, manages player entity, handles module transitions
+    /// - Note: This is an abstraction layer for multiple BioWare engines (Odyssey, Aurora, Eclipse)
+    /// </remarks>
     public interface IEngineGame
     {
         /// <summary>

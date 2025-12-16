@@ -7,6 +7,16 @@ namespace Odyssey.Engines.Common
     /// <summary>
     /// Abstract base class for game profiles across all engines.
     /// </summary>
+    /// <remarks>
+    /// Base Engine Profile:
+    /// - Based on swkotor2.exe game profile system
+    /// - Located via string references: Game profile determines game-specific behavior (K1 vs K2)
+    /// - Game profiles: Define resource configs, table configs, supported features, engine API creation
+    /// - Resource config: Defines resource file locations, keyfile handling, resource precedence
+    /// - Table config: Defines 2DA table locations, table loading behavior
+    /// - Original implementation: Game profiles configure engine behavior for specific games (KOTOR, KOTOR2, etc.)
+    /// - Note: This is an abstraction layer for multiple BioWare engines (Odyssey, Aurora, Eclipse)
+    /// </remarks>
     public abstract class BaseEngineProfile : IEngineProfile
     {
         protected readonly IResourceConfig _resourceConfig;

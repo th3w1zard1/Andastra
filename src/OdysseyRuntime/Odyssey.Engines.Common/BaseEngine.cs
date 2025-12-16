@@ -10,6 +10,17 @@ namespace Odyssey.Engines.Common
     /// <summary>
     /// Abstract base class for all BioWare engine implementations.
     /// </summary>
+    /// <remarks>
+    /// Base Engine:
+    /// - Based on swkotor2.exe engine initialization system
+    /// - Located via string references: Engine initialization in FUN_00404250 @ 0x00404250 (WinMain equivalent)
+    /// - Engine initialization: FUN_00404250 initializes engine objects, loads configuration, creates game instance
+    /// - Resource provider: CExoKeyTable handles resource loading, tracks loaded resources
+    /// - World management: Engine manages world instance, module loading, entity management
+    /// - Engine API: Provides NWScript engine functions (GetObjectByTag, GetNearestObject, etc.)
+    /// - Original implementation: Engine initialization creates resource provider, world, engine API, game session
+    /// - Note: This is an abstraction layer for multiple BioWare engines (Odyssey, Aurora, Eclipse)
+    /// </remarks>
     public abstract class BaseEngine : IEngine
     {
         protected readonly IEngineProfile _profile;

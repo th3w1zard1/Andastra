@@ -10,6 +10,15 @@ namespace Odyssey.Engines.Common
     /// <summary>
     /// Abstract base class for module management across all engines.
     /// </summary>
+    /// <remarks>
+    /// Base Engine Module:
+    /// - Based on swkotor2.exe module management system
+    /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58, "MODULE" @ module loading
+    /// - Module loading: FUN_006caab0 @ 0x006caab0 sets module state flags, manages module transitions
+    /// - Module management: Loads module areas, navigation meshes, entities from GIT files
+    /// - Original implementation: Module system loads areas, entities, navigation meshes, manages module state
+    /// - Note: This is an abstraction layer for multiple BioWare engines (Odyssey, Aurora, Eclipse)
+    /// </remarks>
     public abstract class BaseEngineModule : IEngineModule
     {
         protected readonly IWorld _world;
