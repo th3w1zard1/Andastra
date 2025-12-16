@@ -539,8 +539,150 @@ namespace Odyssey.Kotor.Save
         private void LoadModuleStateERF(ERF erf, SaveGameData saveData)
         {
             // Load area states from module RIM
-            // This would iterate through ARE resources in the RIM
-            // For now, this is a placeholder
+            // Based on swkotor2.exe: Module state loading from [module]_s.rim ERF archive
+            // Located via string references: Module state loading in save system
+            // Original implementation: Iterates through ARE resources in module RIM, loads each area state
+            // Each ARE resource contains GFF data with entity positions, door/placeable states, etc.
+            
+            if (erf == null || saveData == null)
+            {
+                return;
+            }
+
+            // Initialize AreaStates dictionary if null
+            if (saveData.AreaStates == null)
+            {
+                saveData.AreaStates = new Dictionary<string, AreaState>();
+            }
+
+            // Iterate through all resources in the ERF
+            // Each ARE resource represents an area state
+            foreach (ERFResource resource in erf)
+            {
+                // Only process ARE resources (area state files)
+                if (resource.ResType != ResourceType.ARE)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    // Get resource data
+                    byte[] areaData = resource.Data;
+                    if (areaData == null || areaData.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    // Deserialize GFF
+                    GFF areaGff = DeserializeGFF(areaData);
+                    if (areaGff == null || areaGff.Root == null)
+                    {
+                        continue;
+                    }
+
+                    // Create AreaState from GFF
+                    AreaState areaState = LoadAreaStateGFF(areaGff, resource.ResRef);
+                    if (areaState != null && !string.IsNullOrEmpty(areaState.AreaResRef))
+                    {
+                        // Use AreaResRef from GFF if available, otherwise use resource ResRef
+                        string areaKey = !string.IsNullOrEmpty(areaState.AreaResRef) 
+                            ? areaState.AreaResRef 
+                            : resource.ResRef.ToString();
+                        saveData.AreaStates[areaKey] = areaState;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SaveGameManager] Error loading area state from {resource.ResRef}: {ex.Message}");
+                    // Continue loading other areas even if one fails
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads an AreaState from a GFF structure.
+        /// </summary>
+        private AreaState LoadAreaStateGFF(GFF gff, string defaultResRef)
+        {
+            var areaState = new AreaState();
+            var root = gff.Root;
+            if (root == null)
+            {
+                return null;
+            }
+
+            // Get area ResRef
+            areaState.AreaResRef = GetStringField(root, "AreaResRef", defaultResRef);
+            areaState.Visited = true; // If it's in the save, it was visited
+
+            // Load creature states
+            GFFList creatureList = root.GetList("CreatureList");
+            if (creatureList != null)
+            {
+                foreach (GFFStruct creatureStruct in creatureList)
+                {
+                    var entityState = new EntityState();
+                    entityState.ObjectId = (uint)GetIntField(creatureStruct, "ObjectId", 0);
+                    entityState.Position = new System.Numerics.Vector3(
+                        GetFloatField(creatureStruct, "X", 0f),
+                        GetFloatField(creatureStruct, "Y", 0f),
+                        GetFloatField(creatureStruct, "Z", 0f)
+                    );
+                    entityState.Facing = GetFloatField(creatureStruct, "Facing", 0f);
+                    entityState.ObjectType = Odyssey.Core.Enums.ObjectType.Creature;
+                    entityState.Tag = GetStringField(creatureStruct, "Tag", "");
+                    entityState.CurrentHP = GetIntField(creatureStruct, "CurrentHP", 1);
+                    entityState.MaxHP = GetIntField(creatureStruct, "MaxHP", 1);
+                    areaState.CreatureStates.Add(entityState);
+                }
+            }
+
+            // Load door states (if present in GFF)
+            GFFList doorList = root.GetList("DoorList");
+            if (doorList != null)
+            {
+                foreach (GFFStruct doorStruct in doorList)
+                {
+                    var entityState = new EntityState();
+                    entityState.ObjectId = (uint)GetIntField(doorStruct, "ObjectId", 0);
+                    entityState.Position = new System.Numerics.Vector3(
+                        GetFloatField(doorStruct, "X", 0f),
+                        GetFloatField(doorStruct, "Y", 0f),
+                        GetFloatField(doorStruct, "Z", 0f)
+                    );
+                    entityState.Facing = GetFloatField(doorStruct, "Facing", 0f);
+                    entityState.ObjectType = Odyssey.Core.Enums.ObjectType.Door;
+                    entityState.Tag = GetStringField(doorStruct, "Tag", "");
+                    entityState.IsOpen = GetIntField(doorStruct, "IsOpen", 0) != 0;
+                    entityState.IsLocked = GetIntField(doorStruct, "IsLocked", 0) != 0;
+                    areaState.DoorStates.Add(entityState);
+                }
+            }
+
+            // Load placeable states (if present in GFF)
+            GFFList placeableList = root.GetList("PlaceableList");
+            if (placeableList != null)
+            {
+                foreach (GFFStruct placeableStruct in placeableList)
+                {
+                    var entityState = new EntityState();
+                    entityState.ObjectId = (uint)GetIntField(placeableStruct, "ObjectId", 0);
+                    entityState.Position = new System.Numerics.Vector3(
+                        GetFloatField(placeableStruct, "X", 0f),
+                        GetFloatField(placeableStruct, "Y", 0f),
+                        GetFloatField(placeableStruct, "Z", 0f)
+                    );
+                    entityState.Facing = GetFloatField(placeableStruct, "Facing", 0f);
+                    entityState.ObjectType = Odyssey.Core.Enums.ObjectType.Placeable;
+                    entityState.Tag = GetStringField(placeableStruct, "Tag", "");
+                    entityState.IsOpen = GetIntField(placeableStruct, "IsOpen", 0) != 0;
+                    entityState.IsLocked = GetIntField(placeableStruct, "IsLocked", 0) != 0;
+                    areaState.PlaceableStates.Add(entityState);
+                }
+            }
+
+            return areaState;
         }
 
         #endregion
