@@ -761,18 +761,8 @@ namespace Odyssey.Kotor.Save
             {
                 foreach (GFFStruct creatureStruct in creatureList)
                 {
-                    var entityState = new EntityState();
-                    entityState.ObjectId = (uint)GetIntField(creatureStruct, "ObjectId", 0);
-                    entityState.Position = new System.Numerics.Vector3(
-                        GetFloatField(creatureStruct, "X", 0f),
-                        GetFloatField(creatureStruct, "Y", 0f),
-                        GetFloatField(creatureStruct, "Z", 0f)
-                    );
-                    entityState.Facing = GetFloatField(creatureStruct, "Facing", 0f);
+                    var entityState = LoadEntityStateFromGFF(creatureStruct);
                     entityState.ObjectType = Odyssey.Core.Enums.ObjectType.Creature;
-                    entityState.Tag = GetStringField(creatureStruct, "Tag", "");
-                    entityState.CurrentHP = GetIntField(creatureStruct, "CurrentHP", 1);
-                    entityState.MaxHP = GetIntField(creatureStruct, "MaxHP", 1);
                     areaState.CreatureStates.Add(entityState);
                 }
             }
@@ -783,18 +773,8 @@ namespace Odyssey.Kotor.Save
             {
                 foreach (GFFStruct doorStruct in doorList)
                 {
-                    var entityState = new EntityState();
-                    entityState.ObjectId = (uint)GetIntField(doorStruct, "ObjectId", 0);
-                    entityState.Position = new System.Numerics.Vector3(
-                        GetFloatField(doorStruct, "X", 0f),
-                        GetFloatField(doorStruct, "Y", 0f),
-                        GetFloatField(doorStruct, "Z", 0f)
-                    );
-                    entityState.Facing = GetFloatField(doorStruct, "Facing", 0f);
+                    var entityState = LoadEntityStateFromGFF(doorStruct);
                     entityState.ObjectType = Odyssey.Core.Enums.ObjectType.Door;
-                    entityState.Tag = GetStringField(doorStruct, "Tag", "");
-                    entityState.IsOpen = GetIntField(doorStruct, "IsOpen", 0) != 0;
-                    entityState.IsLocked = GetIntField(doorStruct, "IsLocked", 0) != 0;
                     areaState.DoorStates.Add(entityState);
                 }
             }
