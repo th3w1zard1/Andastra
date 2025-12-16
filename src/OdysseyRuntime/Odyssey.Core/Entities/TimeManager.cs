@@ -56,7 +56,7 @@ namespace Odyssey.Core.Entities
         private float _simulationTime;
         private float _realTime;
         private float _deltaTime;
-        
+
         // Game time tracking (hours, minutes, seconds, milliseconds)
         // Based on swkotor2.exe: Game time tracking system
         // Located via string references: "GameTime" @ 0x007c1a78, "TIMEPLAYED" @ 0x007be1c4
@@ -72,7 +72,7 @@ namespace Odyssey.Core.Entities
             FixedTimestep = DefaultFixedTimestep;
             TimeScale = 1.0f;
             IsPaused = false;
-            
+
             // Initialize game time to midnight
             _gameTimeHour = 0;
             _gameTimeMinute = 0;
@@ -133,6 +133,39 @@ namespace Odyssey.Core.Entities
             {
                 _simulationTime += FixedTimestep;
                 _accumulator -= FixedTimestep;
+
+                // Update game time (advance milliseconds)
+                // Based on swkotor2.exe: Game time advances with simulation time
+                // Game time advances at 1:1 with simulation time (1 second of simulation = 1 second of game time)
+                _gameTimeAccumulator += FixedTimestep * 1000.0f; // Convert to milliseconds
+                while (_gameTimeAccumulator >= 1.0f)
+                {
+                    _gameTimeMillisecond += (int)_gameTimeAccumulator;
+                    _gameTimeAccumulator -= (int)_gameTimeAccumulator;
+
+                    if (_gameTimeMillisecond >= 1000)
+                    {
+                        _gameTimeMillisecond -= 1000;
+                        _gameTimeSecond++;
+
+                        if (_gameTimeSecond >= 60)
+                        {
+                            _gameTimeSecond -= 60;
+                            _gameTimeMinute++;
+
+                            if (_gameTimeMinute >= 60)
+                            {
+                                _gameTimeMinute -= 60;
+                                _gameTimeHour++;
+
+                                if (_gameTimeHour >= 24)
+                                {
+                                    _gameTimeHour -= 24;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

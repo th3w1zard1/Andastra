@@ -148,6 +148,43 @@ namespace Odyssey.Kotor.Game
         }
 
         /// <summary>
+        /// Gets whether the game is currently paused.
+        /// </summary>
+        public bool IsPaused
+        {
+            get
+            {
+                return _world != null && _world.TimeManager != null && _world.TimeManager.IsPaused;
+            }
+        }
+
+        /// <summary>
+        /// Pauses the game.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: PauseGame implementation
+        /// Located via string references: Game pause system
+        /// Original implementation: Pauses all game systems except UI (combat, movement, scripts suspended)
+        /// </remarks>
+        public void Pause()
+        {
+            OnPauseChanged(true);
+        }
+
+        /// <summary>
+        /// Resumes the game.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: ResumeGame implementation
+        /// Located via string references: Game pause system
+        /// Original implementation: Resumes all game systems (combat, movement, scripts resume)
+        /// </remarks>
+        public void Resume()
+        {
+            OnPauseChanged(false);
+        }
+
+        /// <summary>
         /// Creates a new game session.
         /// </summary>
         public GameSession(GameSettings settings, World world, NcsVm vm, IScriptGlobals globals)

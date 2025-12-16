@@ -1133,8 +1133,13 @@ namespace Odyssey.Kotor.Game
                     IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
                     if (placeableComponent != null)
                     {
-                        // TODO: IPlaceableComponent.AppearanceType not yet implemented
-                        // placeableComponent.AppearanceType = utp.AppearanceId;
+                        // Based on swkotor2.exe: Placeable appearance setting
+                        // Located via string references: "AppearanceType" @ 0x007c84c8
+                        // Original implementation: AppearanceType from UTP template sets placeable visual appearance
+                        if (placeableComponent is PlaceableComponent kotorPlaceable)
+                        {
+                            kotorPlaceable.AppearanceType = utp.AppearanceId;
+                        }
                         placeableComponent.IsUseable = utp.Useable;
                         placeableComponent.IsStatic = utp.Static;
                     }
@@ -1179,8 +1184,10 @@ namespace Odyssey.Kotor.Game
                     CreatureComponent creatureComponent = entity.GetComponent<CreatureComponent>();
                     if (creatureComponent != null)
                     {
-                        // TODO: CreatureComponent.AppearanceType not yet implemented
-                        // creatureComponent.AppearanceType = utc.AppearanceId;
+                        // Based on swkotor2.exe: Creature appearance setting
+                        // Located via string references: "AppearanceType" @ 0x007c84c8, "Appearance_Type" @ 0x007c40f0
+                        // Original implementation: AppearanceType from UTC template sets creature visual appearance (model selection)
+                        creatureComponent.AppearanceType = utc.AppearanceId;
                         creatureComponent.BodyVariation = utc.BodyVariation;
                         creatureComponent.TextureVar = utc.TextureVariation;
                     }

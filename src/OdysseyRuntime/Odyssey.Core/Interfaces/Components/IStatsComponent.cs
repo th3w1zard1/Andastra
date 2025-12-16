@@ -48,7 +48,7 @@ namespace Odyssey.Core.Interfaces.Components
         /// Maximum Force points.
         /// </summary>
         int MaxFP { get; set; }
-        
+
         /// <summary>
         /// Gets an ability score.
         /// </summary>

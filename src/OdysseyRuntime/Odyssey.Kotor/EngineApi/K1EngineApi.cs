@@ -17,7 +17,6 @@ using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Combat;
-using CoreCombat = Odyssey.Core.Combat;
 using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Game;
@@ -27,6 +26,7 @@ using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
+using CoreCombat = Odyssey.Core.Combat;
 using VMExecutionContext = Odyssey.Scripting.VM.ExecutionContext;
 
 namespace Odyssey.Kotor.EngineApi
@@ -47,15 +47,15 @@ namespace Odyssey.Kotor.EngineApi
     public class K1EngineApi : BaseEngineApi
     {
         private readonly NcsVm _vm;
-        
+
         // Iteration state for GetFirstFactionMember/GetNextFactionMember
         // Key: caller entity ID, Value: list of faction members and current index
         private readonly Dictionary<uint, FactionMemberIteration> _factionMemberIterations;
-        
+
         // Iteration state for GetFirstObjectInArea/GetNextObjectInArea
         // Key: caller entity ID, Value: list of area objects and current index
         private readonly Dictionary<uint, AreaObjectIteration> _areaObjectIterations;
-        
+
         // Iteration state for GetFirstEffect/GetNextEffect
         // Key: caller entity ID, Value: list of effects and current index
         private readonly Dictionary<uint, EffectIteration> _effectIterations;
@@ -63,7 +63,7 @@ namespace Odyssey.Kotor.EngineApi
         // Iteration state for GetFirstInPersistentObject/GetNextInPersistentObject
         // Key: caller entity ID, Value: list of persistent objects and current index
         private readonly Dictionary<uint, PersistentObjectIteration> _persistentObjectIterations;
-        
+
         // Iteration state for GetFirstItemInInventory/GetNextItemInInventory
         // Key: caller entity ID, Value: list of inventory items and current index
         private readonly Dictionary<uint, InventoryItemIteration> _inventoryItemIterations;
@@ -119,19 +119,19 @@ namespace Odyssey.Kotor.EngineApi
             _runScriptVar = Variable.Void();
             _playerRestricted = false; // Initialize player restriction state
         }
-        
+
         private class FactionMemberIteration
         {
             public List<IEntity> Members { get; set; }
             public int CurrentIndex { get; set; }
         }
-        
+
         private class AreaObjectIteration
         {
             public List<IEntity> Objects { get; set; }
             public int CurrentIndex { get; set; }
         }
-        
+
         private class EffectIteration
         {
             public List<CoreCombat.ActiveEffect> Effects { get; set; }
@@ -143,7 +143,7 @@ namespace Odyssey.Kotor.EngineApi
             public List<IEntity> Objects { get; set; }
             public int CurrentIndex { get; set; }
         }
-        
+
         private class InventoryItemIteration
         {
             public List<IEntity> Items { get; set; }
@@ -299,16 +299,16 @@ namespace Odyssey.Kotor.EngineApi
 
                 // GetAbility (routine 139)
                 case 139: return Func_GetAbility(args, ctx);
-                
+
                 // GetItemInSlot (routine 155)
                 case 155: return Func_GetItemInSlot(args, ctx);
-                
+
                 // GetItemStackSize (routine 138)
                 case 138: return Func_GetItemStackSize(args, ctx);
-                
+
                 // PrintVector
                 case 141: return Func_PrintVector(args, ctx);
-                
+
                 // ApplyEffectToObject (routine 220)
                 case 220: return Func_ApplyEffectToObject(args, ctx);
                 case 222: return Func_GetSpellTargetLocation(args, ctx);
@@ -356,7 +356,7 @@ namespace Odyssey.Kotor.EngineApi
                 case 251: return Func_GetLoadFromSaveGame(args, ctx);
                 case 272: return Func_ObjectToString(args, ctx);
                 case 509: return Func_StartNewModule(args, ctx);
-                
+
                 // Faction manipulation
                 case 173: return Func_ChangeFaction(args, ctx);
 
@@ -364,18 +364,18 @@ namespace Odyssey.Kotor.EngineApi
                 case 316: return Func_GetAttackTarget(args, ctx);
                 case 319: return Func_GetDistanceBetween2D(args, ctx);
                 case 320: return Func_GetIsInCombat(args, ctx);
-                
+
                 // Spell tracking functions
                 case 245: return Func_GetLastSpellCaster(args, ctx);
                 case 248: return Func_GetSpellId(args, ctx);
-                
+
                 // Item functions
                 case 150: return Func_SetItemStackSize(args, ctx);
                 case 151: return Func_GetDistanceBetween(args, ctx);
-                
+
                 // Trigger/Object Query Functions
                 case 326: return Func_GetClickingObject(args, ctx);
-                
+
                 // Door/Placeable Action Functions
                 case 337: return Func_GetIsDoorActionPossible(args, ctx);
                 case 338: return Func_DoDoorAction(args, ctx);
@@ -386,21 +386,21 @@ namespace Odyssey.Kotor.EngineApi
                 case 456: return Func_SetPlotFlag(args, ctx);
                 case 701: return Func_GetIsConversationActive(args, ctx);
                 case 711: return Func_GetLastConversation(args, ctx);
-                
+
                 // Object type checks
                 case 217: return Func_GetIsPC(args, ctx);
                 case 218: return Func_GetIsNPC(args, ctx);
 
                 // GetAbilityModifier (routine 331)
                 case 331: return Func_GetAbilityModifier(args, ctx);
-                
+
                 // Party management functions
                 case 126: return Func_GetPartyMemberCount(args, ctx);
                 case 577: return Func_GetPartyMemberByIndex(args, ctx);
                 case 576: return Func_IsObjectPartyMember(args, ctx);
                 case 574: return Func_AddPartyMember(args, ctx);
                 case 575: return Func_RemovePartyMember(args, ctx);
-                
+
                 // Faction functions
                 case 172: return Func_GetFactionEqual(args, ctx);
                 case 181: return Func_GetFactionWeakestMember(args, ctx);
@@ -411,7 +411,7 @@ namespace Odyssey.Kotor.EngineApi
                 case 237: return Func_GetIsNeutral(args, ctx);
                 case 380: return Func_GetFirstFactionMember(args, ctx);
                 case 381: return Func_GetNextFactionMember(args, ctx);
-                
+
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
                 case 579: return Func_SetGlobalBoolean(args, ctx);
@@ -1026,10 +1026,10 @@ namespace Odyssey.Kotor.EngineApi
 
             // Get all creatures in radius
             IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(targetTransform.Position, 100f, Core.Enums.ObjectType.Creature);
-            
+
             // Filter and sort by criteria
             List<IEntity> matchingCreatures = new List<IEntity>();
-            
+
             foreach (IEntity entity in entities)
             {
                 if (entity == target) continue;
@@ -1064,7 +1064,7 @@ namespace Odyssey.Kotor.EngineApi
                     Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                     Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                     if (aTransform == null || bTransform == null) return 0;
-                    
+
                     float distA = System.Numerics.Vector3.DistanceSquared(targetTransform.Position, aTransform.Position);
                     float distB = System.Numerics.Vector3.DistanceSquared(targetTransform.Position, bTransform.Position);
                     return distA.CompareTo(distB);
@@ -1119,10 +1119,10 @@ namespace Odyssey.Kotor.EngineApi
 
             // Get all creatures in radius
             IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(locationPos, 100f, Core.Enums.ObjectType.Creature);
-            
+
             // Filter and sort by criteria
             List<IEntity> matchingCreatures = new List<IEntity>();
-            
+
             foreach (IEntity entity in entities)
             {
                 if (entity.ObjectType != Core.Enums.ObjectType.Creature) continue;
@@ -1156,7 +1156,7 @@ namespace Odyssey.Kotor.EngineApi
                     Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                     Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                     if (aTransform == null || bTransform == null) return 0;
-                    
+
                     float distA = System.Numerics.Vector3.DistanceSquared(locationPos, aTransform.Position);
                     float distB = System.Numerics.Vector3.DistanceSquared(locationPos, bTransform.Position);
                     return distA.CompareTo(distB);
@@ -1321,7 +1321,7 @@ namespace Odyssey.Kotor.EngineApi
                             if (servicesRep.FactionManager is FactionManager factionManager)
                             {
                                 int reputation = factionManager.GetReputation(ctx.Caller, creature);
-                                
+
                                 switch (criteriaValue)
                                 {
                                     case 0: // FRIEND
@@ -1881,10 +1881,16 @@ namespace Odyssey.Kotor.EngineApi
             int minute = args.Count > 1 ? args[1].AsInt() : 0;
             int second = args.Count > 2 ? args[2].AsInt() : 0;
             int millisecond = args.Count > 3 ? args[3].AsInt() : 0;
-            
+
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: SetGameTime not yet implemented - no-op for now
+                // Based on swkotor2.exe: SetGameTime implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Sets game time in module IFO, affects time-of-day checks
+                if (services.World != null && services.World.TimeManager != null)
+                {
+                    services.World.TimeManager.SetGameTime(hour, minute, second, millisecond);
+                }
             }
             return Variable.Void();
         }
@@ -2034,7 +2040,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             int unescapable = args.Count > 0 ? args[0].AsInt() : 0;
             bool isUnescapable = unescapable != 0;
-            
+
             if (ctx.World != null && ctx.World.CurrentArea != null)
             {
                 ctx.World.CurrentArea.IsUnescapable = isUnescapable;
@@ -2063,8 +2069,13 @@ namespace Odyssey.Kotor.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: GetGameTimeHours not yet implemented - return 0 for now
-                return Variable.FromInt(0);
+                // Based on swkotor2.exe: GetTimeHour implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time hour (0-23)
+                if (services.World != null && services.World.TimeManager != null)
+                {
+                    return Variable.FromInt(services.World.TimeManager.GameTimeHour);
+                }
             }
             return Variable.FromInt(0);
         }
@@ -2076,8 +2087,13 @@ namespace Odyssey.Kotor.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: GetGameTimeMinutes not yet implemented - return 0 for now
-                return Variable.FromInt(0);
+                // Based on swkotor2.exe: GetTimeMinute implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time minute (0-59) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
+                {
+                    return Variable.FromInt(services.World.TimeManager.GameTimeMinute);
+                }
             }
             return Variable.FromInt(0);
         }
@@ -2089,10 +2105,12 @@ namespace Odyssey.Kotor.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
+                // Based on swkotor2.exe: GetTimeSecond implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time second (0-59) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
                 {
-                    // TODO: GetGameTimeSeconds not yet implemented - return 0 for now
-                    return Variable.FromInt(0);
+                    return Variable.FromInt(services.World.TimeManager.GameTimeSecond);
                 }
             }
             return Variable.FromInt(0);
@@ -2105,10 +2123,12 @@ namespace Odyssey.Kotor.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
+                // Based on swkotor2.exe: GetTimeMillisecond implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time millisecond (0-999) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
                 {
-                    // TODO: GetGameTimeMilliseconds not yet implemented - return 0 for now
-                    return Variable.FromInt(0);
+                    return Variable.FromInt(services.World.TimeManager.GameTimeMillisecond);
                 }
             }
             return Variable.FromInt(0);
@@ -2294,7 +2314,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            
+
             if (entity == null)
             {
                 return Variable.FromInt(0);
@@ -2318,7 +2338,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int plotFlag = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
@@ -2379,7 +2399,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity item = ResolveObject(itemId, ctx);
-            
+
             if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
         {
             return Variable.FromObject(ObjectInvalid);
@@ -2413,7 +2433,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string itemTag = args.Count > 1 ? args[1].AsString() : string.Empty;
-            
+
             IEntity creature = ResolveObject(creatureId, ctx);
             if (creature == null || string.IsNullOrEmpty(itemTag))
             {
@@ -2704,7 +2724,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity target = ResolveObject(targetId, ctx);
-            
+
             if (target == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -2729,7 +2749,7 @@ namespace Odyssey.Kotor.EngineApi
             // Returns the current attack target of the creature (only works when in combat)
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity creature = ResolveObject(creatureId, ctx);
-            
+
             if (creature == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -2789,7 +2809,7 @@ namespace Odyssey.Kotor.EngineApi
             bool onlyCountReal = args.Count > 1 && args[1].AsInt() != 0;
 
             IEntity creature = ResolveObject(creatureId, ctx);
-            
+
             if (creature == null)
             {
                 return Variable.FromInt(0);
@@ -2815,7 +2835,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_SetCameraFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float direction = args.Count > 0 ? args[0].AsFloat() : 0f;
-            
+
             // Access CameraController through GameServicesContext
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
@@ -2825,7 +2845,7 @@ namespace Odyssey.Kotor.EngineApi
                     cameraController.SetFacing(direction);
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2840,7 +2860,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_PlaySound(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string soundName = args.Count > 0 ? args[0].AsString() : string.Empty;
-            
+
             if (string.IsNullOrEmpty(soundName) || ctx.Caller == null)
             {
                 return Variable.Void();
@@ -2865,7 +2885,7 @@ namespace Odyssey.Kotor.EngineApi
                     // Note: soundInstanceId can be used to stop the sound later if needed
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2924,7 +2944,7 @@ namespace Odyssey.Kotor.EngineApi
             if (targetId != ObjectInvalid)
             {
                 _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
-                
+
                 // Track spell caster for GetLastSpellCaster (target can query who cast spell on them)
                 // Based on swkotor2.exe: GetLastSpellCaster returns caster entity that last cast spell on caller
                 // Original implementation: Stores caster entity ID on target when spell is cast
@@ -3128,7 +3148,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             // GetStringByStrRef(int nStrRef) - Get a string from the talk table using nStrRef
             int strRef = args.Count > 0 ? args[0].AsInt() : 0;
-            
+
             // Access DialogueManager from GameServicesContext to get TLK
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
@@ -3141,7 +3161,7 @@ namespace Odyssey.Kotor.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromString("");
         }
 
@@ -3149,7 +3169,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             // GetLastSpeaker() - Use this in a conversation script to get the person with whom you are conversing
             // Returns OBJECT_INVALID if the caller is not a valid creature or not in conversation
-            
+
             // Access DialogueManager from GameServicesContext
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
@@ -3167,7 +3187,7 @@ namespace Odyssey.Kotor.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -3178,12 +3198,12 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            
+
             if (entity == null)
             {
                 return Variable.FromInt(0);
             }
-            
+
             // Access DialogueManager from GameServicesContext
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
@@ -3208,7 +3228,7 @@ namespace Odyssey.Kotor.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -3224,7 +3244,7 @@ namespace Odyssey.Kotor.EngineApi
                     return Variable.FromInt(dialogueManager.IsConversationActive ? 1 : 0);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -3249,7 +3269,7 @@ namespace Odyssey.Kotor.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromString("");
         }
 
@@ -3272,7 +3292,7 @@ namespace Odyssey.Kotor.EngineApi
                         }
                     }
                 }
-                
+
                 // Fall back to player entity if no active conversation
                 if (services.PlayerEntity != null)
                 {
@@ -3340,7 +3360,7 @@ namespace Odyssey.Kotor.EngineApi
                     return Variable.FromInt(started ? 1 : 0);
                 }
             }
-            
+
             return Variable.FromInt(0); // Failed - no DialogueManager available
         }
 
@@ -3989,24 +4009,26 @@ namespace Odyssey.Kotor.EngineApi
         {
             int pause = args.Count > 0 ? args[0].AsInt() : 0;
             bool shouldPause = pause != 0;
-            
+
             // Access GameSession through GameServicesContext
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession != null)
                 {
-                    // TODO: GameSession.Pause and GameSession.Resume not yet implemented - no-op for now
-                    // if (shouldPause)
-                    // {
-                    //     services.GameSession.Pause();
-                    // }
-                    // else
-                    // {
-                    //     services.GameSession.Resume();
-                    // }
+                    // Based on swkotor2.exe: PauseGame implementation
+                    // Located via string references: Game pause system
+                    // Original implementation: Pauses/unpauses all game systems except UI
+                    if (shouldPause)
+                    {
+                        services.GameSession.Pause();
+                    }
+                    else
+                    {
+                        services.GameSession.Resume();
+                    }
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -4017,12 +4039,12 @@ namespace Odyssey.Kotor.EngineApi
         {
             int restrict = args.Count > 0 ? args[0].AsInt() : 0;
             bool shouldRestrict = restrict != 0;
-            
+
             // Track player restriction state
             // When restricted, player cannot move, interact, or perform actions
             // Used during cutscenes, dialogues, etc.
             _playerRestricted = shouldRestrict;
-            
+
             // Notify GameSession if available to enforce restriction
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
@@ -4032,7 +4054,7 @@ namespace Odyssey.Kotor.EngineApi
                     // This flag is now tracked and can be checked by movement/interaction systems
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -4055,12 +4077,12 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            
+
             if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
-            
+
             // Get caster level from CreatureComponent class list
             // In KOTOR, caster level for Force powers is typically the sum of Force-using class levels
             CreatureComponent creatureComp = entity.GetComponent<CreatureComponent>();
@@ -4068,12 +4090,12 @@ namespace Odyssey.Kotor.EngineApi
             {
                 // For now, return total character level as caster level
                 // Full implementation would filter for Force-using classes only
-                // Force-using classes: Jedi Consular (2), Jedi Guardian (3), Jedi Sentinel (4), 
+                // Force-using classes: Jedi Consular (2), Jedi Guardian (3), Jedi Sentinel (4),
                 //                     Jedi Master (8), Sith Lord (9), etc.
                 int totalLevel = creatureComp.GetTotalLevel();
                 return Variable.FromInt(totalLevel);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -4083,7 +4105,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_GetFirstEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             if (ctx.Caller == null || ctx.World == null || ctx.World.EffectSystem == null)
         {
             return Variable.FromEffect(null);
@@ -4205,7 +4227,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_GetIsEffectValid(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
-            
+
             if (effectObj == null)
         {
             return Variable.FromInt(0);
@@ -4233,7 +4255,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_GetEffectDurationType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
-            
+
             if (effectObj is CoreCombat.Effect effect)
             {
                 // Map EffectDurationType to NWScript constants
@@ -4258,7 +4280,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_GetEffectSubType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
-            
+
             if (effectObj is CoreCombat.Effect effect)
             {
                 return Variable.FromInt(effect.SubType);
@@ -4353,7 +4375,7 @@ namespace Odyssey.Kotor.EngineApi
 
             // Collect all objects in area by iterating through all entity types
             List<IEntity> objects = new List<IEntity>();
-            
+
             // Get all entities from world that are in the current area
             // We'll filter by checking if they're creatures, placeables, doors, etc. from the area
             foreach (IEntity entity in ctx.World.GetAllEntities())
@@ -4505,18 +4527,18 @@ namespace Odyssey.Kotor.EngineApi
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
-            
+
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
-            
+
             // Retrieve last metamagic type for this caster (tracked in ActionCastSpellAtObject)
             if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
             {
                 return Variable.FromInt(metamagicType);
             }
-            
+
             // No metamagic tracked, return 0 (no metamagic)
             return Variable.FromInt(0);
         }
@@ -4530,19 +4552,19 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity creature = ResolveObject(creatureId, ctx);
-            
+
             if (creature == null || creature.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
-            
+
             // Access racial type from CreatureComponent
             CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
             if (creatureComp != null)
             {
                 return Variable.FromInt(creatureComp.RaceId);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -4601,7 +4623,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint casterId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity caster = ResolveObject(casterId, ctx);
-            
+
             if (caster != null)
             {
                 Core.Interfaces.Components.IStatsComponent stats = caster.GetComponent<Core.Interfaces.Components.IStatsComponent>();
@@ -4617,7 +4639,7 @@ namespace Odyssey.Kotor.EngineApi
                     return Variable.FromInt(saveDC);
                 }
             }
-            
+
             // Default save DC if caster not found
             return Variable.FromInt(10);
         }
@@ -4633,13 +4655,13 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.FromEffect(null);
             }
-            
+
             object effectObj = args[0].ComplexValue;
             if (effectObj == null)
             {
                 return Variable.FromEffect(null);
             }
-            
+
             // Set subtype to MAGICAL (8)
             CoreCombat.Effect effect = effectObj as CoreCombat.Effect;
             if (effect != null)
@@ -4649,7 +4671,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Effect is already marked via SubType, which is sufficient
                 return Variable.FromEffect(effect);
             }
-            
+
             return Variable.FromEffect(null);
         }
 
@@ -4664,13 +4686,13 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.FromEffect(null);
             }
-            
+
             object effectObj = args[0].ComplexValue;
             if (effectObj == null)
             {
                 return Variable.FromEffect(null);
             }
-            
+
             // Set subtype to SUPERNATURAL (16)
             CoreCombat.Effect effect = effectObj as CoreCombat.Effect;
             if (effect != null)
@@ -4679,7 +4701,7 @@ namespace Odyssey.Kotor.EngineApi
                 effect.IsSupernatural = true;
                 return Variable.FromEffect(effect);
             }
-            
+
             return Variable.FromEffect(null);
         }
 
@@ -4692,13 +4714,13 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.FromEffect(null);
             }
-            
+
             object effectObj = args[0].ComplexValue;
             if (effectObj == null)
             {
                 return Variable.FromEffect(null);
             }
-            
+
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
             // Set subtype to EXTRAORDINARY (32)
             CoreCombat.Effect effect = effectObj as CoreCombat.Effect;
@@ -4708,7 +4730,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
-            
+
             return Variable.FromEffect(null);
         }
 
@@ -4896,15 +4918,15 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
+
             IEntity entity1 = ResolveObject(objectId1, ctx);
             IEntity entity2 = ResolveObject(objectId2, ctx);
-            
+
             if (entity1 != null && entity2 != null)
             {
                 IFactionComponent faction1 = entity1.GetComponent<IFactionComponent>();
                 IFactionComponent faction2 = entity2.GetComponent<IFactionComponent>();
-                
+
                 if (faction1 != null && faction2 != null)
                 {
                     return Variable.FromInt(faction1.FactionId == faction2.FactionId ? 1 : 0);
@@ -5155,10 +5177,10 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
+
             IEntity source = ResolveObject(sourceId, ctx);
             IEntity target = ResolveObject(targetId, ctx);
-            
+
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
@@ -5184,10 +5206,10 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
+
             IEntity source = ResolveObject(sourceId, ctx);
             IEntity target = ResolveObject(targetId, ctx);
-            
+
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
@@ -5199,11 +5221,11 @@ namespace Odyssey.Kotor.EngineApi
                         return Variable.FromInt(isFriendly ? 1 : 0);
                     }
                 }
-                
+
                 // Fallback: Simple faction check if FactionManager not available
                 IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
                 IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                
+
                 if (sourceFaction != null && targetFaction != null)
                 {
                     // Check if same faction (simplified - would need FactionManager for proper friendliness)
@@ -5238,10 +5260,10 @@ namespace Odyssey.Kotor.EngineApi
             // Neutral range: HostileThreshold (10) < reputation < FriendlyThreshold (90)
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
+
             IEntity source = ResolveObject(sourceId, ctx);
             IEntity target = ResolveObject(targetId, ctx);
-            
+
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
@@ -5255,11 +5277,11 @@ namespace Odyssey.Kotor.EngineApi
                         return Variable.FromInt(isNeutral ? 1 : 0);
                     }
                 }
-                
+
                 // Fallback: If not enemy and not friend, then neutral
                 IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
                 IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                
+
                 if (sourceFaction != null && targetFaction != null)
                 {
                     // Different factions are neutral by default (unless explicitly hostile)
@@ -5286,7 +5308,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_GetWaypointByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string waypointTag = args.Count > 0 ? args[0].AsString() : string.Empty;
-            
+
             if (string.IsNullOrEmpty(waypointTag) || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -5320,7 +5342,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            
+
             if (entity == null)
             {
                 return Variable.FromString(string.Empty);
@@ -5332,7 +5354,7 @@ namespace Odyssey.Kotor.EngineApi
             {
                 string firstName = concreteEntity.GetData<string>("FirstName", null);
                 string lastName = concreteEntity.GetData<string>("LastName", null);
-                
+
                 if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
                 {
                     string fullName = string.Empty;
@@ -5368,10 +5390,10 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectToChangeId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint memberOfFactionId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             IEntity objectToChange = ResolveObject(objectToChangeId, ctx);
             IEntity memberOfFaction = ResolveObject(memberOfFactionId, ctx);
-            
+
             if (objectToChange == null || memberOfFaction == null)
             {
                 return Variable.Void();
@@ -5413,18 +5435,18 @@ namespace Odyssey.Kotor.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            
+
             if (entity == null)
             {
                 return Variable.FromLocation(null);
             }
-            
+
             ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return Variable.FromLocation(null);
             }
-            
+
             var location = new Location(transform.Position, transform.Facing);
             return Variable.FromLocation(location);
         }
@@ -5438,20 +5460,20 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.Void();
             }
-            
+
             object locObj = args[0].AsLocation();
             if (locObj == null || !(locObj is Location location))
             {
                 return Variable.Void();
             }
-            
+
             var action = new ActionJumpToLocation(location.Position, location.Facing);
             IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
             if (queue != null)
             {
                 queue.Add(action);
             }
-            
+
             return Variable.Void();
         }
 
@@ -5462,7 +5484,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             Vector3 position = args.Count > 0 ? args[0].AsVector() : Vector3.Zero;
             float facing = args.Count > 1 ? args[1].AsFloat() : 0f;
-            
+
             var location = new Location(position, facing);
             return Variable.FromLocation(location);
         }
@@ -5610,7 +5632,7 @@ namespace Odyssey.Kotor.EngineApi
                     object moduleTransitionSystem = moduleTransitionProp.GetValue(ctx.World);
                     if (moduleTransitionSystem != null)
                     {
-                        var transitionMethod = moduleTransitionSystem.GetType().GetMethod("TransitionToModule", 
+                        var transitionMethod = moduleTransitionSystem.GetType().GetMethod("TransitionToModule",
                             new System.Type[] { typeof(string), typeof(string) });
                         if (transitionMethod != null)
                         {
@@ -5673,12 +5695,12 @@ namespace Odyssey.Kotor.EngineApi
         {
             int strRef = args.Count > 0 ? args[0].AsInt() : 0;
             int talkVolume = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             if (ctx.Caller == null)
             {
                 return Variable.Void();
             }
-            
+
             // Look up string from TLK
             string text = "";
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
@@ -5688,14 +5710,14 @@ namespace Odyssey.Kotor.EngineApi
                     text = dialogueManager.LookupString(strRef);
                 }
             }
-            
+
             var action = new ActionSpeakString(text, talkVolume);
             IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
             if (queue != null)
             {
                 queue.Add(action);
             }
-            
+
             return Variable.Void();
         }
 
@@ -5708,17 +5730,17 @@ namespace Odyssey.Kotor.EngineApi
             float delay = args.Count > 1 ? args[1].AsFloat() : 0f;
             int noFade = args.Count > 2 ? args[2].AsInt() : 0;
             float delayUntilFade = args.Count > 3 ? args[3].AsFloat() : 0f;
-            
+
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 return Variable.Void();
             }
-            
+
             // Modules and areas are not entities in our system (they're managed separately via World/ModuleLoader)
             // Only entity objects (Creature, Item, Placeable, Door, etc.) can be destroyed
             // The entity null check above already handles invalid entities
-            
+
             // If no delay and no fade, destroy immediately
             if (delay <= 0f && noFade != 0)
             {
@@ -5728,10 +5750,10 @@ namespace Odyssey.Kotor.EngineApi
                 }
                 return Variable.Void();
             }
-            
+
             // Create destroy action with delay and fade support
             var destroyAction = new Odyssey.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
-            
+
             // If delay > 0, schedule via DelayCommand
             if (delay > 0f)
             {
@@ -5759,7 +5781,7 @@ namespace Odyssey.Kotor.EngineApi
                     }
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -5776,13 +5798,13 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.FromVector(Vector3.Zero);
             }
-            
+
             object locObj = args[0].AsLocation();
             if (locObj == null || !(locObj is Location location))
             {
                 return Variable.FromVector(Vector3.Zero);
             }
-            
+
             return Variable.FromVector(location.Position);
         }
 
@@ -5795,13 +5817,13 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.FromFloat(0f);
             }
-            
+
             object locObj = args[0].AsLocation();
             if (locObj == null || !(locObj is Location location))
             {
                 return Variable.FromFloat(0f);
             }
-            
+
             return Variable.FromFloat(location.Facing);
         }
 
@@ -5829,12 +5851,12 @@ namespace Odyssey.Kotor.EngineApi
             string template = args.Count > 1 ? args[1].AsString() : "";
             object locObj = args.Count > 2 ? args[2].AsLocation() : null;
             int useAppearAnimation = args.Count > 3 ? args[3].AsInt() : 0;
-            
+
             if (ctx.World == null || ctx.World.CurrentArea == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Extract position and facing from location
             Vector3 position = Vector3.Zero;
             float facing = 0f;
@@ -5843,11 +5865,11 @@ namespace Odyssey.Kotor.EngineApi
                 position = location.Position;
                 facing = location.Facing;
             }
-            
+
             // Convert object type constant to ObjectType enum
             Core.Enums.ObjectType odyObjectType = Core.Enums.ObjectType.Creature; // Default
             ResourceType resourceType = ResourceType.UTC; // Default
-            
+
             // Map NWScript object type constants to Odyssey ObjectType
             // OBJECT_TYPE_CREATURE = 1, OBJECT_TYPE_ITEM = 2, OBJECT_TYPE_PLACEABLE = 4, OBJECT_TYPE_STORE = 5, OBJECT_TYPE_WAYPOINT = 6
             switch (objectType)
@@ -5875,10 +5897,10 @@ namespace Odyssey.Kotor.EngineApi
                 default:
                     return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Create entity using EntityFactory
             IEntity entity = null;
-            
+
             // Access ModuleLoader via GameServicesContext to get EntityFactory
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
@@ -5927,7 +5949,7 @@ namespace Odyssey.Kotor.EngineApi
                     }
                 }
             }
-            
+
             // Fallback: Create basic entity if EntityFactory not available or template creation failed
             if (entity == null)
             {
@@ -5938,7 +5960,7 @@ namespace Odyssey.Kotor.EngineApi
                 {
                     return Variable.FromObject(ObjectInvalid);
                 }
-                
+
                 // Set tag from template (for waypoints, template is the tag)
                 if (objectType == 6) // Waypoint
                 {
@@ -5949,16 +5971,16 @@ namespace Odyssey.Kotor.EngineApi
                     entity.Tag = template;
                 }
             }
-            
+
             // Register entity with world
             ctx.World.RegisterEntity(entity);
-            
+
             // Add to current area (RuntimeArea has AddEntity method)
             if (ctx.World.CurrentArea is Core.Module.RuntimeArea runtimeArea)
             {
                 runtimeArea.AddEntity(entity);
             }
-            
+
             // Implement appear animation if bUseAppearAnimation is TRUE
             // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
             // This is typically handled by setting a flag that the rendering system uses to fade in the object
@@ -5968,13 +5990,13 @@ namespace Odyssey.Kotor.EngineApi
                 if (entity is Core.Entities.Entity entityImpl)
                 {
                     entityImpl.SetData("AppearAnimation", true);
-                    
+
                     // Optionally, queue an animation action for entities that support it
                     // Most objects in KOTOR just fade in visually rather than playing a specific animation
                     // The rendering system should handle the fade-in based on the AppearAnimation flag
                 }
             }
-            
+
             return Variable.FromObject(entity.ObjectId);
         }
 
@@ -6039,18 +6061,18 @@ namespace Odyssey.Kotor.EngineApi
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             int objectType = args[0].AsInt();
             object locObj = args[1].AsLocation();
             int nth = args.Count > 2 ? args[2].AsInt() : 1;
-            
+
             // Extract position from location
             Vector3 locationPos = Vector3.Zero;
             if (locObj != null && locObj is Location location)
             {
                 locationPos = location.Position;
             }
-            
+
             // Convert object type constant to ObjectType enum
             Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
             if (objectType != 32767) // Not OBJECT_TYPE_ALL
@@ -6058,7 +6080,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Map NWScript object type constants
                 typeMask = (Core.Enums.ObjectType)objectType;
             }
-            
+
             // Get all entities of the specified type
             var candidates = new List<(IEntity entity, float distance)>();
             foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
@@ -6070,16 +6092,16 @@ namespace Odyssey.Kotor.EngineApi
                     candidates.Add((entity, distance));
                 }
             }
-            
+
             // Sort by distance
             candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
-            
+
             // Return Nth nearest (1-indexed)
             if (nth > 0 && nth <= candidates.Count)
             {
                 return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -6110,8 +6132,10 @@ namespace Odyssey.Kotor.EngineApi
             if (stats != null)
             {
                 // Hit dice = total character level
-                // TODO: IStatsComponent.Level not yet implemented - return 1 for now
-                return Variable.FromInt(1);
+                // Based on swkotor2.exe: GetHitDice implementation
+                // Located via string references: Hit dice calculation from character level
+                // Original implementation: Hit dice equals total character level (sum of all class levels)
+                return Variable.FromInt(stats.Level);
             }
 
             return Variable.FromInt(0);
