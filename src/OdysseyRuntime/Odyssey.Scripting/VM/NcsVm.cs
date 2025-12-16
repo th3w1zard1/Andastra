@@ -221,6 +221,10 @@ namespace Odyssey.Scripting.VM
                 case 0x03: RSADDF(); break;
                 case 0x04: RSADDS(); break;
                 case 0x05: RSADDO(); break;
+                case 0x06: RSADDEFF(); break;
+                case 0x07: RSADDEVT(); break;
+                case 0x08: RSADDLOC(); break;
+                case 0x09: RSADDTAL(); break;
                 case 0x0A: CPTOPSP(); break;
                 case 0x0B: CONSTI(); break;
                 case 0x0C: CONSTF(); break;
@@ -236,10 +240,20 @@ namespace Odyssey.Scripting.VM
                 case 0x16: EQUALFF(); break;
                 case 0x17: EQUALSS(); break;
                 case 0x18: EQUALOO(); break;
+                case 0x19: EQUALTT(); break;
+                case 0x1A: EQUALEFFEFF(); break;
+                case 0x1B: EQUALEVTEVT(); break;
+                case 0x1C: EQUALLOCLOC(); break;
+                case 0x1D: EQUALTALTAL(); break;
                 case 0x1E: NEQUALII(); break;
                 case 0x1F: NEQUALFF(); break;
                 case 0x20: NEQUALSS(); break;
                 case 0x21: NEQUALOO(); break;
+                case 0x22: NEQUALTT(); break;
+                case 0x23: NEQUALEFFEFF(); break;
+                case 0x24: NEQUALEVTEVT(); break;
+                case 0x25: NEQUALLOCLOC(); break;
+                case 0x26: NEQUALTALTAL(); break;
                 case 0x27: GEQII(); break;
                 case 0x28: GEQFF(); break;
                 case 0x29: GTII(); break;
@@ -273,6 +287,7 @@ namespace Odyssey.Scripting.VM
                 case 0x45: DIVFI(); break;
                 case 0x46: DIVFF(); break;
                 case 0x47: DIVVF(); break;
+                case 0x48: DIVFV(); break;
                 case 0x49: MODII(); break;
                 case 0x4A: NEGI(); break;
                 case 0x4B: NEGF(); break;
@@ -433,6 +448,22 @@ namespace Odyssey.Scripting.VM
         private void RSADDF() { PushFloat(0f); }
         private void RSADDS() { PushString(string.Empty); }
         private void RSADDO() { PushInt(unchecked((int)ObjectInvalid)); }
+        // Based on swkotor2.exe: RSADDEFF reserves 4 bytes for effect type on stack
+        // Located via string references: Effect type storage (4 bytes, same as object)
+        // Original implementation: Effect types are stored as 4-byte values on stack
+        private void RSADDEFF() { PushInt(0); } // Effect type (4 bytes, initialized to 0)
+        // Based on swkotor2.exe: RSADDEVT reserves 4 bytes for event type on stack
+        // Located via string references: Event type storage (4 bytes, same as object)
+        // Original implementation: Event types are stored as 4-byte values on stack
+        private void RSADDEVT() { PushInt(0); } // Event type (4 bytes, initialized to 0)
+        // Based on swkotor2.exe: RSADDLOC reserves 4 bytes for location type on stack
+        // Located via string references: Location type storage (4 bytes, same as object)
+        // Original implementation: Location types are stored as 4-byte object references on stack
+        private void RSADDLOC() { PushInt(unchecked((int)ObjectInvalid)); } // Location (4 bytes, initialized to OBJECT_INVALID)
+        // Based on swkotor2.exe: RSADDTAL reserves 4 bytes for talent type on stack
+        // Located via string references: Talent type storage (4 bytes, same as object)
+        // Original implementation: Talent types are stored as 4-byte values on stack
+        private void RSADDTAL() { PushInt(0); } // Talent type (4 bytes, initialized to 0)
 
         private void CPTOPSP()
         {
@@ -640,12 +671,104 @@ namespace Odyssey.Scripting.VM
         private void EQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) < 0.0001f ? 1 : 0); }
         private void EQUALSS() { string b = PopString(); string a = PopString(); PushInt(a == b ? 1 : 0); }
         private void EQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
+        // Based on swkotor2.exe: EQUALTT compares structures byte-by-byte
+        // Located via string references: Structure comparison (qualifier 0x24 = struct/struct)
+        // Original implementation: Reads uint16 size field, compares size bytes from stack
+        // Format: [0x0B][0x24][uint16 size] - size must be multiple of 4
+        // Stack layout: Second structure is at SP-size, first structure is at SP-size*2
+        private void EQUALTT()
+        {
+            short size = ReadInt16(); // Size in bytes (must be multiple of 4)
+            bool equal = true;
+            // Compare structures byte-by-byte
+            // Second structure (b) is at offset -size from SP
+            // First structure (a) is at offset -size*2 from SP
+            for (int i = 0; i < size; i++)
+            {
+                int offsetB = _sp - size + i;
+                int offsetA = _sp - size * 2 + i;
+                if (offsetA < 0 || offsetB < 0 || offsetA >= _stack.Length || offsetB >= _stack.Length)
+                {
+                    equal = false;
+                    break;
+                }
+                if (_stack[offsetA] != _stack[offsetB])
+                {
+                    equal = false;
+                    break;
+                }
+            }
+            _sp -= size * 2; // Remove both structures from stack
+            PushInt(equal ? 1 : 0);
+        }
+        // Based on swkotor2.exe: EQUALEFFEFF compares effect types (4 bytes each)
+        // Located via string references: Effect type comparison
+        // Original implementation: Compares two 4-byte effect values
+        private void EQUALEFFEFF() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
+        // Based on swkotor2.exe: EQUALEVTEVT compares event types (4 bytes each)
+        // Located via string references: Event type comparison
+        // Original implementation: Compares two 4-byte event values
+        private void EQUALEVTEVT() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
+        // Based on swkotor2.exe: EQUALLOCLOC compares location types (4 bytes each)
+        // Located via string references: Location type comparison
+        // Original implementation: Compares two 4-byte location object references
+        private void EQUALLOCLOC() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
+        // Based on swkotor2.exe: EQUALTALTAL compares talent types (4 bytes each)
+        // Located via string references: Talent type comparison
+        // Original implementation: Compares two 4-byte talent values
+        private void EQUALTALTAL() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
 
         // Inequality
         private void NEQUALII() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
         private void NEQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) >= 0.0001f ? 1 : 0); }
         private void NEQUALSS() { string b = PopString(); string a = PopString(); PushInt(a != b ? 1 : 0); }
         private void NEQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
+        // Based on swkotor2.exe: NEQUALTT compares structures byte-by-byte for inequality
+        // Located via string references: Structure comparison (qualifier 0x24 = struct/struct)
+        // Original implementation: Reads uint16 size field, compares size bytes from stack
+        // Format: [0x0C][0x24][uint16 size] - size must be multiple of 4
+        // Stack layout: Second structure is at SP-size, first structure is at SP-size*2
+        private void NEQUALTT()
+        {
+            short size = ReadInt16(); // Size in bytes (must be multiple of 4)
+            bool equal = true;
+            // Compare structures byte-by-byte
+            // Second structure (b) is at offset -size from SP
+            // First structure (a) is at offset -size*2 from SP
+            for (int i = 0; i < size; i++)
+            {
+                int offsetB = _sp - size + i;
+                int offsetA = _sp - size * 2 + i;
+                if (offsetA < 0 || offsetB < 0 || offsetA >= _stack.Length || offsetB >= _stack.Length)
+                {
+                    equal = false;
+                    break;
+                }
+                if (_stack[offsetA] != _stack[offsetB])
+                {
+                    equal = false;
+                    break;
+                }
+            }
+            _sp -= size * 2; // Remove both structures from stack
+            PushInt(equal ? 0 : 1); // Inverted for NEQUAL
+        }
+        // Based on swkotor2.exe: NEQUALEFFEFF compares effect types for inequality (4 bytes each)
+        // Located via string references: Effect type comparison
+        // Original implementation: Compares two 4-byte effect values
+        private void NEQUALEFFEFF() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
+        // Based on swkotor2.exe: NEQUALEVTEVT compares event types for inequality (4 bytes each)
+        // Located via string references: Event type comparison
+        // Original implementation: Compares two 4-byte event values
+        private void NEQUALEVTEVT() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
+        // Based on swkotor2.exe: NEQUALLOCLOC compares location types for inequality (4 bytes each)
+        // Located via string references: Location type comparison
+        // Original implementation: Compares two 4-byte location object references
+        private void NEQUALLOCLOC() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
+        // Based on swkotor2.exe: NEQUALTALTAL compares talent types for inequality (4 bytes each)
+        // Located via string references: Talent type comparison
+        // Original implementation: Compares two 4-byte talent values
+        private void NEQUALTALTAL() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
 
         // Comparisons
         private void GEQII() { int b = PopInt(); int a = PopInt(); PushInt(a >= b ? 1 : 0); }
@@ -711,6 +834,23 @@ namespace Odyssey.Scripting.VM
         {
             float s = PopFloat();
             float z = PopFloat(); float y = PopFloat(); float x = PopFloat();
+            if (s != 0)
+            {
+                PushFloat(x / s); PushFloat(y / s); PushFloat(z / s);
+            }
+            else
+            {
+                PushFloat(0); PushFloat(0); PushFloat(0);
+            }
+        }
+        // Based on swkotor2.exe: DIVFV divides vector by float (float, vector)
+        // Located via string references: Vector/float division
+        // Original implementation: Divides each component of vector by float scalar
+        // Stack: [float s][vector z][vector y][vector x] -> [result z][result y][result x]
+        private void DIVFV()
+        {
+            float z = PopFloat(); float y = PopFloat(); float x = PopFloat();
+            float s = PopFloat();
             if (s != 0)
             {
                 PushFloat(x / s); PushFloat(y / s); PushFloat(z / s);
