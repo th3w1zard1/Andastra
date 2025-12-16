@@ -1663,15 +1663,43 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     JavaSystem.@out.Println("DecompileNcsObjectFromFile returned null, falling back to old decoder/parser path");
                     // Fall back to old path if new path returns null
-                    return this.DecompileNcsOldPath(file);
+                    result = this.DecompileNcsOldPath(file);
+                }
+                // Final fallback: ensure we never return null
+                if (result == null)
+                {
+                    JavaSystem.@out.Println("WARNING: Both decompilation paths returned null, creating minimal fallback stub");
+                    result = new Utils.FileScriptData();
+                    result.SetCode(this.GenerateComprehensiveFallbackStub(file, "Both decompilation paths failed", null, "DecompileNcsObjectFromFile and DecompileNcsOldPath both returned null"));
                 }
                 return result;
             }
             catch (Exception e)
             {
                 JavaSystem.@out.Println("DecompileNcsObjectFromFile failed, falling back to old decoder/parser path: " + e.Message);
-                // Fall back to old path if new path fails
-                return this.DecompileNcsOldPath(file);
+                try
+                {
+                    // Fall back to old path if new path fails
+                    Utils.FileScriptData result = this.DecompileNcsOldPath(file);
+                    // Final fallback: ensure we never return null
+                    if (result == null)
+                    {
+                        JavaSystem.@out.Println("WARNING: DecompileNcsOldPath returned null after exception, creating minimal fallback stub");
+                        result = new Utils.FileScriptData();
+                        result.SetCode(this.GenerateComprehensiveFallbackStub(file, "DecompileNcsOldPath returned null", e, null));
+                    }
+                    return result;
+                }
+                catch (Exception e2)
+                {
+                    // Last resort: create a minimal stub so we always return something
+                    JavaSystem.@out.Println("CRITICAL: Both decompilation paths threw exceptions, creating emergency fallback stub");
+                    JavaSystem.@out.Println("  First exception: " + e.GetType().Name + " - " + e.Message);
+                    JavaSystem.@out.Println("  Second exception: " + e2.GetType().Name + " - " + e2.Message);
+                    Utils.FileScriptData result = new Utils.FileScriptData();
+                    result.SetCode(this.GenerateComprehensiveFallbackStub(file, "Both decompilation paths threw exceptions", e, "Second exception: " + e2.GetType().Name + " - " + e2.Message));
+                    return result;
+                }
             }
         }
 
