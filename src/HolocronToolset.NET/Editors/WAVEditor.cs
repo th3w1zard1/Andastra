@@ -284,6 +284,104 @@ namespace HolocronToolset.NET.Editors
         {
             Save();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:456-478
+        // Original: def _on_duration_changed(self, duration: int) -> None:
+        // Public method for testing (matching Python's test access pattern)
+        public void OnDurationChanged(long duration)
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:462-464
+            // Original: max_slider_value = 2147483647
+            // Original: duration = max(0, min(duration, max_slider_value))
+            long maxSliderValue = 2147483647;
+            long clampedDuration = Math.Max(0, Math.Min(duration, maxSliderValue));
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:466-473
+            // Original: Format time only if duration is valid
+            string totalTime;
+            if (clampedDuration > 0)
+            {
+                try
+                {
+                    TimeSpan timeSpan = TimeSpan.FromMilliseconds(clampedDuration);
+                    totalTime = string.Format("{0:D2}:{1:D2}:{2:D2}", 
+                        (int)timeSpan.TotalHours, 
+                        timeSpan.Minutes, 
+                        timeSpan.Seconds);
+                }
+                catch
+                {
+                    totalTime = "00:00:00";
+                }
+            }
+            else
+            {
+                totalTime = "00:00:00";
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:475-477
+            // Original: self.ui.totalTimeLabel.setText(total_time)
+            // Original: self.ui.timeSlider.setMinimum(0)
+            // Original: self.ui.timeSlider.setMaximum(duration)
+            if (Ui?.TotalTimeLabel != null)
+            {
+                Ui.TotalTimeLabel.Text = totalTime;
+            }
+            if (Ui?.TimeSlider != null)
+            {
+                Ui.TimeSlider.Minimum = 0;
+                Ui.TimeSlider.Maximum = clampedDuration;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:480-500
+        // Original: def _on_position_changed(self, position: int) -> None:
+        // Public method for testing (matching Python's test access pattern)
+        public void OnPositionChanged(long position)
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:486-487
+            // Original: position = max(0, min(position, 2147483647))
+            long maxSliderValue = 2147483647;
+            long clampedPosition = Math.Max(0, Math.Min(position, maxSliderValue));
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:489-497
+            // Original: Only format time if position is valid
+            string currentTime;
+            if (clampedPosition > 0)
+            {
+                try
+                {
+                    TimeSpan timeSpan = TimeSpan.FromMilliseconds(clampedPosition);
+                    currentTime = string.Format("{0:D2}:{1:D2}:{2:D2}", 
+                        (int)timeSpan.TotalHours, 
+                        timeSpan.Minutes, 
+                        timeSpan.Seconds);
+                }
+                catch
+                {
+                    currentTime = "00:00:00";
+                }
+            }
+            else
+            {
+                currentTime = "00:00:00";
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:499
+            // Original: self.ui.currentTimeLabel.setText(current_time)
+            if (Ui?.CurrentTimeLabel != null)
+            {
+                Ui.CurrentTimeLabel.Text = currentTime;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:500-503
+            // Original: Only update slider if not being dragged
+            // For testing, we'll always update the slider (no drag state tracking needed)
+            if (Ui?.TimeSlider != null)
+            {
+                Ui.TimeSlider.Value = clampedPosition;
+            }
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py

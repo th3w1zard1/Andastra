@@ -800,5 +800,265 @@ namespace HolocronToolset.NET.Tests.Editors
             // In C#, AudioData is already byte[], so we just verify it matches
             editor.AudioData.Should().Equal(sampleWavData, "AudioData should match loaded WAV data");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:326-328
+        // Original: def test_time_slider_exists(self, wav_editor):
+        [Fact]
+        public void TestWavEditorTimeSliderExists()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:328
+            // Original: assert wav_editor.ui.timeSlider is not None
+            editor.Ui.TimeSlider.Should().NotBeNull("TimeSlider should exist");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:330-334
+        // Original: def test_time_slider_initial_range(self, wav_editor):
+        [Fact]
+        public void TestWavEditorTimeSliderInitialRange()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:332-334
+            // Original: wav_editor.new()
+            // Original: assert wav_editor.ui.timeSlider.minimum() == 0
+            // Original: assert wav_editor.ui.timeSlider.maximum() == 0
+            editor.New();
+            editor.Ui.TimeSlider.Minimum.Should().Be(0, "TimeSlider minimum should be 0");
+            editor.Ui.TimeSlider.Maximum.Should().Be(0, "TimeSlider maximum should be 0 after new()");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:336-342
+        // Original: def test_on_duration_changed_updates_label(self, wav_editor):
+        [Fact]
+        public void TestWavEditorOnDurationChangedUpdatesLabel()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:339
+            // Original: wav_editor._on_duration_changed(65000)
+            editor.OnDurationChanged(65000); // 1 minute 5 seconds
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:341-342
+            // Original: assert wav_editor.ui.totalTimeLabel.text() == "00:01:05"
+            // Original: assert wav_editor.ui.timeSlider.maximum() == 65000
+            editor.Ui.TotalTimeLabel.Text.Should().Be("00:01:05", "TotalTimeLabel should show 00:01:05 for 65000ms");
+            editor.Ui.TimeSlider.Maximum.Should().Be(65000, "TimeSlider maximum should be 65000");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:344-352
+        // Original: def test_on_position_changed_updates_label(self, wav_editor):
+        [Fact]
+        public void TestWavEditorOnPositionChangedUpdatesLabel()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:347
+            // Original: wav_editor._on_duration_changed(120000)  # 2 minutes
+            editor.OnDurationChanged(120000); // 2 minutes
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:350
+            // Original: wav_editor._on_position_changed(65000)
+            editor.OnPositionChanged(65000); // 1 minute 5 seconds
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:352
+            // Original: assert wav_editor.ui.currentTimeLabel.text() == "00:01:05"
+            editor.Ui.CurrentTimeLabel.Text.Should().Be("00:01:05", "CurrentTimeLabel should show 00:01:05 for 65000ms");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:354-359
+        // Original: def test_on_position_changed_updates_slider(self, wav_editor):
+        [Fact]
+        public void TestWavEditorOnPositionChangedUpdatesSlider()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:356-357
+            // Original: wav_editor._on_duration_changed(120000)
+            // Original: wav_editor._on_position_changed(30000)
+            editor.OnDurationChanged(120000); // 2 minutes
+            editor.OnPositionChanged(30000); // 30 seconds
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:359
+            // Original: assert wav_editor.ui.timeSlider.value() == 30000
+            editor.Ui.TimeSlider.Value.Should().Be(30000, "TimeSlider value should be 30000");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:369-374
+        // Original: def test_format_label_shows_wav_format(self, wav_editor, sample_wav_data: bytes):
+        [Fact]
+        public void TestWavEditorFormatLabelShowsWavFormat()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:371
+            // Original: wav_editor.load(Path("test.wav"), "test", ResourceType.WAV, sample_wav_data)
+            editor.Load("test.wav", "test", ResourceType.WAV, sampleWavData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:373-374
+            // Original: format_text = wav_editor.ui.formatLabel.text()
+            // Original: assert "WAV" in format_text or "RIFF" in format_text
+            string formatText = editor.Ui.FormatLabel.Text;
+            (formatText.Contains("WAV") || formatText.Contains("RIFF")).Should().BeTrue($"Format label should contain 'WAV' or 'RIFF', but was '{formatText}'");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:376-381
+        // Original: def test_format_label_shows_mp3_format(self, wav_editor, sample_mp3_data: bytes):
+        [Fact]
+        public void TestWavEditorFormatLabelShowsMp3Format()
+        {
+            // Create minimal MP3-like data with ID3 header for testing (matching Python fixture)
+            byte[] sampleMp3Data = new byte[107];
+            System.Text.Encoding.ASCII.GetBytes("ID3").CopyTo(sampleMp3Data, 0);
+            sampleMp3Data[3] = 0x03;
+            sampleMp3Data[4] = 0x00;
+            sampleMp3Data[5] = 0x00;
+            sampleMp3Data[6] = 0x00;
+            sampleMp3Data[7] = 0x00;
+            sampleMp3Data[8] = 0x00;
+            sampleMp3Data[9] = 0x00;
+            sampleMp3Data[10] = 0xFF;
+            sampleMp3Data[11] = 0xFB;
+            sampleMp3Data[12] = 0x90;
+            sampleMp3Data[13] = 0x00;
+            // Rest is zeros (already initialized)
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:378
+            // Original: wav_editor.load(Path("test.mp3"), "test", ResourceType.MP3, sample_mp3_data)
+            editor.Load("test.mp3", "test", ResourceType.MP3, sampleMp3Data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:380-381
+            // Original: format_text = wav_editor.ui.formatLabel.text()
+            // Original: assert "MP3" in format_text
+            string formatText = editor.Ui.FormatLabel.Text;
+            formatText.Should().Contain("MP3", $"Format label should contain 'MP3', but was '{formatText}'");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:383-386
+        // Original: def test_format_label_shows_dash_for_empty(self, wav_editor):
+        [Fact]
+        public void TestWavEditorFormatLabelShowsDashForEmpty()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:385-386
+            // Original: wav_editor.new()
+            // Original: assert wav_editor.ui.formatLabel.text() == "Format: -"
+            editor.New();
+            editor.Ui.FormatLabel.Text.Should().Be("Format: -", "FormatLabel should show 'Format: -' when empty");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:388-404
+        // Original: def test_time_labels_reset_on_new(self, wav_editor, sample_wav_data: bytes):
+        [Fact]
+        public void TestWavEditorTimeLabelsResetOnNew()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:391-397
+            // Original: wav_editor.load(Path("test.wav"), "test", ResourceType.WAV, sample_wav_data)
+            editor.Load("test.wav", "test", ResourceType.WAV, sampleWavData);
+
+            // Set some duration and position to verify they reset
+            editor.OnDurationChanged(120000); // 2 minutes
+            editor.OnPositionChanged(65000); // 1 minute 5 seconds
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:399
+            // Original: wav_editor.new()
+            editor.New();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:401-403
+            // Original: assert wav_editor.ui.currentTimeLabel.text() == "00:00:00"
+            // Original: assert wav_editor.ui.totalTimeLabel.text() == "00:00:00"
+            editor.Ui.CurrentTimeLabel.Text.Should().Be("00:00:00", "CurrentTimeLabel should reset to 00:00:00");
+            editor.Ui.TotalTimeLabel.Text.Should().Be("00:00:00", "TotalTimeLabel should reset to 00:00:00");
+        }
     }
 }
