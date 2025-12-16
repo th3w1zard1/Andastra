@@ -352,4 +352,8 @@ namespace Odyssey.Core.Entities
             // Update combat system
             CombatSystem.Update(deltaTime);
 
-            
+            EventBus.DispatchQueuedEvents();
+        }
+    }
+}
+
