@@ -27,6 +27,14 @@ namespace Odyssey.Core.Actions
         private readonly bool _run;
         private readonly float _range;
         private const float ArrivalThreshold = 0.1f;
+        
+        // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
+        // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
+        // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
+        // Maximum bumps: 5 (aborts movement if exceeded)
+        private const string BumpCounterKey = "ActionMoveToObject_BumpCounter";
+        private const string LastBlockingCreatureKey = "ActionMoveToObject_LastBlockingCreature";
+        private const int MaxBumps = 5;
 
         public ActionMoveToObject(uint targetObjectId, bool run = false, float range = 1.0f)
             : base(ActionType.MoveToObject)

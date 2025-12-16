@@ -69,6 +69,35 @@ namespace Odyssey.Core.Interfaces
         /// Returns true if there are pending simulation ticks to process.
         /// </summary>
         bool HasPendingTicks();
+
+        /// <summary>
+        /// Gets the current game time hour (0-23).
+        /// </summary>
+        int GameTimeHour { get; }
+
+        /// <summary>
+        /// Gets the current game time minute (0-59).
+        /// </summary>
+        int GameTimeMinute { get; }
+
+        /// <summary>
+        /// Gets the current game time second (0-59).
+        /// </summary>
+        int GameTimeSecond { get; }
+
+        /// <summary>
+        /// Gets the current game time millisecond (0-999).
+        /// </summary>
+        int GameTimeMillisecond { get; }
+
+        /// <summary>
+        /// Sets the game time.
+        /// </summary>
+        /// <param name="hour">Hour (0-23)</param>
+        /// <param name="minute">Minute (0-59)</param>
+        /// <param name="second">Second (0-59)</param>
+        /// <param name="millisecond">Millisecond (0-999)</param>
+        void SetGameTime(int hour, int minute, int second, int millisecond);
     }
 }
 

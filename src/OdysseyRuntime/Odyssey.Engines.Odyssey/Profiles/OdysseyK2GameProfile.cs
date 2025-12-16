@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Odyssey.Engines.Common;
 using Odyssey.Scripting.Interfaces;
+using Odyssey.Engines.Odyssey.EngineApi;
 
 namespace Odyssey.Engines.Odyssey.Profiles
 {
@@ -48,9 +49,7 @@ namespace Odyssey.Engines.Odyssey.Profiles
 
         public override IEngineApi CreateEngineApi()
         {
-            // TODO: Move K2EngineApi from Odyssey.Kotor.EngineApi to Odyssey.Engines.Odyssey.EngineApi
-            // Temporarily reference existing implementation until full refactoring is complete
-            return new Odyssey.Kotor.EngineApi.K2EngineApi();
+            return new EngineApi.OdysseyK2EngineApi();
         }
 
         protected override IEngineProfile.IResourceConfig CreateResourceConfig()

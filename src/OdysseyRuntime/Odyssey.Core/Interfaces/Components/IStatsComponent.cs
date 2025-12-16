@@ -117,6 +117,11 @@ namespace Odyssey.Core.Interfaces.Components
         /// <param name="spellId">Spell ID (row index in spells.2da)</param>
         /// <returns>True if the creature knows the spell, false otherwise</returns>
         bool HasSpell(int spellId);
+
+        /// <summary>
+        /// Character level (total class levels).
+        /// </summary>
+        int Level { get; }
     }
 }
 

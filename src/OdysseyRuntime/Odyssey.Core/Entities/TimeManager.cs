@@ -56,12 +56,29 @@ namespace Odyssey.Core.Entities
         private float _simulationTime;
         private float _realTime;
         private float _deltaTime;
+        
+        // Game time tracking (hours, minutes, seconds, milliseconds)
+        // Based on swkotor2.exe: Game time tracking system
+        // Located via string references: "GameTime" @ 0x007c1a78, "TIMEPLAYED" @ 0x007be1c4
+        // Original implementation: Game time advances with simulation time, stored in module IFO
+        private int _gameTimeHour;
+        private int _gameTimeMinute;
+        private int _gameTimeSecond;
+        private int _gameTimeMillisecond;
+        private float _gameTimeAccumulator; // Accumulator for game time milliseconds
 
         public TimeManager()
         {
             FixedTimestep = DefaultFixedTimestep;
             TimeScale = 1.0f;
             IsPaused = false;
+            
+            // Initialize game time to midnight
+            _gameTimeHour = 0;
+            _gameTimeMinute = 0;
+            _gameTimeSecond = 0;
+            _gameTimeMillisecond = 0;
+            _gameTimeAccumulator = 0.0f;
         }
 
         public float FixedTimestep { get; }
@@ -71,6 +88,23 @@ namespace Odyssey.Core.Entities
         public bool IsPaused { get; set; }
         public float DeltaTime { get { return _deltaTime; } }
         public float InterpolationAlpha { get { return _accumulator / FixedTimestep; } }
+
+        public int GameTimeHour { get { return _gameTimeHour; } }
+        public int GameTimeMinute { get { return _gameTimeMinute; } }
+        public int GameTimeSecond { get { return _gameTimeSecond; } }
+        public int GameTimeMillisecond { get { return _gameTimeMillisecond; } }
+
+        public void SetGameTime(int hour, int minute, int second, int millisecond)
+        {
+            // Based on swkotor2.exe: SetGameTime implementation
+            // Located via string references: "GameTime" @ 0x007c1a78
+            // Original implementation: Sets game time to specified values, stored in module IFO
+            _gameTimeHour = Math.Max(0, Math.Min(23, hour));
+            _gameTimeMinute = Math.Max(0, Math.Min(59, minute));
+            _gameTimeSecond = Math.Max(0, Math.Min(59, second));
+            _gameTimeMillisecond = Math.Max(0, Math.Min(999, millisecond));
+            _gameTimeAccumulator = 0.0f;
+        }
 
         public void Update(float realDeltaTime)
         {
