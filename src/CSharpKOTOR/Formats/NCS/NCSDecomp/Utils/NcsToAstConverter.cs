@@ -136,10 +136,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         }
 
                         // Only add if jumpIdx is after globals/entry stub and not the entry JSR target
-                        if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget)
+                        // CRITICAL: Also ensure jumpIdx is within valid instruction range (0 to instructions.Count-1)
+                        // A subroutine start at instructions.Count would be out of bounds
+                        if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget && jumpIdx < instructions.Count)
                         {
                             subroutineStarts.Add(jumpIdx);
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found subroutine start at {jumpIdx} (JSR at {i} targets {jumpIdx})");
+                        }
+                        else if (jumpIdx >= instructions.Count)
+                        {
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} (out of bounds, instructions.Count={instructions.Count})");
                         }
                         else
                         {
