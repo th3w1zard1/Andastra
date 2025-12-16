@@ -21,6 +21,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using Odyssey.Core;
+using Odyssey.Core.Journal;
 
 namespace Odyssey.Kotor.Game
 {
@@ -70,6 +71,7 @@ namespace Odyssey.Kotor.Game
         private readonly ScriptExecutor _scriptExecutor;
         private readonly IEngineApi _engineApi;
         private readonly Systems.EncounterSystem _encounterSystem;
+        private readonly JournalSystem _journalSystem;
 
         // Current game state
         private RuntimeModule _currentModule;
