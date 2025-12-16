@@ -87,11 +87,28 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Adds a texture to the atlas.
         /// </summary>
+        /// <param name="name">Texture name/identifier. Must not be null or empty.</param>
+        /// <param name="texture">Texture to add. Must not be null.</param>
+        /// <returns>True if texture was added successfully, false otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if name or texture is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if name is empty or texture dimensions are invalid.</exception>
         public bool AddTexture(string name, Texture2D texture)
         {
-            if (texture == null || string.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name))
             {
-                return false;
+                throw new ArgumentNullException(nameof(name));
+            }
+            if (texture == null)
+            {
+                throw new ArgumentNullException(nameof(texture));
+            }
+            if (texture.Width <= 0 || texture.Height <= 0)
+            {
+                throw new ArgumentException("Texture dimensions must be greater than zero.", nameof(texture));
+            }
+            if (texture.Width > _pageSize || texture.Height > _pageSize)
+            {
+                throw new ArgumentException($"Texture dimensions ({texture.Width}x{texture.Height}) exceed page size ({_pageSize}).", nameof(texture));
             }
 
             // Check if already in atlas
@@ -152,6 +169,11 @@ namespace Odyssey.MonoGame.Rendering
         /// </summary>
         public bool GetEntry(string name, out AtlasEntry entry)
         {
+            entry = default(AtlasEntry);
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
             return _entries.TryGetValue(name, out entry);
         }
 

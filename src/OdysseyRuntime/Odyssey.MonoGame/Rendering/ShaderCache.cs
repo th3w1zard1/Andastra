@@ -82,6 +82,9 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets a shader from cache or compiles it.
         /// </summary>
+        /// <param name="shaderName">Shader name/identifier. Must not be null or empty.</param>
+        /// <param name="shaderSource">Shader source code. Must not be null or empty.</param>
+        /// <returns>Compiled shader effect, or null if compilation failed or parameters are invalid.</returns>
         public Effect GetShader(string shaderName, string shaderSource)
         {
             if (string.IsNullOrEmpty(shaderName) || string.IsNullOrEmpty(shaderSource))
@@ -147,6 +150,9 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Precompiles and caches a shader.
         /// </summary>
+        /// <param name="shaderName">Shader name/identifier. Must not be null or empty.</param>
+        /// <param name="shaderSource">Shader source code. Must not be null or empty.</param>
+        /// <returns>True if shader was compiled and cached successfully, false otherwise.</returns>
         public bool PrecompileShader(string shaderName, string shaderSource)
         {
             return GetShader(shaderName, shaderSource) != null;

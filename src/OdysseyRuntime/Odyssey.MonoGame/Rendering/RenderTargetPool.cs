@@ -75,8 +75,23 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets a render target from the pool or creates a new one.
         /// </summary>
+        /// <param name="width">Render target width. Must be greater than zero.</param>
+        /// <param name="height">Render target height. Must be greater than zero.</param>
+        /// <param name="format">Surface format.</param>
+        /// <param name="depthFormat">Depth format.</param>
+        /// <returns>Render target from pool or newly created.</returns>
+        /// <exception cref="ArgumentException">Thrown if width or height is less than or equal to zero.</exception>
         public RenderTarget2D GetRenderTarget(int width, int height, SurfaceFormat format, DepthFormat depthFormat)
         {
+            if (width <= 0)
+            {
+                throw new ArgumentException("Width must be greater than zero.", nameof(width));
+            }
+            if (height <= 0)
+            {
+                throw new ArgumentException("Height must be greater than zero.", nameof(height));
+            }
+
             string key = CreateKey(width, height, format, depthFormat);
 
             lock (_lock)
