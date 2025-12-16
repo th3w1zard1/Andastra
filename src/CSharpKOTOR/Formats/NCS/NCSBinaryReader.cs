@@ -129,13 +129,26 @@ namespace CSharpKOTOR.Formats.NCS
             // Safety: don't read beyond actual file size
             int safeEndPosition = Math.Min(codeEndPosition, actualFileSize);
 
+            int instructionCountBeforeLoop = _instructions.Count;
             while (_reader.Position < safeEndPosition && _reader.Remaining > 0)
             {
                 int offset = _reader.Position;
 
                 try
                 {
-                    _instructions[offset] = ReadInstruction();
+                    var instruction = ReadInstruction();
+                    // DEBUG: Check if this offset already exists (shouldn't happen, but let's verify)
+                    if (_instructions.ContainsKey(offset))
+                    {
+                        Console.WriteLine($"DEBUG NCSBinaryReader: WARNING - Offset {offset} already exists in dictionary! Overwriting.");
+                    }
+                    _instructions[offset] = instruction;
+                    // DEBUG: Log ACTION instructions as they're stored
+                    if (instruction.InsType == NCSInstructionType.ACTION)
+                    {
+                        int currentActionCount = _instructions.Values.Count(inst => inst != null && inst.InsType == NCSInstructionType.ACTION);
+                        Console.WriteLine($"DEBUG NCSBinaryReader: Stored ACTION instruction at offset {offset} in dictionary (dictionary now has {_instructions.Count} instructions, {currentActionCount} ACTION instructions)");
+                    }
                 }
                 catch (InvalidDataException e)
                 {
@@ -198,7 +211,28 @@ namespace CSharpKOTOR.Formats.NCS
                 instruction.Jump = _instructions[jumpToOffset];
             }
 
-            _ncs.Instructions = new List<NCSInstruction>(_instructions.Values);
+            // CRITICAL: Sort instructions by byte offset to preserve order
+            // Dictionary.Values doesn't guarantee order, so we need to explicitly sort
+            Console.WriteLine($"DEBUG NCSBinaryReader: Dictionary has {_instructions.Count} instructions before sorting");
+            int actionCountInDict = _instructions.Values.Count(inst => inst != null && inst.InsType == NCSInstructionType.ACTION);
+            Console.WriteLine($"DEBUG NCSBinaryReader: Dictionary contains {actionCountInDict} ACTION instructions before sorting");
+            var sortedInstructions = _instructions.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
+            _ncs.Instructions = sortedInstructions;
+
+            // DEBUG: Log instruction count and offset range
+            if (sortedInstructions.Count > 0)
+            {
+                int minOffset = sortedInstructions[0].Offset;
+                int maxOffset = sortedInstructions[sortedInstructions.Count - 1].Offset;
+                Console.WriteLine($"DEBUG NCSBinaryReader: Created {sortedInstructions.Count} instructions, offset range: {minOffset} to {maxOffset}");
+                // Count ACTION instructions in the sorted list
+                int actionCount = sortedInstructions.Count(inst => inst != null && inst.InsType == NCSInstructionType.ACTION);
+                Console.WriteLine($"DEBUG NCSBinaryReader: Found {actionCount} ACTION instructions in sorted list");
+                if (actionCountInDict > 0 && actionCount == 0)
+                {
+                    Console.WriteLine($"DEBUG NCSBinaryReader: WARNING - Dictionary had {actionCountInDict} ACTION instructions but sorted list has 0!");
+                }
+            }
 
             return _ncs;
         }
@@ -208,6 +242,14 @@ namespace CSharpKOTOR.Formats.NCS
             int instructionOffset = _reader.Position;
             byte byteCodeValue = _reader.ReadUInt8();
             byte qualifier = _reader.ReadUInt8();
+
+            // DEBUG: Log ACTION bytecode (0x05) when encountered
+            if (byteCodeValue == 0x05)
+            {
+                // Note: Using Console.WriteLine instead of JavaSystem since this is in the binary reader, not decompiler
+                // This will appear in test output
+                Console.WriteLine($"DEBUG NCSBinaryReader: Found ACTION bytecode (0x05) at offset {instructionOffset}, qualifier=0x{qualifier:X2}");
+            }
 
             // Try to convert to NCSByteCode enum
             if (!Enum.IsDefined(typeof(NCSByteCode), byteCodeValue))
@@ -252,6 +294,16 @@ namespace CSharpKOTOR.Formats.NCS
                 try
                 {
                     instruction.InsType = NCSInstructionTypeExtensions.FromBytecode(byteCode, qualifier);
+                    // DEBUG: Log if ACTION bytecode resulted in non-ACTION instruction type
+                    if (byteCode == NCSByteCode.ACTION && instruction.InsType != NCSInstructionType.ACTION)
+                    {
+                        Console.WriteLine($"DEBUG NCSBinaryReader: WARNING - ACTION bytecode (0x05) at offset {instructionOffset} with qualifier 0x{qualifier:X2} resulted in instruction type {instruction.InsType} instead of ACTION");
+                    }
+                    // DEBUG: Log successful ACTION parsing
+                    if (instruction.InsType == NCSInstructionType.ACTION)
+                    {
+                        Console.WriteLine($"DEBUG NCSBinaryReader: Successfully parsed ACTION instruction at offset {instructionOffset}");
+                    }
                 }
                 catch (ArgumentException e)
                 {

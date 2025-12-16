@@ -49,6 +49,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Converting {instructions.Count} instructions to AST");
 
+            // CRITICAL DEBUG: Scan ALL instructions to find ACTION instructions
+            // Also check instruction offsets to understand the mapping
+            int totalActionCount = 0;
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Scanning {instructions.Count} instructions for ACTION type");
+            for (int i = 0; i < instructions.Count; i++)
+            {
+                if (instructions[i] == null)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: WARNING - Instruction at index {i} is null");
+                    continue;
+                }
+                if (instructions[i].InsType == NCSInstructionType.ACTION)
+                {
+                    totalActionCount++;
+                    if (totalActionCount <= 10) // Log first 10 ACTION instructions
+                    {
+                        int routineId = instructions[i].Args.Count > 0 ? (int)instructions[i].Args[0] : -1;
+                        int offset = instructions[i].Offset;
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: ACTION instruction at index {i}, offset={offset}, routineId={routineId}, InsType={instructions[i].InsType}");
+                    }
+                }
+                // Log first few instructions to understand the mapping
+                if (i < 5)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Instruction {i}: InsType={instructions[i].InsType}, Offset={instructions[i].Offset}");
+                }
+            }
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Total ACTION instructions in entire file: {totalActionCount}");
+
             HashSet<int> subroutineStarts = new HashSet<int>();
             // Matching NCSDecomp implementation: detect SAVEBP to split globals from main
             // Globals subroutine ends at SAVEBP, main starts after SAVEBP
