@@ -89,15 +89,30 @@ namespace HolocronToolset.Dialogs
 
         private void SetupUI()
         {
+            // If Ui is already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (Ui != null)
+            {
+                return;
+            }
+
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
             // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
-            Ui = new FileResultsDialogUi
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            Ui = new FileResultsDialogUi();
+            
+            try
             {
-                ResultList = this.FindControl<ListBox>("resultList"),
-                OpenButton = this.FindControl<Button>("openButton"),
-                OkButton = this.FindControl<Button>("okButton")
-            };
+                Ui.ResultList = this.FindControl<ListBox>("resultList");
+                Ui.OpenButton = this.FindControl<Button>("openButton");
+                Ui.OkButton = this.FindControl<Button>("okButton");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+                return; // SetupProgrammaticUI already sets up Ui and connects events
+            }
 
             if (Ui.OpenButton != null)
             {
