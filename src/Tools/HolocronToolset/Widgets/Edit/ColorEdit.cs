@@ -67,10 +67,26 @@ namespace HolocronToolset.Widgets.Edit
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _editButton = this.FindControl<Button>("editButton");
-            _colorSpin = this.FindControl<NumericUpDown>("colorSpin");
-            _colorLabel = this.FindControl<Border>("colorLabel");
+            // If controls are already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (_editButton != null && _colorSpin != null && _colorLabel != null)
+            {
+                return;
+            }
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
+            {
+                // Find controls from XAML
+                _editButton = this.FindControl<Button>("editButton");
+                _colorSpin = this.FindControl<NumericUpDown>("colorSpin");
+                _colorLabel = this.FindControl<Border>("colorLabel");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+                return; // SetupProgrammaticUI already connects events
+            }
 
             if (_editButton != null)
             {

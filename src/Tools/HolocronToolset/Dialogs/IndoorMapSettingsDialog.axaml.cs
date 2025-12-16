@@ -81,6 +81,10 @@ namespace HolocronToolset.Dialogs
 
             var nameLabel = new TextBlock { Text = "Name:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _nameEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _nameEdit.SetInstallation(_installation);
+            }
             Grid.SetRow(nameLabel, 0);
             Grid.SetColumn(nameLabel, 0);
             Grid.SetRow(_nameEdit, 0);
@@ -132,17 +136,33 @@ namespace HolocronToolset.Dialogs
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
-            _colorEdit = this.FindControl<ColorEdit>("colorEdit");
-            _warpCodeEdit = this.FindControl<TextBox>("warpCodeEdit");
-            _skyboxSelect = this.FindControl<ComboBox>("skyboxSelect");
-            _okButton = this.FindControl<Button>("okButton");
-            _cancelButton = this.FindControl<Button>("cancelButton");
+            // If controls are already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (_nameEdit != null && _colorEdit != null && _warpCodeEdit != null && _skyboxSelect != null && _okButton != null && _cancelButton != null)
+            {
+                return;
+            }
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
+            {
+                // Find controls from XAML
+                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
+                _colorEdit = this.FindControl<ColorEdit>("colorEdit");
+                _warpCodeEdit = this.FindControl<TextBox>("warpCodeEdit");
+                _skyboxSelect = this.FindControl<ComboBox>("skyboxSelect");
+                _okButton = this.FindControl<Button>("okButton");
+                _cancelButton = this.FindControl<Button>("cancelButton");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+                return; // SetupProgrammaticUI already connects events
+            }
 
             if (_nameEdit != null && _installation != null)
             {
-                // TODO: Set installation when LocalizedStringEdit.SetInstallation is available
+                _nameEdit.SetInstallation(_installation);
             }
 
             if (_okButton != null)

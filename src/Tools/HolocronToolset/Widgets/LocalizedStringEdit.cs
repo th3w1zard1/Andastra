@@ -25,14 +25,54 @@ namespace HolocronToolset.Widgets
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            _locstringText = this.FindControl<TextBox>("locstringText");
-            _editButton = this.FindControl<Button>("editButton");
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (xamlLoaded)
+            {
+                try
+                {
+                    _locstringText = this.FindControl<TextBox>("locstringText");
+                    _editButton = this.FindControl<Button>("editButton");
+                }
+                catch
+                {
+                    // Controls not found - create programmatic UI
+                    SetupProgrammaticUI();
+                    return;
+                }
+            }
+            else
+            {
+                SetupProgrammaticUI();
+                return;
+            }
 
             if (_editButton != null)
             {
                 _editButton.Click += (s, e) => EditLocString();
             }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            // Create UI controls programmatically for test scenarios
+            _locstringText = new TextBox { IsReadOnly = true, Watermark = "Localized String" };
+            _editButton = new Button { Content = "Edit" };
+            _editButton.Click += (s, e) => EditLocString();
+
+            var panel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+            panel.Children.Add(_locstringText);
+            panel.Children.Add(_editButton);
+            Content = panel;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/locstring.py
