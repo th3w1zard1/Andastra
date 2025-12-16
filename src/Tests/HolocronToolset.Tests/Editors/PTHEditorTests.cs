@@ -8,6 +8,7 @@ using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
+using Andastra.Parsing.Common;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -715,9 +716,9 @@ namespace HolocronToolset.Tests.Editors
             editor.MaterialColors.Count.Should().BeGreaterThan(0, "MaterialColors should have entries");
 
             // Verify some expected materials exist
-            editor.MaterialColors.Should().ContainKey(Andastra.Parsing.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
-            editor.MaterialColors.Should().ContainKey(Andastra.Parsing.SurfaceMaterial.Grass, "Should contain GRASS material");
-            editor.MaterialColors.Should().ContainKey(Andastra.Parsing.SurfaceMaterial.Water, "Should contain WATER material");
+            editor.MaterialColors.Should().ContainKey(Andastra.Parsing.Common.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
+            editor.MaterialColors.Should().ContainKey(Andastra.Parsing.Common.SurfaceMaterial.Grass, "Should contain GRASS material");
+            editor.MaterialColors.Should().ContainKey(Andastra.Parsing.Common.SurfaceMaterial.Water, "Should contain WATER material");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:587-614
