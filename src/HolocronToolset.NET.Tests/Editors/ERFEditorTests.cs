@@ -38,16 +38,55 @@ namespace HolocronToolset.NET.Tests.Editors
         [Fact]
         public void TestErfEditorLoadExistingFile()
         {
-            var editor = new ERFEditor(null, null);
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
 
-            // Create minimal ERF data (simplified for testing)
-            byte[] testData = new byte[0]; // Will be implemented when ERF format is fully supported
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
 
-            editor.Load("test.erf", "test", ResourceType.ERF, testData);
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
 
-            // Verify content loaded (will be implemented when UI is complete)
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string erfFile = System.IO.Path.Combine(testFilesDir, "001EBO_dlg.erf");
+            if (!System.IO.File.Exists(erfFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                erfFile = System.IO.Path.Combine(testFilesDir, "001EBO_dlg.erf");
+            }
+
+            if (!System.IO.File.Exists(erfFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new ERFEditor(null, installation);
+            byte[] testData = System.IO.File.ReadAllBytes(erfFile);
+
+            editor.Load(erfFile, "001EBO_dlg", ResourceType.ERF, testData);
+
+            // Verify content loaded - the editor should be able to build the file
             var (data, _) = editor.Build();
-            data.Should().NotBeNull();
+            data.Should().NotBeNull("Build should return data");
+            data.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
+
+            // Verify the ERF was loaded correctly by checking it can be read back
+            var loadedErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(data);
+            loadedErf.Should().NotBeNull("Loaded ERF should not be null");
+            loadedErf.Count.Should().BeGreaterThan(0, "Loaded ERF should contain resources");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_erf_editor.py:93-103
