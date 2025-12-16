@@ -126,7 +126,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     {
                         try
                         {
-                            int routineId = instructions[i].Args.Count > 0 ? (int)instructions[i].Args[0] : -1;
+                            // ACTION instruction args: [0] = routineId (UInt16), [1] = argCount (byte)
+                            int routineId = -1;
+                            if (instructions[i].Args.Count > 0)
+                            {
+                                object arg0 = instructions[i].Args[0];
+                                if (arg0 is ushort ushortVal)
+                                {
+                                    routineId = ushortVal;
+                                }
+                                else if (arg0 is int intVal)
+                                {
+                                    routineId = intVal;
+                                }
+                                else
+                                {
+                                    routineId = Convert.ToInt32(arg0);
+                                }
+                            }
                             int offset = instructions[i].Offset;
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: ACTION instruction at index {i}, offset={offset}, routineId={routineId}, InsType={instructions[i].InsType}, ==={isAction}, Equals={isActionEquals}, totalActionCount now={totalActionCount}");
                         }
@@ -450,20 +467,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 List<int> sortedSubStarts = new List<int>(subroutineStarts);
                 sortedSubStarts.Sort();
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {subroutineStarts.Count} subroutine starts: {string.Join(", ", sortedSubStarts)}");
+                bool foundSubAfterMain = false;
                 foreach (int subStart in sortedSubStarts)
                 {
                     if (subStart > mainStart)
                     {
                         mainEnd = subStart;
+                        foundSubAfterMain = true;
                         JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (first subroutine start after mainStart={mainStart}, will include instructions {mainStart} to {mainEnd - 1})");
                         break;
                     }
                 }
                 // CRITICAL: Ensure mainEnd is valid - if no subroutine start was found after mainStart,
                 // mainEnd should remain at instructions.Count to include all remaining instructions
-                if (mainEnd == instructions.Count && subroutineStarts.Count > 0)
+                if (!foundSubAfterMain)
                 {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No subroutine starts found after mainStart={mainStart}, keeping mainEnd={mainEnd} (all instructions)");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No subroutine starts found after mainStart={mainStart}, keeping mainEnd={mainEnd} (all {instructions.Count} instructions)");
                 }
             }
             else
@@ -745,6 +765,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             // Only create main if it has valid range
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking main subroutine creation - mainStart={mainStart}, mainEnd={mainEnd}, mainStart < mainEnd={mainStart < mainEnd}, mainStart >= 0={mainStart >= 0}");
             if (mainStart < mainEnd && mainStart >= 0)
             {
                 Console.Error.WriteLine($"DEBUG NcsToAstConverter: Creating main subroutine, range={mainStart}-{mainEnd}, total instructions={instructions.Count}");

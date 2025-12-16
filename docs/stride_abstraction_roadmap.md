@@ -73,8 +73,8 @@ Odyssey.Game (uses abstraction, selects backend)
 - [x] Replace Texture2D with ITexture2D throughout OdysseyGame
 - [x] Replace Content.Load with IContentManager.Load
 - [x] Replace Keyboard/Mouse state with IInputManager
-- [ ] Refactor MenuRenderer.cs to use abstraction (12 MonoGame references)
-- [ ] Refactor SaveLoadMenu.cs to use abstraction (8 MonoGame references)
+- [x] Refactor MenuRenderer.cs to use abstraction (12 MonoGame references)
+- [x] Refactor SaveLoadMenu.cs to use abstraction (8 MonoGame references)
 - [x] Refactor OdysseyGame.cs to use abstraction (63 MonoGame references)
 - [x] Update Program.cs to use GraphicsBackendFactory for backend selection
 

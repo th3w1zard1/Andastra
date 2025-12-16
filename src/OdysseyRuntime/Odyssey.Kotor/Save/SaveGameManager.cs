@@ -397,13 +397,13 @@ namespace Odyssey.Kotor.Save
             var root = gff.Root;
 
             // Save area-specific state (entity positions, door states, etc.)
+            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+            // Located via string references: Entity state serialization in save system
+            // Original implementation: Saves entity positions, door/placeable states, HP, local variables, etc.
             if (areaState != null)
             {
                 SetStringField(root, "AreaResRef", areaState.AreaResRef ?? "");
                 
-                // Save entity states
-                // Note: AreaState has separate lists for different entity types
-                // For now, this is a placeholder - full implementation would serialize all entity data
                 // Save creature states
                 if (areaState.CreatureStates != null && areaState.CreatureStates.Count > 0)
                 {
@@ -412,16 +412,155 @@ namespace Odyssey.Kotor.Save
                     foreach (EntityState entityState in areaState.CreatureStates)
                     {
                         var entityStruct = creatureList.Add();
-                        SetIntField(entityStruct, "ObjectId", (int)entityState.ObjectId);
-                        SetFloatField(entityStruct, "X", entityState.Position.X);
-                        SetFloatField(entityStruct, "Y", entityState.Position.Y);
-                        SetFloatField(entityStruct, "Z", entityState.Position.Z);
-                        SetFloatField(entityStruct, "Facing", entityState.Facing);
+                        SaveEntityStateToGFF(entityStruct, entityState);
+                    }
+                }
+
+                // Save door states
+                if (areaState.DoorStates != null && areaState.DoorStates.Count > 0)
+                {
+                    var doorList = new GFFList();
+                    root.SetList("DoorList", doorList);
+                    foreach (EntityState entityState in areaState.DoorStates)
+                    {
+                        var entityStruct = doorList.Add();
+                        SaveEntityStateToGFF(entityStruct, entityState);
+                    }
+                }
+
+                // Save placeable states
+                if (areaState.PlaceableStates != null && areaState.PlaceableStates.Count > 0)
+                {
+                    var placeableList = new GFFList();
+                    root.SetList("PlaceableList", placeableList);
+                    foreach (EntityState entityState in areaState.PlaceableStates)
+                    {
+                        var entityStruct = placeableList.Add();
+                        SaveEntityStateToGFF(entityStruct, entityState);
+                    }
+                }
+
+                // Save destroyed entity IDs
+                if (areaState.DestroyedEntityIds != null && areaState.DestroyedEntityIds.Count > 0)
+                {
+                    var destroyedList = new GFFList();
+                    root.SetList("DestroyedList", destroyedList);
+                    foreach (uint objectId in areaState.DestroyedEntityIds)
+                    {
+                        var destroyedStruct = destroyedList.Add();
+                        SetIntField(destroyedStruct, "ObjectId", (int)objectId);
+                    }
+                }
+
+                // Save spawned entities (dynamically created, not in original GIT)
+                if (areaState.SpawnedEntities != null && areaState.SpawnedEntities.Count > 0)
+                {
+                    var spawnedList = new GFFList();
+                    root.SetList("SpawnedList", spawnedList);
+                    foreach (SpawnedEntityState spawnedState in areaState.SpawnedEntities)
+                    {
+                        var entityStruct = spawnedList.Add();
+                        SaveEntityStateToGFF(entityStruct, spawnedState);
+                        SetStringField(entityStruct, "BlueprintResRef", spawnedState.BlueprintResRef ?? "");
+                        SetStringField(entityStruct, "SpawnedBy", spawnedState.SpawnedBy ?? "");
                     }
                 }
             }
 
             return gff;
+        }
+
+        /// <summary>
+        /// Saves an EntityState to a GFF struct.
+        /// </summary>
+        private void SaveEntityStateToGFF(GFFStruct entityStruct, EntityState entityState)
+        {
+            if (entityStruct == null || entityState == null)
+            {
+                return;
+            }
+
+            // Basic entity data
+            SetIntField(entityStruct, "ObjectId", (int)entityState.ObjectId);
+            SetStringField(entityStruct, "Tag", entityState.Tag ?? "");
+            SetStringField(entityStruct, "TemplateResRef", entityState.TemplateResRef ?? "");
+            SetIntField(entityStruct, "ObjectType", (int)entityState.ObjectType);
+
+            // Position and orientation
+            SetFloatField(entityStruct, "X", entityState.Position.X);
+            SetFloatField(entityStruct, "Y", entityState.Position.Y);
+            SetFloatField(entityStruct, "Z", entityState.Position.Z);
+            SetFloatField(entityStruct, "Facing", entityState.Facing);
+
+            // Stats (for creatures)
+            SetIntField(entityStruct, "CurrentHP", entityState.CurrentHP);
+            SetIntField(entityStruct, "MaxHP", entityState.MaxHP);
+
+            // Door/placeable states
+            SetIntField(entityStruct, "IsOpen", entityState.IsOpen ? 1 : 0);
+            SetIntField(entityStruct, "IsLocked", entityState.IsLocked ? 1 : 0);
+            SetIntField(entityStruct, "IsDestroyed", entityState.IsDestroyed ? 1 : 0);
+            SetIntField(entityStruct, "IsPlot", entityState.IsPlot ? 1 : 0);
+            SetIntField(entityStruct, "AnimationState", entityState.AnimationState);
+
+            // Local variables (if present)
+            if (entityState.LocalVariables != null && !entityState.LocalVariables.IsEmpty)
+            {
+                var localVarStruct = new GFFStruct();
+                entityStruct.SetStruct("LocalVariables", localVarStruct);
+
+                // Save integer variables
+                if (entityState.LocalVariables.Ints != null && entityState.LocalVariables.Ints.Count > 0)
+                {
+                    var intList = new GFFList();
+                    localVarStruct.SetList("IntList", intList);
+                    foreach (var kvp in entityState.LocalVariables.Ints)
+                    {
+                        var varStruct = intList.Add();
+                        SetStringField(varStruct, "Name", kvp.Key);
+                        SetIntField(varStruct, "Value", kvp.Value);
+                    }
+                }
+
+                // Save float variables
+                if (entityState.LocalVariables.Floats != null && entityState.LocalVariables.Floats.Count > 0)
+                {
+                    var floatList = new GFFList();
+                    localVarStruct.SetList("FloatList", floatList);
+                    foreach (var kvp in entityState.LocalVariables.Floats)
+                    {
+                        var varStruct = floatList.Add();
+                        SetStringField(varStruct, "Name", kvp.Key);
+                        SetFloatField(varStruct, "Value", kvp.Value);
+                    }
+                }
+
+                // Save string variables
+                if (entityState.LocalVariables.Strings != null && entityState.LocalVariables.Strings.Count > 0)
+                {
+                    var stringList = new GFFList();
+                    localVarStruct.SetList("StringList", stringList);
+                    foreach (var kvp in entityState.LocalVariables.Strings)
+                    {
+                        var varStruct = stringList.Add();
+                        SetStringField(varStruct, "Name", kvp.Key);
+                        SetStringField(varStruct, "Value", kvp.Value);
+                    }
+                }
+
+                // Save object reference variables
+                if (entityState.LocalVariables.Objects != null && entityState.LocalVariables.Objects.Count > 0)
+                {
+                    var objectList = new GFFList();
+                    localVarStruct.SetList("ObjectList", objectList);
+                    foreach (var kvp in entityState.LocalVariables.Objects)
+                    {
+                        var varStruct = objectList.Add();
+                        SetStringField(varStruct, "Name", kvp.Key);
+                        SetIntField(varStruct, "Value", (int)kvp.Value);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -666,23 +805,151 @@ namespace Odyssey.Kotor.Save
             {
                 foreach (GFFStruct placeableStruct in placeableList)
                 {
-                    var entityState = new EntityState();
-                    entityState.ObjectId = (uint)GetIntField(placeableStruct, "ObjectId", 0);
-                    entityState.Position = new System.Numerics.Vector3(
-                        GetFloatField(placeableStruct, "X", 0f),
-                        GetFloatField(placeableStruct, "Y", 0f),
-                        GetFloatField(placeableStruct, "Z", 0f)
-                    );
-                    entityState.Facing = GetFloatField(placeableStruct, "Facing", 0f);
+                    var entityState = LoadEntityStateFromGFF(placeableStruct);
                     entityState.ObjectType = Odyssey.Core.Enums.ObjectType.Placeable;
-                    entityState.Tag = GetStringField(placeableStruct, "Tag", "");
-                    entityState.IsOpen = GetIntField(placeableStruct, "IsOpen", 0) != 0;
-                    entityState.IsLocked = GetIntField(placeableStruct, "IsLocked", 0) != 0;
                     areaState.PlaceableStates.Add(entityState);
                 }
             }
 
+            // Load destroyed entity IDs
+            GFFList destroyedList = root.GetList("DestroyedList");
+            if (destroyedList != null)
+            {
+                foreach (GFFStruct destroyedStruct in destroyedList)
+                {
+                    uint objectId = (uint)GetIntField(destroyedStruct, "ObjectId", 0);
+                    if (objectId != 0)
+                    {
+                        areaState.DestroyedEntityIds.Add(objectId);
+                    }
+                }
+            }
+
+            // Load spawned entities (dynamically created, not in original GIT)
+            GFFList spawnedList = root.GetList("SpawnedList");
+            if (spawnedList != null)
+            {
+                foreach (GFFStruct spawnedStruct in spawnedList)
+                {
+                    var spawnedState = new SpawnedEntityState();
+                    LoadEntityStateFromGFF(spawnedStruct, spawnedState);
+                    spawnedState.BlueprintResRef = GetStringField(spawnedStruct, "BlueprintResRef", "");
+                    spawnedState.SpawnedBy = GetStringField(spawnedStruct, "SpawnedBy", "");
+                    areaState.SpawnedEntities.Add(spawnedState);
+                }
+            }
+
             return areaState;
+        }
+
+        /// <summary>
+        /// Loads an EntityState from a GFF struct.
+        /// </summary>
+        private EntityState LoadEntityStateFromGFF(GFFStruct entityStruct, EntityState entityState = null)
+        {
+            if (entityStruct == null)
+            {
+                return null;
+            }
+
+            if (entityState == null)
+            {
+                entityState = new EntityState();
+            }
+
+            // Basic entity data
+            entityState.ObjectId = (uint)GetIntField(entityStruct, "ObjectId", 0);
+            entityState.Tag = GetStringField(entityStruct, "Tag", "");
+            entityState.TemplateResRef = GetStringField(entityStruct, "TemplateResRef", "");
+            entityState.ObjectType = (Odyssey.Core.Enums.ObjectType)GetIntField(entityStruct, "ObjectType", 0);
+
+            // Position and orientation
+            entityState.Position = new System.Numerics.Vector3(
+                GetFloatField(entityStruct, "X", 0f),
+                GetFloatField(entityStruct, "Y", 0f),
+                GetFloatField(entityStruct, "Z", 0f)
+            );
+            entityState.Facing = GetFloatField(entityStruct, "Facing", 0f);
+
+            // Stats (for creatures)
+            entityState.CurrentHP = GetIntField(entityStruct, "CurrentHP", 1);
+            entityState.MaxHP = GetIntField(entityStruct, "MaxHP", 1);
+
+            // Door/placeable states
+            entityState.IsOpen = GetIntField(entityStruct, "IsOpen", 0) != 0;
+            entityState.IsLocked = GetIntField(entityStruct, "IsLocked", 0) != 0;
+            entityState.IsDestroyed = GetIntField(entityStruct, "IsDestroyed", 0) != 0;
+            entityState.IsPlot = GetIntField(entityStruct, "IsPlot", 0) != 0;
+            entityState.AnimationState = GetIntField(entityStruct, "AnimationState", 0);
+
+            // Local variables (if present)
+            GFFStruct localVarStruct = entityStruct.GetStruct("LocalVariables");
+            if (localVarStruct != null)
+            {
+                entityState.LocalVariables = new LocalVariableSet();
+
+                // Load integer variables
+                GFFList intList = localVarStruct.GetList("IntList");
+                if (intList != null)
+                {
+                    foreach (GFFStruct varStruct in intList)
+                    {
+                        string name = GetStringField(varStruct, "Name", "");
+                        int value = GetIntField(varStruct, "Value", 0);
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            entityState.LocalVariables.Ints[name] = value;
+                        }
+                    }
+                }
+
+                // Load float variables
+                GFFList floatList = localVarStruct.GetList("FloatList");
+                if (floatList != null)
+                {
+                    foreach (GFFStruct varStruct in floatList)
+                    {
+                        string name = GetStringField(varStruct, "Name", "");
+                        float value = GetFloatField(varStruct, "Value", 0f);
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            entityState.LocalVariables.Floats[name] = value;
+                        }
+                    }
+                }
+
+                // Load string variables
+                GFFList stringList = localVarStruct.GetList("StringList");
+                if (stringList != null)
+                {
+                    foreach (GFFStruct varStruct in stringList)
+                    {
+                        string name = GetStringField(varStruct, "Name", "");
+                        string value = GetStringField(varStruct, "Value", "");
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            entityState.LocalVariables.Strings[name] = value;
+                        }
+                    }
+                }
+
+                // Load object reference variables
+                GFFList objectList = localVarStruct.GetList("ObjectList");
+                if (objectList != null)
+                {
+                    foreach (GFFStruct varStruct in objectList)
+                    {
+                        string name = GetStringField(varStruct, "Name", "");
+                        uint value = (uint)GetIntField(varStruct, "Value", 0);
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            entityState.LocalVariables.Objects[name] = value;
+                        }
+                    }
+                }
+            }
+
+            return entityState;
         }
 
         #endregion
