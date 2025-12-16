@@ -480,7 +480,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     }
                 }
 
-                if (fallbackMainStart < fallbackMainEnd && fallbackMainStart >= 0)
+                // CRITICAL FIX: If fallbackMainStart >= fallbackMainEnd, use the entire range
+                // This handles very small files where the calculated start might be after the end
+                if (fallbackMainStart >= fallbackMainEnd)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Fallback start ({fallbackMainStart}) >= end ({fallbackMainEnd}), using entire range (0-{instructions.Count})");
+                    fallbackMainStart = 0;
+                    fallbackMainEnd = instructions.Count;
+                }
+
+                if (fallbackMainStart < fallbackMainEnd && fallbackMainStart >= 0 && fallbackMainEnd <= instructions.Count)
                 {
                     ASubroutine fallbackMain = ConvertInstructionRangeToSubroutine(ncs, instructions, fallbackMainStart, fallbackMainEnd, fallbackMainStart);
                     if (fallbackMain != null)
@@ -491,11 +500,54 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     else
                     {
                         JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Fallback main subroutine creation returned null (range {fallbackMainStart}-{fallbackMainEnd})");
+                        // Last resort: create an empty subroutine with just a RETN if we can find one
+                        if (instructions.Count > 0)
+                        {
+                            JavaSystem.@out.Println("DEBUG NcsToAstConverter: Attempting to create minimal subroutine as last resort");
+                            AST.ASubroutine minimalSub = new AST.ASubroutine();
+                            minimalSub.SetId(0);
+                            AST.ACommandBlock minimalCmdBlock = new AST.ACommandBlock();
+                            // Try to convert at least the last instruction (should be RETN)
+                            for (int i = Math.Max(0, instructions.Count - 3); i < instructions.Count; i++)
+                            {
+                                PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
+                                if (cmd != null)
+                                {
+                                    minimalCmdBlock.AddCmd((AST.PCmd)(object)cmd);
+                                }
+                            }
+                            minimalSub.SetCommandBlock(minimalCmdBlock);
+                            // Find RETN and set it as return
+                            for (int i = instructions.Count - 1; i >= 0 && i >= instructions.Count - 5; i--)
+                            {
+                                if (instructions[i].InsType == NCSInstructionType.RETN)
+                                {
+                                    AReturn ret = ConvertRetn(instructions[i], i);
+                                    if (ret != null)
+                                    {
+                                        minimalSub.SetReturn((AST.PReturn)(object)ret);
+                                    }
+                                    break;
+                                }
+                            }
+                            program.GetSubroutine().Add(minimalSub);
+                            JavaSystem.@out.Println("DEBUG NcsToAstConverter: Created minimal fallback subroutine");
+                        }
                     }
                 }
                 else
                 {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Fallback main subroutine range invalid (start={fallbackMainStart}, end={fallbackMainEnd})");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Fallback main subroutine range invalid (start={fallbackMainStart}, end={fallbackMainEnd}, instructions.Count={instructions.Count})");
+                    // Last resort: create an empty subroutine
+                    if (instructions.Count > 0)
+                    {
+                        JavaSystem.@out.Println("DEBUG NcsToAstConverter: Creating empty subroutine as absolute last resort");
+                        AST.ASubroutine emptySub = new AST.ASubroutine();
+                        emptySub.SetId(0);
+                        emptySub.SetCommandBlock(new AST.ACommandBlock());
+                        program.GetSubroutine().Add(emptySub);
+                        JavaSystem.@out.Println("DEBUG NcsToAstConverter: Created empty fallback subroutine");
+                    }
                 }
             }
 
