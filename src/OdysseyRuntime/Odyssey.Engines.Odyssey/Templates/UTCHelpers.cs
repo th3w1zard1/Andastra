@@ -14,6 +14,18 @@ namespace Odyssey.Engines.Odyssey.Templates
     // This is KOTOR/Odyssey-specific GFF template helper functions
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py
     // Original: construct_utc and dismantle_utc functions
+    /// <remarks>
+    /// UTC Helper Functions:
+    /// - Based on swkotor2.exe creature template loading/saving system
+    /// - Located via string references: "Creature" @ 0x007bc544, "CreatureList" @ 0x007c0c80, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+    /// - Creature loading: FUN_005223a0 @ 0x005223a0 loads creature from GFF (construct_utc equivalent)
+    /// - Creature saving: FUN_005226d0 @ 0x005226d0 saves creature to GFF (dismantle_utc equivalent)
+    /// - ConstructUtc: Parses GFF structure into UTC object, extracts all fields (stats, inventory, classes, feats, skills, script hooks)
+    /// - DismantleUtc: Converts UTC object back to GFF structure, writes all fields in correct format
+    /// - GFF field names match original engine exactly (TemplateResRef, Tag, Conversation, Race, Appearance_Type, etc.)
+    /// - Script hook fields: ScriptHeartbeat, ScriptAttacked, ScriptDamaged, ScriptDialogue, ScriptDeath, etc.
+    /// - Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:500-954
+    /// </remarks>
     public static class UTCHelpers
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:500-794

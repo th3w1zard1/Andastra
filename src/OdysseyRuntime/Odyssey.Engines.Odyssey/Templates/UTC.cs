@@ -15,6 +15,27 @@ namespace Odyssey.Engines.Odyssey.Templates
     /// UTC files are GFF-based format files that store creature definitions including
     /// stats, appearance, inventory, feats, and script hooks.
     /// </summary>
+    /// <remarks>
+    /// UTC (Creature Template) Format:
+    /// - Based on swkotor2.exe creature template system
+    /// - Located via string references: "Creature" @ 0x007bc544, "CreatureList" @ 0x007c0c80, "CreatureSize" @ 0x007bf680
+    /// - "CreatureSpeed" @ 0x007c4b8c, "GetCreatureRadius" @ 0x007bb128, "tutchemcreate" @ 0x007d0724
+    /// - "Creature template '%s' doesn't exist.\n" @ 0x007bf78c (template loading error)
+    /// - "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8 (faction error)
+    /// - "Tried to reduce XP of creature '%s' to '%d'. Cannot reduce XP." @ 0x007c3fa8 (XP error)
+    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
+    /// - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40 (appearance error)
+    /// - "u=nwccreature.cpp" @ 0x007c7f5e (creature implementation file reference)
+    /// - Creature loading: FUN_005223a0 @ 0x005223a0 loads creature from GFF, FUN_005226d0 @ 0x005226d0 saves creature to GFF
+    /// - Original implementation: UTC files are GFF with "UTC " signature containing creature template data
+    /// - GFF fields: TemplateResRef, Tag, Conversation, FirstName, LastName, Race, Appearance_Type, Gender, FactionID, etc.
+    /// - Script hooks: ScriptHeartbeat, ScriptAttacked, ScriptDamaged, ScriptDialogue, ScriptDeath, etc.
+    /// - Inventory: ItemList contains inventory items, Equip_ItemList contains equipped items
+    /// - Classes: ClassList contains class/level data with KnownList0 for spells/powers
+    /// - Feats: FeatList contains feat IDs
+    /// - Skills: SkillList contains skill ranks (ComputerUse, Demolitions, Stealth, Awareness, Persuade, Repair, Security, TreatInjury)
+    /// - Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
+    /// </remarks>
     [PublicAPI]
     public sealed class UTC
     {
