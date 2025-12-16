@@ -353,18 +353,20 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
 
             // Toggle checkbox
-            if (editor.IsNoteCheckbox != null)
-            {
-                editor.IsNoteCheckbox.IsChecked = true;
-                var (data1, _) = editor.Build();
-                var modifiedUtw1 = UTWAuto.ReadUtw(data1);
-                modifiedUtw1.HasMapNote.Should().BeTrue();
+            editor.IsNoteCheckbox.Should().NotBeNull("IsNoteCheckbox should be initialized");
+            editor.IsNoteCheckbox.IsChecked = true;
+            editor.IsNoteCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
+            
+            var (data1, _) = editor.Build();
+            var modifiedUtw1 = UTWAuto.ReadUtw(data1);
+            modifiedUtw1.HasMapNote.Should().BeTrue("HasMapNote should be true after setting checkbox");
 
-                editor.IsNoteCheckbox.IsChecked = false;
-                var (data2, _) = editor.Build();
-                var modifiedUtw2 = UTWAuto.ReadUtw(data2);
-                modifiedUtw2.HasMapNote.Should().BeFalse();
-            }
+            editor.IsNoteCheckbox.IsChecked = false;
+            editor.IsNoteCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
+            
+            var (data2, _) = editor.Build();
+            var modifiedUtw2 = UTWAuto.ReadUtw(data2);
+            modifiedUtw2.HasMapNote.Should().BeFalse("HasMapNote should be false after unchecking");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:128-149
