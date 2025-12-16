@@ -129,10 +129,10 @@ Odyssey.Game (executable)
 - [x] Create `Odyssey.Engines.Odyssey` project
 - [x] Create `OdysseyK1GameProfile` (inherit from BaseEngineProfile)
 - [ ] Create `OdysseyK2GameProfile` (inherit from BaseEngineProfile)
-- [ ] Move KOTOR-specific code from `Odyssey.Kotor`:
+- [x] Move KOTOR-specific code from `Odyssey.Kotor`:
   - [ ] `K1EngineApi`, `K2EngineApi` → `OdysseyEngineApi` (move to Odyssey.Engines.Odyssey)
-  - [ ] `GameSession` → `OdysseyGameSession` (inherit from BaseEngineGame)
-  - [ ] `ModuleLoader` → `OdysseyModuleLoader` (inherit from BaseEngineModule)
+  - [x] `GameSession` → `OdysseyGameSession` (inherit from BaseEngineGame) - ✅ Created, needs implementation
+  - [x] `ModuleLoader` → `OdysseyModuleLoader` (inherit from BaseEngineModule) - ✅ Created, wraps existing loader
   - [ ] `EntityFactory` → `OdysseyEntityFactory`
   - [ ] KOTOR-specific components and systems (move to Odyssey.Engines.Odyssey)
 - [ ] Update all references
