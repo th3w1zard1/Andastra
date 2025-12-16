@@ -70,7 +70,7 @@ namespace Odyssey.Stride.PostProcessing
             }
 
             _lutTexture = lutTexture;
-            _lutTexture = lutTexture; // Store in base class field via property
+            base.LutTexture = lutTexture;
         }
 
         /// <summary>

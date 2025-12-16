@@ -126,27 +126,35 @@ namespace Odyssey.Stride.PostProcessing
             Console.WriteLine($"[StrideSSR] Rendering reflections: {_maxIterations} iterations, max distance {_maxDistance}");
         }
 
-        protected override void OnQualityModeChanged(UpscalingQuality quality)
+        public void SetQuality(int qualityLevel)
         {
-            // Adjust SSR quality based on upscaling quality
+            // Adjust SSR quality based on quality level (0-4)
             // Higher quality = more iterations, lower step size
-            switch (quality)
+            switch (qualityLevel)
             {
-                case UpscalingQuality.Native:
-                case UpscalingQuality.Quality:
+                case 4: // Ultra
                     _maxIterations = 128;
                     _stepSize = 0.05f;
                     break;
 
-                case UpscalingQuality.Balanced:
+                case 3: // High
                     _maxIterations = 96;
                     _stepSize = 0.075f;
                     break;
 
-                case UpscalingQuality.Performance:
-                case UpscalingQuality.UltraPerformance:
+                case 2: // Medium
                     _maxIterations = 64;
                     _stepSize = 0.1f;
+                    break;
+
+                case 1: // Low
+                    _maxIterations = 48;
+                    _stepSize = 0.15f;
+                    break;
+
+                default: // Off
+                    _maxIterations = 32;
+                    _stepSize = 0.2f;
                     break;
             }
         }
