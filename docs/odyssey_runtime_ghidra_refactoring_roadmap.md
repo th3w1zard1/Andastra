@@ -37,9 +37,9 @@ When processing a file:
 - [ ] Loaders\GITLoader.cs
 - [ ] Loaders\TemplateLoader.cs
 - [x] MDL\MDLBulkReader.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
-- [ ] MDL\MDLCache.cs
-- [ ] MDL\MDLConstants.cs
-- [ ] MDL\MDLDataTypes.cs
+- [x] MDL\MDLCache.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
+- [x] MDL\MDLConstants.cs - DoubleMdlVar @ 0x007d05d8, ShortMdlVar @ 0x007d05e8, LongMdlVar @ 0x007d05f4, FUN_005261b0 @ 0x005261b0
+- [x] MDL\MDLDataTypes.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, FUN_005261b0 @ 0x005261b0
 - [ ] MDL\MDLFastReader.cs
 - [ ] MDL\MDLLoader.cs
 - [ ] MDL\MDLOptimizedReader.cs
@@ -155,14 +155,14 @@ When processing a file:
 
 ### Odyssey.Engines.Common (8 files)
 
-- [ ] BaseEngine.cs
-- [ ] BaseEngineGame.cs
-- [ ] BaseEngineModule.cs
-- [ ] BaseEngineProfile.cs
-- [ ] IEngine.cs
-- [ ] IEngineGame.cs
-- [ ] IEngineModule.cs
-- [ ] IEngineProfile.cs
+- [x] BaseEngine.cs - FUN_00404250 @ 0x00404250, CExoKeyTable resource management
+- [x] BaseEngineGame.cs - ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0
+- [x] BaseEngineModule.cs - ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0
+- [x] BaseEngineProfile.cs - Game profile system, resource config, table config
+- [x] IEngine.cs - FUN_00404250 @ 0x00404250, CExoKeyTable resource management
+- [x] IEngineGame.cs - ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0
+- [x] IEngineModule.cs - ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0
+- [x] IEngineProfile.cs - Game profile system, resource config, table config
 
 ### Odyssey.Engines.Eclipse (1 files)
 
