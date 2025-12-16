@@ -317,6 +317,10 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // CRITICAL: Save cache value at the start of Build() to prevent it from being overwritten
+            // This ensures that even if PropertyChanged handlers fire during Build(), we preserve the cache
+            bool? savedCacheValue = _cachedMapNoteEnabled;
+            
             // Update the existing UTW object from UI elements
             // Matching Python: utw.name = self.ui.nameEdit.locstring()
             if (_nameEdit != null)
@@ -393,12 +397,13 @@ namespace HolocronToolset.Editors
             // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
             if (_utw != null)
             {
-                // CRITICAL: Always use cache if it has a value - it's the authoritative source for headless tests
+                // CRITICAL: Always use saved cache value (from start of Build()) - it's the authoritative source for headless tests
                 // This ensures SetNoteEnabledCheckbox(true) always works, even in headless tests
-                if (_cachedMapNoteEnabled.HasValue)
+                // Use savedCacheValue instead of _cachedMapNoteEnabled to prevent it from being overwritten during Build()
+                if (savedCacheValue.HasValue)
                 {
                     // Cache is the source of truth - always use it directly
-                    _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
+                    _utw.MapNoteEnabled = savedCacheValue.Value;
                 }
                 else if (_noteEnabledCheckbox != null)
                 {
@@ -459,20 +464,21 @@ namespace HolocronToolset.Editors
             // CRITICAL: Final verification before serialization
             // Ensure MapNoteEnabled is set correctly from cache (if available)
             // This is a defensive check to ensure the value is correct before serialization
-            // ALWAYS use cache if it has a value - it's the authoritative source for headless tests
+            // ALWAYS use saved cache value (from start of Build()) - it's the authoritative source for headless tests
             // This MUST happen right before serialization to ensure the value is correct
             // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
             // Python directly reads from checkbox, but in C# we use cache for headless tests
             if (_utw != null)
             {
-                // Priority 1: Use cache if available (it's the source of truth for headless tests)
+                // Priority 1: Use saved cache value if available (it's the source of truth for headless tests)
                 // The cache is set by SetNoteEnabledCheckbox(true) and is the authoritative source
-                if (_cachedMapNoteEnabled.HasValue)
+                // Use savedCacheValue instead of _cachedMapNoteEnabled to prevent it from being overwritten
+                if (savedCacheValue.HasValue)
                 {
                     // Cache is the source of truth - always use it, no matter what
                     // This ensures that SetNoteEnabledCheckbox(true) always works, even in headless tests
                     // CRITICAL: Set this value RIGHT before serialization to prevent any interference
-                    _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
+                    _utw.MapNoteEnabled = savedCacheValue.Value;
                 }
                 else if (_noteEnabledCheckbox != null)
                 {
@@ -495,18 +501,19 @@ namespace HolocronToolset.Editors
             // Serialize UTW to bytes
             // IMPORTANT: At this point, _utw.MapNoteEnabled should be set correctly
             // DismantleUtw will read utw.MapNoteEnabled directly, so it must be correct here
-            // CRITICAL: Read the cache value one more time right before serialization as a final safeguard
+            // CRITICAL: Use saved cache value one more time right before serialization as a final safeguard
             // This ensures that even if something reset the UTW value, we fix it one last time
             // This is the ABSOLUTE LAST chance to set the value correctly before serialization
             if (_utw != null)
             {
-                // ALWAYS use cache if available - it's the source of truth for headless tests
+                // ALWAYS use saved cache value if available - it's the source of truth for headless tests
                 // This is the final safeguard to ensure SetNoteEnabledCheckbox(true) always works
-                if (_cachedMapNoteEnabled.HasValue)
+                // Use savedCacheValue instead of _cachedMapNoteEnabled to prevent it from being overwritten
+                if (savedCacheValue.HasValue)
                 {
-                    // Force set the value from cache right before serialization
+                    // Force set the value from saved cache right before serialization
                     // This prevents any possibility of the value being wrong
-                    _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
+                    _utw.MapNoteEnabled = savedCacheValue.Value;
                 }
             }
             byte[] data = UTWAuto.BytesUtw(_utw);
