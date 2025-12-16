@@ -129,6 +129,15 @@ namespace Odyssey.Stride.Graphics
             return new StrideSpatialAudio();
         }
 
+        public object CreateDialogueCameraController(object cameraController)
+        {
+            if (cameraController is Odyssey.Core.Camera.CameraController coreCameraController)
+            {
+                return new Odyssey.Stride.Camera.StrideDialogueCameraController(coreCameraController);
+            }
+            throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
+        }
+
         public void Dispose()
         {
             if (_graphicsDevice != null)

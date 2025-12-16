@@ -83,6 +83,13 @@ namespace Odyssey.Graphics
         /// </summary>
         /// <returns>Created spatial audio system.</returns>
         ISpatialAudio CreateSpatialAudio();
+
+        /// <summary>
+        /// Creates a dialogue camera controller.
+        /// </summary>
+        /// <param name="cameraController">The camera controller to use.</param>
+        /// <returns>Created dialogue camera controller.</returns>
+        object CreateDialogueCameraController(object cameraController);
     }
 }
 

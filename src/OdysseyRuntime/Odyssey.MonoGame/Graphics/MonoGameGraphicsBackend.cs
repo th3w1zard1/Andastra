@@ -136,6 +136,15 @@ namespace Odyssey.MonoGame.Graphics
             return new MonoGameSpatialAudio();
         }
 
+        public object CreateDialogueCameraController(object cameraController)
+        {
+            if (cameraController is Odyssey.Core.Camera.CameraController coreCameraController)
+            {
+                return new Odyssey.MonoGame.Camera.MonoGameDialogueCameraController(coreCameraController);
+            }
+            throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
+        }
+
         public void Dispose()
         {
             if (_graphicsDevice != null)
