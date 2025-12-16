@@ -61,6 +61,15 @@ namespace Odyssey.Scripting.VM
         private Dictionary<int, string> _stringPool;
         private int _nextStringHandle;
 
+        // Location storage (Location objects are stored off-stack with IDs)
+        // Based on swkotor2.exe: Location object management system
+        // Located via string references: "LOCATION" @ 0x007c2850 (location type constant)
+        // Original implementation: Location objects are managed by engine, stored in catalog with unique IDs
+        // Location IDs start from 0x80000000 to avoid conflicts with object IDs (0x7F000000+ range)
+        private Dictionary<uint, Location> _locationPool;
+        private uint _nextLocationId;
+        private const uint LocationIdBase = 0x80000000; // Location IDs start here to avoid conflicts with object IDs
+
         // Stack size
         private const int StackSize = 65536;
 
@@ -68,6 +77,8 @@ namespace Odyssey.Scripting.VM
         {
             _stack = new byte[StackSize];
             _stringPool = new Dictionary<int, string>();
+            _locationPool = new Dictionary<uint, Location>();
+            _nextLocationId = LocationIdBase;
             MaxInstructions = DefaultMaxInstructions;
         }
 
@@ -584,12 +595,13 @@ namespace Odyssey.Scripting.VM
                             // Located via string references: "LOCATION" @ 0x007c2850, "ValLocation" @ 0x007c26ac
                             // Original implementation: Location stored as object reference (off-stack complex object)
                             // The actual Location object (position, facing, area) is managed by the engine
-                            // We pop the object ID and pass it to the engine function
-                            // Note: Location objects are managed by the engine, so we just pass the ID
-                            // The engine API functions will handle Location object lookup/creation
-                            int locationValue = PopInt();
-                            // Store the location ID as the ComplexValue (engine will resolve it)
-                            arg = Variable.FromLocation((object)locationValue);
+                            // We pop the location ID and retrieve the Location object from registry
+                            // Note: Location objects are managed by the VM registry, engine API functions receive Location objects
+                            int locationId = PopInt();
+                            // Retrieve Location object from registry by ID
+                            Location location = GetLocation(unchecked((uint)locationId));
+                            // Store the Location object (or null if ID is invalid)
+                            arg = Variable.FromLocation(location);
                             break;
                         default:
                             // Unknown type, pop as int
@@ -645,14 +657,19 @@ namespace Odyssey.Scripting.VM
                         // Handle both integer IDs (for arguments) and Location objects (for return values)
                         if (result.ComplexValue is int locationId)
                         {
+                            // Already an ID, push it directly
                             PushInt(locationId);
+                        }
+                        else if (result.ComplexValue is Location location)
+                        {
+                            // Store Location object in registry and return ID
+                            uint id = StoreLocation(location);
+                            PushInt(unchecked((int)id));
                         }
                         else
                         {
-                            // For Location objects, we need to store them somehow and return an ID
-                            // For now, push 0 (invalid location) as Location object management isn't fully implemented
-                            // TODO: Implement Location object ID management system
-                            PushInt(0);
+                            // Invalid location, push OBJECT_INVALID equivalent for locations
+                            PushInt(unchecked((int)ObjectInvalid));
                         }
                         break;
                 }
@@ -1053,6 +1070,64 @@ namespace Odyssey.Scripting.VM
                 // The action system will restore this state when executing the delayed action
                 // This is a placeholder - full implementation would serialize the actual stack/locals
             }
+        }
+
+        /// <summary>
+        /// Stores a Location object in the registry and returns its ID.
+        /// </summary>
+        /// <param name="location">The Location object to store.</param>
+        /// <returns>The unique ID for the Location object.</returns>
+        private uint StoreLocation(Location location)
+        {
+            if (location == null)
+            {
+                return ObjectInvalid;
+            }
+
+            uint id = _nextLocationId++;
+            _locationPool[id] = location;
+            return id;
+        }
+
+        /// <summary>
+        /// Retrieves a Location object by ID.
+        /// </summary>
+        /// <param name="locationId">The Location object ID.</param>
+        /// <returns>The Location object, or null if not found.</returns>
+        private Location GetLocation(uint locationId)
+        {
+            if (locationId == ObjectInvalid || locationId < LocationIdBase)
+            {
+                return null;
+            }
+
+            if (_locationPool.TryGetValue(locationId, out Location location))
+            {
+                return location;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Removes a Location object from the registry.
+        /// </summary>
+        /// <param name="locationId">The Location object ID to remove.</param>
+        private void RemoveLocation(uint locationId)
+        {
+            if (locationId >= LocationIdBase)
+            {
+                _locationPool.Remove(locationId);
+            }
+        }
+
+        /// <summary>
+        /// Clears all Location objects from the registry.
+        /// </summary>
+        private void ClearLocations()
+        {
+            _locationPool.Clear();
+            _nextLocationId = LocationIdBase;
         }
 
         #endregion
