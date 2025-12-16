@@ -89,7 +89,7 @@ param(
     [string]$NewNamespace,
 
     [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
-    [string[]]$IncludeFiles = @("*.cs", "*.csproj", "*.sln", "*.axaml", "*.axaml.cs"),
+    [string[]]$IncludeFiles = @("*.cs", "*.csproj", "*.sln", "*.axaml", "*.axaml.cs", "*.props", "*.targets", "*.config", "*.json", "*.xml", "*.md", "*.txt", "*.ps1", "*.sh", "*.bat", "*.cmd"),
 
     [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
     [string[]]$ExcludeDirectories = @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups"),
@@ -517,6 +517,7 @@ function Invoke-ReplaceInFile {
     <#
     .SYNOPSIS
     Performs text replacement in a file with ShouldProcess support.
+    Supports multiple replacements and path-aware replacements.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -524,17 +525,143 @@ function Invoke-ReplaceInFile {
         [string]$FilePath,
 
         [Parameter(Mandatory = $true)]
-        [string]$OldValue,
-
-        [Parameter(Mandatory = $true)]
-        [string]$NewValue
+        [hashtable]$Replacements
     )
 
     $original = Get-Content -Path $FilePath -Raw
-    $updated = $original.Replace($OldValue, $NewValue)
+    $updated = $original
 
-    if ($updated -ne $original) {
-        if ($PSCmdlet.ShouldProcess($FilePath, "Replace '$OldValue' with '$NewValue'")) {
+    $hasChanges = $false
+    foreach ($replacement in $Replacements.GetEnumerator()) {
+        $oldValue = $replacement.Key
+        $newValue = $replacement.Value
+        if ($updated.Contains($oldValue)) {
+            $updated = $updated.Replace($oldValue, $newValue)
+            $hasChanges = $true
+        }
+    }
+
+    if ($hasChanges) {
+        if ($PSCmdlet.ShouldProcess($FilePath, "Apply text replacements")) {
+            Set-Content -Path $FilePath -Value $updated -NoNewline
+        }
+        return $true
+    }
+
+    return $false
+}
+
+function Rename-FoldersRecursively {
+    <#
+    .SYNOPSIS
+    Recursively renames folders that match the old name pattern.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RootPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$OldName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$NewName,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$ExcludeDirectories
+    )
+
+    # Get all directories, sorted by depth (deepest first) to avoid path conflicts
+    $allDirs = Get-ChildItem -Path $RootPath -Recurse -Directory |
+        Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) } |
+        Sort-Object -Property { $_.FullName.Split([IO.Path]::DirectorySeparatorChar).Count } -Descending
+
+    $renamedCount = 0
+    foreach ($dir in $allDirs) {
+        if ($dir.Name -eq $OldName) {
+            $newPath = Join-Path $dir.Parent.FullName $NewName
+
+            if (Test-Path -Path $newPath) {
+                Write-Warning "Target folder already exists: $newPath"
+                continue
+            }
+
+            if ($PSCmdlet.ShouldProcess($dir.FullName, "Rename folder to $NewName")) {
+                Rename-Item -Path $dir.FullName -NewName $NewName -Force
+                $renamedCount++
+                Write-Verbose "Renamed folder: $($dir.FullName) -> $newPath"
+            }
+        }
+    }
+
+    return $renamedCount
+}
+
+function Update-PathReferences {
+    <#
+    .SYNOPSIS
+    Updates path references in files (folder names in paths).
+    Handles both forward slashes and backslashes, and relative/absolute paths.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$OldFolderName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$NewFolderName
+    )
+
+    $original = Get-Content -Path $FilePath -Raw
+    $updated = $original
+
+    # Replace folder name in paths (handle both / and \)
+    $patterns = @(
+        "\$OldFolderName\",      # Backslash: \OldName\
+        "/$OldFolderName/",      # Forward slash: /OldName/
+        "\$OldFolderName`"",     # Backslash at end: \OldName"
+        "/$OldFolderName`"",     # Forward slash at end: /OldName"
+        "`"$OldFolderName\",     # Quote backslash: "OldName\
+        "`"$OldFolderName/",     # Quote forward slash: "OldName/
+        "`"$OldFolderName`"",   # Quoted: "OldName"
+        "`'$OldFolderName`'"    # Single quoted: 'OldName'
+    )
+
+    $replacements = @(
+        "\$NewFolderName\",
+        "/$NewFolderName/",
+        "\$NewFolderName`"",
+        "/$NewFolderName`"",
+        "`"$NewFolderName\",
+        "`"$NewFolderName/",
+        "`"$NewFolderName`"",
+        "`'$NewFolderName`'"
+    )
+
+    $hasChanges = $false
+    for ($i = 0; $i -lt $patterns.Count; $i++) {
+        if ($updated -match [regex]::Escape($patterns[$i])) {
+            $updated = $updated -replace [regex]::Escape($patterns[$i]), $replacements[$i]
+            $hasChanges = $true
+        }
+    }
+
+    # Also handle folder name as standalone word in paths (with word boundaries)
+    $standalonePattern = "\b$([regex]::Escape($OldFolderName))\b"
+    if ($updated -match $standalonePattern) {
+        # Only replace if it looks like a path component (preceded/followed by path separators or quotes)
+        $pathPattern = "([`"`'\\/]|^)$([regex]::Escape($OldFolderName))([`"`'\\/]|$)"
+        if ($updated -match $pathPattern) {
+            $updated = $updated -replace $pathPattern, "`$1$NewFolderName`$3"
+            $hasChanges = $true
+        }
+    }
+
+    if ($hasChanges) {
+        if ($PSCmdlet.ShouldProcess($FilePath, "Update path references: $OldFolderName -> $NewFolderName")) {
             Set-Content -Path $FilePath -Value $updated -NoNewline
         }
         return $true
@@ -587,7 +714,7 @@ try {
     $backupDir = Get-BackupDirectory -RootPath $resolvedRoot -CustomBackupDir $BackupDirectory
     $backupPath = New-Backup -RootPath $resolvedRoot -BackupBaseDir $backupDir -BackupCount $BackupCount
 
-    # Rename folder
+    # Rename main folder
     if (-not $NoFolderRename) {
         $oldFolder = Join-Path $resolvedRoot $OldFolderName
         $newFolder = Join-Path $resolvedRoot $NewFolderName
@@ -599,30 +726,61 @@ try {
 
             if ($PSCmdlet.ShouldProcess($oldFolder, "Rename to $newFolder")) {
                 Move-Item -Path $oldFolder -Destination $newFolder -Force
-                Write-Host "Renamed folder: $OldFolderName -> $NewFolderName"
+                Write-Host "Renamed main folder: $OldFolderName -> $NewFolderName"
             }
         }
         else {
             Write-Warning "Old folder not found: $oldFolder"
         }
+
+        # Rename subfolders recursively (after main folder rename, work in new location)
+        $workRoot = if (Test-Path -Path $newFolder) { $newFolder } else { $resolvedRoot }
+        $renamedSubfolders = Rename-FoldersRecursively -RootPath $workRoot -OldName $OldFolderName -NewName $NewFolderName -ExcludeDirectories $ExcludeDirectories
+        if ($renamedSubfolders -gt 0) {
+            Write-Host "Renamed $renamedSubfolders subfolder(s): $OldFolderName -> $NewFolderName"
+        }
     }
 
     # Text replacements
     if (-not $NoTextReplace) {
+        # Get all files matching include patterns
         $files = Get-ChildItem -Path $resolvedRoot -Recurse -File -Include $IncludeFiles |
             Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) }
 
+        # Also get .sln, .csproj, .props, .targets files for path updates (even if not in IncludeFiles)
+        $pathFiles = Get-ChildItem -Path $resolvedRoot -Recurse -File -Include "*.sln", "*.csproj", "*.props", "*.targets", "*.config", "*.json", "*.xml" |
+            Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) }
+
+        # Combine and deduplicate
+        $allFiles = ($files + $pathFiles) | Sort-Object -Property FullName -Unique
+
         $changedCount = 0
+        $pathUpdatedCount = 0
         $sortedCount = 0
 
-        foreach ($file in $files) {
+        foreach ($file in $allFiles) {
             $didChange = $false
+            $didPathChange = $false
+
+            # Prepare replacements hashtable
+            $replacements = @{
+                $OldNamespace = $NewNamespace
+            }
 
             # Perform namespace replacement
-            $didChange = Invoke-ReplaceInFile -FilePath $file.FullName -OldValue $OldNamespace -NewValue $NewNamespace
+            $didChange = Invoke-ReplaceInFile -FilePath $file.FullName -Replacements $replacements
             if ($didChange) {
                 $changedCount++
-                Write-Verbose "Updated: $($file.FullName)"
+                Write-Verbose "Updated namespace: $($file.FullName)"
+            }
+
+            # Update path references (folder names in paths) for relevant file types
+            if ($file.Extension -in @(".sln", ".csproj", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd")) {
+                $didPathChange = Update-PathReferences -FilePath $file.FullName -OldFolderName $OldFolderName -NewFolderName $NewFolderName
+                if ($didPathChange) {
+                    $pathUpdatedCount++
+                    Write-Verbose "Updated paths: $($file.FullName)"
+                }
             }
 
             # Sort using statements for .cs files
@@ -634,7 +792,8 @@ try {
             }
         }
 
-        Write-Host "Files updated: $changedCount"
+        Write-Host "Files with namespace updates: $changedCount"
+        Write-Host "Files with path updates: $pathUpdatedCount"
         if (-not $NoUsingSort) {
             Write-Host "Files with sorted usings: $sortedCount"
         }
