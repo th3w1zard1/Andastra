@@ -8,6 +8,7 @@ using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resource.Generics;
 using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Formats.TwoDA;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Audio;
@@ -1884,7 +1885,13 @@ namespace Odyssey.Engines.Odyssey.EngineApi
             
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: SetGameTime not yet implemented - no-op for now
+                // Based on swkotor2.exe: SetGameTime implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Sets game time in module IFO, affects time-of-day checks
+                if (services.World != null && services.World.TimeManager != null)
+                {
+                    services.World.TimeManager.SetGameTime(hour, minute, second, millisecond);
+                }
             }
             return Variable.Void();
         }
@@ -2063,8 +2070,13 @@ namespace Odyssey.Engines.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: GetGameTimeHours not yet implemented - return 0 for now
-                return Variable.FromInt(0);
+                // Based on swkotor2.exe: GetTimeHour implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time hour (0-23) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
+                {
+                    return Variable.FromInt(services.World.TimeManager.GameTimeHour);
+                }
             }
             return Variable.FromInt(0);
         }
@@ -2076,8 +2088,13 @@ namespace Odyssey.Engines.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: GetGameTimeMinutes not yet implemented - return 0 for now
-                return Variable.FromInt(0);
+                // Based on swkotor2.exe: GetTimeMinute implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time minute (0-59) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
+                {
+                    return Variable.FromInt(services.World.TimeManager.GameTimeMinute);
+                }
             }
             return Variable.FromInt(0);
         }
@@ -2089,10 +2106,12 @@ namespace Odyssey.Engines.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
+                // Based on swkotor2.exe: GetTimeSecond implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time second (0-59) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
                 {
-                    // TODO: GetGameTimeSeconds not yet implemented - return 0 for now
-                    return Variable.FromInt(0);
+                    return Variable.FromInt(services.World.TimeManager.GameTimeSecond);
                 }
             }
             return Variable.FromInt(0);
@@ -2105,10 +2124,12 @@ namespace Odyssey.Engines.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
+                // Based on swkotor2.exe: GetTimeMillisecond implementation
+                // Located via string references: "GameTime" @ 0x007c1a78
+                // Original implementation: Returns current game time millisecond (0-999) from module IFO
+                if (services.World != null && services.World.TimeManager != null)
                 {
-                    // TODO: GetGameTimeMilliseconds not yet implemented - return 0 for now
-                    return Variable.FromInt(0);
+                    return Variable.FromInt(services.World.TimeManager.GameTimeMillisecond);
                 }
             }
             return Variable.FromInt(0);
@@ -3995,15 +4016,20 @@ namespace Odyssey.Engines.Odyssey.EngineApi
             {
                 if (services.GameSession != null)
                 {
-                    // TODO: GameSession.Pause and GameSession.Resume not yet implemented - no-op for now
-                    // if (shouldPause)
-                    // {
-                    //     services.GameSession.Pause();
-                    // }
-                    // else
-                    // {
-                    //     services.GameSession.Resume();
-                    // }
+                    // Based on swkotor2.exe: PauseGame implementation
+                    // Located via string references: Game pause system
+                    // Original implementation: Pauses/unpauses all game systems except UI
+                    if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
+                    {
+                        if (shouldPause)
+                        {
+                            gameSession.Pause();
+                        }
+                        else
+                        {
+                            gameSession.Resume();
+                        }
+                    }
                 }
             }
             
@@ -6110,8 +6136,10 @@ namespace Odyssey.Engines.Odyssey.EngineApi
             if (stats != null)
             {
                 // Hit dice = total character level
-                // TODO: IStatsComponent.Level not yet implemented - return 1 for now
-                return Variable.FromInt(1);
+                // Based on swkotor2.exe: GetHitDice implementation
+                // Located via string references: Hit dice calculation from character level
+                // Original implementation: Hit dice equals total character level (sum of all class levels)
+                return Variable.FromInt(stats.Level);
             }
 
             return Variable.FromInt(0);
@@ -6487,9 +6515,47 @@ namespace Odyssey.Engines.Odyssey.EngineApi
             if (itemComponent != null)
             {
                 // Clamp stack size between 1 and max (from baseitems.2da)
-                // For now, use a reasonable max (100) until we have proper 2DA table access
-                // TODO: Lookup max stack size from baseitems.2da using BaseItem ID
-                int maxStackSize = 100; // Default max, should come from baseitems.2da "stacking" column
+                // Based on swkotor2.exe: SetItemStackSize implementation
+                // Located via string references: "StackSize" @ 0x007c0a34, "stacking" column in baseitems.2da
+                // Original implementation: Looks up max stack size from baseitems.2da "stacking" column using BaseItem ID
+                int maxStackSize = 100; // Default max
+                
+                // Try to look up max stack size from baseitems.2da using CSharpKOTOR
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                {
+                    if (services.GameSession is GameSession gameSession && gameSession.Installation != null)
+                    {
+                        try
+                        {
+                            // Load baseitems.2da using CSharpKOTOR
+                            ResourceResult baseitemsResult = gameSession.Installation.Resource("baseitems", ResourceType.TwoDA, null, null);
+                            if (baseitemsResult != null && baseitemsResult.Data != null)
+                            {
+                                using (var stream = new MemoryStream(baseitemsResult.Data))
+                                {
+                                    var reader = new TwoDABinaryReader(stream);
+                                    TwoDA baseitems = reader.Load();
+                                    
+                                    if (baseitems != null && itemComponent.BaseItem >= 0 && itemComponent.BaseItem < baseitems.GetHeight())
+                                    {
+                                        TwoDARow row = baseitems.GetRow(itemComponent.BaseItem);
+                                        int? stackingValue = row.GetInteger("stacking");
+                                        if (stackingValue.HasValue && stackingValue.Value > 0)
+                                        {
+                                            maxStackSize = stackingValue.Value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Fall back to default if lookup fails
+                            Console.WriteLine($"[OdysseyK1EngineApi] Failed to lookup max stack size for BaseItem {itemComponent.BaseItem}: {ex.Message}");
+                        }
+                    }
+                }
+                
                 int clampedSize = Math.Max(1, Math.Min(maxStackSize, stackSize));
                 itemComponent.StackSize = clampedSize;
             }

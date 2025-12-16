@@ -8,6 +8,7 @@ using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resource.Generics;
 using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Formats.TwoDA;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Audio;
@@ -6511,9 +6512,47 @@ namespace Odyssey.Kotor.EngineApi
             if (itemComponent != null)
             {
                 // Clamp stack size between 1 and max (from baseitems.2da)
-                // For now, use a reasonable max (100) until we have proper 2DA table access
-                // TODO: Lookup max stack size from baseitems.2da using BaseItem ID
-                int maxStackSize = 100; // Default max, should come from baseitems.2da "stacking" column
+                // Based on swkotor2.exe: SetItemStackSize implementation
+                // Located via string references: "StackSize" @ 0x007c0a34, "stacking" column in baseitems.2da
+                // Original implementation: Looks up max stack size from baseitems.2da "stacking" column using BaseItem ID
+                int maxStackSize = 100; // Default max
+                
+                // Try to look up max stack size from baseitems.2da using CSharpKOTOR
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                {
+                    if (services.GameSession is GameSession gameSession && gameSession.Installation != null)
+                    {
+                        try
+                        {
+                            // Load baseitems.2da using CSharpKOTOR
+                            ResourceResult baseitemsResult = gameSession.Installation.Resource("baseitems", ResourceType.TwoDA, null, null);
+                            if (baseitemsResult != null && baseitemsResult.Data != null)
+                            {
+                                using (var stream = new MemoryStream(baseitemsResult.Data))
+                                {
+                                    var reader = new TwoDABinaryReader(stream);
+                                    TwoDA baseitems = reader.Load();
+                                    
+                                    if (baseitems != null && itemComponent.BaseItem >= 0 && itemComponent.BaseItem < baseitems.GetHeight())
+                                    {
+                                        TwoDARow row = baseitems.GetRow(itemComponent.BaseItem);
+                                        int? stackingValue = row.GetInteger("stacking");
+                                        if (stackingValue.HasValue && stackingValue.Value > 0)
+                                        {
+                                            maxStackSize = stackingValue.Value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Fall back to default if lookup fails
+                            Console.WriteLine($"[K1EngineApi] Failed to lookup max stack size for BaseItem {itemComponent.BaseItem}: {ex.Message}");
+                        }
+                    }
+                }
+                
                 int clampedSize = Math.Max(1, Math.Min(maxStackSize, stackSize));
                 itemComponent.StackSize = clampedSize;
             }
