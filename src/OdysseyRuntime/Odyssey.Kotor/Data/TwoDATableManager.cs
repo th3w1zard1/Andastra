@@ -213,7 +213,8 @@ namespace Odyssey.Kotor.Data
                 WalkDist = row.GetFloat("walkdist", 0.0f) ?? 0.0f,
                 RunDist = row.GetFloat("rundist", 0.0f) ?? 0.0f,
                 PerceptionDist = row.GetInteger("perceptiondist", 20) ?? 20,
-                SizeCategory = row.GetInteger("sizecategory", 0) ?? 0
+                SizeCategory = row.GetInteger("sizecategory", 0) ?? 0,
+                HitRadius = row.GetFloat("hitradius", 0.5f) ?? 0.5f
             };
         }
 

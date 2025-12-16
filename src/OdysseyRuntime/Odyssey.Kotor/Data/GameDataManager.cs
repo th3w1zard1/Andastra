@@ -144,7 +144,9 @@ namespace Odyssey.Kotor.Data
                 WalkSpeed = row.GetFloat("walkdist") ?? 1.75f,
                 RunSpeed = row.GetFloat("rundist") ?? 4.0f,
                 PerceptionRange = row.GetFloat("perspace") ?? 20.0f,
-                Height = row.GetFloat("height") ?? 1.8f
+                Height = row.GetFloat("height") ?? 1.8f,
+                SizeCategory = row.GetInteger("sizecategory") ?? 0,
+                HitRadius = row.GetFloat("hitradius") ?? 0.5f
             };
         }
 
@@ -466,6 +468,7 @@ namespace Odyssey.Kotor.Data
         public int PerceptionDist { get { return (int)PerceptionRange; } set { PerceptionRange = value; } }
         public float Height { get; set; }
         public int SizeCategory { get; set; }
+        public float HitRadius { get; set; }
     }
 
     /// <summary>
