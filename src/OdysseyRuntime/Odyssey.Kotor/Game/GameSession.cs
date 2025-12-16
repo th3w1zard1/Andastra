@@ -11,6 +11,7 @@ using Odyssey.Core.Navigation;
 using Odyssey.Core.Party;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Combat;
+using Odyssey.Core.Movement;
 using Odyssey.Kotor.Combat;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Dialogue;
@@ -76,6 +77,7 @@ namespace Odyssey.Kotor.Game
         private readonly Systems.EncounterSystem _encounterSystem;
         private readonly JournalSystem _journalSystem;
         private readonly FixedTimestepGameLoop _gameLoop;
+        private readonly PlayerInputHandler _inputHandler;
 
         // Current game state
         private RuntimeModule _currentModule;
@@ -211,6 +213,21 @@ namespace Odyssey.Kotor.Game
                 (entity) => entity == _playerEntity || (entity != null && entity.GetData<bool>("IsPlayer")),
                 () => _currentModule != null ? new CSharpKOTOR.Common.Module(_currentModuleName, _installation) : null
             );
+
+            // Initialize input handler for player control
+            // Based on swkotor2.exe: Input system handles click-to-move, object interaction, party control
+            // Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "OnClick" @ 0x007c1a20
+            // Original implementation: DirectInput8-based input system with click-to-move, object selection, party control
+            _inputHandler = new PlayerInputHandler(_world, _partySystem);
+
+            // Wire up input handler events
+            _inputHandler.OnMoveCommand += OnMoveCommand;
+            _inputHandler.OnAttackCommand += OnAttackCommand;
+            _inputHandler.OnInteractCommand += OnInteractCommand;
+            _inputHandler.OnTalkCommand += OnTalkCommand;
+            _inputHandler.OnPauseChanged += OnPauseChanged;
+            _inputHandler.OnLeaderCycled += OnLeaderCycled;
+            _inputHandler.OnQuickSlotUsed += OnQuickSlotUsed;
 
             // Subscribe to door opened events for module transitions
             _world.EventBus.Subscribe<DoorOpenedEvent>(OnDoorOpened);
