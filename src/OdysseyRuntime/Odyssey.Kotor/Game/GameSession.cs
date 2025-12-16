@@ -771,8 +771,68 @@ namespace Odyssey.Kotor.Game
             // Based on swkotor2.exe: Quick slot system
             // Located via string references: "QuickSlot" @ inventory/ability system
             // Original implementation: Quick slots store items/abilities, using slot triggers use action
-            // For now, this is a placeholder - full implementation would retrieve quick slot content and use it
-            Console.WriteLine("[GameSession] Quick slot " + slotIndex + " used (placeholder)");
+            Core.Interfaces.Components.IQuickSlotComponent quickSlots = _playerEntity.GetComponent<Core.Interfaces.Components.IQuickSlotComponent>();
+            if (quickSlots == null)
+            {
+                return;
+            }
+
+            int slotType = quickSlots.GetQuickSlotType(slotIndex);
+            if (slotType < 0)
+            {
+                return; // Empty slot
+            }
+
+            if (slotType == 0)
+            {
+                // Item slot: Use the item
+                IEntity item = quickSlots.GetQuickSlotItem(slotIndex);
+                if (item != null && item.IsValid)
+                {
+                    // Queue ActionUseItem action
+                    // Based on swkotor2.exe: Item usage system
+                    // Original implementation: ActionUseItem queues item use action, applies item effects
+                    Core.Actions.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Actions.IActionQueueComponent>();
+                    if (actionQueue != null)
+                    {
+                        // For now, we'll use ActionCastSpellAtObject with item's spell ID if it has one
+                        // Full implementation would create ActionUseItem that handles item consumption, effects, etc.
+                        // TODO: Create ActionUseItem action class for proper item usage
+                        Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
+                        if (itemComponent != null)
+                        {
+                            // Check if item has a useable spell/ability
+                            // Items can have UseableSpell or UseableFeat properties
+                            // For now, skip item usage - would need ActionUseItem implementation
+                            Console.WriteLine($"[GameSession] Quick slot {slotIndex} item usage not yet fully implemented");
+                        }
+                    }
+                }
+            }
+            else if (slotType == 1)
+            {
+                // Ability slot: Cast the spell/feat
+                int abilityId = quickSlots.GetQuickSlotAbility(slotIndex);
+                if (abilityId >= 0)
+                {
+                    // Queue ActionCastSpellAtObject action (target self for now)
+                    // Based on swkotor2.exe: Spell casting from quick slots
+                    // Original implementation: Quick slot ability usage casts spell at self or selected target
+                    Core.Actions.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Actions.IActionQueueComponent>();
+                    if (actionQueue != null)
+                    {
+                        // Get GameDataManager for spell data lookup
+                        object gameDataManager = null;
+                        if (_moduleLoader != null)
+                        {
+                            gameDataManager = _moduleLoader.GameDataManager;
+                        }
+
+                        var castAction = new Core.Actions.ActionCastSpellAtObject(abilityId, _playerEntity.ObjectId, gameDataManager);
+                        actionQueue.Add(castAction);
+                    }
+                }
+            }
         }
 
         /// <summary>
