@@ -27,6 +27,7 @@ namespace HolocronToolset.NET.Editors
         // Public properties for testing (matching Python's public attributes)
         public byte[] AudioData => _audioData;
         public string DetectedFormat => _detectedFormat;
+        public string TempFile => _tempFile;
 
         public WAVEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Audio Editor", "audio",
@@ -264,7 +265,8 @@ namespace HolocronToolset.NET.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:421-428
         // Original: def _cleanup_temp_file(self) -> None:
-        private void CleanupTempFile()
+        // Public method for testing (matching Python's test access pattern)
+        public void CleanupTempFile()
         {
             if (!string.IsNullOrEmpty(_tempFile) && File.Exists(_tempFile))
             {

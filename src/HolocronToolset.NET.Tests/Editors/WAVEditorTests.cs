@@ -1060,5 +1060,281 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Ui.CurrentTimeLabel.Text.Should().Be("00:00:00", "CurrentTimeLabel should reset to 00:00:00");
             editor.Ui.TotalTimeLabel.Text.Should().Be("00:00:00", "TotalTimeLabel should reset to 00:00:00");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:406-408
+        // Original: def test_temp_file_initially_none(self, wav_editor):
+        [Fact]
+        public void TestWavEditorTempFileInitiallyNone()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:408
+            // Original: assert wav_editor._temp_file is None
+            editor.TempFile.Should().BeNull("TempFile should be None initially");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:410-414
+        // Original: def test_cleanup_temp_file_when_none(self, wav_editor):
+        [Fact]
+        public void TestWavEditorCleanupTempFileWhenNone()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:412-414
+            // Original: wav_editor._temp_file = None
+            // Original: wav_editor._cleanup_temp_file()
+            // Original: assert wav_editor._temp_file is None
+            // In C#, we can't directly set private fields, but CleanupTempFile should handle null gracefully
+            editor.CleanupTempFile();
+            editor.TempFile.Should().BeNull("TempFile should remain None after cleanup when already None");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:416-429
+        // Original: def test_cleanup_temp_file_removes_file(self, wav_editor):
+        [Fact]
+        public void TestWavEditorCleanupTempFileRemovesFile()
+        {
+            // Create a real temp file
+            string tempPath = System.IO.Path.GetTempFileName();
+            System.IO.File.WriteAllBytes(tempPath, new byte[] { (byte)'t', (byte)'e', (byte)'s', (byte)'t' });
+
+            try
+            {
+                var editor = new WAVEditor(null, null);
+
+                // Set temp file using reflection (matching Python's direct attribute access)
+                var tempFileField = typeof(WAVEditor).GetField("_tempFile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                tempFileField.SetValue(editor, tempPath);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:424
+                // Original: assert Path(temp_path).exists()
+                System.IO.File.Exists(tempPath).Should().BeTrue("Temp file should exist before cleanup");
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:426
+                // Original: wav_editor._cleanup_temp_file()
+                editor.CleanupTempFile();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:428-429
+                // Original: assert wav_editor._temp_file is None
+                // Original: assert not Path(temp_path).exists()
+                editor.TempFile.Should().BeNull("TempFile should be None after cleanup");
+                System.IO.File.Exists(tempPath).Should().BeFalse("Temp file should be deleted after cleanup");
+            }
+            finally
+            {
+                // Ensure cleanup even if test fails
+                if (System.IO.File.Exists(tempPath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:431-441
+        // Original: def test_new_cleans_up_temp_file(self, wav_editor, sample_wav_data: bytes):
+        [Fact]
+        public void TestWavEditorNewCleansUpTempFile()
+        {
+            // Create a temp file
+            string tempPath = System.IO.Path.GetTempFileName();
+            System.IO.File.WriteAllBytes(tempPath, new byte[] { (byte)'t', (byte)'e', (byte)'s', (byte)'t' });
+
+            try
+            {
+                var editor = new WAVEditor(null, null);
+
+                // Set temp file using reflection (matching Python's direct attribute access)
+                var tempFileField = typeof(WAVEditor).GetField("_tempFile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                tempFileField.SetValue(editor, tempPath);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:439
+                // Original: wav_editor.new()
+                editor.New();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:441
+                // Original: assert not Path(temp_path).exists()
+                System.IO.File.Exists(tempPath).Should().BeFalse("Temp file should be deleted after new()");
+            }
+            finally
+            {
+                // Ensure cleanup even if test fails
+                if (System.IO.File.Exists(tempPath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:451-457
+        // Original: def test_wav_roundtrip_preserves_data(self, wav_editor, sample_wav_data: bytes):
+        [Fact]
+        public void TestWavEditorWavRoundtripPreservesData()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:453
+            // Original: wav_editor.load(Path("test.wav"), "test", ResourceType.WAV, sample_wav_data)
+            editor.Load("test.wav", "test", ResourceType.WAV, sampleWavData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:455-457
+            // Original: saved_data, _ = wav_editor.build()
+            // Original: assert saved_data == sample_wav_data
+            var (savedData, _) = editor.Build();
+            savedData.Should().Equal(sampleWavData, "Roundtrip should preserve WAV data exactly");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:459-465
+        // Original: def test_mp3_roundtrip_preserves_data(self, wav_editor, sample_mp3_data: bytes):
+        [Fact]
+        public void TestWavEditorMp3RoundtripPreservesData()
+        {
+            // Create minimal MP3-like data with ID3 header for testing (matching Python fixture)
+            byte[] sampleMp3Data = new byte[107];
+            System.Text.Encoding.ASCII.GetBytes("ID3").CopyTo(sampleMp3Data, 0);
+            sampleMp3Data[3] = 0x03;
+            sampleMp3Data[4] = 0x00;
+            sampleMp3Data[5] = 0x00;
+            sampleMp3Data[6] = 0x00;
+            sampleMp3Data[7] = 0x00;
+            sampleMp3Data[8] = 0x00;
+            sampleMp3Data[9] = 0x00;
+            sampleMp3Data[10] = 0xFF;
+            sampleMp3Data[11] = 0xFB;
+            sampleMp3Data[12] = 0x90;
+            sampleMp3Data[13] = 0x00;
+            // Rest is zeros (already initialized)
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:461
+            // Original: wav_editor.load(Path("test.mp3"), "test", ResourceType.MP3, sample_mp3_data)
+            editor.Load("test.mp3", "test", ResourceType.MP3, sampleMp3Data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:463-465
+            // Original: saved_data, _ = wav_editor.build()
+            // Original: assert saved_data == sample_mp3_data
+            var (savedData, _) = editor.Build();
+            savedData.Should().Equal(sampleMp3Data, "Roundtrip should preserve MP3 data exactly");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:467-480
+        // Original: def test_multiple_load_save_cycles(self, wav_editor, sample_wav_data: bytes, qtbot):
+        [Fact]
+        public void TestWavEditorMultipleLoadSaveCycles()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            var editor = new WAVEditor(null, null);
+            byte[] originalData = sampleWavData;
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:472-476
+            // Original: for i in range(3):
+            // Original:     wav_editor.load(Path(f"test_{i}.wav"), f"test_{i}", ResourceType.WAV, original_data)
+            // Original:     qtbot.wait(50)  # Small delay to let Qt process events
+            // Original:     saved_data, _ = wav_editor.build()
+            // Original:     assert saved_data == original_data, f"Cycle {i} failed"
+            for (int i = 0; i < 3; i++)
+            {
+                editor.Load($"test_{i}.wav", $"test_{i}", ResourceType.WAV, originalData);
+                var (savedData, _) = editor.Build();
+                savedData.Should().Equal(originalData, $"Cycle {i} should preserve data");
+            }
+        }
     }
 }

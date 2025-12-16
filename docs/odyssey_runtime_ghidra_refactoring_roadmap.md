@@ -17,22 +17,22 @@ This document tracks the progress of refactoring the `OdysseyRuntime` engine to 
 ## Files to Process
 
 ### Odyssey.Game (Entry Point & Launcher)
-- [ ] Program.cs
-- [ ] Core/GameState.cs
-- [ ] Core/GamePathDetector.cs
-- [ ] Core/GameSettings.cs
-- [ ] GUI/MenuRenderer.cs
-- [ ] GUI/SaveLoadMenu.cs
+- [x] Program.cs
+- [x] Core/GameState.cs
+- [x] Core/GamePathDetector.cs
+- [x] Core/GameSettings.cs
+- [x] GUI/MenuRenderer.cs
+- [x] GUI/SaveLoadMenu.cs
 
 ### Odyssey.Core (Core Domain Logic)
 #### Entities
-- [ ] Entities/Entity.cs
-- [ ] Entities/World.cs
-- [ ] Entities/EventBus.cs
-- [ ] Entities/TimeManager.cs
+- [x] Entities/Entity.cs - Already has comprehensive Ghidra references
+- [x] Entities/World.cs - Already has comprehensive Ghidra references
+- [x] Entities/EventBus.cs - Already has comprehensive Ghidra references (FUN_004dcfb0 @ 0x004dcfb0)
+- [x] Entities/TimeManager.cs - Already has comprehensive Ghidra references (TIMEPLAYED @ 0x007be1c4, frame timing strings)
 
 #### Actions
-- [ ] Actions/ActionBase.cs
+- [x] Actions/ActionBase.cs - Already has comprehensive Ghidra references (FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0)
 - [ ] Actions/ActionQueue.cs
 - [ ] Actions/ActionMoveToLocation.cs
 - [ ] Actions/ActionJumpToLocation.cs
@@ -302,9 +302,12 @@ This document tracks the progress of refactoring the `OdysseyRuntime` engine to 
 - [x] Program.cs - Verified and confirmed Ghidra references (FUN_00404250 @ 0x00404250, string references at 0x007b575c, 0x0080c210, 0x007b5644)
 - [x] GamePathDetector.cs - Already has comprehensive Ghidra references for registry access patterns
 - [x] GameState.cs - Updated with accurate FUN_006caab0 @ 0x006caab0 module state management function details
+- [x] GameSettings.cs - Verified Ghidra references (FUN_00633270 @ 0x00633270 for directory aliases, FUN_00630a90, FUN_00631ea0 for INI loading)
+- [x] GUI/MenuRenderer.cs - Verified Ghidra references (main menu strings at 0x007b6044, 0x007cc030, 0x007cc000, etc.)
+- [x] GUI/SaveLoadMenu.cs - Verified Ghidra references (savenfo @ 0x007be1f0, FUN_004eb750 @ 0x004eb750 for save creation, FUN_00708990 @ 0x00708990 for load menu, FUN_0070a020 @ 0x0070a020 for save enumeration)
 
 ## Current File Being Processed
-- None (starting next file)
+- Odyssey.Core/Actions/ActionBase.cs (next - action system)
 
 ## Notes
 
