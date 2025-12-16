@@ -111,8 +111,8 @@ namespace Odyssey.Graphics
     public class BlendState
     {
         public static BlendState Opaque = new BlendState { AlphaBlend = false };
-        public static BlendState AlphaBlend = new BlendState { AlphaBlend = true };
-        public static BlendState Additive = new BlendState { AlphaBlend = true, Additive = true };
+        public static BlendState Default = new BlendState { AlphaBlend = true };
+        public static BlendState AdditiveBlend = new BlendState { AlphaBlend = true, Additive = true };
 
         public bool AlphaBlend { get; set; }
         public bool Additive { get; set; }
