@@ -419,10 +419,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
                     bool mainCodeInGlobals = false;
                     bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}");
-                    // Check if entry JSR targets last RETN AND mainStart is at or before entryStubEnd/globalsEndForMain
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}, mainStartBeforeAdjustment={mainStartBeforeAdjustment}");
+                    // Check if entry JSR targets last RETN AND mainStart is at or after entryStubEnd
+                    // AND there are no ACTION instructions after SAVEBP+1
                     // This means the main code might be in the globals range
-                    if (entryJsrTargetIsLastRetnCheck && mainStart <= globalsEndForMain && savebpIndex >= 0)
+                    if (entryJsrTargetIsLastRetnCheck && mainStart >= entryStubEnd && savebpIndex >= 0)
                     {
                         // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
                         // This includes the entry stub area and everything up to the last RETN
