@@ -607,6 +607,7 @@ namespace HolocronToolset.NET.Editors
             }
         }
         public TextBox NoteEdit => _noteEdit;
+        public Button NoteChangeButton => _noteChangeButton;
         public TextBox CommentsEdit => _commentsEdit;
         public UTW Utw => _utw;
         
