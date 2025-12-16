@@ -58,6 +58,15 @@ namespace Odyssey.Kotor.Systems
                 }
             }
 
+            // Add AnimationComponent for entities that can play animations (creatures, doors, placeables)
+            if (ShouldHaveAnimationComponent(entity.ObjectType))
+            {
+                if (!entity.HasComponent<IAnimationComponent>())
+                {
+                    entity.AddComponent(new AnimationComponent());
+                }
+            }
+
             // Add type-specific components
             switch (entity.ObjectType)
             {
@@ -192,6 +201,22 @@ namespace Odyssey.Kotor.Systems
                 case ObjectType.Door:
                 case ObjectType.Placeable:
                 case ObjectType.Item:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Determines if an entity type should have an AnimationComponent.
+        /// </summary>
+        private static bool ShouldHaveAnimationComponent(ObjectType objectType)
+        {
+            switch (objectType)
+            {
+                case ObjectType.Creature:
+                case ObjectType.Door:
+                case ObjectType.Placeable:
                     return true;
                 default:
                     return false;
