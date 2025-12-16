@@ -421,17 +421,22 @@ namespace HolocronToolset.Editors
                 }
                 
                 // Use checkbox/cache value to update UTW
+                // Always use the cache value if available (it's the source of truth)
                 if (checkboxValue.HasValue)
                 {
                     // Always use checkbox/cache value to update UTW
                     // The cache is the source of truth (updated by SetNoteEnabledCheckbox or PropertyChanged)
                     _utw.MapNoteEnabled = checkboxValue.Value;
                 }
-                // If neither checkbox nor cache has a value, keep existing _utw.MapNoteEnabled value
-                // (might have been manually set as workaround)
+                else
+                {
+                    // If cache is null and we couldn't read from checkbox, preserve existing UTW value
+                    // (might have been manually set as workaround, or default from LoadUTW)
+                }
             }
             else if (_utw != null)
             {
+                // If checkbox is null, set to false (matching Python behavior)
                 _utw.MapNoteEnabled = false;
             }
             // Matching Python: utw.comment = self.ui.commentsEdit.toPlainText()
@@ -574,12 +579,15 @@ namespace HolocronToolset.Editors
         {
             if (e.Property == CheckBox.IsCheckedProperty && _noteEnabledCheckbox != null)
             {
-                // Always update cache from checkbox (SetNoteEnabledCheckbox sets cache first, then checkbox, so this should match)
-                _cachedMapNoteEnabled = _noteEnabledCheckbox.IsChecked;
+                // Update cache from checkbox value
+                // Note: SetNoteEnabledCheckbox sets cache first, then checkbox, so this should match
+                // But we still update cache here to handle direct checkbox changes
+                var newValue = _noteEnabledCheckbox.IsChecked;
+                _cachedMapNoteEnabled = newValue;
                 // Also update UTW immediately if it exists (for real-time updates)
-                if (_utw != null && _cachedMapNoteEnabled.HasValue)
+                if (_utw != null && newValue.HasValue)
                 {
-                    _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
+                    _utw.MapNoteEnabled = newValue.Value;
                 }
             }
         }
