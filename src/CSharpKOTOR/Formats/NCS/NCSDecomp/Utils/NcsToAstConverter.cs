@@ -373,8 +373,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             // If we deferred globals creation (entry JSR targets last RETN), create it now
+            // Also check if main code is in globals even when globals were created normally
             // Split globals if mainStart is in the globals range
-            if (shouldDeferGlobals && savebpIndex >= 0)
+            if (savebpIndex >= 0)
             {
                 // Calculate entryStubEnd (same logic as earlier in the function)
                 int globalsEnd = savebpIndex + 1;
