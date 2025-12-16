@@ -508,6 +508,10 @@ namespace HolocronToolset.Tests.Editors
             // Set checkbox to true (use SetNoteEnabledCheckbox to ensure cache is updated)
             editor.SetNoteEnabledCheckbox(true);
             editor.NoteEnabledCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
+            // Verify cache is set correctly
+            editor.CachedMapNoteEnabled.Should().BeTrue("Cache should be true after SetNoteEnabledCheckbox(true)");
+            // Verify UTW is set correctly
+            editor.Utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should be true after SetNoteEnabledCheckbox(true)");
             
             // Build and verify
             var (data1, _) = editor.Build();
