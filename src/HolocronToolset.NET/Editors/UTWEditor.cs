@@ -566,7 +566,9 @@ namespace HolocronToolset.NET.Editors
         // Public properties for testing
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
+        public Button TagGenerateButton => _tagGenerateButton;
         public TextBox ResrefEdit => _resrefEdit;
+        public Button ResrefGenerateButton => _resrefGenerateButton;
         // Expose cache for debugging
         public bool? CachedHasMapNote => _cachedHasMapNote;
         public bool? CachedMapNoteEnabled => _cachedMapNoteEnabled;
