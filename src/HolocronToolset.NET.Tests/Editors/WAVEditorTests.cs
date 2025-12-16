@@ -330,5 +330,124 @@ namespace HolocronToolset.NET.Tests.Editors
             // Original: assert result == ".flac"
             result.Should().Be(".flac");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:147-151
+        // Original: def test_detect_unknown_format_defaults_to_wav(self, wav_editor):
+        [Fact]
+        public void TestWavEditorDetectUnknownFormatDefaultsToWav()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:149-150
+            // Original: data = b'UNKN' + b'\x00' * 100
+            byte[] data = new byte[104];
+            System.Text.Encoding.ASCII.GetBytes("UNKN").CopyTo(data, 0);
+            // Rest is zeros (already initialized)
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:150
+            // Original: result = wav_editor.detect_audio_format(data)
+            string result = WAVEditor.DetectAudioFormat(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:151
+            // Original: assert result == ".wav"
+            result.Should().Be(".wav");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:153-156
+        // Original: def test_detect_empty_data_defaults_to_wav(self, wav_editor):
+        [Fact]
+        public void TestWavEditorDetectEmptyDataDefaultsToWav()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:155
+            // Original: result = wav_editor.detect_audio_format(b'')
+            string result = WAVEditor.DetectAudioFormat(new byte[0]);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:156
+            // Original: assert result == ".wav"
+            result.Should().Be(".wav");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:158-161
+        // Original: def test_detect_short_data_defaults_to_wav(self, wav_editor):
+        [Fact]
+        public void TestWavEditorDetectShortDataDefaultsToWav()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:160
+            // Original: result = wav_editor.detect_audio_format(b'AB')
+            byte[] data = new byte[] { (byte)'A', (byte)'B' };
+            string result = WAVEditor.DetectAudioFormat(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:161
+            // Original: assert result == ".wav"
+            result.Should().Be(".wav");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:163-166
+        // Original: def test_get_format_name_wav(self, wav_editor):
+        [Fact]
+        public void TestWavEditorGetFormatNameWav()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:165
+            // Original: result = wav_editor.get_format_name(".wav")
+            string result = WAVEditor.GetFormatName(".wav");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:166
+            // Original: assert result == "WAV (RIFF)"
+            result.Should().Be("WAV (RIFF)");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:168-171
+        // Original: def test_get_format_name_mp3(self, wav_editor):
+        [Fact]
+        public void TestWavEditorGetFormatNameMp3()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:170
+            // Original: result = wav_editor.get_format_name(".mp3")
+            string result = WAVEditor.GetFormatName(".mp3");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:171
+            // Original: assert result == "MP3"
+            result.Should().Be("MP3");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:173-176
+        // Original: def test_get_format_name_ogg(self, wav_editor):
+        [Fact]
+        public void TestWavEditorGetFormatNameOgg()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:175
+            // Original: result = wav_editor.get_format_name(".ogg")
+            string result = WAVEditor.GetFormatName(".ogg");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:176
+            // Original: assert result == "OGG Vorbis"
+            result.Should().Be("OGG Vorbis");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:178-181
+        // Original: def test_get_format_name_flac(self, wav_editor):
+        [Fact]
+        public void TestWavEditorGetFormatNameFlac()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:180
+            // Original: result = wav_editor.get_format_name(".flac")
+            string result = WAVEditor.GetFormatName(".flac");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:181
+            // Original: assert result == "FLAC"
+            result.Should().Be("FLAC");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:183-186
+        // Original: def test_get_format_name_unknown(self, wav_editor):
+        [Fact]
+        public void TestWavEditorGetFormatNameUnknown()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:185
+            // Original: result = wav_editor.get_format_name(".xyz")
+            string result = WAVEditor.GetFormatName(".xyz");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:186
+            // Original: assert result == "Unknown"
+            result.Should().Be("Unknown");
+        }
     }
 }

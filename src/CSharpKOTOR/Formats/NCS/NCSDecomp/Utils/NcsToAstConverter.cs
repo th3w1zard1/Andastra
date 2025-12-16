@@ -516,13 +516,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     // the main function code might actually be in the globals range (before entryStubEnd)
                     // Check if there's actual code between entryStubEnd and the last RETN
                     // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
-                    bool mainCodeInGlobals = false;
-                    bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}, mainStartBeforeAdjustment={mainStartBeforeAdjustment}");
+                    bool mainCodeInGlobalsInner = false;
+                    bool entryJsrTargetIsLastRetnCheckInner = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheckInner}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}, mainStartBeforeAdjustment={mainStartBeforeAdjustment}");
                     // Check if entry JSR targets last RETN AND mainStart is at or after entryStubEnd
                     // AND there are no ACTION instructions after SAVEBP+1
                     // This means the main code might be in the globals range
-                    if (entryJsrTargetIsLastRetnCheck && mainStart >= entryStubEnd && savebpIndex >= 0)
+                    if (entryJsrTargetIsLastRetnCheckInner && mainStart >= entryStubEnd && savebpIndex >= 0)
                     {
                         // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
                         // This includes the entry stub area and everything up to the last RETN
@@ -554,7 +554,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                             }
                             if (mainCodeStartInGlobals >= 0)
                             {
-                                mainCodeInGlobals = true;
+                                mainCodeInGlobalsInner = true;
                                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), but found ACTION at {mainCodeStartInGlobals} in globals range (0-{savebpIndex}) - will split globals at {mainCodeStartInGlobals}");
                             }
                             else
@@ -568,7 +568,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         }
                     }
                     
-                    if (mainCodeInGlobals)
+                    if (mainCodeInGlobalsInner)
                     {
                         // Main function code is in globals range - split globals
                         // Find where the main code actually starts in the 0 to SAVEBP range
