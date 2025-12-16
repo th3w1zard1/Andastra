@@ -31,33 +31,15 @@ namespace Odyssey.Graphics
         /// <returns>An instance of the graphics backend.</returns>
         public static IGraphicsBackend CreateBackend(GraphicsBackendType backendType)
         {
-            // Use reflection to load backend implementations from their respective assemblies
-            // This allows the abstraction layer to remain independent
-            string assemblyName;
-            string typeName;
-
             switch (backendType)
             {
                 case GraphicsBackendType.MonoGame:
-                    assemblyName = "Odyssey.MonoGame";
-                    typeName = "Odyssey.MonoGame.Graphics.MonoGameGraphicsBackend";
-                    break;
+                    return new Odyssey.MonoGame.Graphics.MonoGameGraphicsBackend();
                 case GraphicsBackendType.Stride:
-                    assemblyName = "Odyssey.Stride";
-                    typeName = "Odyssey.Stride.Graphics.StrideGraphicsBackend";
-                    break;
+                    return new Odyssey.Stride.Graphics.StrideGraphicsBackend();
                 default:
                     throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
             }
-
-            var assembly = System.Reflection.Assembly.Load(assemblyName);
-            var type = assembly.GetType(typeName);
-            if (type == null)
-            {
-                throw new InvalidOperationException("Could not find backend type: " + typeName + " in assembly: " + assemblyName);
-            }
-
-            return (IGraphicsBackend)Activator.CreateInstance(type);
         }
     }
 }
