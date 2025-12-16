@@ -254,15 +254,45 @@ The tool supports `-WhatIf` for dry-run testing, `-Verbose` for detailed output,
 When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agents MUST:
 
 1. **Use Ghidra MCP** for understanding original engine behavior:
-   - The Ghidra MCP server has `swkotor2.exe` loaded
-   - Use `mcp_ghidra_*` tools to search functions, decompile code, find strings
+   - **ALL executables loaded in Ghidra** are assumed to be BioWare engine games and are necessary for reverse engineering
+   - Use `mcp_ghidra_*` tools to discover, search, and analyze functions across ALL loaded executables
    - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh", "GLOBALVARS", "PARTYTABLE")
    - Verify implementation faithfulness against original engine behavior
    - **MANDATORY**: When modifying ANY code in `src/OdysseyRuntime/`, AI agents MUST:
-     - Search Ghidra for related functions using string searches and function name searches
+     - Search Ghidra for related functions using string searches and function name searches across ALL loaded executables
      - Decompile relevant functions to understand original implementation
      - Add detailed comments with Ghidra function addresses and context
      - Use consistent comment format matching the MonoGame API documentation pattern
+   - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra using Ghidra MCP tools:
+     - Use `mcp_ghidra_set_decompiler_comment` to add comments to decompiled code
+     - Use `mcp_ghidra_set_disassembly_comment` to add comments to assembly code
+     - Use `mcp_ghidra_rename_function` and `mcp_ghidra_rename_function_by_address` to give functions intuitive, descriptive names
+     - Use `mcp_ghidra_rename_data` to rename data labels with meaningful names
+     - Use `mcp_ghidra_rename_variable` to rename local variables for clarity
+     - Use `mcp_ghidra_set_function_prototype` to set accurate function signatures
+     - Use `mcp_ghidra_set_local_variable_type` to set correct variable types
+     - **Documentation must be comprehensive**: Every analyzed function should have:
+       - Descriptive function name (not `FUN_004eb750`, but `SaveGlobalVariables` or similar)
+       - Function prototype with correct parameter types and return types
+       - Comments explaining what the function does, its purpose, and key implementation details
+       - Renamed variables and data labels that reflect their actual purpose
+       - Cross-references documented where relevant
+   - **MANDATORY: Progress Tracking in Ghidra**: AI agents MUST track reverse engineering progress directly within Ghidra:
+     - Use comments to mark functions as "ANALYZED", "PARTIALLY_ANALYZED", "TODO", or "IMPLEMENTED"
+     - Document what has been implemented in C# code and what remains to be done
+     - Use consistent comment prefixes for tracking (e.g., `[STATUS: ANALYZED]`, `[STATUS: TODO]`, `[C#: IMPLEMENTED]`)
+     - Document relationships between functions (call chains, data flow, etc.) in comments
+     - Track which functions are critical vs. auxiliary
+     - Document any deviations or improvements made in the C# implementation compared to the original
+   - **Optimal Ghidra Usage**: AI agents MUST use Ghidra tools canonically and optimally:
+     - Always rename functions with descriptive, intuitive names that reflect their purpose
+     - Set accurate function prototypes to improve decompilation quality
+     - Use proper data types for variables and parameters
+     - Create bookmarks or use comments to organize related functions
+     - Document string references and their usage patterns
+     - Track cross-references (xrefs) to understand function relationships
+     - Use Ghidra's analysis features to their fullest potential
+     - Maintain consistency in naming conventions across all analyzed executables
 
 2. **Reference Documentation**:
    - Primary: `vendor/PyKotor/wiki/` for file format documentation
@@ -316,12 +346,21 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    When implementing or modifying ANY code in `src/OdysseyRuntime/`, AI agents MUST:
 
    **Required Workflow**:
-   1. **Search**: Use `mcp_ghidra_list_strings`, `mcp_ghidra_search_functions_by_name`, or `mcp_ghidra_get_xrefs_to` to find relevant engine functions
+   1. **Search**: Use `mcp_ghidra_list_strings`, `mcp_ghidra_search_functions_by_name`, `mcp_ghidra_list_functions`, or `mcp_ghidra_get_xrefs_to` to find relevant engine functions across ALL loaded executables
    2. **Decompile**: Use `mcp_ghidra_decompile_function_by_address` or `mcp_ghidra_decompile_function` to understand original implementation
-   3. **Document**: Add comments above the code with:
+   3. **Document IN GHIDRA FIRST**: Before documenting in C# code, AI agents MUST:
+      - Rename functions in Ghidra with descriptive names using `mcp_ghidra_rename_function` or `mcp_ghidra_rename_function_by_address`
+      - Set function prototypes using `mcp_ghidra_set_function_prototype` with accurate parameter and return types
+      - Rename variables and data labels using `mcp_ghidra_rename_variable` and `mcp_ghidra_rename_data`
+      - Set variable types using `mcp_ghidra_set_local_variable_type`
+      - Add comprehensive comments in Ghidra using `mcp_ghidra_set_decompiler_comment` and `mcp_ghidra_set_disassembly_comment`
+      - Document function purpose, parameters, return values, and key implementation details
+      - Track analysis status and implementation progress in comments
+      - Document relationships and cross-references
+   4. **Document in C# Code**: After documenting in Ghidra, add comments above the C# code with:
       - Clear explanation of what the code does
-      - Ghidra function address (hex format, e.g., `0x004eb750`)
-      - Function name if available (e.g., `FUN_004eb750`)
+      - Ghidra executable name and function address (hex format, e.g., `swkotor2.exe: 0x004eb750`)
+      - Function name from Ghidra (should be descriptive, not `FUN_004eb750`)
       - Key implementation details from decompiled code
       - String references used to locate the function (e.g., "GLOBALVARS", "PARTYTABLE")
 
@@ -335,11 +374,24 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    actualCodeHere();
    ```
 
-   **Example**:
+   **Example Workflow**:
+
+   **Step 1: Search and Analyze in Ghidra**
+   - Use `mcp_ghidra_list_strings` with filter "GLOBALVARS" to find string references
+   - Use `mcp_ghidra_get_xrefs_to` to find functions that reference the string
+   - Decompile the function to understand its implementation
+
+   **Step 2: Document in Ghidra**
+   - Rename function: `mcp_ghidra_rename_function_by_address("0x005ac670", "SaveGlobalVariables")`
+   - Set prototype: `mcp_ghidra_set_function_prototype("0x005ac670", "void SaveGlobalVariables(char* saveName)")`
+   - Add comment: `mcp_ghidra_set_decompiler_comment("0x005ac670", "[STATUS: ANALYZED]\n[C#: IMPLEMENTED]\nSaves global variables to GFF format.\nConstructs path 'SAVES:\\{saveName}\\GLOBALVARS', writes GFF with global variable state.\nLocated via string reference: 'GLOBALVARS' @ 0x007c27bc")`
+   - Rename variables and data labels as needed
+
+   **Step 3: Document in C# Code**
 
    ```csharp
    // Save global variables to GFF format
-   // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670
+   // Based on swkotor2.exe: SaveGlobalVariables @ 0x005ac670
    // Located via string reference: "GLOBALVARS" @ 0x007c27bc
    // Original implementation: Constructs path "SAVES:\{saveName}\GLOBALVARS", writes GFF with global variable state
    private void SaveGlobalVariables(SaveGameData saveData)
@@ -348,7 +400,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    }
 
    // Serialize save metadata to NFO GFF format
-   // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+   // Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
    // Located via string reference: "savenfo" @ 0x007be1f0
    // Original implementation: Creates GFF with "NFO " signature, writes SAVEGAMENAME, TIMEPLAYED, AREANAME, etc.
    public byte[] SerializeSaveNfo(SaveGameData saveData)
@@ -359,11 +411,16 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 
    **Requirements**:
    - ALL function addresses must be verified in Ghidra (use `mcp_ghidra_decompile_function_by_address`)
+   - Functions MUST be renamed in Ghidra with descriptive names before documenting in C# code
+   - Function prototypes MUST be set in Ghidra for accurate decompilation
+   - Comprehensive comments MUST be added in Ghidra before documenting in C# code
    - Include string references that were used to locate the function
    - Include key implementation details from decompiled code
+   - Track analysis and implementation status in Ghidra comments
    - Comments must explain the "what" and "why", not just reference the address
    - Use natural language and intuitive terminology relevant to the task
    - Be concise but thorough - provide enough context to find the function in Ghidra
+   - C# code comments should reference the renamed function name from Ghidra, not generic names like `FUN_004eb750`
 
 5. **Clean-Room Process**:
    - Derive behavior from observation and specs, not code copying
