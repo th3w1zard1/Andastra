@@ -418,28 +418,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
                     bool mainCodeInGlobals = false;
                     bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
-                    if (entryJsrTargetIsLastRetnCheck && mainStart == entryStubEnd)
+                    if (entryJsrTargetIsLastRetnCheck && mainStart == entryStubEnd && savebpIndex >= 0)
                     {
-                        // Check if there are ACTION instructions between entryStubEnd and last RETN
-                        // If not, the main function code is in the globals range
+                        // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
+                        // This includes the entry stub area and everything up to the last RETN
+                        // If there are no ACTION instructions in this entire range, the main code must be in the globals range (0 to SAVEBP)
                         int actionCount = 0;
-                        for (int i = entryStubEnd; i < instructions.Count - 1; i++)
+                        int checkStart = savebpIndex + 1; // Start checking from right after SAVEBP
+                        for (int i = checkStart; i < instructions.Count - 1; i++)
                         {
                             if (instructions[i].InsType == NCSInstructionType.ACTION)
                             {
                                 actionCount++;
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found ACTION instruction at index {i} in range {checkStart} to {instructions.Count - 1}");
                             }
                         }
                         if (actionCount == 0)
                         {
-                            // No ACTION instructions between entryStubEnd and last RETN
-                            // Main function code is in globals range - need to split
+                            // No ACTION instructions between SAVEBP+1 and last RETN
+                            // Main function code must be in the globals range (0 to SAVEBP) - need to split
                             mainCodeInGlobals = true;
-                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between entryStubEnd ({entryStubEnd}) and last RETN, main code is in globals range - will split globals");
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), main code is in globals range (0-{savebpIndex}) - will split globals");
                         }
                         else
                         {
-                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {actionCount} ACTION instructions between entryStubEnd ({entryStubEnd}) and last RETN, main code is after entry stub");
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {actionCount} ACTION instructions between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), main code is after SAVEBP");
                         }
                     }
                     
