@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Odyssey.Core.Entities;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -27,7 +28,7 @@ namespace Odyssey.Core.Actions
         private readonly bool _run;
         private readonly float _range;
         private const float ArrivalThreshold = 0.1f;
-        
+
         // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
         // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
         // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
@@ -127,7 +128,7 @@ namespace Odyssey.Core.Actions
 
             Vector3 currentPosition = transform.Position;
             Vector3 newPosition = currentPosition + direction2 * moveDistance;
-            
+
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
             // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
@@ -142,7 +143,7 @@ namespace Odyssey.Core.Actions
                     newPosition = projectedPos;
                 }
             }
-            
+
             // Check for creature collisions along movement path
             // Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0 checks for creature collisions
             // Located via string references:
@@ -160,7 +161,7 @@ namespace Odyssey.Core.Actions
             uint blockingCreatureId;
             Vector3 collisionNormal;
             bool hasCollision = CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal);
-            
+
             if (hasCollision)
             {
                 // Get bump counter (stored at offset 0x268 in swkotor2.exe entity structure)
@@ -168,7 +169,7 @@ namespace Odyssey.Core.Actions
                 int bumpCount = GetBumpCounter(actor);
                 bumpCount++;
                 SetBumpCounter(actor, bumpCount);
-                
+
                 // Check if maximum bumps exceeded
                 // Based on swkotor2.exe: FUN_0054be70 aborts movement if bump count > 5
                 // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
@@ -179,7 +180,7 @@ namespace Odyssey.Core.Actions
                     ClearBumpCounter(actor);
                     return ActionStatus.Failed;
                 }
-                
+
                 // Check if same creature blocks repeatedly (matches offset 0x254 in swkotor2.exe)
                 // Based on swkotor2.exe: FUN_0054be70 checks if local_c0 == entity ID at offset 0x254
                 // Original implementation: If same creature blocks repeatedly, aborts movement
@@ -190,26 +191,26 @@ namespace Odyssey.Core.Actions
                     ClearBumpCounter(actor);
                     return ActionStatus.Failed;
                 }
-                
+
                 SetLastBlockingCreature(actor, blockingCreatureId);
-                
+
                 // Try to navigate around the blocking creature
                 // Based on swkotor2.exe: FUN_0054be70 calls FUN_0054a1f0 for pathfinding around obstacles
                 // For now, we'll just stop movement and let the action fail
                 // TODO: Implement pathfinding around obstacles (FUN_0054a1f0)
                 return ActionStatus.Failed;
             }
-            
+
             // Clear bump counter if no collision
             ClearBumpCounter(actor);
-            
+
             transform.Position = newPosition;
             // Y-up system: Atan2(Y, X) for 2D plane facing
             transform.Facing = (float)Math.Atan2(direction2.Y, direction2.X);
 
             return ActionStatus.InProgress;
         }
-        
+
         /// <summary>
         /// Checks for creature collisions along a movement path.
         /// Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0
@@ -224,7 +225,7 @@ namespace Odyssey.Core.Actions
         {
             blockingCreatureId = 0x7F000000; // OBJECT_INVALID
             collisionNormal = Vector3.Zero;
-            
+
             // Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
@@ -233,20 +234,20 @@ namespace Odyssey.Core.Actions
             // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
             // Checks creature positions and handles blocking detection
             // Returns 0 if collision detected, 1 if clear
-            
+
             IWorld world = actor.World;
             if (world == null)
             {
                 return false;
             }
-            
+
             // Get all creatures in the area
             IArea area = world.CurrentArea;
             if (area == null)
             {
                 return false;
             }
-            
+
             // Calculate movement direction and distance
             Vector3 movementDir = endPos - startPos;
             float movementDistance = movementDir.Length();
@@ -254,9 +255,9 @@ namespace Odyssey.Core.Actions
             {
                 return false; // No movement, no collision
             }
-            
+
             Vector3 normalizedDir = Vector3.Normalize(movementDir);
-            
+
             // Check collision with all creatures in the area
             // Based on swkotor2.exe: FUN_005479f0 iterates through creature list
             // Uses bounding box collision detection (FUN_004e17a0, FUN_004f5290)
@@ -267,43 +268,43 @@ namespace Odyssey.Core.Actions
                 {
                     continue;
                 }
-                
+
                 // Only check creatures
                 if ((entity.ObjectType & ObjectType.Creature) == 0)
                 {
                     continue;
                 }
-                
+
                 ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
                 if (entityTransform == null)
                 {
                     continue;
                 }
-                
+
                 // Get creature bounding box
                 // Based on swkotor2.exe: FUN_005479f0 uses creature bounding box from entity structure
                 // Bounding box stored at offset 0x380 + 0x14 (width), 0x380 + 0xbc (height)
                 // For now, use a simple radius-based collision check
                 // TODO: Implement proper bounding box collision (FUN_004e17a0, FUN_004f5290)
                 float creatureRadius = GetCreatureRadius(entity);
-                
+
                 Vector3 entityPos = entityTransform.Position;
-                
+
                 // Check if movement path intersects with creature bounding sphere
                 // Simple line-sphere intersection test
                 Vector3 toEntity = entityPos - startPos;
                 float projectionLength = Vector3.Dot(toEntity, normalizedDir);
-                
+
                 // Clamp projection to movement segment
                 if (projectionLength < 0 || projectionLength > movementDistance)
                 {
                     continue; // Entity is outside movement path
                 }
-                
+
                 // Calculate closest point on movement path to entity
                 Vector3 closestPoint = startPos + normalizedDir * projectionLength;
                 float distanceToEntity = Vector3.Distance(closestPoint, entityPos);
-                
+
                 // Check if distance is less than combined radii
                 float actorRadius = GetCreatureRadius(actor);
                 if (distanceToEntity < (actorRadius + creatureRadius))
@@ -314,7 +315,7 @@ namespace Odyssey.Core.Actions
                     return true;
                 }
             }
-            
+
             return false; // No collision
         }
 
@@ -332,17 +333,15 @@ namespace Odyssey.Core.Actions
                 return 0.5f; // Default radius
             }
 
-            // Try to get appearance type from creature component
-            // Note: This requires KOTOR-specific component, but we use reflection/interface to avoid dependency
-            var creatureComponent = entity.GetComponent<object>(); // Get any component
-            if (creatureComponent != null)
+            // Try to get appearance type from creature component using reflection
+            // Note: This requires KOTOR-specific component, but we use reflection to avoid dependency
+            // The entity itself may have an appearance-related property
+            var entityType = entity.GetType();
+            var appearanceTypeProp = entityType.GetProperty("AppearanceType");
+            if (appearanceTypeProp != null)
             {
-                // Use reflection to check if it's a CreatureComponent with AppearanceType
-                var appearanceTypeProp = creatureComponent.GetType().GetProperty("AppearanceType");
-                if (appearanceTypeProp != null)
+                try
                 {
-                    int appearanceType = (int)appearanceTypeProp.GetValue(creatureComponent);
-                    
                     // Try to get appearance data from world if available
                     // This would require IWorld to expose GameDataManager, which is KOTOR-specific
                     // For now, use size-based defaults
@@ -350,13 +349,17 @@ namespace Odyssey.Core.Actions
                     // Default radii: Small=0.3, Medium=0.5, Large=0.7, Huge=1.0, Gargantuan=1.5
                     // We'll use a default of 0.5f for medium creatures
                 }
+                catch
+                {
+                    // Ignore reflection errors
+                }
             }
 
             // Default radius for medium creatures (most common)
             // Based on swkotor2.exe: Default creature radius is approximately 0.5 units
             return 0.5f;
         }
-        
+
         /// <summary>
         /// Gets the bump counter for an entity.
         /// Based on swkotor2.exe: Bump counter stored at offset 0x268 in entity structure.
@@ -369,7 +372,7 @@ namespace Odyssey.Core.Actions
             }
             return 0;
         }
-        
+
         /// <summary>
         /// Sets the bump counter for an entity.
         /// Based on swkotor2.exe: Bump counter stored at offset 0x268 in entity structure.
@@ -381,7 +384,7 @@ namespace Odyssey.Core.Actions
                 concreteEntity.SetData(BumpCounterKey, count);
             }
         }
-        
+
         /// <summary>
         /// Clears the bump counter for an entity.
         /// </summary>
@@ -392,7 +395,7 @@ namespace Odyssey.Core.Actions
                 concreteEntity.SetData(BumpCounterKey, 0);
             }
         }
-        
+
         /// <summary>
         /// Gets the last blocking creature ObjectId for an entity.
         /// Based on swkotor2.exe: Stored at offset 0x254 in entity structure.
@@ -405,7 +408,7 @@ namespace Odyssey.Core.Actions
             }
             return 0x7F000000; // OBJECT_INVALID
         }
-        
+
         /// <summary>
         /// Sets the last blocking creature ObjectId for an entity.
         /// Based on swkotor2.exe: Stored at offset 0x254 in entity structure.

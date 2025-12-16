@@ -1,4 +1,5 @@
 using System;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -102,7 +103,7 @@ namespace Odyssey.Core.Actions
                 if (itemComponent.Charges > 0)
                 {
                     itemComponent.Charges--;
-                    
+
                     // Remove item if charges depleted
                     if (itemComponent.Charges <= 0)
                     {

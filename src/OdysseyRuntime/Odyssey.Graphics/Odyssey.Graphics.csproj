@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 
 </Project>

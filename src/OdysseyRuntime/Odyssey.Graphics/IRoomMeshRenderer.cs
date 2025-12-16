@@ -1,6 +1,6 @@
 using System;
 using JetBrains.Annotations;
-using AuroraEngine.Common.Formats.MDL;
+using AuroraEngine.Common.Formats.MDLData;
 
 namespace Odyssey.Graphics
 {
@@ -16,7 +16,7 @@ namespace Odyssey.Graphics
         /// <param name="mdl">MDL model data.</param>
         /// <returns>Room mesh data, or null if loading failed.</returns>
         [CanBeNull]
-        IRoomMeshData LoadRoomMesh(string modelResRef, MDLData.MDL mdl);
+        IRoomMeshData LoadRoomMesh(string modelResRef, MDL mdl);
 
         /// <summary>
         /// Clears all loaded meshes.

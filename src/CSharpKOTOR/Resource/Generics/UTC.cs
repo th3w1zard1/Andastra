@@ -1,19 +1,29 @@
-// DEPRECATED: This file is kept for backward compatibility with patcher tools
-// The UTC class has been moved to Odyssey.Engines.Odyssey.Templates.UTC
-// This file provides a type alias to maintain compatibility
-using UTC = Odyssey.Engines.Odyssey.Templates.UTC;
-using UTCClass = Odyssey.Engines.Odyssey.Templates.UTCClass;
+using System.Collections.Generic;
+using AuroraEngine.Common;
+using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Resource.Generics
 {
-    // DEPRECATED: This namespace is kept for backward compatibility
-    // The UTC class has been moved to Odyssey.Engines.Odyssey.Templates.UTC
-    // Patcher tools can continue using AuroraEngine.Common.Resource.Generics.UTC, which is now an alias
-    // Future: Update patcher tools to use Odyssey.Engines.Odyssey.Templates.UTC directly
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
+    // Original: class UTC:
+    /// <summary>
+    /// Stores creature data.
+    ///
+    /// UTC files are GFF-based format files that store creature definitions including
+    /// stats, appearance, inventory, feats, and script hooks.
+    /// </summary>
+    /// <remarks>
+    /// UTC (Creature Template) Format:
+    /// - Based on swkotor2.exe creature template system
+    /// - Located via string references: "Creature" @ 0x007bc544, "CreatureList" @ 0x007c0c80
+    /// - Original implementation: UTC files are GFF with "UTC " signature containing creature template data
+    /// </remarks>
+    [PublicAPI]
+    public sealed class UTC
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
         // Original: BINARY_TYPE = ResourceType.UTC
-        public static readonly ResourceType BinaryType = ResourceType.UTC;
+        public static readonly Resources.ResourceType BinaryType = Resources.ResourceType.UTC;
 
         // Internal use only, to preserve original order
         private readonly Dictionary<int, int> _originalFeatMapping = new Dictionary<int, int>();

@@ -350,23 +350,25 @@ namespace Odyssey.Core.Actions
                 return 0.5f; // Default radius
             }
 
-            // Try to get appearance type from creature component
-            // Note: This requires KOTOR-specific component, but we use reflection/interface to avoid dependency
-            var creatureComponent = entity.GetComponent<object>(); // Get any component
-            if (creatureComponent != null)
+            // Try to get appearance type from creature component using reflection
+            // Note: This requires KOTOR-specific component, but we use reflection to avoid dependency
+            // The entity itself may have an appearance-related property
+            var entityType = entity.GetType();
+            var appearanceTypeProp = entityType.GetProperty("AppearanceType");
+            if (appearanceTypeProp != null)
             {
-                // Use reflection to check if it's a CreatureComponent with AppearanceType
-                var appearanceTypeProp = creatureComponent.GetType().GetProperty("AppearanceType");
-                if (appearanceTypeProp != null)
+                try
                 {
-                    int appearanceType = (int)appearanceTypeProp.GetValue(creatureComponent);
-                    
                     // Try to get appearance data from world if available
                     // This would require IWorld to expose GameDataManager, which is KOTOR-specific
                     // For now, use size-based defaults
                     // Size categories: 0=Small, 1=Medium, 2=Large, 3=Huge, 4=Gargantuan
                     // Default radii: Small=0.3, Medium=0.5, Large=0.7, Huge=1.0, Gargantuan=1.5
                     // We'll use a default of 0.5f for medium creatures
+                }
+                catch
+                {
+                    // Ignore reflection errors
                 }
             }
 

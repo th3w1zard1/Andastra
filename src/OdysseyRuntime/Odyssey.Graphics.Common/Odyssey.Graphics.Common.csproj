@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -13,11 +13,11 @@
 
   <PropertyGroup>
     <Description>Shared graphics abstractions and base classes for Odyssey Engine backends (MonoGame, Stride, etc.)</Description>
-    <Authors>HoloPatcher Team</Authors>
+    <Authors>th3w1zard1</Authors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
   </ItemGroup>
 
 </Project>

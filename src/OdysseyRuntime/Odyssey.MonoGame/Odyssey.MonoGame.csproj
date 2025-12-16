@@ -17,6 +17,7 @@
     <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
     <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
     <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
+    <ProjectReference Include="..\Odyssey.Graphics.Common\Odyssey.Graphics.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
