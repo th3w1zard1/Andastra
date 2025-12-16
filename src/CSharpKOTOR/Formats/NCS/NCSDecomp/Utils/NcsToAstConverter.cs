@@ -172,12 +172,14 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
             // Some files have multiple SAVEBP instructions (e.g., in globals initialization),
             // but we need the one that marks the boundary between globals and main
             int savebpIndex = -1;
+            List<int> allSavebpIndices = new List<int>();
             for (int i = 0; i < instructions.Count; i++)
             {
                 if (instructions[i].InsType == NCSInstructionType.SAVEBP)
                 {
+                    allSavebpIndices.Add(i);
                     savebpIndex = i;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found SAVEBP at instruction index {i}");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found SAVEBP at instruction index {i}, offset={instructions[i].Offset}");
                     // Continue searching to find the LAST SAVEBP (don't break on first match)
                 }
             }
@@ -187,7 +189,18 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
             }
             else
             {
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {allSavebpIndices.Count} SAVEBP instruction(s) at indices: {string.Join(", ", allSavebpIndices)}");
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using LAST SAVEBP at instruction index {savebpIndex} as globals boundary");
+                
+                // Debug: Show instructions around the SAVEBP for context
+                int debugStart = Math.Max(0, savebpIndex - 3);
+                int debugEnd = Math.Min(instructions.Count - 1, savebpIndex + 3);
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Instructions around SAVEBP ({debugStart}-{debugEnd}):");
+                for (int i = debugStart; i <= debugEnd; i++)
+                {
+                    string marker = (i == savebpIndex) ? " <-- SAVEBP" : "";
+                    JavaSystem.@out.Println($"  {i:D4}: {instructions[i].InsType}{marker}");
+                }
             }
 
             // Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
