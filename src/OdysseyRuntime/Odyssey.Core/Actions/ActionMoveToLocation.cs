@@ -67,7 +67,7 @@ namespace Odyssey.Core.Actions
             //   - Path indices: Current waypoint index at offset 0x9c, path length at offset 0x8c
             //   - Position tracking: Current position at offsets 0x25 (X), 0x26 (Y), 0x27 (Z) in entity structure
             //   - Orientation: Facing stored at offsets 0x28 (X), 0x29 (Y), 0x2a (Z) as direction vector
-            //   - Distance calculation: Uses 2D distance (X/Z plane, ignores Y) for movement calculations
+            //   - Distance calculation: Uses 2D distance (X/Y plane, ignores Z) for movement calculations
             //   - Walkmesh projection: Projects position to walkmesh surface using FUN_004f5070 (walkmesh height lookup)
             //   - Direction normalization: Uses FUN_004d8390 to normalize direction vectors
             //   - Creature collision: Checks for collisions with other creatures along path using FUN_005479f0
@@ -75,9 +75,10 @@ namespace Odyssey.Core.Actions
             //   - Maximum bumps: If bump count exceeds 5, aborts movement and clears path (frees path array, sets path length to 0)
             //   - Total blocking: If same creature blocks repeatedly (local_c0 == entity ID at offset 0x254), aborts movement
             //   - Path completion: Returns 1 when path is complete (local_d0 flag), 0 if still in progress
-            //   - Path waypoint iteration: Advances through path waypoints, projects each position to walkmesh
+            //   - Path waypoint iteration: Advances through path waypoints (increments by 2, not 1), projects each position to walkmesh
             //   - Movement distance: Calculates movement distance based on speed and remaining distance to waypoint
             //   - Final position: Updates entity position to final projected position on walkmesh
+            //   - Special case: When path length is 4, checks final waypoint and may reverse direction if facing wrong way
             // Pathfinding searches walkmesh adjacency graph for valid path
             // If no path found, original engine attempts direct movement (may fail if blocked)
             if (_path == null)
