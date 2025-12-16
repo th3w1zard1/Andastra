@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Enums;
+using Odyssey.Core.GameLoop;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Module;
@@ -74,6 +75,7 @@ namespace Odyssey.Kotor.Game
         private readonly IEngineApi _engineApi;
         private readonly Systems.EncounterSystem _encounterSystem;
         private readonly JournalSystem _journalSystem;
+        private readonly FixedTimestepGameLoop _gameLoop;
 
         // Current game state
         private RuntimeModule _currentModule;
@@ -213,11 +215,14 @@ namespace Odyssey.Kotor.Game
             // Subscribe to door opened events for module transitions
             _world.EventBus.Subscribe<DoorOpenedEvent>(OnDoorOpened);
 
+            // Initialize fixed-timestep game loop
+            _gameLoop = new FixedTimestepGameLoop(_world);
+
             Console.WriteLine("[GameSession] Game session initialized");
         }
         
         /// <summary>
-        /// Updates all game systems.
+        /// Updates all game systems using fixed-timestep game loop.
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update in seconds.</param>
         public void Update(float deltaTime)
@@ -227,40 +232,21 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
-            // Update world (time manager, delay scheduler, event bus)
-            _world.Update(deltaTime);
-
-            // Update trigger system (checks for entity entry/exit)
-            if (_triggerSystem != null)
+            // Update fixed-timestep game loop (handles all simulation phases)
+            // Based on swkotor2.exe: Fixed-timestep game loop at 60 Hz
+            // Located via string references: Game loop runs at fixed timestep for deterministic simulation
+            // Original implementation: Fixed timestep ensures deterministic behavior for scripts, combat, AI
+            // Game loop phases: Input, Script, Simulation, Animation, Scene Sync, Render, Audio
+            if (_gameLoop != null)
             {
-                _triggerSystem.Update();
+                _gameLoop.Update(deltaTime);
             }
 
-            // Update AI controller (NPC behavior, heartbeats, combat)
-            if (_aiController != null)
-            {
-                _aiController.Update(deltaTime);
-            }
-
-            // Update combat system
-            if (_combatManager != null)
-            {
-                _combatManager.Update(deltaTime);
-            }
-
-            // Update perception system
-            if (_perceptionManager != null)
-            {
-                _perceptionManager.Update(deltaTime);
-            }
-
-            // Update dialogue system
+            // Update dialogue system (handled separately as it may need variable timestep for VO timing)
             if (_dialogueManager != null)
             {
                 _dialogueManager.Update(deltaTime);
             }
-
-            // Party system updates are handled by individual systems
 
             // Update encounter system (spawns creatures when triggered)
             if (_encounterSystem != null)
@@ -281,22 +267,6 @@ namespace Odyssey.Kotor.Game
                 {
                     _moduleHeartbeatTimer -= 6.0f;
                     FireModuleHeartbeat();
-                }
-            }
-
-            // Update all entities (action queues, transforms, etc.)
-            foreach (IEntity entity in _world.GetAllEntities())
-            {
-                if (entity == null || !entity.IsValid)
-                {
-                    continue;
-                }
-
-                // Update action queues
-                IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
-                if (actionQueue != null)
-                {
-                    actionQueue.Update(entity, deltaTime);
                 }
             }
         }

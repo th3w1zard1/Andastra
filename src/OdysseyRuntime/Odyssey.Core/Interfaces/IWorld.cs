@@ -104,6 +104,26 @@ namespace Odyssey.Core.Interfaces
         Combat.EffectSystem EffectSystem { get; }
 
         /// <summary>
+        /// The perception system for sight/hearing checks.
+        /// </summary>
+        Perception.PerceptionSystem PerceptionSystem { get; }
+
+        /// <summary>
+        /// The combat system for combat resolution.
+        /// </summary>
+        Combat.CombatSystem CombatSystem { get; }
+
+        /// <summary>
+        /// The trigger system for trigger volume events.
+        /// </summary>
+        Triggers.TriggerSystem TriggerSystem { get; }
+
+        /// <summary>
+        /// The AI controller for NPC behavior.
+        /// </summary>
+        AI.AIController AIController { get; }
+
+        /// <summary>
         /// Registers an entity with the world.
         /// </summary>
         void RegisterEntity(IEntity entity);
@@ -112,6 +132,11 @@ namespace Odyssey.Core.Interfaces
         /// Unregisters an entity from the world.
         /// </summary>
         void UnregisterEntity(IEntity entity);
+
+        /// <summary>
+        /// Updates the world (time manager, event bus).
+        /// </summary>
+        void Update(float deltaTime);
     }
 }
 
