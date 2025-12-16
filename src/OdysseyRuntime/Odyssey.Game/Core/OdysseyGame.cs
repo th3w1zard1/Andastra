@@ -1343,8 +1343,7 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void DrawAreaEntities(Odyssey.Core.Module.RuntimeArea area)
         {
-            // TODO: 3D entity rendering needs abstraction (BasicEffect, VertexBuffer, IndexBuffer, Matrix)
-            // For now, entity rendering is disabled until 3D abstraction is complete
+            // Entity rendering using abstraction layer (IBasicEffect, IVertexBuffer, IIndexBuffer, MatrixHelper)
             if (area == null)
             {
                 return;
@@ -1562,7 +1561,7 @@ namespace Odyssey.Game.Core
         }
 
         [CanBeNull]
-        private SpriteFont CreateDefaultFont()
+        private IFont CreateDefaultFont()
         {
             // Create a simple default font if none is loaded
             // This is a fallback - ideally we'd have a proper font file
