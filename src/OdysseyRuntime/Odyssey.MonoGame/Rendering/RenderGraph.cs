@@ -168,12 +168,26 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Executes the render graph.
         /// </summary>
+        /// <param name="context">Render context for pass execution. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if context is null.</exception>
         public void Execute(RenderContext context)
         {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             foreach (string passName in _executionOrder)
             {
-                RenderPass pass = _passes[passName];
-                pass.Execute?.Invoke(context);
+                RenderPass pass;
+                if (!_passes.TryGetValue(passName, out pass))
+                {
+                    continue; // Skip missing passes
+                }
+                if (pass.Execute != null)
+                {
+                    pass.Execute.Invoke(context);
+                }
             }
         }
 
