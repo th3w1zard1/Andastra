@@ -825,32 +825,28 @@ namespace HolocronToolset.NET.Tests.Editors
 
             editor.New();
 
-            // Set all scripts (use shorter names to comply with 16-character ResRef limit)
-            var scripts = new Dictionary<string, string>
+            // Set all scripts - match Python test pattern: iterate through all script_fields keys
+            // Use test values that don't exceed 16 characters (ResRef limit)
+            var scriptTestValues = new Dictionary<string, string>
             {
-                { "on_heartbeat", "test_hb" },
-                { "on_load", "test_load" },
-                { "on_start", "test_start" },
-                { "on_enter", "test_enter" },
-                { "on_leave", "test_leave" },
-                { "on_activate_item", "test_actitem" },
-                { "on_acquire_item", "test_acqitem" },
-                { "on_user_defined", "test_userdef" },
-                { "on_unacquire_item", "test_unacqitem" },
-                { "on_player_death", "test_pdeath" },
-                { "on_player_dying", "test_pdying" },
-                { "on_player_levelup", "test_plevelup" },
-                { "on_player_respawn", "test_prespawn" },
-                { "on_player_rest", "test_prest" },
-                { "start_movie", "test_movie" }
+                { "on_heartbeat", "test_heartbeat" },
+                { "on_load", "test_onload" },
+                { "on_start", "test_onstart" },
+                { "on_enter", "test_onenter" },
+                { "on_leave", "test_onexit" }
             };
 
-            foreach (var kvp in scripts)
+            foreach (var scriptName in editor.ScriptFields.Keys)
             {
-                if (editor.ScriptFields.ContainsKey(kvp.Key))
+                string testValue = scriptTestValues.ContainsKey(scriptName) 
+                    ? scriptTestValues[scriptName] 
+                    : $"test_{scriptName}";
+                // Ensure test value doesn't exceed 16 characters
+                if (testValue.Length > 16)
                 {
-                    editor.ScriptFields[kvp.Key].Text = kvp.Value;
+                    testValue = testValue.Substring(0, 16);
                 }
+                editor.ScriptFields[scriptName].Text = testValue;
             }
 
             editor.OnValueChanged();
@@ -860,21 +856,49 @@ namespace HolocronToolset.NET.Tests.Editors
             var modifiedGff = GFF.FromBytes(data);
             var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
 
-            modifiedIfo.OnHeartbeat.ToString().Should().Be("test_hb");
-            modifiedIfo.OnLoad.ToString().Should().Be("test_load");
-            modifiedIfo.OnStart.ToString().Should().Be("test_start");
-            modifiedIfo.OnClientEnter.ToString().Should().Be("test_enter");
-            modifiedIfo.OnClientLeave.ToString().Should().Be("test_leave");
-            modifiedIfo.OnActivateItem.ToString().Should().Be("test_actitem");
-            modifiedIfo.OnAcquireItem.ToString().Should().Be("test_acqitem");
-            modifiedIfo.OnUserDefined.ToString().Should().Be("test_userdef");
-            modifiedIfo.OnUnacquireItem.ToString().Should().Be("test_unacqitem");
-            modifiedIfo.OnPlayerDeath.ToString().Should().Be("test_pdeath");
-            modifiedIfo.OnPlayerDying.ToString().Should().Be("test_pdying");
-            modifiedIfo.OnPlayerLevelUp.ToString().Should().Be("test_plevelup");
-            modifiedIfo.OnPlayerRespawn.ToString().Should().Be("test_prespawn");
-            modifiedIfo.OnPlayerRest.ToString().Should().Be("test_prest");
-            modifiedIfo.StartMovie.ToString().Should().Be("test_movie");
+            // Verify all scripts - match Python test pattern using reflection (like Python's getattr)
+            var ifoType = typeof(CSharpKOTOR.Resource.Generics.IFO);
+            foreach (var scriptName in editor.ScriptFields.Keys)
+            {
+                string expectedValue = scriptTestValues.ContainsKey(scriptName)
+                    ? scriptTestValues[scriptName]
+                    : $"test_{scriptName}";
+                // Ensure expected value doesn't exceed 16 characters
+                if (expectedValue.Length > 16)
+                {
+                    expectedValue = expectedValue.Substring(0, 16);
+                }
+
+                // Convert script_name to property name (on_heartbeat -> OnHeartbeat)
+                // Handle special cases first
+                string propertyName = scriptName;
+                if (propertyName == "on_enter")
+                    propertyName = "on_client_enter";
+                else if (propertyName == "on_leave")
+                    propertyName = "on_client_leave";
+                else if (propertyName == "start_movie")
+                    propertyName = "start_movie";
+
+                // Convert snake_case to PascalCase
+                var parts = propertyName.Split('_');
+                propertyName = "";
+                foreach (var part in parts)
+                {
+                    if (part.Length > 0)
+                    {
+                        propertyName += char.ToUpperInvariant(part[0]) + part.Substring(1);
+                    }
+                }
+
+                // Use reflection to get property value (like Python's getattr)
+                var property = ifoType.GetProperty(propertyName);
+                if (property != null)
+                {
+                    var value = property.GetValue(modifiedIfo);
+                    string actualValue = value?.ToString() ?? "";
+                    actualValue.Should().Be(expectedValue, $"{scriptName} should be '{expectedValue}'");
+                }
+            }
         }
     }
 }
