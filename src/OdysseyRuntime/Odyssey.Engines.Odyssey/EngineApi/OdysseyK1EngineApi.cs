@@ -322,6 +322,7 @@ namespace Odyssey.Engines.Odyssey.EngineApi
                 case 213: return Func_GetLocation(args, ctx);
                 case 214: return Func_ActionJumpToLocation(args, ctx);
                 case 215: return Func_Location(args, ctx);
+                case 298: return Func_GetDistanceBetweenLocations(args, ctx);
 
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);

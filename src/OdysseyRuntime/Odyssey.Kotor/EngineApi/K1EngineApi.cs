@@ -322,6 +322,7 @@ namespace Odyssey.Kotor.EngineApi
                 case 213: return Func_GetLocation(args, ctx);
                 case 214: return Func_ActionJumpToLocation(args, ctx);
                 case 215: return Func_Location(args, ctx);
+                case 298: return Func_GetDistanceBetweenLocations(args, ctx);
 
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);
@@ -6710,6 +6711,39 @@ namespace Odyssey.Kotor.EngineApi
             if (transformA != null && transformB != null)
             {
                 float distance = Vector3.Distance(transformA.Position, transformB.Position);
+                return Variable.FromFloat(distance);
+            }
+
+            return Variable.FromFloat(0f);
+        }
+
+        /// <summary>
+        /// GetDistanceBetweenLocations(location lLocationA, location lLocationB) - Get the distance between two locations
+        /// Based on swkotor2.exe: Distance calculation between location objects
+        /// Returns the 3D distance in meters between two locations
+        /// </summary>
+        private Variable Func_GetDistanceBetweenLocations(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            object locAObj = args[0].AsLocation();
+            object locBObj = args[1].AsLocation();
+
+            if (locAObj == null || locBObj == null)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            // Location objects should have Position property
+            // Based on swkotor2.exe: Location structure contains Position (Vector3) and Facing (float)
+            // Located via string references: Location structure used for position/orientation storage
+            // Original implementation: Calculates 3D distance between two location positions
+            if (locAObj is Location locA && locBObj is Location locB)
+            {
+                float distance = Vector3.Distance(locA.Position, locB.Position);
                 return Variable.FromFloat(distance);
             }
 
