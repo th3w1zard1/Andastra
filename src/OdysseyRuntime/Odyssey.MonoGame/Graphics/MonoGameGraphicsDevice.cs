@@ -132,9 +132,172 @@ namespace Odyssey.MonoGame.Graphics
 
         public IntPtr NativeHandle => _device.Handle;
 
+        // 3D Rendering Methods
+
+        public void SetVertexBuffer(IVertexBuffer vertexBuffer)
+        {
+            if (vertexBuffer == null)
+            {
+                _device.SetVertexBuffer(null);
+            }
+            else if (vertexBuffer is MonoGameVertexBuffer mgVb)
+            {
+                _device.SetVertexBuffer(mgVb.Buffer);
+            }
+            else
+            {
+                throw new ArgumentException("Vertex buffer must be a MonoGameVertexBuffer", nameof(vertexBuffer));
+            }
+        }
+
+        public void SetIndexBuffer(IIndexBuffer indexBuffer)
+        {
+            if (indexBuffer == null)
+            {
+                _device.Indices = null;
+            }
+            else if (indexBuffer is MonoGameIndexBuffer mgIb)
+            {
+                _device.Indices = mgIb.Buffer;
+            }
+            else
+            {
+                throw new ArgumentException("Index buffer must be a MonoGameIndexBuffer", nameof(indexBuffer));
+            }
+        }
+
+        public void DrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
+        {
+            _device.DrawIndexedPrimitives(
+                ConvertPrimitiveType(primitiveType),
+                baseVertex,
+                minVertexIndex,
+                numVertices,
+                startIndex,
+                primitiveCount
+            );
+        }
+
+        public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
+        {
+            _device.DrawPrimitives(
+                ConvertPrimitiveType(primitiveType),
+                vertexOffset,
+                primitiveCount
+            );
+        }
+
+        public void SetRasterizerState(IRasterizerState rasterizerState)
+        {
+            if (rasterizerState == null)
+            {
+                _device.RasterizerState = RasterizerState.CullCounterClockwise;
+            }
+            else if (rasterizerState is MonoGameRasterizerState mgRs)
+            {
+                _device.RasterizerState = mgRs.State;
+            }
+            else
+            {
+                throw new ArgumentException("Rasterizer state must be a MonoGameRasterizerState", nameof(rasterizerState));
+            }
+        }
+
+        public void SetDepthStencilState(IDepthStencilState depthStencilState)
+        {
+            if (depthStencilState == null)
+            {
+                _device.DepthStencilState = DepthStencilState.Default;
+            }
+            else if (depthStencilState is MonoGameDepthStencilState mgDs)
+            {
+                _device.DepthStencilState = mgDs.State;
+            }
+            else
+            {
+                throw new ArgumentException("Depth-stencil state must be a MonoGameDepthStencilState", nameof(depthStencilState));
+            }
+        }
+
+        public void SetBlendState(IBlendState blendState)
+        {
+            if (blendState == null)
+            {
+                _device.BlendState = BlendState.Opaque;
+            }
+            else if (blendState is MonoGameBlendState mgBs)
+            {
+                _device.BlendState = mgBs.State;
+            }
+            else
+            {
+                throw new ArgumentException("Blend state must be a MonoGameBlendState", nameof(blendState));
+            }
+        }
+
+        public void SetSamplerState(int index, ISamplerState samplerState)
+        {
+            if (samplerState == null)
+            {
+                _device.SamplerStates[index] = SamplerState.LinearWrap;
+            }
+            else if (samplerState is MonoGameSamplerState mgSs)
+            {
+                _device.SamplerStates[index] = mgSs.State;
+            }
+            else
+            {
+                throw new ArgumentException("Sampler state must be a MonoGameSamplerState", nameof(samplerState));
+            }
+        }
+
+        public IBasicEffect CreateBasicEffect()
+        {
+            return new MonoGameBasicEffect(_device);
+        }
+
+        public IRasterizerState CreateRasterizerState()
+        {
+            return new MonoGameRasterizerState();
+        }
+
+        public IDepthStencilState CreateDepthStencilState()
+        {
+            return new MonoGameDepthStencilState();
+        }
+
+        public IBlendState CreateBlendState()
+        {
+            return new MonoGameBlendState();
+        }
+
+        public ISamplerState CreateSamplerState()
+        {
+            return new MonoGameSamplerState();
+        }
+
         public void Dispose()
         {
             // GraphicsDevice is managed by Game, don't dispose it
+        }
+
+        private static Microsoft.Xna.Framework.Graphics.PrimitiveType ConvertPrimitiveType(PrimitiveType type)
+        {
+            switch (type)
+            {
+                case PrimitiveType.TriangleList:
+                    return Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList;
+                case PrimitiveType.TriangleStrip:
+                    return Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleStrip;
+                case PrimitiveType.LineList:
+                    return Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList;
+                case PrimitiveType.LineStrip:
+                    return Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip;
+                case PrimitiveType.PointList:
+                    return Microsoft.Xna.Framework.Graphics.PrimitiveType.PointList;
+                default:
+                    return Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList;
+            }
         }
     }
 }

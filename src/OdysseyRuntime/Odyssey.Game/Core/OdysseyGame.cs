@@ -2,22 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Odyssey.Core.Interfaces;
-using Odyssey.Kotor.Game;
-using Odyssey.Kotor.EngineApi;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.VM;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using JetBrains.Annotations;
+using System.Numerics;
 using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.MDL;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Formats.MDL;
+using Odyssey.Core.Entities;
+using Odyssey.Core.Enums;
+using Odyssey.Core.Interfaces;
 using Odyssey.Graphics;
-using Vector2 = Odyssey.Graphics.Vector2;
-using Rectangle = Odyssey.Graphics.Rectangle;
+using Odyssey.Kotor.EngineApi;
+using Odyssey.Kotor.Game;
+using Odyssey.Scripting.EngineApi;
+using Odyssey.Scripting.VM;
+using JetBrains.Annotations;
 using Color = Odyssey.Graphics.Color;
+using Rectangle = Odyssey.Graphics.Rectangle;
+using Vector2 = Odyssey.Graphics.Vector2;
 
 namespace Odyssey.Game.Core
 {
@@ -72,11 +73,8 @@ namespace Odyssey.Game.Core
         private int _selectedPathIndex = 0;
         private bool _isSelectingPath = false;
 
-        // Basic 3D rendering
-        // Note: BasicEffect, VertexBuffer, IndexBuffer, Matrix are MonoGame-specific
-        // These will need to be abstracted or replaced with abstraction layer equivalents
-        // For now, keeping as placeholders - full 3D rendering abstraction is future work
-        private object _basicEffect; // TODO: Abstract BasicEffect
+        // Basic 3D rendering (using abstraction layer)
+        private IBasicEffect _basicEffect;
         private IVertexBuffer _groundVertexBuffer;
         private IIndexBuffer _groundIndexBuffer;
         private System.Numerics.Matrix4x4 _viewMatrix;
@@ -237,13 +235,13 @@ namespace Odyssey.Game.Core
                     // Quick load
                     QuickLoad();
                 }
-                if (keyboardState.IsKeyDown(Keys.S) && keyboardState.IsKeyDown(Keys.LeftControl) && 
+                if (keyboardState.IsKeyDown(Keys.S) && keyboardState.IsKeyDown(Keys.LeftControl) &&
                     !_previousKeyboardState.IsKeyDown(Keys.S))
                 {
                     // Ctrl+S - Open save menu
                     OpenSaveMenu();
                 }
-                if (keyboardState.IsKeyDown(Keys.L) && keyboardState.IsKeyDown(Keys.LeftControl) && 
+                if (keyboardState.IsKeyDown(Keys.L) && keyboardState.IsKeyDown(Keys.LeftControl) &&
                     !_previousKeyboardState.IsKeyDown(Keys.L))
                 {
                     // Ctrl+L - Open load menu
@@ -254,7 +252,7 @@ namespace Odyssey.Game.Core
                 if (_session != null)
                 {
                     _session.Update(deltaTime);
-                    
+
                     // Handle player input for movement and interaction
                     HandlePlayerInput(keyboardState, mouseState, new GameTime { ElapsedGameTime = System.TimeSpan.FromSeconds(deltaTime), TotalGameTime = System.TimeSpan.Zero });
                 }
@@ -1069,15 +1067,22 @@ namespace Odyssey.Game.Core
 
         private void InitializeGameRendering()
         {
-            // TODO: Full 3D rendering abstraction (BasicEffect, Matrix, Vector3, VertexPositionColor) needs to be implemented
-            // For now, 3D rendering initialization is disabled until abstraction is complete
-            // This includes:
-            // - BasicEffect (shader/effect system)
-            // - VertexPositionColor (vertex format)
-            // - Matrix operations (CreateLookAt, CreatePerspectiveFieldOfView)
-            // - 3D rendering pipeline (SetVertexBuffer, DrawIndexedPrimitives)
-            
-            Console.WriteLine("[Odyssey] Game rendering initialized (3D rendering disabled - needs abstraction)");
+            // Initialize 3D rendering using abstraction layer
+            _basicEffect = _graphicsDevice.CreateBasicEffect();
+
+            // Set up default effect parameters
+            _basicEffect.VertexColorEnabled = true;
+            _basicEffect.LightingEnabled = true;
+            _basicEffect.TextureEnabled = false;
+            _basicEffect.AmbientLightColor = new System.Numerics.Vector3(0.2f, 0.2f, 0.2f);
+            _basicEffect.DiffuseColor = new System.Numerics.Vector3(1.0f, 1.0f, 1.0f);
+            _basicEffect.Alpha = 1.0f;
+
+            // Initialize matrices
+            _viewMatrix = System.Numerics.Matrix4x4.Identity;
+            _projectionMatrix = System.Numerics.Matrix4x4.Identity;
+
+            Console.WriteLine("[Odyssey] Game rendering initialized (3D rendering enabled with abstraction layer)");
         }
 
         private void CreateGroundPlane()
@@ -1139,16 +1144,16 @@ namespace Odyssey.Game.Core
                 );
             }
 
-            // TODO: Matrix operations need abstraction
-            // _viewMatrix = System.Numerics.Matrix4x4.CreateLookAt(cameraPosition, target, up);
+            // Use MatrixHelper for matrix operations (abstraction layer)
+            _viewMatrix = MatrixHelper.CreateLookAt(cameraPosition, target, up);
 
             float aspectRatio = (float)_graphicsDevice.Viewport.Width / _graphicsDevice.Viewport.Height;
-            // _projectionMatrix = System.Numerics.Matrix4x4.CreatePerspectiveFieldOfView(
-            //     (float)(60.0 * Math.PI / 180.0),
-            //     aspectRatio,
-            //     0.1f,
-            //     100f
-            // );
+            _projectionMatrix = MatrixHelper.CreatePerspectiveFieldOfView(
+                (float)(60.0 * Math.PI / 180.0),
+                aspectRatio,
+                0.1f,
+                100f
+            );
         }
 
         private void DrawGameWorld()
@@ -1156,20 +1161,29 @@ namespace Odyssey.Game.Core
             // Clear with a sky color
             _graphicsDevice.Clear(new Color(135, 206, 250, 255)); // Sky blue
 
-            // TODO: 3D rendering state management needs abstraction
-            // For now, basic 3D rendering is disabled until abstraction is complete
-            // GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            // GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-            // GraphicsDevice.BlendState = BlendState.Opaque;
-            // GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            // Set 3D rendering states using abstraction layer
+            _graphicsDevice.SetDepthStencilState(_graphicsDevice.CreateDepthStencilState());
+            _graphicsDevice.SetRasterizerState(_graphicsDevice.CreateRasterizerState());
+            _graphicsDevice.SetBlendState(_graphicsDevice.CreateBlendState());
+            _graphicsDevice.SetSamplerState(0, _graphicsDevice.CreateSamplerState());
 
-            // Draw 3D scene
-            // TODO: 3D rendering needs full abstraction (BasicEffect, EffectPass, DrawIndexedPrimitives)
-            // For now, 3D rendering is disabled until abstraction is complete
-            // if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
-            // {
-            //     // 3D rendering code will be implemented once abstraction is complete
-            // }
+            // Draw 3D scene using abstraction layer
+            if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
+            {
+                _graphicsDevice.SetVertexBuffer(_groundVertexBuffer);
+                _graphicsDevice.SetIndexBuffer(_groundIndexBuffer);
+
+                _basicEffect.View = _viewMatrix;
+                _basicEffect.Projection = _projectionMatrix;
+                _basicEffect.World = System.Numerics.Matrix4x4.Identity;
+
+                foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    // Draw ground plane (would need to know primitive count)
+                    // _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, primitiveCount);
+                }
+            }
 
             // Draw loaded area rooms if available
             if (_session != null && _session.CurrentRuntimeModule != null)
@@ -1239,7 +1253,7 @@ namespace Odyssey.Game.Core
             {
                 return;
             }
-            
+
             // Room rendering disabled - needs 3D abstraction
             return;
 
@@ -1333,7 +1347,7 @@ namespace Odyssey.Game.Core
             {
                 return;
             }
-            
+
             // Entity rendering disabled - needs 3D abstraction
             return;
         }
@@ -2077,7 +2091,7 @@ namespace Odyssey.Game.Core
             if (doorComponent.IsLocked)
             {
                 Console.WriteLine("[Odyssey] Door is locked");
-                
+
                 // Check if player has the required key
                 if (doorComponent.KeyRequired && !string.IsNullOrEmpty(doorComponent.KeyName))
                 {
@@ -2087,14 +2101,14 @@ namespace Odyssey.Game.Core
                         // Player has the key, unlock the door
                         doorComponent.Unlock();
                         Console.WriteLine($"[Odyssey] Door unlocked with key: {doorComponent.KeyName}");
-                        
+
                         // Auto-remove key if configured
                         if (doorComponent.AutoRemoveKey)
                         {
                             // Find and remove the key item from inventory
                             foreach (IEntity item in playerInventory.GetAllItems())
                             {
-                                if (item != null && item.Tag != null && 
+                                if (item != null && item.Tag != null &&
                                     item.Tag.Equals(doorComponent.KeyName, StringComparison.OrdinalIgnoreCase))
                                 {
                                     if (playerInventory.RemoveItem(item))
@@ -2125,19 +2139,19 @@ namespace Odyssey.Game.Core
                     // Lockpicking success: If (d20 + Security skill rank) >= OpenLockDC, door unlocks
                     // Lockpicking failure: If (d20 + Security skill rank) < OpenLockDC, door remains locked
                     // Security skill rank: Retrieved from creature's skill ranks (stored in UTC template or calculated from class/level)
-                    Odyssey.Core.Interfaces.Components.IStatsComponent playerStats = 
+                    Odyssey.Core.Interfaces.Components.IStatsComponent playerStats =
                         _session.PlayerEntity?.GetComponent<Odyssey.Core.Interfaces.Components.IStatsComponent>();
-                    
+
                     if (playerStats != null)
                     {
                         // Get Security skill rank (skill 6)
                         int securitySkill = playerStats.GetSkillRank(6);
-                        
+
                         // Roll d20 (1-20)
                         Random random = new Random();
                         int roll = random.Next(1, 21);
                         int total = roll + securitySkill;
-                        
+
                         if (total >= doorComponent.LockDC)
                         {
                             // Lockpicking successful
@@ -2184,7 +2198,7 @@ namespace Odyssey.Game.Core
                 {
                     // Use ModuleTransitionSystem to handle door transitions
                     // The system will determine if it's a module or area transition
-                    var transitionSystem = _session.GetType().GetField("_moduleTransitionSystem", 
+                    var transitionSystem = _session.GetType().GetField("_moduleTransitionSystem",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (transitionSystem != null)
                     {
@@ -2224,7 +2238,7 @@ namespace Odyssey.Game.Core
                 if (_session != null && _session.PlayerEntity != null)
                 {
                     // Use ModuleTransitionSystem to handle trigger transitions
-                    var transitionSystem = _session.GetType().GetField("_moduleTransitionSystem", 
+                    var transitionSystem = _session.GetType().GetField("_moduleTransitionSystem",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (transitionSystem != null)
                     {

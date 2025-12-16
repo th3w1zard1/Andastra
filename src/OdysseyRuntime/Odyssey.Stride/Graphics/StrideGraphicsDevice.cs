@@ -145,9 +145,170 @@ namespace Odyssey.Stride.Graphics
 
         public IntPtr NativeHandle => _device.NativeDevice;
 
+        // 3D Rendering Methods
+
+        public void SetVertexBuffer(IVertexBuffer vertexBuffer)
+        {
+            if (vertexBuffer == null)
+            {
+                _device.SetVertexBuffer(0, null, 0, 0);
+            }
+            else if (vertexBuffer is StrideVertexBuffer strideVb)
+            {
+                _device.SetVertexBuffer(0, strideVb.Buffer, 0, strideVb.VertexStride);
+            }
+            else
+            {
+                throw new ArgumentException("Vertex buffer must be a StrideVertexBuffer", nameof(vertexBuffer));
+            }
+        }
+
+        public void SetIndexBuffer(IIndexBuffer indexBuffer)
+        {
+            if (indexBuffer == null)
+            {
+                _device.SetIndexBuffer(null, 0, false);
+            }
+            else if (indexBuffer is StrideIndexBuffer strideIb)
+            {
+                _device.SetIndexBuffer(strideIb.Buffer, 0, strideIb.IsShort);
+            }
+            else
+            {
+                throw new ArgumentException("Index buffer must be a StrideIndexBuffer", nameof(indexBuffer));
+            }
+        }
+
+        public void DrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
+        {
+            _device.DrawIndexed(
+                ConvertPrimitiveType(primitiveType),
+                startIndex,
+                baseVertex,
+                primitiveCount
+            );
+        }
+
+        public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
+        {
+            _device.Draw(
+                ConvertPrimitiveType(primitiveType),
+                vertexOffset,
+                primitiveCount
+            );
+        }
+
+        public void SetRasterizerState(IRasterizerState rasterizerState)
+        {
+            if (rasterizerState == null)
+            {
+                _device.SetRasterizerState(RasterizerStateDescription.Default);
+            }
+            else if (rasterizerState is StrideRasterizerState strideRs)
+            {
+                _device.SetRasterizerState(strideRs.Description);
+            }
+            else
+            {
+                throw new ArgumentException("Rasterizer state must be a StrideRasterizerState", nameof(rasterizerState));
+            }
+        }
+
+        public void SetDepthStencilState(IDepthStencilState depthStencilState)
+        {
+            if (depthStencilState == null)
+            {
+                _device.SetDepthStencilState(DepthStencilStateDescription.Default);
+            }
+            else if (depthStencilState is StrideDepthStencilState strideDs)
+            {
+                _device.SetDepthStencilState(strideDs.Description);
+            }
+            else
+            {
+                throw new ArgumentException("Depth-stencil state must be a StrideDepthStencilState", nameof(depthStencilState));
+            }
+        }
+
+        public void SetBlendState(IBlendState blendState)
+        {
+            if (blendState == null)
+            {
+                _device.SetBlendState(BlendStateDescription.Default);
+            }
+            else if (blendState is StrideBlendState strideBs)
+            {
+                _device.SetBlendState(strideBs.Description);
+            }
+            else
+            {
+                throw new ArgumentException("Blend state must be a StrideBlendState", nameof(blendState));
+            }
+        }
+
+        public void SetSamplerState(int index, ISamplerState samplerState)
+        {
+            if (samplerState == null)
+            {
+                _device.SetSamplerState(index, SamplerStateDescription.Default);
+            }
+            else if (samplerState is StrideSamplerState strideSs)
+            {
+                _device.SetSamplerState(index, strideSs.Description);
+            }
+            else
+            {
+                throw new ArgumentException("Sampler state must be a StrideSamplerState", nameof(samplerState));
+            }
+        }
+
+        public IBasicEffect CreateBasicEffect()
+        {
+            return new StrideBasicEffect(_device);
+        }
+
+        public IRasterizerState CreateRasterizerState()
+        {
+            return new StrideRasterizerState();
+        }
+
+        public IDepthStencilState CreateDepthStencilState()
+        {
+            return new StrideDepthStencilState();
+        }
+
+        public IBlendState CreateBlendState()
+        {
+            return new StrideBlendState();
+        }
+
+        public ISamplerState CreateSamplerState()
+        {
+            return new StrideSamplerState();
+        }
+
         public void Dispose()
         {
             // GraphicsDevice is managed by Game, don't dispose it
+        }
+
+        private static Stride.Graphics.PrimitiveType ConvertPrimitiveType(PrimitiveType type)
+        {
+            switch (type)
+            {
+                case PrimitiveType.TriangleList:
+                    return Stride.Graphics.PrimitiveType.TriangleList;
+                case PrimitiveType.TriangleStrip:
+                    return Stride.Graphics.PrimitiveType.TriangleStrip;
+                case PrimitiveType.LineList:
+                    return Stride.Graphics.PrimitiveType.LineList;
+                case PrimitiveType.LineStrip:
+                    return Stride.Graphics.PrimitiveType.LineStrip;
+                case PrimitiveType.PointList:
+                    return Stride.Graphics.PrimitiveType.PointList;
+                default:
+                    return Stride.Graphics.PrimitiveType.TriangleList;
+            }
         }
     }
 }

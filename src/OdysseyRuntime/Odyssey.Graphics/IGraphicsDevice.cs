@@ -94,6 +94,106 @@ namespace Odyssey.Graphics
         /// Gets the native graphics device handle (for advanced operations).
         /// </summary>
         IntPtr NativeHandle { get; }
+
+        // 3D Rendering Methods
+
+        /// <summary>
+        /// Sets the vertex buffer for rendering.
+        /// </summary>
+        /// <param name="vertexBuffer">Vertex buffer to set.</param>
+        void SetVertexBuffer(IVertexBuffer vertexBuffer);
+
+        /// <summary>
+        /// Sets the index buffer for rendering.
+        /// </summary>
+        /// <param name="indexBuffer">Index buffer to set.</param>
+        void SetIndexBuffer(IIndexBuffer indexBuffer);
+
+        /// <summary>
+        /// Draws indexed primitives.
+        /// </summary>
+        /// <param name="primitiveType">Type of primitives to draw.</param>
+        /// <param name="baseVertex">Index of the first vertex to use.</param>
+        /// <param name="minVertexIndex">Minimum vertex index.</param>
+        /// <param name="numVertices">Number of vertices to use.</param>
+        /// <param name="startIndex">Index of the first index to use.</param>
+        /// <param name="primitiveCount">Number of primitives to draw.</param>
+        void DrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount);
+
+        /// <summary>
+        /// Draws primitives.
+        /// </summary>
+        /// <param name="primitiveType">Type of primitives to draw.</param>
+        /// <param name="vertexOffset">Index of the first vertex to use.</param>
+        /// <param name="primitiveCount">Number of primitives to draw.</param>
+        void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount);
+
+        /// <summary>
+        /// Sets the rasterizer state.
+        /// </summary>
+        /// <param name="rasterizerState">Rasterizer state to set.</param>
+        void SetRasterizerState(IRasterizerState rasterizerState);
+
+        /// <summary>
+        /// Sets the depth-stencil state.
+        /// </summary>
+        /// <param name="depthStencilState">Depth-stencil state to set.</param>
+        void SetDepthStencilState(IDepthStencilState depthStencilState);
+
+        /// <summary>
+        /// Sets the blend state.
+        /// </summary>
+        /// <param name="blendState">Blend state to set.</param>
+        void SetBlendState(IBlendState blendState);
+
+        /// <summary>
+        /// Sets the sampler state for a texture slot.
+        /// </summary>
+        /// <param name="index">Texture slot index.</param>
+        /// <param name="samplerState">Sampler state to set.</param>
+        void SetSamplerState(int index, ISamplerState samplerState);
+
+        /// <summary>
+        /// Creates a basic effect for simple 3D rendering.
+        /// </summary>
+        /// <returns>Created basic effect.</returns>
+        IBasicEffect CreateBasicEffect();
+
+        /// <summary>
+        /// Creates a default rasterizer state.
+        /// </summary>
+        /// <returns>Created rasterizer state.</returns>
+        IRasterizerState CreateRasterizerState();
+
+        /// <summary>
+        /// Creates a default depth-stencil state.
+        /// </summary>
+        /// <returns>Created depth-stencil state.</returns>
+        IDepthStencilState CreateDepthStencilState();
+
+        /// <summary>
+        /// Creates a default blend state.
+        /// </summary>
+        /// <returns>Created blend state.</returns>
+        IBlendState CreateBlendState();
+
+        /// <summary>
+        /// Creates a default sampler state.
+        /// </summary>
+        /// <returns>Created sampler state.</returns>
+        ISamplerState CreateSamplerState();
+    }
+
+    /// <summary>
+    /// Primitive type for rendering.
+    /// </summary>
+    public enum PrimitiveType
+    {
+        TriangleList,
+        TriangleStrip,
+        LineList,
+        LineStrip,
+        PointList
     }
 
     /// <summary>
@@ -122,7 +222,7 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Color structure (RGBA).
     /// </summary>
-    public struct Color
+    public struct Color : IEquatable<Color>
     {
         public byte R;
         public byte G;
@@ -145,12 +245,46 @@ namespace Odyssey.Graphics
             A = (byte)(a * 255.0f);
         }
 
+        public bool Equals(Color other)
+        {
+            return R == other.R && G == other.G && B == other.B && A == other.A;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Color)
+            {
+                return Equals((Color)obj);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return R.GetHashCode() ^ G.GetHashCode() ^ B.GetHashCode() ^ A.GetHashCode();
+        }
+
+        public static bool operator ==(Color left, Color right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Color left, Color right)
+        {
+            return !left.Equals(right);
+        }
+
         public static Color White => new Color(255, 255, 255, 255);
         public static Color Black => new Color(0, 0, 0, 255);
         public static Color Transparent => new Color(0, 0, 0, 0);
         public static Color Red => new Color(255, 0, 0, 255);
         public static Color Green => new Color(0, 255, 0, 255);
         public static Color Blue => new Color(0, 0, 255, 255);
+        public static Color Gray => new Color(128, 128, 128, 255);
+        public static Color Brown => new Color(139, 69, 19, 255);
+        public static Color Orange => new Color(255, 165, 0, 255);
+        public static Color Yellow => new Color(255, 255, 0, 255);
+        public static Color Cyan => new Color(0, 255, 255, 255);
     }
 }
 
