@@ -7,6 +7,14 @@ namespace Odyssey.Engines.Aurora
     /// <summary>
     /// Aurora Engine implementation for Neverwinter Nights and Neverwinter Nights 2.
     /// </summary>
+    /// <remarks>
+    /// Aurora Engine:
+    /// - Based on Aurora Engine architecture (Neverwinter Nights, Neverwinter Nights 2)
+    /// - Note: This engine is for different games (NWN/NWN2), not KOTOR, so no swkotor2.exe references needed
+    /// - Engine initialization: Similar pattern to Odyssey engine but for Aurora-based games
+    /// - Resource provider: Uses Aurora-specific resource system (hak files, module files, etc.)
+    /// - Game session: Coordinates module loading, entity management, script execution for Aurora games
+    /// </remarks>
     public class AuroraEngine : BaseEngine
     {
         public AuroraEngine(IEngineProfile profile)

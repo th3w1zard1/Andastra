@@ -151,7 +151,7 @@ When processing a file:
 
 ### Odyssey.Engines.Aurora (1 files)
 
-- [ ] AuroraEngine.cs
+- [x] AuroraEngine.cs - Note: Different game engine (NWN/NWN2), no swkotor2.exe references needed
 
 ### Odyssey.Engines.Common (8 files)
 
@@ -166,13 +166,13 @@ When processing a file:
 
 ### Odyssey.Engines.Eclipse (1 files)
 
-- [ ] EclipseEngine.cs
+- [x] EclipseEngine.cs - Note: Different game engine (DA/ME), no swkotor2.exe references needed
 
 ### Odyssey.Engines.Odyssey (7 files)
 
 - [ ] EngineApi\OdysseyK1EngineApi.cs
 - [ ] EngineApi\OdysseyK2EngineApi.cs
-- [ ] OdysseyEngine.cs
+- [x] OdysseyEngine.cs - FUN_00404250 @ 0x00404250, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0, FUN_00633270 @ 0x00633270
 - [ ] OdysseyGameSession.cs
 - [ ] OdysseyModuleLoader.cs
 - [ ] Profiles\OdysseyK1GameProfile.cs
