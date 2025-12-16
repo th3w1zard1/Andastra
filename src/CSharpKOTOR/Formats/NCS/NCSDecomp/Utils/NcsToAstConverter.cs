@@ -418,6 +418,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
                     bool mainCodeInGlobals = false;
                     bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, savebpIndex={savebpIndex}");
                     if (entryJsrTargetIsLastRetnCheck && mainStart == entryStubEnd && savebpIndex >= 0)
                     {
                         // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
