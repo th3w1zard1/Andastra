@@ -287,11 +287,9 @@ namespace AuroraEngine.Common.Formats.NCS
                     }
                     break;
                 case NCSByteCode.ACTION:
-                    if (qualifier == 0x00)
-                    {
-                        return NCSInstructionType.ACTION;
-                    }
-                    break;
+                    // ACTION instructions can have any qualifier value
+                    // The qualifier is not used to distinguish ACTION types - all ACTION bytecodes map to ACTION type
+                    return NCSInstructionType.ACTION;
                 case NCSByteCode.LOGANDxx:
                     if (qualifier == (byte)NCSInstructionQualifier.IntInt)
                     {
