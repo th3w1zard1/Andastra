@@ -254,6 +254,9 @@ namespace Odyssey.Game.Core
                 if (_session != null)
                 {
                     _session.Update(deltaTime);
+                    
+                    // Handle player input for movement and interaction
+                    HandlePlayerInput(keyboardState, mouseState, new GameTime { ElapsedGameTime = System.TimeSpan.FromSeconds(deltaTime), TotalGameTime = System.TimeSpan.Zero });
                 }
 
                 // Update camera to follow player
@@ -1799,31 +1802,31 @@ namespace Odyssey.Game.Core
                     );
                 }
             }
-            return Microsoft.Xna.Framework.Vector3.Zero;
+            return System.Numerics.Vector3.Zero;
         }
 
         /// <summary>
         /// Gets the ray direction from mouse position.
         /// </summary>
-        private Microsoft.Xna.Framework.Vector3 GetMouseRayDirection(int mouseX, int mouseY)
+        private System.Numerics.Vector3 GetMouseRayDirection(int mouseX, int mouseY)
         {
             // Convert mouse position to normalized device coordinates (-1 to 1)
-            float x = (2.0f * mouseX / GraphicsDevice.Viewport.Width) - 1.0f;
-            float y = 1.0f - (2.0f * mouseY / GraphicsDevice.Viewport.Height);
+            float x = (2.0f * mouseX / _graphicsDevice.Viewport.Width) - 1.0f;
+            float y = 1.0f - (2.0f * mouseY / _graphicsDevice.Viewport.Height);
 
             // Create ray in view space
-            Vector4 rayClip = new Vector4(x, y, -1.0f, 1.0f);
+            System.Numerics.Vector4 rayClip = new System.Numerics.Vector4(x, y, -1.0f, 1.0f);
 
             // Transform to eye space
-            Matrix invProjection = Matrix.Invert(_projectionMatrix);
-            Vector4 rayEye = Vector4.Transform(rayClip, invProjection);
-            rayEye = new Vector4(rayEye.X, rayEye.Y, -1.0f, 0.0f);
+            System.Numerics.Matrix4x4 invProjection = System.Numerics.Matrix4x4.Invert(_projectionMatrix);
+            System.Numerics.Vector4 rayEye = System.Numerics.Vector4.Transform(rayClip, invProjection);
+            rayEye = new System.Numerics.Vector4(rayEye.X, rayEye.Y, -1.0f, 0.0f);
 
             // Transform to world space
-            Matrix invView = Matrix.Invert(_viewMatrix);
-            Vector4 rayWorld = Vector4.Transform(rayEye, invView);
-            Vector3 rayDir = new Vector3(rayWorld.X, rayWorld.Y, rayWorld.Z);
-            rayDir.Normalize();
+            System.Numerics.Matrix4x4 invView = System.Numerics.Matrix4x4.Invert(_viewMatrix);
+            System.Numerics.Vector4 rayWorld = System.Numerics.Vector4.Transform(rayEye, invView);
+            System.Numerics.Vector3 rayDir = new System.Numerics.Vector3(rayWorld.X, rayWorld.Y, rayWorld.Z);
+            rayDir = System.Numerics.Vector3.Normalize(rayDir);
 
             return rayDir;
         }
@@ -1831,7 +1834,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Finds an entity at the given ray position.
         /// </summary>
-        private Odyssey.Core.Interfaces.IEntity FindEntityAtRay(Vector3 rayOrigin, Vector3 rayDirection)
+        private Odyssey.Core.Interfaces.IEntity FindEntityAtRay(System.Numerics.Vector3 rayOrigin, System.Numerics.Vector3 rayDirection)
         {
             if (_session == null || _session.CurrentRuntimeModule == null)
             {
