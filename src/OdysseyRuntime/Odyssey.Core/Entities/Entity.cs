@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Core.Entities
 {
@@ -75,8 +76,8 @@ namespace Odyssey.Core.Entities
             _scripts = new Dictionary<ScriptEvent, string>();
             _isValid = true;
             Tag = string.Empty;
-            Position = Vector3.Zero;
-            Facing = 0f;
+            _position = Vector3.Zero;
+            _facing = 0f;
             AreaId = 0;
         }
 
@@ -93,8 +94,8 @@ namespace Odyssey.Core.Entities
             _scripts = new Dictionary<ScriptEvent, string>();
             _isValid = true;
             Tag = string.Empty;
-            Position = Vector3.Zero;
-            Facing = 0f;
+            _position = Vector3.Zero;
+            _facing = 0f;
             AreaId = 0;
         }
 
@@ -107,14 +108,64 @@ namespace Odyssey.Core.Entities
         /// <summary>
         /// Gets or sets the entity position in world space.
         /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves XPosition, YPosition, ZPosition
+        /// Synchronized with TransformComponent if present.
         /// </summary>
-        public Vector3 Position { get; set; }
+        public Vector3 Position
+        {
+            get
+            {
+                // If TransformComponent exists, use it as source of truth
+                ITransformComponent transform = GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    return transform.Position;
+                }
+                return _position;
+            }
+            set
+            {
+                _position = value;
+                // Synchronize with TransformComponent if present
+                ITransformComponent transform = GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    transform.Position = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets the entity facing angle in radians.
         /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves XOrientation, YOrientation, ZOrientation
+        /// Synchronized with TransformComponent if present.
         /// </summary>
-        public float Facing { get; set; }
+        public float Facing
+        {
+            get
+            {
+                // If TransformComponent exists, use it as source of truth
+                ITransformComponent transform = GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    return transform.Facing;
+                }
+                return _facing;
+            }
+            set
+            {
+                _facing = value;
+                // Synchronize with TransformComponent if present
+                ITransformComponent transform = GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    transform.Facing = value;
+                }
+            }
+        }
+
+        // Backing fields for Position and Facing (used when TransformComponent is not present)
+        private Vector3 _position;
+        private float _facing;
 
         /// <summary>
         /// Gets or sets the area ID this entity belongs to.
