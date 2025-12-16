@@ -95,8 +95,8 @@ namespace Odyssey.Kotor.Components
             _effectAttackBonus = 0;
             
             // Default movement speeds (from appearance.2da averages)
-            WalkSpeed = 1.75f;
-            RunSpeed = 4.0f;
+            _baseWalkSpeed = 1.75f;
+            _baseRunSpeed = 4.0f;
         }
 
         #region IComponent Implementation
@@ -235,8 +235,92 @@ namespace Odyssey.Kotor.Components
             get { return _baseWill + GetAbilityModifier(Ability.Wisdom); }
         }
 
-        public float WalkSpeed { get; set; }
-        public float RunSpeed { get; set; }
+        private float _baseWalkSpeed;
+        private float _baseRunSpeed;
+
+        public float WalkSpeed
+        {
+            get
+            {
+                float speed = _baseWalkSpeed;
+                
+                // Query EffectSystem for speed modifiers (Haste/Slow)
+                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
+                {
+                    foreach (Combat.ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
+                    {
+                        if (activeEffect.Effect.Type == Combat.EffectType.Haste)
+                        {
+                            // Haste typically doubles movement speed (100% increase)
+                            speed *= 2.0f;
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.Slow)
+                        {
+                            // Slow typically halves movement speed (50% reduction)
+                            speed *= 0.5f;
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.MovementSpeedIncrease)
+                        {
+                            // MovementSpeedIncrease adds a percentage bonus
+                            speed *= (1.0f + activeEffect.Effect.Amount / 100.0f);
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.MovementSpeedDecrease)
+                        {
+                            // MovementSpeedDecrease reduces speed by a percentage
+                            speed *= (1.0f - activeEffect.Effect.Amount / 100.0f);
+                        }
+                    }
+                }
+                
+                return Math.Max(0.1f, speed); // Minimum speed to prevent zero/negative
+            }
+            set
+            {
+                _baseWalkSpeed = value;
+            }
+        }
+
+        public float RunSpeed
+        {
+            get
+            {
+                float speed = _baseRunSpeed;
+                
+                // Query EffectSystem for speed modifiers (Haste/Slow)
+                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
+                {
+                    foreach (Combat.ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
+                    {
+                        if (activeEffect.Effect.Type == Combat.EffectType.Haste)
+                        {
+                            // Haste typically doubles movement speed (100% increase)
+                            speed *= 2.0f;
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.Slow)
+                        {
+                            // Slow typically halves movement speed (50% reduction)
+                            speed *= 0.5f;
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.MovementSpeedIncrease)
+                        {
+                            // MovementSpeedIncrease adds a percentage bonus
+                            speed *= (1.0f + activeEffect.Effect.Amount / 100.0f);
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.MovementSpeedDecrease)
+                        {
+                            // MovementSpeedDecrease reduces speed by a percentage
+                            speed *= (1.0f - activeEffect.Effect.Amount / 100.0f);
+                        }
+                    }
+                }
+                
+                return Math.Max(0.1f, speed); // Minimum speed to prevent zero/negative
+            }
+            set
+            {
+                _baseRunSpeed = value;
+            }
+        }
 
         public int GetSkillRank(int skill)
         {

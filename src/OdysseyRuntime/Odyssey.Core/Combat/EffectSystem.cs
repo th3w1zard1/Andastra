@@ -464,10 +464,14 @@ namespace Odyssey.Core.Combat
                 case EffectType.Entangle:
                 case EffectType.Slow:
                 case EffectType.Haste:
-                    // Movement speed modifiers (Haste/Slow) are handled by movement system
-                    // Speed is read-only in IStatsComponent, so this would need to be
-                    // tracked separately or via a different mechanism
-                    // For now, this is a placeholder
+                case EffectType.MovementSpeedIncrease:
+                case EffectType.MovementSpeedDecrease:
+                    // Movement speed modifiers are handled dynamically by StatsComponent
+                    // Based on swkotor2.exe: Haste/Slow effects modify movement speed
+                    // Located via string references: "Haste" @ routine 119, "Slow" @ routine 120
+                    // Original implementation: Haste doubles speed, Slow halves speed
+                    // StatsComponent.WalkSpeed and RunSpeed properties query EffectSystem for active effects
+                    // No direct modification needed here - speed is calculated on-demand
                     break;
 
                 case EffectType.Invisibility:
