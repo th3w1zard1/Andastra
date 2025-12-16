@@ -324,10 +324,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // BUT: Don't override alternative main start that was set from JSR at 0
             // (alternative main start is intentionally in the globals range)
             bool isAlternativeMainStart = (alternativeMainStart >= 0 && mainStart == alternativeMainStart);
+            int mainStartBeforeAdjustment = mainStart;
             if (mainStart <= globalsEndForMain && !isAlternativeMainStart)
             {
                 mainStart = globalsEndForMain;
-                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final adjustment: mainStart set to {mainStart} (after globals/entry stub at {globalsEndForMain})");
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final adjustment: mainStart set to {mainStart} (after globals/entry stub at {globalsEndForMain}, was {mainStartBeforeAdjustment})");
             }
             else if (isAlternativeMainStart)
             {
