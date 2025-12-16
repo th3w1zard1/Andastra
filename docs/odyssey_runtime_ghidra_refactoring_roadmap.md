@@ -14,6 +14,8 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 **Started**: 2025-01-15  
 **Purpose**: Abstract KOTOR-specific code from AuroraEngine.Common to support multiple BioWare engine families (Odyssey, Aurora, Eclipse) following xoreos pattern with maximum code in base classes.
 
+**Architecture Document**: See `docs/engine_abstraction_refined_architecture.md` for comprehensive architecture plan.
+
 ### Strategy
 
 Following xoreos architecture pattern (but cleaner):
