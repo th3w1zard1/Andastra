@@ -395,17 +395,37 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
                 }
                 
-                // If globals were created normally, check if we need to split them
-                // This handles cases where main code is in the globals range even when entry JSR doesn't target last RETN
+                // If globals were created normally OR deferred, check if we need to split them
+                // This handles cases where main code is in the globals range
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if we need to split globals - shouldDeferGlobals={shouldDeferGlobals}, savebpIndex={savebpIndex}, mainStart={mainStart}, entryStubEnd={entryStubEnd}");
-                if (!shouldDeferGlobals)
+                
+                // Check if main code is in globals range - this applies to BOTH normal and deferred cases
+                // When entry JSR targets last RETN, main code is often in the globals range (0 to SAVEBP)
+                bool mainCodeInGlobals = false;
+                bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                
+                // First, scan the globals range (0 to SAVEBP) to see what instruction types are there
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Scanning globals range (0-{savebpIndex}) for instruction types");
+                int actionCountInGlobals = 0;
+                for (int i = 0; i <= savebpIndex && i < instructions.Count; i++)
+                {
+                    if (instructions[i].InsType == NCSInstructionType.ACTION)
+                    {
+                        actionCountInGlobals++;
+                        if (actionCountInGlobals <= 5) // Log first 5 ACTION instructions
+                        {
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found ACTION instruction at index {i} in globals range (0-{savebpIndex})");
+                        }
+                    }
+                }
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Total ACTION instructions in globals range (0-{savebpIndex}): {actionCountInGlobals}");
+                
+                if (entryJsrTargetIsLastRetnCheck || !shouldDeferGlobals)
                 {
                     // Check if main code is actually in the globals range (0 to SAVEBP)
                     // If mainStart is at or after entryStubEnd and there are no ACTION instructions after SAVEBP+1,
                     // the main code must be in the globals range
-                    bool mainCodeInGlobalsNormal = false;
-                    bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals (normal case) - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, savebpIndex={savebpIndex}");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, savebpIndex={savebpIndex}, actionCountInGlobals={actionCountInGlobals}");
                     
                     // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
                     int actionCount = 0;
@@ -435,7 +455,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         }
                         if (mainCodeStartInGlobals >= 0)
                         {
-                            mainCodeInGlobalsNormal = true;
+                            mainCodeInGlobals = true;
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), but found ACTION at {mainCodeStartInGlobals} in globals range (0-{savebpIndex}) - will split globals at {mainCodeStartInGlobals}");
                             
                             // Remove the globals subroutine that was created earlier (it includes main code)
