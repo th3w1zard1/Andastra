@@ -395,16 +395,40 @@ namespace Odyssey.Core.Combat
 
                 case EffectType.ACIncrease:
                 case EffectType.ACDecrease:
-                    // AC modifiers are applied via deflection bonus
-                    // Note: This requires IStatsComponent to have a DeflectionBonus property
-                    // For now, AC is calculated dynamically, so this is a placeholder
-                    // In a full implementation, we'd track effect bonuses separately
+                    // AC modifiers are applied via effect bonus tracking
+                    // Based on swkotor2.exe: AC effects modify total AC calculation
+                    // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
+                    // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
+                    if (stats is Odyssey.Kotor.Components.StatsComponent kotorStats)
+                    {
+                        if (apply)
+                        {
+                            kotorStats.AddEffectACBonus(modifier);
+                        }
+                        else
+                        {
+                            kotorStats.RemoveEffectACBonus(-modifier);
+                        }
+                    }
                     break;
 
                 case EffectType.AttackIncrease:
                 case EffectType.AttackDecrease:
-                    // Attack bonus is calculated dynamically, so we'd need to track this separately
-                    // For now, this is a placeholder - would need effect bonus tracking in StatsComponent
+                    // Attack bonus is applied via effect bonus tracking
+                    // Based on swkotor2.exe: Attack effects modify total attack bonus
+                    // Located via string references: "EffectAttackIncrease" @ routine 118
+                    // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
+                    if (stats is Odyssey.Kotor.Components.StatsComponent kotorStats2)
+                    {
+                        if (apply)
+                        {
+                            kotorStats2.AddEffectAttackBonus(modifier);
+                        }
+                        else
+                        {
+                            kotorStats2.RemoveEffectAttackBonus(-modifier);
+                        }
+                    }
                     break;
 
                 case EffectType.DamageIncrease:

@@ -54,6 +54,8 @@ namespace Odyssey.Kotor.Components
         private int _armorBonus;
         private int _naturalArmor;
         private int _deflectionBonus;
+        private int _effectACBonus; // AC bonus from effects
+        private int _effectAttackBonus; // Attack bonus from effects
         private int _currentFP;
         private int _maxFP;
 
@@ -88,6 +90,8 @@ namespace Odyssey.Kotor.Components
             _armorBonus = 0;
             _naturalArmor = 0;
             _deflectionBonus = 0;
+            _effectACBonus = 0;
+            _effectAttackBonus = 0;
             
             // Default movement speeds (from appearance.2da averages)
             WalkSpeed = 1.75f;
@@ -160,8 +164,8 @@ namespace Odyssey.Kotor.Components
         {
             get
             {
-                // BAB + STR modifier for melee (or DEX for ranged/finesse)
-                return _baseAttackBonus + GetAbilityModifier(Ability.Strength);
+                // BAB + STR modifier for melee (or DEX for ranged/finesse) + effect bonuses
+                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + _effectAttackBonus;
             }
         }
 
@@ -169,12 +173,13 @@ namespace Odyssey.Kotor.Components
         {
             get
             {
-                // Defense = 10 + DEX mod + Armor + Natural + Deflection + Class bonus
+                // Defense = 10 + DEX mod + Armor + Natural + Deflection + Effect bonuses
                 return 10 
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
                     + _naturalArmor
-                    + _deflectionBonus;
+                    + _deflectionBonus
+                    + _effectACBonus;
             }
         }
 
@@ -355,6 +360,38 @@ namespace Odyssey.Kotor.Components
             _baseFortitude = fortitude;
             _baseReflex = reflex;
             _baseWill = will;
+        }
+
+        /// <summary>
+        /// Adds an AC bonus from an effect.
+        /// </summary>
+        public void AddEffectACBonus(int bonus)
+        {
+            _effectACBonus += bonus;
+        }
+
+        /// <summary>
+        /// Removes an AC bonus from an effect.
+        /// </summary>
+        public void RemoveEffectACBonus(int bonus)
+        {
+            _effectACBonus -= bonus;
+        }
+
+        /// <summary>
+        /// Adds an attack bonus from an effect.
+        /// </summary>
+        public void AddEffectAttackBonus(int bonus)
+        {
+            _effectAttackBonus += bonus;
+        }
+
+        /// <summary>
+        /// Removes an attack bonus from an effect.
+        /// </summary>
+        public void RemoveEffectAttackBonus(int bonus)
+        {
+            _effectAttackBonus -= bonus;
         }
 
         /// <summary>
