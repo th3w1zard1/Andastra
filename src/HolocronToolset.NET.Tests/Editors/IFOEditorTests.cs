@@ -542,5 +542,79 @@ namespace HolocronToolset.NET.Tests.Editors
                 modifiedIfo.DawnHour.Should().Be(hour, $"DawnHour should be {hour} after setting DawnHourSpin to {hour}");
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:185-199
+        // Original: def test_ifo_editor_manipulate_dusk_hour(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateDuskHour()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test various hours
+            int[] testHours = { 0, 18, 20, 23 };
+            foreach (int hour in testHours)
+            {
+                editor.DuskHourSpin.Value = hour;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.DuskHour.Should().Be(hour, $"DuskHour should be {hour} after setting DuskHourSpin to {hour}");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:200-215
+        // Original: def test_ifo_editor_manipulate_time_scale(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateTimeScale()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test various time scales
+            int[] testScales = { 0, 1, 50, 100 };
+            foreach (int scale in testScales)
+            {
+                editor.TimeScaleSpin.Value = scale;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.TimeScale.Should().Be(scale, $"TimeScale should be {scale} after setting TimeScaleSpin to {scale}");
+            }
+        }
     }
 }
