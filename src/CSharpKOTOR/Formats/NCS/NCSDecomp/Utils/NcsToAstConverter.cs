@@ -264,10 +264,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
                 {
-                    // FIXED: If entry JSR targets last RETN and it's after entry stub, use entryJsrTarget as mainStart
-                    // This handles cases like asd.nss where main is just a single RETN at the end
-                    mainStart = entryJsrTarget;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub, using it as mainStart (empty main function)");
+                    // CRITICAL FIX: If entry JSR targets last RETN, the main function code is between entryStubEnd and the last RETN
+                    // Use entryStubEnd as mainStart to include all the actual main function code
+                    // The last RETN will be included in the main function range (mainEnd will be instructions.Count)
+                    mainStart = entryStubEnd;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub at {entryStubEnd}, using entryStubEnd as mainStart (main includes all code from {entryStubEnd} to last RETN)");
                 }
                 else
                 {
@@ -347,10 +348,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     if (subStart > mainStart)
                     {
                         mainEnd = subStart;
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (first subroutine start after mainStart)");
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (first subroutine start after mainStart={mainStart}, will include instructions {mainStart} to {mainEnd - 1})");
                         break;
                     }
                 }
+                // CRITICAL: Ensure mainEnd is valid - if no subroutine start was found after mainStart,
+                // mainEnd should remain at instructions.Count to include all remaining instructions
+                if (mainEnd == instructions.Count && subroutineStarts.Count > 0)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No subroutine starts found after mainStart={mainStart}, keeping mainEnd={mainEnd} (all instructions)");
+                }
+            }
+            else
+            {
+                // No subroutine starts - main includes all instructions from mainStart to end
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No subroutine starts found, mainEnd remains at {mainEnd} (all {instructions.Count} instructions)");
             }
 
             // If we deferred globals creation (entry JSR targets last RETN), create it now
