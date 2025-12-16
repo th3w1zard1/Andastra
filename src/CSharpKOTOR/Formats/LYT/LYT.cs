@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 using Vector3 = System.Numerics.Vector3;
 
-namespace CSharpKOTOR.Formats.LYT
+namespace AuroraEngine.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_data.py:57-208
     // Original: class LYT(ComparableMixin)

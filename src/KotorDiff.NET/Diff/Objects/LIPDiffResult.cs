@@ -1,7 +1,7 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/objects.py:167-184
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/objects.py:167-184
 // Original: @dataclass class LIPDiffResult, LIPEntryDiff: ...
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.LIP;
+using AuroraEngine.Common.Formats.LIP;
 using JetBrains.Annotations;
 
 namespace KotorDiff.NET.Diff.Objects

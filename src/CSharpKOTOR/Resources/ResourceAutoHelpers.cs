@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
+﻿using System;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
 
-namespace CSharpKOTOR.Resources
+namespace AuroraEngine.Common.Resources
 {
     // Helper functions for reading GFF-based resources
     // These will be used by ModuleResource<T>.Resource() to load resources

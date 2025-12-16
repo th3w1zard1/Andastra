@@ -1,10 +1,10 @@
-using System;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
+﻿using System;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Mods
+namespace AuroraEngine.Common.Mods
 {
 
     /// <summary>

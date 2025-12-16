@@ -1,6 +1,6 @@
-using System.IO;
+﻿using System.IO;
 
-namespace CSharpKOTOR.Extract.SaveData
+namespace AuroraEngine.Common.Extract.SaveData
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/savedata.py:2122-2535 (orchestration)
     public class SaveFolderEntry

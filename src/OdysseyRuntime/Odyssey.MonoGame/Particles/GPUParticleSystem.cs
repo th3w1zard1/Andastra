@@ -122,6 +122,7 @@ namespace Odyssey.MonoGame.Particles
         /// Spawns new particles.
         /// </summary>
         /// <param name="spawnData">Spawn parameters.</param>
+        /// <exception cref="ArgumentException">Thrown if spawn count is invalid.</exception>
         public void SpawnParticles(ParticleSpawnData spawnData)
         {
             // Add spawn commands to spawn buffer

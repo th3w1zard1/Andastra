@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using AST = AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
 {
     /*
     NCS to AST Converter - Comprehensive instruction conversion.

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/path.py:1383-1457
     // Original: def get_default_paths() -> dict[str, dict[Game, list[str]]]:

@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LYT;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Formats.TPC;
-using CSharpKOTOR.Formats.VIS;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LYT;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Formats.TPC;
+using AuroraEngine.Common.Formats.VIS;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/module.py
     // Original: Module-related utility functions

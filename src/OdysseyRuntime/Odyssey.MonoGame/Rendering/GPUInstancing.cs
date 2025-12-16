@@ -87,9 +87,15 @@ namespace Odyssey.MonoGame.Rendering
         /// Adds instances for a mesh.
         /// </summary>
         /// <param name="meshHandle">Mesh handle/identifier.</param>
-        /// <param name="instances">Array of instance data.</param>
+        /// <param name="instances">Array of instance data. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if instances is null.</exception>
         public void AddInstances(IntPtr meshHandle, InstanceData[] instances)
         {
+            if (instances == null)
+            {
+                throw new ArgumentNullException(nameof(instances));
+            }
+
             List<InstanceData> list;
             if (!_pendingInstances.TryGetValue(meshHandle, out list))
             {
@@ -154,10 +160,12 @@ namespace Odyssey.MonoGame.Rendering
         /// </summary>
         /// <param name="mesh">Mesh to instance.</param>
         /// <param name="primitiveType">Primitive type.</param>
-        /// <param name="vertexBuffer">Vertex buffer.</param>
-        /// <param name="indexBuffer">Index buffer.</param>
-        /// <param name="vertexCount">Number of vertices.</param>
-        /// <param name="primitiveCount">Number of primitives.</param>
+        /// <param name="vertexBuffer">Vertex buffer. Must not be null.</param>
+        /// <param name="indexBuffer">Index buffer. Must not be null.</param>
+        /// <param name="vertexCount">Number of vertices. Must be non-negative.</param>
+        /// <param name="primitiveCount">Number of primitives. Must be non-negative.</param>
+        /// <exception cref="ArgumentNullException">Thrown if vertexBuffer or indexBuffer is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if vertexCount or primitiveCount is negative.</exception>
         public void DrawInstanced(
             IntPtr mesh,
             PrimitiveType primitiveType,
@@ -166,6 +174,23 @@ namespace Odyssey.MonoGame.Rendering
             int vertexCount,
             int primitiveCount)
         {
+            if (vertexBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(vertexBuffer));
+            }
+            if (indexBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(indexBuffer));
+            }
+            if (vertexCount < 0)
+            {
+                throw new ArgumentException("Vertex count must be non-negative.", nameof(vertexCount));
+            }
+            if (primitiveCount < 0)
+            {
+                throw new ArgumentException("Primitive count must be non-negative.", nameof(primitiveCount));
+            }
+
             InstanceBuffer buffer;
             if (!_instanceBuffers.TryGetValue(mesh, out buffer) || buffer.InstanceCount == 0)
             {

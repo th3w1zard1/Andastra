@@ -1,7 +1,7 @@
 using System;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:51-73

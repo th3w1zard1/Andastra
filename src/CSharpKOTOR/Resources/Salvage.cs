@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tools;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resources
+namespace AuroraEngine.Common.Resources
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py
     // Original: Handles resource data validation/salvage strategies

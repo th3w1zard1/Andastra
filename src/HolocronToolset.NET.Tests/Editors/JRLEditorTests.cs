@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -153,10 +153,10 @@ namespace HolocronToolset.NET.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(jrlFile);
-            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var old = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             editor.Load(jrlFile, "global", ResourceType.JRL, data);
             var (newData, _) = editor.Build();
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: false);

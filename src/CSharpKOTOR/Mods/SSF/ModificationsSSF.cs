@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Mods.SSF
+namespace AuroraEngine.Common.Mods.SSF
 {
 
     /// <summary>

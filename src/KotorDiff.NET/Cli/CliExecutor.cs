@@ -1,11 +1,11 @@
-// Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/cli.py:138-219
+﻿// Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/cli.py:138-219
 // Original: def execute_cli(cmdline_args: Namespace): ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Installation;
 using KotorDiff.NET.App;
 
 namespace KotorDiff.NET.Cli
@@ -75,7 +75,7 @@ namespace KotorDiff.NET.Cli
                 {
                     // Try to create an Installation object (for KOTOR installations)
                     // Matching Python: installation = Installation(path_obj)
-                    var installation = new CSharpKOTOR.Installation.Installation(pathStr);
+                    var installation = new AuroraEngine.Common.Installation.Installation(pathStr);
                     resolvedPaths.Add(installation);
                     Console.WriteLine($"[DEBUG] Loaded Installation for: {pathStr}");
                 }

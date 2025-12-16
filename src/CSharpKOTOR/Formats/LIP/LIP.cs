@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.LIP
+namespace AuroraEngine.Common.Formats.LIP
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_data.py:225-458
     // Original: class LIP(ComparableMixin)

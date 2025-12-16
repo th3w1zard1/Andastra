@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Logger;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Logger;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

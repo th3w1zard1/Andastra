@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Mods.TwoDA;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Mods.TwoDA;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
 
     /// <summary>

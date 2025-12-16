@@ -1,29 +1,29 @@
-// Comprehensive tests for IncrementalTSLPatchDataWriter
+﻿// Comprehensive tests for IncrementalTSLPatchDataWriter
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1214-4389
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
-using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
-using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
-using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
+using TLKAuto = AuroraEngine.Common.Formats.TLK.TLKAuto;
+using TwoDAAuto = AuroraEngine.Common.Formats.TwoDA.TwoDAAuto;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
+using SSFAuto = AuroraEngine.Common.Formats.SSF.SSFAuto;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.TSLPatcher;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Generator
+namespace AuroraEngine.Common.Tests.Generator
 {
     /// <summary>
     /// Comprehensive tests for IncrementalTSLPatchDataWriter.
@@ -165,7 +165,7 @@ namespace CSharpKOTOR.Tests.Generator
             // Create test SSF data
             var ssf = new SSF();
             var ssfPath = Path.Combine(_tempDir, "temp.ssf");
-            SSFAuto.WriteSsf(ssf, ssfPath, CSharpKOTOR.Resources.ResourceType.SSF);
+            SSFAuto.WriteSsf(ssf, ssfPath, AuroraEngine.Common.Resources.ResourceType.SSF);
             var ssfData = File.ReadAllBytes(ssfPath);
 
             // Act

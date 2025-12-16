@@ -1,15 +1,15 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:1212-1236
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:1212-1236
 // Original: def determine_install_folders(...): ...
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
 
-namespace CSharpKOTOR.TSLPatcher
+namespace AuroraEngine.Common.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:1212-1236
     // Original: def determine_install_folders(...): ...

@@ -1,11 +1,11 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Diff;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Mods.TwoDA;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Diff;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Mods.TwoDA;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Diff
+namespace AuroraEngine.Common.Tests.Diff
 {
 
     /// <summary>

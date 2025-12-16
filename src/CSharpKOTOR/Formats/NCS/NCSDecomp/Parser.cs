@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:189-1517
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:189-1517
 // Original: public class Parser
 // Note: This file is generated from parser grammar, matching the Java implementation structure
 using System;
@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using LexerClass = CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using LexerClass = AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer;
 
 // Decompiled by Procyon v0.6.0
 // 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Parser
 {
     public class Parser
     {
@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
         private static int[] errors;
         public readonly IAnalysis ignoredTokens;
         protected Node node;
-        private readonly CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer.Lexer lexer;
+        private readonly AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer.Lexer lexer;
         private readonly ListIterator stack;
         private int last_shift;
         private int last_pos;
@@ -37,7 +37,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
         private Token last_token;
         private readonly TokenIndex converter;
         private readonly int[] action;
-        public Parser(CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer.Lexer lexer)
+        public Parser(AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer.Lexer lexer)
         {
             this.ignoredTokens = new AnalysisAdapter();
             this.stack = new LinkedList<object>().ListIterator();
@@ -49,9 +49,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
                 try
                 {
                     // Match Lexer.cs pattern: try executing assembly first, then calling assembly
-                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat") ??
-                                              System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat") ??
-                                              typeof(Parser).Assembly.GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat") ??
+                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("AuroraEngine.Common.Formats.NCS.NCSDecomp.parser.dat") ??
+                                              System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("AuroraEngine.Common.Formats.NCS.NCSDecomp.parser.dat") ??
+                                              typeof(Parser).Assembly.GetManifestResourceStream("AuroraEngine.Common.Formats.NCS.NCSDecomp.parser.dat") ??
                                               System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("parser.dat") ??
                                               System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("parser.dat");
                     if (stream == null)

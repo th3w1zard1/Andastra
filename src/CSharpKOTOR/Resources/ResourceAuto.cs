@@ -1,26 +1,26 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.BWM;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LIP;
-using CSharpKOTOR.Formats.LTR;
-using CSharpKOTOR.Formats.LYT;
-using CSharpKOTOR.Formats.MDL;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TPC;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Formats.VIS;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resource.Generics.DLG;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.BWM;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LIP;
+using AuroraEngine.Common.Formats.LTR;
+using AuroraEngine.Common.Formats.LYT;
+using AuroraEngine.Common.Formats.MDL;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TPC;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Formats.VIS;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resources
+namespace AuroraEngine.Common.Resources
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/resource_auto.py
     // Original: Automatic resource loading and saving utilities

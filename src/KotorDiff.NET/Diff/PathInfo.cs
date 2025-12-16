@@ -1,8 +1,8 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:700-770
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:700-770
 // Original: @dataclass class PathInfo: ...
 using System;
 using System.IO;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Installation;
 
 namespace KotorDiff.NET.Diff
 {

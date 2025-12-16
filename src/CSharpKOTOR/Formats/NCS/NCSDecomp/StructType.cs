@@ -1,12 +1,12 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:15-228
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:15-228
 // Original: public class StructType extends Type
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class StructType : Type
     {

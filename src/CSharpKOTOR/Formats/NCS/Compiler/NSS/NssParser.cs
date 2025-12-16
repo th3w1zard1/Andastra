@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using CSharpKOTOR.Common.Script;
+using AuroraEngine.Common.Common.Script;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
+namespace AuroraEngine.Common.Formats.NCS.Compiler.NSS
 {
     public class NssParser
     {

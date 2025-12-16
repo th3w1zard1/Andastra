@@ -10,10 +10,10 @@ using Odyssey.Scripting.VM;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Enums;
 using JetBrains.Annotations;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Formats.MDL;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Formats.MDL;
 using Odyssey.Graphics;
 using Vector2 = Odyssey.Graphics.Vector2;
 using Rectangle = Odyssey.Graphics.Rectangle;
@@ -1266,7 +1266,7 @@ namespace Odyssey.Game.Core
                 if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
                 {
                     // Try to load actual MDL model from module resources
-                    CSharpKOTOR.Formats.MDLData.MDL mdl = null;
+                    AuroraEngine.Common.Formats.MDLData.MDL mdl = null;
                     if (_session != null && _session.CurrentRuntimeModule != null)
                     {
                         mdl = LoadMDLModel(room.ModelName);
@@ -1550,7 +1550,7 @@ namespace Odyssey.Game.Core
         /// Loads an MDL model from the current module.
         /// </summary>
         [CanBeNull]
-        private CSharpKOTOR.Formats.MDLData.MDL LoadMDLModel(string modelResRef)
+        private AuroraEngine.Common.Formats.MDLData.MDL LoadMDLModel(string modelResRef)
         {
             if (string.IsNullOrEmpty(modelResRef) || _session == null)
             {
@@ -2312,7 +2312,7 @@ namespace Odyssey.Game.Core
                 Console.WriteLine($"[Dialogue] Available replies: {e.State.AvailableReplies.Count}");
                 for (int i = 0; i < e.State.AvailableReplies.Count; i++)
                 {
-                    CSharpKOTOR.Resource.Generics.DLG.DLGReply reply = e.State.AvailableReplies[i];
+                    AuroraEngine.Common.Resource.Generics.DLG.DLGReply reply = e.State.AvailableReplies[i];
                     string replyText = _session.DialogueManager.GetNodeText(reply);
                     Console.WriteLine($"  [{i}] {replyText}");
                 }
@@ -2382,7 +2382,7 @@ namespace Odyssey.Game.Core
                 float replyY = dialogueBoxY + 80; // Below dialogue text
                 for (int i = 0; i < state.AvailableReplies.Count && i < 9; i++)
                 {
-                    CSharpKOTOR.Resource.Generics.DLG.DLGReply reply = state.AvailableReplies[i];
+                    AuroraEngine.Common.Resource.Generics.DLG.DLGReply reply = state.AvailableReplies[i];
                     string replyText = _session.DialogueManager.GetNodeText(reply);
                     if (string.IsNullOrEmpty(replyText))
                     {

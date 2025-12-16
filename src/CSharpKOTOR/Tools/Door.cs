@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py
     public static class Door
@@ -326,7 +326,7 @@ namespace CSharpKOTOR.Tools
                     var mdlResult = installation.Resources.LookupResource(modelVar, ResourceType.MDL);
                     if (mdlResult != null && mdlResult.Data != null)
                     {
-                        textureNames = CSharpKOTOR.Tools.ModelTools.IterateTextures(mdlResult.Data).ToList();
+                        textureNames = AuroraEngine.Common.Tools.ModelTools.IterateTextures(mdlResult.Data).ToList();
                         break;
                     }
                 }

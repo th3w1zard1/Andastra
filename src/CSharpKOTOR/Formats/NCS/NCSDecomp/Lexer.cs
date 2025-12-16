@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:71-1050
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:71-1050
 // Original: public class Lexer
 // Note: This file is generated from lexer grammar, matching the Java implementation structure
 using System;
@@ -7,10 +7,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer
 {
     public class Lexer
     {
@@ -38,7 +38,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer
             {
                 try
                 {
-                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.lexer.dat") ?? System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.lexer.dat");
+                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("AuroraEngine.Common.Formats.NCS.NCSDecomp.lexer.dat") ?? System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("AuroraEngine.Common.Formats.NCS.NCSDecomp.lexer.dat");
                     if (stream == null)
                     {
                         throw new Exception("The file \"lexer.dat\" is either missing or corrupted.");

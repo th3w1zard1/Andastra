@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Enums;

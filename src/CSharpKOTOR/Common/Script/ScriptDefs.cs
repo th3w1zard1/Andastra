@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.Script;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
 
     /// <summary>

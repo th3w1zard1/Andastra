@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AVarDecl : ScriptNode
     {

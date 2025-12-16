@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/ini_manager.py
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/ini_manager.py
 // Original: class INIManager: ...
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.TSLPatcher
+namespace AuroraEngine.Common.TSLPatcher
 {
     /// <summary>
     /// Manages INI file operations with easy section merging and updating.

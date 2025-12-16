@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Enums;
@@ -87,7 +87,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTC);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTC);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -109,7 +109,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTP);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTP);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -131,7 +131,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTD);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTD);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -153,7 +153,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTT);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -175,7 +175,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTW);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTW);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -197,7 +197,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTS);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -219,7 +219,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTE);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTE);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -241,7 +241,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTM);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(templateResRef, AuroraEngine.Common.Resources.ResourceType.UTM);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {

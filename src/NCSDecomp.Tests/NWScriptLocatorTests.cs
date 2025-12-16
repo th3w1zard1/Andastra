@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using File = CSharpKOTOR.Formats.NCS.NCSDecomp.File;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using File = AuroraEngine.Common.Formats.NCS.NCSDecomp.File;
 using FluentAssertions;
 using Xunit;
 

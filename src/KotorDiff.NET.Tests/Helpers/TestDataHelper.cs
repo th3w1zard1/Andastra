@@ -1,20 +1,20 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:61-257
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:61-257
 // Original: class TestDataHelper: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using static CSharpKOTOR.Formats.GFF.GFFAuto;
-using CSharpKOTOR.Formats.SSF;
-using static CSharpKOTOR.Formats.SSF.SSFAuto;
-using CSharpKOTOR.Formats.TwoDA;
-using static CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
-using CSharpKOTOR.Formats.TLK;
-using static CSharpKOTOR.Formats.TLK.TLKAuto;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using static AuroraEngine.Common.Formats.GFF.GFFAuto;
+using AuroraEngine.Common.Formats.SSF;
+using static AuroraEngine.Common.Formats.SSF.SSFAuto;
+using AuroraEngine.Common.Formats.TwoDA;
+using static AuroraEngine.Common.Formats.TwoDA.TwoDAAuto;
+using AuroraEngine.Common.Formats.TLK;
+using static AuroraEngine.Common.Formats.TLK.TLKAuto;
+using AuroraEngine.Common.Resources;
 using KotorDiff.NET.App;
 
 namespace KotorDiff.NET.Tests.Helpers

@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.IO;
 
-namespace CSharpKOTOR.Formats.TPC
+namespace AuroraEngine.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tga.py
     // Original: class TGAImage, read_tga, write_tga

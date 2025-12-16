@@ -1,6 +1,6 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace CSharpKOTOR.Tests
+namespace AuroraEngine.Common.Tests
 {
     public class PlaceholderTests
     {

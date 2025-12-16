@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:40-47
     // Original: _SCAN_RESULTS_CACHE: dict[tuple, list[tuple[int, str]]] = {}
@@ -1057,7 +1057,7 @@ namespace CSharpKOTOR.Tools
             }
 
             // Get module resources
-            string modulesPath = CSharpKOTOR.Installation.Installation.GetModulesPath(installation.Path);
+            string modulesPath = AuroraEngine.Common.Installation.Installation.GetModulesPath(installation.Path);
             if (Directory.Exists(modulesPath))
             {
                 var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")

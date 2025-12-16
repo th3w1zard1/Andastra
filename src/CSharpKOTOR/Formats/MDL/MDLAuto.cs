@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Formats.MDLData;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Formats.MDLData;
 
-namespace CSharpKOTOR.Formats.MDL
+namespace AuroraEngine.Common.Formats.MDL
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py
     // Simplified detector and dispatcher for MDL/MDL_ASCII

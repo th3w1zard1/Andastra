@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:22-219
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:22-219
 // Original: public class ActionsData
 using System;
 using System.Collections.Generic;
@@ -6,10 +6,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     public class ActionsData
     {

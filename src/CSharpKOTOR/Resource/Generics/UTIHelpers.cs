@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
-using static CSharpKOTOR.Common.GameExtensions;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
+using static AuroraEngine.Common.Common.GameExtensions;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
-namespace CSharpKOTOR.Resource.Generics
+namespace AuroraEngine.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/uti.py
     // Original: construct_uti and dismantle_uti functions

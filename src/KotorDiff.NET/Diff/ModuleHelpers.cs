@@ -1,11 +1,11 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:88-111, 1988-2007, 2010-2012
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:88-111, 1988-2007, 2010-2012
 // Original: Various module helper functions
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Formats.Capsule;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Formats.Capsule;
 
 namespace KotorDiff.NET.Diff
 {
@@ -281,7 +281,7 @@ namespace KotorDiff.NET.Diff
                 {
                     return new CompositeModuleCapsule(filePath);
                 }
-                return new CSharpKOTOR.Formats.Capsule.Capsule(filePath);
+                return new AuroraEngine.Common.Formats.Capsule.Capsule(filePath);
             }
             catch (Exception e)
             {

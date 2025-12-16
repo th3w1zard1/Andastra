@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tests.Common;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tests.Common;
 using FluentAssertions;
 using Xunit;
-using static CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
+using static AuroraEngine.Common.Formats.TwoDA.TwoDAAuto;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

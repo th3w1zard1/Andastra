@@ -1,10 +1,10 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_kotordiff_comprehensive.py
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_kotordiff_comprehensive.py
 // Integration tests for KotorDiff installation comparison
 using System;
 using System.IO;
 using System.Diagnostics;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Mods;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Mods;
 using KotorDiff.NET.Resolution;
 using KotorDiff.NET.Diff;
 using Xunit;

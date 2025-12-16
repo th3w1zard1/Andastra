@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract.SaveData
+namespace AuroraEngine.Common.Extract.SaveData
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/savedata.py:1567-1848
     // Original: class SaveNestedCapsule

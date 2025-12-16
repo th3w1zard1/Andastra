@@ -1,12 +1,12 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:782-811
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:782-811
 // Original: class CompositeModuleCapsule: ...
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Installation;
 
 namespace KotorDiff.NET.Diff
 {

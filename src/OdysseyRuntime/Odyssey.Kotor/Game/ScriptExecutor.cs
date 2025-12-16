@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 using Odyssey.Core.Dialogue;
 using Odyssey.Core.Interfaces;
 using Odyssey.Scripting.VM;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.EngineApi;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 
 namespace Odyssey.Kotor.Game
 {
@@ -95,7 +95,7 @@ namespace Odyssey.Kotor.Game
             try
             {
                 // Load NCS file from installation
-                CSharpKOTOR.Installation.ResourceResult resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
+                AuroraEngine.Common.Installation.ResourceResult resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     Console.WriteLine("[ScriptExecutor] Script not found: " + scriptResRef);

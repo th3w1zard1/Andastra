@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.Compiler;
-using CSharpKOTOR.Formats.NCS.Optimizers;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.Compiler;
+using AuroraEngine.Common.Formats.NCS.Optimizers;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

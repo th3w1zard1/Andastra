@@ -1,14 +1,14 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:296-688
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:296-688
 // Original: class GFFDiffAnalyzer(DiffAnalyzer): ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Mods.GFF;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Mods.GFF;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
     /// <summary>
     /// Analyzer for GFF file differences.

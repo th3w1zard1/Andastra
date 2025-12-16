@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.DLG
+namespace AuroraEngine.Common.Resource.Generics.DLG
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py
     // Original: construct_dlg, dismantle_dlg, read_dlg, bytes_dlg functions

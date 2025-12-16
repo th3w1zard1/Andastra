@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.Compiler.NSS;
-using CSharpKOTOR.Formats.NCS.Optimizers;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
+using AuroraEngine.Common.Formats.NCS.Optimizers;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

@@ -1,9 +1,9 @@
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.GFF;
+﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.GFF;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Memory
+namespace AuroraEngine.Common.Tests.Memory
 {
 
     /// <summary>

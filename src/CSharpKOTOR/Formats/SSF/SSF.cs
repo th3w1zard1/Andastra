@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.SSF
+namespace AuroraEngine.Common.Formats.SSF
 {
     /// <summary>
     /// Represents the data stored in an SSF (sound set file) file.

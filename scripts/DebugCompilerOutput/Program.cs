@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.Compiler;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.Compiler;
 
 class Program
 {

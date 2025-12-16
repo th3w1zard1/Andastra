@@ -1,14 +1,14 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
-using Quaternion = CSharpKOTOR.Common.Quaternion;
+using Quaternion = AuroraEngine.Common.Common.Quaternion;
 
-namespace CSharpKOTOR.Resource.Formats.LYT
+namespace AuroraEngine.Common.Resource.Formats.LYT
 {
     /// <summary>
     /// Represents a LYT (Layout) file defining area spatial structure.
@@ -133,6 +133,6 @@ namespace CSharpKOTOR.Resource.Formats.LYT
         public string Room { get; set; }
         public string Door { get; set; }
         public Vector3 Position { get; set; }
-        public CSharpKOTOR.Common.Quaternion Orientation { get; set; }
+        public AuroraEngine.Common.Common.Quaternion Orientation { get; set; }
     }
 }

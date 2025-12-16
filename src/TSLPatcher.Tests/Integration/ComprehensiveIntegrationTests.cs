@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Integration
+namespace AuroraEngine.Common.Tests.Integration
 {
 
     /// <summary>

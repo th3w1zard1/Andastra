@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Odyssey.Content.Interfaces;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
 namespace Odyssey.MonoGame.Rendering
 {
@@ -215,22 +215,22 @@ namespace Odyssey.MonoGame.Rendering
             });
         }
 
-        private CSharpKOTOR.Resources.ResourceType ConvertResourceType(ResourceType type)
+        private AuroraEngine.Common.Resources.ResourceType ConvertResourceType(ResourceType type)
         {
             switch (type)
             {
                 case ResourceType.Texture:
-                    return CSharpKOTOR.Resources.ResourceType.TPC;
+                    return AuroraEngine.Common.Resources.ResourceType.TPC;
                 case ResourceType.Model:
-                    return CSharpKOTOR.Resources.ResourceType.MDL;
+                    return AuroraEngine.Common.Resources.ResourceType.MDL;
                 case ResourceType.Animation:
-                    return CSharpKOTOR.Resources.ResourceType.MDL;
+                    return AuroraEngine.Common.Resources.ResourceType.MDL;
                 case ResourceType.Sound:
-                    return CSharpKOTOR.Resources.ResourceType.WAV;
+                    return AuroraEngine.Common.Resources.ResourceType.WAV;
                 case ResourceType.Script:
-                    return CSharpKOTOR.Resources.ResourceType.NCS;
+                    return AuroraEngine.Common.Resources.ResourceType.NCS;
                 default:
-                    return CSharpKOTOR.Resources.ResourceType.INVALID;
+                    return AuroraEngine.Common.Resources.ResourceType.INVALID;
             }
         }
     }

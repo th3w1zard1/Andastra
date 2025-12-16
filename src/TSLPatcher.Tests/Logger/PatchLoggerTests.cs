@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CSharpKOTOR.Logger;
+using AuroraEngine.Common.Logger;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Logger
+namespace AuroraEngine.Common.Tests.Logger
 {
 
     /// <summary>

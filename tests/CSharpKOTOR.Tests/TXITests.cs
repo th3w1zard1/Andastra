@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using NUnit.Framework;
-using CSharpKOTOR.Formats.TXI;
+using AuroraEngine.Common.Formats.TXI;
 
-namespace CSharpKOTOR.Tests
+namespace AuroraEngine.Common.Tests
 {
     [TestFixture]
     public class TXIParseBlendingTests

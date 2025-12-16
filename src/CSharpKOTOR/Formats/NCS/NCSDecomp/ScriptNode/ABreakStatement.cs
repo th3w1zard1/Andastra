@@ -1,8 +1,8 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ABreakStatement.java:7-12
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ABreakStatement.java:7-12
 // Original: public class ABreakStatement extends ScriptNode
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ABreakStatement : ScriptNode
     {

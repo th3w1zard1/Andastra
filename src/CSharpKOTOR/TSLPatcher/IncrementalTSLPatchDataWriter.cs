@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1214-4389
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1214-4389
 // Original: class IncrementalTSLPatchDataWriter: ...
 using System;
 using System.Collections;
@@ -6,28 +6,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LIP;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.NCS;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Tools;
-using CSharpKOTOR.Utility;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LIP;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.NCS;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Tools;
+using AuroraEngine.Common.Utility;
 using SystemTextEncoding = System.Text.Encoding;
 using JetBrains.Annotations;
-using InstallationClass = CSharpKOTOR.Installation.Installation;
-namespace CSharpKOTOR.TSLPatcher
+using InstallationClass = AuroraEngine.Common.Installation.Installation;
+namespace AuroraEngine.Common.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
     // Original: @dataclass class TwoDALinkTarget, PendingStrRefReference, Pending2DARowReference

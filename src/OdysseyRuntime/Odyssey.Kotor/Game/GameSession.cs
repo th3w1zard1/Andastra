@@ -19,9 +19,9 @@ using Odyssey.Kotor.Loading;
 using Odyssey.Kotor.EngineApi;
 using Odyssey.Scripting.VM;
 using Odyssey.Scripting.Interfaces;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using Odyssey.Core;
 using Odyssey.Core.Journal;
 
@@ -211,7 +211,7 @@ namespace Odyssey.Kotor.Game
                 FireScriptEvent,
                 null, // Loading.ModuleLoader not used - we use Game.ModuleLoader instead
                 (entity) => entity == _playerEntity || (entity != null && entity.GetData<bool>("IsPlayer")),
-                () => _currentModule != null ? new CSharpKOTOR.Common.Module(_currentModuleName, _installation) : null
+                () => _currentModule != null ? new AuroraEngine.Common.Module(_currentModuleName, _installation) : null
             );
 
             // Initialize input handler for player control
@@ -553,7 +553,7 @@ namespace Odyssey.Kotor.Game
         /// <summary>
         /// Loads a dialogue file.
         /// </summary>
-        private CSharpKOTOR.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
+        private AuroraEngine.Common.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
         {
             if (string.IsNullOrEmpty(resRef) || _installation == null)
             {
@@ -562,13 +562,13 @@ namespace Odyssey.Kotor.Game
 
             try
             {
-                CSharpKOTOR.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
+                AuroraEngine.Common.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
                 }
 
-                return CSharpKOTOR.Resource.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
+                return AuroraEngine.Common.Resource.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
             }
             catch (Exception ex)
             {
@@ -589,7 +589,7 @@ namespace Odyssey.Kotor.Game
 
             try
             {
-                CSharpKOTOR.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
+                AuroraEngine.Common.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     return null;

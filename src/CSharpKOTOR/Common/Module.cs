@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resource.Generics.DLG;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resource.Generics.DLG;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tools;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:70-75
     // Original: SEARCH_ORDER: list[SearchLocation] = [SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN]
@@ -514,7 +514,7 @@ namespace CSharpKOTOR.Common
             _cachedModId = null;
 
             // Build all capsules relevant to this root in the provided installation
-            string modulesPath = CSharpKOTOR.Installation.Installation.GetModulesPath(_installation.Path);
+            string modulesPath = AuroraEngine.Common.Installation.Installation.GetModulesPath(_installation.Path);
             if (_dotMod)
             {
                 string modFilepath = Path.Combine(modulesPath, _root + KModuleType.MOD.GetExtension());
@@ -1507,8 +1507,8 @@ namespace CSharpKOTOR.Common
                         continue;
                     }
 
-                    lookupTextureQueries.UnionWith(CSharpKOTOR.Tools.ModelTools.IterateTextures(modelData));
-                    lookupLightmapQueries.UnionWith(CSharpKOTOR.Tools.ModelTools.IterateLightmaps(modelData));
+                    lookupTextureQueries.UnionWith(AuroraEngine.Common.Tools.ModelTools.IterateTextures(modelData));
+                    lookupLightmapQueries.UnionWith(AuroraEngine.Common.Tools.ModelTools.IterateLightmaps(modelData));
                 }
                 catch (Exception ex)
                 {

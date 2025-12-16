@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Formats.BWM;
+using AuroraEngine.Common.Formats.BWM;
 using Odyssey.Core.Navigation;
 
 namespace Odyssey.Content.Converters

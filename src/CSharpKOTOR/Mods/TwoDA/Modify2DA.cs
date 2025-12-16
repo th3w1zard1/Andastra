@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Memory;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Memory;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Mods.TwoDA
+namespace AuroraEngine.Common.Mods.TwoDA
 {
 
     /// <summary>

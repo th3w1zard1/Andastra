@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework.Audio;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Audio;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Formats.WAV;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Formats.WAV;
 
 namespace Odyssey.MonoGame.Audio
 {

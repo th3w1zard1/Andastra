@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

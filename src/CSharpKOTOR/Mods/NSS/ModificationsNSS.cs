@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.Compiler;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.Compiler;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Mods.NSS
+namespace AuroraEngine.Common.Mods.NSS
 {
 
     /// <summary>
@@ -84,7 +84,7 @@ namespace CSharpKOTOR.Mods.NSS
 
                 try
                 {
-                    CSharpKOTOR.Formats.NCS.NCS ncs = NCSAuto.CompileNss(
+                    AuroraEngine.Common.Formats.NCS.NCS ncs = NCSAuto.CompileNss(
                         mutableSource.Value,
                         game,
                         null,

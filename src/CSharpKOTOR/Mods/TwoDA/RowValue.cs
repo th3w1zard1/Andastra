@@ -1,11 +1,11 @@
-using System;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.NSS;
+﻿using System;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.NSS;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Mods.TwoDA
+namespace AuroraEngine.Common.Mods.TwoDA
 {
 
     /// <summary>

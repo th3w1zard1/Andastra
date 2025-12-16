@@ -1,15 +1,15 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/TokenIndex.java:66-335
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/TokenIndex.java:66-335
 // Original: class TokenIndex extends AnalysisAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Parser
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/TokenIndex.java:66-67
     // Original: class TokenIndex extends AnalysisAdapter { int index; }

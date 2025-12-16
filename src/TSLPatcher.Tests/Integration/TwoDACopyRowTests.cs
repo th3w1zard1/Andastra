@@ -1,14 +1,14 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Integration
+namespace AuroraEngine.Common.Tests.Integration
 {
 
     /// <summary>

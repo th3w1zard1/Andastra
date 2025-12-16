@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
 
     /// <summary>

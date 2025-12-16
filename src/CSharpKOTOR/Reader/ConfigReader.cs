@@ -1,26 +1,26 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.NCS;
-using CSharpKOTOR.Mods.NSS;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.NCS;
+using AuroraEngine.Common.Mods.NSS;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
 using IniParser;
 using IniParser.Model;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Reader
+namespace AuroraEngine.Common.Reader
 {
 
     /// <summary>
@@ -1142,7 +1142,7 @@ namespace CSharpKOTOR.Reader
                 int substringId = ParseIntValue(key.Substring(lowerKey.IndexOf("(lang") + 5, key.Length - lowerKey.IndexOf("(lang") - 6));
                 Language language;
                 Gender gender;
-                CSharpKOTOR.Common.LocalizedString.SubstringPair(substringId, out language, out gender);
+                AuroraEngine.Common.Common.LocalizedString.SubstringPair(substringId, out language, out gender);
                 var locstring = new LocalizedStringDelta();
                 locstring.SetData(language, gender, strValue);
                 value = new FieldValueConstant(locstring);

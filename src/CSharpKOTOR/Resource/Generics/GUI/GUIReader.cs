@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.GUI
+namespace AuroraEngine.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// Reads KOTOR GUI files from GFF format.

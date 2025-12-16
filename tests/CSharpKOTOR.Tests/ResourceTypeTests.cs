@@ -1,7 +1,7 @@
-using NUnit.Framework;
-using CSharpKOTOR.Resources;
+﻿using NUnit.Framework;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Tests
+namespace AuroraEngine.Common.Tests
 {
     [TestFixture]
     public class ResourceTypeTests

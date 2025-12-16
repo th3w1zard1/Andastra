@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Numerics;
 
-namespace CSharpKOTOR.Formats.GFF
+namespace AuroraEngine.Common.Formats.GFF
 {
 
     /// <summary>

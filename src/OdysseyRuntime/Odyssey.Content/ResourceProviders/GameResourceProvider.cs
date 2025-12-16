@@ -4,17 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
-using KotorSearchLocation = CSharpKOTOR.Installation.SearchLocation;
+using KotorSearchLocation = AuroraEngine.Common.Installation.SearchLocation;
 using OdysseySearchLocation = Odyssey.Content.Interfaces.SearchLocation;
 
 namespace Odyssey.Content.ResourceProviders
 {
     /// <summary>
-    /// Resource provider that wraps CSharpKOTOR.Installation for unified resource access.
+    /// Resource provider that wraps AuroraEngine.Common.Installation for unified resource access.
     /// </summary>
     /// <remarks>
     /// Game Resource Provider:
@@ -22,7 +22,7 @@ namespace Odyssey.Content.ResourceProviders
     /// - Located via string references: "Resource" @ 0x007c14d4 (resource field)
     /// - Resource table errors: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
     /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124 (duplicate resource key error)
-    /// - Original implementation: Wraps CSharpKOTOR.Installation for resource access
+    /// - Original implementation: Wraps AuroraEngine.Common.Installation for resource access
     /// - Resource lookup: Uses installation resource system to locate files in archives (RIM, ERF, BIF, MOD)
     /// - Module context: Sets current module for module-specific resource lookups (module RIMs loaded first)
     /// - Search order: Module RIMs → Override directory → Main game archives (chitin.key/BIF files)
@@ -64,7 +64,7 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(
+                AuroraEngine.Common.Installation.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -92,7 +92,7 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(
+                AuroraEngine.Common.Installation.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -116,7 +116,7 @@ namespace Odyssey.Content.ResourceProviders
                     ? order.Select(ConvertSearchLocation).Where(l => l.HasValue).Select(l => l.Value).ToArray()
                     : null;
 
-                List<CSharpKOTOR.Resources.LocationResult> results = _installation.Resources.LocateResource(
+                List<AuroraEngine.Common.Resources.LocationResult> results = _installation.Resources.LocateResource(
                     id.ResName,
                     id.ResType,
                     kotorOrder,
@@ -124,7 +124,7 @@ namespace Odyssey.Content.ResourceProviders
                 );
 
                 var converted = new List<Odyssey.Content.Interfaces.LocationResult>();
-                foreach (CSharpKOTOR.Resources.LocationResult r in results)
+                foreach (AuroraEngine.Common.Resources.LocationResult r in results)
                 {
                     converted.Add(new Odyssey.Content.Interfaces.LocationResult
                     {
@@ -152,7 +152,7 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(
+                AuroraEngine.Common.Installation.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,

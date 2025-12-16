@@ -1,16 +1,16 @@
-// Comprehensive tests for InstallFolderDeterminer
+﻿// Comprehensive tests for InstallFolderDeterminer
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:1212-1236
 using System.Collections.Generic;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.TSLPatcher;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Generator
+namespace AuroraEngine.Common.Tests.Generator
 {
     /// <summary>
     /// Comprehensive tests for InstallFolderDeterminer.

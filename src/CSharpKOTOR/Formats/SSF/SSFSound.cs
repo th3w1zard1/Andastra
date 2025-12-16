@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.SSF
+﻿namespace AuroraEngine.Common.Formats.SSF
 {
 
     /// <summary>

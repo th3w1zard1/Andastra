@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.LTR;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.LTR;
 
-namespace CSharpKOTOR.Formats.LTR
+namespace AuroraEngine.Common.Formats.LTR
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/io_ltr.py:14-104
     // Original: class LTRBinaryReader(ResourceReader)

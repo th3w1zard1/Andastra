@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.TPC
+namespace AuroraEngine.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_auto.py
     // Simplified: detect_tpc, read_tpc, write_tpc, bytes_tpc

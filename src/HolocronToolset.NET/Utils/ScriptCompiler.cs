@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Utils;
 

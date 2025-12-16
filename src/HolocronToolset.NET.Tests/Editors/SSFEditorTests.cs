@@ -1,6 +1,6 @@
-using System;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Resources;
+﻿using System;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;

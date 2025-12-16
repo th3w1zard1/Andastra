@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using Xunit;
 using IOFile = System.IO.File;
-using NcsFile = CSharpKOTOR.Formats.NCS.NCSDecomp.NcsFile;
+using NcsFile = AuroraEngine.Common.Formats.NCS.NCSDecomp.NcsFile;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
     /// <summary>
     /// Test NCS -> NSS -> NCS roundtrip for K1 undecompilable files.
@@ -216,7 +216,7 @@ namespace CSharpKOTOR.Tests.Formats
             return null;
         }
 
-        private bool TestRoundtrip(CSharpKOTOR.Formats.NCS.NCSDecomp.FileDecompiler decompiler, string originalNcsPath, string testId, string nwnnsscompPath)
+        private bool TestRoundtrip(AuroraEngine.Common.Formats.NCS.NCSDecomp.FileDecompiler decompiler, string originalNcsPath, string testId, string nwnnsscompPath)
         {
             // Read original NCS bytes
             byte[] originalBytes = IOFile.ReadAllBytes(originalNcsPath);

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -171,12 +171,12 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Try to get a UTM resource from installation
-                var queries = new System.Collections.Generic.List<CSharpKOTOR.Resources.ResourceIdentifier>
+                var queries = new System.Collections.Generic.List<AuroraEngine.Common.Resources.ResourceIdentifier>
                 {
-                    new CSharpKOTOR.Resources.ResourceIdentifier("", ResourceType.UTM)
+                    new AuroraEngine.Common.Resources.ResourceIdentifier("", ResourceType.UTM)
                 };
                 var utmResourcesDict = installation.Resources(queries);
-                var utmResources = new System.Collections.Generic.List<CSharpKOTOR.Installation.ResourceResult>();
+                var utmResources = new System.Collections.Generic.List<AuroraEngine.Common.Installation.ResourceResult>();
                 foreach (var kvp in utmResourcesDict)
                 {
                     if (kvp.Value != null)
@@ -192,7 +192,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: Use first UTM resource
-                CSharpKOTOR.Installation.ResourceResult utmResource = utmResources[0];
+                AuroraEngine.Common.Installation.ResourceResult utmResource = utmResources[0];
                 var resourceResult = installation.Resource(utmResource.ResName, utmResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
@@ -218,7 +218,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                AuroraEngine.Common.Formats.GFF.GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
             else
@@ -241,7 +241,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                AuroraEngine.Common.Formats.GFF.GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
         }
@@ -318,7 +318,7 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
 
             // Matching PyKotor implementation: original_utm = read_utm(original_data)
-            UTM originalUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
+            UTM originalUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(originalData));
 
             // Matching PyKotor implementation: new_name = LocalizedString.from_english("Modified Merchant Name")
             // Matching PyKotor implementation: editor.ui.nameEdit.set_locstring(new_name)
@@ -330,7 +330,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching PyKotor implementation: modified_utm = read_utm(data)
-            UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
             // Matching PyKotor implementation: assert modified_utm.name.get(Language.ENGLISH, Gender.MALE) == "Modified Merchant Name"
             modifiedUtm.Name.Get(Language.English, Gender.Male, false).Should().Be("Modified Merchant Name");
@@ -420,7 +420,7 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Load(utmFile, "m_chano", ResourceType.UTM, originalData);
 
             // Matching PyKotor implementation: original_utm = read_utm(original_data)
-            UTM originalUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
+            UTM originalUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(originalData));
 
             // Matching PyKotor implementation: editor.ui.tagEdit.setText("modified_tag")
             editor.TagEdit.Should().NotBeNull("TagEdit should be initialized");
@@ -430,7 +430,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching PyKotor implementation: modified_utm = read_utm(data)
-            UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
             // Matching PyKotor implementation: assert modified_utm.tag == "modified_tag"
             modifiedUtm.Tag.Should().Be("modified_tag");
@@ -479,7 +479,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching PyKotor implementation: modified_utm = read_utm(data)
-            UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
             // Matching PyKotor implementation: assert str(modified_utm.resref) == "modified_resref"
             modifiedUtm.ResRef.ToString().Should().Be("modified_resref");
@@ -533,7 +533,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 var (data, _) = editor.Build();
 
                 // Matching PyKotor implementation: modified_utm = read_utm(data)
-                UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+                UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
                 // Matching PyKotor implementation: assert modified_utm.id == val
                 modifiedUtm.Id.Should().Be(val);
@@ -586,7 +586,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 var (data, _) = editor.Build();
 
                 // Matching PyKotor implementation: modified_utm = read_utm(data)
-                UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+                UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
                 // Matching PyKotor implementation: assert modified_utm.mark_up == val
                 modifiedUtm.MarkUp.Should().Be(val);
@@ -603,7 +603,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 var (data, _) = editor.Build();
 
                 // Matching PyKotor implementation: modified_utm = read_utm(data)
-                UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+                UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
                 // Matching PyKotor implementation: assert modified_utm.mark_down == val
                 modifiedUtm.MarkDown.Should().Be(val);
@@ -644,7 +644,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching PyKotor implementation: modified_utm = read_utm(data)
-            UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
             // Matching PyKotor implementation: assert str(modified_utm.on_open) == "test_on_open"
             modifiedUtm.OnOpenScript.ToString().Should().Be("test_on_open");
@@ -705,7 +705,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 var (data, _) = editor.Build();
 
                 // Matching PyKotor implementation: modified_utm = read_utm(data)
-                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                AuroraEngine.Common.Formats.GFF.GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
                 UTM modifiedUtm = UTMHelpers.ConstructUtm(gff);
 
                 // Debug: Check what was written to GFF (BuySellFlag is stored as UInt8, not int)
@@ -778,7 +778,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 var (data, _) = editor.Build();
 
                 // Matching PyKotor implementation: modified_utm = read_utm(data)
-                UTM modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+                UTM modifiedUtm = UTMHelpers.ConstructUtm(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
                 // Matching PyKotor implementation: assert modified_utm.comment == comment
                 modifiedUtm.Comment.Should().Be(comment);

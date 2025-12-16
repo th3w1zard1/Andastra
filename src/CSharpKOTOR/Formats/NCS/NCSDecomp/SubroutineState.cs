@@ -1,17 +1,17 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:22-480
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:22-480
 // Original: public class SubroutineState
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineState
     {

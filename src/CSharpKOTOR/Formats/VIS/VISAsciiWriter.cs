@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.VIS;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.VIS;
 
-namespace CSharpKOTOR.Formats.VIS
+namespace AuroraEngine.Common.Formats.VIS
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/io_vis.py:76-87
     // Original: class VISAsciiWriter(ResourceWriter)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Odyssey.Core.Actions;
 using Odyssey.Core.AI;
+using Odyssey.Core.Animation;
 using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
@@ -70,6 +71,7 @@ namespace Odyssey.Core.Entities
             PerceptionSystem = new PerceptionSystem(this);
             TriggerSystem = new TriggerSystem(this);
             AIController = new AIController(this, CombatSystem);
+            AnimationSystem = new AnimationSystem(this);
             // ModuleTransitionSystem will be initialized when SaveSystem and ModuleLoader are available
             ModuleTransitionSystem = null;
         }
@@ -121,6 +123,15 @@ namespace Odyssey.Core.Entities
             return entity;
         }
 
+        /// <summary>
+        /// Destroys an entity by its ObjectId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: DestroyObject NWScript function
+        /// Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event)
+        /// Original implementation: Unregisters entity from world, fires destroy events, marks as invalid
+        /// Destroy sequence: Unregister from world indices, fire OnDestroy script event, mark entity as invalid
+        /// </remarks>
         public void DestroyEntity(uint objectId)
         {
             IEntity entity = GetEntity(objectId);
@@ -135,6 +146,16 @@ namespace Odyssey.Core.Entities
             }
         }
 
+        /// <summary>
+        /// Gets an entity by its ObjectId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetObject function
+        /// Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+        /// Original implementation: FUN_004dc030 @ 0x004dc030 (wrapper that calls FUN_004e9de0)
+        /// ObjectId lookup: O(1) dictionary lookup by ObjectId (uint32)
+        /// Returns null if ObjectId not found (OBJECT_INVALID = 0x7F000000)
+        /// </remarks>
         public IEntity GetEntity(uint objectId)
         {
             if (_entitiesById.TryGetValue(objectId, out IEntity entity))
@@ -144,6 +165,17 @@ namespace Odyssey.Core.Entities
             return null;
         }
 
+        /// <summary>
+        /// Gets an entity by its Tag string.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetObjectByTag NWScript function
+        /// Located via string references: "GetObjectByTag" function uses case-insensitive tag comparison
+        /// Original implementation: Tag lookup is case-insensitive, supports nth parameter for multiple entities with same tag
+        /// Tag matching: Uses case-insensitive string comparison (StringComparer.OrdinalIgnoreCase)
+        /// nth parameter: Returns nth entity with matching tag (0 = first, 1 = second, etc.)
+        /// Returns null if tag not found or nth is out of range
+        /// </remarks>
         public IEntity GetEntityByTag(string tag, int nth = 0)
         {
             if (string.IsNullOrEmpty(tag))

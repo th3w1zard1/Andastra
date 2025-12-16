@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Config
+﻿namespace AuroraEngine.Common.Config
 {
 
     /// <summary>

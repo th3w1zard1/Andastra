@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -558,13 +558,13 @@ namespace HoloPatcher.UI.Views
                     // Set as plain text content - not as a log entry
                     // This matches Python's set_stripped_rtf_text behavior
                     viewModel.ClearLogText();
-                    viewModel.AddLogEntry(stripped, CSharpKOTOR.Logger.LogType.Note);
+                    viewModel.AddLogEntry(stripped, AuroraEngine.Common.Logger.LogType.Note);
                 }
                 catch (Exception stripEx)
                 {
                     Console.WriteLine($"[RTF] ERROR: Failed to strip RTF: {stripEx.Message}");
                     viewModel.IsRtfContent = false;
-                    viewModel.AddLogEntry("Failed to load RTF content. Please check the console for details.", CSharpKOTOR.Logger.LogType.Error);
+                    viewModel.AddLogEntry("Failed to load RTF content. Please check the console for details.", AuroraEngine.Common.Logger.LogType.Error);
                 }
             }
         }

@@ -1,7 +1,7 @@
-using CSharpKOTOR.Common;
+﻿using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.GUI
+namespace AuroraEngine.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// Direction properties for scrollbars.

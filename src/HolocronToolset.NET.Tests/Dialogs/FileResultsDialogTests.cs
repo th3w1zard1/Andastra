@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
 using HolocronToolset.NET.Tests.TestHelpers;
 using Xunit;
-using FileResource = CSharpKOTOR.Resources.FileResource;
+using FileResource = AuroraEngine.Common.Resources.FileResource;
 
 namespace HolocronToolset.NET.Tests.Dialogs
 {

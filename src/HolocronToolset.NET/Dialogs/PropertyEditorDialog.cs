@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resource.Generics;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resource.Generics;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
 using HolocronToolset.NET.Widgets.Edit;

@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/FloatConst.java:13-43
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/FloatConst.java:13-43
 // Original: public class FloatConst extends Const { private Float value; public FloatConst(Float value) { this.type = new Type((byte)4); this.value = value; this.size = 1; } public Float value() { return this.value; } @Override public String toString() { java.text.DecimalFormat df = new java.text.DecimalFormat("0.0##############"); df.setMaximumFractionDigits(15); df.setMinimumFractionDigits(0); df.setGroupingUsed(false); String result = df.format(this.value); if (result.indexOf('.') == -1) { result = result + ".0"; } return result; } }
 using System;
 using System.Collections.Generic;
@@ -6,10 +6,10 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack
 {
     public class FloatConst : Const
     {

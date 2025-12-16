@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.RIM
+namespace AuroraEngine.Common.Formats.RIM
 {
 
     /// <summary>

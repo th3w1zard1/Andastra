@@ -134,7 +134,8 @@ namespace Odyssey.MonoGame.Rendering
             // Dispose cached PSOs if needed
             foreach (object pso in _psoCache.Values)
             {
-                if (pso is IDisposable disposable)
+                IDisposable disposable = pso as IDisposable;
+                if (disposable != null)
                 {
                     disposable.Dispose();
                 }

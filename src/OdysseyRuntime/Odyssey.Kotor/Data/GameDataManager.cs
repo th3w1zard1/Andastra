@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Installation;
 using JetBrains.Annotations;
 
 namespace Odyssey.Kotor.Data
@@ -82,7 +82,7 @@ namespace Odyssey.Kotor.Data
             // Load from installation
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(tableName, CSharpKOTOR.Resources.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, AuroraEngine.Common.Resources.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;

@@ -80,6 +80,10 @@ namespace Odyssey.MonoGame.Rendering
 
             public void SetResource(string name, object resource)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Resource name must not be null or empty.", nameof(name));
+                }
                 _resources[name] = resource;
             }
         }
@@ -103,7 +107,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (pass == null)
             {
-                throw new ArgumentNullException("pass");
+                throw new ArgumentNullException(nameof(pass));
             }
 
             _passes[pass.Name] = pass;

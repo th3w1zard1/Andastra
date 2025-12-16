@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Kotor.Profiles;
 
@@ -24,7 +24,7 @@ namespace Odyssey.Kotor.Data
     /// - Original implementation: Loads 2DA files from chitin.key or module archives
     /// - Caches loaded tables for performance (avoid reloading on every lookup)
     /// - Provides typed lookup methods for common tables (appearance, baseitems, feats, spells)
-    /// - Based on CSharpKOTOR.Formats.TwoDA.TwoDA for parsing
+    /// - Based on AuroraEngine.Common.Formats.TwoDA.TwoDA for parsing
     /// - Resource precedence: override → module → chitin (via IGameResourceProvider)
     /// - Table lookup: Uses row label (string) or row index (int) to access data
     /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)

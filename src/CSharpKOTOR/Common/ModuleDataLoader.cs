@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tools;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py (backend-agnostic loader)
     public static class ModuleDataSearch

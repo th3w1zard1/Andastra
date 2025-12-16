@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Resource.Generics
+namespace AuroraEngine.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utw.py:155-184
     // Original: def read_utw, def write_utw, def bytes_utw

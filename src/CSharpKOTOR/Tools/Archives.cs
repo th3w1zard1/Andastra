@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.KEY;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Resource.Formats.BIF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.KEY;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Resource.Formats.BIF;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/archives.py:33-47
     // Original: def matches_filter(text: str, pattern: str) -> bool:

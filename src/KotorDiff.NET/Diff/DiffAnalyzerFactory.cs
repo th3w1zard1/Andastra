@@ -1,10 +1,10 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:845-869
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:845-869
 // Original: class DiffAnalyzerFactory: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Diff;
-using CSharpKOTOR.Mods;
+using AuroraEngine.Common.Diff;
+using AuroraEngine.Common.Mods;
 
 namespace KotorDiff.NET.Diff
 {
@@ -80,7 +80,7 @@ namespace KotorDiff.NET.Diff
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
         {
-            var analyzer = new CSharpKOTOR.Diff.GffDiffAnalyzer();
+            var analyzer = new AuroraEngine.Common.Diff.GffDiffAnalyzer();
             return analyzer.Analyze(leftData, rightData, identifier);
         }
     }
@@ -93,17 +93,17 @@ namespace KotorDiff.NET.Diff
             try
             {
                 // Read TLK files
-                var leftReader = new CSharpKOTOR.Formats.TLK.TLKBinaryReader(leftData);
-                var rightReader = new CSharpKOTOR.Formats.TLK.TLKBinaryReader(rightData);
+                var leftReader = new AuroraEngine.Common.Formats.TLK.TLKBinaryReader(leftData);
+                var rightReader = new AuroraEngine.Common.Formats.TLK.TLKBinaryReader(rightData);
                 var leftTlk = leftReader.Load();
                 var rightTlk = rightReader.Load();
 
                 // Use existing TlkDiff comparison
-                var compareResult = CSharpKOTOR.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = AuroraEngine.Common.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 // Generate ModificationsTLK from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
-                var modifications = new CSharpKOTOR.Mods.TLK.ModificationsTLK("append.tlk", false);
+                var modifications = new AuroraEngine.Common.Mods.TLK.ModificationsTLK("append.tlk", false);
                 modifications.SaveAs = filename;
 
                 int tokenId = 0;
@@ -114,7 +114,7 @@ namespace KotorDiff.NET.Diff
                 {
                     int idx = kvp.Key;
                     var entry = kvp.Value;
-                    var modify = new CSharpKOTOR.Mods.TLK.ModifyTLK(tokenId, false);
+                    var modify = new AuroraEngine.Common.Mods.TLK.ModifyTLK(tokenId, false);
                     modify.ModIndex = idx;
                     modify.Text = entry.Text ?? "";
                     modify.Sound = entry.Sound ?? "";
@@ -128,7 +128,7 @@ namespace KotorDiff.NET.Diff
                 {
                     int idx = kvp.Key;
                     var (text, sound) = kvp.Value;
-                    var modify = new CSharpKOTOR.Mods.TLK.ModifyTLK(tokenId, false);
+                    var modify = new AuroraEngine.Common.Mods.TLK.ModifyTLK(tokenId, false);
                     modify.ModIndex = idx;
                     modify.Text = text ?? "";
                     modify.Sound = sound ?? "";
@@ -160,24 +160,24 @@ namespace KotorDiff.NET.Diff
             try
             {
                 // Read SSF files
-                var leftReader = new CSharpKOTOR.Formats.SSF.SSFBinaryReader(leftData);
-                var rightReader = new CSharpKOTOR.Formats.SSF.SSFBinaryReader(rightData);
+                var leftReader = new AuroraEngine.Common.Formats.SSF.SSFBinaryReader(leftData);
+                var rightReader = new AuroraEngine.Common.Formats.SSF.SSFBinaryReader(rightData);
                 var leftSsf = leftReader.Load();
                 var rightSsf = rightReader.Load();
 
                 // Use existing SsfDiff comparison
-                var compareResult = CSharpKOTOR.Diff.SsfDiff.Compare(leftSsf, rightSsf);
+                var compareResult = AuroraEngine.Common.Diff.SsfDiff.Compare(leftSsf, rightSsf);
 
                 // Generate ModificationsSSF from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
-                var modifications = new CSharpKOTOR.Mods.SSF.ModificationsSSF(filename, false);
+                var modifications = new AuroraEngine.Common.Mods.SSF.ModificationsSSF(filename, false);
 
                 // Process changed sounds
                 foreach (var kvp in compareResult.ChangedSounds)
                 {
                     var sound = kvp.Key;
                     int stringref = kvp.Value;
-                    var modify = new CSharpKOTOR.Mods.SSF.ModifySSF(sound, new CSharpKOTOR.Memory.NoTokenUsage(stringref.ToString()));
+                    var modify = new AuroraEngine.Common.Mods.SSF.ModifySSF(sound, new AuroraEngine.Common.Memory.NoTokenUsage(stringref.ToString()));
                     modifications.Modifiers.Add(modify);
                 }
 

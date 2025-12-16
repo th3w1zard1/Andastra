@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.SSF;
+using AuroraEngine.Common.Formats.SSF;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
 
     public class SsfCompareResult

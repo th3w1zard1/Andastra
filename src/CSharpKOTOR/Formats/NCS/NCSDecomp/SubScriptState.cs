@@ -1,20 +1,20 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:86-1759
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:86-1759
 // Original: public class SubScriptState
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using AVarRef = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using AVarRef = AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class SubScriptState
     {

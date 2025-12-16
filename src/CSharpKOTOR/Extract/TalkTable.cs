@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract
+namespace AuroraEngine.Common.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/talktable.py
     public struct StringResult

@@ -1,9 +1,9 @@
-using CSharpKOTOR.Diff;
-using CSharpKOTOR.Formats.TLK;
+﻿using AuroraEngine.Common.Diff;
+using AuroraEngine.Common.Formats.TLK;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Diff
+namespace AuroraEngine.Common.Tests.Diff
 {
 
     /// <summary>

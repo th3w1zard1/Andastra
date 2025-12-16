@@ -1,5 +1,5 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Resource.Generics.DLG;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
 

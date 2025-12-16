@@ -1,17 +1,17 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py
 // Original: def log_output(*args, **kwargs): ... def visual_length(...): ... def log_output_with_separator(...): ... def diff_data_wrapper(...): ... def handle_diff_internal(...): ... def run_differ_from_args(...): ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Tools;
-using CSharpKOTOR.Utility;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Tools;
+using AuroraEngine.Common.Utility;
 using KotorDiff.NET.Diff;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.TSLPatcher;
 using Tuple = System.Tuple;
 using SystemTextEncoding = System.Text.Encoding;
 
@@ -629,7 +629,7 @@ namespace KotorDiff.NET.App
             }
 
             // Use TSLPatchDataGenerator for batch generation
-            var generator = new CSharpKOTOR.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
+            var generator = new AuroraEngine.Common.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
 
             var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
 
@@ -647,7 +647,7 @@ namespace KotorDiff.NET.App
             LogOutput($"\nGenerating {iniFilename} at: {iniPath}");
 
             // Use TSLPatcher INI serializer
-            var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
+            var serializer = new AuroraEngine.Common.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
                 File.WriteAllText(iniPath, iniContent, SystemTextEncoding.UTF8);
 

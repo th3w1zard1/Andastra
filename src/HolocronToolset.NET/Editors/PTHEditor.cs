@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
-using KotorColor = CSharpKOTOR.Common.Color;
+using KotorColor = AuroraEngine.Common.Common.Color;
 
 namespace HolocronToolset.NET.Editors
 {

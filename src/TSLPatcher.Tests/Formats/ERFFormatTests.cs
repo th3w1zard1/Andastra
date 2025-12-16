@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tests.Common;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tests.Common;
 using FluentAssertions;
 using Xunit;
-using static CSharpKOTOR.Formats.ERF.ERFAuto;
+using static AuroraEngine.Common.Formats.ERF.ERFAuto;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

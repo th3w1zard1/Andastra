@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace CSharpKOTOR.Formats.MDL
+namespace AuroraEngine.Common.Formats.MDL
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_types.py:13-305
     // Original: enum and flag definitions for MDL

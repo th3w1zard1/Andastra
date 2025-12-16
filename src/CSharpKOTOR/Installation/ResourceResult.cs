@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Resources;
+﻿using System;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Installation
+namespace AuroraEngine.Common.Installation
 {
 
     /// <summary>

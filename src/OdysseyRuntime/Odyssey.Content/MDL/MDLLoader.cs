@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 
 namespace Odyssey.Content.MDL

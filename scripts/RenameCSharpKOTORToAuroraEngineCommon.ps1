@@ -38,16 +38,22 @@ foreach ($file in $csFiles) {
     $originalContent = $content
     $changed = $false
 
-    # Replace namespace declarations
-    $content = $content -replace 'namespace CSharpKOTOR\.', 'namespace AuroraEngine.Common.'
+    # Replace namespace declarations (CSharpKOTOR.* -> AuroraEngine.Common.*)
+    # Handle both "namespace CSharpKOTOR" and "namespace CSharpKOTOR.Something"
+    $content = $content -replace 'namespace CSharpKOTOR(\.|$)', 'namespace AuroraEngine.Common$1'
     if ($content -ne $originalContent) { $changed = $true }
 
-    # Replace using statements
-    $content = $content -replace 'using CSharpKOTOR\.', 'using AuroraEngine.Common.'
+    # Replace using statements (CSharpKOTOR.* -> AuroraEngine.Common.*)
+    $content = $content -replace 'using CSharpKOTOR(\.|;)', 'using AuroraEngine.Common$1'
     if ($content -ne $originalContent) { $changed = $true }
 
     # Replace type references in code (CSharpKOTOR. -> AuroraEngine.Common.)
-    $content = $content -replace '\bCSharpKOTOR\.', 'AuroraEngine.Common.'
+    # But avoid double replacement (AuroraEngine.Common.Common)
+    $content = $content -replace '\bCSharpKOTOR\.(?!Common\.)', 'AuroraEngine.Common.'
+    if ($content -ne $originalContent) { $changed = $true }
+    
+    # Fix any double "Common.Common" that might have been created
+    $content = $content -replace 'AuroraEngine\.Common\.Common\.', 'AuroraEngine.Common.'
     if ($content -ne $originalContent) { $changed = $true }
 
     if ($changed) {

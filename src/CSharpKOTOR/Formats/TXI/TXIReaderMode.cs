@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.TXI
+﻿namespace AuroraEngine.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/io_txi.py:15-20
     // Original: class TXIReaderMode(IntEnum)

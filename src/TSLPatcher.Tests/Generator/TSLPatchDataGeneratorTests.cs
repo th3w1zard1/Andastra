@@ -1,29 +1,29 @@
-// Comprehensive tests for TSLPatchDataGenerator
+﻿// Comprehensive tests for TSLPatchDataGenerator
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
-using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
-using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using TLKAuto = AuroraEngine.Common.Formats.TLK.TLKAuto;
+using TwoDAAuto = AuroraEngine.Common.Formats.TwoDA.TwoDAAuto;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
+using SSFAuto = AuroraEngine.Common.Formats.SSF.SSFAuto;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.TSLPatcher;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Generator
+namespace AuroraEngine.Common.Tests.Generator
 {
     /// <summary>
     /// Comprehensive tests for TSLPatchDataGenerator.

@@ -1,8 +1,8 @@
-using CSharpKOTOR.Namespaces;
+﻿using AuroraEngine.Common.Namespaces;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Namespaces
+namespace AuroraEngine.Common.Tests.Namespaces
 {
 
     /// <summary>

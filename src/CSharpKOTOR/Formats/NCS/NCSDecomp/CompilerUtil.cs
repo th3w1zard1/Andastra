@@ -1,13 +1,13 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
 using System.IO;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:29-363
     // Original: public class CompilerUtil

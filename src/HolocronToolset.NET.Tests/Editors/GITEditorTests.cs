@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -115,7 +115,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Verify we can read it back
-                GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
                 return;
             }
@@ -145,7 +145,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data2.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff2 = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data2);
+            GFF gff2 = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data2);
             gff2.Should().NotBeNull();
         }
 
@@ -192,10 +192,10 @@ namespace HolocronToolset.NET.Tests.Editors
             var logMessages = new List<string> { Environment.NewLine };
 
             byte[] data = System.IO.File.ReadAllBytes(gitFile);
-            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var old = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             editor.Load(gitFile, "zio001", ResourceType.GIT, data);
             var (newData, _) = editor.Build();
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             Action<string> logFunc = msg => logMessages.Add(msg);
             bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: false);

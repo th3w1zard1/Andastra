@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -108,7 +108,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -181,7 +181,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1064
             // Original: original_gff = read_gff(original_data)
-            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var old = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1065
             // Original: editor.load(uts_file, "low_air_01", ResourceType.UTS, original_data)
@@ -193,7 +193,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1069
             // Original: new_gff = read_gff(data)
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1076
             // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)

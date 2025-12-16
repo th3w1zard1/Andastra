@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace CSharpKOTOR.Formats.NCS
+namespace AuroraEngine.Common.Formats.NCS
 {
 
     /// <summary>

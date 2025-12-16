@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.RIM
+namespace AuroraEngine.Common.Formats.RIM
 {
 
     /// <summary>

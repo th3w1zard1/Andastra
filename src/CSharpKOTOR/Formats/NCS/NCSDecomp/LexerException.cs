@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/LexerException.java:10-15
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/LexerException.java:10-15
 // Original: public class LexerException extends Exception
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer
 {
     public class LexerException : Exception
     {

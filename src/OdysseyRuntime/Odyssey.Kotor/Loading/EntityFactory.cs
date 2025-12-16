@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
@@ -1011,7 +1011,7 @@ namespace Odyssey.Kotor.Loading
                     if (bwmResource != null)
                     {
                         object bwmData = bwmResource.Resource();
-                        if (bwmData != null && bwmData is CSharpKOTOR.Formats.BWM.BWM bwm)
+                        if (bwmData != null && bwmData is AuroraEngine.Common.Formats.BWM.BWM bwm)
                         {
                             // Extract hook vectors
                             // Prefer absolute hooks if available (world space), otherwise use relative hooks + entity position
@@ -1064,7 +1064,7 @@ namespace Odyssey.Kotor.Loading
                     if (bwmResource != null)
                     {
                         object bwmData = bwmResource.Resource();
-                        if (bwmData != null && bwmData is CSharpKOTOR.Formats.BWM.BWM bwm)
+                        if (bwmData != null && bwmData is AuroraEngine.Common.Formats.BWM.BWM bwm)
                         {
                             // Extract hook vectors (same logic as doors)
                             System.Numerics.Vector3 hook1 = System.Numerics.Vector3.Zero;

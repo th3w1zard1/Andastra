@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
@@ -22,6 +22,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CSharpKOTOR\CSharpKOTOR.csproj" />
+    <ProjectReference Include="..\..\src\CSharpKOTOR\AuroraEngine.Common.csproj" />
   </ItemGroup>
 </Project>

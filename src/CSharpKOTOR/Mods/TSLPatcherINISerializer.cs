@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:157-243
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:157-243
 // Original: class TSLPatcherINISerializer: ...
 using System;
 using System.Numerics;
@@ -6,15 +6,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.NCS;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.TwoDA;
-using TargetType = CSharpKOTOR.Mods.TwoDA.TargetType;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.NCS;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.TwoDA;
+using TargetType = AuroraEngine.Common.Mods.TwoDA.TargetType;
 
-namespace CSharpKOTOR.Mods
+namespace AuroraEngine.Common.Mods
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:91-120
     // Original: def escape_ini_value(value: str) -> str: ...
@@ -807,7 +807,7 @@ namespace CSharpKOTOR.Mods
             // Serialize ModifySSF modifiers
             foreach (var modifier in modSsf.Modifiers)
             {
-                if (modifier is CSharpKOTOR.Mods.SSF.ModifySSF modifySsf)
+                if (modifier is AuroraEngine.Common.Mods.SSF.ModifySSF modifySsf)
                 {
                     // Serialize sound name and StrRef token
                     string soundName = modifySsf.Sound.ToString();
@@ -825,15 +825,15 @@ namespace CSharpKOTOR.Mods
         private string SerializeTokenUsage(object tokenUsage)
         {
             // CRITICAL: This writes the TOKEN REFERENCE (e.g., 'StrRef5'), NOT the resolved value.
-            if (tokenUsage is CSharpKOTOR.Memory.TokenUsageTLK tlkUsage)
+            if (tokenUsage is AuroraEngine.Common.Memory.TokenUsageTLK tlkUsage)
             {
                 return $"StrRef{tlkUsage.TokenId}";
             }
-            if (tokenUsage is CSharpKOTOR.Memory.TokenUsage2DA twodaUsage)
+            if (tokenUsage is AuroraEngine.Common.Memory.TokenUsage2DA twodaUsage)
             {
                 return $"2DAMEMORY{twodaUsage.TokenId}";
             }
-            if (tokenUsage is CSharpKOTOR.Memory.NoTokenUsage noToken)
+            if (tokenUsage is AuroraEngine.Common.Memory.NoTokenUsage noToken)
             {
                 return noToken.Stored;
             }

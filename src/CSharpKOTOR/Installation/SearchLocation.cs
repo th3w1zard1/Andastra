@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Installation
+﻿namespace AuroraEngine.Common.Installation
 {
 
     /// <summary>

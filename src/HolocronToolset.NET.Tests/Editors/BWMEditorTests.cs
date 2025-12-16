@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.BWM;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.BWM;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -121,7 +121,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Verify we can read it back
-                BWM loadedBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(data);
+                BWM loadedBwm = AuroraEngine.Common.Formats.BWM.BWMAuto.ReadBwm(data);
                 loadedBwm.Should().NotBeNull();
                 return;
             }
@@ -151,7 +151,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data2.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            BWM loadedBwm2 = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(data2);
+            BWM loadedBwm2 = AuroraEngine.Common.Formats.BWM.BWMAuto.ReadBwm(data2);
             loadedBwm2.Should().NotBeNull();
         }
 
@@ -182,7 +182,7 @@ namespace HolocronToolset.NET.Tests.Editors
             }
 
             byte[] originalData = System.IO.File.ReadAllBytes(bwmFile);
-            BWM oldBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(originalData);
+            BWM oldBwm = AuroraEngine.Common.Formats.BWM.BWMAuto.ReadBwm(originalData);
 
             // Get installation if available (K2 preferred for BWM files)
             string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
@@ -201,7 +201,7 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Load(bwmFile, "zio006j", ResourceType.WOK, originalData);
 
             var (newData, _) = editor.Build();
-            BWM newBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(newData);
+            BWM newBwm = AuroraEngine.Common.Formats.BWM.BWMAuto.ReadBwm(newData);
 
             // Compare by content, not by index (faces may be reordered: walkable first, then unwalkable)
             // Compare basic properties

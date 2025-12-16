@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.TwoDA;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.TwoDA;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Integration
+namespace AuroraEngine.Common.Tests.Integration
 {
 
     /// <summary>
@@ -711,7 +711,7 @@ AddColumn0=add_column_0
 ColumnLabel=Col3
 DefaultValue=****
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
@@ -743,7 +743,7 @@ AddColumn0=add_column_0
 ColumnLabel=Col3
 DefaultValue=X
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
@@ -776,7 +776,7 @@ ColumnLabel=Col3
 DefaultValue=****
 I0=X
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
@@ -809,7 +809,7 @@ ColumnLabel=Col3
 DefaultValue=****
 L1=2DAMEMORY5
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
@@ -843,7 +843,7 @@ ColumnLabel=Col3
 DefaultValue=****
 L1=StrRef5
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
@@ -879,7 +879,7 @@ I0=X
 I1=Y
 2DAMEMORY0=I0
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
@@ -915,7 +915,7 @@ I0=X
 I1=Y
 2DAMEMORY0=L1
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -108,7 +108,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -180,7 +180,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1211
             // Original: original_utp = read_utp(original_data)
-            var originalGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var originalGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             UTP originalUtp = UTPHelpers.ConstructUtp(originalGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1212
@@ -193,7 +193,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1216
             // Original: new_utp = read_utp(data)
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
             UTP newUtp = UTPHelpers.ConstructUtp(newGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1221-1264

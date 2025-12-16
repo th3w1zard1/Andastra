@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
 
 namespace HolocronToolset.NET.Editors

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 using Odyssey.Content.Interfaces;
 using Odyssey.Content.ResourceProviders;
 using Odyssey.Engines.Common;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Installation;
 
 namespace Odyssey.Engines.Odyssey
 {

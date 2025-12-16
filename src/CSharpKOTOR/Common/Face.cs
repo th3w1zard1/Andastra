@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at vendor/HoloLSP/vendor/pykotor/common/geometry.py:1094-1188
     // Original: class Face

@@ -1,11 +1,11 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:38-607
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:38-607
 // Original: class StructuredDiffEngine: ...
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
 using KotorDiff.NET.Diff.Objects;
 using JetBrains.Annotations;
 
@@ -29,8 +29,8 @@ namespace KotorDiff.NET.Diff
         {
             try
             {
-                var leftReader = new CSharpKOTOR.Formats.TwoDA.TwoDABinaryReader(leftData);
-                var rightReader = new CSharpKOTOR.Formats.TwoDA.TwoDABinaryReader(rightData);
+                var leftReader = new AuroraEngine.Common.Formats.TwoDA.TwoDABinaryReader(leftData);
+                var rightReader = new AuroraEngine.Common.Formats.TwoDA.TwoDABinaryReader(rightData);
                 var left2da = leftReader.Load();
                 var right2da = rightReader.Load();
 
@@ -268,8 +268,8 @@ namespace KotorDiff.NET.Diff
         {
             try
             {
-                var leftReader = new CSharpKOTOR.Formats.GFF.GFFBinaryReader(leftData);
-                var rightReader = new CSharpKOTOR.Formats.GFF.GFFBinaryReader(rightData);
+                var leftReader = new AuroraEngine.Common.Formats.GFF.GFFBinaryReader(leftData);
+                var rightReader = new AuroraEngine.Common.Formats.GFF.GFFBinaryReader(rightData);
                 var leftGff = leftReader.Load();
                 var rightGff = rightReader.Load();
 
@@ -582,8 +582,8 @@ namespace KotorDiff.NET.Diff
         {
             try
             {
-                var leftReader = new CSharpKOTOR.Formats.TLK.TLKBinaryReader(leftData);
-                var rightReader = new CSharpKOTOR.Formats.TLK.TLKBinaryReader(rightData);
+                var leftReader = new AuroraEngine.Common.Formats.TLK.TLKBinaryReader(leftData);
+                var rightReader = new AuroraEngine.Common.Formats.TLK.TLKBinaryReader(rightData);
                 var leftTlk = leftReader.Load();
                 var rightTlk = rightReader.Load();
 

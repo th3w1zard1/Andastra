@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/NoCast.java:10-25
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/NoCast.java:10-25
 // Original: public class NoCast implements Cast<Object>
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     public class NoCast : ICast
     {

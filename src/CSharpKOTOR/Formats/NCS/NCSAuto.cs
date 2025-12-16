@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.NCS.Compiler;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using CSharpKOTOR.Formats.NCS.Optimizers;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Formats.NCS.Compiler;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using AuroraEngine.Common.Formats.NCS.Optimizers;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
-using FileScriptData = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.FileScriptData;
+using FileScriptData = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.FileScriptData;
 
-namespace CSharpKOTOR.Formats.NCS
+namespace AuroraEngine.Common.Formats.NCS
 {
 
     /// <summary>
@@ -187,19 +187,33 @@ namespace CSharpKOTOR.Formats.NCS
             NCS ncs = compiler.Compile(source, library);
 
             // Ensure NOP removal is always first optimization pass
-            if (optimizers == null || !optimizers.Any(o => o is RemoveNopOptimizer))
+            // EXCEPTION: If optimizers is an empty list (not null), don't add any optimizers
+            // This allows callers to disable all optimizations for roundtrip tests
+            if (optimizers == null)
+            {
+                optimizers = new List<NCSOptimizer> { new RemoveNopOptimizer() };
+            }
+            else if (optimizers.Count == 0)
+            {
+                // Empty list means no optimizations - used for roundtrip tests to match external compiler output
+                // Don't add RemoveNopOptimizer
+            }
+            else if (!optimizers.Any(o => o is RemoveNopOptimizer))
             {
                 optimizers = new List<NCSOptimizer> { new RemoveNopOptimizer() }
-                    .Concat(optimizers ?? Enumerable.Empty<NCSOptimizer>())
+                    .Concat(optimizers)
                     .ToList();
             }
 
-            // Apply all optimizers
-            foreach (NCSOptimizer optimizer in optimizers)
+            // Apply all optimizers (if any)
+            if (optimizers.Count > 0)
             {
-                optimizer.Reset();
+                foreach (NCSOptimizer optimizer in optimizers)
+                {
+                    optimizer.Reset();
+                }
+                ncs.Optimize(optimizers);
             }
-            ncs.Optimize(optimizers);
 
             if (System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true")
             {

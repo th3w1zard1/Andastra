@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace CSharpKOTOR.Formats.NCS
+namespace AuroraEngine.Common.Formats.NCS
 {
     /// <summary>
     /// Type codes used in NCS bytecode operations.

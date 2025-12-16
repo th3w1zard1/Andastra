@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineIterator
     {

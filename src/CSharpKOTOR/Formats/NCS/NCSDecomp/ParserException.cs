@@ -1,14 +1,14 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/ParserException.java:12-24
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/ParserException.java:12-24
 // Original: public class ParserException extends Exception
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Parser
 {
     public class ParserException : Exception
     {

@@ -1,14 +1,14 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/NameGenerator.java:15-889
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/NameGenerator.java:15-889
 // Original: public class NameGenerator
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class NameGenerator
     {

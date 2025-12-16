@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Tests.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Tests.Common;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

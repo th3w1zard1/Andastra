@@ -1,7 +1,7 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     public class LinkedList : Collection, IEnumerable<object>
     {

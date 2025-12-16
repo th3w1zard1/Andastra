@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/playpazaak.py
     // Original: Pazaak card game implementation and rules
@@ -29,20 +29,20 @@ namespace CSharpKOTOR.Tools
 
         public override string ToString()
         {
-            if (CardType == CSharpKOTOR.Tools.CardType.YellowSpecial)
+            if (CardType == AuroraEngine.Common.Tools.CardType.YellowSpecial)
             {
                 return $"Yellow {Value}";
             }
             string valueStr = Value.ToString();
-            if (CardType == CSharpKOTOR.Tools.CardType.Positive)
+            if (CardType == AuroraEngine.Common.Tools.CardType.Positive)
             {
                 return $"+{valueStr}";
             }
-            if (CardType == CSharpKOTOR.Tools.CardType.Negative)
+            if (CardType == AuroraEngine.Common.Tools.CardType.Negative)
             {
                 return $"-{valueStr}";
             }
-            if (CardType == CSharpKOTOR.Tools.CardType.PosOrNeg)
+            if (CardType == AuroraEngine.Common.Tools.CardType.PosOrNeg)
             {
                 return $"+/-{valueStr}";
             }
@@ -53,19 +53,19 @@ namespace CSharpKOTOR.Tools
         // Original: def get_value(self, choice: str | None = None) -> int:
         public int GetValue(string choice = null)
         {
-            if (CardType == CSharpKOTOR.Tools.CardType.Positive)
+            if (CardType == AuroraEngine.Common.Tools.CardType.Positive)
             {
                 return (int)Value;
             }
-            if (CardType == CSharpKOTOR.Tools.CardType.Negative)
+            if (CardType == AuroraEngine.Common.Tools.CardType.Negative)
             {
                 return -(int)Value;
             }
-            if (CardType == CSharpKOTOR.Tools.CardType.PosOrNeg)
+            if (CardType == AuroraEngine.Common.Tools.CardType.PosOrNeg)
             {
                 return choice == "+" ? (int)Value : -(int)Value;
             }
-            if (CardType == CSharpKOTOR.Tools.CardType.YellowSpecial)
+            if (CardType == AuroraEngine.Common.Tools.CardType.YellowSpecial)
             {
                 if (Value is List<int> list && list.Count > 0)
                 {

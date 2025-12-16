@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 
-namespace CSharpKOTOR.Tests.Performance
+namespace AuroraEngine.Common.Tests.Performance
 {
     /// <summary>
     /// NUnit attribute that enforces a maximum test execution time and generates profiling output.

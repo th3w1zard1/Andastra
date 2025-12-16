@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:642-720
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:642-720
 // Original: def _add_to_install_folder(...), def _ensure_capsule_install(...), def _create_patch_for_missing_file(...)
 // Helper functions for installation diff operations
 
@@ -6,17 +6,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.Resources;
 using KotorDiff.NET.Diff;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.NET.Resolution
@@ -264,18 +264,18 @@ namespace KotorDiff.NET.Resolution
                 modifications.Destination = folder;
                 modifications.SourceFile = resourceName;
 
-                if (modifications is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
+                if (modifications is AuroraEngine.Common.Mods.TwoDA.Modifications2DA mod2da)
                 {
                     modificationsByType.Twoda.Add(mod2da);
                     logFunc("  |-- Type: [2DAList]");
                 }
-                else if (modifications is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff)
+                else if (modifications is AuroraEngine.Common.Mods.GFF.ModificationsGFF modGff)
                 {
                     modGff.SaveAs = resourceName;
                     modificationsByType.Gff.Add(modGff);
                     logFunc("  |-- Type: [GFFList]");
                 }
-                else if (modifications is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf)
+                else if (modifications is AuroraEngine.Common.Mods.SSF.ModificationsSSF modSsf)
                 {
                     modificationsByType.Ssf.Add(modSsf);
                     logFunc("  |-- Type: [SSFList]");
@@ -288,15 +288,15 @@ namespace KotorDiff.NET.Resolution
 
                 // Get modifier count based on type
                 int modifiersCount = 0;
-                if (modifications is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2daCount)
+                if (modifications is AuroraEngine.Common.Mods.TwoDA.Modifications2DA mod2daCount)
                 {
                     modifiersCount = mod2daCount.Modifiers != null ? mod2daCount.Modifiers.Count : 0;
                 }
-                else if (modifications is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff2)
+                else if (modifications is AuroraEngine.Common.Mods.GFF.ModificationsGFF modGff2)
                 {
                     modifiersCount = modGff2.Modifiers != null ? modGff2.Modifiers.Count : 0;
                 }
-                else if (modifications is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf2)
+                else if (modifications is AuroraEngine.Common.Mods.SSF.ModificationsSSF modSsf2)
                 {
                     modifiersCount = modSsf2.Modifiers != null ? modSsf2.Modifiers.Count : 0;
                 }
@@ -340,15 +340,15 @@ namespace KotorDiff.NET.Resolution
                 // For 2DA files, create empty TwoDA
                 if (extLower == "2da")
                 {
-                    var empty2da = new CSharpKOTOR.Formats.TwoDA.TwoDA();
-                    return CSharpKOTOR.Formats.TwoDA.TwoDAAuto.BytesTwoDA(empty2da, ResourceType.TwoDA);
+                    var empty2da = new AuroraEngine.Common.Formats.TwoDA.TwoDA();
+                    return AuroraEngine.Common.Formats.TwoDA.TwoDAAuto.BytesTwoDA(empty2da, ResourceType.TwoDA);
                 }
 
                 // For SSF files, create empty SSF
                 if (extLower == "ssf")
                 {
-                    var emptySsf = new CSharpKOTOR.Formats.SSF.SSF();
-                    return CSharpKOTOR.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
+                    var emptySsf = new AuroraEngine.Common.Formats.SSF.SSF();
+                    return AuroraEngine.Common.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
                 }
 
                 // For GFF files, create empty GFF with appropriate content type based on extension
@@ -360,22 +360,22 @@ namespace KotorDiff.NET.Resolution
                 if (gffTypes.Contains(extLower))
                 {
                     // Try to determine GFFContent from extension
-                    CSharpKOTOR.Formats.GFF.GFFContent gffContent;
+                    AuroraEngine.Common.Formats.GFF.GFFContent gffContent;
                     try
                     {
                         // Map extension to GFFContent enum using FromResName (pass filename with extension)
                         string filename = $"dummy.{ext}";
-                        gffContent = CSharpKOTOR.Formats.GFF.GFFContentExtensions.FromResName(filename);
+                        gffContent = AuroraEngine.Common.Formats.GFF.GFFContentExtensions.FromResName(filename);
                     }
                     catch
                     {
                         // Fallback to generic GFF content type
-                        gffContent = CSharpKOTOR.Formats.GFF.GFFContent.GFF;
+                        gffContent = AuroraEngine.Common.Formats.GFF.GFFContent.GFF;
                     }
 
                     // Create empty GFF with determined content type
-                    var emptyGff = new CSharpKOTOR.Formats.GFF.GFF(gffContent);
-                    return CSharpKOTOR.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
+                    var emptyGff = new AuroraEngine.Common.Formats.GFF.GFF(gffContent);
+                    return AuroraEngine.Common.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
                 }
             }
             catch (Exception e)
@@ -400,7 +400,7 @@ namespace KotorDiff.NET.Resolution
         {
             try
             {
-                var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(capsulePath);
+                var capsule = new AuroraEngine.Common.Formats.Capsule.Capsule(capsulePath);
                 string capsuleName = Path.GetFileName(capsulePath);
 
                 // Determine destination based on capsule location and type

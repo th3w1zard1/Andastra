@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/NWScriptSyntaxHighlighter.java:28-365
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/NWScriptSyntaxHighlighter.java:28-365
 // Original: public class NWScriptSyntaxHighlighter
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.SyntaxHighlighting
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.SyntaxHighlighting
 {
     /// <summary>
     /// Syntax highlighter patterns and utilities for NWScript code.

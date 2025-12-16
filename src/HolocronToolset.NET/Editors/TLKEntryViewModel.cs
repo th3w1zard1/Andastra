@@ -1,6 +1,6 @@
-using System.ComponentModel;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TLK;
+﻿using System.ComponentModel;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TLK;
 
 namespace HolocronToolset.NET.Editors
 {

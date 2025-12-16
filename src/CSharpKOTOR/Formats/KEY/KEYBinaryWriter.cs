@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.KEY
+namespace AuroraEngine.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/io_key.py:108-171
     // Original: class KEYBinaryWriter(ResourceWriter)

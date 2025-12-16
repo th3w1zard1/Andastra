@@ -1,4 +1,4 @@
-//
+﻿//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,21 +7,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Lexer;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
 using InputStream = System.IO.Stream;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 using Throwable = System.Exception;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:56-79
     public class FileDecompiler
@@ -3032,10 +3032,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         SubroutineState mainState = subdata.GetState(mainsub);
                         if (mainState == null)
                         {
+                            JavaSystem.@out.Println("ERROR: Main subroutine state was not found. This indicates AddSubState failed during SplitOffSubroutines.");
+                            JavaSystem.@out.Println($"DEBUG: mainsub type={mainsub.GetType().Name}, subId={mainsub.GetId()}, substates count={subdata.NumSubs()}");
                             throw new InvalidOperationException("Main subroutine state was not found. This indicates AddSubState failed during SplitOffSubroutines.");
                         }
+                        JavaSystem.@out.Println($"DEBUG: Main subroutine state found, creating MainPass for subId={mainsub.GetId()}");
                         mainpass = new MainPass(mainState, nodedata, subdata, this.actions);
+                        JavaSystem.@out.Println($"DEBUG: Applying MainPass to main subroutine");
                         mainsub.Apply(mainpass);
+                        JavaSystem.@out.Println($"DEBUG: MainPass applied successfully, getting state");
                         try
                         {
                             mainpass.AssertStack();

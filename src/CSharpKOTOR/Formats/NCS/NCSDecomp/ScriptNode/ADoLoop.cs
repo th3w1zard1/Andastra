@@ -1,9 +1,9 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ADoLoop.java
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ADoLoop.java
 // Original: public class ADoLoop extends AControlLoop
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ADoLoop.java:7-24
     // Original: public ADoLoop(int start, int end) { super(start, end); }

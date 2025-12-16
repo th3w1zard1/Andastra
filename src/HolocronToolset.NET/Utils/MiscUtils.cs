@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -80,7 +80,7 @@ namespace HolocronToolset.NET.Utils
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:221-262
         // Original: def get_resource_from_file(filepath, resname, restype) -> bytes:
-        public static byte[] GetResourceFromFile(string filepath, string resname, CSharpKOTOR.Resources.ResourceType restype)
+        public static byte[] GetResourceFromFile(string filepath, string resname, AuroraEngine.Common.Resources.ResourceType restype)
         {
             if (string.IsNullOrEmpty(filepath) || !System.IO.File.Exists(filepath))
             {

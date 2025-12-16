@@ -1,14 +1,14 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.GFF;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.GFF;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Mods
+namespace AuroraEngine.Common.Tests.Mods
 {
 
     /// <summary>

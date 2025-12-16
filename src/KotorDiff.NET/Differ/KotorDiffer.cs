@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/differ.py:69-437
+﻿// Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/differ.py:69-437
 // Original: class KotorDiffer: ...
 using System;
 using System.Collections.Generic;
@@ -6,15 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LIP;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LIP;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Tools;
 using KotorDiff.NET.Diff;
 using JetBrains.Annotations;
 

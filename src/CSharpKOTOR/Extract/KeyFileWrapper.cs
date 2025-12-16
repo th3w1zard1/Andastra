@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Formats.KEY;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.KEY;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract
+namespace AuroraEngine.Common.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/keyfile.py:13-18
     // Original: @dataclass class BIFResource:

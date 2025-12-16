@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.KEY
+namespace AuroraEngine.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/key_auto.py
     // Original: detect_key, read_key, write_key, bytes_key

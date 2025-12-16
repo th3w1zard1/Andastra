@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/pathfinding.py:29-48
     // Original: @dataclass class PathfindingVertex:

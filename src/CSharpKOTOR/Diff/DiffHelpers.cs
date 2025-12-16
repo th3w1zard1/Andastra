@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tools;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:133-262
     // Helper functions for diff operations

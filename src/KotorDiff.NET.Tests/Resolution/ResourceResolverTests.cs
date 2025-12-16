@@ -1,10 +1,10 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py
 // Tests for ResourceResolver functionality
 using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using KotorDiff.NET.Resolution;
 using Xunit;
 

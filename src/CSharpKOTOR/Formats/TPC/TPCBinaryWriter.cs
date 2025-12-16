@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.TPC
+namespace AuroraEngine.Common.Formats.TPC
 {
     // Simplified writer matching core of PyKotor io_tpc.py:289-448
     public class TPCBinaryWriter : IDisposable

@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.BWM;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.MDL;
-using CSharpKOTOR.Resource.Generics;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.BWM;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.MDL;
+using AuroraEngine.Common.Resource.Generics;
 
 namespace HolocronToolset.NET.Data
 {

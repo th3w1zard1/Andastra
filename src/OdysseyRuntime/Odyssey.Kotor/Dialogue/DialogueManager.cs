@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Resource.Generics.DLG;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Dialogue;

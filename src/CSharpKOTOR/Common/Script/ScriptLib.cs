@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
 
     /// <summary>

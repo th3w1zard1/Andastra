@@ -1,11 +1,11 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/objects.py:198-391
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/objects.py:198-391
 // Original: class DiffComparator(ABC, Generic[T]): ... class BytesDiffComparator, GFFDiffComparator, TwoDADiffComparator, TLKDiffComparator, LIPDiffComparator
 using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LIP;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LIP;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
 using JetBrains.Annotations;
 
 namespace KotorDiff.NET.Diff.Objects
@@ -114,7 +114,7 @@ namespace KotorDiff.NET.Diff.Objects
                 }
 
                 // Use the existing GffDiff.Compare method
-                var compareResult = CSharpKOTOR.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
+                var compareResult = AuroraEngine.Common.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
 
                 DiffType diffType = compareResult.Differences.Count == 0 ? DiffType.Identical : DiffType.Modified;
 
@@ -175,8 +175,8 @@ namespace KotorDiff.NET.Diff.Objects
                 // Use StructuredDiffEngine for 2DA comparison
                 var structuredEngine = new StructuredDiffEngine();
                 var result = structuredEngine.Compare2Da(
-                    CSharpKOTOR.Formats.TwoDA.TwoDAAuto.BytesTwoDA(left2da, CSharpKOTOR.Resources.ResourceType.TwoDA),
-                    CSharpKOTOR.Formats.TwoDA.TwoDAAuto.BytesTwoDA(right2da, CSharpKOTOR.Resources.ResourceType.TwoDA),
+                    AuroraEngine.Common.Formats.TwoDA.TwoDAAuto.BytesTwoDA(left2da, AuroraEngine.Common.Resources.ResourceType.TwoDA),
+                    AuroraEngine.Common.Formats.TwoDA.TwoDAAuto.BytesTwoDA(right2da, AuroraEngine.Common.Resources.ResourceType.TwoDA),
                     leftId,
                     rightId);
 
@@ -221,7 +221,7 @@ namespace KotorDiff.NET.Diff.Objects
                 }
 
                 // Use the existing TlkDiff.Compare method
-                var compareResult = CSharpKOTOR.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = AuroraEngine.Common.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 var entryDiffs = new List<TLKEntryDiff>();
 

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Utility
+namespace AuroraEngine.Common.Utility
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/error_handling.py:21-87
     // Original: def universal_simplify_exception(e: BaseException) -> tuple[str, str]:

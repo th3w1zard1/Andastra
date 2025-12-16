@@ -1,9 +1,9 @@
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
-using static CSharpKOTOR.Common.GameExtensions;
+﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
+using static AuroraEngine.Common.Common.GameExtensions;
 
-namespace CSharpKOTOR.Resource.Generics
+namespace AuroraEngine.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py
     // Original: construct_utd and dismantle_utd functions

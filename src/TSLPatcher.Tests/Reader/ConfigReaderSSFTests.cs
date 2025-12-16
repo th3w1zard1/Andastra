@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Reader;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Reader;
 using FluentAssertions;
 using IniParser.Model;
 using IniParser.Parser;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Reader
+namespace AuroraEngine.Common.Tests.Reader
 {
 
     /// <summary>

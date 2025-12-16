@@ -1,14 +1,14 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StringConst.java:13-30
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StringConst.java:13-30
 // Original: public class StringConst extends Const { private String value; public StringConst(String value) { this.type = new Type((byte)5); this.value = value; this.size = 1; } public String value() { return this.value; } @Override public String toString() { return this.value.toString(); } }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack
 {
     public class StringConst : Const
     {

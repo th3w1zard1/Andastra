@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Formats.TXI
+namespace AuroraEngine.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/txi_data.py:361-745
     // Original: class TXIFeatures

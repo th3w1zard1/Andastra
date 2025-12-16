@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Formats.Chitin;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.Chitin;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract
+namespace AuroraEngine.Common.Extract
 {
     // Thin wrapper matching PyKotor extract.chitin.Chitin semantics (read-only).
     public class ChitinWrapper

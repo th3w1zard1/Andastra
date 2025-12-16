@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
-using CSharpKOTOR.Extract.SaveData;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Extract.SaveData;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -99,7 +99,7 @@ namespace HolocronToolset.NET.Tests.Editors
             {
                 // Matching PyKotor implementation: Create minimal but valid save files
                 // Original: save_info = SaveInfo(str(save_folder)); save_info.savegame_name = "Test Save"; etc.
-                var saveInfo = new CSharpKOTOR.Extract.SaveData.SaveInfo(saveFolder);
+                var saveInfo = new AuroraEngine.Common.Extract.SaveData.SaveInfo(saveFolder);
                 saveInfo.SavegameName = "Test Save";
                 saveInfo.PcName = "TestPlayer";
                 saveInfo.AreaName = "Test Area";
@@ -109,8 +109,8 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Matching PyKotor implementation: party_table = PartyTable(str(save_folder)); etc.
                 // Original: party_table.pt_members = [pc_member]; party_table.pt_gold = 1000; party_table.pt_xp_pool = 5000
-                var partyTable = new CSharpKOTOR.Extract.SaveData.PartyTable(saveFolder);
-                var pcMember = new CSharpKOTOR.Extract.SaveData.PartyMemberEntry
+                var partyTable = new AuroraEngine.Common.Extract.SaveData.PartyTable(saveFolder);
+                var pcMember = new AuroraEngine.Common.Extract.SaveData.PartyMemberEntry
                 {
                     Index = -1,
                     IsLeader = true
@@ -129,7 +129,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 partyTable.Save();
 
                 // Matching PyKotor implementation: global_vars = GlobalVars(str(save_folder)); etc.
-                var globalVars = new CSharpKOTOR.Extract.SaveData.GlobalVars(saveFolder);
+                var globalVars = new AuroraEngine.Common.Extract.SaveData.GlobalVars(saveFolder);
                 globalVars.SetBool("TEST_BOOL", true);
                 globalVars.SetNumber("TEST_NUM", 42);
                 globalVars.SetString("TEST_STR", "test string");
@@ -138,22 +138,22 @@ namespace HolocronToolset.NET.Tests.Editors
                 // Matching PyKotor implementation: Create minimal valid SAVEGAME.sav (ERF file)
                 // Original: erf_data = (b"SAV V1.0" + ...)
                 // Create empty ERF file using ERF class
-                var erf = new CSharpKOTOR.Formats.ERF.ERF(CSharpKOTOR.Formats.ERF.ERFType.ERF, isSave: true);
-                byte[] erfData = CSharpKOTOR.Formats.ERF.ERFAuto.BytesErf(erf, CSharpKOTOR.Resources.ResourceType.SAV);
+                var erf = new AuroraEngine.Common.Formats.ERF.ERF(AuroraEngine.Common.Formats.ERF.ERFType.ERF, isSave: true);
+                byte[] erfData = AuroraEngine.Common.Formats.ERF.ERFAuto.BytesErf(erf, AuroraEngine.Common.Resources.ResourceType.SAV);
                 System.IO.File.WriteAllBytes(System.IO.Path.Combine(saveFolder, "SAVEGAME.sav"), erfData);
 
                 // Matching PyKotor implementation: Load save components directly (skip SAVEGAME.sav which requires valid ERF)
                 // Original: save_info = SaveInfo(str(real_save_folder)); save_info.load()
-                var loadedSaveInfo = new CSharpKOTOR.Extract.SaveData.SaveInfo(saveFolder);
+                var loadedSaveInfo = new AuroraEngine.Common.Extract.SaveData.SaveInfo(saveFolder);
                 loadedSaveInfo.Load();
-                var loadedPartyTable = new CSharpKOTOR.Extract.SaveData.PartyTable(saveFolder);
+                var loadedPartyTable = new AuroraEngine.Common.Extract.SaveData.PartyTable(saveFolder);
                 loadedPartyTable.Load();
-                var loadedGlobalVars = new CSharpKOTOR.Extract.SaveData.GlobalVars(saveFolder);
+                var loadedGlobalVars = new AuroraEngine.Common.Extract.SaveData.GlobalVars(saveFolder);
                 loadedGlobalVars.Load();
 
                 // Matching PyKotor implementation: Create nested capsule manually (without loading invalid SAVEGAME.sav)
                 // Original: nested_capsule = MagicMock(spec=SaveNestedCapsule); nested_capsule.cached_characters = {}
-                var nestedCapsule = new CSharpKOTOR.Extract.SaveData.SaveNestedCapsule(saveFolder);
+                var nestedCapsule = new AuroraEngine.Common.Extract.SaveData.SaveNestedCapsule(saveFolder);
                 // Don't call Load() to avoid loading invalid SAVEGAME.sav
 
                 // Matching PyKotor implementation: Set up editor with loaded data

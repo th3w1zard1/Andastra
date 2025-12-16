@@ -7,25 +7,25 @@ using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LYT;
-using CSharpKOTOR.Formats.VIS;
-using CSharpKOTOR.Formats.BWM;
-using CSharpKOTOR.Formats.MDL;
-using CSharpKOTOR.Formats.TPC;
-using MDLData = CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resource.Generics.DLG;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LYT;
+using AuroraEngine.Common.Formats.VIS;
+using AuroraEngine.Common.Formats.BWM;
+using AuroraEngine.Common.Formats.MDL;
+using AuroraEngine.Common.Formats.TPC;
+using MDLData = AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
 
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
 using KotorVector3 = System.Numerics.Vector3;
 using OdyObjectType = Odyssey.Core.Enums.ObjectType;
-using InstResourceResult = CSharpKOTOR.Installation.ResourceResult;
+using InstResourceResult = AuroraEngine.Common.Installation.ResourceResult;
 using Odyssey.Kotor.Components;
 
 namespace Odyssey.Kotor.Game
@@ -148,7 +148,7 @@ namespace Odyssey.Kotor.Game
         /// Gets the current CSharpKOTOR Module for resource loading.
         /// </summary>
         [CanBeNull]
-        public CSharpKOTOR.Common.Module GetCSharpKotorModule()
+        public AuroraEngine.Common.Module GetCSharpKotorModule()
         {
             if (_installation == null || string.IsNullOrEmpty(_currentModuleRoot))
             {
@@ -158,7 +158,7 @@ namespace Odyssey.Kotor.Game
             try
             {
                 // Create a Module instance from the current module root
-                return new CSharpKOTOR.Common.Module(_currentModuleRoot, _installation);
+                return new AuroraEngine.Common.Module(_currentModuleRoot, _installation);
             }
             catch (Exception ex)
             {

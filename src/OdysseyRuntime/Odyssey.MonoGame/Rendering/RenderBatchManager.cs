@@ -107,9 +107,15 @@ namespace Odyssey.MonoGame.Rendering
         /// Adds an object to be batched.
         /// </summary>
         /// <param name="materialId">Material/shader identifier.</param>
-        /// <param name="obj">Object data.</param>
+        /// <param name="obj">Object data. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if obj is null.</exception>
         public void AddObject(uint materialId, BatchObject obj)
         {
+            if (obj.Equals(default(BatchObject)))
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
             RenderBatch batch;
             if (!_batches.TryGetValue(materialId, out batch))
             {

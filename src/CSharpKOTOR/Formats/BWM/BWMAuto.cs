@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.BWM
+namespace AuroraEngine.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_auto.py
     // Original: read_bwm, write_bwm, bytes_bwm

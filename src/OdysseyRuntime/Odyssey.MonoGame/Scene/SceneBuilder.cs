@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Odyssey.Content.Interfaces;
-using CSharpKOTOR.Formats.LYT;
-using CSharpKOTOR.Formats.VIS;
+using AuroraEngine.Common.Formats.LYT;
+using AuroraEngine.Common.Formats.VIS;
 using JetBrains.Annotations;
 
 namespace Odyssey.MonoGame.Scene

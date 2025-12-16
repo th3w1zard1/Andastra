@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Widgets.Edit;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 using SettingsBase = HolocronToolset.NET.Data.Settings;
 
 namespace HolocronToolset.NET.Widgets.Settings

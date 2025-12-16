@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using NCSDecomp.Tests.TestHelpers;
 using Xunit;
-using File = CSharpKOTOR.Formats.NCS.NCSDecomp.File;
+using File = AuroraEngine.Common.Formats.NCS.NCSDecomp.File;
 
 namespace NCSDecomp.Tests
 {

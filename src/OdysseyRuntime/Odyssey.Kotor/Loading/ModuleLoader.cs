@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.LYT;
-using CSharpKOTOR.Formats.VIS;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.LYT;
+using AuroraEngine.Common.Formats.VIS;
 using Odyssey.Content.Interfaces;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
@@ -683,7 +683,7 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Gets the CSharpKOTOR Module for the currently loaded runtime module.
         /// </summary>
-        public CSharpKOTOR.Common.Module GetCurrentModule()
+        public AuroraEngine.Common.Module GetCurrentModule()
         {
             if (_currentModule == null)
             {
@@ -695,7 +695,7 @@ namespace Odyssey.Kotor.Loading
         /// <summary>
         /// Loads a dialogue by ResRef.
         /// </summary>
-        public CSharpKOTOR.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
+        public AuroraEngine.Common.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
         {
             if (_currentModule == null)
             {
@@ -711,7 +711,7 @@ namespace Odyssey.Kotor.Loading
             }
 
             object dlgData = dlgResource.Resource();
-            return dlgData as CSharpKOTOR.Resource.Generics.DLG.DLG;
+            return dlgData as AuroraEngine.Common.Resource.Generics.DLG.DLG;
         }
 
         /// <summary>
@@ -740,7 +740,7 @@ namespace Odyssey.Kotor.Loading
             }
 
             // Read NCS bytes using ResourceAuto
-            return CSharpKOTOR.Resources.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
+            return AuroraEngine.Common.Resources.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
         }
 
         /// <summary>

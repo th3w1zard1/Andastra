@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.NCS;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Formats.NCS;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Formats.NCS;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Formats.NCS;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

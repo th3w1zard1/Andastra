@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.Reader;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.Reader;
 using FluentAssertions;
 using IniParser.Model;
 using IniParser.Parser;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Reader
+namespace AuroraEngine.Common.Tests.Reader
 {
 
     /// <summary>

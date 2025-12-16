@@ -1,10 +1,10 @@
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.GFF;
+﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.GFF;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Mods
+namespace AuroraEngine.Common.Tests.Mods
 {
 
     /// <summary>

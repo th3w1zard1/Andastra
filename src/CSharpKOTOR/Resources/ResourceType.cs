@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resources
+namespace AuroraEngine.Common.Resources
 {
 
     /// <summary>

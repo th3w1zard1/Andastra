@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace CSharpKOTOR.Tests.Performance
+namespace AuroraEngine.Common.Tests.Performance
 {
     /// <summary>
     /// xUnit attribute that enforces a maximum test execution time and generates profiling output.

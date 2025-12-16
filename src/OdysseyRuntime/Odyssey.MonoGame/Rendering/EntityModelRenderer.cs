@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,9 +8,9 @@ using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Data;
 using Odyssey.MonoGame.Converters;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Installation;
 using JetBrains.Annotations;
 
 namespace Odyssey.MonoGame.Rendering
@@ -241,14 +241,14 @@ namespace Odyssey.MonoGame.Rendering
 
             try
             {
-                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, CSharpKOTOR.Resources.ResourceType.MDL);
+                AuroraEngine.Common.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, AuroraEngine.Common.Resources.ResourceType.MDL);
                 if (result == null || result.Data == null)
                 {
                     return null;
                 }
 
                 // Use CSharpKOTOR MDL parser
-                return CSharpKOTOR.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                return AuroraEngine.Common.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

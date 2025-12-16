@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 using HolocronToolset.NET.Data;
 
 namespace HolocronToolset.NET.Dialogs
@@ -149,7 +149,7 @@ namespace HolocronToolset.NET.Dialogs
             foreach (var module in modulesList)
             {
                 // Matching Python: Module.filepath_to_root(module)
-                string moduleRoot = CSharpKOTOR.Installation.Installation.GetModuleRoot(module);
+                string moduleRoot = AuroraEngine.Common.Installation.Installation.GetModuleRoot(module);
                 string casefoldModuleFileName = (moduleRoot + System.IO.Path.GetExtension(module)).ToLowerInvariant().Trim();
                 
                 if (listedModules.Contains(casefoldModuleFileName))
@@ -252,7 +252,7 @@ namespace HolocronToolset.NET.Dialogs
             }
 
             // Matching Python: Module.filepath_to_root(filepath)
-            string moduleRoot = CSharpKOTOR.Installation.Installation.GetModuleRoot(filepath);
+            string moduleRoot = AuroraEngine.Common.Installation.Installation.GetModuleRoot(filepath);
             _selectedModule = moduleRoot;
             Confirm();
         }

@@ -1,23 +1,23 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.BWM;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Formats.TPC;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.BWM;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Formats.TPC;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py
     // Original: Kit generation utilities for extracting kit resources from module RIM files
@@ -61,7 +61,7 @@ namespace CSharpKOTOR.Tools
         // Original: def find_module_file(installation: Installation, module_name: str) -> Path | None:
         public static string FindModuleFile(Installation.Installation installation, string moduleName)
         {
-            string rimsPath = CSharpKOTOR.Installation.Installation.GetRimsPath(installation.Path);
+            string rimsPath = AuroraEngine.Common.Installation.Installation.GetRimsPath(installation.Path);
             string modulesPath = installation.ModulePath();
 
             // Check rimsPath first, then modulesPath

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/language.py:12-145
     // Original: class Language(IntEnum):

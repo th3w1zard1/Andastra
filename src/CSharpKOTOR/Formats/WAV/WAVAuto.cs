@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.WAV
+namespace AuroraEngine.Common.Formats.WAV
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_auto.py
     // Original: read_wav, write_wav, bytes_wav, get_playable_bytes, detect_audio_type functions

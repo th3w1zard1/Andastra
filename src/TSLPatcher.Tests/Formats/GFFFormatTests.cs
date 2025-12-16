@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tests.Common;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tests.Common;
 using FluentAssertions;
 using Xunit;
-using static CSharpKOTOR.Formats.GFF.GFFAuto;
+using static AuroraEngine.Common.Formats.GFF.GFFAuto;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 
-namespace CSharpKOTOR.Formats.TLK
+namespace AuroraEngine.Common.Formats.TLK
 {
 
     /// <summary>

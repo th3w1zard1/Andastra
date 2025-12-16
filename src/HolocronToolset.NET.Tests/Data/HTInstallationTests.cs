@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Tests.TestHelpers;
 using Xunit;
-using ResourceResult = CSharpKOTOR.Installation.ResourceResult;
-using LocationResult = CSharpKOTOR.Resources.LocationResult;
+using ResourceResult = AuroraEngine.Common.Installation.ResourceResult;
+using LocationResult = AuroraEngine.Common.Resources.LocationResult;
 
 namespace HolocronToolset.NET.Tests.Data
 {

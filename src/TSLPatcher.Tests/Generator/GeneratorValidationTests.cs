@@ -1,13 +1,13 @@
-// Comprehensive tests for GeneratorValidation
+﻿// Comprehensive tests for GeneratorValidation
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:975-1104
 using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.TSLPatcher;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Generator
+namespace AuroraEngine.Common.Tests.Generator
 {
     /// <summary>
     /// Comprehensive tests for GeneratorValidation.

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using Xunit;
 

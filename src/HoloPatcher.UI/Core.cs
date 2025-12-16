@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,14 +6,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Namespaces;
-using CSharpKOTOR.Patcher;
-using CSharpKOTOR.Reader;
-using CSharpKOTOR.Uninstall;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Namespaces;
+using AuroraEngine.Common.Patcher;
+using AuroraEngine.Common.Reader;
+using AuroraEngine.Common.Uninstall;
 using JetBrains.Annotations;
 #if WINDOWS
 using Microsoft.Win32;
@@ -24,7 +24,7 @@ namespace HoloPatcher.UI
 
     /// <summary>
     /// Core functionality for HoloPatcher.
-    /// Equivalent to holopatcher/csharpkotor.py
+    /// Equivalent to holopatcher/AuroraEngine.Common.py
     /// </summary>
     public static class Core
     {

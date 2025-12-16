@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.DLG
+namespace AuroraEngine.Common.Resource.Generics.DLG
 {
     /// <summary>
     /// Represents a node in the dialog graph (either DLGEntry or DLGReply).

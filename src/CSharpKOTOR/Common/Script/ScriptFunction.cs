@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:75-104

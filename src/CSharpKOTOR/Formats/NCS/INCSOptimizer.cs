@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Common;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS
+namespace AuroraEngine.Common.Formats.NCS
 {
     /// <summary>
     /// Base class for NCS optimizers with common functionality.

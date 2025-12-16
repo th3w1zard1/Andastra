@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Resources;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.GUI
+namespace AuroraEngine.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// A class representing a GUI resource in KotOR games.

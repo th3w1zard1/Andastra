@@ -105,7 +105,8 @@ namespace Odyssey.MonoGame.Memory
             while (_pool.Count > 0)
             {
                 T obj = _pool.Pop();
-                if (obj is IDisposable disposable)
+                IDisposable disposable = obj as IDisposable;
+                if (disposable != null)
                 {
                     disposable.Dispose();
                 }

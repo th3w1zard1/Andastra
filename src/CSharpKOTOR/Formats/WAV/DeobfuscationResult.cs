@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.WAV
+﻿namespace AuroraEngine.Common.Formats.WAV
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py:38-42
     // Original: class DeobfuscationResult(IntEnum)

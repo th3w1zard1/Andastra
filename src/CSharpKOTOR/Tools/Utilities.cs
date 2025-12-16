@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TPC;
-using CSharpKOTOR.Formats.TwoDA;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TPC;
+using AuroraEngine.Common.Formats.TwoDA;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/utilities.py
     // Original: Utility command functions for file operations, validation, and analysis

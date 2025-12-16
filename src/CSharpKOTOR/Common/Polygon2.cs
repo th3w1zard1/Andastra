@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/geometry.py:1295-1452
     // Original: class Polygon2:
@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Common
             set => _points[index] = value;
         }
 
-        public static Polygon2 FromPolygon3(CSharpKOTOR.Common.Polygon3 poly3)
+        public static Polygon2 FromPolygon3(AuroraEngine.Common.Common.Polygon3 poly3)
         {
             Polygon2 poly2 = new Polygon2();
             foreach (Vector3 point in poly3)

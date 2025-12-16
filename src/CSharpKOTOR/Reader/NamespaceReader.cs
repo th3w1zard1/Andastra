@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Namespaces;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Namespaces;
 using IniParser;
 using IniParser.Model;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Reader
+namespace AuroraEngine.Common.Reader
 {
 
     /// <summary>

@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Formats.TLK;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Formats.TLK;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
 
     public class TlkCompareResult

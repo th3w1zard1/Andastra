@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.GFF
+namespace AuroraEngine.Common.Formats.GFF
 {
 
     /// <summary>

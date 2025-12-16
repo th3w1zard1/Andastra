@@ -41,6 +41,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HolocronToolset.NET\HolocronToolset.NET.csproj" />
-    <ProjectReference Include="..\CSharpKOTOR\CSharpKOTOR.csproj" />
+    <ProjectReference Include="..\CSharpKOTOR\AuroraEngine.Common.csproj" />
   </ItemGroup>
 </Project>

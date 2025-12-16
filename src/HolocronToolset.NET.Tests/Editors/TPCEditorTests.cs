@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -120,13 +120,13 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Try to get a TPC resource from installation
                 // Matching PyKotor implementation: installation.resources([ResourceIdentifier(resname="", restype=ResourceType.TPC), ResourceIdentifier(resname="", restype=ResourceType.TGA)])
-                var queries = new List<CSharpKOTOR.Resources.ResourceIdentifier>
+                var queries = new List<AuroraEngine.Common.Resources.ResourceIdentifier>
                 {
-                    new CSharpKOTOR.Resources.ResourceIdentifier("", ResourceType.TPC),
-                    new CSharpKOTOR.Resources.ResourceIdentifier("", ResourceType.TGA)
+                    new AuroraEngine.Common.Resources.ResourceIdentifier("", ResourceType.TPC),
+                    new AuroraEngine.Common.Resources.ResourceIdentifier("", ResourceType.TGA)
                 };
                 var tpcResourcesDict = installation.Resources(queries);
-                var tpcResources = new List<CSharpKOTOR.Installation.ResourceResult>();
+                var tpcResources = new List<AuroraEngine.Common.Installation.ResourceResult>();
                 foreach (var kvp in tpcResourcesDict)
                 {
                     if (kvp.Value != null)
@@ -142,7 +142,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: tpc_resource: ResourceResult | None = tpc_resources[0]
-                CSharpKOTOR.Installation.ResourceResult tpcResource = tpcResources[0];
+                AuroraEngine.Common.Installation.ResourceResult tpcResource = tpcResources[0];
                 // Matching PyKotor implementation: tpc_data: bytes | None = installation.resource(resname=tpc_resource.resname, restype=tpc_resource.restype)
                 var resourceResult = installation.Resource(tpcResource.ResName, tpcResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
@@ -171,7 +171,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                CSharpKOTOR.Formats.TPC.TPC loadedTpc = CSharpKOTOR.Formats.TPC.TPCAuto.ReadTpc(data);
+                AuroraEngine.Common.Formats.TPC.TPC loadedTpc = AuroraEngine.Common.Formats.TPC.TPCAuto.ReadTpc(data);
                 loadedTpc.Should().NotBeNull();
             }
             else
@@ -195,7 +195,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                CSharpKOTOR.Formats.TPC.TPC loadedTpc = CSharpKOTOR.Formats.TPC.TPCAuto.ReadTpc(data);
+                AuroraEngine.Common.Formats.TPC.TPC loadedTpc = AuroraEngine.Common.Formats.TPC.TPCAuto.ReadTpc(data);
                 loadedTpc.Should().NotBeNull();
             }
         }

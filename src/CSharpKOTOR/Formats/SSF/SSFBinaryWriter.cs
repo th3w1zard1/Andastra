@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 
-namespace CSharpKOTOR.Formats.SSF
+namespace AuroraEngine.Common.Formats.SSF
 {
 
     /// <summary>

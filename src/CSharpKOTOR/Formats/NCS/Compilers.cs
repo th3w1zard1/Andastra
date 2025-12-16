@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS.Compiler;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS.Compiler;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS
+namespace AuroraEngine.Common.Formats.NCS
 {
     /// <summary>
     /// Shared utility methods for NCS compilers.

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Utils;
-using NcsFile = CSharpKOTOR.Formats.NCS.NCSDecomp.NcsFile;
+using NcsFile = AuroraEngine.Common.Formats.NCS.NCSDecomp.NcsFile;
 
 namespace HolocronToolset.NET.Utils
 {

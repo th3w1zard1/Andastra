@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.LYT;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.LYT;
 
 namespace HolocronToolset.NET.Dialogs
 {

@@ -1,13 +1,13 @@
-// Comprehensive tests for INIManager
+﻿// Comprehensive tests for INIManager
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/ini_manager.py
 using System;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.TSLPatcher;
+using AuroraEngine.Common.TSLPatcher;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Generator
+namespace AuroraEngine.Common.Tests.Generator
 {
     /// <summary>
     /// Comprehensive tests for INIManager.

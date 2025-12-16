@@ -114,7 +114,6 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Worker thread procedure.
         /// </summary>
-
         private void WorkerThreadProc()
         {
             while (_running)

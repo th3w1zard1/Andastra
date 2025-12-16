@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Installation;
-using ResourceType = CSharpKOTOR.Resources.ResourceType;
-using LocationResult = CSharpKOTOR.Resources.LocationResult;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Installation;
+using ResourceType = AuroraEngine.Common.Resources.ResourceType;
+using LocationResult = AuroraEngine.Common.Resources.LocationResult;
 
-namespace CSharpKOTOR.Extract
+namespace AuroraEngine.Common.Extract
 {
     // Thin wrapper to mirror PyKotor extract.installation.Installation semantics.
     public class InstallationWrapper
@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Extract
             _installation = new Installation.Installation(installPath);
         }
 
-        public CSharpKOTOR.Installation.ResourceResult Resource(string resref, ResourceType restype)
+        public AuroraEngine.Common.Installation.ResourceResult Resource(string resref, ResourceType restype)
         {
             return _installation.Resources.LookupResource(resref, restype);
         }

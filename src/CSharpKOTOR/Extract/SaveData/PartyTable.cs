@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract.SaveData
+namespace AuroraEngine.Common.Extract.SaveData
 {
     // Supporting entries matching PyKotor savedata.py
     public class JournalEntry

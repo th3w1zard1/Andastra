@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
-using BinaryReader = CSharpKOTOR.Common.RawBinaryReader;
+using BinaryReader = AuroraEngine.Common.Common.RawBinaryReader;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     /// <summary>
     /// Utility functions for working with 3D model data.

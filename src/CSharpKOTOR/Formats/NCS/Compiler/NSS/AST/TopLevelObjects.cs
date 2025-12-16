@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.Compiler.NSS;
-using MissingIncludeError = CSharpKOTOR.Formats.NCS.Compiler.NSS.MissingIncludeError;
-using ScriptDataType = CSharpKOTOR.Common.Script.DataType;
+using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
+using MissingIncludeError = AuroraEngine.Common.Formats.NCS.Compiler.NSS.MissingIncludeError;
+using ScriptDataType = AuroraEngine.Common.Common.Script.DataType;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
     public class GlobalVariableDeclaration : TopLevelObject
     {

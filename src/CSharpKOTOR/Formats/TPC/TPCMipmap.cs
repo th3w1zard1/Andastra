@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace CSharpKOTOR.Formats.TPC
+namespace AuroraEngine.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:199-238
     // Original: @dataclass class TPCMipmap

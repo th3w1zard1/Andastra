@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.AST
 {
     public sealed class Start : Node
     {

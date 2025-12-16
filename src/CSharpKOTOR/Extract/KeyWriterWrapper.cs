@@ -1,8 +1,8 @@
-using System.IO;
-using CSharpKOTOR.Formats.KEY;
-using CSharpKOTOR.Resources;
+﻿using System.IO;
+using AuroraEngine.Common.Formats.KEY;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract
+namespace AuroraEngine.Common.Extract
 {
     // Thin wrapper to mirror PyKotor extract.keywriter.KEYWriter.
     public static class KeyWriterWrapper

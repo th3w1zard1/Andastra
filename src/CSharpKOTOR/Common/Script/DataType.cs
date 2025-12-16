@@ -1,6 +1,6 @@
 using System;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
 
     /// <summary>

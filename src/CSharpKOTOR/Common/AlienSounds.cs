@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/alien_sounds.py:1-303
     // Original: ALIEN_SOUNDS = { ... }

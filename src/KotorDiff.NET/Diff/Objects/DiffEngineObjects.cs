@@ -1,11 +1,11 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/objects.py:394-497
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/objects.py:394-497
 // Original: class DiffEngine: ... class DiffResourceType(Enum): ...
 using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
 
 namespace KotorDiff.NET.Diff.Objects
 {

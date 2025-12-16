@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.WAV;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.WAV;
 
-namespace CSharpKOTOR.Formats.WAV
+namespace AuroraEngine.Common.Formats.WAV
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:38-220
     // Original: class WAVBinaryReader(ResourceReader)

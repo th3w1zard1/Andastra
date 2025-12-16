@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Xunit.Abstractions;
 
-namespace CSharpKOTOR.Tests.Performance
+namespace AuroraEngine.Common.Tests.Performance
 {
     /// <summary>
     /// Helper class for performance testing with timeout enforcement and profiling.

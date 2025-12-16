@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using NUnit.Framework;
 
-namespace CSharpKOTOR.Tests.Performance
+namespace AuroraEngine.Common.Tests.Performance
 {
     /// <summary>
     /// NUnit attribute that enforces a maximum test execution time.

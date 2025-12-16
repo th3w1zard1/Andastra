@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.BWM;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.BWM;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
@@ -203,7 +203,7 @@ namespace Odyssey.Kotor.Loading
                 }
 
                 // Search for WOK resource
-                CSharpKOTOR.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
+                AuroraEngine.Common.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
                     new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
 
                 if (wokResource == null || wokResource.Data == null)

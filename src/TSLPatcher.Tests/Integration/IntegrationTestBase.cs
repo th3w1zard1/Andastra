@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Config;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Reader;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Config;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Reader;
 using IniParser.Model;
 using IniParser.Parser;
 
-namespace CSharpKOTOR.Tests.Integration
+namespace AuroraEngine.Common.Tests.Integration
 {
 
     /// <summary>
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Tests.Integration
         protected PatcherConfig SetupIniAndConfig(string iniText, string modPath = null)
         {
             // Use unified INI parser (case-sensitive for changes.ini files)
-            IniData ini = CSharpKOTOR.Reader.ConfigReader.ParseIniText(iniText, caseInsensitive: false);
+            IniData ini = AuroraEngine.Common.Reader.ConfigReader.ParseIniText(iniText, caseInsensitive: false);
             var config = new PatcherConfig();
             string actualModPath = modPath ?? TempDir;
 

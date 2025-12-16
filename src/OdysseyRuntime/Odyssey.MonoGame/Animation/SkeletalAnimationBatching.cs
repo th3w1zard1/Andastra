@@ -94,11 +94,20 @@ namespace Odyssey.MonoGame.Animation
         /// <summary>
         /// Adds or updates an animated character instance.
         /// </summary>
+        /// <param name="characterId">Unique character identifier.</param>
+        /// <param name="boneMatrices">Array of bone transformation matrices. Must not be null or empty.</param>
+        /// <param name="worldMatrix">World transformation matrix.</param>
+        /// <exception cref="ArgumentNullException">Thrown if boneMatrices is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if boneMatrices is empty.</exception>
         public void UpdateInstance(uint characterId, Matrix[] boneMatrices, Matrix worldMatrix)
         {
-            if (boneMatrices == null || boneMatrices.Length == 0)
+            if (boneMatrices == null)
             {
-                return;
+                throw new ArgumentNullException(nameof(boneMatrices));
+            }
+            if (boneMatrices.Length == 0)
+            {
+                throw new ArgumentException("Bone matrices array must not be empty.", nameof(boneMatrices));
             }
 
             // Truncate if too many bones

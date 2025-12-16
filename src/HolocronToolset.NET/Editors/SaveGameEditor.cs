@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Extract.SaveData;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Extract.SaveData;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
 
 namespace HolocronToolset.NET.Editors

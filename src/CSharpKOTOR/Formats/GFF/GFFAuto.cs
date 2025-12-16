@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.GFF
+namespace AuroraEngine.Common.Formats.GFF
 {
 
     /// <summary>

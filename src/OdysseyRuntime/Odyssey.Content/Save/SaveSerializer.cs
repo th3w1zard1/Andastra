@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using Odyssey.Core.Save;
 
 namespace Odyssey.Content.Save
@@ -977,14 +977,14 @@ namespace Odyssey.Content.Save
             {
                 // Use dynamic to call GetTable without referencing Odyssey.Kotor
                 dynamic gameDataManager = _gameDataManager;
-                CSharpKOTOR.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("party");
+                AuroraEngine.Common.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("party");
                 if (partyTable != null)
                 {
                     // Search party.2da for matching ResRef
                     // Row index in party.2da corresponds to member ID
                     for (int i = 0; i < partyTable.GetHeight(); i++)
                     {
-                        CSharpKOTOR.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
+                        AuroraEngine.Common.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
                         string rowLabel = row.Label();
                         
                         // Check exact match

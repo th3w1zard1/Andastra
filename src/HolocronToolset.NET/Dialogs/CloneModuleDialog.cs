@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -225,7 +225,7 @@ namespace HolocronToolset.NET.Dialogs
                     string filename = kvp.Key;
                     string name = kvp.Value ?? "";
                     // Matching PyKotor: Module.filepath_to_root(filename)
-                    string root = CSharpKOTOR.Installation.Installation.GetModuleRoot(filename);
+                    string root = AuroraEngine.Common.Installation.Installation.GetModuleRoot(filename);
                     if (!options.ContainsKey(root))
                     {
                         options[root] = new ModuleOption(name, root, new List<string>(), installation);

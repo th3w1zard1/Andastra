@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Namespaces
+﻿namespace AuroraEngine.Common.Namespaces
 {
 
     /// <summary>

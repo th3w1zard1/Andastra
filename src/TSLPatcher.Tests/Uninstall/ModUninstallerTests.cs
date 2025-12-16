@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Uninstall;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Uninstall;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Uninstall
+namespace AuroraEngine.Common.Tests.Uninstall
 {
 
     /// <summary>

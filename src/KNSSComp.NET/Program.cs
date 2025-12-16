@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.Optimizers;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.Optimizers;
 
 namespace KNSSComp.NET
 {
@@ -247,11 +247,11 @@ namespace KNSSComp.NET
                 {
                     if (arg == "1" || arg == "k1" || arg.Equals("kotor1", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = CSharpKOTOR.Common.Game.K1;
+                        result.Game = AuroraEngine.Common.Common.Game.K1;
                     }
                     else if (arg == "2" || arg == "k2" || arg.Equals("kotor2", StringComparison.OrdinalIgnoreCase) || arg.Equals("tsl", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = CSharpKOTOR.Common.Game.K2;
+                        result.Game = AuroraEngine.Common.Common.Game.K2;
                     }
                     else
                     {
@@ -421,11 +421,11 @@ namespace KNSSComp.NET
                 }
                 else if (arg == "-k1" || arg == "--kotor1")
                 {
-                    result.Game = CSharpKOTOR.Common.Game.K1;
+                    result.Game = AuroraEngine.Common.Common.Game.K1;
                 }
                 else if (arg == "-k2" || arg == "--kotor2" || arg == "--tsl")
                 {
-                    result.Game = CSharpKOTOR.Common.Game.K2;
+                    result.Game = AuroraEngine.Common.Common.Game.K2;
                 }
                 else if (arg == "-i" || arg == "--include" || arg == "--input")
                 {
@@ -686,7 +686,7 @@ namespace KNSSComp.NET
             {
                 // Try to infer from source file location or content
                 // Default to K2 (TSL) as it's more common
-                result.Game = CSharpKOTOR.Common.Game.K2;
+                result.Game = AuroraEngine.Common.Common.Game.K2;
             }
 
             return result;
@@ -714,7 +714,7 @@ namespace KNSSComp.NET
                 }
 
                 string source = File.ReadAllText(args.SourceFile, Encoding.UTF8);
-                Game game = args.Game ?? CSharpKOTOR.Common.Game.K2;
+                Game game = args.Game ?? AuroraEngine.Common.Common.Game.K2;
 
                 // Build library lookup paths
                 List<string> libraryLookup = new List<string>();
@@ -790,7 +790,7 @@ namespace KNSSComp.NET
         {
             try
             {
-                Game game = args.Game ?? CSharpKOTOR.Common.Game.K2;
+                Game game = args.Game ?? AuroraEngine.Common.Common.Game.K2;
                 Encoding encoding = GetEncoding(args.Encoding);
 
                 // Collect all input files

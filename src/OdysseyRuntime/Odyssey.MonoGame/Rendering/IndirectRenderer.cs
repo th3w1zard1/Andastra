@@ -130,6 +130,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Updates object data buffer with current objects.
         /// </summary>
+        /// <param name="objects">Array of object data. Can be null or empty (no-op).</param>
         public void UpdateObjectData(ObjectData[] objects)
         {
             if (objects == null || objects.Length == 0)

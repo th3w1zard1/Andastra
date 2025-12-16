@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.TwoDA;
+using AuroraEngine.Common.Formats.TwoDA;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
 
     public class TwoDaCompareResult

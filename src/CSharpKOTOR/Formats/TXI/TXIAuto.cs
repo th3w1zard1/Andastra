@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.TXI
+namespace AuroraEngine.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/txi_auto.py
     // Original: read_txi, write_txi, bytes_txi functions

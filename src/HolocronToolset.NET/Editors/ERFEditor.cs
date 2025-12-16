@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -9,14 +9,14 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Common;
 using HolocronToolset.NET.Data;
-using ERFResource = CSharpKOTOR.Formats.ERF.ERFResource;
-using RIMResource = CSharpKOTOR.Formats.RIM.RIMResource;
+using ERFResource = AuroraEngine.Common.Formats.ERF.ERFResource;
+using RIMResource = AuroraEngine.Common.Formats.RIM.RIMResource;
 
 namespace HolocronToolset.NET.Editors
 {

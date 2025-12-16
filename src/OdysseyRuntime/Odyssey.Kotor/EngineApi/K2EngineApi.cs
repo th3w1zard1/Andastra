@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Common.Script;
+using AuroraEngine.Common.Script;
 using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
@@ -832,7 +832,7 @@ namespace Odyssey.Kotor.EngineApi
                 
                 // Create entity from template using EntityFactory
                 // Get current module from ModuleLoader
-                CSharpKOTOR.Common.Module module = moduleLoader.GetCSharpKotorModule();
+                AuroraEngine.Common.Module module = moduleLoader.GetCSharpKotorModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)

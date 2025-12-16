@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Resources;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Extract
+namespace AuroraEngine.Common.Extract
 {
     // Thin wrapper matching PyKotor extract.capsule LazyCapsule semantics.
     public class LazyCapsuleWrapper

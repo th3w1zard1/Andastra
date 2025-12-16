@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using Xunit;
-using static CSharpKOTOR.Formats.SSF.SSFAuto;
+using static AuroraEngine.Common.Formats.SSF.SSFAuto;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

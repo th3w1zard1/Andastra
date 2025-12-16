@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace CSharpKOTOR.Formats.RIM
+namespace AuroraEngine.Common.Formats.RIM
 {
     public class RIMBinaryWriter
     {

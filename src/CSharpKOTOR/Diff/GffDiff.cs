@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.GFF;
+using AuroraEngine.Common.Formats.GFF;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Diff
+namespace AuroraEngine.Common.Diff
 {
 
     public class GffCompareResult
@@ -134,7 +134,7 @@ namespace CSharpKOTOR.Diff
 
             // Handle specific types like Vector3, Vector4, ResRef, etc. if they don't implement Equals correctly
             // Assuming CSharpKOTOR types implement Equals or are value types.
-            // ResRef, LocalizedString, Vector3, Vector4 in CSharpKOTOR.Common should implement Equals.
+            // ResRef, LocalizedString, Vector3, Vector4 in AuroraEngine.Common.Common should implement Equals.
 
             return false;
         }

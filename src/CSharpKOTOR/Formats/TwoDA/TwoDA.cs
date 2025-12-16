@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.TwoDA
+namespace AuroraEngine.Common.Formats.TwoDA
 {
 
     /// <summary>

@@ -1,5 +1,5 @@
-using System;
-using CSharpKOTOR.Resources;
+﻿using System;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -117,12 +117,12 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Try to get a UTE resource from installation
-                var queries = new System.Collections.Generic.List<CSharpKOTOR.Resources.ResourceIdentifier>
+                var queries = new System.Collections.Generic.List<AuroraEngine.Common.Resources.ResourceIdentifier>
                 {
-                    new CSharpKOTOR.Resources.ResourceIdentifier("", ResourceType.UTE)
+                    new AuroraEngine.Common.Resources.ResourceIdentifier("", ResourceType.UTE)
                 };
                 var uteResourcesDict = installation.Resources(queries);
-                var uteResources = new System.Collections.Generic.List<CSharpKOTOR.Installation.ResourceResult>();
+                var uteResources = new System.Collections.Generic.List<AuroraEngine.Common.Installation.ResourceResult>();
                 foreach (var kvp in uteResourcesDict)
                 {
                     if (kvp.Value != null)
@@ -138,7 +138,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: Use first UTE resource
-                CSharpKOTOR.Installation.ResourceResult uteResource = uteResources[0];
+                AuroraEngine.Common.Installation.ResourceResult uteResource = uteResources[0];
                 var resourceResult = installation.Resource(uteResource.ResName, uteResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
@@ -164,7 +164,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                AuroraEngine.Common.Formats.GFF.GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
             else
@@ -187,7 +187,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                AuroraEngine.Common.Formats.GFF.GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
         }

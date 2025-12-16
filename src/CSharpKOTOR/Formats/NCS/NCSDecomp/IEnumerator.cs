@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+﻿namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Java-style enumerator interface with HasNext() and Next() methods.

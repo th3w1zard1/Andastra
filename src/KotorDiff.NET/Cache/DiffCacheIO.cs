@@ -1,10 +1,10 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/cache.py:114-251
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/cache.py:114-251
 // Original: def save_diff_cache, load_diff_cache, restore_strref_cache_from_cache: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 using KotorDiff.NET.Diff;
 using JetBrains.Annotations;
 

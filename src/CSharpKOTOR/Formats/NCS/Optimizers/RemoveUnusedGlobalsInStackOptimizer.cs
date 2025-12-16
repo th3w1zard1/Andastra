@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace CSharpKOTOR.Formats.NCS.Optimizers
+namespace AuroraEngine.Common.Formats.NCS.Optimizers
 {
     /// <summary>
     /// Optimizer to remove unused global variables from the stack.

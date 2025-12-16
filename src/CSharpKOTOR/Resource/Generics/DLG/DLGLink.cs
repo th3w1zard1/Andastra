@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Common;
+﻿using System;
+using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.DLG
+namespace AuroraEngine.Common.Resource.Generics.DLG
 {
     /// <summary>
     /// Represents a directed edge from a source node to a target node (DLGNode).

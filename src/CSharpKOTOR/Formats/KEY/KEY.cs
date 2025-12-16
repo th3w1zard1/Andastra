@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.KEY
+namespace AuroraEngine.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/key_data.py:281-462
     // Original: class KEY

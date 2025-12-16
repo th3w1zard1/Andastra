@@ -1,20 +1,20 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:50-635
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:50-635
 // Original: public class MainPass extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     public class MainPass : PrunedDepthFirstAdapter
     {

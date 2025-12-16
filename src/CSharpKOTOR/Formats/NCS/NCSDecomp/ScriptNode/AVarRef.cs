@@ -1,11 +1,11 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarRef.java:13-68
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarRef.java:13-68
 // Original: public class AVarRef extends ScriptNode implements AExpression
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AVarRef : ScriptNode, AExpression
     {

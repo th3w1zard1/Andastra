@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Numerics;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 
-namespace CSharpKOTOR.Formats.BWM
+namespace AuroraEngine.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1544-1707
     // Original: class BWMNodeAABB(ComparableMixin)

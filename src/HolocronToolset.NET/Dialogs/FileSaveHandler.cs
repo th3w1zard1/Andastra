@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Resources;
-using FileResource = CSharpKOTOR.Resources.FileResource;
+using AuroraEngine.Common.Resources;
+using FileResource = AuroraEngine.Common.Resources.FileResource;
 
 namespace HolocronToolset.NET.Dialogs
 {

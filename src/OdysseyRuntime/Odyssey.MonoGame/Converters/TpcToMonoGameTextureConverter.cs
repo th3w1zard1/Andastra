@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using CSharpKOTOR.Formats.TPC;
+using AuroraEngine.Common.Formats.TPC;
 using JetBrains.Annotations;
 
 namespace Odyssey.MonoGame.Converters

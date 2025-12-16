@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using CSharpKOTOR.Formats.MDLData;
+using AuroraEngine.Common.Formats.MDLData;
 using JetBrains.Annotations;
 
 namespace Odyssey.MonoGame.Converters

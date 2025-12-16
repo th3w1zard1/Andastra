@@ -1,6 +1,6 @@
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics.GUI
+namespace AuroraEngine.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// Enum representing different GUI control types.

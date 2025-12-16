@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
 using HolocronToolset.NET.Tests.TestHelpers;
 using Xunit;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Tests.Editors
 {
@@ -99,7 +99,7 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Load(utdFile, "naldoor001", ResourceType.UTD, originalData);
 
             // Matching PyKotor implementation: original_utd = read_utd(original_data)
-            UTD originalUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
+            UTD originalUtd = UTDHelpers.ConstructUtd(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(originalData));
 
             // Modify tag
             // Matching PyKotor implementation: editor.ui.tagEdit.setText("modified_tag")
@@ -110,7 +110,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching PyKotor implementation: modified_utd = read_utd(data)
-            UTD modifiedUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTD modifiedUtd = UTDHelpers.ConstructUtd(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
             // Matching PyKotor implementation: assert modified_utd.tag == "modified_tag"
             // Matching PyKotor implementation: assert modified_utd.tag != original_utd.tag
@@ -208,7 +208,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -281,7 +281,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1141
             // Original: original_gff = read_gff(original_data)
-            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var old = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1142
             // Original: editor.load(utd_file, "naldoor001", ResourceType.UTD, original_data)
@@ -293,7 +293,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1146
             // Original: new_gff = read_gff(data)
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1153
             // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)

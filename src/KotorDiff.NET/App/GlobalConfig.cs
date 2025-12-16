@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:69-80
+﻿// Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:69-80
 // Original: class GlobalConfig: ... _global_config: GlobalConfig = GlobalConfig()
 using System.IO;
 
@@ -13,7 +13,7 @@ namespace KotorDiff.NET.App
         public FileInfo OutputLog { get; set; }
         public bool? LoggingEnabled { get; set; }
         public KotorDiffConfig Config { get; set; }
-        public CSharpKOTOR.Mods.ModificationsByType ModificationsByType { get; set; }
+        public AuroraEngine.Common.Mods.ModificationsByType ModificationsByType { get; set; }
     }
 }
 

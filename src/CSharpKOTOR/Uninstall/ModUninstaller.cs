@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Logger;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Logger;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Uninstall
+namespace AuroraEngine.Common.Uninstall
 {
 
     /// <summary>

@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Formats.MDL;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Formats.MDL;
 
-namespace CSharpKOTOR.Formats.MDL
+namespace AuroraEngine.Common.Formats.MDL
 {
     // Simplified port of PyKotor io_mdl_ascii.MDLAsciiReader
     public class MDLAsciiReader : IDisposable

@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.Capsule
+namespace AuroraEngine.Common.Formats.Capsule
 {
 
     /// <summary>

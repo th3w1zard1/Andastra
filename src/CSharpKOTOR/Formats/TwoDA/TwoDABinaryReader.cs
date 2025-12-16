@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Formats;
+using AuroraEngine.Common.Formats;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.TwoDA
+namespace AuroraEngine.Common.Formats.TwoDA
 {
 
     /// <summary>

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Script;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
@@ -195,7 +195,7 @@ namespace Odyssey.Scripting.VM
             // Fallback to CSharpKOTOR Installation provider
             else if (provider is Installation installation)
             {
-                CSharpKOTOR.Installation.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
+                AuroraEngine.Common.Installation.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
                 if (result != null && result.Data != null)
                 {
                     ncsBytes = result.Data;

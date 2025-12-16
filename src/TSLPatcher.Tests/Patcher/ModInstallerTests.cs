@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Patcher;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Patcher;
+using AuroraEngine.Common.Resources;
 using Moq;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Patcher
+namespace AuroraEngine.Common.Tests.Patcher
 {
 
     /// <summary>

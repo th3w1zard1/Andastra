@@ -1,15 +1,15 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.TwoDA;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.TwoDA;
 using FluentAssertions;
 using Xunit;
-using TwoDAFile = CSharpKOTOR.Formats.TwoDA.TwoDA;
+using TwoDAFile = AuroraEngine.Common.Formats.TwoDA.TwoDA;
 
-namespace CSharpKOTOR.Tests.Mods
+namespace AuroraEngine.Common.Tests.Mods
 {
 
     /// <summary>

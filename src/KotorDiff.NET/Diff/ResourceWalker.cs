@@ -1,12 +1,12 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:884-980
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:884-980
 // Original: class ResourceWalker: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Installation;
 
 namespace KotorDiff.NET.Diff
 {
@@ -105,7 +105,7 @@ namespace KotorDiff.NET.Diff
                 var results = new List<ComparableResource>();
                 try
                 {
-                    var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(filePath.FullName);
+                    var capsule = new AuroraEngine.Common.Formats.Capsule.Capsule(filePath.FullName);
                     foreach (var res in capsule)
                     {
                         string ext = res.ResType.Extension.ToLowerInvariant();

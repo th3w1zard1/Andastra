@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace CSharpKOTOR.Tests.Performance
+namespace AuroraEngine.Common.Tests.Performance
 {
     /// <summary>
     /// Performance profiler that tracks method execution times and generates cProfile-like output.

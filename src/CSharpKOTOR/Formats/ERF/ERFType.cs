@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.ERF
+﻿namespace AuroraEngine.Common.Formats.ERF
 {
 
     /// <summary>

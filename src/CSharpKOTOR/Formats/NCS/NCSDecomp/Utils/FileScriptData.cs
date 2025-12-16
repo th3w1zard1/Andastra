@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
-using Scriptutils = CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
+using Scriptutils = AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class FileScriptData
     {

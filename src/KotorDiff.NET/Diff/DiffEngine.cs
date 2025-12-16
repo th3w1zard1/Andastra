@@ -1,15 +1,15 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:3294-3386
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:3294-3386
 // Original: def run_differ_from_args_impl(...): ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.TSLPatcher;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.TSLPatcher;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Resources;
 using KotorDiff.NET.Resolution;
 using KotorDiff.NET.Cache;
 
@@ -529,7 +529,7 @@ namespace KotorDiff.NET.Diff
                     if (result != null && modificationsByType != null)
                     {
                         // Add modifications
-                        if (result is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff)
+                        if (result is AuroraEngine.Common.Mods.GFF.ModificationsGFF modGff)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modGff.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -582,7 +582,7 @@ namespace KotorDiff.NET.Diff
                     var result = analyzer.Analyze(data1, data2, context.Where);
                     if (result != null)
                     {
-                        if (result is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
+                        if (result is AuroraEngine.Common.Mods.TwoDA.Modifications2DA mod2da)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             mod2da.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -639,7 +639,7 @@ namespace KotorDiff.NET.Diff
                     if (result != null)
                     {
                         // TLK analyzer returns tuple: (ModificationsTLK, strref_mappings)
-                        if (result is ValueTuple<CSharpKOTOR.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
+                        if (result is ValueTuple<AuroraEngine.Common.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
                         {
                             var modTlk = tuple.Item1;
 
@@ -689,7 +689,7 @@ namespace KotorDiff.NET.Diff
                     var result = analyzer.Analyze(data1, data2, context.Where);
                     if (result != null)
                     {
-                        if (result is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf)
+                        if (result is AuroraEngine.Common.Mods.SSF.ModificationsSSF modSsf)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modSsf.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -805,12 +805,12 @@ namespace KotorDiff.NET.Diff
             }
 
             // Load capsules (composite module loading is handled by CompositeModuleCapsule if needed)
-            CSharpKOTOR.Formats.Capsule.Capsule file1Capsule = null;
-            CSharpKOTOR.Formats.Capsule.Capsule file2Capsule = null;
+            AuroraEngine.Common.Formats.Capsule.Capsule file1Capsule = null;
+            AuroraEngine.Common.Formats.Capsule.Capsule file2Capsule = null;
 
             try
             {
-                file1Capsule = new CSharpKOTOR.Formats.Capsule.Capsule(cFile1);
+                file1Capsule = new AuroraEngine.Common.Formats.Capsule.Capsule(cFile1);
             }
             catch (Exception e)
             {
@@ -820,7 +820,7 @@ namespace KotorDiff.NET.Diff
 
             try
             {
-                file2Capsule = new CSharpKOTOR.Formats.Capsule.Capsule(cFile2);
+                file2Capsule = new AuroraEngine.Common.Formats.Capsule.Capsule(cFile2);
             }
             catch (Exception e)
             {
@@ -829,8 +829,8 @@ namespace KotorDiff.NET.Diff
             }
 
             // Build dict of resources
-            var capsule1Resources = new Dictionary<string, CSharpKOTOR.Formats.Capsule.CapsuleResource>();
-            var capsule2Resources = new Dictionary<string, CSharpKOTOR.Formats.Capsule.CapsuleResource>();
+            var capsule1Resources = new Dictionary<string, AuroraEngine.Common.Formats.Capsule.CapsuleResource>();
+            var capsule2Resources = new Dictionary<string, AuroraEngine.Common.Formats.Capsule.CapsuleResource>();
 
             foreach (var res in file1Capsule)
             {

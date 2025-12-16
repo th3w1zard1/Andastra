@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Memory
+namespace AuroraEngine.Common.Memory
 {
 
     /// <summary>

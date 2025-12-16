@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.TwoDA;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.TwoDA;
 using Xunit;
-using TwoDAFile = CSharpKOTOR.Formats.TwoDA.TwoDA;
+using TwoDAFile = AuroraEngine.Common.Formats.TwoDA.TwoDA;
 
-namespace CSharpKOTOR.Tests.Mods.TwoDA
+namespace AuroraEngine.Common.Tests.Mods.TwoDA
 {
 
     /// <summary>

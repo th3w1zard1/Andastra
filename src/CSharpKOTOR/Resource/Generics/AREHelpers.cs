@@ -1,9 +1,9 @@
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
-namespace CSharpKOTOR.Resource.Generics
+namespace AuroraEngine.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py
     // Original: construct_are and dismantle_are functions

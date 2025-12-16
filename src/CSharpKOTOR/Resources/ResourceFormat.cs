@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Resources
+﻿namespace AuroraEngine.Common.Resources
 {
     /// <summary>
     /// Base class for resource formats.

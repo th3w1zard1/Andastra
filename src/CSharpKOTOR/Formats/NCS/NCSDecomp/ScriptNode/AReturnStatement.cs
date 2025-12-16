@@ -1,7 +1,7 @@
-using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
+﻿using System.Text;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AReturnStatement : ScriptNode
     {

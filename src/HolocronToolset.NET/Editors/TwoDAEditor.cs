@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -8,8 +8,8 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Common;
 using HolocronToolset.NET.Data;
 

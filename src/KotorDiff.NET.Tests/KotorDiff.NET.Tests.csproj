@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KotorDiff.NET\KotorDiff.NET.csproj" />
-    <ProjectReference Include="..\CSharpKOTOR\CSharpKOTOR.csproj" />
+    <ProjectReference Include="..\CSharpKOTOR\AuroraEngine.Common.csproj" />
   </ItemGroup>
 
 </Project>

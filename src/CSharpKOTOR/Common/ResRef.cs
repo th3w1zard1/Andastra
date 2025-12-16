@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:23-248

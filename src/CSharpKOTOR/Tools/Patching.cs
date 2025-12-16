@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Formats.TPC;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Installation;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Formats.TPC;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Installation;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py
     // Original: Batch patching utilities for KOTOR resources
@@ -642,7 +642,7 @@ namespace CSharpKOTOR.Tools
 
             LogMessage(config, $"Using install dir for operations:\t{installPath}");
 
-            var kInstall = new CSharpKOTOR.Installation.Installation(installPath);
+            var kInstall = new AuroraEngine.Common.Installation.Installation(installPath);
             if (config.IsPatching())
             {
                 LogMessage(config, "Patching modules...");

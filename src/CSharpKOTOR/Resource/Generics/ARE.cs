@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics
+namespace AuroraEngine.Common.Resource.Generics
 {
     /// <summary>
     /// Stores static area data.

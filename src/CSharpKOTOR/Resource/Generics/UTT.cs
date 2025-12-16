@@ -1,8 +1,8 @@
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Generics
+namespace AuroraEngine.Common.Resource.Generics
 {
     /// <summary>
     /// Stores trigger data.

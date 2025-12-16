@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Common;
+﻿using System;
+using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.TLK
+namespace AuroraEngine.Common.Formats.TLK
 {
 
     /// <summary>

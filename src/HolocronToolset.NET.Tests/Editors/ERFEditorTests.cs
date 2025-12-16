@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Text;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -84,7 +84,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
 
             // Verify the ERF was loaded correctly by checking it can be read back
-            var loadedErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(data);
+            var loadedErf = AuroraEngine.Common.Formats.ERF.ERFAuto.ReadErf(data);
             loadedErf.Should().NotBeNull("Loaded ERF should not be null");
             loadedErf.Count.Should().BeGreaterThan(0, "Loaded ERF should contain resources");
         }
@@ -131,12 +131,12 @@ namespace HolocronToolset.NET.Tests.Editors
 
             var editor = new ERFEditor(null, installation);
             byte[] originalData = System.IO.File.ReadAllBytes(erfFile);
-            var oldErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(originalData);
+            var oldErf = AuroraEngine.Common.Formats.ERF.ERFAuto.ReadErf(originalData);
 
             editor.Load(erfFile, "001EBO_dlg", ResourceType.ERF, originalData);
 
             var (newData, _) = editor.Build();
-            var newErf = CSharpKOTOR.Formats.ERF.ERFAuto.ReadErf(newData);
+            var newErf = AuroraEngine.Common.Formats.ERF.ERFAuto.ReadErf(newData);
 
             // Compare ERF files - check resource count
             oldErf.Count.Should().Be(newErf.Count, "Resource count should match");

@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.ERF;
-using CSharpKOTOR.Formats.MDL;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.ERF;
+using AuroraEngine.Common.Formats.MDL;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Widgets;
 
@@ -114,17 +114,17 @@ namespace HolocronToolset.NET.Editors
                         mdxData = File.ReadAllBytes(mdxPath);
                     }
                 }
-                else if (CSharpKOTOR.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
+                else if (AuroraEngine.Common.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
                 {
                     ERF erf = ERFAuto.ReadErf(filepath);
                     mdxData = erf.Get(resref, ResourceType.MDX);
                 }
-                else if (CSharpKOTOR.Tools.FileHelpers.IsRimFile(filepath))
+                else if (AuroraEngine.Common.Tools.FileHelpers.IsRimFile(filepath))
                 {
                     RIM rim = RIMAuto.ReadRim(filepath);
                     mdxData = rim.Get(resref, ResourceType.MDX);
                 }
-                else if (CSharpKOTOR.Tools.FileHelpers.IsBifFile(filepath))
+                else if (AuroraEngine.Common.Tools.FileHelpers.IsBifFile(filepath))
                 {
                     if (_installation != null)
                     {
@@ -148,17 +148,17 @@ namespace HolocronToolset.NET.Editors
                         mdlData = File.ReadAllBytes(mdlPath);
                     }
                 }
-                else if (CSharpKOTOR.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
+                else if (AuroraEngine.Common.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
                 {
                     ERF erf = ERFAuto.ReadErf(filepath);
                     mdlData = erf.Get(resref, ResourceType.MDL);
                 }
-                else if (CSharpKOTOR.Tools.FileHelpers.IsRimFile(filepath))
+                else if (AuroraEngine.Common.Tools.FileHelpers.IsRimFile(filepath))
                 {
                     RIM rim = RIMAuto.ReadRim(filepath);
                     mdlData = rim.Get(resref, ResourceType.MDL);
                 }
-                else if (CSharpKOTOR.Tools.FileHelpers.IsBifFile(filepath))
+                else if (AuroraEngine.Common.Tools.FileHelpers.IsBifFile(filepath))
                 {
                     if (_installation != null)
                     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:19-49

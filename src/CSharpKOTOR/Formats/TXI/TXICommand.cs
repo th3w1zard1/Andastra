@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.TXI
+﻿namespace AuroraEngine.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/txi_data.py:748-813
     // Original: class TXICommand(Enum)

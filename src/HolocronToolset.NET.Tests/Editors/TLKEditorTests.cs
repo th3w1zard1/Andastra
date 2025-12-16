@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Text;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -78,7 +78,7 @@ namespace HolocronToolset.NET.Tests.Editors
             fileData.Length.Should().BeGreaterThan(0, "TLK file should not be empty");
 
             // Verify we can read it before loading in editor
-            var testTlk = CSharpKOTOR.Formats.TLK.TLKAuto.ReadTlk(fileData);
+            var testTlk = AuroraEngine.Common.Formats.TLK.TLKAuto.ReadTlk(fileData);
             testTlk.Count.Should().BeGreaterThan(0, "TLK should have entries");
 
             // Load in editor
@@ -103,7 +103,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
 
             // Verify the built TLK can be read back
-            var builtTlk = CSharpKOTOR.Formats.TLK.TLKAuto.ReadTlk(data);
+            var builtTlk = AuroraEngine.Common.Formats.TLK.TLKAuto.ReadTlk(data);
             builtTlk.Should().NotBeNull("Built TLK should not be null");
             builtTlk.Count.Should().Be(testTlk.Count, "Built TLK should have same entry count");
         }

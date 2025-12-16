@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using NUnit.Framework;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Tests
+namespace AuroraEngine.Common.Tests
 {
     [TestFixture]
     public class ModuleTests
@@ -76,7 +76,7 @@ namespace CSharpKOTOR.Tests
         public void TestGITCreation()
         {
             // Test GIT class creation and basic functionality
-            var git = new CSharpKOTOR.Resource.Generics.GIT();
+            var git = new AuroraEngine.Common.Resource.Generics.GIT();
 
             Assert.IsNotNull(git);
             Assert.IsNotNull(git.Cameras);
@@ -98,7 +98,7 @@ namespace CSharpKOTOR.Tests
         public void TestLYTCreation()
         {
             // Test LYT class creation
-            var lyt = new CSharpKOTOR.Resource.Formats.LYT.LYT();
+            var lyt = new AuroraEngine.Common.Resource.Formats.LYT.LYT();
 
             Assert.IsNotNull(lyt);
             Assert.IsNotNull(lyt.Rooms);
@@ -111,7 +111,7 @@ namespace CSharpKOTOR.Tests
         public void TestVISCreation()
         {
             // Test VIS class creation
-            var vis = new CSharpKOTOR.Resource.Formats.VIS.VIS();
+            var vis = new AuroraEngine.Common.Resource.Formats.VIS.VIS();
 
             Assert.IsNotNull(vis);
             var rooms = vis.AllRooms();
@@ -130,30 +130,30 @@ namespace CSharpKOTOR.Tests
         public void TestUTCCreation()
         {
             // Test UTC class creation
-            var utc = new CSharpKOTOR.Resource.Generics.UTC();
+            var utc = new AuroraEngine.Common.Resource.Generics.UTC();
 
             Assert.IsNotNull(utc);
-            Assert.AreEqual(CSharpKOTOR.Resource.Generics.UTC.BinaryType, ResourceType.UTC);
+            Assert.AreEqual(AuroraEngine.Common.Resource.Generics.UTC.BinaryType, ResourceType.UTC);
         }
 
         [Test]
         public void TestUTDCreation()
         {
             // Test UTD class creation
-            var utd = new CSharpKOTOR.Resource.Generics.UTD();
+            var utd = new AuroraEngine.Common.Resource.Generics.UTD();
 
             Assert.IsNotNull(utd);
-            Assert.AreEqual(CSharpKOTOR.Resource.Generics.UTD.BinaryType, ResourceType.UTD);
+            Assert.AreEqual(AuroraEngine.Common.Resource.Generics.UTD.BinaryType, ResourceType.UTD);
         }
 
         [Test]
         public void TestUTPCreation()
         {
             // Test UTP class creation
-            var utp = new CSharpKOTOR.Resource.Generics.UTP();
+            var utp = new AuroraEngine.Common.Resource.Generics.UTP();
 
             Assert.IsNotNull(utp);
-            Assert.AreEqual(CSharpKOTOR.Resource.Generics.UTP.BinaryType, ResourceType.UTP);
+            Assert.AreEqual(AuroraEngine.Common.Resource.Generics.UTP.BinaryType, ResourceType.UTP);
         }
 
         [Test]

@@ -1,6 +1,6 @@
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
+﻿using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.AST
 {
     public abstract class PCmd : Node
     {

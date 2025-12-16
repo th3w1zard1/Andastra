@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 using Vector3 = System.Numerics.Vector3;
 
-namespace CSharpKOTOR.Formats.BWM
+namespace AuroraEngine.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:127-1843
     // Original: class BWM(ComparableMixin)

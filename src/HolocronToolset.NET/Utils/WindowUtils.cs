@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
-using CSharpKOTOR.Resources;
-using FileResource = CSharpKOTOR.Resources.FileResource;
+using AuroraEngine.Common.Resources;
+using FileResource = AuroraEngine.Common.Resources.FileResource;
 using JetBrains.Annotations;
 using NSSEditor = HolocronToolset.NET.Editors.NSSEditor;
 
@@ -107,7 +107,7 @@ namespace HolocronToolset.NET.Utils
         public static Tuple<string, Window> OpenResourceEditor(
             string filepath = null,
             string resname = null,
-            CSharpKOTOR.Resources.ResourceType restype = null,
+            AuroraEngine.Common.Resources.ResourceType restype = null,
             byte[] data = null,
             HTInstallation installation = null,
             Window parentWindow = null,
@@ -129,23 +129,23 @@ namespace HolocronToolset.NET.Utils
             var targetType = restype.TargetType();
 
             // Route to appropriate editor based on resource type
-            if (targetType == CSharpKOTOR.Resources.ResourceType.TwoDA)
+            if (targetType == AuroraEngine.Common.Resources.ResourceType.TwoDA)
             {
                 editor = new TwoDAEditor(parentWindow, installation);
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.SSF)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.SSF)
             {
                 editor = new SSFEditor(parentWindow, installation);
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.TLK)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.TLK)
             {
                 editor = new TLKEditor(parentWindow, installation);
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.LTR)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.LTR)
             {
                 editor = new LTREditor(parentWindow, installation);
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.LIP)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.LIP)
             {
                 editor = new LIPEditor(parentWindow, installation);
             }
@@ -153,13 +153,13 @@ namespace HolocronToolset.NET.Utils
             {
                 editor = new BWMEditor(parentWindow, installation);
             }
-            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != CSharpKOTOR.Resources.ResourceType.TXI)
+            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != AuroraEngine.Common.Resources.ResourceType.TXI)
             {
                 editor = new TPCEditor(parentWindow, installation);
             }
-            else if (restype == CSharpKOTOR.Resources.ResourceType.NSS || restype == CSharpKOTOR.Resources.ResourceType.NCS)
+            else if (restype == AuroraEngine.Common.Resources.ResourceType.NSS || restype == AuroraEngine.Common.Resources.ResourceType.NCS)
             {
-                if (installation == null && restype == CSharpKOTOR.Resources.ResourceType.NCS)
+                if (installation == null && restype == AuroraEngine.Common.Resources.ResourceType.NCS)
                 {
                     // Show warning for NCS without installation
                     // TODO: Show MessageBox when MessageBox.Avalonia is available
@@ -167,7 +167,7 @@ namespace HolocronToolset.NET.Utils
                 }
                 editor = new NSSEditor(parentWindow, installation);
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.DLG)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.DLG)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -178,7 +178,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new DLGEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTC || targetType == CSharpKOTOR.Resources.ResourceType.BTC || targetType == CSharpKOTOR.Resources.ResourceType.BIC)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTC || targetType == AuroraEngine.Common.Resources.ResourceType.BTC || targetType == AuroraEngine.Common.Resources.ResourceType.BIC)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -189,7 +189,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTCEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTP || targetType == CSharpKOTOR.Resources.ResourceType.BTP)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTP || targetType == AuroraEngine.Common.Resources.ResourceType.BTP)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -200,7 +200,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTPEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTD || targetType == CSharpKOTOR.Resources.ResourceType.BTD)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTD || targetType == AuroraEngine.Common.Resources.ResourceType.BTD)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -211,11 +211,11 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTDEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.IFO)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.IFO)
             {
                 editor = new IFOEditor(parentWindow, installation);
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTS)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTS)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -226,7 +226,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTSEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTT || targetType == CSharpKOTOR.Resources.ResourceType.BTT)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTT || targetType == AuroraEngine.Common.Resources.ResourceType.BTT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -237,7 +237,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTTEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTM || targetType == CSharpKOTOR.Resources.ResourceType.BTM)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTM || targetType == AuroraEngine.Common.Resources.ResourceType.BTM)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -248,7 +248,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTMEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTW)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTW)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -259,7 +259,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTWEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTE || targetType == CSharpKOTOR.Resources.ResourceType.BTE)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTE || targetType == AuroraEngine.Common.Resources.ResourceType.BTE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -270,7 +270,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTEEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.UTI || targetType == CSharpKOTOR.Resources.ResourceType.BTI)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.UTI || targetType == AuroraEngine.Common.Resources.ResourceType.BTI)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -281,7 +281,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new UTIEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.JRL)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.JRL)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -292,7 +292,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new JRLEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.ARE)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.ARE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -303,7 +303,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new AREEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.PTH)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.PTH)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -314,7 +314,7 @@ namespace HolocronToolset.NET.Utils
                     editor = new PTHEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == CSharpKOTOR.Resources.ResourceType.GIT)
+            else if (targetType == AuroraEngine.Common.Resources.ResourceType.GIT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -329,13 +329,13 @@ namespace HolocronToolset.NET.Utils
             {
                 editor = new WAVEditor(parentWindow, installation);
             }
-            else if (restype == CSharpKOTOR.Resources.ResourceType.ERF || restype == CSharpKOTOR.Resources.ResourceType.SAV ||
-                     restype == CSharpKOTOR.Resources.ResourceType.MOD || restype == CSharpKOTOR.Resources.ResourceType.RIM ||
-                     restype == CSharpKOTOR.Resources.ResourceType.BIF)
+            else if (restype == AuroraEngine.Common.Resources.ResourceType.ERF || restype == AuroraEngine.Common.Resources.ResourceType.SAV ||
+                     restype == AuroraEngine.Common.Resources.ResourceType.MOD || restype == AuroraEngine.Common.Resources.ResourceType.RIM ||
+                     restype == AuroraEngine.Common.Resources.ResourceType.BIF)
             {
                 editor = new ERFEditor(parentWindow, installation);
             }
-            else if (restype == CSharpKOTOR.Resources.ResourceType.MDL || restype == CSharpKOTOR.Resources.ResourceType.MDX)
+            else if (restype == AuroraEngine.Common.Resources.ResourceType.MDL || restype == AuroraEngine.Common.Resources.ResourceType.MDX)
             {
                 editor = new MDLEditor(parentWindow, installation);
             }

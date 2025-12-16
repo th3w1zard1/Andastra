@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Namespaces;
-using CSharpKOTOR.Reader;
+using AuroraEngine.Common.Namespaces;
+using AuroraEngine.Common.Reader;
 using FluentAssertions;
 using IniParser.Model;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Reader
+namespace AuroraEngine.Common.Tests.Reader
 {
     /// <summary>
     /// Tests for NamespaceReader functionality.

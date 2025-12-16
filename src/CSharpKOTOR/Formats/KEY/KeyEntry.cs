@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resources;
+﻿using System;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Formats.KEY
+namespace AuroraEngine.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/key_data.py:154-279
     // Original: class KeyEntry

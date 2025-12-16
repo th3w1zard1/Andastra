@@ -1,27 +1,27 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:872-1549
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:872-1549
 // Original: def _find_strref_in_gff_struct, _extract_ncs_consti_offsets, analyze_tlk_strref_references, analyze_2da_memory_references: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Diff;
-using CSharpKOTOR.Extract;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Mods;
-using CSharpKOTOR.Mods.GFF;
-using CSharpKOTOR.Mods.TLK;
-using CSharpKOTOR.Mods.NCS;
-using CSharpKOTOR.Mods.SSF;
-using CSharpKOTOR.Mods.TwoDA;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Diff;
+using AuroraEngine.Common.Extract;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.SSF;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Mods;
+using AuroraEngine.Common.Mods.GFF;
+using AuroraEngine.Common.Mods.TLK;
+using AuroraEngine.Common.Mods.NCS;
+using AuroraEngine.Common.Mods.SSF;
+using AuroraEngine.Common.Mods.TwoDA;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tools;
 using JetBrains.Annotations;
 
 namespace KotorDiff.NET.Diff
@@ -94,7 +94,7 @@ namespace KotorDiff.NET.Diff
             var offsets = new List<int>();
             try
             {
-                using (var reader = CSharpKOTOR.Common.BinaryReader.FromBytes(ncsData))
+                using (var reader = AuroraEngine.Common.Common.BinaryReader.FromBytes(ncsData))
                 {
                     // Skip NCS header (13 bytes)
                     string signature = reader.ReadString(4);

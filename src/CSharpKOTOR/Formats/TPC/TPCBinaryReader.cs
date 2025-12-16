@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TXI;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TXI;
 
-namespace CSharpKOTOR.Formats.TPC
+namespace AuroraEngine.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:85-270
     // Simplified: reads core header, mipmaps, and TXI text without conversions

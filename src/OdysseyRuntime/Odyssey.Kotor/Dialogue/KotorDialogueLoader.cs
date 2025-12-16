@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Generics.DLG;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Resource.Generics.DLG;
+using AuroraEngine.Common.Resources;
 using Odyssey.Core.Dialogue;
 using Odyssey.Content.Interfaces;
 
@@ -11,7 +11,7 @@ namespace Odyssey.Kotor.Dialogue
 {
     /// <summary>
     /// Dialogue loader implementation using CSharpKOTOR DLG format.
-    /// Converts CSharpKOTOR.Resource.Generics.DLG.DLG to Odyssey.Core.Dialogue.RuntimeDialogue.
+    /// Converts AuroraEngine.Common.Resource.Generics.DLG.DLG to Odyssey.Core.Dialogue.RuntimeDialogue.
     /// </summary>
     /// <remarks>
     /// Dialogue Loader:
@@ -52,7 +52,7 @@ namespace Odyssey.Kotor.Dialogue
             try
             {
                 byte[] data = _resourceProvider.GetResourceBytesAsync(
-                    new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.DLG),
+                    new AuroraEngine.Common.Resources.ResourceIdentifier(resRef, AuroraEngine.Common.Resources.ResourceType.DLG),
                     System.Threading.CancellationToken.None).Result;
 
                 if (data == null || data.Length == 0)
@@ -61,7 +61,7 @@ namespace Odyssey.Kotor.Dialogue
                 }
 
                 // Parse DLG using CSharpKOTOR helper
-                DLG dlg = CSharpKOTOR.Resource.Generics.DLG.DLGHelper.ReadDlg(data);
+                DLG dlg = AuroraEngine.Common.Resource.Generics.DLG.DLGHelper.ReadDlg(data);
 
                 // Convert to RuntimeDialogue
                 RuntimeDialogue runtimeDialogue = ConvertToRuntimeDialogue(dlg, resRef);

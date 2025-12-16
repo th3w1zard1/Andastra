@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 
-namespace CSharpKOTOR.Formats.LYT
+namespace AuroraEngine.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_data.py:210-304
     // Original: class LYTRoom(ComparableMixin)

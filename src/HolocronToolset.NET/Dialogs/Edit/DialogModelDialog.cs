@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Generics.DLG;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Resource.Generics.DLG;
 
 namespace HolocronToolset.NET.Dialogs.Edit
 {

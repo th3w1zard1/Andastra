@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Logger;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Logger;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py
     // Original: Windows registry paths and game installation detection

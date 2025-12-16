@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Installation;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tools;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Installation;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tools;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Merge
+namespace AuroraEngine.Common.Merge
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/merge/module.py:25-34
     // Original: class ResourceInfo:

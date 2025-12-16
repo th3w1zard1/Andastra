@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia;
@@ -7,10 +7,10 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using Xunit;
-using File = CSharpKOTOR.Formats.NCS.NCSDecomp.File;
+using File = AuroraEngine.Common.Formats.NCS.NCSDecomp.File;
 
 namespace NCSDecomp.Tests.UI
 {

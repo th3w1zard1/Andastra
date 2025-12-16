@@ -1,12 +1,12 @@
-//
+﻿//
 // Settings for NCS Decompiler - UI is in NCSDecomp project (Avalonia)
 //
 using System;
 using System.Collections.Generic;
 using System.IO;
-using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
+using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Settings storage for the NCS decompiler.

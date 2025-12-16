@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Odyssey.Content.Interfaces;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
 namespace Odyssey.MonoGame.Loading
 {

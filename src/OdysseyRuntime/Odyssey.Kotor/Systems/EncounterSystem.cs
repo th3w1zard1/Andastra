@@ -46,7 +46,7 @@ namespace Odyssey.Kotor.Systems
         private readonly Loading.EntityFactory _entityFactory;
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly Func<IEntity, bool> _isPlayerCheck;
-        private readonly Func<CSharpKOTOR.Common.Module> _getCurrentModule;
+        private readonly Func<AuroraEngine.Common.Module> _getCurrentModule;
 
         public EncounterSystem(IWorld world, FactionManager factionManager)
         {
@@ -57,7 +57,7 @@ namespace Odyssey.Kotor.Systems
             _entityFactory = new Loading.EntityFactory();
         }
 
-        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<CSharpKOTOR.Common.Module> getCurrentModule = null)
+        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<AuroraEngine.Common.Module> getCurrentModule = null)
             : this(world, factionManager)
         {
             _scriptExecutor = scriptExecutor;
@@ -318,7 +318,7 @@ namespace Odyssey.Kotor.Systems
                 IEntity creature = null;
                 if (_moduleLoader != null && _getCurrentModule != null)
                 {
-                    CSharpKOTOR.Common.Module csharpModule = _getCurrentModule();
+                    AuroraEngine.Common.Module csharpModule = _getCurrentModule();
                     if (csharpModule != null)
                     {
                         creature = _entityFactory.CreateCreatureFromTemplate(

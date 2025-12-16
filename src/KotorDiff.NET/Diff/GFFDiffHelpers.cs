@@ -1,10 +1,10 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/gff.py:9-77
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/gff.py:9-77
 // Original: def flatten_differences, build_hierarchy, serialize_to_ini: ...
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Diff;
+using AuroraEngine.Common.Diff;
 
 namespace KotorDiff.NET.Diff
 {

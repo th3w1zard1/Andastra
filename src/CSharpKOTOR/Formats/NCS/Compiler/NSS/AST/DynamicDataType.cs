@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Common.Script;
+﻿using System;
+using AuroraEngine.Common.Common.Script;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Formats.NCS.Compiler
+namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace CSharpKOTOR.Logger
+namespace AuroraEngine.Common.Logger
 {
 
     /// <summary>

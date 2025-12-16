@@ -1,4 +1,4 @@
-// Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py
+﻿// Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py
 // Original: """Generate scriptdefs.py from NSS files using the actual NCS lexer/parser."""
 using System;
 using System.Collections.Generic;
@@ -7,10 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.NCS.Compiler;
-using CSharpKOTOR.Formats.NCS.Compiler.NSS;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Formats.NCS.Compiler;
+using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
 
 namespace GenerateScriptDefs
 {
@@ -756,10 +756,10 @@ namespace GenerateScriptDefs
             // Original: def generate_scriptdefs(k1_constants: list[dict], k1_functions: list[dict], k2_constants: list[dict], k2_functions: list[dict]) -> str:
             var sb = new StringBuilder();
             sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using CSharpKOTOR.Common;");
-            sb.AppendLine("using CSharpKOTOR.Common.Script;");
+            sb.AppendLine("using AuroraEngine.Common.Common;");
+            sb.AppendLine("using AuroraEngine.Common.Common.Script;");
             sb.AppendLine();
-            sb.AppendLine("namespace CSharpKOTOR.Common.Script");
+            sb.AppendLine("namespace AuroraEngine.Common.Common.Script");
             sb.AppendLine("{");
             sb.AppendLine();
             sb.AppendLine("    /// <summary>");

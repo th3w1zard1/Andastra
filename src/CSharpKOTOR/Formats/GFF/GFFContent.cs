@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace CSharpKOTOR.Formats.GFF
+namespace AuroraEngine.Common.Formats.GFF
 {
 
     /// <summary>

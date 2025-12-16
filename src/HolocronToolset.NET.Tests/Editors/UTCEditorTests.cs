@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
 using HolocronToolset.NET.Tests.TestHelpers;
 using Xunit;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Tests.Editors
 {
@@ -94,7 +94,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -166,7 +166,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1379
             // Original: original_utc = read_utc(original_data)
-            var originalGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var originalGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             UTC originalUtc = UTCHelpers.ConstructUtc(originalGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1380
@@ -179,7 +179,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1384
             // Original: new_utc = read_utc(data)
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
             UTC newUtc = UTCHelpers.ConstructUtc(newGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1389-1465

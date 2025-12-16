@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using CSharpKOTOR.Formats.NCS.Compiler;
-using CSharpKOTOR.Formats.NCS.Compiler.NSS;
+using AuroraEngine.Common.Formats.NCS.Compiler;
+using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
 
-namespace CSharpKOTOR.Common.Script
+namespace AuroraEngine.Common.Script
 {
     /// <summary>
     /// Utility class to parse nwscript.nss files and extract function and constant definitions.

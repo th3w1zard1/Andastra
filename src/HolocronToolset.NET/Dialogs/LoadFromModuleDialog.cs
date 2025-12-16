@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Resources;
-using FileResource = CSharpKOTOR.Resources.FileResource;
+using AuroraEngine.Common.Resources;
+using FileResource = AuroraEngine.Common.Resources.FileResource;
 
 namespace HolocronToolset.NET.Dialogs
 {

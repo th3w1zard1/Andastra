@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Formats.TwoDA;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Formats.TwoDA;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

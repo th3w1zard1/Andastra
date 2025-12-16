@@ -1,7 +1,7 @@
 using System;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
     /// <summary>
     /// Represents a quaternion for 3D rotations.

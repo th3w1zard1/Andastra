@@ -1,4 +1,4 @@
-// Matching vendor/NCSDecomp/src/test/java/com/kotor/resource/formats/ncs/test_roundtrip_decompiler.java:1-4050
+﻿// Matching vendor/NCSDecomp/src/test/java/com/kotor/resource/formats/ncs/test_roundtrip_decompiler.java:1-4050
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // Visit https://bolabaden.org for more information and other ventures
@@ -11,16 +11,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.NCS;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
-using IOException = CSharpKOTOR.Formats.NCS.NCSDecomp.IOException;
-using NcsFile = CSharpKOTOR.Formats.NCS.NCSDecomp.NcsFile;
-using CSharpKOTOR.Tests.Performance;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.NCS;
+using AuroraEngine.Common.Formats.NCS.NCSDecomp;
+using IOException = AuroraEngine.Common.Formats.NCS.NCSDecomp.IOException;
+using NcsFile = AuroraEngine.Common.Formats.NCS.NCSDecomp.NcsFile;
+using AuroraEngine.Common.Tests.Performance;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
     /// <summary>
     /// Exhaustive round-trip tests for the decompiler and compiler:
@@ -1054,7 +1054,10 @@ namespace CSharpKOTOR.Tests.Formats
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(compiledOut));
-                NCS ncs = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
+                // For roundtrip tests, disable all optimizations to match external compiler output exactly
+                // Pass empty list to disable optimizations (including RemoveNopOptimizer)
+                // This ensures bytecode matches the external compiler's output byte-for-byte
+                NCS ncs = NCSAuto.CompileNss(source, game, null, new List<NCSOptimizer>(), libraryLookup);
                 NCSAuto.WriteNcs(ncs, compiledOut);
 
                 if (!File.Exists(compiledOut))

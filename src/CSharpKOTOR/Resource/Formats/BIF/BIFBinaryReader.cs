@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.LZMA;
-using CSharpKOTOR.Formats;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Common.LZMA;
+using AuroraEngine.Common.Formats;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resource.Formats.BIF
+namespace AuroraEngine.Common.Resource.Formats.BIF
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:49-161
     // Original: class BIFBinaryReader(ResourceReader):

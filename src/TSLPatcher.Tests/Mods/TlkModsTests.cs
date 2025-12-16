@@ -1,13 +1,13 @@
-using System.Collections.Generic;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TLK;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.TLK;
+﻿using System.Collections.Generic;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TLK;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.TLK;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Mods
+namespace AuroraEngine.Common.Tests.Mods
 {
 
     /// <summary>

@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.RIM;
-using CSharpKOTOR.Resources;
-using CSharpKOTOR.Tests.Common;
+using AuroraEngine.Common.Formats.RIM;
+using AuroraEngine.Common.Resources;
+using AuroraEngine.Common.Tests.Common;
 using FluentAssertions;
 using Xunit;
-using static CSharpKOTOR.Formats.RIM.RIMAuto;
+using static AuroraEngine.Common.Formats.RIM.RIMAuto;
 
-namespace CSharpKOTOR.Tests.Formats
+namespace AuroraEngine.Common.Tests.Formats
 {
 
     /// <summary>

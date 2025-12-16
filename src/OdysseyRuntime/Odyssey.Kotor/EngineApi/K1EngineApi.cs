@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Common.Script;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Script;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Audio;
@@ -2487,9 +2487,9 @@ namespace Odyssey.Kotor.EngineApi
                         }
                     }
                     // Fallback to CSharpKOTOR Installation provider
-                    else if (ctx.ResourceProvider is CSharpKOTOR.Installation.Installation installation)
+                    else if (ctx.ResourceProvider is AuroraEngine.Common.Installation.Installation installation)
                     {
-                        CSharpKOTOR.Installation.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
+                        AuroraEngine.Common.Installation.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
                         if (result != null && result.Data != null)
                         {
                             using (var stream = new MemoryStream(result.Data))
@@ -5884,7 +5884,7 @@ namespace Odyssey.Kotor.EngineApi
             {
                 if (services.ModuleLoader is Odyssey.Kotor.Game.ModuleLoader moduleLoader)
                 {
-                    CSharpKOTOR.Common.Module csharpKotorModule = moduleLoader.GetCSharpKotorModule();
+                    AuroraEngine.Common.Module csharpKotorModule = moduleLoader.GetCSharpKotorModule();
                     if (csharpKotorModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);

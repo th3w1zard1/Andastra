@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Globalization;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 
-namespace CSharpKOTOR.Formats.TXI
+namespace AuroraEngine.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/io_txi.py:23-313
     // Original: class TXIBinaryReader(ResourceReader)

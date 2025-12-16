@@ -1,8 +1,8 @@
-using CSharpKOTOR.Config;
+﻿using AuroraEngine.Common.Config;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Config
+namespace AuroraEngine.Common.Tests.Config
 {
 
     /// <summary>

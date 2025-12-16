@@ -1,5 +1,5 @@
-using System.IO;
-using CSharpKOTOR.Resources;
+﻿using System.IO;
+using AuroraEngine.Common.Resources;
 
 namespace Odyssey.Content.Interfaces
 {

@@ -1,6 +1,6 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
 namespace Odyssey.Content.Interfaces
 {

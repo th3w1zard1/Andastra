@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
-using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
+using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {

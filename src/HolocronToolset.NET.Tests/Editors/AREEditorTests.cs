@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -90,7 +90,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -152,7 +152,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1222
             // Original: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
             // We'll compare GFF directly instead of ARE object for more comprehensive comparison
-            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var old = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1222
             // Original: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
@@ -167,7 +167,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1228-1234
             // Original: assert saved_are.tag == original_are.tag ...
             // Instead of comparing ARE objects directly, we'll do GFF comparison like UTIEditor test
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:91
             // Original: diff = old.compare(new, self.log_func, ignore_default_changes=True)

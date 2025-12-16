@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resources;
 
 namespace HolocronToolset.NET.Widgets
 {

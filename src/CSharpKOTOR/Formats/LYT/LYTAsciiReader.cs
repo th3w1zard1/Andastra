@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.LYT;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.LYT;
 
-namespace CSharpKOTOR.Formats.LYT
+namespace AuroraEngine.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:17-113
     // Original: class LYTAsciiReader(ResourceReader)

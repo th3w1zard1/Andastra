@@ -1,11 +1,11 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:18-256
+﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:18-256
 // Original: public class VarStruct extends Variable
 using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using NCSDecompLinkedList = CSharpKOTOR.Formats.NCS.NCSDecomp.LinkedList;
-using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
-namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
+using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using NCSDecompLinkedList = AuroraEngine.Common.Formats.NCS.NCSDecomp.LinkedList;
+using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
+namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack
 {
     public class VarStruct : Variable
     {

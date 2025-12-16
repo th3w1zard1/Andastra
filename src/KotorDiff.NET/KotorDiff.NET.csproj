@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CSharpKOTOR\CSharpKOTOR.csproj" />
+    <ProjectReference Include="..\CSharpKOTOR\AuroraEngine.Common.csproj" />
   </ItemGroup>
 
 </Project>

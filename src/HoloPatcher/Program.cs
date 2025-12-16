@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using Avalonia;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Logger;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Logger;
 using HoloPatcher.UI;
 using HoloPatcher.UI.ViewModels;
 using JetBrains.Annotations;

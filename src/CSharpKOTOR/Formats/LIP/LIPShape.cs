@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Formats.LIP
+namespace AuroraEngine.Common.Formats.LIP
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_data.py:50-221
     // Original: class LIPShape(IntEnum)

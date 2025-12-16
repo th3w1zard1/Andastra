@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Formats.MDL;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Formats.MDL;
 
-namespace CSharpKOTOR.Formats.MDL
+namespace AuroraEngine.Common.Formats.MDL
 {
     // Simplified binary writer. Full parity with PyKotor io_mdl.py is pending.
     public class MDLBinaryWriter : IDisposable

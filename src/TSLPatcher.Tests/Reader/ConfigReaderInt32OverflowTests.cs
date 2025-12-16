@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Reader;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Reader;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Reader
+namespace AuroraEngine.Common.Tests.Reader
 {
     /// <summary>
     /// Tests for ConfigReader Int32 overflow handling in ParseIntValue.

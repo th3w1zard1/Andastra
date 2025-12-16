@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Extract;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Extract;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resources
+namespace AuroraEngine.Common.Resources
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/file.py:269-561
     // Original: class FileResource:

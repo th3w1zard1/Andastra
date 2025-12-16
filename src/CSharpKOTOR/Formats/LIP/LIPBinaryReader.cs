@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.LIP;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.LIP;
 
-namespace CSharpKOTOR.Formats.LIP
+namespace AuroraEngine.Common.Formats.LIP
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/io_lip.py:12-56
     // Original: class LIPBinaryReader(ResourceReader)

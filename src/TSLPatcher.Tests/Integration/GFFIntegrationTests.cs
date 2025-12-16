@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Logger;
-using CSharpKOTOR.Memory;
-using CSharpKOTOR.Mods.GFF;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Logger;
+using AuroraEngine.Common.Memory;
+using AuroraEngine.Common.Mods.GFF;
 using FluentAssertions;
 using Xunit;
 
-namespace CSharpKOTOR.Tests.Integration
+namespace AuroraEngine.Common.Tests.Integration
 {
 
     /// <summary>
@@ -539,7 +539,7 @@ Path=List
 Label=
 TypeId=1
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             var gff = new GFF();
             var gffList = new GFFList();
             gff.Root.SetList("List", gffList);
@@ -583,7 +583,7 @@ Label=
 TypeId=0
 2DAMEMORY12=ListIndex
 ";
-            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            AuroraEngine.Common.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             var gff = new GFF();
             gff.Root.SetList("List", new GFFList());
 

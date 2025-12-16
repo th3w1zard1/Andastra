@@ -1,4 +1,4 @@
-namespace CSharpKOTOR.Formats.NCS.Compiler
+﻿namespace AuroraEngine.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

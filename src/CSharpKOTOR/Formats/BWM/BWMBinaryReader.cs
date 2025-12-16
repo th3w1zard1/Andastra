@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.BWM;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.BWM;
 
-namespace CSharpKOTOR.Formats.BWM
+namespace AuroraEngine.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/io_bwm.py:41-182
     // Original: class BWMBinaryReader(ResourceReader)

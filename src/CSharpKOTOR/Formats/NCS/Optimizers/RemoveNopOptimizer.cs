@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace CSharpKOTOR.Formats.NCS.Optimizers
+namespace AuroraEngine.Common.Formats.NCS.Optimizers
 {
 
     /// <summary>

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.VIS;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.VIS;
 
-namespace CSharpKOTOR.Formats.VIS
+namespace AuroraEngine.Common.Formats.VIS
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/io_vis.py:14-73
     // Original: class VISAsciiReader(ResourceReader)

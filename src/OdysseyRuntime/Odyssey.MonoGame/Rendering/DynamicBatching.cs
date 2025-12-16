@@ -120,8 +120,34 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Adds an object to be batched.
         /// </summary>
+        /// <param name="materialId">Material identifier.</param>
+        /// <param name="worldMatrix">World transformation matrix.</param>
+        /// <param name="vertexBuffer">Vertex buffer. Must not be null.</param>
+        /// <param name="indexBuffer">Index buffer. Must not be null.</param>
+        /// <param name="vertexCount">Number of vertices. Must be non-negative.</param>
+        /// <param name="indexCount">Number of indices. Must be non-negative.</param>
+        /// <returns>True if object was added successfully, false if batch is full.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if vertexBuffer or indexBuffer is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if vertexCount or indexCount is negative.</exception>
         public bool AddObject(uint materialId, Matrix worldMatrix, VertexBuffer vertexBuffer, IndexBuffer indexBuffer, int vertexCount, int indexCount)
         {
+            if (vertexBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(vertexBuffer));
+            }
+            if (indexBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(indexBuffer));
+            }
+            if (vertexCount < 0)
+            {
+                throw new ArgumentException("Vertex count must be non-negative.", nameof(vertexCount));
+            }
+            if (indexCount < 0)
+            {
+                throw new ArgumentException("Index count must be non-negative.", nameof(indexCount));
+            }
+
             // Check if there's room
             if (_currentVertexOffset + vertexCount > _maxVertices ||
                 _currentIndexOffset + indexCount > _maxIndices)

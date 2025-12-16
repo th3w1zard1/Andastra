@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace CSharpKOTOR.Formats.NCS.Optimizers
+namespace AuroraEngine.Common.Formats.NCS.Optimizers
 {
     /// <summary>
     /// Merges consecutive MOVSP instructions into a single instruction.

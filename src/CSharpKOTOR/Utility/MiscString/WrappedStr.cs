@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Reflection;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Utility.MiscString
+namespace AuroraEngine.Common.Utility.MiscString
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/mutable_str.py:9-15
     // Original: def is_string_like(obj: Any) -> bool:

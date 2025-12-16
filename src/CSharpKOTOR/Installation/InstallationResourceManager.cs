@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.Capsule;
-using CSharpKOTOR.Formats.Chitin;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.Capsule;
+using AuroraEngine.Common.Formats.Chitin;
+using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Installation
+namespace AuroraEngine.Common.Installation
 {
     /// <summary>
     /// Manages resource lookup and location for a game installation.

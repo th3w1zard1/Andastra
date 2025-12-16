@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -343,7 +343,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching Python: data, _ = editor.build()
             var (data, _) = editor.Build();
             // Matching Python: uti = read_uti(data)
-            UTI uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTI uti = UTIHelpers.ConstructUti(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
             // Matching Python: assert uti.comment == "Test comment\nLine 2\nLine 3"
             uti.Comment.Should().Be(testComment);
 
@@ -395,7 +395,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Matching Python: uti = read_uti(data)
-            UTI uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTI uti = UTIHelpers.ConstructUti(AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data));
 
             // Verify all values were saved correctly
             // Matching Python: assert uti.tag == "test_tag"
@@ -557,7 +557,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -630,7 +630,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:85
             // Original: old = read_gff(data)
-            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            var old = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(data);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:86
             // Original: self.editor.load(filepath, "baragwin", ResourceType.UTI, data)
@@ -642,7 +642,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:89
             // Original: new = read_gff(data)
-            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = AuroraEngine.Common.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:91
             // Original: diff = old.compare(new, self.log_func, ignore_default_changes=True)

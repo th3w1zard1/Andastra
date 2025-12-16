@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
 
     public static class SystemHelpers

@@ -117,8 +117,15 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Executes all commands on the graphics device.
         /// </summary>
+        /// <param name="device">Graphics device to execute commands on. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if device is null.</exception>
         public void Execute(GraphicsDevice device)
         {
+            if (device == null)
+            {
+                throw new ArgumentNullException(nameof(device));
+            }
+
             foreach (RenderCommand cmd in _commands)
             {
                 ExecuteCommand(device, cmd);

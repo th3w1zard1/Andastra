@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.TLK;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.TLK;
 
-namespace CSharpKOTOR.Uninstall
+namespace AuroraEngine.Common.Uninstall
 {
 
     /// <summary>

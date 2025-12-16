@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.MDL;
+using AuroraEngine.Common.Common;
+using AuroraEngine.Common.Formats.MDL;
 
-namespace CSharpKOTOR.Formats.MDLData
+namespace AuroraEngine.Common.Formats.MDLData
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py
     // Simplified data containers mirroring fields for MDL/MDX structures.

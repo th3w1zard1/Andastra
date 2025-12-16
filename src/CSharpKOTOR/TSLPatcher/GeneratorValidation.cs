@@ -1,11 +1,11 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:975-1104
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:975-1104
 // Original: def _validate_ini_filename, _validate_installation_path, validate_tslpatchdata_arguments: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
-using InstallationClass = CSharpKOTOR.Installation.Installation;
+using InstallationClass = AuroraEngine.Common.Installation.Installation;
 
-namespace CSharpKOTOR.TSLPatcher
+namespace AuroraEngine.Common.TSLPatcher
 {
     /// <summary>
     /// Validation functions for TSLPatcher data generation.

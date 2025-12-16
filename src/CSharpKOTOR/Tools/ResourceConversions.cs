@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.IO;
-using CSharpKOTOR.Formats.MDL;
-using CSharpKOTOR.Formats.MDLData;
-using CSharpKOTOR.Formats.TPC;
-using CSharpKOTOR.Formats.WAV;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Formats.MDL;
+using AuroraEngine.Common.Formats.MDLData;
+using AuroraEngine.Common.Formats.TPC;
+using AuroraEngine.Common.Formats.WAV;
+using AuroraEngine.Common.Resources;
 
-namespace CSharpKOTOR.Tools
+namespace AuroraEngine.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/resources.py
     // Original: Resource conversion utility functions for KOTOR game resources

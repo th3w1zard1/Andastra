@@ -1,8 +1,8 @@
-using System;
-using CSharpKOTOR.Common;
+﻿using System;
+using AuroraEngine.Common.Common;
 using JetBrains.Annotations;
 
-namespace CSharpKOTOR.Resources
+namespace AuroraEngine.Common.Resources
 {
     /// <summary>
     /// Represents a resource stored within a BioWare archive (ERF, RIM, BIF).

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using CSharpKOTOR.Resource.Generics;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common.Resource.Generics;
+using AuroraEngine.Common.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
@@ -87,7 +87,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Load it back
             // Note: PTH loading requires LYT file, so we skip loading for now
             // Just verify build works
-            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            var loadedPth = AuroraEngine.Common.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Should().NotBeNull();
             loadedPth.Count.Should().Be(3, "Should have 3 nodes");
         }
@@ -126,7 +126,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Save
                 var (data, _) = editor.Build();
-                var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+                var loadedPth = AuroraEngine.Common.Resource.Generics.PTHAuto.ReadPth(data);
 
                 // Verify nodes were preserved
                 loadedPth.Count.Should().Be(cycle + 1, $"Should have {cycle + 1} nodes after cycle {cycle}");
@@ -144,7 +144,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add node
             int initialCount = pth.Count;
@@ -170,7 +170,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add multiple nodes
             var testPositions = new[]
@@ -210,7 +210,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add nodes first
             editor.AddNode(0.0f, 0.0f);
@@ -240,7 +240,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add nodes
             editor.AddNode(0.0f, 0.0f);
@@ -265,7 +265,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add nodes first
             editor.AddNode(0.0f, 0.0f);
@@ -293,7 +293,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add nodes and edge
             editor.AddNode(0.0f, 0.0f);
@@ -319,7 +319,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Add multiple nodes
             for (int i = 0; i < 4; i++)
@@ -500,7 +500,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
 
             // Load it back (may require LYT file, so just verify build works)
-            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            var loadedPth = AuroraEngine.Common.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Should().NotBeNull();
             loadedPth.Count.Should().Be(0);
         }
@@ -519,7 +519,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Build and verify
             var (data, _) = editor.Build();
-            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            var loadedPth = AuroraEngine.Common.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Count.Should().Be(1);
             Math.Abs(loadedPth[0].X - 0.0f).Should().BeLessThan(0.001f);
             Math.Abs(loadedPth[0].Y - 0.0f).Should().BeLessThan(0.001f);
@@ -536,7 +536,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Get internal PTH object using reflection
             var pthField = typeof(PTHEditor).GetField("_pth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var pth = (CSharpKOTOR.Resource.Generics.PTH)pthField.GetValue(editor);
+            var pth = (AuroraEngine.Common.Resource.Generics.PTH)pthField.GetValue(editor);
 
             // Create a complex path
             var nodes = new[]
@@ -567,7 +567,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Build and verify
             var (data, _) = editor.Build();
-            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            var loadedPth = AuroraEngine.Common.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Count.Should().Be(nodes.Length);
         }
 
@@ -596,7 +596,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Build and verify
             var (data, _) = editor.Build();
-            var loadedPth = CSharpKOTOR.Resource.Generics.PTHAuto.ReadPth(data);
+            var loadedPth = AuroraEngine.Common.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Count.Should().Be(3);
         }
 
@@ -715,9 +715,9 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.MaterialColors.Count.Should().BeGreaterThan(0, "MaterialColors should have entries");
 
             // Verify some expected materials exist
-            editor.MaterialColors.Should().ContainKey(CSharpKOTOR.Common.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
-            editor.MaterialColors.Should().ContainKey(CSharpKOTOR.Common.SurfaceMaterial.Grass, "Should contain GRASS material");
-            editor.MaterialColors.Should().ContainKey(CSharpKOTOR.Common.SurfaceMaterial.Water, "Should contain WATER material");
+            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.Common.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
+            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.Common.SurfaceMaterial.Grass, "Should contain GRASS material");
+            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.Common.SurfaceMaterial.Water, "Should contain WATER material");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:587-614

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common.Common;
 
-namespace CSharpKOTOR.Tests
+namespace AuroraEngine.Common.Tests
 {
     // Matching PyKotor implementation at Libraries/PyKotor/tests/common/test_stream.py:28
     // Original: class TestBinaryReader(TestCase):

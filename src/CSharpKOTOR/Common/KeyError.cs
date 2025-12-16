@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace CSharpKOTOR.Common
+namespace AuroraEngine.Common
 {
 
     /// <summary>

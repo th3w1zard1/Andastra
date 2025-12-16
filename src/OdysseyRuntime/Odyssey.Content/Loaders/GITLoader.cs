@@ -4,9 +4,9 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpKOTOR.Common;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Resources;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Resources;
 using Odyssey.Content.Interfaces;
 
 namespace Odyssey.Content.Loaders
@@ -94,7 +94,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<GITData> LoadAsync(string areaResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new CSharpKOTOR.Resources.ResourceIdentifier(areaResRef, CSharpKOTOR.Resources.ResourceType.GIT);
+            var id = new AuroraEngine.Common.Resources.ResourceIdentifier(areaResRef, AuroraEngine.Common.Resources.ResourceType.GIT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {

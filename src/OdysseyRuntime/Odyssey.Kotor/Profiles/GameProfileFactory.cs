@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using CSharpKOTOR.Common;
+using AuroraEngine.Common;
 using Odyssey.Content.Interfaces;
 
 namespace Odyssey.Kotor.Profiles

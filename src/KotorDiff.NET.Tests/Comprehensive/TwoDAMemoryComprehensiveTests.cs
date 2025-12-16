@@ -1,13 +1,13 @@
-// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:264-465
+﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:264-465
 // Original: class Test2DAMemoryComprehensive: ...
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using static CSharpKOTOR.Formats.GFF.GFFAuto;
-using CSharpKOTOR.Formats.GFF;
-using CSharpKOTOR.Formats.TwoDA;
-using CSharpKOTOR.Resources;
+using static AuroraEngine.Common.Formats.GFF.GFFAuto;
+using AuroraEngine.Common.Formats.GFF;
+using AuroraEngine.Common.Formats.TwoDA;
+using AuroraEngine.Common.Resources;
 using KotorDiff.NET.Tests.Helpers;
 using Xunit;
 
