@@ -505,8 +505,8 @@ namespace HolocronToolset.Tests.Editors
             // Verify initial state
             editor.NoteEnabledCheckbox.IsChecked.Should().BeFalse("Checkbox should start unchecked");
             
-            // Set checkbox to true
-            editor.NoteEnabledCheckbox.IsChecked = true;
+            // Set checkbox to true (use SetNoteEnabledCheckbox to ensure cache is updated)
+            editor.SetNoteEnabledCheckbox(true);
             editor.NoteEnabledCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
             
             // Build and verify
@@ -514,8 +514,8 @@ namespace HolocronToolset.Tests.Editors
             var modifiedUtw1 = UTWAuto.ReadUtw(data1);
             modifiedUtw1.MapNoteEnabled.Should().BeTrue("MapNoteEnabled should be true after setting checkbox");
 
-            // Set checkbox to false
-            editor.NoteEnabledCheckbox.IsChecked = false;
+            // Set checkbox to false (use SetNoteEnabledCheckbox to ensure cache is updated)
+            editor.SetNoteEnabledCheckbox(false);
             editor.NoteEnabledCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
             
             // Build and verify

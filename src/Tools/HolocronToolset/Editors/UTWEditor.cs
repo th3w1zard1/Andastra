@@ -384,36 +384,42 @@ namespace HolocronToolset.Editors
             // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
             if (_noteEnabledCheckbox != null && _utw != null)
             {
-                // Try both GetValue and IsChecked to ensure we get the correct value
-                var getValueResult = _noteEnabledCheckbox.GetValue(CheckBox.IsCheckedProperty);
-                var isCheckedValue = _noteEnabledCheckbox.IsChecked;
+                // Check cache first (updated by SetNoteEnabledCheckbox or PropertyChanged handler)
+                // Cache is the source of truth for headless tests
+                bool? checkboxValue = _cachedMapNoteEnabled;
                 
-                bool? checkboxValue = null;
-                if (getValueResult is bool getValueBool)
+                // If cache is null, try to read from checkbox directly
+                if (!checkboxValue.HasValue)
                 {
-                    checkboxValue = getValueBool;
-                }
-                else if (isCheckedValue.HasValue)
-                {
-                    checkboxValue = isCheckedValue.Value;
+                    // Try both GetValue and IsChecked to ensure we get the correct value
+                    var getValueResult = _noteEnabledCheckbox.GetValue(CheckBox.IsCheckedProperty);
+                    var isCheckedValue = _noteEnabledCheckbox.IsChecked;
+                    
+                    if (getValueResult is bool getValueBool)
+                    {
+                        checkboxValue = getValueBool;
+                    }
+                    else if (isCheckedValue.HasValue)
+                    {
+                        checkboxValue = isCheckedValue.Value;
+                    }
+                    
+                    // Update cache with the value we read (for consistency and next time)
+                    if (checkboxValue.HasValue)
+                    {
+                        _cachedMapNoteEnabled = checkboxValue;
+                    }
                 }
                 
-                // Always preserve manually set True values (workaround for headless limitation)
+                // Use checkbox/cache value to update UTW
                 if (checkboxValue.HasValue)
                 {
-                    bool currentMapNoteEnabled = _utw.MapNoteEnabled;
-                    if (currentMapNoteEnabled == true)
-                    {
-                        // UTW was manually set to True - preserve it regardless of checkbox value
-                        // Keep existing _utw.MapNoteEnabled = true (do nothing, value already set correctly)
-                    }
-                    else
-                    {
-                        // UTW is False - use checkbox value (normal case)
-                        _utw.MapNoteEnabled = checkboxValue.Value;
-                    }
+                    // Always use checkbox/cache value to update UTW
+                    // The cache is the source of truth (updated by SetNoteEnabledCheckbox or PropertyChanged)
+                    _utw.MapNoteEnabled = checkboxValue.Value;
                 }
-                // If neither works (headless limitation), keep existing _utw.MapNoteEnabled value
+                // If neither checkbox nor cache has a value, keep existing _utw.MapNoteEnabled value
+                // (might have been manually set as workaround)
             }
             else if (_utw != null)
             {
@@ -561,6 +567,11 @@ namespace HolocronToolset.Editors
             {
                 // Always update cache from checkbox (SetNoteEnabledCheckbox sets cache first, then checkbox, so this should match)
                 _cachedMapNoteEnabled = _noteEnabledCheckbox.IsChecked;
+                // Also update UTW immediately if it exists (for real-time updates)
+                if (_utw != null && _cachedMapNoteEnabled.HasValue)
+                {
+                    _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
+                }
             }
         }
 
@@ -630,6 +641,11 @@ namespace HolocronToolset.Editors
                 // Set cache first, then set checkbox (cache takes precedence in Build())
                 _cachedMapNoteEnabled = value;
                 _noteEnabledCheckbox.IsChecked = value;
+                // Also update UTW immediately if it exists (for real-time updates)
+                if (_utw != null)
+                {
+                    _utw.MapNoteEnabled = value;
+                }
             }
         }
     }
