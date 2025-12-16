@@ -58,11 +58,11 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
         private const byte DECOCT_STORE_STATE = 44;
         private const byte DECOCT_NOP = 45;
         private const byte DECOCT_T = 66;
-        private BinaryReader @in;
+        private System.IO.BinaryReader @in;
         private ActionsData actions;
         private int pos;
 
-        public Decoder(BinaryReader @in, ActionsData actions)
+        public Decoder(System.IO.BinaryReader @in, ActionsData actions)
         {
             this.@in = @in;
             this.actions = actions;

@@ -25,7 +25,7 @@ namespace AuroraEngine.Common.Formats.RIM
 
         public void Write(Stream stream)
         {
-            using (var writer = new BinaryWriter(stream, Encoding.ASCII, true))
+            using (var writer = new System.IO.BinaryWriter(stream, Encoding.ASCII, true))
             {
                 writer.Write(Encoding.ASCII.GetBytes("RIM "));
                 writer.Write(Encoding.ASCII.GetBytes("V1.0"));

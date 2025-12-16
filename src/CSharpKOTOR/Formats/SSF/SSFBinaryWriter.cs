@@ -21,7 +21,7 @@ namespace AuroraEngine.Common.Formats.SSF
         public byte[] Write()
         {
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.ASCII))
+            using (var writer = new System.IO.BinaryWriter(ms, Encoding.ASCII))
             {
                 // Write header
                 writer.Write(Encoding.ASCII.GetBytes("SSF "));

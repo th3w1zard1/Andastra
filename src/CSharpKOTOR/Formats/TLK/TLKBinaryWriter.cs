@@ -33,7 +33,7 @@ namespace AuroraEngine.Common.Formats.TLK
         public byte[] Write()
         {
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            using (var writer = new System.IO.BinaryWriter(ms))
             {
                 WriteFileHeader(writer);
 
