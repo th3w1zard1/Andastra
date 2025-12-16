@@ -32,7 +32,7 @@ namespace AuroraEngine.Common.Formats.NCS
         public byte[] Write()
         {
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.ASCII, leaveOpen: true))
+            using (var writer = new System.IO.BinaryWriter(ms, Encoding.ASCII, leaveOpen: true))
             {
                 int offset = NCS_HEADER_SIZE;
                 foreach (NCSInstruction instruction in _ncs.Instructions)
@@ -58,7 +58,7 @@ namespace AuroraEngine.Common.Formats.NCS
             }
         }
 
-        private void WriteInstruction(BinaryWriter writer, NCSInstruction instruction)
+        private void WriteInstruction(System.IO.BinaryWriter writer, NCSInstruction instruction)
         {
             (NCSByteCode byteCode, byte qualifier) = instruction.InsType.GetValue();
             writer.Write((byte)byteCode);
@@ -236,27 +236,19 @@ namespace AuroraEngine.Common.Formats.NCS
             return size;
         }
 
-        private static void WriteBigEndianInt16(BinaryWriter writer, short value)
+        private static void WriteBigEndianInt16(System.IO.BinaryWriter writer, short value)
         {
             writer.Write((byte)((value >> 8) & 0xFF));
             writer.Write((byte)(value & 0xFF));
         }
 
-        private static void WriteBigEndianUInt16(BinaryWriter writer, ushort value)
+        private static void WriteBigEndianUInt16(System.IO.BinaryWriter writer, ushort value)
         {
             writer.Write((byte)((value >> 8) & 0xFF));
             writer.Write((byte)(value & 0xFF));
         }
 
-        private static void WriteBigEndianInt32(BinaryWriter writer, int value)
-        {
-            writer.Write((byte)((value >> 24) & 0xFF));
-            writer.Write((byte)((value >> 16) & 0xFF));
-            writer.Write((byte)((value >> 8) & 0xFF));
-            writer.Write((byte)(value & 0xFF));
-        }
-
-        private static void WriteBigEndianUInt32(BinaryWriter writer, uint value)
+        private static void WriteBigEndianInt32(System.IO.BinaryWriter writer, int value)
         {
             writer.Write((byte)((value >> 24) & 0xFF));
             writer.Write((byte)((value >> 16) & 0xFF));
@@ -264,7 +256,15 @@ namespace AuroraEngine.Common.Formats.NCS
             writer.Write((byte)(value & 0xFF));
         }
 
-        private static void WriteBigEndianSingle(BinaryWriter writer, float value)
+        private static void WriteBigEndianUInt32(System.IO.BinaryWriter writer, uint value)
+        {
+            writer.Write((byte)((value >> 24) & 0xFF));
+            writer.Write((byte)((value >> 16) & 0xFF));
+            writer.Write((byte)((value >> 8) & 0xFF));
+            writer.Write((byte)(value & 0xFF));
+        }
+
+        private static void WriteBigEndianSingle(System.IO.BinaryWriter writer, float value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
             if (BitConverter.IsLittleEndian)

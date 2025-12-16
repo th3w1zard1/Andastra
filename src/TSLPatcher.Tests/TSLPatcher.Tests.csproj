@@ -81,7 +81,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CSharpKOTOR\AuroraEngine.Common.csproj" />
+    <ProjectReference Include="..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 
   <ItemGroup>
