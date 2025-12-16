@@ -17,6 +17,7 @@ namespace Odyssey.Core.Interfaces
     /// - Update: Updates accumulator with real frame time (drives fixed timestep ticks)
     /// - HasPendingTicks: Returns true if accumulator has enough time for additional ticks
     /// - Fixed timestep prevents timing-dependent bugs and ensures deterministic gameplay
+    /// - Time tracking: TIMEPLAYED @ 0x007be1c4 (time played field in save GFF), frameStart @ 0x007ba698, frameEnd @ 0x007ba668 (frame timing)
     /// </remarks>
     public interface ITimeManager
     {

@@ -11,6 +11,8 @@ namespace Odyssey.Core.Interfaces
     /// - Components attached to entities provide specific functionality (Transform, Stats, Inventory, etc.)
     /// - Components have lifecycle hooks: OnAttach (when added to entity), OnDetach (when removed)
     /// - Component system allows flexible entity composition without inheritance hierarchies
+    /// - Entity component management: FUN_005226d0 @ 0x005226d0 saves entity components to GFF, FUN_005223a0 @ 0x005223a0 loads entity components from GFF
+    /// - Component types: Transform, Stats, Inventory, ScriptHooks, Faction, Perception, etc.
     /// </remarks>
     public interface IComponent
     {

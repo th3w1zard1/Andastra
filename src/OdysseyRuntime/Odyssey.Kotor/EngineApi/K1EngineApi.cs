@@ -1408,14 +1408,14 @@ namespace Odyssey.Kotor.EngineApi
                                 // Check if creature matches the perception type from caller's perspective
                                 bool isSeen = perceptionManager.HasSeen(ctx.Caller, creature);
                                 bool isHeard = perceptionManager.HasHeard(ctx.Caller, creature);
-                                
+
                                 // Map perception type constants to checks
                                 // Constants from nwscript.nss (approximate values, may need adjustment):
                                 // PERCEPTION_SEEN = 1, PERCEPTION_HEARD = 2, PERCEPTION_SEEN_AND_HEARD = 3
                                 // PERCEPTION_SEEN_AND_NOT_HEARD = 4, PERCEPTION_HEARD_AND_NOT_SEEN = 5
                                 // PERCEPTION_NOT_SEEN = 6, PERCEPTION_NOT_HEARD = 7
                                 // PERCEPTION_NOT_SEEN_AND_NOT_HEARD = 8
-                                
+
                                 switch (criteriaValue)
                                 {
                                     case 1: // PERCEPTION_SEEN

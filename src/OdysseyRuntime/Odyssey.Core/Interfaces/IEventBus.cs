@@ -17,6 +17,7 @@ namespace Odyssey.Core.Interfaces
     /// - FireScriptEvent: Fires script event on entity (triggers script hooks like OnHeartbeat, OnAttacked, etc.)
     /// - Script events: Heartbeat, OnNotice, Attacked, Damaged, Death, Dialogue, etc.
     /// - Event system decouples components and allows script-driven behavior
+    /// - Event routing: FUN_004dcfb0 @ 0x004dcfb0 routes script events to entity handlers (case 0xa = OnDeath, case 0x1 = OnHeartbeat, etc.)
     /// </remarks>
     public interface IEventBus
     {

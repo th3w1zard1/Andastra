@@ -16,6 +16,7 @@ namespace Odyssey.Core.Interfaces.Components
     /// - GetQuickSlotType: Returns type of content in slot (item vs ability)
     /// - Original implementation: Quick slots stored in creature GFF data (QuickSlot_* fields)
     /// - Quick slot usage: Using a slot triggers ActionUseItem (for items) or ActionCastSpellAtObject (for abilities)
+    /// - Quick slot storage: FUN_005226d0 @ 0x005226d0 saves QuickSlot_* fields to creature GFF, FUN_005223a0 @ 0x005223a0 loads QuickSlot_* fields from creature GFF
     /// </remarks>
     public interface IQuickSlotComponent : IComponent
     {

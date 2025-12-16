@@ -1,341 +1,483 @@
 # OdysseyRuntime Ghidra Refactoring Roadmap
 
-This document tracks the progress of refactoring the `OdysseyRuntime` engine to be more faithful to the original game, using Ghidra's decompiled output from `swkotor2.exe`.
+Internal tracking document for AI agents. Not public-facing. Do not commit to repository.
 
-**Status**: 🔄 IN PROGRESS - Fresh Comprehensive Review (2025-01-15)
+**Status**: IN PROGRESS
 **Started**: 2025-01-15
 **Current Phase**: Systematic file-by-file review with Ghidra MCP verification
-**Current File**: EventBus.cs (Odyssey.Core/Entities/EventBus.cs)
-
-**Completed Files**:
-- ✅ World.cs - Fixed: Added OnDeath event firing before entity destruction (matches FUN_004dcfb0 case 0xa)
-- ✅ Entity.cs - Verified: ObjectId assignment, component system, lifecycle all match decompiled code (FUN_005226d0, FUN_005223a0)
+**Total Files**: 414
 
 ## Refactoring Strategy
 
-1. **Search Ghidra** for relevant functions using string searches and function name searches
-2. **Decompile** relevant functions to understand original implementation
-3. **Add detailed comments** with Ghidra function addresses and context
-4. **Update implementation** to match original behavior where possible
-5. **Document** any deviations or improvements
+1. Search Ghidra for relevant functions using string searches and function name searches
+2. Decompile relevant functions to understand original implementation
+3. Add detailed comments with Ghidra function addresses and context
+4. Update implementation to match original behavior where possible
+5. Document any deviations or improvements
 
-## Current Phase: Deep Implementation Fidelity Review
+## Update Instructions
 
-**Phase 1 (COMPLETE)**: Added Ghidra references to all files (1,481+ references across 222+ files)
-**Phase 2 (COMPLETE)**: Verified implementations match original behavior from decompiled code
-- Checking function signatures match
-- Verifying logic flow matches original
-- Ensuring data structures match original
-- Confirming timing/sequencing matches original
-
-**Findings So Far**:
-- ✅ ActionAttack.cs: Verified - correct d20 combat system implementation
-- ✅ ModuleTransitionSystem.cs: Verified - correct module loading sequence
-- ✅ SaveSerializer.cs: Verified - correct save file format (FUN_004eb750)
-- ✅ SaveGameManager.cs: Updated - CreateSaveInfoGFF now matches exact field order from FUN_004eb750 (AREANAME, LASTMODULE, TIMEPLAYED, CHEATUSED, SAVEGAMENAME, TIMESTAMP, PCNAME, SAVENUMBER, GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT)
-- ✅ IInputManager.cs: Added Ghidra reference comment noting original uses DirectInput8 (DINPUT8.dll @ 0x0080a6c0, DirectInput8Create @ 0x0080a6ac)
-- ✅ PlayerInputHandler.cs: Verified - already has comprehensive Ghidra references
-- ✅ EventBus.cs: Verified - correct event routing (FUN_004dcfb0)
-- ✅ CombatSystem.cs: Verified - correct combat rounds
-- ✅ PartySystem.cs: Verified - correct PARTYTABLE implementation
-- ✅ TriggerSystem.cs: Verified - correct trigger detection
-- ✅ DoorComponent.cs: Verified - correct door system
-- ✅ NcsVm.cs: Verified - correct NCS format (signature, version, 0x42 marker, 0x0D offset)
-- ✅ GameSession.cs: Verified - correct system coordination
-- ✅ All Action files (25 total): Verified - comprehensive Ghidra references, correct implementations
-  - ActionMoveToObject.cs, ActionMoveToLocation.cs, ActionMoveAwayFromObject.cs
-  - ActionFollowObject.cs, ActionJumpToLocation.cs, ActionJumpToObject.cs
-  - ActionRandomWalk.cs, ActionWait.cs, ActionSpeakString.cs, ActionPlayAnimation.cs
-  - ActionUseObject.cs, ActionOpenDoor.cs, ActionCloseDoor.cs, ActionDoCommand.cs
-  - ActionDestroyObject.cs, ActionEquipItem.cs, ActionUnequipItem.cs
-  - ActionPickUpItem.cs, ActionPutDownItem.cs, ActionCastSpellAtObject.cs, ActionCastSpellAtLocation.cs
-  - All have comprehensive Ghidra references documenting original behavior
-- ✅ NavigationMesh.cs: Verified - correct BWM format handling
-- ✅ NavigationMeshFactory.cs: Verified - correct BWM conversion
-- ⚠️ ActionMoveToObject.cs: Has comprehensive Ghidra references, but missing creature collision checking (FUN_005479f0) and bump counter tracking (offset 0x268, max 5 bumps)
-- ⚠️ ActionMoveToLocation.cs: Has comprehensive Ghidra references, but missing creature collision checking and bump counter tracking
-- ⚠️ CharacterController.cs: Has comprehensive Ghidra references, but missing full collision system implementation
-- ⚠️ FUN_0054be70 @ 0x0054be70: Decompiled shows complex collision checking, bump tracking, and pathfinding around obstacles - needs implementation
-  - Function signature: `undefined4 FUN_0054be70(int *param_1, float *param_2, float *param_3, float *param_4, int *param_5)`
-  - Key features: Creature collision checking via FUN_005479f0, bump counter at offset 0x268 (max 5 bumps), pathfinding around obstacles via FUN_0054a1f0
-  - Bump counter logic: Increments at offset 0x268, aborts movement if > 5, clears path array and sets path length to 0
-  - Total blocking detection: If same creature blocks repeatedly (local_c0 == entity ID at offset 0x254), aborts movement
-  - Walkmesh projection: Uses FUN_004f5070 to project positions to walkmesh surface after movement
-- ⚠️ FUN_005479f0 @ 0x005479f0: Decompiled shows creature collision checking function - needs implementation
-  - Function signature: `undefined4 FUN_005479f0(void *this, float *param_1, float *param_2, undefined4 *param_3, uint *param_4)`
-  - Key features: Checks if movement path intersects with other creatures, returns 0 if collision detected, 1 if clear
-  - Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
-  - Checks creature positions and handles blocking detection
+When processing a file:
+- Mark as - [/] when starting work
+- Mark as - [x] when complete with Ghidra references added
+- Add notes about function addresses, string references, and implementation details
+- Use format: - [x] FileName.cs - Function addresses, string references, key findings
 
 ## Files to Process
 
-### Odyssey.Game (Entry Point & Launcher)
-- [x] Program.cs
-- [x] Core/GameState.cs
-- [x] Core/GamePathDetector.cs
-- [x] Core/GameSettings.cs
-- [x] GUI/MenuRenderer.cs
-- [x] GUI/SaveLoadMenu.cs
+### Odyssey.Content (18 files)
 
-### Odyssey.Core (Core Domain Logic)
-#### Entities
-- [x] Entities/Entity.cs - Already has comprehensive Ghidra references
-- [x] Entities/World.cs - Already has comprehensive Ghidra references
-- [x] Entities/EventBus.cs - Already has comprehensive Ghidra references (FUN_004dcfb0 @ 0x004dcfb0)
-- [x] Entities/TimeManager.cs - Already has comprehensive Ghidra references (TIMEPLAYED @ 0x007be1c4, frame timing strings)
+- [ ] Cache\ContentCache.cs
+- [ ] Converters\BwmToNavigationMeshConverter.cs
+- [ ] Interfaces\IContentCache.cs
+- [ ] Interfaces\IContentConverter.cs
+- [ ] Interfaces\IGameResourceProvider.cs
+- [ ] Interfaces\IResourceProvider.cs
+- [ ] Loaders\GITLoader.cs
+- [ ] Loaders\TemplateLoader.cs
+- [ ] MDL\MDLBulkReader.cs
+- [ ] MDL\MDLCache.cs
+- [ ] MDL\MDLConstants.cs
+- [ ] MDL\MDLDataTypes.cs
+- [ ] MDL\MDLFastReader.cs
+- [ ] MDL\MDLLoader.cs
+- [ ] MDL\MDLOptimizedReader.cs
+- [ ] ResourceProviders\GameResourceProvider.cs
+- [ ] Save\SaveDataProvider.cs
+- [ ] Save\SaveSerializer.cs
 
-#### Actions
-- [x] Actions/ActionBase.cs - Already has comprehensive Ghidra references (FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0)
-- [x] Actions/ActionQueue.cs - Already has Ghidra references
-- [x] Actions/ActionMoveToLocation.cs - Already has Ghidra references
-- [x] Actions/ActionJumpToLocation.cs - Already has Ghidra references
-- [x] Actions/ActionJumpToObject.cs - Already has Ghidra references
-- [x] Actions/ActionAttack.cs - Already has Ghidra references
-- [x] Actions/ActionDoCommand.cs - Already has Ghidra references
-- [x] Actions/DelayScheduler.cs - Already has Ghidra references
-- [x] Actions/*.cs (all other action files - 25 total, all have Ghidra references verified)
+### Odyssey.Core (99 files)
 
-#### Combat
-- [x] Combat/CombatSystem.cs - Already has comprehensive Ghidra references (CombatRoundData @ 0x007bf6b4, FUN_005226d0, FUN_00529470)
-- [x] Combat/CombatTypes.cs - Already has comprehensive Ghidra references (DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70)
-- [x] Combat/EffectSystem.cs - Already has comprehensive Ghidra references (EffectList @ 0x007bebe8, FUN_0050b540 @ 0x0050b540, FUN_00505db0 @ 0x00505db0)
+- [ ] Actions\ActionAttack.cs
+- [ ] Actions\ActionBase.cs
+- [ ] Actions\ActionCastSpellAtLocation.cs
+- [ ] Actions\ActionCastSpellAtObject.cs
+- [ ] Actions\ActionCloseDoor.cs
+- [ ] Actions\ActionDestroyObject.cs
+- [ ] Actions\ActionDoCommand.cs
+- [ ] Actions\ActionEquipItem.cs
+- [ ] Actions\ActionFollowObject.cs
+- [ ] Actions\ActionJumpToLocation.cs
+- [ ] Actions\ActionJumpToObject.cs
+- [ ] Actions\ActionMoveAwayFromObject.cs
+- [ ] Actions\ActionMoveToLocation.cs
+- [ ] Actions\ActionMoveToObject.cs
+- [ ] Actions\ActionOpenDoor.cs
+- [ ] Actions\ActionPickUpItem.cs
+- [ ] Actions\ActionPlayAnimation.cs
+- [ ] Actions\ActionPutDownItem.cs
+- [ ] Actions\ActionQueue.cs
+- [ ] Actions\ActionRandomWalk.cs
+- [ ] Actions\ActionSpeakString.cs
+- [ ] Actions\ActionUnequipItem.cs
+- [ ] Actions\ActionUseItem.cs
+- [ ] Actions\ActionUseObject.cs
+- [ ] Actions\ActionWait.cs
+- [ ] Actions\DelayScheduler.cs
+- [ ] AI\AIController.cs
+- [ ] Animation\AnimationSystem.cs
+- [ ] Audio\ISoundPlayer.cs
+- [ ] Camera\CameraController.cs
+- [ ] Combat\CombatSystem.cs
+- [ ] Combat\CombatTypes.cs
+- [ ] Combat\EffectSystem.cs
+- [ ] Dialogue\DialogueInterfaces.cs
+- [ ] Dialogue\DialogueSystem.cs
+- [ ] Dialogue\LipSyncController.cs
+- [ ] Dialogue\RuntimeDialogue.cs
+- [ ] Entities\Entity.cs
+- [ ] Entities\EventBus.cs
+- [ ] Entities\TimeManager.cs
+- [ ] Entities\World.cs
+- [ ] Enums\Ability.cs
+- [ ] Enums\ActionStatus.cs
+- [ ] Enums\ActionType.cs
+- [ ] Enums\ObjectType.cs
+- [ ] Enums\ScriptEvent.cs
+- [ ] GameLoop\FixedTimestepGameLoop.cs
+- [ ] GameSettings.cs
+- [ ] Interfaces\Components\IActionQueueComponent.cs
+- [ ] Interfaces\Components\IAnimationComponent.cs
+- [ ] Interfaces\Components\IDoorComponent.cs
+- [ ] Interfaces\Components\IFactionComponent.cs
+- [ ] Interfaces\Components\IInventoryComponent.cs
+- [ ] Interfaces\Components\IItemComponent.cs
+- [ ] Interfaces\Components\IPerceptionComponent.cs
+- [ ] Interfaces\Components\IPlaceableComponent.cs
+- [ ] Interfaces\Components\IQuickSlotComponent.cs
+- [ ] Interfaces\Components\IRenderableComponent.cs
+- [ ] Interfaces\Components\IScriptHooksComponent.cs
+- [ ] Interfaces\Components\IStatsComponent.cs
+- [ ] Interfaces\Components\ITransformComponent.cs
+- [ ] Interfaces\Components\ITriggerComponent.cs
+- [ ] Interfaces\IAction.cs
+- [ ] Interfaces\IActionQueue.cs
+- [ ] Interfaces\IArea.cs
+- [ ] Interfaces\IComponent.cs
+- [ ] Interfaces\IDelayScheduler.cs
+- [ ] Interfaces\IEntity.cs
+- [ ] Interfaces\IEventBus.cs
+- [ ] Interfaces\IGameServicesContext.cs
+- [ ] Interfaces\IModule.cs
+- [ ] Interfaces\INavigationMesh.cs
+- [ ] Interfaces\ITimeManager.cs
+- [ ] Interfaces\IWorld.cs
+- [ ] Journal\JournalSystem.cs
+- [ ] Module\ModuleTransitionSystem.cs
+- [ ] Module\RuntimeArea.cs
+- [ ] Module\RuntimeModule.cs
+- [ ] Movement\CharacterController.cs
+- [ ] Movement\PlayerInputHandler.cs
+- [ ] Navigation\NavigationMesh.cs
+- [ ] Navigation\NavigationMeshFactory.cs
+- [ ] Party\PartyInventory.cs
+- [ ] Party\PartyMember.cs
+- [ ] Party\PartySystem.cs
+- [ ] Perception\PerceptionSystem.cs
+- [ ] Save\AreaState.cs
+- [ ] Save\SaveGameData.cs
+- [ ] Save\SaveSystem.cs
+- [ ] Templates\CreatureTemplate.cs
+- [ ] Templates\DoorTemplate.cs
+- [ ] Templates\EncounterTemplate.cs
+- [ ] Templates\IEntityTemplate.cs
+- [ ] Templates\PlaceableTemplate.cs
+- [ ] Templates\SoundTemplate.cs
+- [ ] Templates\StoreTemplate.cs
+- [ ] Templates\TriggerTemplate.cs
+- [ ] Templates\WaypointTemplate.cs
+- [ ] Triggers\TriggerSystem.cs
 
-#### Dialogue
-- [x] Dialogue/DialogueSystem.cs - Already has comprehensive Ghidra references (ScriptDialogue @ 0x007bee40, FUN_005226d0, FUN_0050c510 @ 0x0050c510)
-- [x] Dialogue/DialogueInterfaces.cs - Already has Ghidra references
-- [x] Dialogue/RuntimeDialogue.cs - Already has comprehensive Ghidra references
-- [x] Dialogue/LipSyncController.cs - Already has comprehensive Ghidra references (LIPS:localization @ 0x007be654, .\lips @ 0x007c6838)
+### Odyssey.Engines.Aurora (1 files)
 
-#### Movement & Navigation
-- [x] Movement/CharacterController.cs - Already has Ghidra references
-- [x] Movement/PlayerInputHandler.cs - Already has Ghidra references
-- [x] Navigation/NavigationMesh.cs - Already has Ghidra references
-- [x] Navigation/NavigationMeshFactory.cs - Already has Ghidra references
+- [ ] AuroraEngine.cs
 
-#### Party
-- [x] Party/*.cs (all party files - already have Ghidra references)
+### Odyssey.Engines.Common (8 files)
 
-#### Perception
-- [x] Perception/PerceptionSystem.cs - Already has Ghidra references
+- [ ] BaseEngine.cs
+- [ ] BaseEngineGame.cs
+- [ ] BaseEngineModule.cs
+- [ ] BaseEngineProfile.cs
+- [ ] IEngine.cs
+- [ ] IEngineGame.cs
+- [ ] IEngineModule.cs
+- [ ] IEngineProfile.cs
 
-#### Save
-- [x] Save/*.cs (all save files - already have Ghidra references)
+### Odyssey.Engines.Eclipse (1 files)
 
-#### Scripting
-- [x] Scripting/*.cs (all scripting files - no Scripting directory in Odyssey.Core, scripting is in Odyssey.Scripting which is complete)
+- [ ] EclipseEngine.cs
 
-#### Templates
-- [x] Templates/*.cs (all template files - 9 files, all have Ghidra references)
+### Odyssey.Engines.Odyssey (7 files)
 
-#### Triggers
-- [x] Triggers/*.cs (all trigger files - already have Ghidra references)
+- [ ] EngineApi\OdysseyK1EngineApi.cs
+- [ ] EngineApi\OdysseyK2EngineApi.cs
+- [ ] OdysseyEngine.cs
+- [ ] OdysseyGameSession.cs
+- [ ] OdysseyModuleLoader.cs
+- [ ] Profiles\OdysseyK1GameProfile.cs
+- [ ] Profiles\OdysseyK2GameProfile.cs
 
-#### Interfaces
-- [x] Interfaces/*.cs (all interface files - 24 files, all have Ghidra references verified)
+### Odyssey.Game (8 files)
 
-#### Enums
-- [x] Enums/*.cs (all enum files - 5 files: ObjectType, Ability, ScriptEvent, ActionType, ActionStatus - all have Ghidra references)
+- [ ] Core\GamePathDetector.cs
+- [ ] Core\GameSettings.cs
+- [ ] Core\GameState.cs
+- [ ] Core\GraphicsBackendFactory.cs
+- [ ] Core\OdysseyGame.cs
+- [ ] GUI\MenuRenderer.cs
+- [ ] GUI\SaveLoadMenu.cs
+- [ ] Program.cs
 
-#### Other Core
-- [x] GameSettings.cs - Already has Ghidra references
-- [x] Journal/JournalSystem.cs - Already has Ghidra references
-- [x] Module/*.cs (all module files - 3 files, all have Ghidra references)
-- [x] AI/AIController.cs - Already has Ghidra references
-- [x] Audio/ISoundPlayer.cs - Already has Ghidra references
-- [x] Camera/CameraController.cs - Already has Ghidra references
-- [x] GameLoop/FixedTimestepGameLoop.cs - Updated with detailed Ghidra references (frameStart @ 0x007ba698, frameEnd @ 0x007ba668)
+### Odyssey.Graphics (22 files)
 
-### Odyssey.Content (Asset Pipeline)
-- [x] Cache/ContentCache.cs - Already has Ghidra references
-- [x] Converters/BwmToNavigationMeshConverter.cs - Already has Ghidra references
-- [x] Loaders/GITLoader.cs - Already has Ghidra references (27 matches)
-- [x] Loaders/TemplateLoader.cs - Already has Ghidra references (9 matches)
-- [x] MDL/*.cs (all MDL files - already have Ghidra references)
-- [x] ResourceProviders/GameResourceProvider.cs - Already has Ghidra references
-- [x] Save/SaveDataProvider.cs - Already has Ghidra references (11 matches)
-- [x] Save/SaveSerializer.cs - Already has Ghidra references (36 matches)
-- [x] Interfaces/*.cs (all interface files - already have Ghidra references)
-- **Total: 107 matches across 14 files - All verified**
+- [ ] GraphicsBackend.cs
+- [ ] IContentManager.cs
+- [ ] IDepthStencilBuffer.cs
+- [ ] IEffect.cs
+- [ ] IEntityModelRenderer.cs
+- [ ] IFont.cs
+- [ ] IGraphicsBackend.cs
+- [ ] IGraphicsDevice.cs
+- [ ] IIndexBuffer.cs
+- [ ] IInputManager.cs
+- [ ] IModel.cs
+- [ ] IRenderState.cs
+- [ ] IRenderTarget.cs
+- [ ] IRoomMeshRenderer.cs
+- [ ] ISpatialAudio.cs
+- [ ] ISpriteBatch.cs
+- [ ] ITexture2D.cs
+- [ ] IVertexBuffer.cs
+- [ ] IVertexDeclaration.cs
+- [ ] IWindow.cs
+- [ ] MatrixHelper.cs
+- [ ] VertexPositionColor.cs
 
-### Odyssey.Scripting (NCS VM & Engine API)
-- [x] VM/ScriptGlobals.cs - Already has Ghidra references
-- [x] VM/ExecutionContext.cs - Already has Ghidra references
-- [x] VM/*.cs (all other VM files - already have Ghidra references)
-- [x] EngineApi/*.cs (all engine API files - already have Ghidra references)
-- [x] ScriptExecutor.cs - Already has Ghidra references
-- [x] Types/*.cs (all type files - already have Ghidra references)
-- [x] Interfaces/*.cs (all interface files - already have Ghidra references)
-- **Total: 151 matches across 12 files - All verified**
+### Odyssey.Kotor (56 files)
 
-### Odyssey.Kotor (KOTOR-Specific Rules)
-#### Components
-- [x] Components/TransformComponent.cs - Already has Ghidra references
-- [x] Components/StatsComponent.cs - Already has Ghidra references
-- [x] Components/ScriptHooksComponent.cs - Already has Ghidra references
-- [x] Components/FactionComponent.cs - Already has Ghidra references
-- [x] Components/WaypointComponent.cs - Already has Ghidra references
-- [x] Components/SoundComponent.cs - Already has Ghidra references
-- [x] Components/StoreComponent.cs - Already has Ghidra references
-- [x] Components/EncounterComponent.cs - Already has Ghidra references
-- [x] Components/*.cs (all other component files - already have Ghidra references)
+- [ ] Combat\CombatManager.cs
+- [ ] Combat\CombatRound.cs
+- [ ] Combat\DamageCalculator.cs
+- [ ] Combat\WeaponDamageCalculator.cs
+- [ ] Components\ActionQueueComponent.cs
+- [ ] Components\CreatureComponent.cs
+- [ ] Components\DoorComponent.cs
+- [ ] Components\EncounterComponent.cs
+- [ ] Components\FactionComponent.cs
+- [ ] Components\InventoryComponent.cs
+- [ ] Components\ItemComponent.cs
+- [ ] Components\PerceptionComponent.cs
+- [ ] Components\PlaceableComponent.cs
+- [x] Components\QuickSlotComponent.cs - FUN_005226d0 @ 0x005226d0, FUN_005223a0 @ 0x005223a0, QuickSlot_0-11 fields in UTC GFF
+- [ ] Components\RenderableComponent.cs
+- [ ] Components\ScriptHooksComponent.cs
+- [ ] Components\SoundComponent.cs
+- [ ] Components\StatsComponent.cs
+- [ ] Components\StoreComponent.cs
+- [ ] Components\TransformComponent.cs
+- [ ] Components\TriggerComponent.cs
+- [ ] Components\WaypointComponent.cs
+- [ ] Data\GameDataManager.cs
+- [ ] Data\TwoDATableManager.cs
+- [ ] Dialogue\ConversationContext.cs
+- [ ] Dialogue\DialogueManager.cs
+- [ ] Dialogue\DialogueState.cs
+- [ ] Dialogue\KotorDialogueLoader.cs
+- [ ] Dialogue\KotorLipDataLoader.cs
+- [ ] EngineApi\K1EngineApi.cs
+- [ ] EngineApi\K2EngineApi.cs
+- [ ] Game\GameSession.cs
+- [ ] Game\ModuleLoader.cs
+- [ ] Game\ModuleTransitionSystem.cs
+- [ ] Game\PlayerController.cs
+- [ ] Game\ScriptExecutor.cs
+- [ ] Input\PlayerController.cs
+- [ ] Loading\EntityFactory.cs
+- [ ] Loading\KotorModuleLoader.cs
+- [ ] Loading\ModuleLoader.cs
+- [ ] Loading\NavigationMeshFactory.cs
+- [ ] Profiles\GameProfileFactory.cs
+- [ ] Profiles\IGameProfile.cs
+- [ ] Profiles\K1GameProfile.cs
+- [ ] Profiles\K2GameProfile.cs
+- [ ] Save\SaveGameManager.cs
+- [ ] Systems\AIController.cs
+- [ ] Systems\ComponentInitializer.cs
+- [ ] Systems\EncounterSystem.cs
+- [ ] Systems\FactionManager.cs
+- [ ] Systems\HeartbeatSystem.cs
+- [ ] Systems\ModelResolver.cs
+- [ ] Systems\PartyManager.cs
+- [ ] Systems\PerceptionManager.cs
+- [ ] Systems\StoreSystem.cs
+- [ ] Systems\TriggerSystem.cs
 
-#### Combat
-- [x] Combat/*.cs (all combat files - already have Ghidra references)
+### Odyssey.MonoGame (159 files)
 
-#### Dialogue
-- [x] Dialogue/DialogueState.cs - Already has Ghidra references
-- [x] Dialogue/ConversationContext.cs - Already has Ghidra references
-- [x] Dialogue/*.cs (all other dialogue files - already have Ghidra references)
+- [ ] Animation\AnimationCompression.cs
+- [ ] Animation\SkeletalAnimationBatching.cs
+- [ ] Assets\AssetHotReload.cs
+- [ ] Assets\AssetValidator.cs
+- [ ] Audio\MonoGameSoundPlayer.cs
+- [ ] Audio\MonoGameVoicePlayer.cs
+- [ ] Audio\SpatialAudio.cs
+- [ ] Backends\BackendFactory.cs
+- [ ] Backends\Direct3D10Backend.cs
+- [ ] Backends\Direct3D11Backend.cs
+- [ ] Backends\Direct3D12Backend.cs
+- [ ] Backends\OpenGLBackend.cs
+- [ ] Backends\VulkanBackend.cs
+- [ ] Camera\ChaseCamera.cs
+- [ ] Camera\MonoGameDialogueCameraController.cs
+- [ ] Compute\ComputeShaderFramework.cs
+- [ ] Converters\MdlToMonoGameModelConverter.cs
+- [ ] Converters\RoomMeshRenderer.cs
+- [ ] Converters\TpcToMonoGameTextureConverter.cs
+- [ ] Culling\DistanceCuller.cs
+- [ ] Culling\Frustum.cs
+- [ ] Culling\GPUCulling.cs
+- [ ] Culling\OcclusionCuller.cs
+- [ ] Debug\DebugRendering.cs
+- [ ] Debug\RenderStatistics.cs
+- [ ] Enums\GraphicsBackend.cs
+- [ ] Enums\MaterialType.cs
+- [ ] Graphics\MonoGameBasicEffect.cs
+- [ ] Graphics\MonoGameContentManager.cs
+- [ ] Graphics\MonoGameDepthStencilBuffer.cs
+- [ ] Graphics\MonoGameEntityModelRenderer.cs
+- [ ] Graphics\MonoGameFont.cs
+- [ ] Graphics\MonoGameGraphicsBackend.cs
+- [ ] Graphics\MonoGameGraphicsDevice.cs
+- [ ] Graphics\MonoGameIndexBuffer.cs
+- [ ] Graphics\MonoGameInputManager.cs
+- [ ] Graphics\MonoGameRenderState.cs
+- [ ] Graphics\MonoGameRenderTarget.cs
+- [ ] Graphics\MonoGameRoomMeshRenderer.cs
+- [ ] Graphics\MonoGameSpatialAudio.cs
+- [ ] Graphics\MonoGameSpriteBatch.cs
+- [ ] Graphics\MonoGameTexture2D.cs
+- [ ] Graphics\MonoGameVertexBuffer.cs
+- [ ] Graphics\MonoGameWindow.cs
+- [ ] GUI\KotorGuiManager.cs
+- [ ] GUI\MyraMenuRenderer.cs
+- [ ] Interfaces\ICommandList.cs
+- [ ] Interfaces\IDevice.cs
+- [ ] Interfaces\IDynamicLight.cs
+- [ ] Interfaces\IGraphicsBackend.cs
+- [ ] Interfaces\IPbrMaterial.cs
+- [ ] Interfaces\IRaytracingSystem.cs
+- [ ] Lighting\ClusteredLightCulling.cs
+- [ ] Lighting\ClusteredLightingSystem.cs
+- [ ] Lighting\DynamicLight.cs
+- [ ] Lighting\LightProbeSystem.cs
+- [ ] Lighting\VolumetricLighting.cs
+- [ ] Loading\AsyncResourceLoader.cs
+- [ ] LOD\LODFadeSystem.cs
+- [ ] LOD\LODSystem.cs
+- [ ] Materials\KotorMaterialConverter.cs
+- [ ] Materials\KotorMaterialFactory.cs
+- [ ] Materials\MaterialInstancing.cs
+- [ ] Materials\PbrMaterial.cs
+- [ ] Memory\GPUMemoryPool.cs
+- [ ] Memory\MemoryTracker.cs
+- [ ] Memory\ObjectPool.cs
+- [ ] Models\MDLModelConverter.cs
+- [ ] Particles\GPUParticleSystem.cs
+- [ ] Particles\ParticleSorter.cs
+- [ ] Performance\FramePacing.cs
+- [ ] Performance\FrameTimeBudget.cs
+- [ ] Performance\GPUTimestamps.cs
+- [ ] Performance\Telemetry.cs
+- [ ] PostProcessing\Bloom.cs
+- [ ] PostProcessing\ColorGrading.cs
+- [ ] PostProcessing\ExposureAdaptation.cs
+- [ ] PostProcessing\MotionBlur.cs
+- [ ] PostProcessing\SSAO.cs
+- [ ] PostProcessing\SSR.cs
+- [ ] PostProcessing\TemporalAA.cs
+- [ ] PostProcessing\ToneMapping.cs
+- [ ] Raytracing\NativeRaytracingSystem.cs
+- [ ] Raytracing\RaytracedEffects.cs
+- [ ] Remix\Direct3D9Wrapper.cs
+- [ ] Remix\RemixBridge.cs
+- [ ] Remix\RemixMaterialExporter.cs
+- [ ] Rendering\AdaptiveQuality.cs
+- [ ] Rendering\BatchOptimizer.cs
+- [ ] Rendering\BindlessTextures.cs
+- [ ] Rendering\CommandBuffer.cs
+- [ ] Rendering\CommandListOptimizer.cs
+- [ ] Rendering\ContactShadows.cs
+- [ ] Rendering\DecalSystem.cs
+- [ ] Rendering\DeferredRenderer.cs
+- [ ] Rendering\DepthPrePass.cs
+- [ ] Rendering\DrawCallSorter.cs
+- [ ] Rendering\DynamicBatching.cs
+- [ ] Rendering\DynamicResolution.cs
+- [ ] Rendering\EntityModelRenderer.cs
+- [ ] Rendering\FrameGraph.cs
+- [ ] Rendering\GeometryCache.cs
+- [ ] Rendering\GeometryStreaming.cs
+- [ ] Rendering\GPUInstancing.cs
+- [ ] Rendering\GPUMemoryBudget.cs
+- [ ] Rendering\GPUMemoryDefragmentation.cs
+- [ ] Rendering\GPUSynchronization.cs
+- [ ] Rendering\HDRPipeline.cs
+- [ ] Rendering\IndirectRenderer.cs
+- [ ] Rendering\MemoryAliasing.cs
+- [ ] Rendering\MeshCompression.cs
+- [ ] Rendering\ModernRenderer.cs
+- [ ] Rendering\MultiThreadedRenderer.cs
+- [ ] Rendering\MultiThreadedRendering.cs
+- [ ] Rendering\OcclusionQueries.cs
+- [ ] Rendering\OdysseyRenderer.cs
+- [ ] Rendering\PipelineStateCache.cs
+- [ ] Rendering\QualityPresets.cs
+- [ ] Rendering\RenderBatchManager.cs
+- [ ] Rendering\RenderGraph.cs
+- [ ] Rendering\RenderOptimizer.cs
+- [ ] Rendering\RenderPipeline.cs
+- [ ] Rendering\RenderProfiler.cs
+- [ ] Rendering\RenderQueue.cs
+- [ ] Rendering\RenderSettings.cs
+- [ ] Rendering\RenderTargetCache.cs
+- [ ] Rendering\RenderTargetChain.cs
+- [ ] Rendering\RenderTargetManager.cs
+- [ ] Rendering\RenderTargetPool.cs
+- [ ] Rendering\RenderTargetScaling.cs
+- [ ] Rendering\ResourceBarriers.cs
+- [ ] Rendering\ResourcePreloader.cs
+- [ ] Rendering\SceneGraph.cs
+- [ ] Rendering\ShaderCache.cs
+- [ ] Rendering\StateCache.cs
+- [ ] Rendering\SubsurfaceScattering.cs
+- [ ] Rendering\TemporalReprojection.cs
+- [ ] Rendering\TextureAtlas.cs
+- [ ] Rendering\TextureCompression.cs
+- [ ] Rendering\TriangleStripGenerator.cs
+- [ ] Rendering\Upscaling\DLSS.cs
+- [ ] Rendering\Upscaling\FSR.cs
+- [ ] Rendering\VariableRateShading.cs
+- [ ] Rendering\VertexCacheOptimizer.cs
+- [ ] Rendering\VisibilityBuffer.cs
+- [ ] Save\AsyncSaveSystem.cs
+- [ ] Scene\SceneBuilder.cs
+- [ ] Shaders\ShaderCache.cs
+- [ ] Shaders\ShaderPermutationSystem.cs
+- [ ] Shadows\CascadedShadowMaps.cs
+- [ ] Spatial\Octree.cs
+- [ ] Textures\TextureFormatConverter.cs
+- [ ] Textures\TextureStreamingManager.cs
+- [ ] UI\BasicHUD.cs
+- [ ] UI\DialoguePanel.cs
+- [ ] UI\LoadingScreen.cs
+- [ ] UI\MainMenu.cs
+- [ ] UI\PauseMenu.cs
+- [ ] UI\ScreenFade.cs
 
-#### Game
-- [x] Game/GameSession.cs - Already has Ghidra references (15 matches)
-- [x] Game/PlayerController.cs - Already has Ghidra references (11 matches)
-- [x] Game/ScriptExecutor.cs - Already has Ghidra references
-- [x] Game/*.cs (all other game files - already have Ghidra references)
+### Odyssey.Scripting (11 files)
 
-#### Input
-- [x] Input/*.cs (all input files - already have Ghidra references)
+- [ ] EngineApi\BaseEngineApi.cs
+- [ ] Interfaces\IEngineApi.cs
+- [ ] Interfaces\IExecutionContext.cs
+- [ ] Interfaces\INcsVm.cs
+- [ ] Interfaces\IScriptGlobals.cs
+- [ ] Interfaces\Variable.cs
+- [ ] ScriptExecutor.cs
+- [ ] Types\Location.cs
+- [ ] VM\ExecutionContext.cs
+- [ ] VM\NcsVm.cs
+- [ ] VM\ScriptGlobals.cs
 
-#### Loading
-- [x] Loading/EntityFactory.cs - Already has Ghidra references (16 matches)
-- [x] Loading/NavigationMeshFactory.cs - Already has Ghidra references
-- [x] Loading/*.cs (all other loading files - already have Ghidra references)
+### Odyssey.Stride (20 files)
 
-#### Profiles
-- [x] Profiles/IGameProfile.cs - Already has Ghidra references
-- [x] Profiles/*.cs (all other profile files - already have Ghidra references)
+- [ ] Audio\StrideSoundPlayer.cs
+- [ ] Audio\StrideVoicePlayer.cs
+- [ ] Camera\StrideDialogueCameraController.cs
+- [ ] Graphics\StrideBasicEffect.cs
+- [ ] Graphics\StrideContentManager.cs
+- [ ] Graphics\StrideDepthStencilBuffer.cs
+- [ ] Graphics\StrideEntityModelRenderer.cs
+- [ ] Graphics\StrideFont.cs
+- [ ] Graphics\StrideGraphicsBackend.cs
+- [ ] Graphics\StrideGraphicsDevice.cs
+- [ ] Graphics\StrideIndexBuffer.cs
+- [ ] Graphics\StrideInputManager.cs
+- [ ] Graphics\StrideRenderState.cs
+- [ ] Graphics\StrideRenderTarget.cs
+- [ ] Graphics\StrideRoomMeshRenderer.cs
+- [ ] Graphics\StrideSpatialAudio.cs
+- [ ] Graphics\StrideSpriteBatch.cs
+- [ ] Graphics\StrideTexture2D.cs
+- [ ] Graphics\StrideVertexBuffer.cs
+- [ ] Graphics\StrideWindow.cs
 
-#### Save
-- [x] Save/SaveGameManager.cs - Already has Ghidra references (18 matches)
-- [x] Save/*.cs (all other save files - already have Ghidra references)
+### Odyssey.Tests (3 files)
 
-#### Systems
-- [x] Systems/EncounterSystem.cs - Already has Ghidra references
-- [x] Systems/*.cs (all other system files - already have Ghidra references)
+- [ ] UI\FallbackUITests.cs
+- [ ] UI\KotorGuiManagerTests.cs
+- [ ] VM\NcsVmTests.cs
 
-#### Data
-- [x] Data/*.cs (all data files - already have Ghidra references)
-- **Total: 474 matches across 51 files - All verified**
+### Odyssey.Tooling (1 files)
 
-### Odyssey.MonoGame (MonoGame Adapters)
-**Status: Complete - 88 matches across 43 files, all verified**
-- [x] Animation/*.cs - Already have Ghidra references
-- [x] Assets/*.cs - Already have Ghidra references
-- [x] Audio/*.cs - Already have comprehensive Ghidra references
-- [x] Backends/*.cs - Already have Ghidra references
-- [x] Camera/*.cs - Already have Ghidra references
-- [x] Compute/*.cs - Already have Ghidra references
-- [x] Converters/*.cs - Already have comprehensive Ghidra references
-- [x] Culling/*.cs - Already have Ghidra references (4 files)
-- [x] Graphics/*.cs - Already have Ghidra references
-- [x] GUI/*.cs - Already have Ghidra references
-- [x] Lighting/*.cs - Already have Ghidra references
-- [x] Loading/*.cs - Already have Ghidra references
-- [x] LOD/*.cs - Already have Ghidra references
-- [x] Materials/*.cs - Already have Ghidra references
-- [x] Memory/*.cs - Already have Ghidra references
-- [x] Models/*.cs - Already have Ghidra references
-- [x] Particles/*.cs - Already have Ghidra references
-- [x] Performance/*.cs - Already have Ghidra references
-- [x] PostProcessing/*.cs - Already have Ghidra references
-- [x] Raytracing/*.cs - Already have Ghidra references
-- [x] Remix/*.cs - Already have Ghidra references
-- [x] Rendering/*.cs - Already have comprehensive Ghidra references (15 files)
-- [x] Save/*.cs - Already have Ghidra references
-- [x] Scene/*.cs - Already have Ghidra references
-- [x] Shaders/*.cs - Already have Ghidra references
-- [x] Shadows/*.cs - Already have Ghidra references
-- [x] Spatial/*.cs - Already have Ghidra references
-- [x] Textures/*.cs - Already have Ghidra references
-- [x] UI/*.cs - Already have comprehensive Ghidra references (6 files)
-- [x] Interfaces/*.cs - Already have Ghidra references
-- [x] Enums/*.cs - Already have Ghidra references
-- [x] Debug/*.cs - Already have Ghidra references
-
-### Odyssey.Graphics (Graphics Abstraction)
-**Status: Abstraction layer - No Ghidra references needed (MonoGame abstraction)**
-- [x] GraphicsBackend.cs - Abstraction layer, no Ghidra references needed
-- [x] IGraphicsBackend.cs - Interface, no Ghidra references needed
-- [x] IGraphicsDevice.cs - Interface, no Ghidra references needed
-- [x] IContentManager.cs - Interface, no Ghidra references needed
-- [x] IFont.cs - Interface, no Ghidra references needed
-- [x] IInputManager.cs - Interface, no Ghidra references needed
-- [x] IIndexBuffer.cs - Interface, no Ghidra references needed
-- [x] IRenderTarget.cs - Interface, no Ghidra references needed
-- [x] ISpriteBatch.cs - Interface, no Ghidra references needed
-- [x] ITexture2D.cs - Interface, no Ghidra references needed
-- [x] IVertexBuffer.cs - Interface, no Ghidra references needed
-- [x] IDepthStencilBuffer.cs - Interface, no Ghidra references needed
-- [x] IWindow.cs - Interface, no Ghidra references needed
-
-### Odyssey.Stride (Stride Backend - Optional)
-**Status: Alternative backend - Lower priority**
-- [x] Graphics/*.cs - Alternative backend implementation, lower priority
-
-### Odyssey.Tests (Test Files - Lower Priority)
-**Status: Test files - Lower priority for Ghidra refactoring**
-- [x] Tests/UI/*.cs - Test files, lower priority
-- [x] Tests/VM/*.cs - Test files, lower priority
-
-### Odyssey.Tooling (Tooling - Lower Priority)
-**Status: Tooling files - Lower priority for Ghidra refactoring**
-- [x] Tooling/Program.cs - Tooling, lower priority
-- [x] Tooling/*.cs - Tooling files, lower priority
-
-## Completed Files
-- [x] Program.cs - Verified and confirmed Ghidra references (FUN_00404250 @ 0x00404250, string references at 0x007b575c, 0x0080c210, 0x007b5644)
-- [x] GamePathDetector.cs - Already has comprehensive Ghidra references for registry access patterns
-- [x] GameState.cs - Updated with accurate FUN_006caab0 @ 0x006caab0 module state management function details
-- [x] GameSettings.cs - Verified Ghidra references (FUN_00633270 @ 0x00633270 for directory aliases, FUN_00630a90, FUN_00631ea0 for INI loading)
-- [x] GUI/MenuRenderer.cs - Verified Ghidra references (main menu strings at 0x007b6044, 0x007cc030, 0x007cc000, etc.)
-- [x] GUI/SaveLoadMenu.cs - Verified Ghidra references (savenfo @ 0x007be1f0, FUN_004eb750 @ 0x004eb750 for save creation, FUN_00708990 @ 0x00708990 for load menu, FUN_0070a020 @ 0x0070a020 for save enumeration)
-- [x] GameLoop/FixedTimestepGameLoop.cs - Updated with detailed Ghidra references (frameStart @ 0x007ba698, frameEnd @ 0x007ba668, TimeElapsed @ 0x007bed5c, GameTime @ 0x007c1a78)
-
-## Current File Being Processed
-- **✅ COMPLETE** - All files verified and improved. Final Summary:
-  - **Total Files**: 363 C# files in OdysseyRuntime
-  - **Files with Ghidra References**: 222 files (1,481 total references)
-  - **Odyssey.Game**: 6/6 files complete ✅
-  - **Odyssey.Core**: All files complete (437+ matches across 94 files) ✅
-    - Enums: 5/5 files (ObjectType, Ability, ScriptEvent, ActionType, ActionStatus) ✅
-    - Interfaces: 24/24 files ✅
-    - GameLoop: FixedTimestepGameLoop.cs improved with frame timing references ✅
-  - **Odyssey.Kotor**: All files complete (474 matches across 51 files) ✅
-  - **Odyssey.Scripting**: All files complete (151 matches across 12 files) ✅
-  - **Odyssey.Content**: All files complete (107 matches across 14 files) ✅
-  - **Odyssey.MonoGame**: All files complete (88 matches across 43 files) ✅
-  - **Odyssey.Graphics**: Abstraction layer (interfaces only, no Ghidra references needed) ✅
-  - **Odyssey.Stride/Tests/Tooling**: Lower priority (alternative backends, tests, tooling) ✅
-  
-**All critical game logic files have comprehensive Ghidra references with function addresses, string references, and implementation details.**
-
-## Notes
-
-- Focus on core game logic first (Odyssey.Core, Odyssey.Kotor, Odyssey.Scripting)
-- Graphics/MonoGame adapters can be lower priority unless they affect gameplay
-- Use Ghidra string searches to locate functions (e.g., "GLOBALVARS", "PARTYTABLE", "savenfo")
-- Document all Ghidra function addresses and string references in comments
-- Match original engine behavior exactly where documented
-
-## Common Ghidra Search Strings
-
-- "GLOBALVARS" - Global variable system
-- "PARTYTABLE" - Party management
-- "savenfo" - Save game info
-- "BWM" - Walkmesh
-- "pathfind" - Pathfinding
-- "walkmesh" - Walkmesh operations
-- "MODULE" - Module loading
-- "AREA" - Area management
-- "DIALOG" - Dialogue system
-- "COMBAT" - Combat system
-- "SCRIPT" - Script execution
-- "ACTION" - Action system
-- "EFFECT" - Effect system
-- "TRIGGER" - Trigger system
-- "DOOR" - Door system
-- "CREATURE" - Creature management
-- "INVENTORY" - Inventory system
-- "SAVE" - Save/load system
-- "LOAD" - Load system
+- [ ] Program.cs
 

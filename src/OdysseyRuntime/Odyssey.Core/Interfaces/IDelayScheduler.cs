@@ -12,6 +12,8 @@ namespace Odyssey.Core.Interfaces
     /// - Delayed actions execute in order based on schedule time
     /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
     /// - Actions are queued to target entity's action queue when delay expires
+    /// - NCS VM: STORE_STATE opcode @ offset 0x0D+ in NCS file stores execution context for delayed execution
+    /// - DelayCommand implementation: Stores action + delay time, executes when delay expires
     /// </remarks>
     public interface IDelayScheduler
     {

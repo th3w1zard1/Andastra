@@ -17,6 +17,9 @@ namespace Odyssey.Kotor.Components
     /// - Quick slots: 0-11 (12 slots total) for storing items or abilities (spells/feats)
     /// - Quick slot types: QUICKSLOT_TYPE_ITEM (0), QUICKSLOT_TYPE_ABILITY (1)
     /// - Original implementation: Quick slots stored in creature GFF data (QuickSlot_* fields in UTC)
+    /// - Quick slot storage: FUN_005226d0 @ 0x005226d0 saves QuickSlot_* fields to creature GFF, FUN_005223a0 @ 0x005223a0 loads QuickSlot_* fields from creature GFF
+    /// - Quick slot fields: QuickSlot_0 through QuickSlot_11 (12 fields total) in UTC GFF format
+    /// - Each QuickSlot_* field contains: Type (0=item, 1=ability), Item/ObjectId (for items), AbilityID (for abilities)
     /// - Quick slot usage: Using a slot triggers ActionUseItem (for items) or ActionCastSpellAtObject (for abilities)
     /// </remarks>
     public class QuickSlotComponent : IQuickSlotComponent
