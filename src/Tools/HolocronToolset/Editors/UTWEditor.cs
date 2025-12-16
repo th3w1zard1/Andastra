@@ -268,12 +268,21 @@ namespace HolocronToolset.Editors
             if (_isNoteCheckbox != null)
             {
                 _isNoteCheckbox.IsChecked = utw.HasMapNote;
-                _cachedHasMapNote = utw.HasMapNote;
+                // Only update cache if it's null (not already set by SetIsNoteCheckbox)
+                if (!_cachedHasMapNote.HasValue)
+                {
+                    _cachedHasMapNote = utw.HasMapNote;
+                }
             }
             if (_noteEnabledCheckbox != null)
             {
                 _noteEnabledCheckbox.IsChecked = utw.MapNoteEnabled;
-                _cachedMapNoteEnabled = utw.MapNoteEnabled;
+                // Only update cache if it's null (not already set by SetNoteEnabledCheckbox)
+                // This prevents LoadUTW from overwriting cache set by SetNoteEnabledCheckbox
+                if (!_cachedMapNoteEnabled.HasValue)
+                {
+                    _cachedMapNoteEnabled = utw.MapNoteEnabled;
+                }
             }
             if (_noteEdit != null)
             {
