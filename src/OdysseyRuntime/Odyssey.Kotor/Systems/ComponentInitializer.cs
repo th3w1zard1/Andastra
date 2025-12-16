@@ -78,6 +78,16 @@ namespace Odyssey.Kotor.Systems
                     {
                         entity.AddComponent(new QuickSlotComponent(entity));
                     }
+                    if (!entity.HasComponent<IFactionComponent>())
+                    {
+                        var factionComponent = new FactionComponent();
+                        // Set FactionID from entity data if available (loaded from UTC template)
+                        if (entity.GetData("FactionID") is int factionId)
+                        {
+                            factionComponent.FactionId = factionId;
+                        }
+                        entity.AddComponent(factionComponent);
+                    }
                     break;
 
                 case ObjectType.Door:
