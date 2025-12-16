@@ -148,7 +148,13 @@ namespace Odyssey.MonoGame.Rendering
 
             visiting.Add(passName);
 
-            RenderPass pass = _passes[passName];
+            RenderPass pass;
+            if (!_passes.TryGetValue(passName, out pass))
+            {
+                visiting.Remove(passName);
+                return; // Skip missing passes
+            }
+
             foreach (string dep in pass.Dependencies)
             {
                 TopologicalSort(dep, visited, visiting);

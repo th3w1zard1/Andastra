@@ -193,7 +193,8 @@ namespace Odyssey.MonoGame.Memory
         public void Dispose()
         {
             // Dispose backing resource
-            if (_backingResource is IDisposable disposable)
+            IDisposable disposable = _backingResource as IDisposable;
+            if (disposable != null)
             {
                 disposable.Dispose();
             }

@@ -167,7 +167,8 @@ namespace Odyssey.MonoGame.Rendering
             foreach (uint id in toRemove)
             {
                 QueryEntry entry = _queries[id];
-                if (entry.QueryObject is IDisposable disposable)
+                IDisposable disposable = entry.QueryObject as IDisposable;
+                if (disposable != null)
                 {
                     disposable.Dispose();
                 }
@@ -206,7 +207,8 @@ namespace Odyssey.MonoGame.Rendering
         {
             foreach (QueryEntry entry in _queries.Values)
             {
-                if (entry.QueryObject is IDisposable disposable)
+                IDisposable disposable = entry.QueryObject as IDisposable;
+                if (disposable != null)
                 {
                     disposable.Dispose();
                 }
