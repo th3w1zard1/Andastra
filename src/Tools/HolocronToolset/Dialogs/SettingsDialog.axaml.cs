@@ -58,23 +58,87 @@ namespace HolocronToolset.Dialogs
             Width = 600;
             Height = 500;
 
-            var panel = new StackPanel();
-            var titleLabel = new TextBlock
-            {
-                Text = "Settings",
-                FontSize = 18,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
-            };
-            var closeButton = new Button
-            {
-                Content = "Close",
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
-            };
-            closeButton.Click += (sender, e) => Close();
+            // Create programmatic UI matching XAML structure
+            var mainGrid = new Grid();
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            panel.Children.Add(titleLabel);
-            panel.Children.Add(closeButton);
-            Content = panel;
+            // Create splitter grid
+            var splitGrid = new Grid();
+            splitGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
+            splitGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            Grid.SetRow(splitGrid, 0);
+            mainGrid.Children.Add(splitGrid);
+
+            // Create settings tree
+            var settingsTree = new TreeView();
+            settingsTree.Items.Add(new TreeViewItem { Header = "Installations", IsSelected = true });
+            settingsTree.Items.Add(new TreeViewItem { Header = "GIT Editor" });
+            settingsTree.Items.Add(new TreeViewItem { Header = "Module Designer" });
+            settingsTree.Items.Add(new TreeViewItem { Header = "Misc" });
+            settingsTree.Items.Add(new TreeViewItem { Header = "Application" });
+            Grid.SetColumn(settingsTree, 0);
+            splitGrid.Children.Add(settingsTree);
+
+            // Create settings stack
+            var settingsStack = new ContentControl();
+            Grid.SetColumn(settingsStack, 1);
+            splitGrid.Children.Add(settingsStack);
+
+            // Create button grid
+            var buttonGrid = new Grid();
+            buttonGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            buttonGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            Grid.SetRow(buttonGrid, 1);
+            mainGrid.Children.Add(buttonGrid);
+
+            var okButton = new Button { Content = "OK", Width = 75, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Margin = new Avalonia.Thickness(0, 0, 5, 0) };
+            Grid.SetColumn(okButton, 0);
+            buttonGrid.Children.Add(okButton);
+
+            var cancelButton = new Button { Content = "Cancel", Width = 75, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+            Grid.SetColumn(cancelButton, 1);
+            buttonGrid.Children.Add(cancelButton);
+
+            // Create placeholder pages
+            var installationsPage = new Control();
+            var gitEditorPage = new Control();
+            var miscPage = new Control();
+            var moduleDesignerPage = new Control();
+            var applicationSettingsPage = new Control();
+
+            Ui = new SettingsDialogUi
+            {
+                SettingsTree = settingsTree,
+                SettingsStack = settingsStack,
+                InstallationsPage = installationsPage,
+                GitEditorPage = gitEditorPage,
+                MiscPage = miscPage,
+                ModuleDesignerPage = moduleDesignerPage,
+                ApplicationSettingsPage = applicationSettingsPage,
+                OkButton = okButton,
+                CancelButton = cancelButton
+            };
+
+            // Set up signals
+            okButton.Click += (s, e) => Accept();
+            cancelButton.Click += (s, e) => Close();
+
+            var pageDict = new Dictionary<string, Control>
+            {
+                { "Installations", Ui.InstallationsPage },
+                { "GIT Editor", Ui.GitEditorPage },
+                { "Misc", Ui.MiscPage },
+                { "Module Designer", Ui.ModuleDesignerPage },
+                { "Application", Ui.ApplicationSettingsPage }
+            };
+
+            settingsTree.SelectionChanged += (s, e) => OnSettingsTreeSelectionChanged(pageDict);
+
+            // Set initial page
+            settingsStack.Content = installationsPage;
+
+            Content = mainGrid;
         }
 
         private void SetupUI()
@@ -82,10 +146,24 @@ namespace HolocronToolset.Dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
             // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
-            var settingsTree = this.FindControl<TreeView>("settingsTree");
-            var settingsStack = this.FindControl<ContentControl>("settingsStack");
-            var okButton = this.FindControl<Button>("okButton");
-            var cancelButton = this.FindControl<Button>("cancelButton");
+            TreeView settingsTree = null;
+            ContentControl settingsStack = null;
+            Button okButton = null;
+            Button cancelButton = null;
+            
+            try
+            {
+                settingsTree = this.FindControl<TreeView>("settingsTree");
+                settingsStack = this.FindControl<ContentControl>("settingsStack");
+                okButton = this.FindControl<Button>("okButton");
+                cancelButton = this.FindControl<Button>("cancelButton");
+            }
+            catch (InvalidOperationException)
+            {
+                // XAML not loaded or controls not found - create programmatic UI
+                SetupProgrammaticUI();
+                return;
+            }
 
             // Create placeholder pages for testing
             var installationsPage = new Control();
