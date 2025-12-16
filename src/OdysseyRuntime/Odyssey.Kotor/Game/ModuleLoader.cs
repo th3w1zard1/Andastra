@@ -290,21 +290,41 @@ namespace Odyssey.Kotor.Game
             // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD fires when module is loaded
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (0x14), "Mod_OnModLoad" @ IFO GFF
             // Original implementation: OnModuleLoad script fires on module after all resources are loaded and entities are spawned
-            // TODO: Script executor not yet implemented - script events will be handled later
-            // if (_scriptExecutor != null && _world.EventBus != null)
-            // {
-            //     string onModuleLoadScript = runtimeModule.GetScript(ScriptEvent.OnModuleLoad);
-            //     if (!string.IsNullOrEmpty(onModuleLoadScript))
-            //     {
-            //         _scriptExecutor.ExecuteScript(onModuleLoadScript, null, null);
-            //     }
-            //
-            //     string onModuleStartScript = runtimeModule.GetScript(ScriptEvent.OnModuleStart);
-            //     if (!string.IsNullOrEmpty(onModuleStartScript))
-            //     {
-            //         _scriptExecutor.ExecuteScript(onModuleStartScript, null, null);
-            //     }
-            // }
+            // Script execution is handled through EventBus subscriptions (ScriptExecutor listens to script events)
+            if (_world != null && _world.EventBus != null)
+            {
+                // Fire OnModuleLoad script event - module scripts use module entity as owner
+                string onModuleLoadScript = runtimeModule.GetScript(ScriptEvent.OnModuleLoad);
+                if (!string.IsNullOrEmpty(onModuleLoadScript))
+                {
+                    // Create or get module entity for script execution
+                    IEntity moduleEntity = _world.GetEntityByTag(runtimeModule.ResRef, 0);
+                    if (moduleEntity == null)
+                    {
+                        // Create a temporary entity for module script execution
+                        moduleEntity = _world.CreateEntity(ObjectType.Invalid, System.Numerics.Vector3.Zero, 0f);
+                        moduleEntity.Tag = runtimeModule.ResRef;
+                    }
+                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLoad, null);
+                }
+
+                // Fire OnModuleStart script event - fires after OnModuleLoad, before gameplay starts
+                // Based on swkotor2.exe: Module start script execution
+                // Located via string references: "OnModuleStart" script, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x15)
+                // Original implementation: OnModuleStart fires after OnModuleLoad, before gameplay starts
+                string onModuleStartScript = runtimeModule.GetScript(ScriptEvent.OnModuleStart);
+                if (!string.IsNullOrEmpty(onModuleStartScript))
+                {
+                    // Use same module entity
+                    IEntity moduleEntity = _world.GetEntityByTag(runtimeModule.ResRef, 0);
+                    if (moduleEntity == null)
+                    {
+                        moduleEntity = _world.CreateEntity(ObjectType.Invalid, System.Numerics.Vector3.Zero, 0f);
+                        moduleEntity.Tag = runtimeModule.ResRef;
+                    }
+                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleStart, null);
+                }
+            }
 
             Console.WriteLine("[ModuleLoader] Module loaded: " + moduleName);
         }
@@ -612,7 +632,7 @@ namespace Odyssey.Kotor.Game
                     area.FogEnabled = are.FogEnabled;
                     area.FogNear = are.FogNear;
                     area.FogFar = are.FogFar;
-                    
+
                     // Convert Color to RGBA uint (ARGB format)
                     if (are.FogColor != null)
                     {
@@ -870,7 +890,7 @@ namespace Odyssey.Kotor.Game
                         storeComponent.MarkDown = utm.MarkDown;
                         storeComponent.CanBuy = utm.CanBuy;
                         storeComponent.OnOpenStore = utm.OnOpenScript.ToString();
-                        
+
                         // Load items for sale
                         storeComponent.ItemsForSale = new List<StoreItem>();
                         foreach (UTMItem utmItem in utm.Items)
