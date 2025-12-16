@@ -54,6 +54,7 @@ namespace Odyssey.Core.Save
         private readonly IWorld _world;
         private readonly ISaveDataProvider _dataProvider;
         private object _globals; // IScriptGlobals - stored as object to avoid dependency
+        private Party.PartySystem _partySystem; // PartySystem - stored as concrete type since both are in Odyssey.Core
 
         /// <summary>
         /// Currently loaded save data.
@@ -92,6 +93,14 @@ namespace Odyssey.Core.Save
         public void SetScriptGlobals(object globals)
         {
             _globals = globals;
+        }
+
+        /// <summary>
+        /// Sets the party system instance for saving/loading party state.
+        /// </summary>
+        public void SetPartySystem(Party.PartySystem partySystem)
+        {
+            _partySystem = partySystem;
         }
 
         #region Save Operations
@@ -273,10 +282,61 @@ namespace Odyssey.Core.Save
         // influence values, gold, XP pool, solo mode flag, cheat used flag, and various game state flags
         private void SavePartyState(SaveGameData saveData)
         {
-            // Save party member list and selection
             saveData.PartyState = new PartyState();
 
-            // Would iterate through party members and save their state
+            if (_partySystem == null)
+            {
+                return;
+            }
+
+            // Save party gold and XP
+            saveData.PartyState.Gold = _partySystem.Gold;
+            saveData.PartyState.ExperiencePoints = _partySystem.ExperiencePoints;
+            saveData.PartyState.SoloMode = _partySystem.SoloMode;
+
+            // Save player character state
+            if (_partySystem.PlayerCharacter != null && _partySystem.PlayerCharacter.Entity != null)
+            {
+                saveData.PartyState.PlayerCharacter = CreateCreatureState(_partySystem.PlayerCharacter.Entity);
+                saveData.PlayerName = _partySystem.PlayerCharacter.Entity.Tag;
+            }
+
+            // Save available party members
+            foreach (Party.PartyMember member in _partySystem.AvailableMembers)
+            {
+                if (member.Entity != null)
+                {
+                    string templateResRef = member.TemplateResRef ?? member.Entity.Tag;
+                    if (!string.IsNullOrEmpty(templateResRef))
+                    {
+                        var memberState = new PartyMemberState();
+                        memberState.TemplateResRef = templateResRef;
+                        memberState.State = CreateCreatureState(member.Entity);
+                        memberState.IsAvailable = member.IsAvailable;
+                        memberState.IsSelectable = member.IsSelectable;
+                        saveData.PartyState.AvailableMembers[templateResRef] = memberState;
+                    }
+                }
+            }
+
+            // Save active party selection (by template ResRef)
+            foreach (Party.PartyMember member in _partySystem.ActiveParty)
+            {
+                if (member.Entity != null)
+                {
+                    string templateResRef = member.TemplateResRef ?? member.Entity.Tag;
+                    if (!string.IsNullOrEmpty(templateResRef) && !saveData.PartyState.SelectedParty.Contains(templateResRef))
+                    {
+                        saveData.PartyState.SelectedParty.Add(templateResRef);
+                    }
+                }
+            }
+
+            // Save leader (first in active party is leader)
+            if (_partySystem.Leader != null && _partySystem.Leader.Entity != null)
+            {
+                saveData.PartyState.LeaderResRef = _partySystem.Leader.TemplateResRef ?? _partySystem.Leader.Entity.Tag;
+            }
         }
 
         private void SaveAreaStates(SaveGameData saveData)
@@ -354,6 +414,40 @@ namespace Odyssey.Core.Save
                 state.IsOpen = placeable.IsOpen;
                 state.IsLocked = placeable.IsLocked;
             }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Creates a creature state from an entity.
+        /// </summary>
+        private CreatureState CreateCreatureState(IEntity entity)
+        {
+            var state = new CreatureState();
+            state.Tag = entity.Tag;
+            state.ObjectId = entity.ObjectId;
+            state.ObjectType = entity.ObjectType;
+
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            if (transform != null)
+            {
+                state.Position = transform.Position;
+                state.Facing = transform.Facing;
+            }
+
+            Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            if (stats != null)
+            {
+                state.CurrentHP = stats.CurrentHP;
+                state.MaxHP = stats.MaxHP;
+                state.CurrentFP = stats.CurrentFP;
+                state.MaxFP = stats.MaxFP;
+                // Note: Level, XP, ClassLevels, Skills, Attributes would need to be extracted from stats component
+                // For now, we save basic HP/FP state
+            }
+
+            // Save inventory and equipment would require IInventoryComponent access
+            // This is a simplified version - full implementation would save all creature data
 
             return state;
         }
@@ -491,12 +585,133 @@ namespace Odyssey.Core.Save
         // influence values, gold, XP pool, solo mode flag, and various game state flags
         private void RestorePartyState(SaveGameData saveData)
         {
-            if (saveData.PartyState == null)
+            if (saveData.PartyState == null || _partySystem == null)
             {
                 return;
             }
 
-            // Would restore party members
+            // Restore party gold and XP
+            _partySystem.Gold = saveData.PartyState.Gold;
+            _partySystem.ExperiencePoints = saveData.PartyState.ExperiencePoints;
+            _partySystem.SoloMode = saveData.PartyState.SoloMode;
+
+            // Restore player character state
+            if (saveData.PartyState.PlayerCharacter != null)
+            {
+                // Player character entity should already exist in world
+                // We restore its state via entity components
+                IEntity pcEntity = _world.GetEntityByTag(saveData.PartyState.PlayerCharacter.Tag);
+                if (pcEntity != null)
+                {
+                    RestoreCreatureState(pcEntity, saveData.PartyState.PlayerCharacter);
+                    _partySystem.SetPlayerCharacter(pcEntity);
+                }
+            }
+
+            // Restore available party members
+            foreach (var kvp in saveData.PartyState.AvailableMembers)
+            {
+                string templateResRef = kvp.Key;
+                PartyMemberState memberState = kvp.Value;
+
+                // Find entity by tag or create from template
+                IEntity memberEntity = _world.GetEntityByTag(memberState.State.Tag);
+                if (memberEntity != null)
+                {
+                    RestoreCreatureState(memberEntity, memberState.State);
+                    
+                    // Add to available members (NPCSlot is int, use -1 to let PartySystem assign slot)
+                    _partySystem.AddAvailableMember(memberEntity, -1);
+                    
+                    // Set availability flags
+                    _partySystem.SetAvailability(memberEntity, memberState.IsAvailable);
+                    _partySystem.SetSelectability(memberEntity, memberState.IsSelectable);
+                }
+            }
+
+            // Restore active party selection
+            foreach (string templateResRef in saveData.PartyState.SelectedParty)
+            {
+                if (saveData.PartyState.AvailableMembers.TryGetValue(templateResRef, out PartyMemberState memberState))
+                {
+                    IEntity memberEntity = _world.GetEntityByTag(memberState.State.Tag);
+                    if (memberEntity != null)
+                    {
+                        Party.PartyMember member = _partySystem.GetAvailableMemberByTag(memberEntity.Tag);
+                        if (member != null)
+                        {
+                            _partySystem.AddToActiveParty(member);
+                        }
+                    }
+                }
+            }
+
+            // Restore leader
+            if (!string.IsNullOrEmpty(saveData.PartyState.LeaderResRef))
+            {
+                IEntity leaderEntity = _world.GetEntityByTag(saveData.PartyState.LeaderResRef);
+                if (leaderEntity != null)
+                {
+                    Party.PartyMember leader = _partySystem.GetAvailableMemberByTag(leaderEntity.Tag);
+                    if (leader == null && _partySystem.PlayerCharacter != null && 
+                        _partySystem.PlayerCharacter.Entity.ObjectId == leaderEntity.ObjectId)
+                    {
+                        leader = _partySystem.PlayerCharacter;
+                    }
+                    
+                    if (leader != null)
+                    {
+                        // Find leader index in active party
+                        int leaderIndex = -1;
+                        for (int i = 0; i < _partySystem.ActiveParty.Count; i++)
+                        {
+                            if (_partySystem.ActiveParty[i] == leader)
+                            {
+                                leaderIndex = i;
+                                break;
+                            }
+                        }
+                        if (leaderIndex >= 0)
+                        {
+                            _partySystem.SetLeader(leaderIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Restores creature state to an entity.
+        /// </summary>
+        private void RestoreCreatureState(IEntity entity, CreatureState state)
+        {
+            if (entity == null || state == null)
+            {
+                return;
+            }
+
+            // Restore transform
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            if (transform != null)
+            {
+                transform.Position = state.Position;
+                transform.Facing = state.Facing;
+            }
+
+            // Restore stats
+            Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            if (stats != null)
+            {
+                stats.CurrentHP = state.CurrentHP;
+                stats.MaxHP = state.MaxHP;
+                stats.CurrentFP = state.CurrentFP;
+                stats.MaxFP = state.MaxFP;
+                // Note: Level, XP, ClassLevels, Skills, Attributes would need to be restored
+                // This is a simplified version - full implementation would restore all creature data
+            }
+
+            // Restore inventory and equipment would require IInventoryComponent access
+            // This is a simplified version - full implementation would restore all creature data
         }
 
         /// <summary>
