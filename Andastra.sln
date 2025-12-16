@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Formats", "src\Andastra\Formats\Andastra.Formats.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Parsing", "src\Andastra\Parsing\Andastra.Parsing.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Andastra.Runtime", "Andastra.Runtime", "{B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Core", "src\Andastra\Runtime\Core\Andastra.Runtime.Core.csproj", "{6D60797F-9C20-45A9-9555-38865885E5C8}"
 EndProject
@@ -15,21 +13,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Content", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Scripting", "src\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj", "{E5AD48E5-052B-4312-BB09-B98A10B48663}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Graphics", "Graphics", "{D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Common\Andastra.Runtime.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Common", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Common", "src\Andastra\Runtime\Graphics\Common\Andastra.Runtime.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.MonoGame", "src\Andastra\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Stride", "src\Andastra\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj", "{89381CF8-A859-479A-AEAC-9C8A36D6D355}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Games", "Games", "{E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Common", "src\Andastra\Runtime\Games\Common\Andastra.Runtime.Games.Common.csproj", "{C013626C-1404-4FEF-A1B4-C02CADA857BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Kotor", "src\Andastra\Runtime\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Kotor", "src\Andastra\Runtime\Games\Odyssey\Andastra.Runtime.Games.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Aurora", "src\Andastra\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj", "{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}"
 EndProject
@@ -41,9 +35,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Game", "src\Andast
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F6A7B8C9-D0E1-2F3A-4B5C-6D7E8F9A0B1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Patcher", "src\Tools\Andastra.Patcher\Andastra.Patcher.csproj", "{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Patcher.UI", "src\Tools\Andastra.Patcher.UI\Andastra.Patcher.UI.csproj", "{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoloPatcher.UI", "src\Tools\HoloPatcher.UI\HoloPatcher.UI.csproj", "{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Tooling", "src\Tools\Andastra.Tooling\Andastra.Tooling.csproj", "{923C03F6-1D28-4BE5-AF20-76593AD8F716}"
 EndProject
@@ -57,7 +49,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KotorDiff.NET", "src\Tools\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSLPatcher.Tests", "src\Tests\Andastra.Formats.Tests\TSLPatcher.Tests.csproj", "{9B1E2F3A-4D5C-6F7B-8E9C-0A1B2C3D4E5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSLPatcher.Tests", "src\Andastra\Tests\TSLPatcher.Tests.csproj", "{9B1E2F3A-4D5C-6F7B-8E9C-0A1B2C3D4E5F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolocronToolset.NET.Tests", "src\Tests\HolocronToolset.Tests\HolocronToolset.NET.Tests.csproj", "{5FBA2891-C5C6-4B17-A6E2-1C9EFEC7E8DF}"
 EndProject
@@ -247,18 +239,6 @@ Global
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x64.Build.0 = Release|Any CPU
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x86.ActiveCfg = Release|Any CPU
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x86.Build.0 = Release|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Debug|x64.Build.0 = Debug|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Debug|x86.Build.0 = Debug|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Release|x64.ActiveCfg = Release|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Release|x64.Build.0 = Release|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Release|x86.ActiveCfg = Release|Any CPU
-		{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}.Release|x86.Build.0 = Release|Any CPU
 		{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}.Debug|x64.ActiveCfg = Debug|Any CPU
