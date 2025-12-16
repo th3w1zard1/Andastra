@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.LYT;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Formats.TPC;
-using AuroraEngine.Common.Formats.VIS;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resource.Generics;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.LYT;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Formats.TPC;
+using BioWareCSharp.Common.Formats.VIS;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resource.Generics;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/module.py
     // Original: Module-related utility functions

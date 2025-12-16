@@ -1,8 +1,8 @@
 using System;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics.DLG
+namespace BioWareCSharp.Common.Resource.Generics.DLG
 {
     /// <summary>
     /// Represents a directed edge from a source node to a target node (DLGNode).

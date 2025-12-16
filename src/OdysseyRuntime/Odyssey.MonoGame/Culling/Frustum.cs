@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 
-namespace Odyssey.MonoGame.Culling
+namespace BioWareEngines.MonoGame.Culling
 {
     /// <summary>
     /// View frustum for culling objects outside the camera's view.

@@ -1,6 +1,6 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics.GUI
+namespace BioWareCSharp.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// Enum representing different GUI control types.

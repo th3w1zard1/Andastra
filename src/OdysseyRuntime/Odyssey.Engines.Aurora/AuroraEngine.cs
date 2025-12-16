@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Content.Interfaces;
-using Odyssey.Engines.Common;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Engines.Common;
 
-namespace Odyssey.Engines.Aurora
+namespace BioWareEngines.Engines.Aurora
 {
     /// <summary>
     /// Aurora Engine implementation for Neverwinter Nights and Neverwinter Nights 2.

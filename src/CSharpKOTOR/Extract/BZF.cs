@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.LZMA;
-using AuroraEngine.Common.Extract;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.LZMA;
+using BioWareCSharp.Common.Extract;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/bzf.py:12-15
     // Original: BZF_ID = b"BIFF", VERSION_1 = b"V1  "

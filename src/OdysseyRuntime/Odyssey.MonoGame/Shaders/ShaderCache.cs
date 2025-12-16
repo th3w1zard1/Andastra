@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Shaders
+namespace BioWareEngines.MonoGame.Shaders
 {
     /// <summary>
     /// Shader compilation cache system for performance optimization.

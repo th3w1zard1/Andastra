@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// Lightweight vector types for MDL data without external dependencies.

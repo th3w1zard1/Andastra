@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Temporal reprojection for upsampling and anti-aliasing.

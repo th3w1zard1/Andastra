@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Actions
+namespace BioWareEngines.Core.Actions
 {
     /// <summary>
     /// Action that executes a stored script action.

@@ -1,11 +1,11 @@
 using System;
 using System.Numerics;
-using Odyssey.MonoGame.Backends;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
-using Odyssey.MonoGame.Remix;
+using BioWareEngines.MonoGame.Backends;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Remix;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Main Odyssey renderer coordinating all graphics systems.

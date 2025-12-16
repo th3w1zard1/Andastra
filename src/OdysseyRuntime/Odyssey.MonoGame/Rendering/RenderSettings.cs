@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.MonoGame.Enums;
+using BioWareEngines.MonoGame.Enums;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Comprehensive render settings for the Odyssey engine.

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/geometry.py:1295-1452
     // Original: class Polygon2:

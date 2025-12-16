@@ -1,13 +1,13 @@
-﻿// 
+// 
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public sealed class AAddVarCmd : PCmd
     {

@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.MonoGame.Graphics
+namespace BioWareEngines.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IDepthStencilBuffer.

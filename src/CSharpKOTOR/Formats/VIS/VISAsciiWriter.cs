@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.VIS;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.VIS;
 
-namespace AuroraEngine.Common.Formats.VIS
+namespace BioWareCSharp.Common.Formats.VIS
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/io_vis.py:76-87
     // Original: class VISAsciiWriter(ResourceWriter)

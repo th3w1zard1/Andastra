@@ -2,9 +2,9 @@ using System;
 using Stride.Engine;
 using Stride.Graphics;
 using Stride.Content;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Stride.Graphics
+namespace BioWareEngines.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IContentManager.

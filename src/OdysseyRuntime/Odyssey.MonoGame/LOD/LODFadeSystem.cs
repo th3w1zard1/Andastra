@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Odyssey.MonoGame.LOD
+namespace BioWareEngines.MonoGame.LOD
 {
     /// <summary>
     /// LOD fade system for smooth transitions between LOD levels.

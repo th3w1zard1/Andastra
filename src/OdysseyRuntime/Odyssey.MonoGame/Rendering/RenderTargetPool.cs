@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Render target pool for efficient render target reuse.

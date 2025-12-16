@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.VIS;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.VIS;
 
-namespace AuroraEngine.Common.Formats.VIS
+namespace BioWareCSharp.Common.Formats.VIS
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/io_vis.py:14-73
     // Original: class VISAsciiReader(ResourceReader)

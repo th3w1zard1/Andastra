@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Audio
+namespace BioWareEngines.Core.Audio
 {
     /// <summary>
     /// Interface for playing sound effects in the game.

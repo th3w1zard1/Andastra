@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Kotor.Components
+namespace BioWareEngines.Kotor.Components
 {
     /// <summary>
     /// Component for encounter spawner entities.

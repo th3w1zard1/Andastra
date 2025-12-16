@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 
-namespace AuroraEngine.Common.Formats.BWM
+namespace BioWareCSharp.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1426-1531
     // Original: class BWMFace(Face, ComparableMixin)

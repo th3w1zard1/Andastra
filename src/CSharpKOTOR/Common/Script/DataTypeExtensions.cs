@@ -1,6 +1,6 @@
 using System;
 
-namespace AuroraEngine.Common.Script
+namespace BioWareCSharp.Common.Script
 {
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/script.py:120-129

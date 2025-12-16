@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
-using Odyssey.MonoGame.Rendering;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Rendering;
 
-namespace Odyssey.MonoGame.Remix
+namespace BioWareEngines.MonoGame.Remix
 {
     /// <summary>
     /// NVIDIA RTX Remix bridge for path-traced rendering.

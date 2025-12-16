@@ -1,6 +1,6 @@
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Enums;
 
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Base interface for all actions that can be queued on entities.

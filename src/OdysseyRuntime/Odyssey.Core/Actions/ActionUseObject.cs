@@ -1,10 +1,10 @@
 using System;
 using System.Numerics;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Core.Actions
+namespace BioWareEngines.Core.Actions
 {
     /// <summary>
     /// Action to use/interact with a placeable object.

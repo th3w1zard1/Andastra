@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Odyssey.Core.Interfaces.Components
+namespace BioWareEngines.Core.Interfaces.Components
 {
     /// <summary>
     /// Component for trigger volumes.

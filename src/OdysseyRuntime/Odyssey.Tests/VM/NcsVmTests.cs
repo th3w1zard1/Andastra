@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.Interfaces;
-using Odyssey.Scripting.VM;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Scripting.EngineApi;
+using BioWareEngines.Scripting.Interfaces;
+using BioWareEngines.Scripting.VM;
 using Xunit;
 
-namespace Odyssey.Tests.VM
+namespace BioWareEngines.Tests.VM
 {
     public class NcsVmTests
     {

@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Config
+namespace BioWareCSharp.Common.Config
 {
 
     /// <summary>

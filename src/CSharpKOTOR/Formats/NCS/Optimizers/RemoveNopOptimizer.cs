@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace AuroraEngine.Common.Formats.NCS.Optimizers
+namespace BioWareCSharp.Common.Formats.NCS.Optimizers
 {
 
     /// <summary>

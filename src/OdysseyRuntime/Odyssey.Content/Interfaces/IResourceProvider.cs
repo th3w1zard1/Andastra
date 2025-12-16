@@ -1,7 +1,7 @@
-﻿using System.IO;
+using System.IO;
 using AuroraEngine.Common.Resources;
 
-namespace Odyssey.Content.Interfaces
+namespace BioWareEngines.Content.Interfaces
 {
     /// <summary>
     /// Resource precedence chain element.

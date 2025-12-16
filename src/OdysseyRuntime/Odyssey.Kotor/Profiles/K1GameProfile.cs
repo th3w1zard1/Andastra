@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using Odyssey.Content.Interfaces;
-using Odyssey.Kotor.EngineApi;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Kotor.EngineApi;
+using BioWareEngines.Scripting.EngineApi;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Kotor.Profiles
+namespace BioWareEngines.Kotor.Profiles
 {
     /// <summary>
     /// Game profile for Star Wars: Knights of the Old Republic (K1).

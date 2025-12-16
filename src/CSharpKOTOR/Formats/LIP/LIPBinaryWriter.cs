@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.LIP;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.LIP;
 
-namespace AuroraEngine.Common.Formats.LIP
+namespace BioWareCSharp.Common.Formats.LIP
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/io_lip.py:59-81
     // Original: class LIPBinaryWriter(ResourceWriter)

@@ -6,12 +6,12 @@ using AuroraEngine.Common.Formats.BWM;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Module;
-using Odyssey.Core.Navigation;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Module;
+using BioWareEngines.Core.Navigation;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Odyssey.Kotor.Loading
+namespace BioWareEngines.Kotor.Loading
 {
     /// <summary>
     /// Factory for creating NavigationMesh from BWM walkmesh data.

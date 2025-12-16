@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Logger;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Logger;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

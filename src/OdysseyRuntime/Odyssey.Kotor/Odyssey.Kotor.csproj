@@ -5,15 +5,15 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Kotor</RootNamespace>
-    <AssemblyName>Odyssey.Kotor</AssemblyName>
+    <RootNamespace>BioWareEngines.Kotor</RootNamespace>
+    <AssemblyName>BioWareEngines.Kotor</AssemblyName>
     <Description>KOTOR 1/2 game rules, data tables, and gameplay systems for Odyssey Engine</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Scripting\BioWareEngines.Scripting.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

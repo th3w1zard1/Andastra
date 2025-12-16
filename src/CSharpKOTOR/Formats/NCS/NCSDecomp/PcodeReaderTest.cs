@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public class PcodeReaderTest
     {

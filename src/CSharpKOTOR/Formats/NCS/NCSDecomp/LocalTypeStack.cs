@@ -1,15 +1,15 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:16-154
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:16-154
 // Original: public class LocalTypeStack extends LocalStack<Type>
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack
 {
     public class LocalTypeStack : LocalStack
     {

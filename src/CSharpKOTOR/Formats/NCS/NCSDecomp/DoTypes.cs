@@ -1,19 +1,19 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:40-786
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:40-786
 // Original: public class DoTypes extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
 using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public class DoTypes : PrunedDepthFirstAdapter
     {

@@ -5,18 +5,18 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Tests</RootNamespace>
-    <AssemblyName>Odyssey.Tests</AssemblyName>
+    <RootNamespace>BioWareEngines.Tests</RootNamespace>
+    <AssemblyName>BioWareEngines.Tests</AssemblyName>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
-    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
-    <ProjectReference Include="..\Odyssey.Game\Odyssey.Game.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Scripting\BioWareEngines.Scripting.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Kotor\BioWareEngines.Kotor.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Game\BioWareEngines.Game.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

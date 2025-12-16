@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Audio;
-using Odyssey.Core.Dialogue;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Content.Interfaces;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Formats.WAV;
 
-namespace Odyssey.MonoGame.Audio
+namespace BioWareEngines.MonoGame.Audio
 {
     /// <summary>
     /// MonoGame implementation of IVoicePlayer for playing voice-over audio.

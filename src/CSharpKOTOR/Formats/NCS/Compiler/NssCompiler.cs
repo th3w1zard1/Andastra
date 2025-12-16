@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Script;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
-using AuroraEngine.Common.Formats.NCS.Optimizers;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Script;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.NCS.Compiler.NSS;
+using BioWareCSharp.Common.Formats.NCS.Optimizers;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

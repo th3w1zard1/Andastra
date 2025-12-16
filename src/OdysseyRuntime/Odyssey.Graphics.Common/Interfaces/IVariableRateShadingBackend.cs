@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Interface for graphics backends that support Variable Rate Shading (VRS).

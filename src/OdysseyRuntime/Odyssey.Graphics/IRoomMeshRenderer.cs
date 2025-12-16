@@ -2,7 +2,7 @@ using System;
 using JetBrains.Annotations;
 using AuroraEngine.Common.Formats.MDLData;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Room mesh renderer abstraction for loading and rendering room meshes from MDL models.

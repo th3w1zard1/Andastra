@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Collections.Generic;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// Ultra-high-performance MDL/MDX reader using unsafe code and zero-copy operations.

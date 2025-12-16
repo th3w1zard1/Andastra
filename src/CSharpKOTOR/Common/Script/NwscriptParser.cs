@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common.Formats.NCS.Compiler;
-using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
+using BioWareCSharp.Common.Formats.NCS.Compiler;
+using BioWareCSharp.Common.Formats.NCS.Compiler.NSS;
 
-namespace AuroraEngine.Common.Script
+namespace BioWareCSharp.Common.Script
 {
     /// <summary>
     /// Utility class to parse nwscript.nss files and extract function and constant definitions.

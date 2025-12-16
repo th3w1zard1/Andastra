@@ -238,7 +238,11 @@ function New-Backup {
     if ($OldNamespace -and $OldNamespace -ne $OldFolderName) {
         Write-Host "Scanning remaining ./src files for namespace references..."
         # Get files NOT in the target folder that might reference the namespace
-        $otherFiles = Get-ChildItem -Path $srcPath -Recurse -File -ErrorAction SilentlyContinue |
+        $srcPathForScan = Join-Path $RootPath "src"
+        if (-not (Test-Path -Path $srcPathForScan)) {
+            $srcPathForScan = $RootPath
+        }
+        $otherFiles = Get-ChildItem -Path $srcPathForScan -Recurse -File -ErrorAction SilentlyContinue |
             Where-Object {
                 -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $excludeDirs) -and
                 $_.Extension -in $allowedExtensions -and

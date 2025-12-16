@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Logger
+namespace BioWareCSharp.Common.Logger
 {
 
     /// <summary>

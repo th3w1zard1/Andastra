@@ -1,8 +1,8 @@
 using System;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.KEY
+namespace BioWareCSharp.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/key_data.py:154-279
     // Original: class KeyEntry

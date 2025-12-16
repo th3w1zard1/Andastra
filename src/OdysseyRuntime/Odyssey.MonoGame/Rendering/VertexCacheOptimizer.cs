@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Vertex cache optimizer for improved GPU performance.

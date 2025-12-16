@@ -1,4 +1,4 @@
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Scheduler for delayed actions (DelayCommand).

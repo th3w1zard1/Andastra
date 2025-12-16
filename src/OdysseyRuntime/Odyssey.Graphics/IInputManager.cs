@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Input manager interface for keyboard, mouse, and gamepad input.

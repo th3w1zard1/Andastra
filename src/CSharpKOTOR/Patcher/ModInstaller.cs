@@ -4,27 +4,27 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Config;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Memory;
-using AuroraEngine.Common.Mods;
-using AuroraEngine.Common.Mods.GFF;
-using AuroraEngine.Common.Mods.NCS;
-using AuroraEngine.Common.Mods.NSS;
-using AuroraEngine.Common.Mods.SSF;
-using AuroraEngine.Common.Mods.TLK;
-using AuroraEngine.Common.Mods.TwoDA;
-using AuroraEngine.Common.Reader;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Config;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Memory;
+using BioWareCSharp.Common.Mods;
+using BioWareCSharp.Common.Mods.GFF;
+using BioWareCSharp.Common.Mods.NCS;
+using BioWareCSharp.Common.Mods.NSS;
+using BioWareCSharp.Common.Mods.SSF;
+using BioWareCSharp.Common.Mods.TLK;
+using BioWareCSharp.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Reader;
+using BioWareCSharp.Common.Resources;
 using IniParser.Model;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Patcher
+namespace BioWareCSharp.Common.Patcher
 {
 
     /// <summary>

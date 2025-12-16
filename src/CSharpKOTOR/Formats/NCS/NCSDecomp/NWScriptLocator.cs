@@ -1,10 +1,10 @@
-﻿//
+//
 using System;
 using System.Collections.Generic;
 using System.IO;
 using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Utility class to locate nwscript.nss files for K1 and TSL decompilation.

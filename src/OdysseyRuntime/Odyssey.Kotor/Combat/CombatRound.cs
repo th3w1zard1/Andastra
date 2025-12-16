@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Kotor.Combat
+namespace BioWareEngines.Kotor.Combat
 {
     /// <summary>
     /// Combat round phases.

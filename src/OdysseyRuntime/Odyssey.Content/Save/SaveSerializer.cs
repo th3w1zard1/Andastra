@@ -7,9 +7,9 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.ERF;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
-using Odyssey.Core.Save;
+using BioWareEngines.Core.Save;
 
-namespace Odyssey.Content.Save
+namespace BioWareEngines.Content.Save
 {
     /// <summary>
     /// Serializes save data to/from KOTOR save file formats.

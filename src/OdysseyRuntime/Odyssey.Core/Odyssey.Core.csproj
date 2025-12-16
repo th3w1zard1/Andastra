@@ -5,8 +5,8 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Core</RootNamespace>
-    <AssemblyName>Odyssey.Core</AssemblyName>
+    <RootNamespace>BioWareEngines.Core</RootNamespace>
+    <AssemblyName>BioWareEngines.Core</AssemblyName>
     <Description>Core runtime domain for Odyssey Engine - entities, components, world state, time, events, save model</Description>
   </PropertyGroup>
 

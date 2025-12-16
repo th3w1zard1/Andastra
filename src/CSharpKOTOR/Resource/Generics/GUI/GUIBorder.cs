@@ -1,7 +1,7 @@
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics.GUI
+namespace BioWareCSharp.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// Represents border properties for GUI controls.

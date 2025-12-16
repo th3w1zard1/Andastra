@@ -1,12 +1,12 @@
 using System;
 using System.Numerics;
 using Stride.Graphics;
-using Odyssey.Graphics.Common.Backends;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Interfaces;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Backends;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Interfaces;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Stride.Backends
+namespace BioWareEngines.Stride.Backends
 {
     /// <summary>
     /// Stride implementation of Vulkan backend with raytracing support.

@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// Ultra-high-performance MDL/MDX binary reader using bulk I/O operations.
@@ -20,7 +20,7 @@ namespace Odyssey.Content.MDL
     /// - MDL file structure: Header, geometry header, model header, names header, node tree, animations
     /// - MDX file structure: Vertex data arrays (positions, normals, UVs, face indices)
     /// - File format: Binary format with specific offsets, counts, and pointer structures
-    /// 
+    ///
     /// Optimization strategies (based on reone, KotOR.js, MDLOps analysis):
     /// 1. Bulk array reading - reads large chunks at once instead of individual values
     /// 2. Memory-mapped-like access through pre-read byte arrays
@@ -28,7 +28,7 @@ namespace Odyssey.Content.MDL
     /// 4. Pre-sized arrays based on header counts
     /// 5. Single-pass MDX vertex data extraction
     /// 6. Minimal stream seeking - read sequentially when possible
-    /// 
+    ///
     /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md
     /// Reference: vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp
     /// </remarks>

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.VIS
+namespace BioWareCSharp.Common.Formats.VIS
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/vis_data.py:52-295
     // Original: class VIS(ComparableMixin)

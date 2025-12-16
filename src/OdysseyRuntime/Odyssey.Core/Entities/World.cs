@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Actions;
-using Odyssey.Core.AI;
-using Odyssey.Core.Animation;
-using Odyssey.Core.Combat;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Module;
-using Odyssey.Core.Perception;
-using Odyssey.Core.Save;
-using Odyssey.Core.Triggers;
-using Odyssey.Core.Templates;
+using BioWareEngines.Core.Actions;
+using BioWareEngines.Core.AI;
+using BioWareEngines.Core.Animation;
+using BioWareEngines.Core.Combat;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Module;
+using BioWareEngines.Core.Perception;
+using BioWareEngines.Core.Save;
+using BioWareEngines.Core.Triggers;
+using BioWareEngines.Core.Templates;
 
-namespace Odyssey.Core.Entities
+namespace BioWareEngines.Core.Entities
 {
     /// <summary>
     /// Core world implementation - entity container and state manager.

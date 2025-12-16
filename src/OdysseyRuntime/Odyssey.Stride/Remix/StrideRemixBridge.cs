@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Stride.Graphics;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Remix;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Remix;
 
-namespace Odyssey.Stride.Remix
+namespace BioWareEngines.Stride.Remix
 {
     /// <summary>
     /// Stride implementation of NVIDIA RTX Remix bridge.

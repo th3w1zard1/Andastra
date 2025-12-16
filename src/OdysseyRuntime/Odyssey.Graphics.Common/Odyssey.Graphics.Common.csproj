@@ -7,8 +7,8 @@
     <Nullable>disable</Nullable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RootNamespace>Odyssey.Graphics.Common</RootNamespace>
-    <AssemblyName>Odyssey.Graphics.Common</AssemblyName>
+    <RootNamespace>BioWareEngines.Graphics.Common</RootNamespace>
+    <AssemblyName>BioWareEngines.Graphics.Common</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Graphics\BioWareEngines.Graphics.csproj" />
   </ItemGroup>
 
 </Project>

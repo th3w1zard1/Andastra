@@ -1,4 +1,4 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:12-427
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:12-427
 // Original: public class Type
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class Type
     {

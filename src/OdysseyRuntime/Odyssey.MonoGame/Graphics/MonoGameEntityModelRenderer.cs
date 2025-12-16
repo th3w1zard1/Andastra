@@ -2,12 +2,12 @@ using System;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Graphics;
-using Odyssey.MonoGame.Converters;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Graphics;
+using BioWareEngines.MonoGame.Converters;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Graphics
+namespace BioWareEngines.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IEntityModelRenderer.

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Odyssey.MonoGame.Memory
+namespace BioWareEngines.MonoGame.Memory
 {
     /// <summary>
     /// Memory tracking system for detailed memory usage monitoring.

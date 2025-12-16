@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.LTR
+namespace BioWareCSharp.Common.Formats.LTR
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_auto.py
     // Original: read_ltr, write_ltr, bytes_ltr functions

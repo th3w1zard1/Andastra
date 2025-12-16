@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Extract;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Extract;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/file.py:269-561
     // Original: class FileResource:

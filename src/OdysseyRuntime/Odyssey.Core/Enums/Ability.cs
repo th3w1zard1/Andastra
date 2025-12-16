@@ -1,4 +1,4 @@
-namespace Odyssey.Core.Enums
+namespace BioWareEngines.Core.Enums
 {
     /// <summary>
     /// Character ability scores (D20 system).

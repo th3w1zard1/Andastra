@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.Content.MDL;
+using BioWareEngines.Content.MDL;
 
-namespace Odyssey.MonoGame.Models
+namespace BioWareEngines.MonoGame.Models
 {
     /// <summary>
     /// High-performance converter from MDL model data to MonoGame rendering structures.

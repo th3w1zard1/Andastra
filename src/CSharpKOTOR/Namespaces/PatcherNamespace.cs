@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Namespaces
+namespace BioWareCSharp.Common.Namespaces
 {
 
     /// <summary>

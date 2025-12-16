@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Party
+namespace BioWareEngines.Core.Party
 {
     /// <summary>
     /// Represents a party member (PC or NPC).

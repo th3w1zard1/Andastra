@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.MonoGame.Rendering;
+using BioWareEngines.MonoGame.Rendering;
 
-namespace Odyssey.MonoGame.Animation
+namespace BioWareEngines.MonoGame.Animation
 {
     /// <summary>
     /// Skeletal animation batching for efficient character rendering.

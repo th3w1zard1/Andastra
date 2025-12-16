@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Globalization;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 
-namespace AuroraEngine.Common.Formats.TXI
+namespace BioWareCSharp.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/io_txi.py:23-313
     // Original: class TXIBinaryReader(ResourceReader)

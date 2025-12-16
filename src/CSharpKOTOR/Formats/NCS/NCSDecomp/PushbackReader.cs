@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Lexer
 {
     public class PushbackReader
     {

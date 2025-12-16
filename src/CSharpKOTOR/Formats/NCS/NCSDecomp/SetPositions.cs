@@ -1,11 +1,11 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:14-39
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:14-39
 // Original: public class SetPositions extends PrunedReversedDepthFirstAdapter
 using System;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class SetPositions : PrunedReversedDepthFirstAdapter
     {

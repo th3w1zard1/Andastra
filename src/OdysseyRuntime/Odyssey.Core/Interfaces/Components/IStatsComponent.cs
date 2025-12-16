@@ -1,6 +1,6 @@
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Enums;
 
-namespace Odyssey.Core.Interfaces.Components
+namespace BioWareEngines.Core.Interfaces.Components
 {
     /// <summary>
     /// Component for creature stats (HP, abilities, etc.)

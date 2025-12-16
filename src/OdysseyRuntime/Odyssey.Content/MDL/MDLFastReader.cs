@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// High-performance MDL/MDX binary reader optimized for game asset loading.

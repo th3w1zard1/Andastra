@@ -197,5 +197,5 @@ Odyssey.Engines.Common (base engine abstraction)
 - Minimize duplication
 - Ensure C# 7.3 compatibility
 - Maintain 1:1 parity with original KOTOR 2 engine (Ghidra verification)
-- Consider HoloPatcher.NET, HolocronToolset, NCSDecomp, and KotorDiff dependencies
+- Consider Andastra, HolocronToolset, NCSDecomp, and KotorDiff dependencies
 

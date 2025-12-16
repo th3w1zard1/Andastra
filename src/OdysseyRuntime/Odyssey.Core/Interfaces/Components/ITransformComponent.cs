@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Odyssey.Core.Interfaces.Components
+namespace BioWareEngines.Core.Interfaces.Components
 {
     /// <summary>
     /// Transform component for position and orientation.

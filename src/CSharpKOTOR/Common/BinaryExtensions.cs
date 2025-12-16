@@ -4,7 +4,7 @@ using System.IO;
 using System.Numerics;
 using System.Text;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     /// <summary>
     /// Extension methods for Vector3 and Vector4.

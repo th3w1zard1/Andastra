@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.MonoGame.Culling;
-using Odyssey.MonoGame.LOD;
-using Odyssey.MonoGame.Loading;
-using Odyssey.MonoGame.Memory;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.MonoGame.Culling;
+using BioWareEngines.MonoGame.LOD;
+using BioWareEngines.MonoGame.Loading;
+using BioWareEngines.MonoGame.Memory;
+using BioWareEngines.Content.Interfaces;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Modern rendering pipeline with comprehensive AAA optimizations.

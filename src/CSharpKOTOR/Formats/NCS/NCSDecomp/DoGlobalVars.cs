@@ -1,11 +1,11 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:24-122
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:24-122
 // Original: public class DoGlobalVars extends MainPass
 using System;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public class DoGlobalVars : MainPass
     {

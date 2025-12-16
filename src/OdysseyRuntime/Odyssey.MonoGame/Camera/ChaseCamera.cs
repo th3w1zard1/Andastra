@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Camera
+namespace BioWareEngines.MonoGame.Camera
 {
     /// <summary>
     /// KOTOR-style chase camera that follows the player character.

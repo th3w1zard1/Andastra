@@ -1,4 +1,4 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:71-1050
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/lexer/Lexer.java:71-1050
 // Original: public class Lexer
 // Note: This file is generated from lexer grammar, matching the Java implementation structure
 using System;
@@ -7,10 +7,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Lexer
 {
     public class Lexer
     {

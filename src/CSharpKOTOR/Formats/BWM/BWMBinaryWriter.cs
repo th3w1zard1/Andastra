@@ -3,10 +3,10 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.BWM;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.BWM;
 
-namespace AuroraEngine.Common.Formats.BWM
+namespace BioWareCSharp.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/io_bwm.py:185-355
     // Original: class BWMBinaryWriter(ResourceWriter)

@@ -1,8 +1,8 @@
 using System;
 using Stride.Graphics;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Stride.Graphics
+namespace BioWareEngines.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IVertexBuffer.

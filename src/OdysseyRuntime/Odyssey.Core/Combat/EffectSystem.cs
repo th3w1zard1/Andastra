@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Combat
+namespace BioWareEngines.Core.Combat
 {
     /// <summary>
     /// Effect type identifier.

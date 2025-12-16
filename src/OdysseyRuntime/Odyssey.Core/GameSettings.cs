@@ -1,4 +1,4 @@
-namespace Odyssey.Core
+namespace BioWareEngines.Core
 {
     /// <summary>
     /// Which KOTOR game to run.

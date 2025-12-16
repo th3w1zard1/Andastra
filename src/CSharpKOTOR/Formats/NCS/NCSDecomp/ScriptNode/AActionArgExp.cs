@@ -1,9 +1,9 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AActionArgExp.java:9-24
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AActionArgExp.java:9-24
 // Original: public class AActionArgExp extends ScriptRootNode implements AExpression
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AActionArgExp : ScriptRootNode, AExpression
     {

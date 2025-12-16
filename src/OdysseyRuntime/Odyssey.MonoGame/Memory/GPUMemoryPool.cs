@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Memory
+namespace BioWareEngines.MonoGame.Memory
 {
     /// <summary>
     /// GPU memory pool for efficient GPU memory allocation.

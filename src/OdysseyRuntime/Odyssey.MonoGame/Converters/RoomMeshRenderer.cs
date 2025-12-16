@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -6,7 +6,7 @@ using AuroraEngine.Common.Formats.MDL;
 using AuroraEngine.Common.Formats.MDLData;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Converters
+namespace BioWareEngines.MonoGame.Converters
 {
     /// <summary>
     /// Renders room meshes from MDL models.

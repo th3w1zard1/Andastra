@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Navigation;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Navigation;
 
-namespace Odyssey.Core.Movement
+namespace BioWareEngines.Core.Movement
 {
     /// <summary>
     /// Controls character movement in the game world.

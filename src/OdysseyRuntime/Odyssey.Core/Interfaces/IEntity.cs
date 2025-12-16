@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Enums;
 
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Runtime entity with components.

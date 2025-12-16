@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/file.py:60-100
     // Original: def _find_real_filesystem_path(filepath: Path) -> tuple[Path | None, list[str]]:

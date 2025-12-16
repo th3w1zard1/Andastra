@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using AuroraEngine.Common.Formats.SSF;
+using BioWareCSharp.Common.Formats.SSF;
 
-namespace AuroraEngine.Common.Diff
+namespace BioWareCSharp.Common.Diff
 {
 
     public class SsfCompareResult

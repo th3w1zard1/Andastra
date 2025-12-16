@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Numerics;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Script;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Script;
 
-namespace AuroraEngine.Common.Script
+namespace BioWareCSharp.Common.Script
 {
 
     /// <summary>

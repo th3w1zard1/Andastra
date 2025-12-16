@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.SSF
+namespace BioWareCSharp.Common.Formats.SSF
 {
 
     /// <summary>

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common.Formats;
+using BioWareCSharp.Common.Formats;
 
-namespace AuroraEngine.Common.Formats.SSF
+namespace BioWareCSharp.Common.Formats.SSF
 {
 
     /// <summary>

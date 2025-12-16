@@ -1,13 +1,13 @@
 using System;
 using System.Numerics;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Components;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Components;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Odyssey.Kotor.Systems
+namespace BioWareEngines.Kotor.Systems
 {
     /// <summary>
     /// Initializes default components for entities based on their object type.

@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
-using Odyssey.Engines.Common;
-using Odyssey.Content.Interfaces;
-using Odyssey.Content.ResourceProviders;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Engines.Common;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Content.ResourceProviders;
 using AuroraEngine.Common.Installation;
 
-namespace Odyssey.Engines.Odyssey
+namespace BioWareEngines.Engines.Odyssey
 {
     /// <summary>
     /// Odyssey Engine game session implementation for KOTOR 1/2.
@@ -49,7 +49,7 @@ namespace Odyssey.Engines.Odyssey
                 throw new InvalidOperationException("Resource provider must be GameResourceProvider for Odyssey engine");
             }
 
-            // Initialize module loader (now using Odyssey.Engines.Odyssey implementation)
+            // Initialize module loader (now using BioWareEngines.Engines.Odyssey implementation)
             _moduleLoader = new OdysseyModuleLoader(engine.World, engine.ResourceProvider);
         }
 

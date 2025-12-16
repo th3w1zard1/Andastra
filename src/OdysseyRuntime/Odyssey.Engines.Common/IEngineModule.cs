@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Navigation;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Navigation;
 
-namespace Odyssey.Engines.Common
+namespace BioWareEngines.Engines.Common
 {
     /// <summary>
     /// Base interface for module management across all engines.

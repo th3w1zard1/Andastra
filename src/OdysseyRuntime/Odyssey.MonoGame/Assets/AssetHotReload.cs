@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Assets
+namespace BioWareEngines.MonoGame.Assets
 {
     /// <summary>
     /// Asset hot reload system for development workflow.

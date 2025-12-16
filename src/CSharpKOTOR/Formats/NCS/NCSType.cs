@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS
+namespace BioWareCSharp.Common.Formats.NCS
 {
     /// <summary>
     /// Represents a type in the NCS type system.

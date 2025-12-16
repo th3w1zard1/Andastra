@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.PostProcessing
+namespace BioWareEngines.MonoGame.PostProcessing
 {
     /// <summary>
     /// Tone mapping operator for HDR to LDR conversion.

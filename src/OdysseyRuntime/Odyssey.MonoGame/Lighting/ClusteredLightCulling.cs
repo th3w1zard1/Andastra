@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Lighting
+namespace BioWareEngines.MonoGame.Lighting
 {
     /// <summary>
     /// Clustered light culling system for efficient handling of many lights.

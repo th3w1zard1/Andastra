@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Kotor.Components
+namespace BioWareEngines.Kotor.Components
 {
     /// <summary>
     /// Component for item entities that stores UTI template data.

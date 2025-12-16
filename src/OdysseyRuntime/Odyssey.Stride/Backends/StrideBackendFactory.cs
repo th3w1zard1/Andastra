@@ -1,12 +1,12 @@
 using System;
 using Stride.Engine;
 using Stride.Graphics;
-using Odyssey.Graphics.Common.Backends;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Interfaces;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Backends;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Interfaces;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Stride.Backends
+namespace BioWareEngines.Stride.Backends
 {
     /// <summary>
     /// Factory for creating Stride graphics backends.

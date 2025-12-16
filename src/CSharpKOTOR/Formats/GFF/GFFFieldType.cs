@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Numerics;
 
-namespace AuroraEngine.Common.Formats.GFF
+namespace BioWareCSharp.Common.Formats.GFF
 {
 
     /// <summary>

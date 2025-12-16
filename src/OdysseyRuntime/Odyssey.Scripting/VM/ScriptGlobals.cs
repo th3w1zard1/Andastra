@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Scripting.VM
+namespace BioWareEngines.Scripting.VM
 {
     /// <summary>
     /// Implementation of script globals and local variables.

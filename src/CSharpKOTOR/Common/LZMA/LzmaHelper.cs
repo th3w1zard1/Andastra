@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace AuroraEngine.Common.LZMA
+namespace BioWareCSharp.Common.LZMA
 {
     /// <summary>
     /// Minimal helper for raw LZMA1 compression/decompression (no headers) matching PyKotor bzf.py (lzma.FORMAT_RAW, FILTER_LZMA1).

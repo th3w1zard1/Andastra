@@ -6,11 +6,11 @@ using System.Threading;
 using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
-using Odyssey.Scripting.Interfaces;
-using Odyssey.Scripting.Types;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Scripting.Interfaces;
+using BioWareEngines.Scripting.Types;
 
-namespace Odyssey.Scripting.VM
+namespace BioWareEngines.Scripting.VM
 {
     /// <summary>
     /// NWScript Compiled Script Virtual Machine implementation.

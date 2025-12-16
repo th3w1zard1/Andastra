@@ -7,21 +7,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Lexer;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Scriptutils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
 using InputStream = System.IO.Stream;
 using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 using Throwable = System.Exception;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:56-79
     public class FileDecompiler

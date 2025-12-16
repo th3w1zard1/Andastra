@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Formats.TLK;
+using System.Collections.Generic;
+using BioWareCSharp.Common.Formats.TLK;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Diff
+namespace BioWareCSharp.Common.Diff
 {
 
     public class TlkCompareResult

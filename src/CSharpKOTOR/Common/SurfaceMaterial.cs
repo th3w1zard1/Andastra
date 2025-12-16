@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at vendor/HoloLSP/vendor/pykotor/common/geometry.py:1037-1091
     // Original: class SurfaceMaterial(IntEnum)

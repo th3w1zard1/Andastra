@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Odyssey.Scripting.Types
+namespace BioWareEngines.Scripting.Types
 {
     /// <summary>
     /// Represents a location (position + facing) in NWScript.

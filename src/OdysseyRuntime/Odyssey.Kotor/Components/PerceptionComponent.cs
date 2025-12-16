@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Systems;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Systems;
 
-namespace Odyssey.Kotor.Components
+namespace BioWareEngines.Kotor.Components
 {
     /// <summary>
     /// Concrete implementation of perception component for KOTOR.

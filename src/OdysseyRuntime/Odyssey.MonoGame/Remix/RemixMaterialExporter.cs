@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
-using Odyssey.MonoGame.Materials;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Materials;
 
-namespace Odyssey.MonoGame.Remix
+namespace BioWareEngines.MonoGame.Remix
 {
     /// <summary>
     /// Exports materials in a format compatible with RTX Remix.

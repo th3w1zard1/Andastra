@@ -1,4 +1,4 @@
-namespace Odyssey.Scripting.Interfaces
+namespace BioWareEngines.Scripting.Interfaces
 {
     /// <summary>
     /// NWScript compiled script virtual machine.

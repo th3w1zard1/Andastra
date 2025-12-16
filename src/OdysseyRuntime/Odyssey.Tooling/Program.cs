@@ -4,7 +4,7 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Odyssey.Tooling
+namespace BioWareEngines.Tooling
 {
     /// <summary>
     /// CLI entry point for Odyssey tooling commands.

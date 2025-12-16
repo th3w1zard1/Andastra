@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Shaders
+namespace BioWareEngines.MonoGame.Shaders
 {
     /// <summary>
     /// Shader permutation/variant system for efficient shader management.

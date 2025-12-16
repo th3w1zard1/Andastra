@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.LYT;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.LYT;
 
-namespace AuroraEngine.Common.Formats.LYT
+namespace BioWareCSharp.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:116-165
     // Original: class LYTAsciiWriter(ResourceWriter)

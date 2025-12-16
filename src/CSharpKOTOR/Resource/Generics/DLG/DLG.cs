@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics.DLG
+namespace BioWareCSharp.Common.Resource.Generics.DLG
 {
     /// <summary>
     /// Type of computer interface for dialog.

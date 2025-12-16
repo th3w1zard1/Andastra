@@ -1,9 +1,9 @@
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Resources;
 using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace BioWareCSharp.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py
     // Original: construct_are and dismantle_are functions

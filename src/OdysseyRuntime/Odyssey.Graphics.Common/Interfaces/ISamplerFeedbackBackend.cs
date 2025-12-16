@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Interface for graphics backends that support Sampler Feedback.

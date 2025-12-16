@@ -1,4 +1,4 @@
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Manages simulation and render time for deterministic gameplay.

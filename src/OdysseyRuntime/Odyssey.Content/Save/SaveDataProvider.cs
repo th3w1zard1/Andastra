@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Odyssey.Core.Save;
+using BioWareEngines.Core.Save;
 
-namespace Odyssey.Content.Save
+namespace BioWareEngines.Content.Save
 {
     /// <summary>
     /// Provides save data persistence using KOTOR save file format.

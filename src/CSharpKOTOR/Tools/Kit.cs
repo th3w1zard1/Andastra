@@ -4,20 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Extract;
-using AuroraEngine.Common.Formats.BWM;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Formats.TPC;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resource.Generics;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Extract;
+using BioWareCSharp.Common.Formats.BWM;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Formats.TPC;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resource.Generics;
+using BioWareCSharp.Common.Resources;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py
     // Original: Kit generation utilities for extracting kit resources from module RIM files

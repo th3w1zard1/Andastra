@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.LTR
+namespace BioWareCSharp.Common.Formats.LTR
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:57-355
     // Original: class LTR(ComparableMixin)

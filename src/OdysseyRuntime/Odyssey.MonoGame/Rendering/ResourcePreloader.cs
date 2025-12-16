@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 using AuroraEngine.Common.Resources;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Resource preloader for predictive asset loading.

@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.ERF
+namespace BioWareCSharp.Common.Formats.ERF
 {
 
     /// <summary>

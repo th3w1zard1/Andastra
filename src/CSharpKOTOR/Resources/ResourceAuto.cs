@@ -1,26 +1,26 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.BWM;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.LIP;
-using AuroraEngine.Common.Formats.LTR;
-using AuroraEngine.Common.Formats.LYT;
-using AuroraEngine.Common.Formats.MDL;
-using AuroraEngine.Common.Formats.MDLData;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Formats.SSF;
-using AuroraEngine.Common.Formats.TLK;
-using AuroraEngine.Common.Formats.TPC;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Formats.VIS;
-using AuroraEngine.Common.Resource.Generics;
-using AuroraEngine.Common.Resource.Generics.DLG;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.BWM;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.LIP;
+using BioWareCSharp.Common.Formats.LTR;
+using BioWareCSharp.Common.Formats.LYT;
+using BioWareCSharp.Common.Formats.MDL;
+using BioWareCSharp.Common.Formats.MDLData;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Formats.SSF;
+using BioWareCSharp.Common.Formats.TLK;
+using BioWareCSharp.Common.Formats.TPC;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Formats.VIS;
+using BioWareCSharp.Common.Resource.Generics;
+using BioWareCSharp.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/resource_auto.py
     // Original: Automatic resource loading and saving utilities

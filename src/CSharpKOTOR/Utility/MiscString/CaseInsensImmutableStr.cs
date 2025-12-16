@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Utility.MiscString
+namespace BioWareCSharp.Common.Utility.MiscString
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/case_insens_str.py:13-353
     // Original: class CaseInsensImmutableStr(WrappedStr):

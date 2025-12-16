@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace AuroraEngine.Common.Logger
+namespace BioWareCSharp.Common.Logger
 {
 
     /// <summary>

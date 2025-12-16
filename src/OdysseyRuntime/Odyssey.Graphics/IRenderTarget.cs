@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Render target interface for off-screen rendering.

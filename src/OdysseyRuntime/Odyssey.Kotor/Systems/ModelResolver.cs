@@ -1,12 +1,12 @@
 using System;
 using JetBrains.Annotations;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Data;
-using Odyssey.Kotor.Components;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Data;
+using BioWareEngines.Kotor.Components;
 
-namespace Odyssey.Kotor.Systems
+namespace BioWareEngines.Kotor.Systems
 {
     /// <summary>
     /// Resolves model ResRefs from entity appearance types and object types.

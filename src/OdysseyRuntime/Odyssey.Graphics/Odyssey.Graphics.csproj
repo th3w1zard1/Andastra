@@ -5,8 +5,8 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Graphics</RootNamespace>
-    <AssemblyName>Odyssey.Graphics</AssemblyName>
+    <RootNamespace>BioWareEngines.Graphics</RootNamespace>
+    <AssemblyName>BioWareEngines.Graphics</AssemblyName>
     <Description>Graphics abstraction layer for Odyssey Engine - unified interfaces for MonoGame and Stride backends</Description>
   </PropertyGroup>
 
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

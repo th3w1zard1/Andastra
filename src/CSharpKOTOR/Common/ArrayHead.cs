@@ -1,4 +1,4 @@
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:45-53
     // Original: class ArrayHead:

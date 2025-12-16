@@ -1,8 +1,8 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AErrorComment.java:9-20
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AErrorComment.java:9-20
 // Original: public class AErrorComment extends ScriptNode
 using System;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AErrorComment : ScriptNode
     {

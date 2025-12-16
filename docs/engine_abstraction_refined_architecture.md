@@ -6,21 +6,22 @@
 
 ## Executive Summary
 
-Refactor HoloPatcher.NET to support multiple BioWare engine families (Odyssey, Aurora, Eclipse) through a comprehensive abstraction layer. Follow xoreos's proven modular pattern but with cleaner design, maximizing code reuse through base classes and ensuring 1:1 parity with original KOTOR 2 engine (Ghidra-verified).
+Refactor Andastra to support multiple BioWare engine families (specifically: Odyssey, Aurora, Eclipse, Infinity) through a comprehensive abstraction layer. Follow xoreos's proven modular pattern but with cleaner design, maximizing code reuse through base classes and ensuring 1:1 parity with original KOTOR 2 engine (Ghidra-verified).
 
 ## Architecture Pattern (Following xoreos, but cleaner)
 
 ### xoreos Structure Analysis
 
 xoreos uses this hierarchy:
-```
+
+```sh
 Engine (base engine.h)
 ├── kotorbase/ (shared KOTOR 1/2 code)
-│   ├── kotor/ (KOTOR 1 specific)
-│   └── kotor2/ (KOTOR 2 specific)
+│   ├── kotor/ (KotOR 1 specific)
+│   └── kotor2/ (KotOR 2 specific)
 ├── aurora/ (shared Aurora utilities)
-│   ├── nwn/ (Neverwinter Nights)
-│   └── nwn2/ (Neverwinter Nights 2)
+│   ├── nwn/ (NeverWinter Nights)
+│   └── nwn2/ (NeverWinter Nights 2)
 ├── eclipse/ (Eclipse engine base)
 │   ├── dragonage/ (Dragon Age)
 │   └── dragonage2/ (Dragon Age 2)
@@ -29,7 +30,7 @@ Engine (base engine.h)
 
 ### Our Refined Structure
 
-```
+```sh
 AuroraEngine.Common (pure file formats, installation, resource management)
     ↑
 Odyssey.Engines.Common (base engine abstraction - like xoreos's Engine)
@@ -70,6 +71,7 @@ Odyssey.Engines.Common (base engine abstraction - like xoreos's Engine)
 **Principle**: All shared logic goes in `Odyssey.Engines.Common` base classes. Engine-specific projects should only contain what differs.
 
 **Implementation**:
+
 - `BaseEngine` - All common engine initialization, shutdown, resource management
 - `BaseEngineGame` - All common game session logic (module loading, world management, update loop)
 - `BaseEngineModule` - All common module loading logic (IFO parsing, area loading, entity spawning)
@@ -80,12 +82,14 @@ Odyssey.Engines.Common (base engine abstraction - like xoreos's Engine)
 ### 2. AuroraEngine.Common Must Be Engine-Agnostic
 
 **Keep in AuroraEngine.Common**:
+
 - ✅ File format parsers (GFF, 2DA, TLK, MDL, TPC, BWM, LYT, VIS, KEY, BIF, ERF, RIM)
 - ✅ Installation detection (generic structure, engine-specific detection via plugins)
 - ✅ Resource management (resource loading, precedence, caching)
 - ✅ Utility classes (ResRef, LocalizedString, BinaryReader/Writer)
 
 **Move from AuroraEngine.Common**:
+
 - ❌ Game enum (K1, K2, etc.) → `Odyssey.Engines.Odyssey.Common`
 - ❌ KModuleType enum → `Odyssey.Engines.Odyssey.Module`
 - ❌ Module class → `Odyssey.Engines.Odyssey.Module`
@@ -93,24 +97,28 @@ Odyssey.Engines.Common (base engine abstraction - like xoreos's Engine)
 - ❌ Module/Area structures (IFO, ARE, GIT, JRL, PTH) if KOTOR-specific
 
 **Exception for Patcher Tools**:
+
 - Keep deprecated aliases in `AuroraEngine.Common` for backward compatibility
-- Patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff) can continue using old namespaces
+- Patcher tools (Andastra, HolocronToolset, NCSDecomp, KotorDiff) can continue using old namespaces
 - Document as DEPRECATED, encourage migration to new namespaces
 
 ### 3. Engine Family Base Classes (Like xoreos's kotorbase)
 
 **Odyssey.Engines.Odyssey** (like xoreos's `kotorbase`):
+
 - Contains ALL shared KOTOR 1/2 code
 - Game enum, Module class, GFF templates
 - Shared game logic, combat systems, dialogue systems
 - Profiles and EngineApi for both K1 and K2
 
 **Odyssey.Engines.Aurora** (like xoreos's `aurora`):
+
 - Contains ALL shared NWN/NWN2 code
 - Aurora-specific structures (tilesets, etc.)
 - Shared Aurora game logic
 
 **Odyssey.Engines.Eclipse** (like xoreos's `eclipse`):
+
 - Contains ALL shared Dragon Age/Mass Effect code
 - Eclipse-specific structures
 - Shared Eclipse game logic
@@ -120,6 +128,7 @@ Odyssey.Engines.Common (base engine abstraction - like xoreos's Engine)
 **Preference**: Use profiles (`IEngineProfile`) instead of separate projects when possible.
 
 **Only create separate projects if**:
+
 - Significant code differences (>50% different)
 - Different file formats
 - Different game loop structures
@@ -133,7 +142,8 @@ Odyssey.Engines.Common (base engine abstraction - like xoreos's Engine)
 **Purpose**: Pure file formats and resource management, engine-agnostic.
 
 **Contents**:
-```
+
+```sh
 AuroraEngine.Common/
 ├── Formats/ (GFF, 2DA, TLK, MDL, TPC, BWM, LYT, VIS, KEY, BIF, ERF, RIM, etc.)
 ├── Installation/ (Installation detection - generic structure)
@@ -144,6 +154,7 @@ AuroraEngine.Common/
 ```
 
 **Key Files**:
+
 - `Formats/GFF/GFF.cs` - Generic GFF parser (engine-agnostic)
 - `Formats/TwoDA/TwoDA.cs` - Generic 2DA parser
 - `Formats/TLK/TLK.cs` - Generic TLK parser
@@ -151,6 +162,7 @@ AuroraEngine.Common/
 - `Resources/ResourceType.cs` - Resource type enumeration
 
 **Deprecated (for patcher tools)**:
+
 - `Resource/Generics/UTC.cs` → Alias to `Odyssey.Engines.Odyssey.Templates.UTC`
 - `Resource/Generics/UTD.cs` → Alias to `Odyssey.Engines.Odyssey.Templates.UTD`
 - (All other GFF templates)
@@ -160,7 +172,8 @@ AuroraEngine.Common/
 **Purpose**: Base engine abstraction, maximum shared code.
 
 **Contents**:
-```
+
+```sh
 Odyssey.Engines.Common/
 ├── IEngine.cs (interface)
 ├── IEngineGame.cs (interface)
@@ -173,12 +186,14 @@ Odyssey.Engines.Common/
 ```
 
 **Key Responsibilities**:
+
 - **BaseEngine**: Engine initialization, shutdown, resource provider creation, world creation, engine API creation
 - **BaseEngineGame**: Game session lifecycle, module loading coordination, world updates, entity management
 - **BaseEngineModule**: Module loading logic, IFO parsing, area loading, entity spawning, navigation mesh loading
 - **BaseEngineProfile**: Resource configuration, table configuration, feature detection
 
 **Maximization Strategy**:
+
 - Move ALL common logic from engine-specific classes to base classes
 - Engine-specific classes should only override what differs
 - Use template method pattern for extensibility
@@ -188,7 +203,8 @@ Odyssey.Engines.Common/
 **Purpose**: KOTOR 1/2 shared code (like xoreos's `kotorbase`).
 
 **Contents**:
-```
+
+```sh
 Odyssey.Engines.Odyssey/
 ├── Common/
 │   ├── Game.cs (Game enum: K1, K2, etc.)
@@ -219,6 +235,7 @@ Odyssey.Engines.Odyssey/
 ```
 
 **Key Responsibilities**:
+
 - **OdysseyEngine**: KOTOR-specific resource provider creation (uses `AuroraEngine.Common.Installation`)
 - **OdysseyGameSession**: KOTOR-specific game logic (combat, dialogue, etc.)
 - **OdysseyModuleLoader**: KOTOR-specific module loading (MOD, ARE, GIT, etc.)
@@ -228,7 +245,8 @@ Odyssey.Engines.Odyssey/
 **Purpose**: NWN/NWN2 shared code (like xoreos's `aurora`).
 
 **Contents**:
-```
+
+```sh
 Odyssey.Engines.Aurora/
 ├── Common/ (Aurora-specific utilities)
 ├── Module/ (Aurora module structures - tilesets, etc.)
@@ -244,7 +262,8 @@ Odyssey.Engines.Aurora/
 **Purpose**: Dragon Age/Mass Effect shared code (like xoreos's `eclipse`).
 
 **Contents**:
-```
+
+```sh
 Odyssey.Engines.Eclipse/
 ├── Common/ (Eclipse-specific utilities)
 ├── Module/ (Eclipse module structures)
@@ -262,6 +281,7 @@ Odyssey.Engines.Eclipse/
 **Goal**: Move maximum code to `Odyssey.Engines.Common` base classes.
 
 **Tasks**:
+
 - [ ] Review `BaseEngine` - move all common initialization logic
 - [ ] Review `BaseEngineGame` - move all common game session logic
 - [ ] Review `BaseEngineModule` - move all common module loading logic
@@ -273,6 +293,7 @@ Odyssey.Engines.Eclipse/
 **Goal**: Move all KOTOR-specific code from `AuroraEngine.Common` to `Odyssey.Engines.Odyssey`.
 
 **Tasks**:
+
 - [x] Move GFF templates (UTC, UTD, UTE, UTI, UTP, UTS, UTT, UTW, UTM) ✅
 - [ ] Move Game enum and extensions
 - [ ] Move Module class and KModuleType enum
@@ -287,6 +308,7 @@ Odyssey.Engines.Eclipse/
 **Goal**: Ensure patcher tools continue working with deprecated namespaces.
 
 **Tasks**:
+
 - [ ] Create type aliases in `AuroraEngine.Common` for moved classes
 - [ ] Document deprecated namespaces
 - [ ] Create migration guide for patcher tools
@@ -297,6 +319,7 @@ Odyssey.Engines.Eclipse/
 **Goal**: Implement Aurora engine support.
 
 **Tasks**:
+
 - [ ] Create `Odyssey.Engines.Aurora` project
 - [ ] Implement Aurora-specific structures
 - [ ] Implement Aurora game profiles
@@ -307,6 +330,7 @@ Odyssey.Engines.Eclipse/
 **Goal**: Implement Eclipse engine support.
 
 **Tasks**:
+
 - [ ] Create `Odyssey.Engines.Eclipse` project
 - [ ] Implement Eclipse-specific structures
 - [ ] Implement Eclipse game profiles
@@ -317,6 +341,7 @@ Odyssey.Engines.Eclipse/
 ### Problem
 
 Patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff) directly reference `AuroraEngine.Common` and expect:
+
 - `AuroraEngine.Common.Game` enum
 - `AuroraEngine.Common.Resource.Generics.UTC` (and other templates)
 - `AuroraEngine.Common.Common.Module` class
@@ -326,6 +351,7 @@ Patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff) directly 
 **Approach**: Keep deprecated type aliases in `AuroraEngine.Common` that forward to new locations.
 
 **Example**:
+
 ```csharp
 // AuroraEngine.Common/Resource/Generics/UTC.cs (DEPRECATED)
 namespace AuroraEngine.Common.Resource.Generics
@@ -364,6 +390,7 @@ namespace AuroraEngine.Common.Resource.Generics
 **Requirement**: All KOTOR 2 implementations must achieve 1:1 parity with original engine (verified via Ghidra).
 
 **Process**:
+
 1. Search Ghidra for relevant functions using string searches
 2. Decompile functions to understand original implementation
 3. Add detailed comments with Ghidra function addresses
@@ -371,6 +398,7 @@ namespace AuroraEngine.Common.Resource.Generics
 5. Document any deviations or improvements
 
 **Example Comment Format**:
+
 ```csharp
 /// <summary>
 /// Loads a module by name.
@@ -385,17 +413,20 @@ namespace AuroraEngine.Common.Resource.Generics
 ## File Migration Checklist
 
 ### Completed ✅
+
 - [x] GFF templates (UTC, UTD, UTE, UTI, UTP, UTS, UTT, UTW, UTM) → `Odyssey.Engines.Odyssey.Templates`
 - [x] Profiles (OdysseyK1GameProfile, OdysseyK2GameProfile) → `Odyssey.Engines.Odyssey.Profiles`
 - [x] EngineApi (OdysseyK1EngineApi, OdysseyK2EngineApi) → `Odyssey.Engines.Odyssey.EngineApi`
 - [x] Base engine abstraction → `Odyssey.Engines.Common`
 
 ### In Progress [/]
+
 - [/] Game enum → `Odyssey.Engines.Odyssey.Common` (deferred due to patcher tools)
 - [/] Module class → `Odyssey.Engines.Odyssey.Module` (deferred due to patcher tools)
 - [/] Base class maximization (reviewing common logic)
 
 ### Pending [ ]
+
 - [ ] ModuleDataLoader → `Odyssey.Engines.Odyssey.Module`
 - [ ] IFO, ARE, GIT, JRL, PTH structures (review if KOTOR-specific)
 - [ ] DLG structures (review if KOTOR-specific)
@@ -413,4 +444,3 @@ namespace AuroraEngine.Common.Resource.Generics
 - Maintain 1:1 parity with original KOTOR 2 engine (Ghidra verification)
 - Consider patcher tool dependencies (backward compatibility)
 - Document all Ghidra-derived implementations
-

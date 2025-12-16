@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/talktable.py
     public struct StringResult

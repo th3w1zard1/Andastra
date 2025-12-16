@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
-using Odyssey.MonoGame.Rendering;
-using Odyssey.MonoGame.Remix;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Rendering;
+using BioWareEngines.MonoGame.Remix;
 
-namespace Odyssey.MonoGame.Backends
+namespace BioWareEngines.MonoGame.Backends
 {
     /// <summary>
     /// Factory for creating graphics backends with automatic fallback support.

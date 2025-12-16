@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Odyssey.MonoGame.Assets
+namespace BioWareEngines.MonoGame.Assets
 {
     /// <summary>
     /// Asset validation system for catching errors early.

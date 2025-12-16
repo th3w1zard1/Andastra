@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
 
     /// <summary>

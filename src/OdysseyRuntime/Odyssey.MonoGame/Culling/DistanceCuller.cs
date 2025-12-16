@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Odyssey.MonoGame.Culling
+namespace BioWareEngines.MonoGame.Culling
 {
     /// <summary>
     /// Distance-based culling system.

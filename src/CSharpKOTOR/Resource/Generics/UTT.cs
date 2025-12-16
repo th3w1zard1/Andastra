@@ -1,8 +1,8 @@
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace BioWareCSharp.Common.Resource.Generics
 {
     /// <summary>
     /// Stores trigger data.

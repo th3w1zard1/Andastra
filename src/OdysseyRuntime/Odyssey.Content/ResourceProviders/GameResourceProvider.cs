@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using AuroraEngine.Common;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 using KotorSearchLocation = AuroraEngine.Common.Installation.SearchLocation;
 using OdysseySearchLocation = Odyssey.Content.Interfaces.SearchLocation;
 
-namespace Odyssey.Content.ResourceProviders
+namespace BioWareEngines.Content.ResourceProviders
 {
     /// <summary>
     /// Resource provider that wraps AuroraEngine.Common.Installation for unified resource access.

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Script;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
+using BioWareCSharp.Common.Script;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.NCS.Compiler.NSS;
 using MissingIncludeError = AuroraEngine.Common.Formats.NCS.Compiler.NSS.MissingIncludeError;
 using ScriptDataType = AuroraEngine.Common.Script.DataType;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
     public class GlobalVariableDeclaration : TopLevelObject
     {

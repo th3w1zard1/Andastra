@@ -1,9 +1,9 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AElse.java:7-49
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AElse.java:7-49
 // Original: public class AElse extends ScriptRootNode
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AElse.java:8-10
     // Original: public AElse(int start, int end) { super(start, end); }

@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.MDLData;
-using AuroraEngine.Common.Formats.MDL;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.MDLData;
+using BioWareCSharp.Common.Formats.MDL;
 
-namespace AuroraEngine.Common.Formats.MDL
+namespace BioWareCSharp.Common.Formats.MDL
 {
     // Simplified binary reader. Full parity with PyKotor io_mdl.py is pending.
     public class MDLBinaryReader : IDisposable

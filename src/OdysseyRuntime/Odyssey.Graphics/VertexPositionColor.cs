@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Vertex structure with position and color (equivalent to MonoGame's VertexPositionColor).

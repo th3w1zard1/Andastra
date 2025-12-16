@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common.Formats;
+using BioWareCSharp.Common.Formats;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.TwoDA
+namespace BioWareCSharp.Common.Formats.TwoDA
 {
 
     /// <summary>

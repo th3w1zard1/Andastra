@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 using System.Numerics;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Dialogue;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Core.Interfaces;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Formats.WAV;
 
-namespace Odyssey.Stride.Audio
+namespace BioWareEngines.Stride.Audio
 {
     /// <summary>
     /// Stride implementation of IVoicePlayer for playing voice-over dialogue.

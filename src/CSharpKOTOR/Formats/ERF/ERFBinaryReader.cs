@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common.Formats;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Formats;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.ERF
+namespace BioWareCSharp.Common.Formats.ERF
 {
 
     /// <summary>

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Core.Navigation;
-using Odyssey.Core.Actions;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Core.Navigation;
+using BioWareEngines.Core.Actions;
 using JetBrains.Annotations;
 
-namespace Odyssey.Kotor.Input
+namespace BioWareEngines.Kotor.Input
 {
     /// <summary>
     /// Handles player input and movement using click-to-move with pathfinding.

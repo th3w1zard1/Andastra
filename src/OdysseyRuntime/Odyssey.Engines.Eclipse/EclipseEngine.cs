@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Content.Interfaces;
-using Odyssey.Engines.Common;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Engines.Common;
 
-namespace Odyssey.Engines.Eclipse
+namespace BioWareEngines.Engines.Eclipse
 {
     /// <summary>
     /// Eclipse Engine implementation for Dragon Age and Mass Effect series.

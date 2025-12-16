@@ -6,28 +6,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Extract;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.LIP;
-using AuroraEngine.Common.Formats.SSF;
-using AuroraEngine.Common.Formats.TLK;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Mods;
-using AuroraEngine.Common.Mods.GFF;
-using AuroraEngine.Common.Mods.NCS;
-using AuroraEngine.Common.Mods.SSF;
-using AuroraEngine.Common.Mods.TLK;
-using AuroraEngine.Common.Mods.TwoDA;
-using AuroraEngine.Common.Memory;
-using AuroraEngine.Common.Tools;
-using AuroraEngine.Common.Utility;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Extract;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.LIP;
+using BioWareCSharp.Common.Formats.SSF;
+using BioWareCSharp.Common.Formats.TLK;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Mods;
+using BioWareCSharp.Common.Mods.GFF;
+using BioWareCSharp.Common.Mods.NCS;
+using BioWareCSharp.Common.Mods.SSF;
+using BioWareCSharp.Common.Mods.TLK;
+using BioWareCSharp.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Memory;
+using BioWareCSharp.Common.Tools;
+using BioWareCSharp.Common.Utility;
 using SystemTextEncoding = System.Text.Encoding;
 using JetBrains.Annotations;
 using InstallationClass = AuroraEngine.Common.Installation.Installation;
-namespace AuroraEngine.Common.TSLPatcher
+namespace BioWareCSharp.Common.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
     // Original: @dataclass class TwoDALinkTarget, PendingStrRefReference, Pending2DARowReference

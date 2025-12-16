@@ -3,12 +3,12 @@ using System.IO;
 using AuroraEngine.Common.Formats.LIP;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Dialogue;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Dialogue;
 using ResourceIdentifier = AuroraEngine.Common.Resources.ResourceIdentifier;
 using ResourceType = AuroraEngine.Common.Resources.ResourceType;
 
-namespace Odyssey.Kotor.Dialogue
+namespace BioWareEngines.Kotor.Dialogue
 {
     /// <summary>
     /// Loads LIP (lip sync) files using CSharpKOTOR.

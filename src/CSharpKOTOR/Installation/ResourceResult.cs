@@ -1,8 +1,8 @@
-﻿using System;
-using AuroraEngine.Common.Resources;
+using System;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Installation
+namespace BioWareCSharp.Common.Installation
 {
 
     /// <summary>

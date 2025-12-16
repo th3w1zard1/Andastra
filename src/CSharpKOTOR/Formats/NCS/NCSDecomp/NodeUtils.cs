@@ -1,15 +1,15 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:16-952
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:16-952
 // Original: public final class NodeUtils
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 using JavaSystem = AuroraEngine.Common.Formats.NCS.NCSDecomp.JavaSystem;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils
 {
     public sealed class NodeUtils
     {

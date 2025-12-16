@@ -1,10 +1,10 @@
 using System;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 using Vector2 = Odyssey.Graphics.Vector2;
 using Rectangle = Odyssey.Graphics.Rectangle;
 using Color = Odyssey.Graphics.Color;
 
-namespace Odyssey.Game.GUI
+namespace BioWareEngines.Game.GUI
 {
     /// <summary>
     /// Menu renderer with text labels and click handling using graphics abstraction layer.

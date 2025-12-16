@@ -3,12 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Utility;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Utility;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace BioWareCSharp.Common.Resource.Generics
 {
     /// <summary>
     /// Stores the path data for a module.

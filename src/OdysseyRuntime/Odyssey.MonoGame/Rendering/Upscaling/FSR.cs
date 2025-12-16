@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Rendering.Upscaling
+namespace BioWareEngines.MonoGame.Rendering.Upscaling
 {
     /// <summary>
     /// AMD FSR (FidelityFX Super Resolution) integration.

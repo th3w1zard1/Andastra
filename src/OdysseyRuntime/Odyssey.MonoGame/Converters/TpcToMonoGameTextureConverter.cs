@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using AuroraEngine.Common.Formats.TPC;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Converters
+namespace BioWareEngines.MonoGame.Converters
 {
     /// <summary>
     /// Converts CSharpKOTOR TPC texture data to MonoGame Texture2D.

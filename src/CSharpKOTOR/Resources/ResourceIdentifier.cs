@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
 
     /// <summary>

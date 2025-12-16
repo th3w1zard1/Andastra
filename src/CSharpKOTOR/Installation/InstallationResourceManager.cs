@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.Chitin;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.Chitin;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Installation
+namespace BioWareCSharp.Common.Installation
 {
     /// <summary>
     /// Manages resource lookup and location for a game installation.

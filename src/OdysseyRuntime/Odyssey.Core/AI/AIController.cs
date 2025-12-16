@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Odyssey.Core.Actions;
-using Odyssey.Core.Combat;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Actions;
+using BioWareEngines.Core.Combat;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Core.AI
+namespace BioWareEngines.Core.AI
 {
     /// <summary>
     /// AI controller for NPCs.

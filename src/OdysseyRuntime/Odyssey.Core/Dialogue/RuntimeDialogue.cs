@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.Core.Dialogue
+namespace BioWareEngines.Core.Dialogue
 {
     /// <summary>
     /// Runtime representation of a DLG dialogue file.

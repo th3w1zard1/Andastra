@@ -1,9 +1,9 @@
 using System;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Interfaces;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Interfaces;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Graphics.Common.Backends
+namespace BioWareEngines.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for DirectX 10 backend implementations.

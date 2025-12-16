@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.NCS.Compiler;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.NCS.Compiler;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS
+namespace BioWareCSharp.Common.Formats.NCS
 {
     /// <summary>
     /// Shared utility methods for NCS compilers.

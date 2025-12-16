@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Audio;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Audio;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Formats.WAV;
 
-namespace Odyssey.Stride.Audio
+namespace BioWareEngines.Stride.Audio
 {
     /// <summary>
     /// Stride implementation of ISoundPlayer for playing sound effects.

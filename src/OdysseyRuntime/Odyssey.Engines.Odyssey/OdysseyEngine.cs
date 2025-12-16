@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
-using Odyssey.Content.Interfaces;
-using Odyssey.Content.ResourceProviders;
-using Odyssey.Engines.Common;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Content.ResourceProviders;
+using BioWareEngines.Engines.Common;
 using AuroraEngine.Common.Installation;
 
-namespace Odyssey.Engines.Odyssey
+namespace BioWareEngines.Engines.Odyssey
 {
     /// <summary>
     /// Odyssey Engine implementation for KOTOR 1/2.

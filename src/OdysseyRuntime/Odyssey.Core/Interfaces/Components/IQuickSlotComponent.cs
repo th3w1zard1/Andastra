@@ -1,6 +1,6 @@
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Interfaces.Components
+namespace BioWareEngines.Core.Interfaces.Components
 {
     /// <summary>
     /// Component for managing quick slot assignments (items and abilities).

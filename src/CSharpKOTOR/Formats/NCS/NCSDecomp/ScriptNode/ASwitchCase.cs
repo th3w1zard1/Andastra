@@ -1,10 +1,10 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASwitchCase.java:11-75
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASwitchCase.java:11-75
 // Original: public class ASwitchCase extends ScriptRootNode
 using System.Collections.Generic;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ASwitchCase : ScriptRootNode
     {

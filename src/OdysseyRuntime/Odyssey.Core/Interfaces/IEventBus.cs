@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Enums;
 
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Event bus for routing entity and world events.

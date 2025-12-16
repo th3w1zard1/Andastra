@@ -4,14 +4,14 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Formats.NCS.Compiler;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Memory;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.NCS.Compiler;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Memory;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Mods.NSS
+namespace BioWareCSharp.Common.Mods.NSS
 {
 
     /// <summary>

@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using AuroraEngine.Common.Formats.MDLData;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Converters
+namespace BioWareEngines.MonoGame.Converters
 {
     /// <summary>
     /// Converts CSharpKOTOR MDL model data to MonoGame Model.
@@ -54,8 +54,8 @@ namespace Odyssey.MonoGame.Converters
     /// 
     /// <code>
     /// // New optimized approach (recommended):
-    /// using Odyssey.Content.MDL;
-    /// using Odyssey.MonoGame.Models;
+    /// using BioWareEngines.Content.MDL;
+    /// using BioWareEngines.MonoGame.Models;
     /// 
     /// var mdlData = resourceProvider.GetResource(resRef, "mdl");
     /// var mdxData = resourceProvider.GetResource(resRef, "mdx");

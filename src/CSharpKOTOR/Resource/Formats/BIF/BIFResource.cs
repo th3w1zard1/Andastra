@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Formats.BIF
+namespace BioWareCSharp.Common.Resource.Formats.BIF
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/bif_data.py:102-199
     // Original: class BIFResource(ArchiveResource):

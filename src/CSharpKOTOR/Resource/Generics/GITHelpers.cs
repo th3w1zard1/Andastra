@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
 using System.Numerics;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace BioWareCSharp.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py
     // Original: construct_git and dismantle_git functions

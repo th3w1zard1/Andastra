@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.MDLData;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resource.Generics;
-using AuroraEngine.Common.Resource.Generics.DLG;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Tools;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.MDLData;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resource.Generics;
+using BioWareCSharp.Common.Resource.Generics.DLG;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Tools;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:70-75
     // Original: SEARCH_ORDER: list[SearchLocation] = [SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN]

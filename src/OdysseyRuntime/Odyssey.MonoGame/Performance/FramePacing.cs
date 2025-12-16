@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Odyssey.MonoGame.Performance
+namespace BioWareEngines.MonoGame.Performance
 {
     /// <summary>
     /// Frame pacing system for consistent frame timing.

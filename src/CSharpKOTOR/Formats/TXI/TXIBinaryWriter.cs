@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Globalization;
 using System.Collections.Generic;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 
-namespace AuroraEngine.Common.Formats.TXI
+namespace BioWareCSharp.Common.Formats.TXI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/txi/io_txi.py:316-355
     // Original: class TXIBinaryWriter(ResourceWriter)

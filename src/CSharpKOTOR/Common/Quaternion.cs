@@ -1,7 +1,7 @@
 using System;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     /// <summary>
     /// Represents a quaternion for 3D rotations.

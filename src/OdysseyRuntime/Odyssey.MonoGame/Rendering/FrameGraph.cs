@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Frame graph system for advanced rendering pipeline management.

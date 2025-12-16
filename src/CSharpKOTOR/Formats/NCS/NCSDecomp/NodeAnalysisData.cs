@@ -1,14 +1,14 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:18-321
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:18-321
 // Original: public class NodeAnalysisData
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class NodeAnalysisData
     {

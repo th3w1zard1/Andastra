@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Components;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Components;
 
-namespace Odyssey.Kotor.Systems
+namespace BioWareEngines.Kotor.Systems
 {
     /// <summary>
     /// Manages merchant store interactions.

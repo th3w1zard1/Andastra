@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace BioWareCSharp.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:212-241
     // Original: def read_pth, def write_pth, def bytes_pth

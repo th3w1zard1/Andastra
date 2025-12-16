@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Resources;
+using System.Collections.Generic;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Thin wrapper matching PyKotor extract.capsule LazyCapsule semantics.
     public class LazyCapsuleWrapper

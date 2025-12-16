@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.Core.Journal
+namespace BioWareEngines.Core.Journal
 {
     /// <summary>
     /// Manages the quest/journal system.

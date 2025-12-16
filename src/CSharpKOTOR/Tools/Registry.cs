@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Logger;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Logger;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py
     // Original: Windows registry paths and game installation detection

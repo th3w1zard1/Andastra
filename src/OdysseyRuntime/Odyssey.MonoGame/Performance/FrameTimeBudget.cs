@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.MonoGame.Performance
+namespace BioWareEngines.MonoGame.Performance
 {
     /// <summary>
     /// Frame time budgeting system for maintaining consistent frame rates.

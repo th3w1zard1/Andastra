@@ -1,8 +1,8 @@
 using System.Numerics;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Entity model renderer abstraction for rendering entity models.

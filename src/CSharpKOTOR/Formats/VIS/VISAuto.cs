@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.VIS
+namespace BioWareCSharp.Common.Formats.VIS
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/vis/vis_auto.py
     // Original: read_vis, write_vis, bytes_vis functions

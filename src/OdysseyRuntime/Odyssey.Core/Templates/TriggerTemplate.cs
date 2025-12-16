@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Templates
+namespace BioWareEngines.Core.Templates
 {
     /// <summary>
     /// Trigger template implementation for spawning triggers from UTT data.

@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Graphics.Common.Effects
+namespace BioWareEngines.Graphics.Common.Effects
 {
     /// <summary>
     /// Abstract base class for BasicEffect implementations.

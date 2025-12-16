@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Textures
+namespace BioWareEngines.MonoGame.Textures
 {
     /// <summary>
     /// Texture format conversion system for optimal texture formats.

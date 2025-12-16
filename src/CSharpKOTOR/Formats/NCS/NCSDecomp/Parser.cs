@@ -1,4 +1,4 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:189-1517
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:189-1517
 // Original: public class Parser
 // Note: This file is generated from parser grammar, matching the Java implementation structure
 using System;
@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 using LexerClass = AuroraEngine.Common.Formats.NCS.NCSDecomp.Lexer;
 
 // Decompiled by Procyon v0.6.0
 // 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Parser
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Parser
 {
     public class Parser
     {

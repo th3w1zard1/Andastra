@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace AuroraEngine.Common.Formats.GFF
+namespace BioWareCSharp.Common.Formats.GFF
 {
 
     /// <summary>

@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.MDLData;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.MDLData;
 
-namespace AuroraEngine.Common.Formats.MDL
+namespace BioWareCSharp.Common.Formats.MDL
 {
     // Simplified port of PyKotor io_mdl_ascii.MDLAsciiWriter
     public class MDLAsciiWriter : IDisposable

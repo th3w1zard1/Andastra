@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
     /// <summary>
     /// Base class for resource formats.

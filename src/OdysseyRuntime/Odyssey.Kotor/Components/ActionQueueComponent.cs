@@ -1,9 +1,9 @@
 using JetBrains.Annotations;
-using Odyssey.Core.Actions;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Actions;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Kotor.Components
+namespace BioWareEngines.Kotor.Components
 {
     /// <summary>
     /// Component that wraps an ActionQueue for entity action management.

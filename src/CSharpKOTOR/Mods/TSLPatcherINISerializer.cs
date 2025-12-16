@@ -1,4 +1,4 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:157-243
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:157-243
 // Original: class TSLPatcherINISerializer: ...
 using System;
 using System.Numerics;
@@ -6,15 +6,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Mods.GFF;
-using AuroraEngine.Common.Mods.NCS;
-using AuroraEngine.Common.Mods.SSF;
-using AuroraEngine.Common.Mods.TLK;
-using AuroraEngine.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Mods.GFF;
+using BioWareCSharp.Common.Mods.NCS;
+using BioWareCSharp.Common.Mods.SSF;
+using BioWareCSharp.Common.Mods.TLK;
+using BioWareCSharp.Common.Mods.TwoDA;
 using TargetType = AuroraEngine.Common.Mods.TwoDA.TargetType;
 
-namespace AuroraEngine.Common.Mods
+namespace BioWareCSharp.Common.Mods
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:91-120
     // Original: def escape_ini_value(value: str) -> str: ...

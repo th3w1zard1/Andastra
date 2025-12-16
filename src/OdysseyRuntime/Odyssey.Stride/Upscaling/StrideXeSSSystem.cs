@@ -1,10 +1,10 @@
 using System;
 using Stride.Graphics;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Upscaling;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Upscaling;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Stride.Upscaling
+namespace BioWareEngines.Stride.Upscaling
 {
     /// <summary>
     /// Stride implementation of Intel XeSS (Xe Super Sampling).

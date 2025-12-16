@@ -5,13 +5,13 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Interfaces;
-using Odyssey.Kotor.Components;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Kotor.Components;
 using ObjectType = Odyssey.Core.Enums.ObjectType;
 using ScriptEvent = Odyssey.Core.Enums.ScriptEvent;
 
-namespace Odyssey.Kotor.Loading
+namespace BioWareEngines.Kotor.Loading
 {
     /// <summary>
     /// Factory for creating runtime entities from GFF templates.

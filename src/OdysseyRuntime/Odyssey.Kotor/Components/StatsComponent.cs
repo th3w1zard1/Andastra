@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Core.Combat;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Core.Combat;
 
-namespace Odyssey.Kotor.Components
+namespace BioWareEngines.Kotor.Components
 {
     /// <summary>
     /// Concrete implementation of creature stats for KOTOR.

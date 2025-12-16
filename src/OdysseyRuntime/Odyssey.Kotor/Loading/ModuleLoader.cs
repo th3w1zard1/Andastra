@@ -7,16 +7,16 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Formats.LYT;
 using AuroraEngine.Common.Formats.VIS;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Module;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Module;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Odyssey.Kotor.Loading
+namespace BioWareEngines.Kotor.Loading
 {
     /// <summary>
     /// Loads KotOR modules from CSharpKOTOR data structures into Odyssey runtime format.

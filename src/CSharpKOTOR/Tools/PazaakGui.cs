@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/pazaak_gui.py
     // Original: Pazaak GUI implementation using PyQt

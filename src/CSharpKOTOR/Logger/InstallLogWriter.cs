@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Logger
+namespace BioWareCSharp.Common.Logger
 {
 
     /// <summary>

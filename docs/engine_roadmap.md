@@ -43,7 +43,7 @@ src/OdysseyRuntime/
 
 ### 1.1 Repository + Build Foundation ✅
 
-- [x] Add OdysseyRuntime projects to HoloPatcher.sln
+- [x] Add OdysseyRuntime projects to Andastra.sln
 - [x] C# 7.3 language version enforced
 - [x] Nullable reference types disabled
 - [x] Project structure created

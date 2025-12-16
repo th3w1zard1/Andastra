@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using AuroraEngine.Common.Formats.NCS;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 using AST = AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils
 {
     /*
     NCS to AST Converter - Comprehensive instruction conversion.
@@ -329,6 +329,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
             int mainStart = 0;
             int alternativeMainStart = -1;
             int mainEnd = instructions.Count;
+            bool mainStartIsAfterSavebp = false; // Flag to indicate mainStart was intentionally set to SAVEBP+1
 
             // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
             // But we need to calculate mainStart first, so we'll do this after mainStart is determined
@@ -442,6 +443,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                     {
                         // Only cleanup code (MOVSP+RETN+RETN) after entry stub - main code is before entry stub
                         mainStart = savebpIndex + 1;
+                        mainStartIsAfterSavebp = true; // Mark that mainStart was intentionally set to SAVEBP+1
                         JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, but only {codeAfterEntryStub} instructions after entry stub at {entryStubEnd} (likely cleanup), using SAVEBP+1 ({mainStart}) as mainStart");
                     }
                     else

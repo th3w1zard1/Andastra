@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
 
     public static class SystemHelpers

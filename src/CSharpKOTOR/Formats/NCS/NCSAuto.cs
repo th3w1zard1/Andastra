@@ -4,17 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Script;
-using AuroraEngine.Common.Formats.NCS.Compiler;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
-using AuroraEngine.Common.Formats.NCS.Optimizers;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Script;
+using BioWareCSharp.Common.Formats.NCS.Compiler;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.Optimizers;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 using FileScriptData = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.FileScriptData;
 
-namespace AuroraEngine.Common.Formats.NCS
+namespace BioWareCSharp.Common.Formats.NCS
 {
 
     /// <summary>

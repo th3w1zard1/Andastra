@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
 
     /// <summary>

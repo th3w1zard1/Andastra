@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public abstract class Collection
     {

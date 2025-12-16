@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.MonoGame.Enums
+namespace BioWareEngines.MonoGame.Enums
 {
     /// <summary>
     /// PBR material types supported by the Odyssey renderer.

@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.LYT;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.LYT;
 
-namespace AuroraEngine.Common.Formats.LYT
+namespace BioWareCSharp.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:17-113
     // Original: class LYTAsciiReader(ResourceReader)

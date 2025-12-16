@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.WAV
+namespace BioWareCSharp.Common.Formats.WAV
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_data.py:27-40
     // Original: class WaveEncoding(IntEnum)

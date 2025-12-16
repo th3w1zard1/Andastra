@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Content.Interfaces;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Kotor.Profiles
+namespace BioWareEngines.Kotor.Profiles
 {
     /// <summary>
     /// Defines game-specific behavior for different Aurora/Odyssey engine games.

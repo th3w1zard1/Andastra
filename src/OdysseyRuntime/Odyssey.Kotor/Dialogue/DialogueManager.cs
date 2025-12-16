@@ -4,11 +4,11 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.TLK;
 using AuroraEngine.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Dialogue;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Kotor.Dialogue
+namespace BioWareEngines.Kotor.Dialogue
 {
     /// <summary>
     /// Event arguments for dialogue events.

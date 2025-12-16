@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Reflection;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.LIP
+namespace BioWareCSharp.Common.Formats.LIP
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_auto.py
     // Original: detect_lip, read_lip, write_lip, bytes_lip functions

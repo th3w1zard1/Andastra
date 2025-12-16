@@ -1,11 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Core.Enums;
 using JetBrains.Annotations;
 
-namespace Odyssey.Kotor.Game
+namespace BioWareEngines.Kotor.Game
 {
     /// <summary>
     /// Arguments for module transition events.

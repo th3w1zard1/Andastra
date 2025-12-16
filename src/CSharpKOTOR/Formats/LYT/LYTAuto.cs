@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.LYT
+namespace BioWareCSharp.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py
     // Original: read_lyt, write_lyt, bytes_lyt functions

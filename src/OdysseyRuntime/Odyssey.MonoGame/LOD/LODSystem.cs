@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 
-namespace Odyssey.MonoGame.LOD
+namespace BioWareEngines.MonoGame.LOD
 {
     /// <summary>
     /// Level of Detail (LOD) system for managing mesh detail levels.

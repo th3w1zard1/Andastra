@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/game_object.py:28-327
     // Original: class ObjectType(IntEnum): class GameObjectState: class GameObject(ABC):

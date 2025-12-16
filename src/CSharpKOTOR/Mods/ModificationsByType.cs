@@ -1,14 +1,14 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:128-143
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:128-143
 // Original: @dataclass class ModificationsByType: ...
 using System.Collections.Generic;
-using AuroraEngine.Common.Mods.GFF;
-using AuroraEngine.Common.Mods.NCS;
-using AuroraEngine.Common.Mods.NSS;
-using AuroraEngine.Common.Mods.SSF;
-using AuroraEngine.Common.Mods.TLK;
-using AuroraEngine.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Mods.GFF;
+using BioWareCSharp.Common.Mods.NCS;
+using BioWareCSharp.Common.Mods.NSS;
+using BioWareCSharp.Common.Mods.SSF;
+using BioWareCSharp.Common.Mods.TLK;
+using BioWareCSharp.Common.Mods.TwoDA;
 
-namespace AuroraEngine.Common.Mods
+namespace BioWareCSharp.Common.Mods
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:128-143
     // Original: @dataclass class ModificationsByType: ...

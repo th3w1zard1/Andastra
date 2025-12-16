@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// Thread-safe model cache for loaded MDL models.

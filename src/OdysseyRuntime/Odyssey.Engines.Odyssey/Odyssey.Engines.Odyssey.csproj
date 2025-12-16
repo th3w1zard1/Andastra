@@ -1,21 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Engines.Odyssey</RootNamespace>
-    <AssemblyName>Odyssey.Engines.Odyssey</AssemblyName>
-    <Description>Odyssey Engine implementation for KOTOR 1/2 (refactored from Odyssey.Kotor)</Description>
+    <RootNamespace>BioWareEngines.Engines.Odyssey</RootNamespace>
+    <AssemblyName>BioWareEngines.Engines.Odyssey</AssemblyName>
+    <Description>Odyssey Engine implementation for KOTOR 1/2 (refactored from BioWareEngines.Kotor)</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
-    <ProjectReference Include="..\Odyssey.Engines.Common\Odyssey.Engines.Common.csproj" />
-    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Scripting\BioWareEngines.Scripting.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Common\BioWareEngines.Common.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Kotor\BioWareEngines.Kotor.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

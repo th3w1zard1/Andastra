@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Lighting
+namespace BioWareEngines.MonoGame.Lighting
 {
     /// <summary>
     /// Volumetric lighting and fog system.

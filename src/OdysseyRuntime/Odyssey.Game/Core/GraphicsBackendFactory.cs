@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Game.Core
+namespace BioWareEngines.Game.Core
 {
     /// <summary>
     /// Factory for creating graphics backend instances.

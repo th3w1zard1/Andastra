@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Mods;
-using AuroraEngine.Common.Mods.GFF;
-using AuroraEngine.Common.Mods.NCS;
-using AuroraEngine.Common.Mods.NSS;
-using AuroraEngine.Common.Mods.SSF;
-using AuroraEngine.Common.Mods.TLK;
-using AuroraEngine.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Mods;
+using BioWareCSharp.Common.Mods.GFF;
+using BioWareCSharp.Common.Mods.NCS;
+using BioWareCSharp.Common.Mods.NSS;
+using BioWareCSharp.Common.Mods.SSF;
+using BioWareCSharp.Common.Mods.TLK;
+using BioWareCSharp.Common.Mods.TwoDA;
 
-namespace AuroraEngine.Common.Config
+namespace BioWareCSharp.Common.Config
 {
 
     /// <summary>

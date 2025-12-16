@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.TXI;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.TXI;
 
-namespace AuroraEngine.Common.Formats.TPC
+namespace BioWareCSharp.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:85-270
     // Simplified: reads core header, mipmaps, and TXI text without conversions

@@ -89,7 +89,7 @@ chmod +x scripts/setup-netsparkle-keys.sh
 
 ### 2. Configure GitHub Secrets
 
-Go to: <https://github.com/th3w1zard1/HoloPatcher.NET/settings/secrets/actions>
+Go to: <https://github.com/th3w1zard1/Andastra/settings/secrets/actions>
 
 Add:
 
@@ -98,7 +98,7 @@ Add:
 
 ### 3. Update UpdateManager.cs
 
-In `src/HoloPatcher/UpdateManager.cs`, set:
+In `src/HoloPatcher/UpdateManager.cs`, set (note: folder name is legacy, project is now Andastra):
 
 ```csharp
 Ed25519PublicKey = "your_base64_public_key_here"

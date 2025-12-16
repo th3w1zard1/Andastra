@@ -5,14 +5,14 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Scripting</RootNamespace>
-    <AssemblyName>Odyssey.Scripting</AssemblyName>
+    <RootNamespace>BioWareEngines.Scripting</RootNamespace>
+    <AssemblyName>BioWareEngines.Scripting</AssemblyName>
     <Description>NCS Virtual Machine and NWScript engine API for Odyssey Engine</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

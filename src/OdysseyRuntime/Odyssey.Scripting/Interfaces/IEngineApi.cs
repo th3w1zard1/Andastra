@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Odyssey.Scripting.Interfaces
+namespace BioWareEngines.Scripting.Interfaces
 {
     /// <summary>
     /// Engine function dispatch interface for NWScript ACTION calls.

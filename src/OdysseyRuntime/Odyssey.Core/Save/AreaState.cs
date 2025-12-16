@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Enums;
 
-namespace Odyssey.Core.Save
+namespace BioWareEngines.Core.Save
 {
     /// <summary>
     /// Saved state for an area.

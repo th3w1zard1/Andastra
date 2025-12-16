@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Game.Core;
-using Odyssey.Graphics;
+using BioWareEngines.Game.Core;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Game
+namespace BioWareEngines.Game
 {
     /// <summary>
     /// Entry point for the Odyssey Engine game launcher.

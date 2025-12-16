@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Extract;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.SSF;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Extract;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.SSF;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:40-47
     // Original: _SCAN_RESULTS_CACHE: dict[tuple, list[tuple[int, str]]] = {}

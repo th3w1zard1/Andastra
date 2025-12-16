@@ -1,10 +1,10 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.MonoGame.UI
+namespace BioWareEngines.MonoGame.UI
 {
     /// <summary>
     /// Basic HUD component using MonoGame SpriteBatch rendering.

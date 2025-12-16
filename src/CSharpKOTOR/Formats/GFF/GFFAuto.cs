@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.GFF
+namespace BioWareCSharp.Common.Formats.GFF
 {
 
     /// <summary>

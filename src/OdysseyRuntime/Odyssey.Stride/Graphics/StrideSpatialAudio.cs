@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Stride.Graphics
+namespace BioWareEngines.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of ISpatialAudio.

@@ -1,6 +1,6 @@
 # NuGet Package Distribution
 
-Both `TSLPatcher.Core` and `HoloPatcher` are configured to be distributed as NuGet packages, allowing other C# projects to reference them directly instead of using the CLI.
+Both `TSLPatcher.Core` and `Andastra` (formerly HoloPatcher) are configured to be distributed as NuGet packages, allowing other C# projects to reference them directly instead of using the CLI.
 
 ## Building NuGet Packages
 
@@ -14,7 +14,7 @@ dotnet pack --configuration Release
 
 # Packages will be created in:
 # - src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.2.0.0-alpha1.nupkg
-# - src/HoloPatcher/bin/Release/HoloPatcher.2.0.0-alpha1.nupkg
+# - src/HoloPatcher/bin/Release/Andastra.2.0.0-alpha1.nupkg (note: folder name is legacy)
 ```
 
 ### Build Individual Packages
@@ -23,7 +23,7 @@ dotnet pack --configuration Release
 # Build only TSLPatcher.Core
 dotnet pack src/TSLPatcher.Core/TSLPatcher.Core.csproj --configuration Release
 
-# Build only HoloPatcher
+# Build only Andastra (note: folder name is legacy)
 dotnet pack src/HoloPatcher/HoloPatcher.csproj --configuration Release
 ```
 
@@ -43,7 +43,7 @@ mkdir nuget-packages
 
 ```bash
 dotnet add package TSLPatcher.Core --source ./nuget-packages
-dotnet add package HoloPatcher --source ./nuget-packages
+dotnet add package Andastra --source ./nuget-packages
 ```
 
 ### From NuGet.org (after publishing)
@@ -52,7 +52,7 @@ Once published to NuGet.org, install via:
 
 ```bash
 dotnet add package TSLPatcher.Core
-dotnet add package HoloPatcher
+dotnet add package Andastra
 ```
 
 Or add to your `.csproj`:
@@ -60,7 +60,7 @@ Or add to your `.csproj`:
 ```xml
 <ItemGroup>
   <PackageReference Include="TSLPatcher.Core" Version="2.0.0-alpha1" />
-  <PackageReference Include="HoloPatcher" Version="2.0.0-alpha1" />
+  <PackageReference Include="Andastra" Version="2.0.0-alpha1" />
 </ItemGroup>
 ```
 
@@ -90,14 +90,14 @@ var installer = new ModInstaller(
 installer.Install();
 ```
 
-### Using HoloPatcher
+### Using Andastra
 
-HoloPatcher can be used as a library for programmatic access:
+Andastra can be used as a library for programmatic access:
 
 ```csharp
-using HoloPatcher;
+using Andastra; // Note: namespace may still be HoloPatcher internally
 
-// Access core functionality through HoloPatcher classes
+// Access core functionality through Andastra classes
 // (Implementation depends on what public APIs are exposed)
 ```
 
@@ -114,8 +114,8 @@ using HoloPatcher;
 # Publish TSLPatcher.Core
 dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 
-# Publish HoloPatcher
-dotnet nuget push src/HoloPatcher/bin/Release/HoloPatcher.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+# Publish Andastra
+dotnet nuget push src/HoloPatcher/bin/Release/Andastra.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 3. **Publish symbol packages** (optional):
@@ -126,8 +126,8 @@ dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.snupkg --api
 
 ## Package Dependencies
 
-- **TSLPatcher.Core**: Standalone library with no dependencies on HoloPatcher
-- **HoloPatcher**: Depends on TSLPatcher.Core (automatically included when installing HoloPatcher)
+- **TSLPatcher.Core**: Standalone library with no dependencies on Andastra
+- **Andastra**: Depends on TSLPatcher.Core (automatically included when installing Andastra)
 
 ## Version Management
 

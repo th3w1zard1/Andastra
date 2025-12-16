@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace AuroraEngine.Common.Formats.KEY
+namespace BioWareCSharp.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/key_data.py:65-148
     // Original: class BifEntry

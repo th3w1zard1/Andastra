@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Shadows
+namespace BioWareEngines.MonoGame.Shadows
 {
     /// <summary>
     /// Cascaded shadow maps (CSM) for high-quality directional light shadows.

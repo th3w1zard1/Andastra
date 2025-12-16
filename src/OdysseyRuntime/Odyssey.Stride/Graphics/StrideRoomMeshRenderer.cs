@@ -6,9 +6,9 @@ using Stride.Core.Mathematics;
 using AuroraEngine.Common.Formats.MDL;
 using AuroraEngine.Common.Formats.MDLData;
 using JetBrains.Annotations;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.Stride.Graphics
+namespace BioWareEngines.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IRoomMeshRenderer.

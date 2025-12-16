@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Entities
+namespace BioWareEngines.Core.Entities
 {
     /// <summary>
     /// Event bus implementation for routing entity and world events.

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using AuroraEngine.Common.Formats.BWM;
-using Odyssey.Core.Navigation;
+using BioWareEngines.Core.Navigation;
 
-namespace Odyssey.Content.Converters
+namespace BioWareEngines.Content.Converters
 {
     /// <summary>
     /// Converts CSharpKOTOR BWM walkmesh data to Odyssey NavigationMesh.

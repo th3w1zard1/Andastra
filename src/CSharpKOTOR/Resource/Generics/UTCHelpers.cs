@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resources;
 using static AuroraEngine.Common.GameExtensions;
 using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
-namespace AuroraEngine.Common.Resource.Generics
+namespace BioWareCSharp.Common.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py
     // Original: construct_utc and dismantle_utc functions

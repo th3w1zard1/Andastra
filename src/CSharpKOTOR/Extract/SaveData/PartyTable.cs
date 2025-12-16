@@ -2,11 +2,11 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract.SaveData
+namespace BioWareCSharp.Common.Extract.SaveData
 {
     // Supporting entries matching PyKotor savedata.py
     public class JournalEntry

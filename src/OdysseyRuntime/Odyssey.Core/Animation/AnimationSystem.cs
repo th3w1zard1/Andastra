@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Core.Animation
+namespace BioWareEngines.Core.Animation
 {
     /// <summary>
     /// System that updates animations for all entities with animation components.

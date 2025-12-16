@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Rendering;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Rendering;
 
-namespace Odyssey.MonoGame.Interfaces
+namespace BioWareEngines.MonoGame.Interfaces
 {
     /// <summary>
     /// Graphics backend capability information.

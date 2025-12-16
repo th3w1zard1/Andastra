@@ -2,15 +2,15 @@ using System;
 using System.Threading;
 using AuroraEngine.Common;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Scripting.Interfaces;
-using Odyssey.Scripting.VM;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Scripting.Interfaces;
+using BioWareEngines.Scripting.VM;
 
-namespace Odyssey.Scripting
+namespace BioWareEngines.Scripting
 {
     /// <summary>
     /// Executes NWScript scripts for entities when events fire.

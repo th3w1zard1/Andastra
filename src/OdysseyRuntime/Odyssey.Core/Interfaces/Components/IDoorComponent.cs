@@ -1,4 +1,4 @@
-namespace Odyssey.Core.Interfaces.Components
+namespace BioWareEngines.Core.Interfaces.Components
 {
     /// <summary>
     /// Component for door entities.

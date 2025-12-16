@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 using AuroraEngine.Common.Formats.LYT;
 using AuroraEngine.Common.Formats.VIS;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Scene
+namespace BioWareEngines.MonoGame.Scene
 {
     /// <summary>
     /// Builds MonoGame rendering structures from KOTOR area data (LYT, VIS, GIT).

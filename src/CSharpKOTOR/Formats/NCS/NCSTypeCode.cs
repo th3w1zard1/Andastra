@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace AuroraEngine.Common.Formats.NCS
+namespace BioWareCSharp.Common.Formats.NCS
 {
     /// <summary>
     /// Type codes used in NCS bytecode operations.

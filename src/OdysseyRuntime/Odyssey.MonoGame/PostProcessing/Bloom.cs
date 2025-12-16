@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.PostProcessing
+namespace BioWareEngines.MonoGame.PostProcessing
 {
     /// <summary>
     /// Bloom post-processing effect for HDR rendering.

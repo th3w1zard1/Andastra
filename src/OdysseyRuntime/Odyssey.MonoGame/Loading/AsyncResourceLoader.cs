@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 using AuroraEngine.Common.Resources;
 
-namespace Odyssey.MonoGame.Loading
+namespace BioWareEngines.MonoGame.Loading
 {
     /// <summary>
     /// Asynchronous resource loader for textures and models.

@@ -1,7 +1,7 @@
-using Odyssey.Core.Entities;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Interface for game services context accessible from script execution context.

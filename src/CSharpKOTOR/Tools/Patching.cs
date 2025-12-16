@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Extract;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Formats.TLK;
-using AuroraEngine.Common.Formats.TPC;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Installation;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Extract;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Formats.TLK;
+using BioWareCSharp.Common.Formats.TPC;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Installation;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py
     // Original: Batch patching utilities for KOTOR resources

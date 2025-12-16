@@ -2,10 +2,10 @@ using System;
 using System.Numerics;
 using Stride.Graphics;
 using Stride.Rendering;
-using Odyssey.Graphics.Common.PostProcessing;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.PostProcessing;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Stride.PostProcessing
+namespace BioWareEngines.Stride.PostProcessing
 {
     /// <summary>
     /// Stride implementation of temporal anti-aliasing effect.

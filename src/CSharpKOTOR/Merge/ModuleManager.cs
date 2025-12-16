@@ -4,14 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Tools;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Tools;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Merge
+namespace BioWareCSharp.Common.Merge
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/merge/module.py:25-34
     // Original: class ResourceInfo:

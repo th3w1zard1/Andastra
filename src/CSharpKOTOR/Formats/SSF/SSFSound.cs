@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.SSF
+namespace BioWareCSharp.Common.Formats.SSF
 {
 
     /// <summary>

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Odyssey.Kotor.Systems
+namespace BioWareEngines.Kotor.Systems
 {
     /// <summary>
     /// System for detecting entity entry/exit into trigger volumes.

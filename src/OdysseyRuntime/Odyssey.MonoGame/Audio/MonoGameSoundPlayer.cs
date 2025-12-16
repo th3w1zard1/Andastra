@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework.Audio;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Audio;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Audio;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Formats.WAV;
 
-namespace Odyssey.MonoGame.Audio
+namespace BioWareEngines.MonoGame.Audio
 {
     /// <summary>
     /// MonoGame implementation of ISoundPlayer for playing sound effects.

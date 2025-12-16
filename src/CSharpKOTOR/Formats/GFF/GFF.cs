@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.GFF
+namespace BioWareCSharp.Common.Formats.GFF
 {
 
     /// <summary>

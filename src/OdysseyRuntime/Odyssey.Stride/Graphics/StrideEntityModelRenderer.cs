@@ -1,11 +1,11 @@
 using System;
 using System.Numerics;
 using Stride.Graphics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Graphics;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Graphics;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.Graphics
+namespace BioWareEngines.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IEntityModelRenderer.

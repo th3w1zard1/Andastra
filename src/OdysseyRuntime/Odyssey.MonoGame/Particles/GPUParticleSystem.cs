@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.MonoGame.Rendering;
+using BioWareEngines.MonoGame.Rendering;
 
-namespace Odyssey.MonoGame.Particles
+namespace BioWareEngines.MonoGame.Particles
 {
     /// <summary>
     /// GPU-based particle system using compute shaders.

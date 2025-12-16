@@ -5,16 +5,16 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Engines.Eclipse</RootNamespace>
-    <AssemblyName>Odyssey.Engines.Eclipse</AssemblyName>
+    <RootNamespace>BioWareEngines.Engines.Eclipse</RootNamespace>
+    <AssemblyName>BioWareEngines.Engines.Eclipse</AssemblyName>
     <Description>Eclipse Engine implementation for Dragon Age and Mass Effect series</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
-    <ProjectReference Include="..\Odyssey.Engines.Common\Odyssey.Engines.Common.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Scripting\BioWareEngines.Scripting.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Common\BioWareEngines.Common.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

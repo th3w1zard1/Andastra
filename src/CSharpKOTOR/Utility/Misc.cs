@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Globalization;
 
-namespace AuroraEngine.Common.Utility
+namespace BioWareCSharp.Common.Utility
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/misc.py:348-387
     // Original: def is_int(val: str | int | Buffer | SupportsInt | SupportsIndex) -> bool:

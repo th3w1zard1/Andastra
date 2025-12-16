@@ -6,13 +6,13 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RootNamespace>Odyssey.Content</RootNamespace>
-    <AssemblyName>Odyssey.Content</AssemblyName>
+    <RootNamespace>BioWareEngines.Content</RootNamespace>
+    <AssemblyName>BioWareEngines.Content</AssemblyName>
     <Description>Asset conversion and caching pipeline for Odyssey Engine</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 
-namespace Odyssey.Content.Loaders
+namespace BioWareEngines.Content.Loaders
 {
     /// <summary>
     /// Loads GIT (Game Instance Table) files for area instance data.

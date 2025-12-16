@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.KEY;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Resource.Formats.BIF;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.KEY;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Resource.Formats.BIF;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/archives.py:33-47
     // Original: def matches_filter(text: str, pattern: str) -> bool:

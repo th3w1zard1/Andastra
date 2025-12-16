@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Components;
-using Odyssey.Kotor.Systems;
-using Odyssey.Kotor.Data;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Components;
+using BioWareEngines.Kotor.Systems;
+using BioWareEngines.Kotor.Data;
 
-namespace Odyssey.Kotor.Combat
+namespace BioWareEngines.Kotor.Combat
 {
     /// <summary>
     /// Combat state for an entity.

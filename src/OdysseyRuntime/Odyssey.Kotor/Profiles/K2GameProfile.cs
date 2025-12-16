@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using AuroraEngine.Common;
-using Odyssey.Content.Interfaces;
-using Odyssey.Kotor.EngineApi;
-using Odyssey.Kotor.Profiles;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Kotor.EngineApi;
+using BioWareEngines.Kotor.Profiles;
+using BioWareEngines.Scripting.EngineApi;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Kotor.Profiles
+namespace BioWareEngines.Kotor.Profiles
 {
     /// <summary>
     /// Game profile for KOTOR 2: The Sith Lords (TSL).

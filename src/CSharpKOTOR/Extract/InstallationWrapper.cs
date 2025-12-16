@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Installation;
+using System.Collections.Generic;
+using BioWareCSharp.Common.Installation;
 using ResourceType = AuroraEngine.Common.Resources.ResourceType;
 using LocationResult = AuroraEngine.Common.Resources.LocationResult;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Thin wrapper to mirror PyKotor extract.installation.Installation semantics.
     public class InstallationWrapper

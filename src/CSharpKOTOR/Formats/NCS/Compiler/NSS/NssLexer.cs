@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
     /// <summary>
     /// NSS (NWScript Source) lexer/tokenizer.

@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.UI
+namespace BioWareEngines.MonoGame.UI
 {
     /// <summary>
     /// Loading screen UI component using MonoGame SpriteBatch rendering.

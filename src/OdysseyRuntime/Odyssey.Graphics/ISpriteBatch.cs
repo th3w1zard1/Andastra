@@ -1,4 +1,4 @@
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Sprite batch interface for 2D rendering.

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Scripting.EngineApi
+namespace BioWareEngines.Scripting.EngineApi
 {
     /// <summary>
     /// Base implementation of engine API with common functions.

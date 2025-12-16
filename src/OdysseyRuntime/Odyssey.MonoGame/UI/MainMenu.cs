@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Odyssey.MonoGame.UI
+namespace BioWareEngines.MonoGame.UI
 {
     /// <summary>
     /// Main menu UI component using MonoGame SpriteBatch rendering.

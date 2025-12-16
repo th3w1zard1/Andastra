@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.Capsule;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Resource.Generics;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Tools;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.Capsule;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Resource.Generics;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Tools;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py
     // Original: Handles resource data validation/salvage strategies

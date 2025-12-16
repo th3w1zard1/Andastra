@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using AuroraEngine.Common.Script;
-using Odyssey.Core.Combat;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Kotor.Game;
-using Odyssey.Kotor.Systems;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.Interfaces;
-using Odyssey.Scripting.VM;
+using BioWareEngines.Core.Combat;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Kotor.Game;
+using BioWareEngines.Kotor.Systems;
+using BioWareEngines.Scripting.EngineApi;
+using BioWareEngines.Scripting.Interfaces;
+using BioWareEngines.Scripting.VM;
 
-namespace Odyssey.Kotor.EngineApi
+namespace BioWareEngines.Kotor.EngineApi
 {
     /// <summary>
     /// KOTOR 2 (TSL) engine API implementation.

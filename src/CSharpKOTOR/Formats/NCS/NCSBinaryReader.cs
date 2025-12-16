@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS
+namespace BioWareCSharp.Common.Formats.NCS
 {
 
     /// <summary>

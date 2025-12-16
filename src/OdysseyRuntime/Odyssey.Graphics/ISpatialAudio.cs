@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Spatial audio abstraction for 3D sound positioning.

@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 
-namespace Odyssey.Core.Movement
+namespace BioWareEngines.Core.Movement
 {
     /// <summary>
     /// Handles player input for character control.

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AVarDecl : ScriptNode
     {

@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/encoding.py
     public static class Encoding

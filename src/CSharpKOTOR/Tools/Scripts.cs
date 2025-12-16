@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Script;
-using AuroraEngine.Common.Formats.NCS;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Script;
+using BioWareCSharp.Common.Formats.NCS;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py
     // Original: Script utility functions for NCS bytecode manipulation

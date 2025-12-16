@@ -1,6 +1,6 @@
-﻿using AuroraEngine.Common.Formats.NCS;
+using BioWareCSharp.Common.Formats.NCS;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

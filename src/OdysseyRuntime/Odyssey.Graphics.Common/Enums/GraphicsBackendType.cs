@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Graphics.Common.Enums
+namespace BioWareEngines.Graphics.Common.Enums
 {
     /// <summary>
     /// Supported graphics API backends.

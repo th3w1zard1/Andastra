@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.KEY
+namespace BioWareCSharp.Common.Formats.KEY
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/key/io_key.py:108-171
     // Original: class KEYBinaryWriter(ResourceWriter)

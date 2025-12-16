@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.MonoGame.Memory
+namespace BioWareEngines.MonoGame.Memory
 {
     /// <summary>
     /// Generic object pool for reducing allocations and GC pressure.

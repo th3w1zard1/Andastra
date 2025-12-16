@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.NCS.Compiler.NSS
+namespace BioWareCSharp.Common.Formats.NCS.Compiler.NSS
 {
 
     /// <summary>

@@ -1,9 +1,9 @@
-﻿//
+//
 using System;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public sealed class X2PSubroutine : XPSubroutine
     {

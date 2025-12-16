@@ -1,11 +1,11 @@
 using System;
 using Stride.Graphics;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Interfaces;
-using Odyssey.Graphics.Common.Raytracing;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Interfaces;
+using BioWareEngines.Graphics.Common.Raytracing;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Stride.Raytracing
+namespace BioWareEngines.Stride.Raytracing
 {
     /// <summary>
     /// Stride implementation of hardware raytracing system.

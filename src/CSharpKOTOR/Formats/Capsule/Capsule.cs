@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.Capsule
+namespace BioWareCSharp.Common.Formats.Capsule
 {
 
     /// <summary>

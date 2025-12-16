@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Core.Module;
-using Odyssey.Core.Navigation;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Core.Module;
+using BioWareEngines.Core.Navigation;
 using AuroraEngine.Common;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
@@ -26,9 +26,9 @@ using SysVector3 = System.Numerics.Vector3;
 using KotorVector3 = System.Numerics.Vector3;
 using OdyObjectType = Odyssey.Core.Enums.ObjectType;
 using InstResourceResult = AuroraEngine.Common.Installation.ResourceResult;
-using Odyssey.Kotor.Components;
+using BioWareEngines.Kotor.Components;
 
-namespace Odyssey.Kotor.Game
+namespace BioWareEngines.Kotor.Game
 {
     /// <summary>
     /// Loads modules from KOTOR game files using CSharpKOTOR resource infrastructure.

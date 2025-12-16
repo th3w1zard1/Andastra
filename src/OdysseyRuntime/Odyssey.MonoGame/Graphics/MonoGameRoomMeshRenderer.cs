@@ -5,9 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using AuroraEngine.Common.Formats.MDL;
 using AuroraEngine.Common.Formats.MDLData;
 using JetBrains.Annotations;
-using Odyssey.Graphics;
+using BioWareEngines.Graphics;
 
-namespace Odyssey.MonoGame.Graphics
+namespace BioWareEngines.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IRoomMeshRenderer.

@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Graphics.Common.Enums
+namespace BioWareEngines.Graphics.Common.Enums
 {
     /// <summary>
     /// Shader stages in the graphics pipeline.

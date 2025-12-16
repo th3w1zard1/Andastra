@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 
-namespace AuroraEngine.Common.Formats.TPC
+namespace BioWareCSharp.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_dds.py:44-337
     // Original: class TPCDDSReader(ResourceReader)

@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework.Graphics;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.GUI
+namespace BioWareEngines.MonoGame.GUI
 {
     /// <summary>
     /// Manages KOTOR GUI rendering using MonoGame SpriteBatch.

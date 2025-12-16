@@ -1,10 +1,10 @@
 using System;
 using Stride.Graphics;
-using Odyssey.Graphics.Common.Backends;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Backends;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Stride.Backends
+namespace BioWareEngines.Stride.Backends
 {
     /// <summary>
     /// Stride implementation of DirectX 11 backend.

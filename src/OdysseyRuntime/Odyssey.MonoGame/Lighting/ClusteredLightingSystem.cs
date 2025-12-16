@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
 
-namespace Odyssey.MonoGame.Lighting
+namespace BioWareEngines.MonoGame.Lighting
 {
     /// <summary>
     /// Clustered forward+ lighting system.

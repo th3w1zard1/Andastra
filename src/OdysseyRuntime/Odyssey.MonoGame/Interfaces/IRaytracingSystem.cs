@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.MonoGame.Enums;
+using BioWareEngines.MonoGame.Enums;
 
-namespace Odyssey.MonoGame.Interfaces
+namespace BioWareEngines.MonoGame.Interfaces
 {
     /// <summary>
     /// Hardware raytracing system interface.

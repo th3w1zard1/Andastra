@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Odyssey.Kotor.Systems
+namespace BioWareEngines.Kotor.Systems
 {
     /// <summary>
     /// System that fires OnHeartbeat script events at regular intervals.

@@ -1,4 +1,4 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:8-27
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptNode.java:8-27
 // Original: public abstract class ScriptNode
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptnode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Scriptnode
 {
     public abstract class ScriptNode
     {

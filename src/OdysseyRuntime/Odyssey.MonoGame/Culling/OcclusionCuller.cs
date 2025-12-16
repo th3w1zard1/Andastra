@@ -4,7 +4,7 @@ using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Culling
+namespace BioWareEngines.MonoGame.Culling
 {
     /// <summary>
     /// Occlusion culling system using Hi-Z (Hierarchical-Z) buffer.

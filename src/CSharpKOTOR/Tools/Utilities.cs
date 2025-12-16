@@ -1,16 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.ERF;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.RIM;
-using AuroraEngine.Common.Formats.TLK;
-using AuroraEngine.Common.Formats.TPC;
-using AuroraEngine.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Formats.ERF;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.RIM;
+using BioWareCSharp.Common.Formats.TLK;
+using BioWareCSharp.Common.Formats.TPC;
+using BioWareCSharp.Common.Formats.TwoDA;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/utilities.py
     // Original: Utility command functions for file operations, validation, and analysis

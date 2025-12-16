@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Represents a game module (collection of areas and global state).

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS
+namespace BioWareCSharp.Common.Formats.NCS
 {
     /// <summary>
     /// Base class for NCS optimizers with common functionality.

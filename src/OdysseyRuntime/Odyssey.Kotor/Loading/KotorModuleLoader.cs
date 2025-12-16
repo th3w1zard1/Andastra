@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Module;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Module;
 
-namespace Odyssey.Kotor.Loading
+namespace BioWareEngines.Kotor.Loading
 {
     /// <summary>
     /// KOTOR implementation of IModuleLoader.

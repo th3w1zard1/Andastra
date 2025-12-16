@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
-using Odyssey.Core.Dialogue;
-using Odyssey.Core.Interfaces;
-using Odyssey.Scripting.VM;
-using Odyssey.Scripting.Interfaces;
-using Odyssey.Scripting.EngineApi;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Scripting.VM;
+using BioWareEngines.Scripting.Interfaces;
+using BioWareEngines.Scripting.EngineApi;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
 
-namespace Odyssey.Kotor.Game
+namespace BioWareEngines.Kotor.Game
 {
     /// <summary>
     /// Executes NCS scripts using the NCS VM.

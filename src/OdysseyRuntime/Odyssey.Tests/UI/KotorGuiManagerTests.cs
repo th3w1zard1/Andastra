@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Text;
 using Xunit;
-using Odyssey.Game.Core;
-using Odyssey.Core;
+using BioWareEngines.Game.Core;
+using BioWareEngines.Core;
 
-namespace Odyssey.Tests.UI
+namespace BioWareEngines.Tests.UI
 {
     /// <summary>
     /// Comprehensive tests for the KOTOR GUI Manager (main UI system).

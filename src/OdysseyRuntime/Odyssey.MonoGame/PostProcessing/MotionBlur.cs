@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.PostProcessing
+namespace BioWareEngines.MonoGame.PostProcessing
 {
     /// <summary>
     /// Motion blur post-processing effect.

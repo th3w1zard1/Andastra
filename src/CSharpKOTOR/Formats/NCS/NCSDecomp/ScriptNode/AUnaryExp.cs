@@ -1,8 +1,8 @@
-﻿using System;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using System;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AUnaryExp : ScriptNode, AExpression
     {

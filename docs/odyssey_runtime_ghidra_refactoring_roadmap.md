@@ -10,17 +10,26 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ## CRITICAL: Canonical Renaming Strategy
 
-**Status**: PENDING  
+**Status**: IN PROGRESS (Script executed, build validation failed - needs fixes)  
 **Priority**: HIGHEST  
 **Purpose**: Rename `OdysseyRuntime` folder and all `Odyssey.*` namespaces to canonical `BioWareEngines.*` structure following xoreos pattern.
+
+**Last Execution**: 2025-12-16 10:55:40
+**Result**: Script processed 490 files with namespace updates, 1237 files with sorted usings, but build validation failed due to:
+
+- Missing project file references (AuroraEngine.Common.csproj path issues)
+- Namespace mismatches in dependent projects (NCSDecomp, HoloPatcher.UI still reference AuroraEngine)
+- Folder rename didn't execute (OdysseyRuntime folder not found in staging - needs to be within ./src)
 
 ### Renaming Plan
 
 **Folder Structure**:
+
 - `src/OdysseyRuntime/` → `src/BioWareEngines/`
 - All project folders remain the same structure, just moved
 
 **Namespace Structure** (following xoreos canonical hierarchy):
+
 - `Odyssey.*` → `BioWareEngines.*`
 - `Odyssey.Engines.Common` → `BioWareEngines.Common` (base engine abstraction)
 - `Odyssey.Engines.Odyssey` → `BioWareEngines.Odyssey` (KOTOR 1/2 engine)
@@ -37,7 +46,8 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - `Odyssey.Graphics.Common` → `BioWareEngines.Graphics.Common` (shared graphics base)
 - `Odyssey.Game` → `BioWareEngines.Game` (executable launcher)
 
-**Rationale**: 
+**Rationale**:
+
 - "Odyssey" is a specific engine, not the base for all engines
 - Following xoreos pattern: base engine class, then engine-specific implementations
 - Canonical naming: BioWareEngines is the umbrella, engines are children
@@ -206,7 +216,7 @@ BioWareEngines (src/BioWareEngines/) - Runtime engine implementations
 #### Game Enum (KOTOR-Specific - Kept for Compatibility)
 
 - [x] Common\Game.cs → Decision: KEEP in CSharpKOTOR
-  - [x] Review: Used extensively by patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
+  - [x] Review: Used extensively by patcher tools (Andastra, HolocronToolset, NCSDecomp, KotorDiff)
   - [x] Decision: Keep in CSharpKOTOR for backward compatibility
   - [x] Note: Documented as KOTOR-specific, but kept for patcher tools
 

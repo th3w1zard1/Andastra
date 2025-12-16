@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using Odyssey.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Enums;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Interface for graphics backends that support DirectStorage.
@@ -11,6 +11,14 @@ namespace Odyssey.Graphics.Common.Interfaces
     ///
     /// Based on DirectStorage API: https://devblogs.microsoft.com/directx/directstorage-is-coming-to-pc/
     /// </summary>
+    /// <remarks>
+    /// DirectStorage Backend Interface:
+    /// - This is a modern graphics API feature (DirectX 12)
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game did not support DirectStorage; this is a modern enhancement for faster asset loading
+    /// - This interface: Provides DirectStorage abstraction for modern graphics APIs, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     public interface IDirectStorageBackend : ILowLevelBackend
     {
         /// <summary>

@@ -7,31 +7,31 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resource.Generics;
-using Odyssey.Engines.Odyssey.Templates;
+using BioWareEngines.Engines.Odyssey.Templates;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Formats.TwoDA;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Actions;
-using Odyssey.Core.Audio;
-using Odyssey.Core.Combat;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Combat;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Actions;
+using BioWareEngines.Core.Audio;
+using BioWareEngines.Core.Combat;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Combat;
 using CoreCombat = Odyssey.Core.Combat;
-using Odyssey.Kotor.Components;
-using Odyssey.Kotor.Dialogue;
-using Odyssey.Kotor.Game;
-using Odyssey.Kotor.Loading;
-using Odyssey.Kotor.Systems;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.Interfaces;
-using Odyssey.Scripting.Types;
-using Odyssey.Scripting.VM;
+using BioWareEngines.Kotor.Components;
+using BioWareEngines.Kotor.Dialogue;
+using BioWareEngines.Kotor.Game;
+using BioWareEngines.Kotor.Loading;
+using BioWareEngines.Kotor.Systems;
+using BioWareEngines.Scripting.EngineApi;
+using BioWareEngines.Scripting.Interfaces;
+using BioWareEngines.Scripting.Types;
+using BioWareEngines.Scripting.VM;
 using VMExecutionContext = Odyssey.Scripting.VM.ExecutionContext;
 
-namespace Odyssey.Engines.Odyssey.EngineApi
+namespace BioWareEngines.Engines.Odyssey.EngineApi
 {
     /// <summary>
     /// Odyssey Engine KOTOR 1 engine API implementation.

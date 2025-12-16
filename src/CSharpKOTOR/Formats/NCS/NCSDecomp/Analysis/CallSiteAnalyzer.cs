@@ -1,14 +1,14 @@
-﻿// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:1-243
+// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:1-243
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:36-243
     // Original: public class CallSiteAnalyzer extends PrunedDepthFirstAdapter

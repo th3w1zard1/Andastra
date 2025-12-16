@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Logger
+namespace BioWareCSharp.Common.Logger
 {
     /// <summary>
     /// Robust logger for pykotor errors, exceptions, warnings, and info logging.

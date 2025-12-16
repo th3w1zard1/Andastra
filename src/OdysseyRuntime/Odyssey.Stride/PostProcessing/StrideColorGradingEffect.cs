@@ -1,11 +1,11 @@
 using System;
 using Stride.Graphics;
 using Stride.Rendering;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.PostProcessing;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.PostProcessing;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Stride.PostProcessing
+namespace BioWareEngines.Stride.PostProcessing
 {
     /// <summary>
     /// Stride implementation of Color Grading post-processing effect.

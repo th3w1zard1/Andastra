@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Kotor.Dialogue
+namespace BioWareEngines.Kotor.Dialogue
 {
     /// <summary>
     /// Provides context for a dialogue conversation.

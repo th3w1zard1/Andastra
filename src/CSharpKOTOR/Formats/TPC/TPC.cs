@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Formats.TXI;
+using BioWareCSharp.Common.Formats.TXI;
 
-namespace AuroraEngine.Common.Formats.TPC
+namespace BioWareCSharp.Common.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:317-529
     // Simplified: core fields and equality for texture container

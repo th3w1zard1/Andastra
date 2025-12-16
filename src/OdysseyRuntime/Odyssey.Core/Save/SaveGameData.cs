@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Enums;
+using BioWareEngines.Core.Enums;
 
-namespace Odyssey.Core.Save
+namespace BioWareEngines.Core.Save
 {
     /// <summary>
     /// Complete save game data.

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using AuroraEngine.Common.Resource.Generics.DLG;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Kotor.Dialogue
+namespace BioWareEngines.Kotor.Dialogue
 {
     /// <summary>
     /// Tracks the current state of a dialogue conversation.

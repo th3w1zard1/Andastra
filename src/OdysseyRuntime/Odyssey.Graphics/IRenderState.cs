@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Rasterizer state abstraction for controlling how primitives are rasterized.

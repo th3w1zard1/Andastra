@@ -6,18 +6,18 @@
     <Nullable>disable</Nullable>
     <OutputType>Library</OutputType>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.MonoGame</RootNamespace>
-    <AssemblyName>Odyssey.MonoGame</AssemblyName>
+    <RootNamespace>BioWareEngines.MonoGame</RootNamespace>
+    <AssemblyName>BioWareEngines.MonoGame</AssemblyName>
     <Description>MonoGame adapters for Odyssey Engine - cross-platform rendering with support for textures, models, and UI.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
-    <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
-    <ProjectReference Include="..\Odyssey.Graphics.Common\Odyssey.Graphics.Common.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Kotor\BioWareEngines.Kotor.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Graphics\BioWareEngines.Graphics.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Graphics.Common\BioWareEngines.Graphics.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

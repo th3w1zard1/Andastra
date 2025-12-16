@@ -1,8 +1,8 @@
 using System;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
     /// <summary>
     /// Represents a resource stored within a BioWare archive (ERF, RIM, BIF).

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AuroraEngine.Common.Script
+namespace BioWareCSharp.Common.Script
 {
 
     /// <summary>

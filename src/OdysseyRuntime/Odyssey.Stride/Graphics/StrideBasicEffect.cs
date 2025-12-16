@@ -4,11 +4,11 @@ using Stride.Graphics;
 using Stride.Core.Mathematics;
 using Stride.Rendering;
 using Stride.Rendering.Materials;
-using Odyssey.Graphics;
-using Odyssey.Graphics.Common.Effects;
+using BioWareEngines.Graphics;
+using BioWareEngines.Graphics.Common.Effects;
 using Vector3Stride = Stride.Core.Mathematics.Vector3;
 
-namespace Odyssey.Stride.Graphics
+namespace BioWareEngines.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IBasicEffect.

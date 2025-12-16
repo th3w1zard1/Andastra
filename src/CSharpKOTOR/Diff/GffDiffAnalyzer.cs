@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Mods.GFF;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Mods.GFF;
 
-namespace AuroraEngine.Common.Diff
+namespace BioWareCSharp.Common.Diff
 {
     /// <summary>
     /// Analyzer for GFF file differences.

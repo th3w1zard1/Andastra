@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Actions
+namespace BioWareEngines.Core.Actions
 {
     /// <summary>
     /// Scheduler for delayed actions using a priority queue.

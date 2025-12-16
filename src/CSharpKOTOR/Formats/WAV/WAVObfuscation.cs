@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace AuroraEngine.Common.Formats.WAV
+namespace BioWareCSharp.Common.Formats.WAV
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py
     // Original: detect_audio_format, deobfuscate_audio, get_deobfuscation_result, obfuscate_audio functions

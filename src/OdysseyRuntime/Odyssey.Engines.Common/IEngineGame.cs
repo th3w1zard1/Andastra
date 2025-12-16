@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Engines.Common
+namespace BioWareEngines.Engines.Common
 {
     /// <summary>
     /// Base interface for game session management across all engines.

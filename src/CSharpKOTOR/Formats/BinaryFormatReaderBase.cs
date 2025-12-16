@@ -1,9 +1,9 @@
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats
+namespace BioWareCSharp.Common.Formats
 {
 
     /// <summary>

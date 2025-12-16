@@ -1,13 +1,13 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:1-235
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ExpressionFormatter.java:1-235
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // Visit https://bolabaden.org for more information and other ventures
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode
 {
     /// <summary>
     /// Centralized expression pretty-printer that minimizes redundant parentheses

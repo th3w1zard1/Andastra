@@ -1,8 +1,8 @@
 using System;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.TLK
+namespace BioWareCSharp.Common.Formats.TLK
 {
 
     /// <summary>

@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
-using AuroraEngine.Common.LZMA;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.LZMA;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Resource.Formats.BIF
+namespace BioWareCSharp.Common.Resource.Formats.BIF
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:164-238
     // Original: class BIFBinaryWriter(ResourceWriter):

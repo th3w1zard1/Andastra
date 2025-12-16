@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using AuroraEngine.Common.Script;
+using BioWareCSharp.Common.Script;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

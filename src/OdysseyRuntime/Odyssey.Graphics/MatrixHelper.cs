@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Matrix helper class for common matrix operations.

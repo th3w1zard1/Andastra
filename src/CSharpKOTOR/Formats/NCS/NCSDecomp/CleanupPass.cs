@@ -1,11 +1,11 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:37-191
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:37-191
 // Original: public class CleanupPass
 using System;
 using System.Collections.Generic;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.ScriptNode;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.ScriptNode;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class CleanupPass
     {

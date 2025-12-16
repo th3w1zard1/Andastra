@@ -1,4 +1,4 @@
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Base interface for all entity components.
@@ -20,12 +20,12 @@ namespace Odyssey.Core.Interfaces
         /// The entity this component is attached to.
         /// </summary>
         IEntity Owner { get; set; }
-        
+
         /// <summary>
         /// Called when the component is attached to an entity.
         /// </summary>
         void OnAttach();
-        
+
         /// <summary>
         /// Called when the component is detached from an entity.
         /// </summary>

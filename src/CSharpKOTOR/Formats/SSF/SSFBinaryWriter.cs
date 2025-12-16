@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 
-namespace AuroraEngine.Common.Formats.SSF
+namespace BioWareCSharp.Common.Formats.SSF
 {
 
     /// <summary>

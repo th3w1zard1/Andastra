@@ -1,4 +1,4 @@
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Font interface for text rendering.

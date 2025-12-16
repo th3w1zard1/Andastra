@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Odyssey.Content.Interfaces;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Engines.Common
+namespace BioWareEngines.Engines.Common
 {
     /// <summary>
     /// Abstract base class for game profiles across all engines.

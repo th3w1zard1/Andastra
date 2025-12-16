@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/heuristics.py:12-227
     // Original: def determine_game(path: os.PathLike | str) -> Game | None:

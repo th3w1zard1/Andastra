@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Graphics.Common.Interfaces;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Interfaces;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Graphics.Common.PostProcessing
+namespace BioWareEngines.Graphics.Common.PostProcessing
 {
     /// <summary>
     /// Abstract base class for all post-processing effects.

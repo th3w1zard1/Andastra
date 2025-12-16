@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Textures
+namespace BioWareEngines.MonoGame.Textures
 {
     /// <summary>
     /// Texture streaming and atlas management system.

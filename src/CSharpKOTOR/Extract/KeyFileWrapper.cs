@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Formats.KEY;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Formats.KEY;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/keyfile.py:13-18
     // Original: @dataclass class BIFResource:

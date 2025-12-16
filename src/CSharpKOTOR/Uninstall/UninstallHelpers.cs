@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.TLK;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.TLK;
 
-namespace AuroraEngine.Common.Uninstall
+namespace BioWareCSharp.Common.Uninstall
 {
 
     /// <summary>

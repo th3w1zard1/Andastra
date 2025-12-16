@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Kotor.Systems
+namespace BioWareEngines.Kotor.Systems
 {
     /// <summary>
     /// Event arguments for party changes.

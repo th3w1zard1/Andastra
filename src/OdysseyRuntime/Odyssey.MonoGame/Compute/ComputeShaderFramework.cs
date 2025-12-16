@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Compute
+namespace BioWareEngines.MonoGame.Compute
 {
     /// <summary>
     /// Compute shader framework for general-purpose GPU computing.

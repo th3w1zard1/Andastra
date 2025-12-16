@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
 using Quaternion = AuroraEngine.Common.Quaternion;
 
-namespace AuroraEngine.Common.Resource.Formats.LYT
+namespace BioWareCSharp.Common.Resource.Formats.LYT
 {
     /// <summary>
     /// Represents a LYT (Layout) file defining area spatial structure.

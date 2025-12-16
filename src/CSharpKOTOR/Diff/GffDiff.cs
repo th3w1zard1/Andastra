@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.GFF;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Diff
+namespace BioWareCSharp.Common.Diff
 {
 
     public class GffCompareResult

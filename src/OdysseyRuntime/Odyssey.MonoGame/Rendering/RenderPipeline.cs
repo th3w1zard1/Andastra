@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.Content.Interfaces;
-using Odyssey.MonoGame.Performance;
-using Odyssey.MonoGame.Debug;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.MonoGame.Performance;
+using BioWareEngines.MonoGame.Debug;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Unified render pipeline orchestrating all rendering systems.

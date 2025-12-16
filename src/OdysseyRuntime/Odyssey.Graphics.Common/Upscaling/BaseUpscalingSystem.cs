@@ -1,9 +1,9 @@
 using System;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Interfaces;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Interfaces;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Graphics.Common.Upscaling
+namespace BioWareEngines.Graphics.Common.Upscaling
 {
     /// <summary>
     /// Abstract base class for upscaling/super-resolution systems.

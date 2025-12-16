@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.UI
+namespace BioWareEngines.MonoGame.UI
 {
     /// <summary>
     /// Screen fade system for transitions (fade in/out effects).

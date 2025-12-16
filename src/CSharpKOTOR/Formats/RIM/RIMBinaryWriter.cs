@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace AuroraEngine.Common.Formats.RIM
+namespace BioWareCSharp.Common.Formats.RIM
 {
     public class RIMBinaryWriter
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Odyssey.MonoGame.Performance
+namespace BioWareEngines.MonoGame.Performance
 {
     /// <summary>
     /// Telemetry system for performance data collection and analysis.

@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 
-namespace Odyssey.Content.Cache
+namespace BioWareEngines.Content.Cache
 {
     /// <summary>
     /// File-based content cache for converted assets.

@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Installation
+namespace BioWareCSharp.Common.Installation
 {
 
     /// <summary>

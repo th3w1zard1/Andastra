@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.MonoGame.PostProcessing
+namespace BioWareEngines.MonoGame.PostProcessing
 {
     /// <summary>
     /// Automatic exposure adaptation for HDR rendering.

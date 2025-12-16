@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using AuroraEngine.Common.Formats.ERF;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Save;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Save;
 
-namespace Odyssey.Kotor.Save
+namespace BioWareEngines.Kotor.Save
 {
     /// <summary>
     /// Manages save game operations (save and load).

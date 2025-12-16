@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Odyssey.Core.Dialogue;
+using BioWareEngines.Core.Dialogue;
 
-namespace Odyssey.MonoGame.UI
+namespace BioWareEngines.MonoGame.UI
 {
     /// <summary>
     /// Dialogue panel UI component using MonoGame SpriteBatch rendering.

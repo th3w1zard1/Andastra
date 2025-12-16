@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace AuroraEngine.Common.Utility.MiscString
+namespace BioWareCSharp.Common.Utility.MiscString
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/util.py:7-23
     // Original: def insert_newlines(text: str, length: int = 100) -> str:

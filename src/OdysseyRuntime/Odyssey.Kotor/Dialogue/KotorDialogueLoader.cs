@@ -4,10 +4,10 @@ using System.Linq;
 using AuroraEngine.Common;
 using AuroraEngine.Common.Resource.Generics.DLG;
 using AuroraEngine.Common.Resources;
-using Odyssey.Core.Dialogue;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Content.Interfaces;
 
-namespace Odyssey.Kotor.Dialogue
+namespace BioWareEngines.Kotor.Dialogue
 {
     /// <summary>
     /// Dialogue loader implementation using CSharpKOTOR DLG format.

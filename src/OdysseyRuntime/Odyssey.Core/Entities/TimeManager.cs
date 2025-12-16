@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Entities
+namespace BioWareEngines.Core.Entities
 {
     /// <summary>
     /// Manages simulation and render time for deterministic gameplay.

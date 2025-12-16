@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/misc.py
     // Original: def normalize_ext(str_repr: os.PathLike | str) -> os.PathLike | str:

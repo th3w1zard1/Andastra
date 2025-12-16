@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using AuroraEngine.Common.Formats.TPC;
-using Odyssey.MonoGame.Converters;
-using Odyssey.MonoGame.Enums;
+using BioWareEngines.MonoGame.Converters;
+using BioWareEngines.MonoGame.Enums;
 using JetBrains.Annotations;
 
-namespace Odyssey.MonoGame.Materials
+namespace BioWareEngines.MonoGame.Materials
 {
     /// <summary>
     /// Factory for creating MonoGame materials from KOTOR texture and material data.

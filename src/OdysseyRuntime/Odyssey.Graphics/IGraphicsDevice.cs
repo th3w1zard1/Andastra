@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Graphics device abstraction for rendering operations.

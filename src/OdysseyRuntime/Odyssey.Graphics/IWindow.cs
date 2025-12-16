@@ -1,4 +1,4 @@
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Window interface for window management.

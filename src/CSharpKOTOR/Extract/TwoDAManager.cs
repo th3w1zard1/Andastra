@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     public struct LookupResult2DA
     {

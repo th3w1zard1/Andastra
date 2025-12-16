@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Odyssey.MonoGame.Spatial
+namespace BioWareEngines.MonoGame.Spatial
 {
     /// <summary>
     /// Octree spatial partitioning structure for efficient spatial queries and culling.

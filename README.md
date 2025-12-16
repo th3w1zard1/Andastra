@@ -1,4 +1,4 @@
-# HoloPatcher.NET
+# Andastra
 
 A direct 1:1 port of HoloPatcher from Python to C#/.NET with Avalonia UI framework.
 
@@ -22,7 +22,7 @@ The only exception to strict 1:1 parity is RTF rendering: the C# version attempt
 
 ## Project Structure
 
-- **HoloPatcher** - Main Avalonia UI application
+- **Andastra** - Main Avalonia UI application
 - **TSLPatcher.Core** - Core patching engine and logic (portable library)
 
 ## Features
@@ -94,7 +94,7 @@ Current test coverage includes:
 ## Building
 
 ```bash
-cd Tools/HoloPatcher.NET
+cd Andastra
 dotnet restore
 dotnet build
 ```
@@ -118,7 +118,7 @@ The core library contains all the patching logic independent of UI:
 - **Mods/** - Modification operations (GFF, 2DA, TLK, etc.)
 - **Patcher/** - Main installation engine
 
-### HoloPatcher
+### Andastra
 
 The Avalonia UI application follows MVVM pattern:
 

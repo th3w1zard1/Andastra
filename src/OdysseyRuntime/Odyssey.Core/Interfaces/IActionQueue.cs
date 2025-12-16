@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Odyssey.Core.Interfaces
+namespace BioWareEngines.Core.Interfaces
 {
     /// <summary>
     /// Action queue for an entity.

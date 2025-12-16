@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Numerics;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics.GUI
+namespace BioWareCSharp.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// Base class for all GUI controls.

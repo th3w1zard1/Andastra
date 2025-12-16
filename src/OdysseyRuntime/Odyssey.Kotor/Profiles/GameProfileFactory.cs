@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using AuroraEngine.Common;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 
-namespace Odyssey.Kotor.Profiles
+namespace BioWareEngines.Kotor.Profiles
 {
     /// <summary>
     /// Factory for creating game profiles based on game type.

@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Core;
+using BioWareEngines.Core;
 
-namespace Odyssey.Game.Core
+namespace BioWareEngines.Game.Core
 {
     /// <summary>
     /// Game settings and configuration with command-line parsing.

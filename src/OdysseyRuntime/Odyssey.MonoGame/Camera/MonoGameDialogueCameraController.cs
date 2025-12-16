@@ -1,11 +1,11 @@
 using System;
 using System.Numerics;
-using Odyssey.Core.Camera;
-using Odyssey.Core.Dialogue;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Camera;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Core.Interfaces;
 using DialogueCameraAngle = Odyssey.Core.Camera.DialogueCameraAngle;
 
-namespace Odyssey.MonoGame.Camera
+namespace BioWareEngines.MonoGame.Camera
 {
     /// <summary>
     /// MonoGame implementation of IDialogueCameraController.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -6,12 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Content.Loaders
+namespace BioWareEngines.Content.Loaders
 {
     /// <summary>
     /// Loads entity templates from GFF files (UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTM).

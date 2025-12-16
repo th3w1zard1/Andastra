@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// Constants for MDL/MDX file format parsing.

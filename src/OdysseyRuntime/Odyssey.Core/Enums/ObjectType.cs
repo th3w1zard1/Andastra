@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Core.Enums
+namespace BioWareEngines.Core.Enums
 {
     /// <summary>
     /// Types of game objects in the Odyssey engine.

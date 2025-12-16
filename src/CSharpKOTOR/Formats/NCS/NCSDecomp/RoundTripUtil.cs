@@ -1,11 +1,11 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RoundTripUtil.java:23-167
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RoundTripUtil.java:23-167
 // Original: public class RoundTripUtil
 using System;
 using System.IO;
 using System.Text;
 using IOException = AuroraEngine.Common.Formats.NCS.NCSDecomp.IOException;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Shared utility class for round-trip decompilation operations.

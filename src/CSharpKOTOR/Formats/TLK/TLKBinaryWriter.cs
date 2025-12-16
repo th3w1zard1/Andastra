@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using BinaryWriter = System.IO.BinaryWriter;
 
-namespace AuroraEngine.Common.Formats.TLK
+namespace BioWareCSharp.Common.Formats.TLK
 {
 
     /// <summary>

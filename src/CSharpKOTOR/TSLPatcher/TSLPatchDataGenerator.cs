@@ -5,19 +5,19 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Mods;
-using AuroraEngine.Common.Mods.GFF;
-using AuroraEngine.Common.Mods.SSF;
-using AuroraEngine.Common.Mods.TLK;
-using AuroraEngine.Common.Mods.TwoDA;
-using AuroraEngine.Common.Memory;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Formats.TLK;
-using AuroraEngine.Common.Formats.SSF;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.LIP;
+using BioWareCSharp.Common.Mods;
+using BioWareCSharp.Common.Mods.GFF;
+using BioWareCSharp.Common.Mods.SSF;
+using BioWareCSharp.Common.Mods.TLK;
+using BioWareCSharp.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Memory;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Formats.TLK;
+using BioWareCSharp.Common.Formats.SSF;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.LIP;
 using GFFContent = AuroraEngine.Common.Formats.GFF.GFFContent;
 using TLKAuto = AuroraEngine.Common.Formats.TLK.TLKAuto;
 using TwoDAAuto = AuroraEngine.Common.Formats.TwoDA.TwoDAAuto;
@@ -25,7 +25,7 @@ using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 using SSFAuto = AuroraEngine.Common.Formats.SSF.SSFAuto;
 using LIPAuto = AuroraEngine.Common.Formats.LIP.LIPAuto;
 
-namespace AuroraEngine.Common.TSLPatcher
+namespace BioWareCSharp.Common.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:68-129
     // Original: class TSLPatchDataGenerator: ...

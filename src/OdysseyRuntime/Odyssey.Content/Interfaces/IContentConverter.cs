@@ -1,8 +1,8 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using AuroraEngine.Common.Resources;
 
-namespace Odyssey.Content.Interfaces
+namespace BioWareEngines.Content.Interfaces
 {
     /// <summary>
     /// Interface for content converters that transform KOTOR assets to runtime format.

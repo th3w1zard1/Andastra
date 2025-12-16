@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Enums;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Interface for graphics backends that support bindless resources (DirectX 12, Vulkan descriptor indexing).
@@ -11,6 +11,14 @@ namespace Odyssey.Graphics.Common.Interfaces
     /// Based on DirectX 12 Bindless Resources: https://devblogs.microsoft.com/directx/in-the-works-hlsl-shader-model-6-6/
     /// Based on Vulkan Descriptor Indexing: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/vkspec.html#descriptorsets-updates
     /// </summary>
+    /// <remarks>
+    /// Bindless Resources Backend Interface:
+    /// - This is a modern graphics API feature (DirectX 12, Vulkan)
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game did not support bindless resources; this is a modern enhancement for GPU-driven rendering
+    /// - This interface: Provides bindless resources abstraction for modern graphics APIs, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     public interface IBindlessResourcesBackend : ILowLevelBackend
     {
         /// <summary>

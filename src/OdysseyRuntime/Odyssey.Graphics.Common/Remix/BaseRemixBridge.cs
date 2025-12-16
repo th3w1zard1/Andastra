@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Graphics.Common.Remix
+namespace BioWareEngines.Graphics.Common.Remix
 {
     /// <summary>
     /// Abstract base class for NVIDIA RTX Remix bridge implementations.

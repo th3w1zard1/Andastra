@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:287-529
     // Original: class Color:

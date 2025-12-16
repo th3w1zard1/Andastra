@@ -1,6 +1,6 @@
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Combat
+namespace BioWareEngines.Core.Combat
 {
     /// <summary>
     /// Type of attack.

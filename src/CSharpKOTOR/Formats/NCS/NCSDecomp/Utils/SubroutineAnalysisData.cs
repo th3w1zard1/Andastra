@@ -1,16 +1,16 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:23-569
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:23-569
 // Original: public class SubroutineAnalysisData
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.AST;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Scriptutils;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Scriptutils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack;
 using IEnumerator = AuroraEngine.Common.Formats.NCS.NCSDecomp.IEnumerator<object>;
 using IAnalysis = AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis.IAnalysis;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineAnalysisData
     {

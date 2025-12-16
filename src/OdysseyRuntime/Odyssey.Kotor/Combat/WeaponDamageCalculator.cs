@@ -1,10 +1,10 @@
 using System;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Kotor.Data;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Kotor.Data;
 
-namespace Odyssey.Kotor.Combat
+namespace BioWareEngines.Kotor.Combat
 {
     /// <summary>
     /// Calculates weapon damage from equipped items using baseitems.2da.

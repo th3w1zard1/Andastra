@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Script;
-using AuroraEngine.Common.Formats.NCS;
+using BioWareCSharp.Common.Script;
+using BioWareCSharp.Common.Formats.NCS;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
     public class BitwiseUnsignedRightAssignmentExpression : Expression
     {

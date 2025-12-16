@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
 
-namespace Odyssey.MonoGame.Materials
+namespace BioWareEngines.MonoGame.Materials
 {
     /// <summary>
     /// Physically-based rendering material implementation.

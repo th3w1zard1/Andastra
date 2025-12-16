@@ -2,11 +2,11 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Resources;
 using Vector3 = System.Numerics.Vector3;
 
-namespace AuroraEngine.Common.Formats.LYT
+namespace BioWareCSharp.Common.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_data.py:57-208
     // Original: class LYT(ComparableMixin)

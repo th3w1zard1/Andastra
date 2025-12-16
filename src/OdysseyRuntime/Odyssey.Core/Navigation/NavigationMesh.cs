@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Navigation
+namespace BioWareEngines.Core.Navigation
 {
     /// <summary>
     /// Navigation mesh for pathfinding and collision detection.

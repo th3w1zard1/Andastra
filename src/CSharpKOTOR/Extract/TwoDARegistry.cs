@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Minimal registry matching PyKotor extract/twoda.py structure.
     // Matching PyKotor extract/twoda.py StrRefs/ResRefs mappings (K1)

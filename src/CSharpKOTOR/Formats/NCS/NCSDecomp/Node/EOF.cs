@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.AST
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST
 {
     public sealed class EOF : Token
     {

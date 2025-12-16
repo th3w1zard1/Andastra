@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.TLK;
-using AuroraEngine.Common.Logger;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.TLK;
+using BioWareCSharp.Common.Logger;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Uninstall
+namespace BioWareCSharp.Common.Uninstall
 {
 
     /// <summary>

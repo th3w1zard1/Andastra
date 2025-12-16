@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Base interface for all post-processing effects.

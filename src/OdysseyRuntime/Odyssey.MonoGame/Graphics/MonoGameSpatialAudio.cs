@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Xna.Framework;
-using Odyssey.Graphics;
-using Odyssey.MonoGame.Audio;
+using BioWareEngines.Graphics;
+using BioWareEngines.MonoGame.Audio;
 
-namespace Odyssey.MonoGame.Graphics
+namespace BioWareEngines.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of ISpatialAudio.

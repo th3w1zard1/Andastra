@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.MonoGame.Enums
+namespace BioWareEngines.MonoGame.Enums
 {
     /// <summary>
     /// Supported graphics API backends.

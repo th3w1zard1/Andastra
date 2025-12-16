@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Navigation;
-using Odyssey.Core.Module;
-using Odyssey.Engines.Common;
-using Odyssey.Content.Interfaces;
-using Odyssey.Content.ResourceProviders;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Navigation;
+using BioWareEngines.Core.Module;
+using BioWareEngines.Engines.Common;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Content.ResourceProviders;
 using AuroraEngine.Common.Installation;
 
-namespace Odyssey.Engines.Odyssey
+namespace BioWareEngines.Engines.Odyssey
 {
     /// <summary>
     /// Odyssey Engine module loader implementation for KOTOR 1/2.

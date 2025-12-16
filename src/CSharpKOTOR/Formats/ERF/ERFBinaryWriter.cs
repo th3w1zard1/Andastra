@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 
-namespace AuroraEngine.Common.Formats.ERF
+namespace BioWareCSharp.Common.Formats.ERF
 {
 
     public class ERFBinaryWriter

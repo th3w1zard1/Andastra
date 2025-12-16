@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Tools;
+using BioWareCSharp.Common.Tools;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Formats.BIF
+namespace BioWareCSharp.Common.Resource.Formats.BIF
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/bif_data.py:72-99
     // Original: class BIFType(Enum):

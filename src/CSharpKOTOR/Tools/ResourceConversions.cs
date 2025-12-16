@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Formats.MDL;
-using AuroraEngine.Common.Formats.MDLData;
-using AuroraEngine.Common.Formats.TPC;
-using AuroraEngine.Common.Formats.WAV;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Formats.MDL;
+using BioWareCSharp.Common.Formats.MDLData;
+using BioWareCSharp.Common.Formats.TPC;
+using BioWareCSharp.Common.Formats.WAV;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/resources.py
     // Original: Resource conversion utility functions for KOTOR game resources

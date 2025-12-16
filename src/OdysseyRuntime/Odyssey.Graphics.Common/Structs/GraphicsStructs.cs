@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Enums;
 
-namespace Odyssey.Graphics.Common.Structs
+namespace BioWareEngines.Graphics.Common.Structs
 {
     /// <summary>
     /// Graphics backend capability information.

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using AuroraEngine.Common.Formats.TwoDA;
 using AuroraEngine.Common.Installation;
 using JetBrains.Annotations;
 
-namespace Odyssey.Kotor.Data
+namespace BioWareEngines.Kotor.Data
 {
     /// <summary>
     /// Manages game data tables (2DA files) for KOTOR.

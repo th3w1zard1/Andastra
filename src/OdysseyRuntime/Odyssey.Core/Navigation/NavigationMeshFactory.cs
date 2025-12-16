@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Odyssey.Core.Navigation
+namespace BioWareEngines.Core.Navigation
 {
     /// <summary>
     /// Factory for creating NavigationMesh instances from CSharpKOTOR BWM data.

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Utility.System
+namespace BioWareCSharp.Common.Utility.System
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/system/os_helper.py:15-59
     // Original: def get_size_on_disk(file_path: Path, stat_result: os.stat_result | None = None) -> int:

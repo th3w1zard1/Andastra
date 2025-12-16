@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Extract;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Extract;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Tools
+namespace BioWareCSharp.Common.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/validation.py
     // Original: Validation and investigation utilities for KOTOR installations and modules

@@ -1,4 +1,4 @@
-# HoloPatcher.NET Quick Start Guide
+# Andastra Quick Start Guide
 
 ## Prerequisites
 
@@ -18,14 +18,14 @@
 **Windows (PowerShell)**:
 
 ```powershell
-cd Tools\HoloPatcher.NET
+cd Andastra
 .\build.ps1
 ```
 
 **Linux/macOS (Bash)**:
 
 ```bash
-cd Tools/HoloPatcher.NET
+cd Andastra
 chmod +x build.sh
 ./build.sh
 ```
@@ -33,7 +33,7 @@ chmod +x build.sh
 ### Option 2: Using .NET CLI
 
 ```bash
-cd Tools/HoloPatcher.NET
+cd Andastra
 dotnet restore
 dotnet build
 ```
@@ -41,17 +41,17 @@ dotnet build
 ## Running the Application
 
 ```bash
-cd Tools/HoloPatcher.NET
+cd Andastra
 dotnet run --project src/HoloPatcher/HoloPatcher.csproj
 ```
 
 ## Project Structure Overview
 
 ```sh
-Tools/HoloPatcher.NET/
-├── HoloPatcher.sln              # Solution file
+Andastra/
+├── Andastra.sln                 # Solution file
 ├── src/
-│   ├── HoloPatcher/             # Main UI application (Avalonia)
+│   ├── HoloPatcher/             # Main UI application (Avalonia) - legacy name
 │   │   ├── Views/               # XAML views
 │   │   ├── ViewModels/          # View models (MVVM)
 │   │   ├── App.axaml            # Application definition
@@ -75,18 +75,18 @@ Tools/HoloPatcher.NET/
 
 **Visual Studio 2022**:
 
-- Open `HoloPatcher.sln`
+- Open `Andastra.sln`
 - Press F5 to build and run
 
 **JetBrains Rider**:
 
-- Open `HoloPatcher.sln`
+- Open `Andastra.sln`
 - Click the Run button or press Shift+F10
 
 **VS Code**:
 
 ```bash
-cd Tools/HoloPatcher.NET
+cd Andastra
 code .
 ```
 

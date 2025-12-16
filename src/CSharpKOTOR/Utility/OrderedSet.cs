@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Utility
+namespace BioWareCSharp.Common.Utility
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/more_collections.py:25-177
     // Original: class OrderedSet(MutableSet[T]):

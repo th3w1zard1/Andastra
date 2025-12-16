@@ -7,20 +7,20 @@
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>Odyssey.Game</RootNamespace>
-    <AssemblyName>Odyssey.Game</AssemblyName>
+    <RootNamespace>BioWareEngines.Game</RootNamespace>
+    <AssemblyName>BioWareEngines.Game</AssemblyName>
     <Description>MonoGame executable launcher for Odyssey Engine</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
-    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
-    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
-    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
-    <ProjectReference Include="..\Odyssey.Graphics\Odyssey.Graphics.csproj" />
-    <ProjectReference Include="..\Odyssey.MonoGame\Odyssey.MonoGame.csproj" />
-    <ProjectReference Include="..\Odyssey.Stride\Odyssey.Stride.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Core\BioWareEngines.Core.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Content\BioWareEngines.Content.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Scripting\BioWareEngines.Scripting.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Kotor\BioWareEngines.Kotor.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Graphics\BioWareEngines.Graphics.csproj" />
+    <ProjectReference Include="..\BioWareEngines.MonoGame\BioWareEngines.MonoGame.csproj" />
+    <ProjectReference Include="..\BioWareEngines.Stride\BioWareEngines.Stride.csproj" />
   </ItemGroup>
 
   <ItemGroup>

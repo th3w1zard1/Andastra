@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using AuroraEngine.Common.Formats.TwoDA;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
-using Odyssey.Kotor.Profiles;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Kotor.Profiles;
 
-namespace Odyssey.Kotor.Data
+namespace BioWareEngines.Kotor.Data
 {
     /// <summary>
     /// Manages loading and caching of 2DA tables for game data lookup.

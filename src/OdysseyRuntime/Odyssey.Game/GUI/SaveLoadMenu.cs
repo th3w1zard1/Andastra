@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Odyssey.Core.Save;
-using Odyssey.Graphics;
+using BioWareEngines.Core.Save;
+using BioWareEngines.Graphics;
 using Vector2 = Odyssey.Graphics.Vector2;
 using Rectangle = Odyssey.Graphics.Rectangle;
 using Color = Odyssey.Graphics.Color;
 
-namespace Odyssey.Game.GUI
+namespace BioWareEngines.Game.GUI
 {
     /// <summary>
     /// Handles save/load menu rendering and input.

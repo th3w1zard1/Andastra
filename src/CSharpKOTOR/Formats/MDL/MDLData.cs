@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.MDL;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.MDL;
 
-namespace AuroraEngine.Common.Formats.MDLData
+namespace BioWareCSharp.Common.Formats.MDLData
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py
     // Simplified data containers mirroring fields for MDL/MDX structures.

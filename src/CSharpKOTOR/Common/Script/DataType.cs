@@ -1,6 +1,6 @@
 using System;
 
-namespace AuroraEngine.Common.Script
+namespace BioWareCSharp.Common.Script
 {
 
     /// <summary>

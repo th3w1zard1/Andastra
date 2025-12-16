@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Odyssey.MonoGame.Animation
+namespace BioWareEngines.MonoGame.Animation
 {
     /// <summary>
     /// Animation compression system for reducing animation data size.

@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.AST
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.AST
 {
     public sealed class Start : Node
     {

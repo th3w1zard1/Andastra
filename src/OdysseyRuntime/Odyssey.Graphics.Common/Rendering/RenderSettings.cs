@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Enums;
 
-namespace Odyssey.Graphics.Common.Rendering
+namespace BioWareEngines.Graphics.Common.Rendering
 {
     /// <summary>
     /// Comprehensive render settings for the Odyssey engine.

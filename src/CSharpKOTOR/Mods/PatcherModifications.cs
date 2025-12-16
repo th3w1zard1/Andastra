@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Memory;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Memory;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Mods
+namespace BioWareCSharp.Common.Mods
 {
 
     /// <summary>

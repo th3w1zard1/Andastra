@@ -1,9 +1,9 @@
 using System;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Structs;
-using Odyssey.Graphics.Common.Rendering;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Rendering;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Low-level graphics backend interface for API-specific implementations.

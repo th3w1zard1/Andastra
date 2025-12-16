@@ -2,10 +2,10 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common;
+using BioWareCSharp.Common;
 using Vector3 = System.Numerics.Vector3;
 
-namespace AuroraEngine.Common.Formats.BWM
+namespace BioWareCSharp.Common.Formats.BWM
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:127-1843
     // Original: class BWM(ComparableMixin)

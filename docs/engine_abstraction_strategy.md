@@ -63,7 +63,7 @@ Odyssey.Engines.Eclipse (future)
 **Decision**: Keep `Game` enum in `AuroraEngine.Common` for now.
 
 **Rationale**:
-- Used by patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
+- Used by patcher tools (Andastra, HolocronToolset, NCSDecomp, KotorDiff)
 - Creating a project reference from `AuroraEngine.Common` to `Odyssey.Engines.Odyssey` would create a circular dependency
 - `AuroraEngine.Common` is currently KOTOR-specific, but the structure allows for future expansion
 - Document it as KOTOR-specific and create a wrapper in `Odyssey.Engines.Odyssey` if needed
@@ -189,6 +189,6 @@ Odyssey.Engines.Eclipse (future)
 - Minimize duplication
 - Ensure C# 7.3 compatibility
 - Maintain 1:1 parity with original KOTOR 2 engine (Ghidra verification)
-- Consider HoloPatcher.NET, HolocronToolset, NCSDecomp, and KotorDiff dependencies
+- Consider Andastra, HolocronToolset, NCSDecomp, and KotorDiff dependencies
 - `AuroraEngine.Common` is currently KOTOR-specific, but the structure allows for future expansion to other engines
 

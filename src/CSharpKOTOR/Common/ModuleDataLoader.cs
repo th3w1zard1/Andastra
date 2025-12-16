@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Resource.Generics;
-using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Tools;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Installation;
+using BioWareCSharp.Common.Resource.Generics;
+using BioWareCSharp.Common.Resources;
+using BioWareCSharp.Common.Tools;
 
-namespace AuroraEngine.Common
+namespace BioWareCSharp.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py (backend-agnostic loader)
     public static class ModuleDataSearch

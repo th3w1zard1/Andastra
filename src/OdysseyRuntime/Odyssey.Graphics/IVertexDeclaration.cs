@@ -1,4 +1,4 @@
-namespace Odyssey.Graphics
+namespace BioWareEngines.Graphics
 {
     /// <summary>
     /// Vertex declaration abstraction for defining vertex formats.

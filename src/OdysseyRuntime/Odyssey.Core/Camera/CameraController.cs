@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Camera
+namespace BioWareEngines.Core.Camera
 {
     /// <summary>
     /// Manages camera behavior in the game world.

@@ -1,7 +1,7 @@
 using System;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Dialogue
+namespace BioWareEngines.Core.Dialogue
 {
     /// <summary>
     /// Interface for loading dialogue files.

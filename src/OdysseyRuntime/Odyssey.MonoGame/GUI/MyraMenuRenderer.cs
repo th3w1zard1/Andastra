@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.GUI
+namespace BioWareEngines.MonoGame.GUI
 {
     /// <summary>
     /// Myra-based menu renderer for MonoGame (if Myra is available).

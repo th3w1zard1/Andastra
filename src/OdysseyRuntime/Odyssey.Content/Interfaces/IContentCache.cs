@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using AuroraEngine.Common.Resources;
 
-namespace Odyssey.Content.Interfaces
+namespace BioWareEngines.Content.Interfaces
 {
     /// <summary>
     /// Cache for converted content assets.
@@ -30,38 +30,38 @@ namespace Odyssey.Content.Interfaces
         /// Tries to get a cached item.
         /// </summary>
         Task<CacheResult<T>> TryGetAsync<T>(CacheKey key, CancellationToken ct) where T : class;
-        
+
         /// <summary>
         /// Stores an item in the cache.
         /// </summary>
         Task StoreAsync<T>(CacheKey key, T item, CancellationToken ct) where T : class;
-        
+
         /// <summary>
         /// Invalidates a cache entry.
         /// </summary>
         void Invalidate(CacheKey key);
-        
+
         /// <summary>
         /// Clears the entire cache.
         /// </summary>
         void Clear();
-        
+
         /// <summary>
         /// Gets the cache directory path.
         /// </summary>
         string CacheDirectory { get; }
-        
+
         /// <summary>
         /// Gets the total size of the cache in bytes.
         /// </summary>
         long TotalSize { get; }
-        
+
         /// <summary>
         /// Prunes old cache entries to stay within size limits.
         /// </summary>
         void Prune(long maxSizeBytes);
     }
-    
+
     /// <summary>
     /// Key for cache entries.
     /// </summary>
@@ -72,7 +72,7 @@ namespace Odyssey.Content.Interfaces
         public readonly ResourceType ResourceType;
         public readonly string SourceHash;
         public readonly int ConverterVersion;
-        
+
         public CacheKey(GameType gameType, string resRef, ResourceType resourceType, string sourceHash, int converterVersion)
         {
             GameType = gameType;
@@ -81,7 +81,7 @@ namespace Odyssey.Content.Interfaces
             SourceHash = sourceHash ?? string.Empty;
             ConverterVersion = converterVersion;
         }
-        
+
         public bool Equals(CacheKey other)
         {
             return GameType == other.GameType &&
@@ -90,12 +90,12 @@ namespace Odyssey.Content.Interfaces
                    string.Equals(SourceHash, other.SourceHash, StringComparison.Ordinal) &&
                    ConverterVersion == other.ConverterVersion;
         }
-        
+
         public override bool Equals(object obj)
         {
             return obj is CacheKey other && Equals(other);
         }
-        
+
         public override int GetHashCode()
         {
             unchecked
@@ -108,14 +108,14 @@ namespace Odyssey.Content.Interfaces
                 return hash;
             }
         }
-        
+
         public string ToFileName()
         {
-            return string.Format("{0}_{1}_{2}_{3}_v{4}", 
+            return string.Format("{0}_{1}_{2}_{3}_v{4}",
                 GameType, ResRef, (int)ResourceType, SourceHash.Substring(0, Math.Min(8, SourceHash.Length)), ConverterVersion);
         }
     }
-    
+
     /// <summary>
     /// Result of a cache lookup.
     /// </summary>
@@ -123,18 +123,18 @@ namespace Odyssey.Content.Interfaces
     {
         public readonly bool Found;
         public readonly T Value;
-        
+
         public CacheResult(bool found, T value)
         {
             Found = found;
             Value = value;
         }
-        
+
         public static CacheResult<T> Miss()
         {
             return new CacheResult<T>(false, null);
         }
-        
+
         public static CacheResult<T> Hit(T value)
         {
             return new CacheResult<T>(true, value);

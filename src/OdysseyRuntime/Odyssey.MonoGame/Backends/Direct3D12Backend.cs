@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.MonoGame.Enums;
-using Odyssey.MonoGame.Interfaces;
-using Odyssey.MonoGame.Rendering;
+using BioWareEngines.MonoGame.Enums;
+using BioWareEngines.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Rendering;
 
-namespace Odyssey.MonoGame.Backends
+namespace BioWareEngines.MonoGame.Backends
 {
     /// <summary>
     /// DirectX 12 graphics backend implementation.

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using AuroraEngine.Common.Resources;
-using Odyssey.Content.Interfaces;
+using BioWareEngines.Content.Interfaces;
 
-namespace Odyssey.Content.MDL
+namespace BioWareEngines.Content.MDL
 {
     /// <summary>
     /// High-level MDL model loader that integrates with the resource provider system.

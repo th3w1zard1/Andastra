@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Core.Dialogue
+namespace BioWareEngines.Core.Dialogue
 {
     /// <summary>
     /// Controls lip sync animation during dialogue.

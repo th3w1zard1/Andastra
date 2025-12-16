@@ -1,8 +1,8 @@
-﻿using System.IO;
-using AuroraEngine.Common.Formats.KEY;
-using AuroraEngine.Common.Resources;
+using System.IO;
+using BioWareCSharp.Common.Formats.KEY;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Thin wrapper to mirror PyKotor extract.keywriter.KEYWriter.
     public static class KeyWriterWrapper

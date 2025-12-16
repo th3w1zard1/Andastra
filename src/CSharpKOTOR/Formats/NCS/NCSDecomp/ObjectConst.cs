@@ -1,14 +1,14 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/ObjectConst.java:13-34
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/ObjectConst.java:13-34
 // Original: public class ObjectConst extends Const { private Integer value; public ObjectConst(Integer value) { this.type = new Type((byte)6); this.value = value; this.size = 1; } public Integer value() { return this.value; } @Override public String toString() { if (this.value == 0) { return "OBJECT_SELF"; } else { return this.value == 1 ? "OBJECT_INVALID" : this.value.toString(); } } }
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Utils;
 using UtilsType = AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils.Type;
 
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Stack
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp.Stack
 {
     public class ObjectConst : Const
     {

@@ -1,4 +1,4 @@
-﻿namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Java-style enumerator interface with HasNext() and Next() methods.

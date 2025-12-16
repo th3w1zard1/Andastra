@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Odyssey.Graphics.Common.Enums;
-using Odyssey.Graphics.Common.Structs;
+using BioWareEngines.Graphics.Common.Enums;
+using BioWareEngines.Graphics.Common.Structs;
 
-namespace Odyssey.Graphics.Common.Interfaces
+namespace BioWareEngines.Graphics.Common.Interfaces
 {
     /// <summary>
     /// Hardware raytracing system interface.

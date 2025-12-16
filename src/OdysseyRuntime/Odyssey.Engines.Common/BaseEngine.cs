@@ -1,11 +1,11 @@
 using System;
 using JetBrains.Annotations;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Interfaces;
-using Odyssey.Content.Interfaces;
-using Odyssey.Scripting.Interfaces;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Content.Interfaces;
+using BioWareEngines.Scripting.Interfaces;
 
-namespace Odyssey.Engines.Common
+namespace BioWareEngines.Engines.Common
 {
     /// <summary>
     /// Abstract base class for all BioWare engine implementations.

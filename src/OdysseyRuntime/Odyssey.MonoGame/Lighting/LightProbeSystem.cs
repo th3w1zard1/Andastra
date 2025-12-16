@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Odyssey.MonoGame.Lighting
+namespace BioWareEngines.MonoGame.Lighting
 {
     /// <summary>
     /// Light probe system for global illumination approximation.

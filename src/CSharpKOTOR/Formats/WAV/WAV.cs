@@ -1,7 +1,7 @@
-﻿using System;
-using AuroraEngine.Common.Resources;
+using System;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Formats.WAV
+namespace BioWareCSharp.Common.Formats.WAV
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_data.py:56-100
     // Original: class WAV

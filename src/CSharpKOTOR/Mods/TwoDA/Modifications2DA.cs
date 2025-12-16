@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Logger;
-using AuroraEngine.Common.Memory;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Logger;
+using BioWareCSharp.Common.Memory;
 
-namespace AuroraEngine.Common.Mods.TwoDA
+namespace BioWareCSharp.Common.Mods.TwoDA
 {
 
     /// <summary>

@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Core.Actions;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Entities;
-using Odyssey.Kotor.Systems;
-using Odyssey.Kotor.Dialogue;
-using Odyssey.Kotor.Components;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Core.Actions;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Kotor.Systems;
+using BioWareEngines.Kotor.Dialogue;
+using BioWareEngines.Kotor.Components;
 
-namespace Odyssey.Kotor.Game
+namespace BioWareEngines.Kotor.Game
 {
     /// <summary>
     /// Handles player input and movement.

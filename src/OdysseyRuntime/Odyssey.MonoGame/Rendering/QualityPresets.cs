@@ -1,7 +1,7 @@
 using System;
-using Odyssey.MonoGame.Interfaces;
+using BioWareEngines.MonoGame.Interfaces;
 
-namespace Odyssey.MonoGame.Rendering
+namespace BioWareEngines.MonoGame.Rendering
 {
     /// <summary>
     /// Render quality presets for common performance profiles.

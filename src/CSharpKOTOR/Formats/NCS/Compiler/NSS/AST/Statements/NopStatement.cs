@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Formats.NCS;
+using System.Collections.Generic;
+using BioWareCSharp.Common.Formats.NCS;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

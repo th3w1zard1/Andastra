@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Win32;
-using Odyssey.Core;
+using BioWareEngines.Core;
 
-namespace Odyssey.Game.Core
+namespace BioWareEngines.Game.Core
 {
     /// <summary>
     /// Detects KOTOR installation paths from common locations.

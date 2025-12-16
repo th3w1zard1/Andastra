@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace AuroraEngine.Common.Memory
+namespace BioWareCSharp.Common.Memory
 {
 
     /// <summary>

@@ -1,4 +1,4 @@
-namespace Odyssey.Core.Enums
+namespace BioWareEngines.Core.Enums
 {
     /// <summary>
     /// Types of actions that can be queued on entities.

@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Formats.TwoDA;
-using AuroraEngine.Common.Mods.TwoDA;
+using BioWareCSharp.Common.Formats.TwoDA;
+using BioWareCSharp.Common.Mods.TwoDA;
 
-namespace AuroraEngine.Common.Diff
+namespace BioWareCSharp.Common.Diff
 {
 
     /// <summary>

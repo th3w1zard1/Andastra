@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Resources;
+using System.Collections.Generic;
+using BioWareCSharp.Common.Resources;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Resource.Generics.GUI
+namespace BioWareCSharp.Common.Resource.Generics.GUI
 {
     /// <summary>
     /// A class representing a GUI resource in KotOR games.

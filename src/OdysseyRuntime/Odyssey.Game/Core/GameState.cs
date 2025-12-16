@@ -1,4 +1,4 @@
-namespace Odyssey.Game.Core
+namespace BioWareEngines.Game.Core
 {
     /// <summary>
     /// Represents the current state of the game.

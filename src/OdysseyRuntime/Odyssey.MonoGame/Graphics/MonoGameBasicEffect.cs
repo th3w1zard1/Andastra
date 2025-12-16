@@ -1,10 +1,10 @@
 using System;
 using System.Numerics;
 using Microsoft.Xna.Framework.Graphics;
-using Odyssey.Graphics;
-using Odyssey.Graphics.Common.Effects;
+using BioWareEngines.Graphics;
+using BioWareEngines.Graphics.Common.Effects;
 
-namespace Odyssey.MonoGame.Graphics
+namespace BioWareEngines.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IBasicEffect.

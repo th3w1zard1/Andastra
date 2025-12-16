@@ -1,6 +1,6 @@
-using Odyssey.Core.Actions;
+using BioWareEngines.Core.Actions;
 
-namespace Odyssey.Core.Interfaces.Components
+namespace BioWareEngines.Core.Interfaces.Components
 {
     /// <summary>
     /// Component for entities that have an action queue.

@@ -1,6 +1,6 @@
-using Odyssey.Core.Interfaces;
+using BioWareEngines.Core.Interfaces;
 
-namespace Odyssey.Scripting.Interfaces
+namespace BioWareEngines.Scripting.Interfaces
 {
     /// <summary>
     /// Persistent script state - global and local variables.

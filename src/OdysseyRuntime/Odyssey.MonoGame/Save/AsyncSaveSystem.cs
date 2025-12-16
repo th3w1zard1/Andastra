@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Odyssey.MonoGame.Save
+namespace BioWareEngines.MonoGame.Save
 {
     /// <summary>
     /// Async save/load system for non-blocking game state persistence.

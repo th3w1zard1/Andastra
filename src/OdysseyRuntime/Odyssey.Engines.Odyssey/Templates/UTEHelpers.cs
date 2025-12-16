@@ -3,7 +3,7 @@ using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
 using static AuroraEngine.Common.GameExtensions;
 
-namespace Odyssey.Engines.Odyssey.Templates
+namespace BioWareEngines.Engines.Odyssey.Templates
 {
     // Moved from AuroraEngine.Common.Resource.Generics.UTEHelpers to Odyssey.Engines.Odyssey.Templates
     // This is KOTOR/Odyssey-specific GFF template helper functions

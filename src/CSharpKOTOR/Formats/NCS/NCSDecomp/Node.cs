@@ -1,12 +1,12 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Node.java:1-115
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Node.java:1-115
 // Original: public abstract class Node extends Switchable implements Cloneable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;
-namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
+using BioWareCSharp.Common.Formats.NCS.NCSDecomp.Analysis;
+namespace BioWareCSharp.Common.Formats.NCS.NCSDecomp
 {
     public abstract class Node : Switchable, Cloneable
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Odyssey.MonoGame.Particles
+namespace BioWareEngines.MonoGame.Particles
 {
     /// <summary>
     /// Particle sorting system for proper alpha blending.

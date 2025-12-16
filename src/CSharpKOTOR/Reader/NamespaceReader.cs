@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Namespaces;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Namespaces;
 using IniParser;
 using IniParser.Model;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Reader
+namespace BioWareCSharp.Common.Reader
 {
 
     /// <summary>

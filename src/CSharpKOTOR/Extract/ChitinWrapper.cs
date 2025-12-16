@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Formats.Chitin;
-using AuroraEngine.Common.Resources;
+using BioWareCSharp.Common.Formats.Chitin;
+using BioWareCSharp.Common.Resources;
 
-namespace AuroraEngine.Common.Extract
+namespace BioWareCSharp.Common.Extract
 {
     // Thin wrapper matching PyKotor extract.chitin.Chitin semantics (read-only).
     public class ChitinWrapper

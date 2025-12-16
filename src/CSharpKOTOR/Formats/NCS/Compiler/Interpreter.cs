@@ -2,11 +2,11 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common;
-using AuroraEngine.Common.Script;
+using BioWareCSharp.Common;
+using BioWareCSharp.Common.Script;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Formats.NCS.Compiler
+namespace BioWareCSharp.Common.Formats.NCS.Compiler
 {
 
     /// <summary>

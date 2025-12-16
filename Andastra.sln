@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoloPatcher", "src\HoloPatcher\HoloPatcher.csproj", "{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra", "src\HoloPatcher\HoloPatcher.csproj", "{6C7E8B5E-8D4F-4B3A-9E2A-F5B7C9D1E3A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuroraEngine.Common", "src\CSharpKOTOR\AuroraEngine.Common.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareCSharp.Common", "src\BioWareCSharp\BioWareCSharp.Common.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSLPatcher.Tests", "src\TSLPatcher.Tests\TSLPatcher.Tests.csproj", "{9B1E2F3A-4D5C-6F7B-8E9C-0A1B2C3D4E5F}"
 EndProject
@@ -13,43 +13,43 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCSDecomp", "src\NCSDecomp\NCSDecomp.csproj", "{06F3A9B8-9C87-40D2-94B5-A509238F348D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoloPatcher.UI", "src\HoloPatcher.UI\HoloPatcher.UI.csproj", "{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.UI", "src\HoloPatcher.UI\HoloPatcher.UI.csproj", "{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolocronToolset.NET", "src\HolocronToolset.NET\HolocronToolset.NET.csproj", "{B5D847E7-A300-47D8-BCA1-3339A71E0E88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolocronToolset.NET.Tests", "src\HolocronToolset.NET.Tests\HolocronToolset.NET.Tests.csproj", "{5FBA2891-C5C6-4B17-A6E2-1C9EFEC7E8DF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OdysseyRuntime", "OdysseyRuntime", "{DE75CE55-0C06-42AB-7654-F4E104E2AADB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BioWareEngines", "BioWareEngines", "{DE75CE55-0C06-42AB-7654-F4E104E2AADB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Core", "src\OdysseyRuntime\Odyssey.Core\Odyssey.Core.csproj", "{6D60797F-9C20-45A9-9555-38865885E5C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Core", "src\BioWareEngines\BioWareEngines.Core\BioWareEngines.Core.csproj", "{6D60797F-9C20-45A9-9555-38865885E5C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Content", "src\OdysseyRuntime\Odyssey.Content\Odyssey.Content.csproj", "{3452FBD2-23D5-4E96-938A-087B0A2010E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Content", "src\BioWareEngines\BioWareEngines.Content\BioWareEngines.Content.csproj", "{3452FBD2-23D5-4E96-938A-087B0A2010E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Scripting", "src\OdysseyRuntime\Odyssey.Scripting\Odyssey.Scripting.csproj", "{E5AD48E5-052B-4312-BB09-B98A10B48663}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Scripting", "src\BioWareEngines\BioWareEngines.Scripting\BioWareEngines.Scripting.csproj", "{E5AD48E5-052B-4312-BB09-B98A10B48663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Kotor", "src\OdysseyRuntime\Odyssey.Kotor\Odyssey.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Kotor", "src\BioWareEngines\BioWareEngines.Kotor\BioWareEngines.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.MonoGame", "src\OdysseyRuntime\Odyssey.MonoGame\Odyssey.MonoGame.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.MonoGame", "src\BioWareEngines\BioWareEngines.MonoGame\BioWareEngines.MonoGame.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Game", "src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj", "{463A33EC-7903-447E-B2CC-992FD84722F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Game", "src\BioWareEngines\BioWareEngines.Game\BioWareEngines.Game.csproj", "{463A33EC-7903-447E-B2CC-992FD84722F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Tests", "src\OdysseyRuntime\Odyssey.Tests\Odyssey.Tests.csproj", "{DDDD00D4-A580-4440-B93B-437B3FAEBEE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Tests", "src\BioWareEngines\BioWareEngines.Tests\BioWareEngines.Tests.csproj", "{DDDD00D4-A580-4440-B93B-437B3FAEBEE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Tooling", "src\OdysseyRuntime\Odyssey.Tooling\Odyssey.Tooling.csproj", "{923C03F6-1D28-4BE5-AF20-76593AD8F716}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Tooling", "src\BioWareEngines\BioWareEngines.Tooling\BioWareEngines.Tooling.csproj", "{923C03F6-1D28-4BE5-AF20-76593AD8F716}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Graphics", "src\OdysseyRuntime\Odyssey.Graphics\Odyssey.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Graphics", "src\BioWareEngines\BioWareEngines.Graphics\BioWareEngines.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Graphics.Common", "src\OdysseyRuntime\Odyssey.Graphics.Common\Odyssey.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Graphics.Common", "src\BioWareEngines\BioWareEngines.Graphics.Common\BioWareEngines.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Stride", "src\OdysseyRuntime\Odyssey.Stride\Odyssey.Stride.csproj", "{89381CF8-A859-479A-AEAC-9C8A36D6D355}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Stride", "src\BioWareEngines\BioWareEngines.Stride\BioWareEngines.Stride.csproj", "{89381CF8-A859-479A-AEAC-9C8A36D6D355}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Engines.Aurora", "src\OdysseyRuntime\Odyssey.Engines.Aurora\Odyssey.Engines.Aurora.csproj", "{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Aurora", "src\BioWareEngines\BioWareEngines.Aurora\BioWareEngines.Aurora.csproj", "{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Engines.Common", "src\OdysseyRuntime\Odyssey.Engines.Common\Odyssey.Engines.Common.csproj", "{C013626C-1404-4FEF-A1B4-C02CADA857BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Common", "src\BioWareEngines\BioWareEngines.Common\BioWareEngines.Common.csproj", "{C013626C-1404-4FEF-A1B4-C02CADA857BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Engines.Eclipse", "src\OdysseyRuntime\Odyssey.Engines.Eclipse\Odyssey.Engines.Eclipse.csproj", "{59ECBBB7-4F75-45B4-AF07-2F741E2BAB93}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Eclipse", "src\BioWareEngines\BioWareEngines.Eclipse\BioWareEngines.Eclipse.csproj", "{59ECBBB7-4F75-45B4-AF07-2F741E2BAB93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Engines.Odyssey", "src\OdysseyRuntime\Odyssey.Engines.Odyssey\Odyssey.Engines.Odyssey.csproj", "{FEED5800-938A-4D45-A8EE-73ECEF36C8A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BioWareEngines.Odyssey", "src\BioWareEngines\BioWareEngines.Odyssey\BioWareEngines.Odyssey.csproj", "{FEED5800-938A-4D45-A8EE-73ECEF36C8A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -214,7 +214,7 @@ Global
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x64.ActiveCfg = Release|Any CPU
-		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x64.Build.0 = Release|Any CPU
+		{463A22F3}.Release|x64.Build.0 = Release|Any CPU
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x86.ActiveCfg = Release|Any CPU
 		{463A33EC-7903-447E-B2CC-992FD84722F3}.Release|x86.Build.0 = Release|Any CPU
 		{DDDD00D4-A580-4440-B93B-437B3FAEBEE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -354,3 +354,4 @@ Global
 		{FEED5800-938A-4D45-A8EE-73ECEF36C8A6} = {DE75CE55-0C06-42AB-7654-F4E104E2AADB}
 	EndGlobalSection
 EndGlobal
+

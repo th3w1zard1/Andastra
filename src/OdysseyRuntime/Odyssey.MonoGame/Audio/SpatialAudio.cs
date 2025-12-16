@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Odyssey.MonoGame.Audio
+namespace BioWareEngines.MonoGame.Audio
 {
     /// <summary>
     /// Spatial audio system for 3D sound positioning.

@@ -1,8 +1,8 @@
-﻿using System;
-using AuroraEngine.Common.Formats.GFF;
-using AuroraEngine.Common.Resource.Generics;
+using System;
+using BioWareCSharp.Common.Formats.GFF;
+using BioWareCSharp.Common.Resource.Generics;
 
-namespace AuroraEngine.Common.Resources
+namespace BioWareCSharp.Common.Resources
 {
     // Helper functions for reading GFF-based resources
     // These will be used by ModuleResource<T>.Resource() to load resources

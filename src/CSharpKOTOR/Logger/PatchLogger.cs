@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace AuroraEngine.Common.Logger
+namespace BioWareCSharp.Common.Logger
 {
 
     /// <summary>

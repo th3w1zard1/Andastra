@@ -8,19 +8,19 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.MDL;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
-using Odyssey.Core.Entities;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Graphics;
-using Odyssey.Kotor.EngineApi;
-using Odyssey.Kotor.Game;
-using Odyssey.Scripting.EngineApi;
-using Odyssey.Scripting.VM;
+using BioWareEngines.Core.Entities;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Graphics;
+using BioWareEngines.Kotor.EngineApi;
+using BioWareEngines.Kotor.Game;
+using BioWareEngines.Scripting.EngineApi;
+using BioWareEngines.Scripting.VM;
 using Color = Odyssey.Graphics.Color;
 using Rectangle = Odyssey.Graphics.Rectangle;
 using Vector2 = Odyssey.Graphics.Vector2;
 
-namespace Odyssey.Game.Core
+namespace BioWareEngines.Game.Core
 {
     /// <summary>
     /// Odyssey game implementation using graphics abstraction layer.

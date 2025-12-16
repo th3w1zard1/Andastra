@@ -1,15 +1,15 @@
 using System;
-using Odyssey.Core.Actions;
-using Odyssey.Core.AI;
-using Odyssey.Core.Combat;
-using Odyssey.Core.Dialogue;
-using Odyssey.Core.Enums;
-using Odyssey.Core.Interfaces;
-using Odyssey.Core.Interfaces.Components;
-using Odyssey.Core.Perception;
-using Odyssey.Core.Triggers;
+using BioWareEngines.Core.Actions;
+using BioWareEngines.Core.AI;
+using BioWareEngines.Core.Combat;
+using BioWareEngines.Core.Dialogue;
+using BioWareEngines.Core.Enums;
+using BioWareEngines.Core.Interfaces;
+using BioWareEngines.Core.Interfaces.Components;
+using BioWareEngines.Core.Perception;
+using BioWareEngines.Core.Triggers;
 
-namespace Odyssey.Core.GameLoop
+namespace BioWareEngines.Core.GameLoop
 {
     /// <summary>
     /// Fixed-timestep game loop implementation following the 7-phase pattern.
