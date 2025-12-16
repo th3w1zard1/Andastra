@@ -136,28 +136,92 @@ namespace HolocronToolset.Editors
 
         private void SetupUI()
         {
-            // Try to find controls from XAML if available
-            _talkTable = this.FindControl<DataGrid>("talkTable");
-            _textEdit = this.FindControl<TextBox>("textEdit");
-            _soundEdit = this.FindControl<TextBox>("soundEdit");
-            _searchEdit = this.FindControl<TextBox>("searchEdit");
-            _searchButton = this.FindControl<Button>("searchButton");
-            _jumpSpinbox = this.FindControl<NumericUpDown>("jumpSpinbox");
-            _jumpButton = this.FindControl<Button>("jumpButton");
-            var searchBoxBorder = this.FindControl<Border>("searchBox");
-            if (searchBoxBorder != null)
+            // If controls are already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (_talkTable != null && _textEdit != null && _soundEdit != null && _searchEdit != null && _searchButton != null && _jumpSpinbox != null && _jumpButton != null)
             {
-                _searchBox = searchBoxBorder;
+                if (_talkTable.ItemsSource == null)
+                {
+                    _talkTable.ItemsSource = _filteredEntries.View;
+                }
+                return;
             }
-            var jumpBoxBorder = this.FindControl<Border>("jumpBox");
-            if (jumpBoxBorder != null)
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
             {
-                _jumpBox = jumpBoxBorder;
+                // Try to find controls from XAML if available
+                _talkTable = this.FindControl<DataGrid>("talkTable");
+                _textEdit = this.FindControl<TextBox>("textEdit");
+                _soundEdit = this.FindControl<TextBox>("soundEdit");
+                _searchEdit = this.FindControl<TextBox>("searchEdit");
+                _searchButton = this.FindControl<Button>("searchButton");
+                _jumpSpinbox = this.FindControl<NumericUpDown>("jumpSpinbox");
+                _jumpButton = this.FindControl<Button>("jumpButton");
+                var searchBoxBorder = this.FindControl<Border>("searchBox");
+                if (searchBoxBorder != null)
+                {
+                    _searchBox = searchBoxBorder;
+                }
+                var jumpBoxBorder = this.FindControl<Border>("jumpBox");
+                if (jumpBoxBorder != null)
+                {
+                    _jumpBox = jumpBoxBorder;
+                }
+            }
+            catch
+            {
+                // XAML controls not available - controls should already be initialized by SetupProgrammaticUI
+                // If not, ensure minimal setup
+                if (_talkTable == null)
+                {
+                    _talkTable = new DataGrid
+                    {
+                        AutoGenerateColumns = false,
+                        CanUserReorderColumns = false,
+                        CanUserResizeColumns = true,
+                        SelectionMode = DataGridSelectionMode.Single
+                    };
+                }
+                if (_textEdit == null)
+                {
+                    _textEdit = new TextBox { AcceptsReturn = true };
+                }
+                if (_soundEdit == null)
+                {
+                    _soundEdit = new TextBox { MaxLength = 16 };
+                }
+                if (_searchEdit == null)
+                {
+                    _searchEdit = new TextBox { Watermark = "Search..." };
+                }
+                if (_searchButton == null)
+                {
+                    _searchButton = new Button { Content = "Search" };
+                }
+                if (_jumpSpinbox == null)
+                {
+                    _jumpSpinbox = new NumericUpDown { Minimum = 0, Maximum = 0 };
+                }
+                if (_jumpButton == null)
+                {
+                    _jumpButton = new Button { Content = "Go" };
+                }
+                if (_searchBox == null)
+                {
+                    _searchBox = new StackPanel { Orientation = Orientation.Horizontal };
+                }
+                if (_jumpBox == null)
+                {
+                    _jumpBox = new StackPanel { Orientation = Orientation.Horizontal };
+                }
             }
 
             if (_talkTable != null)
             {
-                _talkTable.ItemsSource = _filteredEntries.View;
+                if (_talkTable.ItemsSource == null)
+                {
+                    _talkTable.ItemsSource = _filteredEntries.View;
+                }
             }
             else if (_talkTable == null && Content is StackPanel panel)
             {
@@ -167,7 +231,10 @@ namespace HolocronToolset.Editors
                     if (child is DataGrid dg)
                     {
                         _talkTable = dg;
-                        _talkTable.ItemsSource = _filteredEntries.View;
+                        if (_talkTable.ItemsSource == null)
+                        {
+                            _talkTable.ItemsSource = _filteredEntries.View;
+                        }
                         break;
                     }
                 }
