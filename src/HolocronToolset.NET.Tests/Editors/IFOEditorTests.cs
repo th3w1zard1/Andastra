@@ -951,7 +951,7 @@ namespace HolocronToolset.NET.Tests.Editors
             modifiedIfo.Tag.Should().Be("combined_test");
             modifiedIfo.VoId.Should().Be("vo_combined");
             modifiedIfo.Hak.Should().Be("hak_combined");
-            modifiedIfo.EntryArea.ToString().Should().Be("area_combined");
+            modifiedIfo.ResRef.ToString().Should().Be("area_combined");
             Math.Abs(modifiedIfo.EntryX - 10.0f).Should().BeLessThan(0.001f);
             Math.Abs(modifiedIfo.EntryY - 20.0f).Should().BeLessThan(0.001f);
             Math.Abs(modifiedIfo.EntryZ - 5.0f).Should().BeLessThan(0.001f);
