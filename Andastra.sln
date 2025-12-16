@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Andastra.Formats", "Andastra.Formats", "{458EFFFA-DFDC-44EC-AE5F-03A24DD004A6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Formats", "src\Andastra.Formats\Andastra.Formats.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Andastra.Runtime", "Andastra.Runtime", "{B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E}"
