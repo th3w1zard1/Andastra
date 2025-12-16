@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using CSharpKOTOR.Formats.NCS;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
@@ -438,7 +439,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                             
                             // Remove the globals subroutine that was created earlier (it includes main code)
                             // We'll recreate it with the correct split
-                            program.GetSubroutine().RemoveAll(s => s.GetId() == 0);
+                            var subsToRemove = new List<PSubroutine>();
+                            foreach (var s in program.GetSubroutine())
+                            {
+                                if (s is ASubroutine aSub && aSub.GetId() == 0)
+                                {
+                                    subsToRemove.Add(s);
+                                }
+                            }
+                            foreach (var sub in subsToRemove)
+                            {
+                                program.GetSubroutine().Remove(sub);
+                            }
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Removed {subsToRemove.Count} globals subroutine(s) that included main code");
                             
                             // Create split globals (0 to first ACTION)
                             int globalsInitEnd = mainCodeStartInGlobals;
