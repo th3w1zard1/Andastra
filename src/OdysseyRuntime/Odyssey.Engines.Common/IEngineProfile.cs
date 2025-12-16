@@ -10,11 +10,14 @@ namespace Odyssey.Engines.Common
     /// <remarks>
     /// Engine Profile Interface:
     /// - Based on swkotor2.exe game profile system
-    /// - Located via string references: Game profile determines game-specific behavior (K1 vs K2)
+    /// - Located via string references: "config.txt" @ 0x007b5750 (configuration file loading)
+    /// - Game profile determines game-specific behavior (K1 vs K2) through resource configs and table configs
     /// - Game profiles: Define resource configs, table configs, supported features, engine API creation
-    /// - Resource config: Defines resource file locations, keyfile handling, resource precedence
-    /// - Table config: Defines 2DA table locations, table loading behavior
+    /// - Resource config: Defines resource file locations (chitin.key, dialog.tlk, modules, override, saves), keyfile handling, resource precedence
+    /// - Table config: Defines 2DA table locations (appearance.2da, baseitems.2da, etc.), table loading behavior
     /// - Original implementation: Game profiles configure engine behavior for specific games (KOTOR, KOTOR2, etc.)
+    /// - Engine initialization: FUN_00404250 @ 0x00404250 loads game configuration based on profile
+    /// - Resource loading: FUN_00633270 @ 0x00633270 handles resource path resolution based on profile
     /// - Note: This is an abstraction layer for multiple BioWare engines (Odyssey, Aurora, Eclipse)
     /// </remarks>
     public interface IEngineProfile
