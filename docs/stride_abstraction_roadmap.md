@@ -63,14 +63,20 @@ Odyssey.Game (uses abstraction, selects backend)
 - [x] StrideInputManager - IInputManager implementation
 - [ ] StrideSpatialAudio - ISpatialAudio implementation (needs abstraction first)
 
-## Phase 4: Refactor Existing Code
+## Phase 4: Refactor Existing Code (IN PROGRESS)
 
-- [ ] Refactor OdysseyGame to use IGraphicsDevice instead of GraphicsDevice
-- [ ] Refactor all rendering code to use abstraction interfaces
-- [ ] Refactor UI components to use ISpriteBatch/IFont
-- [ ] Refactor audio code to use abstraction (already partially done)
-- [ ] Refactor input handling to use IInputManager
-- [ ] Refactor content loading to use IContentManager
+- [ ] Update Odyssey.Game.csproj to reference Odyssey.Graphics instead of direct MonoGame
+- [ ] Refactor OdysseyGame to use IGraphicsBackend instead of inheriting from MonoGame.Game
+- [ ] Replace GraphicsDevice with IGraphicsDevice throughout OdysseyGame
+- [ ] Replace SpriteBatch with ISpriteBatch throughout OdysseyGame
+- [ ] Replace SpriteFont with IFont throughout OdysseyGame
+- [ ] Replace Texture2D with ITexture2D throughout OdysseyGame
+- [ ] Replace Content.Load with IContentManager.Load
+- [ ] Replace Keyboard/Mouse state with IInputManager
+- [ ] Refactor MenuRenderer.cs to use abstraction (12 MonoGame references)
+- [ ] Refactor SaveLoadMenu.cs to use abstraction (8 MonoGame references)
+- [ ] Refactor OdysseyGame.cs to use abstraction (63 MonoGame references)
+- [ ] Update Program.cs to use GraphicsBackendFactory for backend selection
 
 ## Phase 5: Feature Parity Verification
 
