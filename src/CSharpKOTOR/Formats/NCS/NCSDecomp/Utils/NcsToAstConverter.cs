@@ -394,7 +394,70 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
                 }
                 
-                if (mainStart < savebpIndex + 1 && mainStart > 0)
+                // If globals were created normally, check if we need to split them
+                // This handles cases where main code is in the globals range even when entry JSR doesn't target last RETN
+                if (!shouldDeferGlobals)
+                {
+                    // Check if main code is actually in the globals range (0 to SAVEBP)
+                    // If mainStart is at or after entryStubEnd and there are no ACTION instructions after SAVEBP+1,
+                    // the main code must be in the globals range
+                    bool mainCodeInGlobalsNormal = false;
+                    bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals (normal case) - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, savebpIndex={savebpIndex}");
+                    
+                    // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
+                    int actionCount = 0;
+                    int checkStart = savebpIndex + 1;
+                    for (int i = checkStart; i < instructions.Count - 1; i++)
+                    {
+                        if (instructions[i].InsType == NCSInstructionType.ACTION)
+                        {
+                            actionCount++;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found ACTION instruction at index {i} in range {checkStart} to {instructions.Count - 1}");
+                        }
+                    }
+                    
+                    if (actionCount == 0)
+                    {
+                        // No ACTION instructions between SAVEBP+1 and last RETN
+                        // Main function code must be in the globals range (0 to SAVEBP) - need to split
+                        int mainCodeStartInGlobals = -1;
+                        for (int i = 0; i <= savebpIndex; i++)
+                        {
+                            if (instructions[i].InsType == NCSInstructionType.ACTION)
+                            {
+                                mainCodeStartInGlobals = i;
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found first ACTION instruction in globals range at index {i}");
+                                break;
+                            }
+                        }
+                        if (mainCodeStartInGlobals >= 0)
+                        {
+                            mainCodeInGlobalsNormal = true;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), but found ACTION at {mainCodeStartInGlobals} in globals range (0-{savebpIndex}) - will split globals at {mainCodeStartInGlobals}");
+                            
+                            // Remove the globals subroutine that was created earlier (it includes main code)
+                            // We'll recreate it with the correct split
+                            program.GetSubroutine().RemoveAll(s => s.GetId() == 0);
+                            
+                            // Create split globals (0 to first ACTION)
+                            int globalsInitEnd = mainCodeStartInGlobals;
+                            ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
+                            if (globalsSub != null)
+                            {
+                                program.GetSubroutine().Add(globalsSub);
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, globals initialization only, before first ACTION at {mainCodeStartInGlobals})");
+                            }
+                            
+                            // Update mainStart to include the main function code (from first ACTION to last RETN)
+                            mainStart = mainCodeStartInGlobals;
+                            mainEnd = instructions.Count;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (main includes all code from first ACTION at {mainStart} to last RETN)");
+                        }
+                    }
+                }
+                
+                if (shouldDeferGlobals && mainStart < savebpIndex + 1 && mainStart > 0)
                 {
                     // Split globals:
                     // - Globals: 0 to mainStart (globals initialization only, no overlap)
