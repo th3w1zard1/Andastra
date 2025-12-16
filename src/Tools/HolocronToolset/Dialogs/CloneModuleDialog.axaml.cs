@@ -67,21 +67,73 @@ namespace HolocronToolset.Dialogs
             Width = 500;
             Height = 500;
 
-            var panel = new StackPanel();
+            // Create all UI controls programmatically for test scenarios
+            _moduleSelect = new ComboBox();
+            _moduleRootEdit = new TextBox { IsReadOnly = true, Watermark = "Module Root" };
+            _nameEdit = new TextBox { Watermark = "Name" };
+            _filenameEdit = new TextBox { Watermark = "Filename" };
+            _prefixEdit = new TextBox { Watermark = "Prefix", MaxLength = 3 };
+            _keepDoorsCheckbox = new CheckBox { Content = "Keep Doors" };
+            _keepPlaceablesCheckbox = new CheckBox { Content = "Keep Placeables" };
+            _keepSoundsCheckbox = new CheckBox { Content = "Keep Sounds" };
+            _keepPathingCheckbox = new CheckBox { Content = "Keep Pathing" };
+            _copyTexturesCheckbox = new CheckBox { Content = "Copy Textures" };
+            _copyLightmapsCheckbox = new CheckBox { Content = "Copy Lightmaps" };
+            _createButton = new Button { Content = "Create" };
+            _cancelButton = new Button { Content = "Cancel" };
+
+            // Connect events
+            _createButton.Click += (s, e) => Ok();
+            _cancelButton.Click += (s, e) => Close();
+            _moduleSelect.SelectionChanged += (s, e) => OnModuleSelectionChanged();
+            _filenameEdit.TextChanged += (s, e) => SetPrefixFromFilename();
+
+            // Create UI wrapper for testing
+            Ui = new CloneModuleDialogUi
+            {
+                ModuleSelect = _moduleSelect,
+                ModuleRootEdit = _moduleRootEdit,
+                NameEdit = _nameEdit,
+                FilenameEdit = _filenameEdit,
+                PrefixEdit = _prefixEdit,
+                KeepDoorsCheckbox = _keepDoorsCheckbox,
+                KeepPlaceablesCheckbox = _keepPlaceablesCheckbox,
+                KeepSoundsCheckbox = _keepSoundsCheckbox,
+                KeepPathingCheckbox = _keepPathingCheckbox,
+                CopyTexturesCheckbox = _copyTexturesCheckbox,
+                CopyLightmapsCheckbox = _copyLightmapsCheckbox,
+                CreateButton = _createButton,
+                CancelButton = _cancelButton
+            };
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 10 };
             var titleLabel = new TextBlock
             {
                 Text = "Clone Module",
                 FontSize = 18,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
-            var createButton = new Button { Content = "Create" };
-            createButton.Click += (sender, e) => Ok();
-            var cancelButton = new Button { Content = "Cancel" };
-            cancelButton.Click += (sender, e) => Close();
-
             panel.Children.Add(titleLabel);
-            panel.Children.Add(createButton);
-            panel.Children.Add(cancelButton);
+            panel.Children.Add(new TextBlock { Text = "Module:" });
+            panel.Children.Add(_moduleSelect);
+            panel.Children.Add(new TextBlock { Text = "Module Root:" });
+            panel.Children.Add(_moduleRootEdit);
+            panel.Children.Add(new TextBlock { Text = "Name:" });
+            panel.Children.Add(_nameEdit);
+            panel.Children.Add(new TextBlock { Text = "Filename:" });
+            panel.Children.Add(_filenameEdit);
+            panel.Children.Add(new TextBlock { Text = "Prefix:" });
+            panel.Children.Add(_prefixEdit);
+            panel.Children.Add(_keepDoorsCheckbox);
+            panel.Children.Add(_keepPlaceablesCheckbox);
+            panel.Children.Add(_keepSoundsCheckbox);
+            panel.Children.Add(_keepPathingCheckbox);
+            panel.Children.Add(_copyTexturesCheckbox);
+            panel.Children.Add(_copyLightmapsCheckbox);
+            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+            buttonPanel.Children.Add(_createButton);
+            buttonPanel.Children.Add(_cancelButton);
+            panel.Children.Add(buttonPanel);
             Content = panel;
         }
 
@@ -106,9 +158,18 @@ namespace HolocronToolset.Dialogs
 
         private void SetupUI()
         {
-            // Find controls from XAML - use Get() method which throws if not found, or FindControl which returns null
+            // If Ui is already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (Ui != null)
+            {
+                return;
+            }
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            Ui = new CloneModuleDialogUi();
+            
             try
             {
+                // Find controls from XAML
                 _moduleSelect = this.FindControl<ComboBox>("moduleSelect");
                 _moduleRootEdit = this.FindControl<TextBox>("moduleRootEdit");
                 _nameEdit = this.FindControl<TextBox>("nameEdit");
@@ -125,26 +186,25 @@ namespace HolocronToolset.Dialogs
             }
             catch
             {
-                // Controls not found - will be null, tests will handle this
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+                return; // SetupProgrammaticUI already sets up Ui and connects events
             }
 
             // Create UI wrapper for testing
-            Ui = new CloneModuleDialogUi
-            {
-                ModuleSelect = _moduleSelect,
-                ModuleRootEdit = _moduleRootEdit,
-                NameEdit = _nameEdit,
-                FilenameEdit = _filenameEdit,
-                PrefixEdit = _prefixEdit,
-                KeepDoorsCheckbox = _keepDoorsCheckbox,
-                KeepPlaceablesCheckbox = _keepPlaceablesCheckbox,
-                KeepSoundsCheckbox = _keepSoundsCheckbox,
-                KeepPathingCheckbox = _keepPathingCheckbox,
-                CopyTexturesCheckbox = _copyTexturesCheckbox,
-                CopyLightmapsCheckbox = _copyLightmapsCheckbox,
-                CreateButton = _createButton,
-                CancelButton = _cancelButton
-            };
+            Ui.ModuleSelect = _moduleSelect;
+            Ui.ModuleRootEdit = _moduleRootEdit;
+            Ui.NameEdit = _nameEdit;
+            Ui.FilenameEdit = _filenameEdit;
+            Ui.PrefixEdit = _prefixEdit;
+            Ui.KeepDoorsCheckbox = _keepDoorsCheckbox;
+            Ui.KeepPlaceablesCheckbox = _keepPlaceablesCheckbox;
+            Ui.KeepSoundsCheckbox = _keepSoundsCheckbox;
+            Ui.KeepPathingCheckbox = _keepPathingCheckbox;
+            Ui.CopyTexturesCheckbox = _copyTexturesCheckbox;
+            Ui.CopyLightmapsCheckbox = _copyLightmapsCheckbox;
+            Ui.CreateButton = _createButton;
+            Ui.CancelButton = _cancelButton;
 
             if (_createButton != null)
             {
