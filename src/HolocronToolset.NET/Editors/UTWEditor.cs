@@ -306,9 +306,17 @@ namespace HolocronToolset.NET.Editors
                 _utw.ResRef = !string.IsNullOrEmpty(_resrefEdit.Text) ? new ResRef(_resrefEdit.Text) : new ResRef("");
             }
             // Matching Python: utw.has_map_note = self.ui.isNoteCheckbox.isChecked()
-            _utw.HasMapNote = _isNoteCheckbox?.IsChecked ?? false;
+            if (_isNoteCheckbox != null)
+            {
+                bool? isChecked = _isNoteCheckbox.IsChecked;
+                _utw.HasMapNote = isChecked.HasValue && isChecked.Value;
+            }
             // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
-            _utw.MapNoteEnabled = _noteEnabledCheckbox?.IsChecked ?? false;
+            if (_noteEnabledCheckbox != null)
+            {
+                bool? isChecked = _noteEnabledCheckbox.IsChecked;
+                _utw.MapNoteEnabled = isChecked.HasValue && isChecked.Value;
+            }
             // Matching Python: utw.comment = self.ui.commentsEdit.toPlainText()
             if (_commentsEdit != null)
             {
