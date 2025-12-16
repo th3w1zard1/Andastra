@@ -53,22 +53,92 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Also check instruction offsets to understand the mapping
             int totalActionCount = 0;
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Scanning {instructions.Count} instructions for ACTION type");
+            
+            // Sample some instructions to see what types we have
+            int sampleCount = Math.Min(100, instructions.Count);
+            var typeCounts = new Dictionary<NCSInstructionType, int>();
+            for (int i = 0; i < sampleCount; i++)
+            {
+                if (instructions[i] != null)
+                {
+                    var insType = instructions[i].InsType;
+                    if (!typeCounts.ContainsKey(insType))
+                    {
+                        typeCounts[insType] = 0;
+                    }
+                    typeCounts[insType]++;
+                }
+            }
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Sample of first {sampleCount} instructions - type counts: {string.Join(", ", typeCounts.Select(kvp => $"{kvp.Key}={kvp.Value}"))}");
+            
+            // Also sample around known ACTION instruction offsets (like 2463, 2476, etc.)
+            // Find the instruction indices that correspond to those offsets
+            if (instructions.Count > 1000)
+            {
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking instructions around offset 2463 (known ACTION location)");
+                for (int i = 0; i < Math.Min(instructions.Count, 5000); i++)
+                {
+                    if (instructions[i] != null && instructions[i].Offset >= 2460 && instructions[i].Offset <= 2470)
+                    {
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Instruction at index {i}, offset={instructions[i].Offset}, InsType={instructions[i].InsType}, IsAction={instructions[i].InsType == NCSInstructionType.ACTION}");
+                    }
+                }
+            }
+            
+            // Check specific known ACTION instruction indices to verify they're found
+            if (instructions.Count > 453)
+            {
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Pre-check - Instruction 453: InsType={instructions[453]?.InsType}, IsAction={instructions[453]?.InsType == NCSInstructionType.ACTION}");
+            }
+            
             for (int i = 0; i < instructions.Count; i++)
             {
+                // Progress logging for large files
+                if (instructions.Count > 1000 && i > 0 && i % 1000 == 0)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Progress - scanned {i}/{instructions.Count} instructions, found {totalActionCount} ACTION so far");
+                }
+                
                 if (instructions[i] == null)
                 {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: WARNING - Instruction at index {i} is null");
+                    if (i < 10 || (i >= 450 && i <= 460)) // Only log nulls for first 10 or around known ACTION
+                    {
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: WARNING - Instruction at index {i} is null");
+                    }
                     continue;
                 }
-                if (instructions[i].InsType == NCSInstructionType.ACTION)
+                // Check if InsType is ACTION using both == and Equals for debugging
+                bool isAction = instructions[i].InsType == NCSInstructionType.ACTION;
+                bool isActionEquals = instructions[i].InsType.Equals(NCSInstructionType.ACTION);
+                
+                // Special logging for index 453 where we know there's an ACTION
+                if (i == 453)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: At index 453 - InsType={instructions[i].InsType}, isAction={isAction}, isActionEquals={isActionEquals}, Offset={instructions[i].Offset}, totalActionCount before={totalActionCount}");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: At index 453 - Condition check: (isAction || isActionEquals) = ({isAction} || {isActionEquals}) = {isAction || isActionEquals}");
+                }
+                
+                if (isAction || isActionEquals)
                 {
                     totalActionCount++;
-                    if (totalActionCount <= 10) // Log first 10 ACTION instructions
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found ACTION at index {i}, incrementing count to {totalActionCount}");
+                    if (totalActionCount <= 10 || i == 453) // Log first 10 ACTION instructions or index 453
                     {
-                        int routineId = instructions[i].Args.Count > 0 ? (int)instructions[i].Args[0] : -1;
-                        int offset = instructions[i].Offset;
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: ACTION instruction at index {i}, offset={offset}, routineId={routineId}, InsType={instructions[i].InsType}");
+                        try
+                        {
+                            int routineId = instructions[i].Args.Count > 0 ? (int)instructions[i].Args[0] : -1;
+                            int offset = instructions[i].Offset;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: ACTION instruction at index {i}, offset={offset}, routineId={routineId}, InsType={instructions[i].InsType}, ==={isAction}, Equals={isActionEquals}, totalActionCount now={totalActionCount}");
+                        }
+                        catch (Exception ex)
+                        {
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Exception logging ACTION at index {i}: {ex.Message}");
+                        }
                     }
+                }
+                else if (i == 453)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: WARNING - Index 453 has InsType=ACTION but condition (isAction || isActionEquals) is FALSE!");
                 }
                 // Log first few instructions to understand the mapping
                 if (i < 5)
@@ -76,7 +146,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Instruction {i}: InsType={instructions[i].InsType}, Offset={instructions[i].Offset}");
                 }
             }
-            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Total ACTION instructions in entire file: {totalActionCount}");
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Loop completed. Total ACTION instructions in entire file: {totalActionCount}");
 
             HashSet<int> subroutineStarts = new HashSet<int>();
             // Matching NCSDecomp implementation: detect SAVEBP to split globals from main
