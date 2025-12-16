@@ -115,7 +115,7 @@ namespace Odyssey.Core.GameLoop
                 IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
                 if (actionQueue != null)
                 {
-                    actionQueue.Process(dt);
+                    actionQueue.Update(entity, dt);
                     // TODO: Track instruction count from script execution
                     // instructionsUsed += actionQueue.GetInstructionCount();
                 }
