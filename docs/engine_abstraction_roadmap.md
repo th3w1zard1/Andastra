@@ -21,14 +21,38 @@
 - Refactoring `Odyssey.Kotor` code to use base classes
 - Moving KOTOR-specific implementations to `Odyssey.Engines.Odyssey`
 
+### ✅ Additional Progress
+3. **Phase 3 (Continued)**: Odyssey Engine Implementation
+   - Created `OdysseyK2GameProfile` (inherits from BaseEngineProfile)
+   - Created `OdysseyEngine` class (inherits from BaseEngine)
+   - Created `OdysseyGameSession` class (inherits from BaseEngineGame)
+   - Project structure in place
+
+4. **Phase 4 & 5**: Created Aurora and Eclipse Engine Projects
+   - Created `Odyssey.Engines.Aurora` project structure
+   - Created `Odyssey.Engines.Eclipse` project structure
+   - Created `AuroraEngine` and `EclipseEngine` base classes
+   - Projects configured with proper dependencies
+
 ### 📋 Remaining Work
-- Complete profile refactoring (K2GameProfile)
-- Move EngineApi classes to Odyssey.Engines.Odyssey
-- Refactor GameSession to inherit from BaseEngineGame
-- Refactor ModuleLoader to inherit from BaseEngineModule
-- Move all KOTOR-specific components/systems
-- Create Aurora and Eclipse engine projects
+- Complete Odyssey engine refactoring:
+  - Move EngineApi classes to Odyssey.Engines.Odyssey
+  - Complete OdysseyGameSession implementation (move code from Odyssey.Kotor.Game.GameSession)
+  - Refactor ModuleLoader to inherit from BaseEngineModule
+  - Move all KOTOR-specific components/systems to Odyssey.Engines.Odyssey
+- Implement Aurora engine:
+  - Create Aurora game profiles (NWN, NWN2)
+  - Implement Aurora-specific resource provider
+  - Implement AuroraGameSession
+  - Implement Aurora-specific systems
+- Implement Eclipse engine:
+  - Create Eclipse game profiles (Dragon Age, Mass Effect)
+  - Implement Eclipse-specific resource provider
+  - Implement EclipseGameSession
+  - Implement Eclipse-specific systems
 - Rename CSharpKOTOR to AuroraEngine.Common (large find/replace operation)
+- Update solution file with new projects
+- Update all project references throughout codebase
 
 ## Goal
 
