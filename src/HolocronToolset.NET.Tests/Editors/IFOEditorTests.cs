@@ -709,5 +709,172 @@ namespace HolocronToolset.NET.Tests.Editors
                 modifiedIfo.XpScale.Should().Be(scale, $"XpScale should be {scale} after setting XpScaleSpin to {scale}");
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:264-277
+        // Original: def test_ifo_editor_manipulate_on_heartbeat_script(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateOnHeartbeatScript()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            editor.ScriptFields["on_heartbeat"].Text = "test_heartbeat";
+            editor.OnValueChanged();
+
+            var (data, _) = editor.Build();
+            var modifiedGff = GFF.FromBytes(data);
+            var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            modifiedIfo.OnHeartbeat.ToString().Should().Be("test_heartbeat", "OnHeartbeat should be 'test_heartbeat'");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:278-291
+        // Original: def test_ifo_editor_manipulate_on_load_script(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateOnLoadScript()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            editor.ScriptFields["on_load"].Text = "test_on_load";
+            editor.OnValueChanged();
+
+            var (data, _) = editor.Build();
+            var modifiedGff = GFF.FromBytes(data);
+            var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            modifiedIfo.OnLoad.ToString().Should().Be("test_on_load", "OnLoad should be 'test_on_load'");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:292-305
+        // Original: def test_ifo_editor_manipulate_on_start_script(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateOnStartScript()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            editor.ScriptFields["on_start"].Text = "test_on_start";
+            editor.OnValueChanged();
+
+            var (data, _) = editor.Build();
+            var modifiedGff = GFF.FromBytes(data);
+            var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+            modifiedIfo.OnStart.ToString().Should().Be("test_on_start", "OnStart should be 'test_on_start'");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:306-343
+        // Original: def test_ifo_editor_manipulate_all_scripts(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateAllScripts()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Set all scripts (use shorter names to comply with 16-character ResRef limit)
+            var scripts = new Dictionary<string, string>
+            {
+                { "on_heartbeat", "test_hb" },
+                { "on_load", "test_load" },
+                { "on_start", "test_start" },
+                { "on_enter", "test_enter" },
+                { "on_leave", "test_leave" },
+                { "on_activate_item", "test_actitem" },
+                { "on_acquire_item", "test_acqitem" },
+                { "on_user_defined", "test_userdef" },
+                { "on_unacquire_item", "test_unacqitem" },
+                { "on_player_death", "test_pdeath" },
+                { "on_player_dying", "test_pdying" },
+                { "on_player_levelup", "test_plevelup" },
+                { "on_player_respawn", "test_prespawn" },
+                { "on_player_rest", "test_prest" },
+                { "start_movie", "test_movie" }
+            };
+
+            foreach (var kvp in scripts)
+            {
+                if (editor.ScriptFields.ContainsKey(kvp.Key))
+                {
+                    editor.ScriptFields[kvp.Key].Text = kvp.Value;
+                }
+            }
+
+            editor.OnValueChanged();
+
+            // Build and verify
+            var (data, _) = editor.Build();
+            var modifiedGff = GFF.FromBytes(data);
+            var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+
+            modifiedIfo.OnHeartbeat.ToString().Should().Be("test_hb");
+            modifiedIfo.OnLoad.ToString().Should().Be("test_load");
+            modifiedIfo.OnStart.ToString().Should().Be("test_start");
+            modifiedIfo.OnClientEnter.ToString().Should().Be("test_enter");
+            modifiedIfo.OnClientLeave.ToString().Should().Be("test_leave");
+            modifiedIfo.OnActivateItem.ToString().Should().Be("test_actitem");
+            modifiedIfo.OnAcquireItem.ToString().Should().Be("test_acqitem");
+            modifiedIfo.OnUserDefined.ToString().Should().Be("test_userdef");
+            modifiedIfo.OnUnacquireItem.ToString().Should().Be("test_unacqitem");
+            modifiedIfo.OnPlayerDeath.ToString().Should().Be("test_pdeath");
+            modifiedIfo.OnPlayerDying.ToString().Should().Be("test_pdying");
+            modifiedIfo.OnPlayerLevelUp.ToString().Should().Be("test_plevelup");
+            modifiedIfo.OnPlayerRespawn.ToString().Should().Be("test_prespawn");
+            modifiedIfo.OnPlayerRest.ToString().Should().Be("test_prest");
+            modifiedIfo.StartMovie.ToString().Should().Be("test_movie");
+        }
     }
 }
