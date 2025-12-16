@@ -624,9 +624,10 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                         program.GetSubroutine().Add(globalsSub);
                         JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{mainStart}, globals initialization only)");
                     }
-                    // Update mainEnd to include SAVEBP since main function code is in globals range
-                    mainEnd = savebpIndex + 1;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainEnd to {mainEnd} (SAVEBP+1, includes main code and SAVEBP)");
+                    // Update mainEnd to include all instructions up to the last RETN
+                    // CRITICAL: mainEnd must be instructions.Count to include ALL instructions, not just up to SAVEBP+1
+                    mainEnd = instructions.Count;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainEnd to {mainEnd} (all {instructions.Count} instructions, includes main code from {mainStart} to last RETN)");
                 }
                 else
                 {
@@ -761,6 +762,18 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created globals subroutine (range 0-{globalsSubEnd})");
                         }
                     }
+                }
+            }
+
+            // CRITICAL: Ensure mainEnd always includes all instructions when there are no subroutines after main
+            // This prevents missing instructions at the end of the main function (e.g., RSADDI before final RETN)
+            if (subroutineStarts.Count == 0 || !subroutineStarts.Any(subStart => subStart > mainStart))
+            {
+                // No subroutines after main - main should include ALL instructions up to the last RETN
+                if (mainEnd < instructions.Count)
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: WARNING - mainEnd ({mainEnd}) < instructions.Count ({instructions.Count}), correcting to include all instructions");
+                    mainEnd = instructions.Count;
                 }
             }
 
