@@ -199,20 +199,55 @@ namespace HolocronToolset.Editors
 
         private void SetupUI()
         {
-            // Try to find controls from XAML if available
-            _treeView = this.FindControl<TreeView>("treeView");
-            var fieldBoxBorder = this.FindControl<Border>("fieldBox");
-            if (fieldBoxBorder != null && fieldBoxBorder.Child is Panel fieldBoxPanel)
+            // If controls are already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (_treeView != null && _fieldBox != null && _typeCombo != null && _labelEdit != null)
             {
-                _fieldBox = fieldBoxPanel;
+                return;
             }
-            _typeCombo = this.FindControl<ComboBox>("typeCombo");
-            _labelEdit = this.FindControl<TextBox>("labelEdit");
-            var pagesControl = this.FindControl<ContentControl>("pages");
-            // Create pages panel if not found
-            if (_pages == null)
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
             {
-                _pages = new StackPanel();
+                // Try to find controls from XAML if available
+                _treeView = this.FindControl<TreeView>("treeView");
+                var fieldBoxBorder = this.FindControl<Border>("fieldBox");
+                if (fieldBoxBorder != null && fieldBoxBorder.Child is Panel fieldBoxPanel)
+                {
+                    _fieldBox = fieldBoxPanel;
+                }
+                _typeCombo = this.FindControl<ComboBox>("typeCombo");
+                _labelEdit = this.FindControl<TextBox>("labelEdit");
+                var pagesControl = this.FindControl<ContentControl>("pages");
+                // Create pages panel if not found
+                if (_pages == null)
+                {
+                    _pages = new StackPanel();
+                }
+            }
+            catch
+            {
+                // XAML controls not available - controls should already be initialized by SetupProgrammaticUI
+                // If not, ensure minimal setup
+                if (_treeView == null)
+                {
+                    _treeView = new TreeView();
+                }
+                if (_fieldBox == null)
+                {
+                    _fieldBox = new StackPanel();
+                }
+                if (_typeCombo == null)
+                {
+                    _typeCombo = new ComboBox();
+                }
+                if (_labelEdit == null)
+                {
+                    _labelEdit = new TextBox();
+                }
+                if (_pages == null)
+                {
+                    _pages = new StackPanel();
+                }
             }
             // Note: Individual page controls will be created programmatically
         }
