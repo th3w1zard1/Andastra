@@ -1558,5 +1558,76 @@ namespace HolocronToolset.NET.Tests.Editors
                 editor.TagEdit.Text.Should().NotBeNullOrEmpty("Tag should be generated after clicking generate button");
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:592-612
+        // Original: def test_utw_editor_generate_resref_button(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtwEditorGenerateResrefButton()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            if (!System.IO.File.Exists(utwFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            }
+
+            if (!System.IO.File.Exists(utwFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTWEditor(null, installation);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:600
+            // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, utw_file.read_bytes())
+            editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, System.IO.File.ReadAllBytes(utwFile));
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:603
+            // Original: editor.ui.resrefEdit.setText("")
+            if (editor.ResrefEdit != null)
+            {
+                editor.ResrefEdit.Text = "";
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:606
+            // Original: qtbot.mouseClick(editor.ui.resrefGenerateButton, Qt.MouseButton.LeftButton)
+            // In headless mode, we simulate the button click by calling the click handler directly
+            if (editor.ResrefGenerateButton != null)
+            {
+                // Simulate button click by raising the Click event
+                editor.ResrefGenerateButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:609-610
+            // Original: generated_resref = editor.ui.resrefEdit.text()
+            // Original: assert generated_resref
+            if (editor.ResrefEdit != null)
+            {
+                editor.ResrefEdit.Text.Should().NotBeNullOrEmpty("ResRef should be generated after clicking generate button");
+            }
+        }
     }
 }
