@@ -616,5 +616,98 @@ namespace HolocronToolset.NET.Tests.Editors
                 modifiedIfo.TimeScale.Should().Be(scale, $"TimeScale should be {scale} after setting TimeScaleSpin to {scale}");
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:216-243
+        // Original: def test_ifo_editor_manipulate_start_date(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateStartDate()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test various start date values
+            int[] testMonths = { 1, 6, 12 };
+            int[] testDays = { 1, 15, 28 };
+            int[] testHours = { 0, 12, 23 };
+            int[] testYears = { 0, 100, 1000 };
+
+            foreach (int month in testMonths)
+            {
+                foreach (int day in testDays)
+                {
+                    foreach (int hour in testHours)
+                    {
+                        foreach (int year in testYears)
+                        {
+                            editor.StartMonthSpin.Value = month;
+                            editor.StartDaySpin.Value = day;
+                            editor.StartHourSpin.Value = hour;
+                            editor.StartYearSpin.Value = year;
+                            editor.OnValueChanged();
+
+                            // Build and verify
+                            var (data, _) = editor.Build();
+                            var modifiedGff = GFF.FromBytes(data);
+                            var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                            modifiedIfo.StartMonth.Should().Be(month, $"StartMonth should be {month}");
+                            modifiedIfo.StartDay.Should().Be(day, $"StartDay should be {day}");
+                            modifiedIfo.StartHour.Should().Be(hour, $"StartHour should be {hour}");
+                            modifiedIfo.StartYear.Should().Be(year, $"StartYear should be {year}");
+                        }
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:244-263
+        // Original: def test_ifo_editor_manipulate_xp_scale(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateXpScale()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test various XP scales
+            int[] testScales = { 0, 50, 100, 200 };
+            foreach (int scale in testScales)
+            {
+                editor.XpScaleSpin.Value = scale;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.XpScale.Should().Be(scale, $"XpScale should be {scale} after setting XpScaleSpin to {scale}");
+            }
+        }
     }
 }
