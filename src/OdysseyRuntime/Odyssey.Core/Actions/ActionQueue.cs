@@ -153,6 +153,11 @@ namespace Odyssey.Core.Actions
             // Based on swkotor2.exe: Action queue processing implementation
             // Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0
             // Original implementation: FUN_00508260 @ 0x00508260 loads ActionList from GFF
+            //   - Reads "ActionList" list from GFF structure (via FUN_004129e0)
+            //   - For each action entry: Reads ActionId (int32), GroupActionId (int16), NumParams (int16)
+            //   - Reads "Paramaters" list with Type/Value pairs (Type 1=int, 2=float, 3=object/uint32, 4=string, 5=location)
+            //   - Calls FUN_00507fd0 to create action from parsed parameters
+            // FUN_00505bc0 @ 0x00505bc0 saves ActionList to GFF (writes ActionId, GroupActionId, NumParams, Paramaters array)
             // Actions processed sequentially: Current action executes until complete, then next action dequeued
             // Action structure: ActionId (uint32), GroupActionId (int16), NumParams (int16), Paramaters array
             int instructionsExecuted = 0;

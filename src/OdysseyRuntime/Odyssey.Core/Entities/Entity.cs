@@ -19,7 +19,19 @@ namespace Odyssey.Core.Entities
     /// - Component system: Entities use component-based architecture for stats, transform, inventory, etc.
     /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
     /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId, Tag
-    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
+    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state to GFF
+    ///   - Saves DetectMode (byte), StealthMode (byte), CreatureSize (float)
+    ///   - Saves IsDestroyable (byte), IsRaiseable (byte), DeadSelectable (byte)
+    ///   - Saves script hooks: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
+    ///   - Saves Equip_ItemList (equipped items with ObjectId), ItemList (inventory items with ObjectId)
+    ///   - Saves PerceptionList (perception data with ObjectId and PerceptionData byte)
+    ///   - Saves CombatRoundData (if in combat, via FUN_00529470)
+    ///   - Saves AreaId (int32), AmbientAnimState (byte), Animation (float), CreatnScrptFird (byte)
+    ///   - Saves PM_IsDisguised (byte), PM_Appearance (int16 if disguised), Listening (byte), ForceAlwaysUpdate (byte)
+    ///   - Saves Position: XPosition, YPosition, ZPosition (floats)
+    ///   - Saves Orientation: XOrientation, YOrientation, ZOrientation (floats)
+    ///   - Saves JoiningXP (float), BonusForcePoints (float), AssignedPup (float), PlayerCreated (float)
+    ///   - Saves FollowInfo (if following, via FUN_0050b920), ActionList (via FUN_00508200)
     /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 (load creature data from GFF)
     ///   - Loads AreaId from GFF at offset 0x90 (via FUN_00412d40 with "AreaId" field name)
     ///   - Loads creature template data via FUN_005fb0f0 (creature template loading)
