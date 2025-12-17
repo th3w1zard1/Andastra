@@ -1265,6 +1265,101 @@ namespace HolocronToolset.Tests.Editors
                 modifiedAre.MapResX.Should().Be(val);
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:375-426
+        // Original: def test_are_editor_manipulate_map_image_points(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestAreEditorManipulateMapImagePoints()
+        {
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_points = [(Vector2(0.1, 0.1), Vector2(0.9, 0.9)), ...]
+            var testPoints = new[]
+            {
+                (new System.Numerics.Vector2(0.1f, 0.1f), new System.Numerics.Vector2(0.9f, 0.9f)),
+                (new System.Numerics.Vector2(0.1f, 0.2f), new System.Numerics.Vector2(0.8f, 0.9f)),
+                (new System.Numerics.Vector2(0.25f, 0.25f), new System.Numerics.Vector2(0.75f, 0.75f)),
+                (new System.Numerics.Vector2(0.5f, 0.5f), new System.Numerics.Vector2(0.5f, 0.5f))
+            };
+
+            foreach (var (point1, point2) in testPoints)
+            {
+                // Matching Python: editor.ui.mapImageX1Spin.setValue(point1.x)
+                if (editor.MapImageX1Spin != null)
+                {
+                    editor.MapImageX1Spin.Value = point1.X;
+                }
+                // Matching Python: editor.ui.mapImageY1Spin.setValue(point1.y)
+                if (editor.MapImageY1Spin != null)
+                {
+                    editor.MapImageY1Spin.Value = point1.Y;
+                }
+                // Matching Python: editor.ui.mapImageX2Spin.setValue(point2.x)
+                if (editor.MapImageX2Spin != null)
+                {
+                    editor.MapImageX2Spin.Value = point2.X;
+                }
+                // Matching Python: editor.ui.mapImageY2Spin.setValue(point2.y)
+                if (editor.MapImageY2Spin != null)
+                {
+                    editor.MapImageY2Spin.Value = point2.Y;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.map_point_1.x - point1.x) < 0.001
+                System.Math.Abs(modifiedAre.MapPoint1.X - point1.X).Should().BeLessThan(0.001f);
+                System.Math.Abs(modifiedAre.MapPoint1.Y - point1.Y).Should().BeLessThan(0.001f);
+                System.Math.Abs(modifiedAre.MapPoint2.X - point2.X).Should().BeLessThan(0.001f);
+                System.Math.Abs(modifiedAre.MapPoint2.Y - point2.Y).Should().BeLessThan(0.001f);
+            }
+        }
     }
 }
 

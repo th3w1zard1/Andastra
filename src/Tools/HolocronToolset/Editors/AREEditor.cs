@@ -33,6 +33,10 @@ namespace HolocronToolset.Editors
         private ComboBox _mapAxisSelect;
         private NumericUpDown _mapZoomSpin;
         private NumericUpDown _mapResXSpin;
+        private NumericUpDown _mapImageX1Spin;
+        private NumericUpDown _mapImageY1Spin;
+        private NumericUpDown _mapImageX2Spin;
+        private NumericUpDown _mapImageY2Spin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -142,18 +146,42 @@ namespace HolocronToolset.Editors
             _mapAxisSelect.SelectedIndex = 0;
             panel.Children.Add(mapAxisLabel);
             panel.Children.Add(_mapAxisSelect);
-            
+
             // Map Zoom spin - matching Python: self.ui.mapZoomSpin
             var mapZoomLabel = new Avalonia.Controls.TextBlock { Text = "Map Zoom:" };
             _mapZoomSpin = new NumericUpDown { Minimum = 1, Maximum = int.MaxValue, Value = 1 };
             panel.Children.Add(mapZoomLabel);
             panel.Children.Add(_mapZoomSpin);
-            
+
             // Map Res X spin - matching Python: self.ui.mapResXSpin
             var mapResXLabel = new Avalonia.Controls.TextBlock { Text = "Map Res X:" };
             _mapResXSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(mapResXLabel);
             panel.Children.Add(_mapResXSpin);
+            
+            // Map Image X1 spin - matching Python: self.ui.mapImageX1Spin
+            var mapImageX1Label = new Avalonia.Controls.TextBlock { Text = "Map Image X1:" };
+            _mapImageX1Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapImageX1Label);
+            panel.Children.Add(_mapImageX1Spin);
+            
+            // Map Image Y1 spin - matching Python: self.ui.mapImageY1Spin
+            var mapImageY1Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y1:" };
+            _mapImageY1Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapImageY1Label);
+            panel.Children.Add(_mapImageY1Spin);
+            
+            // Map Image X2 spin - matching Python: self.ui.mapImageX2Spin
+            var mapImageX2Label = new Avalonia.Controls.TextBlock { Text = "Map Image X2:" };
+            _mapImageX2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapImageX2Label);
+            panel.Children.Add(_mapImageX2Spin);
+            
+            // Map Image Y2 spin - matching Python: self.ui.mapImageY2Spin
+            var mapImageY2Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y2:" };
+            _mapImageY2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapImageY2Label);
+            panel.Children.Add(_mapImageY2Spin);
 
             Content = panel;
         }
@@ -173,6 +201,10 @@ namespace HolocronToolset.Editors
         public ComboBox MapAxisSelect => _mapAxisSelect;
         public NumericUpDown MapZoomSpin => _mapZoomSpin;
         public NumericUpDown MapResXSpin => _mapResXSpin;
+        public NumericUpDown MapImageX1Spin => _mapImageX1Spin;
+        public NumericUpDown MapImageY1Spin => _mapImageY1Spin;
+        public NumericUpDown MapImageX2Spin => _mapImageX2Spin;
+        public NumericUpDown MapImageY2Spin => _mapImageY2Spin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -274,6 +306,26 @@ namespace HolocronToolset.Editors
             {
                 _mapResXSpin.Value = are.MapResX;
             }
+            // Matching Python: self.ui.mapImageX1Spin.setValue(are.map_point_1.x) (line 192)
+            if (_mapImageX1Spin != null)
+            {
+                _mapImageX1Spin.Value = are.MapPoint1.X;
+            }
+            // Matching Python: self.ui.mapImageX2Spin.setValue(are.map_point_2.x) (line 193)
+            if (_mapImageX2Spin != null)
+            {
+                _mapImageX2Spin.Value = are.MapPoint2.X;
+            }
+            // Matching Python: self.ui.mapImageY1Spin.setValue(are.map_point_1.y) (line 194)
+            if (_mapImageY1Spin != null)
+            {
+                _mapImageY1Spin.Value = are.MapPoint1.Y;
+            }
+            // Matching Python: self.ui.mapImageY2Spin.setValue(are.map_point_2.y) (line 195)
+            if (_mapImageY2Spin != null)
+            {
+                _mapImageY2Spin.Value = are.MapPoint2.Y;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -348,6 +400,22 @@ namespace HolocronToolset.Editors
             if (_mapResXSpin != null && _mapResXSpin.Value.HasValue)
             {
                 are.MapResX = (int)_mapResXSpin.Value.Value;
+            }
+            // Matching Python: are.map_point_1 = Vector2(self.ui.mapImageX1Spin.value(), self.ui.mapImageY1Spin.value()) (line 298)
+            if (_mapImageX1Spin != null && _mapImageY1Spin != null && 
+                _mapImageX1Spin.Value.HasValue && _mapImageY1Spin.Value.HasValue)
+            {
+                are.MapPoint1 = new System.Numerics.Vector2(
+                    (float)_mapImageX1Spin.Value.Value,
+                    (float)_mapImageY1Spin.Value.Value);
+            }
+            // Matching Python: are.map_point_2 = Vector2(self.ui.mapImageX2Spin.value(), self.ui.mapImageY2Spin.value()) (line 299)
+            if (_mapImageX2Spin != null && _mapImageY2Spin != null && 
+                _mapImageX2Spin.Value.HasValue && _mapImageY2Spin.Value.HasValue)
+            {
+                are.MapPoint2 = new System.Numerics.Vector2(
+                    (float)_mapImageX2Spin.Value.Value,
+                    (float)_mapImageY2Spin.Value.Value);
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -630,6 +698,8 @@ namespace HolocronToolset.Editors
             copy.NorthAxis = source.NorthAxis;
             copy.MapZoom = source.MapZoom;
             copy.MapResX = source.MapResX;
+            copy.MapPoint1 = source.MapPoint1;
+            copy.MapPoint2 = source.MapPoint2;
             copy.GrassTexture = source.GrassTexture;
             copy.GrassDensity = source.GrassDensity;
             copy.GrassSize = source.GrassSize;
