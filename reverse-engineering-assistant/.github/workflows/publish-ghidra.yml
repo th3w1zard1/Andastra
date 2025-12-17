@@ -1,0 +1,96 @@
+name: Publish Ghidra 🐉 distribution
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to update (e.g., v4.1.0). If not provided, uses the current ref.'
+        required: false
+        type: string
+      update_existing:
+        description: 'Update existing release instead of creating new one'
+        required: false
+        type: boolean
+        default: true
+jobs:
+  build:
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        # Build only on Linux since the extension is Java-only and platform-independent
+        # This simplifies the build process and reduces CI time
+        ghidra-version: [
+            "12.0",
+            "latest",
+        ]
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - name: Set up Java 🍵
+      uses: actions/setup-java@v5
+      with:
+        java-version: "21"
+        distribution: "microsoft"
+    - name: Install Ghidra 🐉
+      uses: antoniovazquezblanco/setup-ghidra@v2.0.15
+      with:
+        version: ${{ matrix.ghidra-version }}
+    - name: Compile ReVa 👩‍💻✨
+      run: gradle buildExtension
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v5
+      with:
+        name: ghidra-distributions-${{ matrix.ghidra-version }}
+        path: dist/
+        if-no-files-found: error
+  github-release:
+    name: >-
+      Sign the Ghidra 🐉 distribution 📦 with Sigstore
+      and upload them to GitHub Release
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write  # IMPORTANT: mandatory for sigstore
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v6
+      with:
+        pattern: ghidra-distributions-*
+        path: dist/
+        merge-multiple: true
+
+    - name: Sign the dists with Sigstore
+      uses: sigstore/gh-action-sigstore-python@v3.1.0
+      with:
+        inputs: >-
+          ./dist/*.zip
+        upload-signing-artifacts: true
+
+    - name: Create or update GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        if [[ "${{ inputs.update_existing }}" == "true" ]] && gh release view "$RELEASE_TAG" --repo '${{ github.repository }}' >/dev/null 2>&1; then
+          echo "Release $RELEASE_TAG already exists, will update it"
+        else
+          echo "Creating new release $RELEASE_TAG"
+          gh release create "$RELEASE_TAG" \
+            --repo '${{ github.repository }}' \
+            --notes-from-tag
+        fi
+
+    - name: Upload build artifacts and signatures to GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: >-
+        gh release upload
+        "$RELEASE_TAG" ./dist/* --clobber
+        --repo '${{ github.repository }}'

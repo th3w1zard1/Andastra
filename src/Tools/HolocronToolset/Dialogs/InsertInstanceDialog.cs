@@ -79,7 +79,7 @@ namespace HolocronToolset.Dialogs
                 FontSize = 18,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
-            
+
             // Create UI controls programmatically for test scenarios
             _reuseResourceRadio = new RadioButton { Content = "Reuse Resource" };
             _copyResourceRadio = new RadioButton { Content = "Copy Resource" };
