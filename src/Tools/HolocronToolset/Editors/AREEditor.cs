@@ -109,7 +109,7 @@ namespace HolocronToolset.Editors
             
             // Alpha Test spin - matching Python: self.ui.alphaTestSpin
             var alphaTestLabel = new Avalonia.Controls.TextBlock { Text = "Alpha Test:" };
-            _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0 };
             panel.Children.Add(alphaTestLabel);
             panel.Children.Add(_alphaTestSpin);
 
@@ -237,9 +237,9 @@ namespace HolocronToolset.Editors
                 are.Unescapable = _unescapableCheck.IsChecked == true;
             }
             // Matching Python: are.alpha_test = float(self.ui.alphaTestSpin.value()) (line 289)
-            if (_alphaTestSpin != null)
+            if (_alphaTestSpin != null && _alphaTestSpin.Value.HasValue)
             {
-                are.AlphaTest = (int)_alphaTestSpin.Value;
+                are.AlphaTest = (int)_alphaTestSpin.Value.Value;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
