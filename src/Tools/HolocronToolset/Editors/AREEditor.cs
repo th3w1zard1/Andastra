@@ -7,6 +7,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
+using HolocronToolset.Widgets;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -17,6 +18,7 @@ namespace HolocronToolset.Editors
     {
         private ARE _are;
         private GFF _originalGff;
+        private LocalizedStringEdit _nameEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -46,8 +48,22 @@ namespace HolocronToolset.Editors
         {
             // Setup UI elements - will be implemented when UI controls are created
             var panel = new StackPanel();
+            
+            // Name field - matching Python: self.ui.nameEdit
+            var nameLabel = new Avalonia.Controls.TextBlock { Text = "Name:" };
+            _nameEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _nameEdit.SetInstallation(_installation);
+            }
+            panel.Children.Add(nameLabel);
+            panel.Children.Add(_nameEdit);
+            
             Content = panel;
         }
+
+        // Matching PyKotor implementation - expose NameEdit for testing
+        public LocalizedStringEdit NameEdit => _nameEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -74,20 +90,33 @@ namespace HolocronToolset.Editors
         // Original: def _loadARE(self, are: ARE):
         private void LoadARE(ARE are)
         {
-            // Load ARE data into UI
-            // This will be implemented when UI controls are created
-            // For now, just store the ARE object
             _are = are;
+
+            // Matching Python: self.ui.nameEdit.set_locstring(are.name) (line 177)
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetLocString(are.Name);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // Matching Python: are = deepcopy(self._are) / _buildARE() which creates new ARE and sets from UI
+            // Following UTWEditor pattern: create copy then read from UI controls
+            var are = CopyAre(_are);
+
+            // Matching Python: are.name = self.ui.nameEdit.locstring() (line 283)
+            if (_nameEdit != null)
+            {
+                are.Name = _nameEdit.GetLocString();
+            }
+
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
             // Original: def build(self) -> tuple[bytes, bytes]:
             Game game = _installation?.Game ?? Game.K1;
-            var gff = AREHelpers.DismantleAre(_are, game);
+            var gff = AREHelpers.DismantleAre(are, game);
             
             // Preserve unmodified fields from original GFF that aren't yet supported by ARE object model
             // This ensures roundtrip tests pass by maintaining all original data
@@ -342,6 +371,100 @@ namespace HolocronToolset.Editors
                     destination.SetList(label, source.GetList(label));
                     break;
             }
+        }
+
+        // Matching Python: deepcopy(self._are)
+        private static ARE CopyAre(ARE source)
+        {
+            var copy = new ARE();
+            
+            // Copy all properties from source to copy
+            copy.Name = CopyLocalizedString(source.Name);
+            copy.Tag = source.Tag;
+            copy.AlphaTest = source.AlphaTest;
+            copy.CameraStyle = source.CameraStyle;
+            copy.DefaultEnvMap = source.DefaultEnvMap;
+            copy.GrassTexture = source.GrassTexture;
+            copy.GrassDensity = source.GrassDensity;
+            copy.GrassSize = source.GrassSize;
+            copy.GrassProbLL = source.GrassProbLL;
+            copy.GrassProbLR = source.GrassProbLR;
+            copy.GrassProbUL = source.GrassProbUL;
+            copy.GrassProbUR = source.GrassProbUR;
+            copy.FogEnabled = source.FogEnabled;
+            copy.FogNear = source.FogNear;
+            copy.FogFar = source.FogFar;
+            copy.FogColor = source.FogColor;
+            copy.SunFogEnabled = source.SunFogEnabled;
+            copy.SunFogNear = source.SunFogNear;
+            copy.SunFogFar = source.SunFogFar;
+            copy.SunFogColor = source.SunFogColor;
+            copy.WindPower = source.WindPower;
+            copy.ShadowOpacity = source.ShadowOpacity;
+            copy.ChancesOfRain = source.ChancesOfRain;
+            copy.ChancesOfSnow = source.ChancesOfSnow;
+            copy.ChancesOfLightning = source.ChancesOfLightning;
+            copy.ChancesOfFog = source.ChancesOfFog;
+            copy.Weather = source.Weather;
+            copy.SkyBox = source.SkyBox;
+            copy.MoonAmbient = source.MoonAmbient;
+            copy.DawnAmbient = source.DawnAmbient;
+            copy.DayAmbient = source.DayAmbient;
+            copy.DuskAmbient = source.DuskAmbient;
+            copy.NightAmbient = source.NightAmbient;
+            copy.DawnDir1 = source.DawnDir1;
+            copy.DawnDir2 = source.DawnDir2;
+            copy.DawnDir3 = source.DawnDir3;
+            copy.DayDir1 = source.DayDir1;
+            copy.DayDir2 = source.DayDir2;
+            copy.DayDir3 = source.DayDir3;
+            copy.DuskDir1 = source.DuskDir1;
+            copy.DuskDir2 = source.DuskDir2;
+            copy.DuskDir3 = source.DuskDir3;
+            copy.NightDir1 = source.NightDir1;
+            copy.NightDir2 = source.NightDir2;
+            copy.NightDir3 = source.NightDir3;
+            copy.DawnColor1 = source.DawnColor1;
+            copy.DawnColor2 = source.DawnColor2;
+            copy.DawnColor3 = source.DawnColor3;
+            copy.DayColor1 = source.DayColor1;
+            copy.DayColor2 = source.DayColor2;
+            copy.DayColor3 = source.DayColor3;
+            copy.DuskColor1 = source.DuskColor1;
+            copy.DuskColor2 = source.DuskColor2;
+            copy.DuskColor3 = source.DuskColor3;
+            copy.NightColor1 = source.NightColor1;
+            copy.NightColor2 = source.NightColor2;
+            copy.NightColor3 = source.NightColor3;
+            copy.OnEnter = source.OnEnter;
+            copy.OnExit = source.OnExit;
+            copy.OnHeartbeat = source.OnHeartbeat;
+            copy.OnUserDefined = source.OnUserDefined;
+            copy.OnEnter2 = source.OnEnter2;
+            copy.OnExit2 = source.OnExit2;
+            copy.OnHeartbeat2 = source.OnHeartbeat2;
+            copy.OnUserDefined2 = source.OnUserDefined2;
+            copy.LoadScreenID = source.LoadScreenID;
+            
+            // Copy lists
+            copy.AreaList = new System.Collections.Generic.List<string>(source.AreaList);
+            copy.MapList = new System.Collections.Generic.List<ResRef>(source.MapList);
+            
+            return copy;
+        }
+
+        private static LocalizedString CopyLocalizedString(LocalizedString source)
+        {
+            if (source == null)
+            {
+                return LocalizedString.FromInvalid();
+            }
+            var copy = new LocalizedString(source.StringRef);
+            foreach (var (language, gender, text) in source)
+            {
+                copy.SetData(language, gender, text);
+            }
+            return copy;
         }
     }
 }

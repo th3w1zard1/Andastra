@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -178,6 +179,89 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:92
             // Original: assert diff, os.linesep.join(self.log_messages)
             diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:28-54
+        // Original: def test_are_editor_manipulate_name_locstring(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestAreEditorManipulateNameLocstring()
+        {
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: original_are = read_are(original_data)
+            var originalAre = AREHelpers.ReadAre(originalData);
+
+            // Matching Python: new_name = LocalizedString.from_english("Modified Area Name")
+            var newName = LocalizedString.FromEnglish("Modified Area Name");
+
+            // Matching Python: editor.ui.nameEdit.set_locstring(new_name)
+            if (editor.NameEdit != null)
+            {
+                editor.NameEdit.SetLocString(newName);
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.name.get(Language.ENGLISH, Gender.MALE) == "Modified Area Name"
+            modifiedAre.Name.Get(Language.English, Gender.Male).Should().Be("Modified Area Name");
+
+            // Matching Python: assert modified_are.name.get(Language.ENGLISH, Gender.MALE) != original_are.name.get(Language.ENGLISH, Gender.MALE)
+            modifiedAre.Name.Get(Language.English, Gender.Male).Should().NotBe(originalAre.Name.Get(Language.English, Gender.Male));
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+            // Matching Python: assert editor.ui.nameEdit.locstring().get(Language.ENGLISH, Gender.MALE) == "Modified Area Name"
+            if (editor.NameEdit != null)
+            {
+                editor.NameEdit.GetLocString().Get(Language.English, Gender.Male).Should().Be("Modified Area Name");
+            }
         }
     }
 }
