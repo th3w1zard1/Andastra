@@ -1614,6 +1614,96 @@ namespace HolocronToolset.Tests.Editors
                 System.Math.Abs(modifiedAre.FogColor.B - color.B).Should().BeLessThan(0.01f);
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:515-541
+        // Original: def test_are_editor_manipulate_fog_near_far_spins(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestAreEditorManipulateFogNearFarSpins()
+        {
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_near = [0.0, 1.0, 5.0, 10.0, 50.0]
+            double[] testNear = { 0.0, 1.0, 5.0, 10.0, 50.0 };
+            foreach (double nearVal in testNear)
+            {
+                // Matching Python: editor.ui.fogNearSpin.setValue(near_val)
+                if (editor.FogNearSpin != null)
+                {
+                    editor.FogNearSpin.Value = nearVal;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.fog_near - near_val) < 0.001
+                System.Math.Abs(modifiedAre.FogNear - (float)nearVal).Should().BeLessThan(0.001f);
+            }
+
+            // Matching Python: test_far = [10.0, 50.0, 100.0, 500.0, 1000.0]
+            double[] testFar = { 10.0, 50.0, 100.0, 500.0, 1000.0 };
+            foreach (double farVal in testFar)
+            {
+                // Matching Python: editor.ui.fogFarSpin.setValue(far_val)
+                if (editor.FogFarSpin != null)
+                {
+                    editor.FogFarSpin.Value = farVal;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.fog_far - far_val) < 0.001
+                System.Math.Abs(modifiedAre.FogFar - (float)farVal).Should().BeLessThan(0.001f);
+            }
+        }
     }
 }
 

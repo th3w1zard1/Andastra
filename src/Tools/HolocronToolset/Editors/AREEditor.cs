@@ -44,6 +44,8 @@ namespace HolocronToolset.Editors
         private NumericUpDown _mapWorldY2Spin;
         private CheckBox _fogEnabledCheck;
         private ColorEdit _fogColorEdit;
+        private NumericUpDown _fogNearSpin;
+        private NumericUpDown _fogFarSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -217,12 +219,24 @@ namespace HolocronToolset.Editors
             // Fog Enabled checkbox - matching Python: self.ui.fogEnabledCheck
             _fogEnabledCheck = new CheckBox { Content = "Fog Enabled" };
             panel.Children.Add(_fogEnabledCheck);
-            
+
             // Fog Color edit - matching Python: self.ui.fogColorEdit
             var fogColorLabel = new Avalonia.Controls.TextBlock { Text = "Fog Color:" };
             _fogColorEdit = new ColorEdit(null);
             panel.Children.Add(fogColorLabel);
             panel.Children.Add(_fogColorEdit);
+            
+            // Fog Near spin - matching Python: self.ui.fogNearSpin
+            var fogNearLabel = new Avalonia.Controls.TextBlock { Text = "Fog Near:" };
+            _fogNearSpin = new NumericUpDown { Minimum = 0.0, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(fogNearLabel);
+            panel.Children.Add(_fogNearSpin);
+            
+            // Fog Far spin - matching Python: self.ui.fogFarSpin
+            var fogFarLabel = new Avalonia.Controls.TextBlock { Text = "Fog Far:" };
+            _fogFarSpin = new NumericUpDown { Minimum = 0.0, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(fogFarLabel);
+            panel.Children.Add(_fogFarSpin);
 
             Content = panel;
         }
@@ -252,6 +266,8 @@ namespace HolocronToolset.Editors
         public NumericUpDown MapWorldY2Spin => _mapWorldY2Spin;
         public CheckBox FogEnabledCheck => _fogEnabledCheck;
         public ColorEdit FogColorEdit => _fogColorEdit;
+        public NumericUpDown FogNearSpin => _fogNearSpin;
+        public NumericUpDown FogFarSpin => _fogFarSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -403,6 +419,16 @@ namespace HolocronToolset.Editors
             {
                 _fogColorEdit.SetColor(are.FogColor);
             }
+            // Matching Python: self.ui.fogNearSpin.setValue(are.fog_near) (line 204)
+            if (_fogNearSpin != null)
+            {
+                _fogNearSpin.Value = are.FogNear;
+            }
+            // Matching Python: self.ui.fogFarSpin.setValue(are.fog_far) (line 205)
+            if (_fogFarSpin != null)
+            {
+                _fogFarSpin.Value = are.FogFar;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -519,6 +545,16 @@ namespace HolocronToolset.Editors
             if (_fogColorEdit != null)
             {
                 are.FogColor = _fogColorEdit.GetColor();
+            }
+            // Matching Python: are.fog_near = self.ui.fogNearSpin.value() (line 306)
+            if (_fogNearSpin != null && _fogNearSpin.Value.HasValue)
+            {
+                are.FogNear = (float)_fogNearSpin.Value.Value;
+            }
+            // Matching Python: are.fog_far = self.ui.fogFarSpin.value() (line 307)
+            if (_fogFarSpin != null && _fogFarSpin.Value.HasValue)
+            {
+                are.FogFar = (float)_fogFarSpin.Value.Value;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
