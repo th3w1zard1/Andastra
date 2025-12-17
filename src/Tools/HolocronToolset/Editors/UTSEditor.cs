@@ -399,51 +399,72 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Basic
-            _uts.Name = _uts.Name ?? LocalizedString.FromInvalid();
-            _uts.Tag = _tagEdit?.Text ?? "";
-            _uts.ResRef = new ResRef(_resrefEdit?.Text ?? "");
-            _uts.Volume = (int)(_volumeSlider?.Value ?? 127);
-            _uts.Active = _activeCheckbox?.IsChecked ?? false;
+            // Matching Python: uts: UTS = deepcopy(self._uts)
+            var uts = CopyUts(_uts);
 
-            // Advanced
-            _uts.Positional = _playSpecificRadio?.IsChecked ?? false;
-            _uts.Random = _orderRandomRadio?.IsChecked ?? false;
-            _uts.Interval = (int)(_intervalSpin?.Value ?? 0);
-            _uts.IntervalVariance = (int)(_intervalVariationSpin?.Value ?? 0);
-            _uts.VolumeVariance = (int)(_volumeVariationSlider?.Value ?? 0);
-            _uts.PitchVariance = (float)((_pitchVariationSlider?.Value ?? 0) / 100.0);
+            // Basic - read from UI controls (matching Python which always reads from UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:213
+            // Python: uts.name = self.ui.nameEdit.locstring()
+            // In C#, nameEdit is TextBox (read-only), LocalizedString is stored in _uts.Name and updated via EditName()
+            // So we use uts.Name from the copy (which preserves the value set by EditName())
+            // Note: This matches Python behavior where locstring() returns the stored LocalizedString
+            uts.Name = uts.Name ?? LocalizedString.FromInvalid();
+            uts.Tag = _tagEdit?.Text ?? "";
+            uts.ResRef = new ResRef(_resrefEdit?.Text ?? "");
+            uts.Volume = (int)(_volumeSlider?.Value ?? 127);
+            uts.Active = _activeCheckbox?.IsChecked == true;
 
-            // Sounds
-            _uts.Sounds.Clear();
+            // Advanced - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:219-225
+            uts.Positional = _playSpecificRadio?.IsChecked == true;
+            uts.Random = _orderRandomRadio?.IsChecked == true;
+            uts.Interval = (int)(_intervalSpin?.Value ?? 0);
+            uts.IntervalVariance = (int)(_intervalVariationSpin?.Value ?? 0);
+            uts.VolumeVariance = (int)(_volumeVariationSlider?.Value ?? 0);
+            uts.PitchVariance = (float)((_pitchVariationSlider?.Value ?? 0) / 100.0);
+
+            // Sounds - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:227-234
+            uts.Sounds.Clear();
             if (_soundList?.Items != null)
             {
                 foreach (string item in _soundList.Items)
                 {
                     if (!string.IsNullOrEmpty(item))
                     {
-                        _uts.Sounds.Add(new ResRef(item));
+                        uts.Sounds.Add(new ResRef(item));
                     }
                 }
             }
 
-            // Positioning
-            _uts.Continuous = _styleSeamlessRadio?.IsChecked ?? false;
-            _uts.Looping = (_styleSeamlessRadio?.IsChecked ?? false) || (_styleRepeatRadio?.IsChecked ?? false);
-            _uts.MaxDistance = (float)(_maxVolumeDistanceSpin?.Value ?? 0);
-            _uts.MinDistance = (float)(_cutoffSpin?.Value ?? 0);
-            _uts.Elevation = (float)(_heightSpin?.Value ?? 0);
-            _uts.RandomRangeY = (float)(_northRandomSpin?.Value ?? 0);
-            _uts.RandomRangeX = (float)(_eastRandomSpin?.Value ?? 0);
+            // Positioning - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:236-243
+            uts.Continuous = _styleSeamlessRadio?.IsChecked == true;
+            uts.Looping = (_styleSeamlessRadio?.IsChecked == true) || (_styleRepeatRadio?.IsChecked == true);
+            uts.MaxDistance = (float)(_maxVolumeDistanceSpin?.Value ?? 0);
+            uts.MinDistance = (float)(_cutoffSpin?.Value ?? 0);
+            uts.Elevation = (float)(_heightSpin?.Value ?? 0);
+            uts.RandomRangeY = (float)(_northRandomSpin?.Value ?? 0);
+            uts.RandomRangeX = (float)(_eastRandomSpin?.Value ?? 0);
 
-            // Comments
-            _uts.Comment = _commentsEdit?.Text ?? "";
+            // Comments - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:246
+            uts.Comment = _commentsEdit?.Text ?? "";
 
-            // Build GFF
+            // Matching Python: gff: GFF = dismantle_uts(uts); write_gff(gff, data)
             Game game = _installation?.Game ?? Game.K2;
-            var gff = UTSHelpers.DismantleUts(_uts, game);
+            var gff = UTSHelpers.DismantleUts(uts, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTS);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        // Matching Python: deepcopy(self._uts)
+        private static UTS CopyUts(UTS source)
+        {
+            // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
+            Game game = Game.K2; // Default game for serialization
+            var gff = UTSHelpers.DismantleUts(source, game);
+            return UTSHelpers.ConstructUts(gff);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:254-256

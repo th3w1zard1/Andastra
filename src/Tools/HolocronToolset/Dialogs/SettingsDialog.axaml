@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:widgets="using:HolocronToolset.NET.Widgets"
+        xmlns:widgets="using:HolocronToolset.Widgets"
         x:Class="HolocronToolset.Dialogs.SettingsDialog"
         Title="Settings"
         Width="757" Height="451"

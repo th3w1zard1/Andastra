@@ -396,75 +396,96 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Basic
-            _utp.Name = _utp.Name ?? LocalizedString.FromInvalid();
-            _utp.Tag = _tagEdit?.Text ?? "";
-            _utp.ResRef = new ResRef(_resrefEdit?.Text ?? "");
-            _utp.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
-            _utp.Conversation = new ResRef(_conversationEdit?.Text ?? "");
-            _utp.HasInventory = _hasInventoryCheckbox?.IsChecked ?? false;
+            // Matching Python: utp: UTP = deepcopy(self._utp)
+            var utp = CopyUtp(_utp);
 
-            // Advanced
-            _utp.Min1Hp = _min1HpCheckbox?.IsChecked ?? false;
-            _utp.PartyInteract = _partyInteractCheckbox?.IsChecked ?? false;
-            _utp.Useable = _useableCheckbox?.IsChecked ?? false;
-            _utp.Plot = _plotCheckbox?.IsChecked ?? false;
-            _utp.Static = _staticCheckbox?.IsChecked ?? false;
-            _utp.NotBlastable = _notBlastableCheckbox?.IsChecked ?? false;
-            _utp.FactionId = _factionSelect?.SelectedIndex ?? 0;
-            _utp.AnimationState = (int)(_animationStateSpin?.Value ?? 0);
-            _utp.CurrentHp = (int)(_currentHpSpin?.Value ?? 0);
-            _utp.MaximumHp = (int)(_maxHpSpin?.Value ?? 0);
-            _utp.Hardness = (int)(_hardnessSpin?.Value ?? 0);
-            _utp.Fortitude = (int)(_fortitudeSpin?.Value ?? 0);
-            _utp.Reflex = (int)(_reflexSpin?.Value ?? 0);
-            _utp.Will = (int)(_willSpin?.Value ?? 0);
+            // Basic - read from UI controls (matching Python which always reads from UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:291
+            // Python: utp.name = self.ui.nameEdit.locstring()
+            // In C#, nameEdit is TextBox (read-only), LocalizedString is stored in _utp.Name and updated via EditName()
+            // So we use utp.Name from the copy (which preserves the value set by EditName())
+            // Note: This matches Python behavior where locstring() returns the stored LocalizedString
+            utp.Name = utp.Name ?? LocalizedString.FromInvalid();
+            utp.Tag = _tagEdit?.Text ?? "";
+            utp.ResRef = new ResRef(_resrefEdit?.Text ?? "");
+            utp.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
+            utp.Conversation = new ResRef(_conversationEdit?.Text ?? "");
+            utp.HasInventory = _hasInventoryCheckbox?.IsChecked == true;
 
-            // Lock
-            _utp.Locked = _lockedCheckbox?.IsChecked ?? false;
-            _utp.UnlockDc = (int)(_openLockSpin?.Value ?? 0);
-            _utp.UnlockDiff = (int)(_difficultySpin?.Value ?? 0);
-            _utp.UnlockDiffMod = (int)(_difficultyModSpin?.Value ?? 0);
-            _utp.KeyRequired = _needKeyCheckbox?.IsChecked ?? false;
-            _utp.AutoRemoveKey = _removeKeyCheckbox?.IsChecked ?? false;
-            _utp.KeyName = _keyEdit?.Text ?? "";
+            // Advanced - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:298-312
+            utp.Min1Hp = _min1HpCheckbox?.IsChecked == true;
+            utp.PartyInteract = _partyInteractCheckbox?.IsChecked == true;
+            utp.Useable = _useableCheckbox?.IsChecked == true;
+            utp.Plot = _plotCheckbox?.IsChecked == true;
+            utp.Static = _staticCheckbox?.IsChecked == true;
+            utp.NotBlastable = _notBlastableCheckbox?.IsChecked == true;
+            utp.FactionId = _factionSelect?.SelectedIndex ?? 0;
+            utp.AnimationState = (int)(_animationStateSpin?.Value ?? 0);
+            utp.CurrentHp = (int)(_currentHpSpin?.Value ?? 0);
+            utp.MaximumHp = (int)(_maxHpSpin?.Value ?? 0);
+            utp.Hardness = (int)(_hardnessSpin?.Value ?? 0);
+            utp.Fortitude = (int)(_fortitudeSpin?.Value ?? 0);
+            utp.Reflex = (int)(_reflexSpin?.Value ?? 0);
+            utp.Will = (int)(_willSpin?.Value ?? 0);
 
-            // Scripts
+            // Lock - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:314-321
+            utp.Locked = _lockedCheckbox?.IsChecked == true;
+            utp.UnlockDc = (int)(_openLockSpin?.Value ?? 0);
+            utp.UnlockDiff = (int)(_difficultySpin?.Value ?? 0);
+            utp.UnlockDiffMod = (int)(_difficultyModSpin?.Value ?? 0);
+            utp.KeyRequired = _needKeyCheckbox?.IsChecked == true;
+            utp.AutoRemoveKey = _removeKeyCheckbox?.IsChecked == true;
+            utp.KeyName = _keyEdit?.Text ?? "";
+
+            // Scripts - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:323-337
             if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
-                _utp.OnClosed = new ResRef(_scriptFields["OnClosed"].Text);
+                utp.OnClosed = new ResRef(_scriptFields["OnClosed"].Text);
             if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                _utp.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
+                utp.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
             if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                _utp.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
+                utp.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
             if (_scriptFields.ContainsKey("OnEndDialog") && _scriptFields["OnEndDialog"] != null)
-                _utp.OnEndDialog = new ResRef(_scriptFields["OnEndDialog"].Text);
+                utp.OnEndDialog = new ResRef(_scriptFields["OnEndDialog"].Text);
             if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
-                _utp.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text);
+                utp.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text);
             if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                _utp.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
+                utp.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
             if (_scriptFields.ContainsKey("OnInventory") && _scriptFields["OnInventory"] != null)
-                _utp.OnInventory = new ResRef(_scriptFields["OnInventory"].Text);
+                utp.OnInventory = new ResRef(_scriptFields["OnInventory"].Text);
             if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
-                _utp.OnMelee = new ResRef(_scriptFields["OnMelee"].Text);
+                utp.OnMelee = new ResRef(_scriptFields["OnMelee"].Text);
             if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
-                _utp.OnOpen = new ResRef(_scriptFields["OnOpen"].Text);
+                utp.OnOpen = new ResRef(_scriptFields["OnOpen"].Text);
             if (_scriptFields.ContainsKey("OnLock") && _scriptFields["OnLock"] != null)
-                _utp.OnLock = new ResRef(_scriptFields["OnLock"].Text);
+                utp.OnLock = new ResRef(_scriptFields["OnLock"].Text);
             if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
-                _utp.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text);
+                utp.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text);
             if (_scriptFields.ContainsKey("OnUsed") && _scriptFields["OnUsed"] != null)
-                _utp.OnUsed = new ResRef(_scriptFields["OnUsed"].Text);
+                utp.OnUsed = new ResRef(_scriptFields["OnUsed"].Text);
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                _utp.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
+                utp.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
 
-            // Comments
-            _utp.Comment = _commentsEdit?.Text ?? "";
+            // Comments - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:340
+            utp.Comment = _commentsEdit?.Text ?? "";
 
-            // Build GFF
+            // Matching Python: gff: GFF = dismantle_utp(utp); write_gff(gff, data)
             Game game = _installation?.Game ?? Game.K2;
-            var gff = UTPHelpers.DismantleUtp(_utp, game);
+            var gff = UTPHelpers.DismantleUtp(utp, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTP);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        // Matching Python: deepcopy(self._utp)
+        private static UTP CopyUtp(UTP source)
+        {
+            // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
+            Game game = Game.K2; // Default game for serialization
+            var gff = UTPHelpers.DismantleUtp(source, game);
+            return UTPHelpers.ConstructUtp(gff);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:348-350

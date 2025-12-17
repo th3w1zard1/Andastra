@@ -36,10 +36,6 @@ namespace HolocronToolset.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
-        // Cached checkbox values to work around Avalonia headless test issues
-        private bool? _cachedHasMapNote;
-        private bool? _cachedMapNoteEnabled;
-
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:24-63
         // Original: def __init__(self, parent, installation):
         public UTWEditor(Window parent = null, HTInstallation installation = null)
@@ -84,16 +80,7 @@ namespace HolocronToolset.Editors
                 _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
                 _resrefGenerateButton = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateButton");
                 _isNoteCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "isNoteCheckbox");
-                // Don't subscribe to PropertyChanged here - it may interfere with SetIsNoteCheckbox in tests
-                // if (_isNoteCheckbox != null)
-                // {
-                //     _isNoteCheckbox.PropertyChanged += OnIsNoteCheckboxPropertyChanged;
-                // }
                 _noteEnabledCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "noteEnabledCheckbox");
-                // if (_noteEnabledCheckbox != null)
-                // {
-                //     _noteEnabledCheckbox.PropertyChanged += OnNoteEnabledCheckboxPropertyChanged;
-                // }
                 _noteEdit = EditorHelpers.FindControlSafe<TextBox>(this, "noteEdit");
                 _noteChangeButton = EditorHelpers.FindControlSafe<Button>(this, "noteChangeButton");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
@@ -188,10 +175,7 @@ namespace HolocronToolset.Editors
             var advancedPanel = new StackPanel { Orientation = Orientation.Vertical };
 
             _isNoteCheckbox = new CheckBox { Content = "Is a Map Note" };
-            // Don't subscribe to PropertyChanged here - it may interfere with SetIsNoteCheckbox in tests
-            // _isNoteCheckbox.PropertyChanged += OnIsNoteCheckboxPropertyChanged;
             _noteEnabledCheckbox = new CheckBox { Content = "Map Note is Enabled" };
-            // _noteEnabledCheckbox.PropertyChanged += OnNoteEnabledCheckboxPropertyChanged;
 
             // Map Note
             var noteLabel = new TextBlock { Text = "Map Note:" };
@@ -268,21 +252,10 @@ namespace HolocronToolset.Editors
             if (_isNoteCheckbox != null)
             {
                 _isNoteCheckbox.IsChecked = utw.HasMapNote;
-                // Only update cache if it's null (not already set by SetIsNoteCheckbox)
-                if (!_cachedHasMapNote.HasValue)
-                {
-                    _cachedHasMapNote = utw.HasMapNote;
-                }
             }
             if (_noteEnabledCheckbox != null)
             {
                 _noteEnabledCheckbox.IsChecked = utw.MapNoteEnabled;
-                // Only update cache if it's null (not already set by SetNoteEnabledCheckbox)
-                // This prevents LoadUTW from overwriting cache set by SetNoteEnabledCheckbox
-                if (!_cachedMapNoteEnabled.HasValue)
-                {
-                    _cachedMapNoteEnabled = utw.MapNoteEnabled;
-                }
             }
             if (_noteEdit != null)
             {
@@ -317,282 +290,88 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // CRITICAL: Save cache value at the start of Build() to prevent it from being overwritten
-            // This ensures that even if PropertyChanged handlers fire during Build(), we preserve the cache
-            // Also save the UTW value directly as a backup (in case cache is null but UTW is set)
-            bool? savedCacheValue = _cachedMapNoteEnabled;
-            bool? savedUtwValue = _utw != null ? (bool?)_utw.MapNoteEnabled : null;
+            // Matching Python: utw: UTW = deepcopy(self._utw)
+            var utw = CopyUtw(_utw);
 
-            // Update the existing UTW object from UI elements
             // Matching Python: utw.name = self.ui.nameEdit.locstring()
             if (_nameEdit != null)
             {
-                _utw.Name = _nameEdit.GetLocString();
+                utw.Name = _nameEdit.GetLocString();
             }
+
             // Matching Python: utw.tag = self.ui.tagEdit.text()
             if (_tagEdit != null)
             {
-                _utw.Tag = _tagEdit.Text ?? "";
+                utw.Tag = _tagEdit.Text ?? "";
             }
+
             // Matching Python: utw.resref = ResRef(self.ui.resrefEdit.text())
             if (_resrefEdit != null)
             {
-                _utw.ResRef = !string.IsNullOrEmpty(_resrefEdit.Text) ? new ResRef(_resrefEdit.Text) : new ResRef("");
+                utw.ResRef = new ResRef(_resrefEdit.Text ?? "");
             }
+
             // Matching Python: utw.has_map_note = self.ui.isNoteCheckbox.isChecked()
-            // Read directly from checkbox (matching Python behavior)
-            if (_isNoteCheckbox != null && _utw != null)
+            if (_isNoteCheckbox != null)
             {
-                // Try both GetValue and IsChecked to ensure we get the correct value
-                // GetValue works when SetCurrentValue is used (headless tests)
-                // IsChecked works when IsChecked = value is used
-                var getValueResult = _isNoteCheckbox.GetValue(CheckBox.IsCheckedProperty);
-                var isCheckedValue = _isNoteCheckbox.IsChecked;
-
-                // Prefer GetValue if it's a bool, otherwise use IsChecked property
-                bool? checkboxValue = null;
-                if (getValueResult is bool getValueBool)
-                {
-                    checkboxValue = getValueBool;
-                }
-                else if (isCheckedValue.HasValue)
-                {
-                    checkboxValue = isCheckedValue.Value;
-                }
-
-                // Only update if we got a valid value from the checkbox
-                // Special case: if UTW is True but checkbox reads False, preserve True (headless limitation)
-                // This allows tests to directly set _utw.HasMapNote = true as a workaround
-                if (checkboxValue.HasValue)
-                {
-                    // Check current value to detect if it was manually set to True
-                    bool currentHasMapNote = _utw.HasMapNote;
-                    // If UTW is True and checkbox is False, preserve True (headless limitation)
-                    // If UTW is True and checkbox is True, use True (both agree - but prefer UTW value if it was manually set)
-                    // If UTW is False and checkbox is True, use True (normal case - checkbox was checked)
-                    // If UTW is False and checkbox is False, use False (normal case)
-                    // Always preserve manually set True values (workaround for headless limitation)
-                    if (currentHasMapNote == true)
-                    {
-                        // UTW was manually set to True - preserve it regardless of checkbox value
-                        // This works around headless limitation where checkbox doesn't propagate
-                        // Keep existing _utw.HasMapNote = true (do nothing, value already set correctly)
-                    }
-                    else
-                    {
-                        // UTW is False - use checkbox value (normal case)
-                        _utw.HasMapNote = checkboxValue.Value;
-                    }
-                }
-                // If neither works (headless limitation), keep existing _utw.HasMapNote value
+                utw.HasMapNote = _isNoteCheckbox.IsChecked == true;
             }
-            else if (_utw != null)
-            {
-                // If checkbox is null but UTW is True, preserve it (might have been manually set)
-                // Only set to false if it's actually false
-                if (_utw.HasMapNote == false)
-                {
-                    _utw.HasMapNote = false;
-                }
-                // Otherwise keep existing value (might be True from manual setting)
-            }
+
             // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
-            // Python directly reads from checkbox, but in C# we use cache for headless tests
-            if (_utw != null)
+            if (_noteEnabledCheckbox != null)
             {
-                // CRITICAL: Priority order for MapNoteEnabled:
-                // 1. savedCacheValue (from start of Build()) - authoritative source for headless tests
-                // 2. savedUtwValue (from start of Build()) - backup if cache is null
-                // 3. Current cache value (as last resort if saved values are null)
-                // 4. Checkbox value (if readable)
-                // 5. Preserve existing UTW value (don't overwrite manually set values)
-                bool? targetValue = null;
-                if (savedCacheValue.HasValue)
-                {
-                    targetValue = savedCacheValue;
-                }
-                else if (savedUtwValue.HasValue)
-                {
-                    targetValue = savedUtwValue;
-                }
-                else if (_cachedMapNoteEnabled.HasValue)
-                {
-                    // Last resort: use current cache value if saved values are null
-                    targetValue = _cachedMapNoteEnabled;
-                }
-                else if (_noteEnabledCheckbox != null)
-                {
-                    // Try to read from checkbox directly
-                    var getValueResult = _noteEnabledCheckbox.GetValue(CheckBox.IsCheckedProperty);
-                    var isCheckedValue = _noteEnabledCheckbox.IsChecked;
-
-                    if (getValueResult is bool getValueBool)
-                    {
-                        targetValue = getValueBool;
-                    }
-                    else if (isCheckedValue.HasValue)
-                    {
-                        targetValue = isCheckedValue.Value;
-                    }
-                }
-
-                // Set the value if we have one, otherwise preserve existing UTW value
-                if (targetValue.HasValue)
-                {
-                    _utw.MapNoteEnabled = targetValue.Value;
-                }
-                // If we don't have a value, preserve existing UTW value (might have been manually set)
+                System.Console.WriteLine($"[BUILD DEBUG] _noteEnabledCheckbox.IsChecked = {_noteEnabledCheckbox.IsChecked}");
+                utw.MapNoteEnabled = _noteEnabledCheckbox.IsChecked == true;
+                System.Console.WriteLine($"[BUILD DEBUG] utw.MapNoteEnabled = {utw.MapNoteEnabled}");
             }
+
+            // Matching Python: utw.map_note = self.ui.noteEdit.locstring / LocalizedString(self.ui.noteEdit.text())
+            if (_noteEdit != null && !string.IsNullOrEmpty(_noteEdit.Text))
+            {
+                utw.MapNote = LocalizedString.FromEnglish(_noteEdit.Text);
+            }
+
             // Matching Python: utw.comment = self.ui.commentsEdit.toPlainText()
             if (_commentsEdit != null)
             {
-                _utw.Comment = _commentsEdit.Text ?? "";
+                utw.Comment = _commentsEdit.Text ?? "";
             }
 
-            // Handle map note - if noteEdit has text, create a LocalizedString from it
-            if (_noteEdit != null && !string.IsNullOrEmpty(_noteEdit.Text))
-            {
-                // Try to parse as string ref first, otherwise create from text
-                if (int.TryParse(_noteEdit.Text, out int stringRef) && stringRef >= 0)
-                {
-                    _utw.MapNote = new LocalizedString(stringRef);
-                }
-                else
-                {
-                    _utw.MapNote = LocalizedString.FromEnglish(_noteEdit.Text);
-                }
-            }
-            else
-            {
-                _utw.MapNote = LocalizedString.FromInvalid();
-            }
-
-            // CRITICAL: Final verification before serialization
-            // Ensure MapNoteEnabled is set correctly from cache (if available)
-            // This is a defensive check to ensure the value is correct before serialization
-            // ALWAYS use saved cache value (from start of Build()) - it's the authoritative source for headless tests
-            // This MUST happen right before serialization to ensure the value is correct
-            // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
-            // Python directly reads from checkbox, but in C# we use cache for headless tests
-            if (_utw != null)
-            {
-                // Priority 1: Use saved cache value if available (it's the source of truth for headless tests)
-                // The cache is set by SetNoteEnabledCheckbox(true) and is the authoritative source
-                // Use savedCacheValue instead of _cachedMapNoteEnabled to prevent it from being overwritten
-                // If cache is null but UTW value was saved, use the saved UTW value as a backup
-                if (savedCacheValue.HasValue)
-                {
-                    // Cache is the source of truth - always use it, no matter what
-                    // This ensures that SetNoteEnabledCheckbox(true) always works, even in headless tests
-                    // CRITICAL: Set this value RIGHT before serialization to prevent any interference
-                    _utw.MapNoteEnabled = savedCacheValue.Value;
-                }
-                else if (savedUtwValue.HasValue)
-                {
-                    // If cache is null but we saved the UTW value at the start of Build(), use it
-                    // This handles cases where SetNoteEnabledCheckbox sets UTW directly but cache might be null
-                    _utw.MapNoteEnabled = savedUtwValue.Value;
-                }
-                else if (_noteEnabledCheckbox != null)
-                {
-                    // Priority 2: If cache is null, try to read from checkbox one last time
-                    var getValueResult = _noteEnabledCheckbox.GetValue(CheckBox.IsCheckedProperty);
-                    var isCheckedValue = _noteEnabledCheckbox.IsChecked;
-                    if (getValueResult is bool getValueBool)
-                    {
-                        _utw.MapNoteEnabled = getValueBool;
-                    }
-                    else if (isCheckedValue.HasValue)
-                    {
-                        _utw.MapNoteEnabled = isCheckedValue.Value;
-                    }
-                }
-                // Priority 3: If neither cache nor checkbox is available, preserve existing UTW value
-                // (don't overwrite manually set values)
-            }
-
-            // Serialize UTW to bytes
-            // IMPORTANT: At this point, _utw.MapNoteEnabled should be set correctly
-            // DismantleUtw will read utw.MapNoteEnabled directly, so it must be correct here
-            // CRITICAL: Use saved cache value one more time right before serialization as a final safeguard
-            // This ensures that even if something reset the UTW value, we fix it one last time
-            // This is the ABSOLUTE LAST chance to set the value correctly before serialization
-            if (_utw != null)
-            {
-                // ALWAYS use saved cache value if available - it's the source of truth for headless tests
-                // This is the final safeguard to ensure SetNoteEnabledCheckbox(true) always works
-                // Use savedCacheValue instead of _cachedMapNoteEnabled to prevent it from being overwritten
-                // If cache is null but UTW value was saved, use the saved UTW value as a backup
-                if (savedCacheValue.HasValue)
-                {
-                    // Force set the value from saved cache right before serialization
-                    // This prevents any possibility of the value being wrong
-                    _utw.MapNoteEnabled = savedCacheValue.Value;
-                    // CRITICAL: Verify the value was actually set (defensive check)
-                    // This ensures that the property setter is working correctly
-                    if (_utw.MapNoteEnabled != savedCacheValue.Value)
-                    {
-                        // If the value didn't set correctly, try setting it again
-                        // This handles edge cases where property setters might not work as expected
-                        _utw.MapNoteEnabled = savedCacheValue.Value;
-                    }
-                }
-                else if (savedUtwValue.HasValue)
-                {
-                    // If cache is null but we saved the UTW value at the start of Build(), use it
-                    // This handles cases where SetNoteEnabledCheckbox sets UTW directly but cache might be null
-                    _utw.MapNoteEnabled = savedUtwValue.Value;
-                }
-            }
-            // CRITICAL: Verify UTW value is correct immediately before serialization
-            // This is the absolute last check before we serialize
-            // Use saved cache value if available, otherwise use saved UTW value
-            if (_utw != null)
-            {
-                bool? targetValue = savedCacheValue.HasValue ? savedCacheValue : savedUtwValue;
-                if (targetValue.HasValue)
-                {
-                    // Double-check that the value is correct right before serialization
-                    // If it's not, set it one more time (this should never happen, but it's a safeguard)
-                    if (_utw.MapNoteEnabled != targetValue.Value)
-                    {
-                        _utw.MapNoteEnabled = targetValue.Value;
-                    }
-                }
-            }
-            // CRITICAL: Final check - verify UTW value is correct immediately before calling BytesUtw
-            // This is the absolute last chance to ensure the value is correct
-            // IMPORTANT: If savedCacheValue is null, check _cachedMapNoteEnabled directly as a last resort
-            // This handles edge cases where savedCacheValue might be null but cache was set after Build() started
-            if (_utw != null)
-            {
-                bool? finalValue = savedCacheValue.HasValue ? savedCacheValue : savedUtwValue;
-                // Last resort: if both saved values are null, check current cache value
-                if (!finalValue.HasValue && _cachedMapNoteEnabled.HasValue)
-                {
-                    finalValue = _cachedMapNoteEnabled;
-                }
-                if (finalValue.HasValue)
-                {
-                    // Force set one final time right before serialization
-                    _utw.MapNoteEnabled = finalValue.Value;
-                    // Verify it was set (this should never fail, but it's a safeguard)
-                    if (_utw.MapNoteEnabled != finalValue.Value)
-                    {
-                        // If it still didn't set, something is very wrong - try one more time
-                        _utw.MapNoteEnabled = finalValue.Value;
-                    }
-                }
-                else
-                {
-                    // If we still don't have a value, check the UTW object itself as absolute last resort
-                    // This should never happen, but it's a safeguard
-                    // Don't overwrite if UTW already has a value (might have been manually set)
-                    // Only set to false if it's actually false (preserve existing value)
-                }
-            }
-            byte[] data = UTWAuto.BytesUtw(_utw);
+            // Matching Python: gff: GFF = dismantle_utw(utw); write_gff(gff, data)
+            byte[] data = UTWAuto.BytesUtw(utw);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        // Matching Python: deepcopy(self._utw)
+        private static UTW CopyUtw(UTW source)
+        {
+            var copy = new UTW();
+            copy.Name = CopyLocalizedString(source.Name);
+            copy.Tag = source.Tag;
+            copy.ResRef = source.ResRef;
+            copy.HasMapNote = source.HasMapNote;
+            copy.MapNoteEnabled = source.MapNoteEnabled;
+            copy.MapNote = CopyLocalizedString(source.MapNote);
+            copy.AppearanceId = source.AppearanceId;
+            copy.PaletteId = source.PaletteId;
+            copy.Comment = source.Comment;
+            copy.LinkedTo = source.LinkedTo;
+            copy.Description = CopyLocalizedString(source.Description);
+            return copy;
+        }
+
+        private static LocalizedString CopyLocalizedString(LocalizedString source)
+        {
+            if (source == null)
+            {
+                return LocalizedString.FromInvalid();
+            }
+            var copy = new LocalizedString(source.StringRef);
+            foreach (var (language, gender, text) in source)
+            {
+                copy.SetData(language, gender, text);
+            }
+            return copy;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:152-154
@@ -600,9 +379,6 @@ namespace HolocronToolset.Editors
         public override void New()
         {
             base.New();
-            // Reset cache when creating new UTW
-            _cachedHasMapNote = null;
-            _cachedMapNoteEnabled = null;
             LoadUTW(new UTW());
         }
 
@@ -692,151 +468,17 @@ namespace HolocronToolset.Editors
             Save();
         }
 
-        // Event handlers for checkbox property changes
-        private void OnIsNoteCheckboxPropertyChanged(object sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property == CheckBox.IsCheckedProperty && _isNoteCheckbox != null)
-            {
-                // Always update cache from checkbox (SetIsNoteCheckbox sets cache first, then checkbox, so this should match)
-                _cachedHasMapNote = _isNoteCheckbox.IsChecked;
-            }
-        }
-
-        private bool _isSettingNoteEnabledCheckbox = false; // Flag to prevent handler from overwriting cache during SetNoteEnabledCheckbox
-
-        private void OnNoteEnabledCheckboxPropertyChanged(object sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property == CheckBox.IsCheckedProperty && _noteEnabledCheckbox != null)
-            {
-                // Don't update cache if we're in the middle of SetNoteEnabledCheckbox
-                // (SetNoteEnabledCheckbox is the authoritative source for test scenarios)
-                if (_isSettingNoteEnabledCheckbox)
-                {
-                    return;
-                }
-
-                // Update cache from checkbox value
-                // Note: SetNoteEnabledCheckbox sets cache first, then checkbox, so this should match
-                // But we still update cache here to handle direct checkbox changes
-                // CRITICAL: Only update cache if we get a valid value from checkbox
-                // In headless tests, checkbox might be unreadable, so preserve existing cache
-                var newValue = _noteEnabledCheckbox.IsChecked;
-                if (newValue.HasValue)
-                {
-                    // Only update cache if checkbox has a valid value
-                    // This prevents headless test issues where checkbox might be unreadable
-                    _cachedMapNoteEnabled = newValue;
-                    // Also update UTW immediately if it exists (for real-time updates)
-                    if (_utw != null)
-                    {
-                        _utw.MapNoteEnabled = newValue.Value;
-                    }
-                }
-                // If checkbox value is null (headless test limitation), preserve existing cache
-                // This ensures SetNoteEnabledCheckbox(true) cache value is not overwritten
-            }
-        }
-
-        // Public properties for testing
+        // Public properties for testing - matching Python's self.ui structure
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateButton => _tagGenerateButton;
         public TextBox ResrefEdit => _resrefEdit;
         public Button ResrefGenerateButton => _resrefGenerateButton;
-        // Expose cache for debugging
-        public bool? CachedHasMapNote => _cachedHasMapNote;
-        public bool? CachedMapNoteEnabled => _cachedMapNoteEnabled;
-        public CheckBox IsNoteCheckbox
-        {
-            get => _isNoteCheckbox;
-            set
-            {
-                if (_isNoteCheckbox != null && _isNoteCheckbox != value)
-                {
-                    _isNoteCheckbox.PropertyChanged -= OnIsNoteCheckboxPropertyChanged;
-                }
-                _isNoteCheckbox = value;
-                if (_isNoteCheckbox != null)
-                {
-                    _isNoteCheckbox.PropertyChanged += OnIsNoteCheckboxPropertyChanged;
-                    _cachedHasMapNote = _isNoteCheckbox.IsChecked;
-                }
-            }
-        }
-        public CheckBox NoteEnabledCheckbox
-        {
-            get => _noteEnabledCheckbox;
-            set
-            {
-                if (_noteEnabledCheckbox != null && _noteEnabledCheckbox != value)
-                {
-                    _noteEnabledCheckbox.PropertyChanged -= OnNoteEnabledCheckboxPropertyChanged;
-                }
-                _noteEnabledCheckbox = value;
-                if (_noteEnabledCheckbox != null)
-                {
-                    _noteEnabledCheckbox.PropertyChanged += OnNoteEnabledCheckboxPropertyChanged;
-                    // Only update cache if checkbox has a valid value
-                    // This prevents headless test issues where checkbox might be unreadable
-                    // If checkbox is null/unreadable, preserve existing cache (set by SetNoteEnabledCheckbox)
-                    var checkboxValue = _noteEnabledCheckbox.IsChecked;
-                    if (checkboxValue.HasValue)
-                    {
-                        _cachedMapNoteEnabled = checkboxValue;
-                    }
-                }
-            }
-        }
+        public CheckBox IsNoteCheckbox => _isNoteCheckbox;
+        public CheckBox NoteEnabledCheckbox => _noteEnabledCheckbox;
         public TextBox NoteEdit => _noteEdit;
         public Button NoteChangeButton => _noteChangeButton;
         public TextBox CommentsEdit => _commentsEdit;
         public UTW Utw => _utw;
-
-        // Helper method to set checkbox value and update cache (for tests)
-        public void SetIsNoteCheckbox(bool value)
-        {
-            if (_isNoteCheckbox != null)
-            {
-                // Set cache first, then set checkbox (cache takes precedence in Build())
-                _cachedHasMapNote = value;
-                _isNoteCheckbox.IsChecked = value;
-            }
-        }
-
-        public void SetNoteEnabledCheckbox(bool value)
-        {
-            if (_noteEnabledCheckbox != null)
-            {
-                // Set cache first, then set checkbox (cache takes precedence in Build())
-                // The cache is the source of truth for headless tests
-                _cachedMapNoteEnabled = value;
-                // Set flag to prevent PropertyChanged handler from overwriting cache
-                _isSettingNoteEnabledCheckbox = true;
-                try
-                {
-                    // Temporarily detach PropertyChanged handler to prevent it from overwriting cache
-                    // (SetNoteEnabledCheckbox is the authoritative source for test scenarios)
-                    _noteEnabledCheckbox.PropertyChanged -= OnNoteEnabledCheckboxPropertyChanged;
-                    _noteEnabledCheckbox.IsChecked = value;
-                    // Reattach handler after setting value, but keep flag set to prevent immediate handler execution
-                    // The handler will be allowed to run after we clear the flag
-                }
-                finally
-                {
-                    // Reattach handler before clearing flag
-                    // This ensures the handler is reattached but won't fire until after we're done
-                    _noteEnabledCheckbox.PropertyChanged += OnNoteEnabledCheckboxPropertyChanged;
-                    // Clear flag AFTER reattaching handler to prevent handler from overwriting cache
-                    // The handler will now be active but won't execute because checkbox value hasn't changed
-                    _isSettingNoteEnabledCheckbox = false;
-                }
-                // Also update UTW immediately if it exists (for real-time updates)
-                if (_utw != null)
-                {
-                    _utw.MapNoteEnabled = value;
-                }
-            }
-        }
     }
 }
-

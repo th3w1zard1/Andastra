@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:widgets="clr-namespace:HolocronToolset.NET.Widgets;assembly=HolocronToolset.NET"
+        xmlns:widgets="clr-namespace:HolocronToolset.Widgets;assembly=HolocronToolset.NET"
         xmlns:widgetsEdit="clr-namespace:HolocronToolset.Widgets.Edit;assembly=HolocronToolset.NET"
         x:Class="HolocronToolset.Dialogs.IndoorMapSettingsDialog"
         Title="Module Settings"

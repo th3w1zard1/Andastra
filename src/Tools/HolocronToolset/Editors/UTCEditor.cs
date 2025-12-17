@@ -640,74 +640,83 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Basic
-            _utc.FirstName = _utc.FirstName ?? LocalizedString.FromInvalid();
-            _utc.LastName = _utc.LastName ?? LocalizedString.FromInvalid();
-            _utc.Tag = _tagEdit?.Text ?? "";
-            _utc.ResRef = new ResRef(_resrefEdit?.Text ?? "");
-            _utc.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
-            _utc.SoundsetId = _soundsetSelect?.SelectedIndex ?? 0;
-            _utc.Conversation = new ResRef(_conversationEdit?.Text ?? "");
-            _utc.PortraitId = _portraitSelect?.SelectedIndex ?? 0;
-            _utc.Alignment = (int)(_alignmentSlider?.Value ?? 50);
+            // Matching Python: utc: UTC = deepcopy(self._utc)
+            var utc = CopyUtc(_utc);
 
-            // Advanced
-            _utc.Disarmable = _disarmableCheckbox?.IsChecked ?? false;
-            _utc.NoPermDeath = _noPermDeathCheckbox?.IsChecked ?? false;
-            _utc.Min1Hp = _min1HpCheckbox?.IsChecked ?? false;
-            _utc.Plot = _plotCheckbox?.IsChecked ?? false;
-            _utc.IsPc = _isPcCheckbox?.IsChecked ?? false;
-            _utc.NotReorienting = _noReorientateCheckbox?.IsChecked ?? false;
-            _utc.IgnoreCrePath = _noBlockCheckbox?.IsChecked ?? false;
-            _utc.Hologram = _hologramCheckbox?.IsChecked ?? false;
-            _utc.RaceId = _raceSelect?.SelectedIndex ?? 0;
-            _utc.SubraceId = _subraceSelect?.SelectedIndex ?? 0;
-            _utc.WalkrateId = _speedSelect?.SelectedIndex ?? 0;
-            _utc.FactionId = _factionSelect?.SelectedIndex ?? 0;
-            _utc.GenderId = _genderSelect?.SelectedIndex ?? 0;
-            _utc.PerceptionId = _perceptionSelect?.SelectedIndex ?? 0;
-            _utc.ChallengeRating = (float)(_challengeRatingSpin?.Value ?? 0);
-            _utc.Blindspot = (float)(_blindSpotSpin?.Value ?? 0);
-            _utc.MultiplierSet = (int)(_multiplierSetSpin?.Value ?? 0);
+            // Basic - read from UI controls (matching Python which always reads from UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:561-562
+            // Python: utc.first_name = self.ui.firstnameEdit.locstring()
+            // In C#, firstNameEdit/lastNameEdit are TextBox (read-only), LocalizedString is stored in _utc.FirstName/LastName and updated via dialogs
+            // So we use utc.FirstName/LastName from the copy (which preserves the values set by dialogs)
+            // Note: This matches Python behavior where locstring() returns the stored LocalizedString
+            utc.FirstName = utc.FirstName ?? LocalizedString.FromInvalid();
+            utc.LastName = utc.LastName ?? LocalizedString.FromInvalid();
+            utc.Tag = _tagEdit?.Text ?? "";
+            utc.ResRef = new ResRef(_resrefEdit?.Text ?? "");
+            utc.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
+            utc.SoundsetId = _soundsetSelect?.SelectedIndex ?? 0;
+            utc.Conversation = new ResRef(_conversationEdit?.Text ?? "");
+            utc.PortraitId = _portraitSelect?.SelectedIndex ?? 0;
+            utc.Alignment = (int)(_alignmentSlider?.Value ?? 50);
 
-            // Stats
-            _utc.Strength = (int)(_strengthSpin?.Value ?? 0);
-            _utc.Dexterity = (int)(_dexteritySpin?.Value ?? 0);
-            _utc.Constitution = (int)(_constitutionSpin?.Value ?? 0);
-            _utc.Intelligence = (int)(_intelligenceSpin?.Value ?? 0);
-            _utc.Wisdom = (int)(_wisdomSpin?.Value ?? 0);
-            _utc.Charisma = (int)(_charismaSpin?.Value ?? 0);
-            _utc.ComputerUse = (int)(_computerUseSpin?.Value ?? 0);
-            _utc.Demolitions = (int)(_demolitionsSpin?.Value ?? 0);
-            _utc.Stealth = (int)(_stealthSpin?.Value ?? 0);
-            _utc.Awareness = (int)(_awarenessSpin?.Value ?? 0);
-            _utc.Persuade = (int)(_persuadeSpin?.Value ?? 0);
-            _utc.Repair = (int)(_repairSpin?.Value ?? 0);
-            _utc.Security = (int)(_securitySpin?.Value ?? 0);
-            _utc.TreatInjury = (int)(_treatInjurySpin?.Value ?? 0);
-            _utc.FortitudeBonus = (int)(_fortitudeSpin?.Value ?? 0);
-            _utc.ReflexBonus = (int)(_reflexSpin?.Value ?? 0);
-            _utc.WillpowerBonus = (int)(_willSpin?.Value ?? 0);
-            _utc.NaturalAc = (int)(_armorClassSpin?.Value ?? 0);
-            _utc.Hp = (int)(_baseHpSpin?.Value ?? 0);
-            _utc.CurrentHp = (int)(_currentHpSpin?.Value ?? 0);
-            _utc.MaxHp = (int)(_maxHpSpin?.Value ?? 0);
-            _utc.Fp = (int)(_currentFpSpin?.Value ?? 0);
-            _utc.MaxFp = (int)(_maxFpSpin?.Value ?? 0);
+            // Advanced - read from UI controls
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:569-576
+            utc.Disarmable = _disarmableCheckbox?.IsChecked == true;
+            utc.NoPermDeath = _noPermDeathCheckbox?.IsChecked == true;
+            utc.Min1Hp = _min1HpCheckbox?.IsChecked == true;
+            utc.Plot = _plotCheckbox?.IsChecked == true;
+            utc.IsPc = _isPcCheckbox?.IsChecked == true;
+            utc.NotReorienting = _noReorientateCheckbox?.IsChecked == true;
+            utc.IgnoreCrePath = _noBlockCheckbox?.IsChecked == true;
+            utc.Hologram = _hologramCheckbox?.IsChecked == true;
+            utc.RaceId = _raceSelect?.SelectedIndex ?? 0;
+            utc.SubraceId = _subraceSelect?.SelectedIndex ?? 0;
+            utc.WalkrateId = _speedSelect?.SelectedIndex ?? 0;
+            utc.FactionId = _factionSelect?.SelectedIndex ?? 0;
+            utc.GenderId = _genderSelect?.SelectedIndex ?? 0;
+            utc.PerceptionId = _perceptionSelect?.SelectedIndex ?? 0;
+            utc.ChallengeRating = (float)(_challengeRatingSpin?.Value ?? 0);
+            utc.Blindspot = (float)(_blindSpotSpin?.Value ?? 0);
+            utc.MultiplierSet = (int)(_multiplierSetSpin?.Value ?? 0);
 
-            // Classes
-            _utc.Classes.Clear();
+            // Stats - read from UI controls
+            utc.Strength = (int)(_strengthSpin?.Value ?? 0);
+            utc.Dexterity = (int)(_dexteritySpin?.Value ?? 0);
+            utc.Constitution = (int)(_constitutionSpin?.Value ?? 0);
+            utc.Intelligence = (int)(_intelligenceSpin?.Value ?? 0);
+            utc.Wisdom = (int)(_wisdomSpin?.Value ?? 0);
+            utc.Charisma = (int)(_charismaSpin?.Value ?? 0);
+            utc.ComputerUse = (int)(_computerUseSpin?.Value ?? 0);
+            utc.Demolitions = (int)(_demolitionsSpin?.Value ?? 0);
+            utc.Stealth = (int)(_stealthSpin?.Value ?? 0);
+            utc.Awareness = (int)(_awarenessSpin?.Value ?? 0);
+            utc.Persuade = (int)(_persuadeSpin?.Value ?? 0);
+            utc.Repair = (int)(_repairSpin?.Value ?? 0);
+            utc.Security = (int)(_securitySpin?.Value ?? 0);
+            utc.TreatInjury = (int)(_treatInjurySpin?.Value ?? 0);
+            utc.FortitudeBonus = (int)(_fortitudeSpin?.Value ?? 0);
+            utc.ReflexBonus = (int)(_reflexSpin?.Value ?? 0);
+            utc.WillpowerBonus = (int)(_willSpin?.Value ?? 0);
+            utc.NaturalAc = (int)(_armorClassSpin?.Value ?? 0);
+            utc.Hp = (int)(_baseHpSpin?.Value ?? 0);
+            utc.CurrentHp = (int)(_currentHpSpin?.Value ?? 0);
+            utc.MaxHp = (int)(_maxHpSpin?.Value ?? 0);
+            utc.Fp = (int)(_currentFpSpin?.Value ?? 0);
+            utc.MaxFp = (int)(_maxFpSpin?.Value ?? 0);
+
+            // Classes - read from UI controls
+            utc.Classes.Clear();
             if (_class1Select?.SelectedIndex >= 0)
             {
                 int classId = _class1Select.SelectedIndex;
                 int classLevel = (int)(_class1LevelSpin?.Value ?? 0);
-                _utc.Classes.Add(new UTCClass(classId, classLevel));
+                utc.Classes.Add(new UTCClass(classId, classLevel));
             }
             if (_class2Select?.SelectedIndex > 0) // > 0 because 0 is "[Unset]"
             {
                 int classId = _class2Select.SelectedIndex - 1;
                 int classLevel = (int)(_class2LevelSpin?.Value ?? 0);
-                _utc.Classes.Add(new UTCClass(classId, classLevel));
+                utc.Classes.Add(new UTCClass(classId, classLevel));
             }
 
             // Feats - would need to be populated from checked items in _featList
@@ -715,47 +724,56 @@ namespace HolocronToolset.Editors
 
             // Powers - would need to be populated from checked items in _powerList
             // Simplified for now - full implementation would read from list
-            if (_utc.Classes.Count > 0)
+            if (utc.Classes.Count > 0)
             {
                 // Powers would be added to the last class
             }
 
-            // Scripts
+            // Scripts - read from UI controls
             if (_scriptFields.ContainsKey("OnBlocked") && _scriptFields["OnBlocked"] != null)
-                _utc.OnBlocked = new ResRef(_scriptFields["OnBlocked"].Text);
+                utc.OnBlocked = new ResRef(_scriptFields["OnBlocked"].Text);
             if (_scriptFields.ContainsKey("OnAttacked") && _scriptFields["OnAttacked"] != null)
-                _utc.OnAttacked = new ResRef(_scriptFields["OnAttacked"].Text);
+                utc.OnAttacked = new ResRef(_scriptFields["OnAttacked"].Text);
             if (_scriptFields.ContainsKey("OnNotice") && _scriptFields["OnNotice"] != null)
-                _utc.OnNotice = new ResRef(_scriptFields["OnNotice"].Text);
+                utc.OnNotice = new ResRef(_scriptFields["OnNotice"].Text);
             if (_scriptFields.ContainsKey("OnDialog") && _scriptFields["OnDialog"] != null)
-                _utc.OnDialog = new ResRef(_scriptFields["OnDialog"].Text);
+                utc.OnDialog = new ResRef(_scriptFields["OnDialog"].Text);
             if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                _utc.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
+                utc.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
             if (_scriptFields.ContainsKey("OnDisturbed") && _scriptFields["OnDisturbed"] != null)
-                _utc.OnDisturbed = new ResRef(_scriptFields["OnDisturbed"].Text);
+                utc.OnDisturbed = new ResRef(_scriptFields["OnDisturbed"].Text);
             if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                _utc.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
+                utc.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
             if (_scriptFields.ContainsKey("OnEndRound") && _scriptFields["OnEndRound"] != null)
-                _utc.OnEndRound = new ResRef(_scriptFields["OnEndRound"].Text);
+                utc.OnEndRound = new ResRef(_scriptFields["OnEndRound"].Text);
             if (_scriptFields.ContainsKey("OnEndDialog") && _scriptFields["OnEndDialog"] != null)
-                _utc.OnEndDialog = new ResRef(_scriptFields["OnEndDialog"].Text);
+                utc.OnEndDialog = new ResRef(_scriptFields["OnEndDialog"].Text);
             if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                _utc.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
+                utc.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
             if (_scriptFields.ContainsKey("OnSpawn") && _scriptFields["OnSpawn"] != null)
-                _utc.OnSpawn = new ResRef(_scriptFields["OnSpawn"].Text);
+                utc.OnSpawn = new ResRef(_scriptFields["OnSpawn"].Text);
             if (_scriptFields.ContainsKey("OnSpell") && _scriptFields["OnSpell"] != null)
-                _utc.OnSpell = new ResRef(_scriptFields["OnSpell"].Text);
+                utc.OnSpell = new ResRef(_scriptFields["OnSpell"].Text);
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                _utc.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
+                utc.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
 
-            // Comments
-            _utc.Comment = _commentsEdit?.Text ?? "";
+            // Comments - read from UI controls
+            utc.Comment = _commentsEdit?.Text ?? "";
 
-            // Build GFF
+            // Matching Python: gff: GFF = dismantle_utc(utc); write_gff(gff, data)
             Game game = _installation?.Game ?? Game.K2;
-            var gff = UTCHelpers.DismantleUtc(_utc, game);
+            var gff = UTCHelpers.DismantleUtc(utc, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTC);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        // Matching Python: deepcopy(self._utc)
+        private static UTC CopyUtc(UTC source)
+        {
+            // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
+            Game game = Game.K2; // Default game for serialization
+            var gff = UTCHelpers.DismantleUtc(source, game);
+            return UTCHelpers.ConstructUtc(gff);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:665-668
