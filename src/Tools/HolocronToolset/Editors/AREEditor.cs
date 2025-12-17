@@ -23,6 +23,7 @@ namespace HolocronToolset.Editors
         private TextBox _tagEdit;
         private Button _tagGenerateButton;
         private ComboBox _cameraStyleSelect;
+        private TextBox _envmapEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -89,6 +90,12 @@ namespace HolocronToolset.Editors
             panel.Children.Add(cameraStyleLabel);
             panel.Children.Add(_cameraStyleSelect);
             
+            // Envmap field - matching Python: self.ui.envmapEdit
+            var envmapLabel = new Avalonia.Controls.TextBlock { Text = "Default Envmap:" };
+            _envmapEdit = new TextBox();
+            panel.Children.Add(envmapLabel);
+            panel.Children.Add(_envmapEdit);
+            
             Content = panel;
         }
 
@@ -97,6 +104,7 @@ namespace HolocronToolset.Editors
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateButton => _tagGenerateButton;
         public ComboBox CameraStyleSelect => _cameraStyleSelect;
+        public TextBox EnvmapEdit => _envmapEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -148,6 +156,11 @@ namespace HolocronToolset.Editors
                     _cameraStyleSelect.SelectedIndex = 0;
                 }
             }
+            // Matching Python: self.ui.envmapEdit.setText(str(are.default_envmap)) (line 180)
+            if (_envmapEdit != null)
+            {
+                _envmapEdit.Text = are.DefaultEnvMap.ToString();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -172,6 +185,11 @@ namespace HolocronToolset.Editors
             if (_cameraStyleSelect != null && _cameraStyleSelect.SelectedIndex >= 0)
             {
                 are.CameraStyle = _cameraStyleSelect.SelectedIndex;
+            }
+            // Matching Python: are.default_envmap = ResRef(self.ui.envmapEdit.text()) (line 286)
+            if (_envmapEdit != null)
+            {
+                are.DefaultEnvMap = new ResRef(_envmapEdit.Text ?? "");
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
