@@ -37,6 +37,10 @@ namespace HolocronToolset.Editors
         private NumericUpDown _mapImageY1Spin;
         private NumericUpDown _mapImageX2Spin;
         private NumericUpDown _mapImageY2Spin;
+        private NumericUpDown _mapWorldX1Spin;
+        private NumericUpDown _mapWorldY1Spin;
+        private NumericUpDown _mapWorldX2Spin;
+        private NumericUpDown _mapWorldY2Spin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -158,30 +162,54 @@ namespace HolocronToolset.Editors
             _mapResXSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(mapResXLabel);
             panel.Children.Add(_mapResXSpin);
-            
+
             // Map Image X1 spin - matching Python: self.ui.mapImageX1Spin
             var mapImageX1Label = new Avalonia.Controls.TextBlock { Text = "Map Image X1:" };
             _mapImageX1Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapImageX1Label);
             panel.Children.Add(_mapImageX1Spin);
-            
+
             // Map Image Y1 spin - matching Python: self.ui.mapImageY1Spin
             var mapImageY1Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y1:" };
             _mapImageY1Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapImageY1Label);
             panel.Children.Add(_mapImageY1Spin);
-            
+
             // Map Image X2 spin - matching Python: self.ui.mapImageX2Spin
             var mapImageX2Label = new Avalonia.Controls.TextBlock { Text = "Map Image X2:" };
             _mapImageX2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapImageX2Label);
             panel.Children.Add(_mapImageX2Spin);
-            
+
             // Map Image Y2 spin - matching Python: self.ui.mapImageY2Spin
             var mapImageY2Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y2:" };
             _mapImageY2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapImageY2Label);
             panel.Children.Add(_mapImageY2Spin);
+            
+            // Map World X1 spin - matching Python: self.ui.mapWorldX1Spin
+            var mapWorldX1Label = new Avalonia.Controls.TextBlock { Text = "Map World X1:" };
+            _mapWorldX1Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapWorldX1Label);
+            panel.Children.Add(_mapWorldX1Spin);
+            
+            // Map World Y1 spin - matching Python: self.ui.mapWorldY1Spin
+            var mapWorldY1Label = new Avalonia.Controls.TextBlock { Text = "Map World Y1:" };
+            _mapWorldY1Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapWorldY1Label);
+            panel.Children.Add(_mapWorldY1Spin);
+            
+            // Map World X2 spin - matching Python: self.ui.mapWorldX2Spin
+            var mapWorldX2Label = new Avalonia.Controls.TextBlock { Text = "Map World X2:" };
+            _mapWorldX2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapWorldX2Label);
+            panel.Children.Add(_mapWorldX2Spin);
+            
+            // Map World Y2 spin - matching Python: self.ui.mapWorldY2Spin
+            var mapWorldY2Label = new Avalonia.Controls.TextBlock { Text = "Map World Y2:" };
+            _mapWorldY2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            panel.Children.Add(mapWorldY2Label);
+            panel.Children.Add(_mapWorldY2Spin);
 
             Content = panel;
         }
@@ -205,6 +233,10 @@ namespace HolocronToolset.Editors
         public NumericUpDown MapImageY1Spin => _mapImageY1Spin;
         public NumericUpDown MapImageX2Spin => _mapImageX2Spin;
         public NumericUpDown MapImageY2Spin => _mapImageY2Spin;
+        public NumericUpDown MapWorldX1Spin => _mapWorldX1Spin;
+        public NumericUpDown MapWorldY1Spin => _mapWorldY1Spin;
+        public NumericUpDown MapWorldX2Spin => _mapWorldX2Spin;
+        public NumericUpDown MapWorldY2Spin => _mapWorldY2Spin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -326,6 +358,26 @@ namespace HolocronToolset.Editors
             {
                 _mapImageY2Spin.Value = are.MapPoint2.Y;
             }
+            // Matching Python: self.ui.mapWorldX1Spin.setValue(are.world_point_1.x) (line 196)
+            if (_mapWorldX1Spin != null)
+            {
+                _mapWorldX1Spin.Value = are.WorldPoint1.X;
+            }
+            // Matching Python: self.ui.mapWorldX2Spin.setValue(are.world_point_2.x) (line 197)
+            if (_mapWorldX2Spin != null)
+            {
+                _mapWorldX2Spin.Value = are.WorldPoint2.X;
+            }
+            // Matching Python: self.ui.mapWorldY1Spin.setValue(are.world_point_1.y) (line 198)
+            if (_mapWorldY1Spin != null)
+            {
+                _mapWorldY1Spin.Value = are.WorldPoint1.Y;
+            }
+            // Matching Python: self.ui.mapWorldY2Spin.setValue(are.world_point_2.y) (line 199)
+            if (_mapWorldY2Spin != null)
+            {
+                _mapWorldY2Spin.Value = are.WorldPoint2.Y;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -402,7 +454,7 @@ namespace HolocronToolset.Editors
                 are.MapResX = (int)_mapResXSpin.Value.Value;
             }
             // Matching Python: are.map_point_1 = Vector2(self.ui.mapImageX1Spin.value(), self.ui.mapImageY1Spin.value()) (line 298)
-            if (_mapImageX1Spin != null && _mapImageY1Spin != null && 
+            if (_mapImageX1Spin != null && _mapImageY1Spin != null &&
                 _mapImageX1Spin.Value.HasValue && _mapImageY1Spin.Value.HasValue)
             {
                 are.MapPoint1 = new System.Numerics.Vector2(
@@ -416,6 +468,22 @@ namespace HolocronToolset.Editors
                 are.MapPoint2 = new System.Numerics.Vector2(
                     (float)_mapImageX2Spin.Value.Value,
                     (float)_mapImageY2Spin.Value.Value);
+            }
+            // Matching Python: are.world_point_1 = Vector2(self.ui.mapWorldX1Spin.value(), self.ui.mapWorldY1Spin.value()) (line 300)
+            if (_mapWorldX1Spin != null && _mapWorldY1Spin != null && 
+                _mapWorldX1Spin.Value.HasValue && _mapWorldY1Spin.Value.HasValue)
+            {
+                are.WorldPoint1 = new System.Numerics.Vector2(
+                    (float)_mapWorldX1Spin.Value.Value,
+                    (float)_mapWorldY1Spin.Value.Value);
+            }
+            // Matching Python: are.world_point_2 = Vector2(self.ui.mapWorldX2Spin.value(), self.ui.mapWorldY2Spin.value()) (line 301)
+            if (_mapWorldX2Spin != null && _mapWorldY2Spin != null && 
+                _mapWorldX2Spin.Value.HasValue && _mapWorldY2Spin.Value.HasValue)
+            {
+                are.WorldPoint2 = new System.Numerics.Vector2(
+                    (float)_mapWorldX2Spin.Value.Value,
+                    (float)_mapWorldY2Spin.Value.Value);
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -700,6 +768,8 @@ namespace HolocronToolset.Editors
             copy.MapResX = source.MapResX;
             copy.MapPoint1 = source.MapPoint1;
             copy.MapPoint2 = source.MapPoint2;
+            copy.WorldPoint1 = source.WorldPoint1;
+            copy.WorldPoint2 = source.WorldPoint2;
             copy.GrassTexture = source.GrassTexture;
             copy.GrassDensity = source.GrassDensity;
             copy.GrassSize = source.GrassSize;
