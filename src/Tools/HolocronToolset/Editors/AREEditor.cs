@@ -28,6 +28,8 @@ namespace HolocronToolset.Editors
         private CheckBox _unescapableCheck;
         private NumericUpDown _alphaTestSpin;
         private CheckBox _stealthCheck;
+        private NumericUpDown _stealthMaxSpin;
+        private NumericUpDown _stealthLossSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -113,10 +115,22 @@ namespace HolocronToolset.Editors
             _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0 };
             panel.Children.Add(alphaTestLabel);
             panel.Children.Add(_alphaTestSpin);
-            
+
             // Stealth XP checkbox - matching Python: self.ui.stealthCheck
             _stealthCheck = new CheckBox { Content = "Stealth XP" };
             panel.Children.Add(_stealthCheck);
+            
+            // Stealth XP Max spin - matching Python: self.ui.stealthMaxSpin
+            var stealthMaxLabel = new Avalonia.Controls.TextBlock { Text = "Stealth XP Max:" };
+            _stealthMaxSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            panel.Children.Add(stealthMaxLabel);
+            panel.Children.Add(_stealthMaxSpin);
+            
+            // Stealth XP Loss spin - matching Python: self.ui.stealthLossSpin
+            var stealthLossLabel = new Avalonia.Controls.TextBlock { Text = "Stealth XP Loss:" };
+            _stealthLossSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            panel.Children.Add(stealthLossLabel);
+            panel.Children.Add(_stealthLossSpin);
 
             Content = panel;
         }
@@ -131,6 +145,8 @@ namespace HolocronToolset.Editors
         public CheckBox UnescapableCheck => _unescapableCheck;
         public NumericUpDown AlphaTestSpin => _alphaTestSpin;
         public CheckBox StealthCheck => _stealthCheck;
+        public NumericUpDown StealthMaxSpin => _stealthMaxSpin;
+        public NumericUpDown StealthLossSpin => _stealthLossSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -207,6 +223,16 @@ namespace HolocronToolset.Editors
             {
                 _stealthCheck.IsChecked = are.StealthXp;
             }
+            // Matching Python: self.ui.stealthMaxSpin.setValue(are.stealth_xp_max) (line 185)
+            if (_stealthMaxSpin != null)
+            {
+                _stealthMaxSpin.Value = are.StealthXpMax;
+            }
+            // Matching Python: self.ui.stealthLossSpin.setValue(are.stealth_xp_loss) (line 186)
+            if (_stealthLossSpin != null)
+            {
+                _stealthLossSpin.Value = are.StealthXpLoss;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -256,6 +282,16 @@ namespace HolocronToolset.Editors
             if (_stealthCheck != null)
             {
                 are.StealthXp = _stealthCheck.IsChecked == true;
+            }
+            // Matching Python: are.stealth_xp_max = self.ui.stealthMaxSpin.value() (line 291)
+            if (_stealthMaxSpin != null && _stealthMaxSpin.Value.HasValue)
+            {
+                are.StealthXpMax = (int)_stealthMaxSpin.Value.Value;
+            }
+            // Matching Python: are.stealth_xp_loss = self.ui.stealthLossSpin.value() (line 292)
+            if (_stealthLossSpin != null && _stealthLossSpin.Value.HasValue)
+            {
+                are.StealthXpLoss = (int)_stealthLossSpin.Value.Value;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
