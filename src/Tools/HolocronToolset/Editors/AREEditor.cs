@@ -26,6 +26,7 @@ namespace HolocronToolset.Editors
         private TextBox _envmapEdit;
         private CheckBox _disableTransitCheck;
         private CheckBox _unescapableCheck;
+        private NumericUpDown _alphaTestSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -105,6 +106,12 @@ namespace HolocronToolset.Editors
             // Unescapable checkbox - matching Python: self.ui.unescapableCheck
             _unescapableCheck = new CheckBox { Content = "Unescapable" };
             panel.Children.Add(_unescapableCheck);
+            
+            // Alpha Test spin - matching Python: self.ui.alphaTestSpin
+            var alphaTestLabel = new Avalonia.Controls.TextBlock { Text = "Alpha Test:" };
+            _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            panel.Children.Add(alphaTestLabel);
+            panel.Children.Add(_alphaTestSpin);
 
             Content = panel;
         }
@@ -117,6 +124,7 @@ namespace HolocronToolset.Editors
         public TextBox EnvmapEdit => _envmapEdit;
         public CheckBox DisableTransitCheck => _disableTransitCheck;
         public CheckBox UnescapableCheck => _unescapableCheck;
+        public NumericUpDown AlphaTestSpin => _alphaTestSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -183,6 +191,11 @@ namespace HolocronToolset.Editors
             {
                 _unescapableCheck.IsChecked = are.Unescapable;
             }
+            // Matching Python: self.ui.alphaTestSpin.setValue(are.alpha_test) (line 183)
+            if (_alphaTestSpin != null)
+            {
+                _alphaTestSpin.Value = are.AlphaTest;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -222,6 +235,11 @@ namespace HolocronToolset.Editors
             if (_unescapableCheck != null)
             {
                 are.Unescapable = _unescapableCheck.IsChecked == true;
+            }
+            // Matching Python: are.alpha_test = float(self.ui.alphaTestSpin.value()) (line 289)
+            if (_alphaTestSpin != null)
+            {
+                are.AlphaTest = (int)_alphaTestSpin.Value;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -494,6 +512,7 @@ namespace HolocronToolset.Editors
             copy.Tag = source.Tag;
             copy.AlphaTest = source.AlphaTest;
             copy.CameraStyle = source.CameraStyle;
+            copy.AlphaTest = source.AlphaTest;
             copy.DefaultEnvMap = source.DefaultEnvMap;
             copy.DisableTransit = source.DisableTransit;
             copy.Unescapable = source.Unescapable;
