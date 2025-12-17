@@ -4,7 +4,17 @@ A modern game engine runtime and development tooling suite for BioWare's Odyssey
 
 ## Overview
 
-Andastra provides a complete runtime implementation for games built on the Odyssey engine architecture, with full support for Knights of the Old Republic (KOTOR) and Knights of the Old Republic II: The Sith Lords (TSL). The project includes both the game engine runtime and a comprehensive suite of development tools for modding and content creation.
+Andastra is a .NET implementation of BioWare's Odyssey engine family, providing a modern, cross-platform runtime for games originally built on this architecture. Similar in scope to projects like Xoreos, Andastra aims to create a complete, faithful reimplementation of the engine with full support for Knights of the Old Republic (KOTOR) and Knights of the Old Republic II: The Sith Lords (TSL). The project includes both the game engine runtime and a comprehensive suite of development tools for modding and content creation.
+
+### Project Name
+
+The name "Andastra" draws from multiple sources:
+
+- **Logical AND**: Represents the intersection and combination of multiple systems and technologies
+- **Astraea**: In Greek mythology, the daughter of Eos (goddess of dawn) and Astraeus, later identified with the constellation Virgo and associated with justice and precision
+- **Andraste**: The Celtic war goddess historically associated with Boudica, and also referenced as "The Maker" in BioWare's Dragon Age series
+
+This name reflects the project's goal of bringing together modern .NET technologies with the precision and faithfulness required to recreate BioWare's classic game engines.
 
 ### Core Components
 
@@ -18,7 +28,7 @@ Andastra provides a complete runtime implementation for games built on the Odyss
 
 The Andastra runtime is organized into a layered architecture with strict dependency rules:
 
-```
+```sh
 ┌─────────────────────────────────────────────────────────────┐
 │                    Andastra.Game (Executable)                │
 ├─────────────────────────────────────────────────────────────┤
@@ -36,6 +46,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 ### Project Organization
 
 **Runtime Projects:**
+
 - `Andastra.Runtime.Core` - Pure domain logic, no external dependencies
 - `Andastra.Runtime.Content` - Asset conversion and caching pipeline
 - `Andastra.Runtime.Scripting` - NCS virtual machine and NWScript execution
@@ -44,10 +55,12 @@ The Andastra runtime is organized into a layered architecture with strict depend
 - `Andastra.Game` - Main executable and game launcher
 
 **Supporting Projects:**
+
 - `Andastra.Parsing` - File format parsers and resource management
 - `Andastra.Tests` - Unit and integration tests
 
 **Development Tools:**
+
 - `HoloPatcher.UI` - Mod installation and patching tool
 - `NCSDecomp` - NWScript bytecode decompiler
 - `KNSSComp.NET` - NWScript compiler
@@ -139,7 +152,7 @@ dotnet run --project src/Tools/KNSSComp.NET/KNSSComp.NET.csproj
 
 ## Project Structure
 
-```
+```sh
 Andastra/
 ├── src/
 │   ├── Andastra/
@@ -234,4 +247,3 @@ This project is licensed under the Business Source License 1.1 (BSL-1.1). See th
 ## Status
 
 Andastra is under active development. Core systems are implemented and functional, with ongoing work on rendering, scripting, and game-specific features. See the [engine roadmap](docs/engine_roadmap.md) for detailed implementation status.
-
