@@ -407,67 +407,159 @@ namespace HolocronToolset.Editors
 
             // Basic - read from UI controls (matching Python which always reads from UI)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:280-285
-            utd.Name = utd.Name ?? LocalizedString.FromInvalid();
-            utd.Tag = _tagEdit?.Text ?? utd.Tag ?? "";
-            utd.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
-                ? new ResRef(_resrefEdit.Text)
-                : utd.ResRef;
-            utd.AppearanceId = (_appearanceSelect?.SelectedIndex >= 0) ? _appearanceSelect.SelectedIndex : utd.AppearanceId;
-            utd.Conversation = _conversationEdit != null && !string.IsNullOrEmpty(_conversationEdit.Text)
-                ? new ResRef(_conversationEdit.Text)
-                : utd.Conversation;
+            // Python: utd.name = self.ui.nameEdit.locstring()
+            if (_nameEdit != null)
+            {
+                utd.Name = _nameEdit.GetLocString();
+            }
+            // Python: utd.tag = self.ui.tagEdit.text()
+            if (_tagEdit != null)
+            {
+                utd.Tag = _tagEdit.Text ?? "";
+            }
+            // Python: utd.resref = ResRef(self.ui.resrefEdit.text())
+            if (_resrefEdit != null)
+            {
+                utd.ResRef = new ResRef(_resrefEdit.Text ?? "");
+            }
+            // Python: utd.appearance_id = self.ui.appearanceSelect.currentIndex()
+            if (_appearanceSelect != null)
+            {
+                utd.AppearanceId = _appearanceSelect.SelectedIndex;
+            }
+            // Python: utd.conversation = ResRef(self.ui.conversationEdit.currentText())
+            if (_conversationEdit != null)
+            {
+                utd.Conversation = new ResRef(_conversationEdit.Text ?? "");
+            }
 
             // Advanced - read from UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:287-299
-            utd.Min1Hp = _min1HpCheckbox?.IsChecked ?? utd.Min1Hp;
-            utd.Plot = _plotCheckbox?.IsChecked ?? utd.Plot;
-            utd.Static = _staticCheckbox?.IsChecked ?? utd.Static;
-            utd.NotBlastable = _notBlastableCheckbox?.IsChecked ?? utd.NotBlastable;
-            utd.FactionId = (_factionSelect?.SelectedIndex >= 0) ? _factionSelect.SelectedIndex : utd.FactionId;
-            utd.AnimationState = _animationStateSpin?.Value != null ? (int)_animationStateSpin.Value : utd.AnimationState;
-            utd.CurrentHp = _currentHpSpin?.Value != null ? (int)_currentHpSpin.Value : utd.CurrentHp;
-            utd.MaximumHp = _maxHpSpin?.Value != null ? (int)_maxHpSpin.Value : utd.MaximumHp;
-            utd.Hardness = _hardnessSpin?.Value != null ? (int)_hardnessSpin.Value : utd.Hardness;
-            utd.Fortitude = _fortitudeSpin?.Value != null ? (int)_fortitudeSpin.Value : utd.Fortitude;
-            utd.Reflex = _reflexSpin?.Value != null ? (int)_reflexSpin.Value : utd.Reflex;
-            utd.Willpower = _willSpin?.Value != null ? (int)_willSpin.Value : utd.Willpower;
+            // Python: utd.min1_hp = self.ui.min1HpCheckbox.isChecked()
+            utd.Min1Hp = _min1HpCheckbox != null ? (_min1HpCheckbox.IsChecked == true) : utd.Min1Hp;
+            utd.Plot = _plotCheckbox != null ? (_plotCheckbox.IsChecked == true) : utd.Plot;
+            utd.Static = _staticCheckbox != null ? (_staticCheckbox.IsChecked == true) : utd.Static;
+            utd.NotBlastable = _notBlastableCheckbox != null ? (_notBlastableCheckbox.IsChecked == true) : utd.NotBlastable;
+            // Python: utd.faction_id = self.ui.factionSelect.currentIndex()
+            if (_factionSelect != null)
+            {
+                utd.FactionId = _factionSelect.SelectedIndex;
+            }
+            // Python: utd.animation_state = self.ui.animationState.value()
+            if (_animationStateSpin != null)
+            {
+                utd.AnimationState = (int)_animationStateSpin.Value;
+            }
+            // Python: utd.current_hp = self.ui.currenHpSpin.value()
+            if (_currentHpSpin != null)
+            {
+                utd.CurrentHp = (int)_currentHpSpin.Value;
+            }
+            // Python: utd.maximum_hp = self.ui.maxHpSpin.value()
+            if (_maxHpSpin != null)
+            {
+                utd.MaximumHp = (int)_maxHpSpin.Value;
+            }
+            // Python: utd.hardness = self.ui.hardnessSpin.value()
+            if (_hardnessSpin != null)
+            {
+                utd.Hardness = (int)_hardnessSpin.Value;
+            }
+            // Python: utd.fortitude = self.ui.fortitudeSpin.value()
+            if (_fortitudeSpin != null)
+            {
+                utd.Fortitude = (int)_fortitudeSpin.Value;
+            }
+            // Python: utd.reflex = self.ui.reflexSpin.value()
+            if (_reflexSpin != null)
+            {
+                utd.Reflex = (int)_reflexSpin.Value;
+            }
+            // Python: utd.willpower = self.ui.willSpin.value()
+            if (_willSpin != null)
+            {
+                utd.Willpower = (int)_willSpin.Value;
+            }
 
             // Lock - read from UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:301-307
-            utd.Locked = _lockedCheckbox?.IsChecked ?? utd.Locked;
-            utd.UnlockDc = _openLockSpin?.Value != null ? (int)_openLockSpin.Value : utd.UnlockDc;
-            utd.UnlockDiff = _difficultySpin?.Value != null ? (int)_difficultySpin.Value : utd.UnlockDiff;
-            utd.UnlockDiffMod = _difficultyModSpin?.Value != null ? (int)_difficultyModSpin.Value : utd.UnlockDiffMod;
-            utd.KeyRequired = _needKeyCheckbox?.IsChecked ?? utd.KeyRequired;
-            utd.AutoRemoveKey = _removeKeyCheckbox?.IsChecked ?? utd.AutoRemoveKey;
-            utd.KeyName = _keyEdit?.Text ?? utd.KeyName ?? "";
+            // Python: utd.locked = self.ui.lockedCheckbox.isChecked()
+            utd.Locked = _lockedCheckbox != null ? (_lockedCheckbox.IsChecked == true) : utd.Locked;
+            // Python: utd.unlock_dc = self.ui.openLockSpin.value()
+            if (_openLockSpin != null)
+            {
+                utd.UnlockDc = (int)_openLockSpin.Value;
+            }
+            // Python: utd.unlock_diff = self.ui.difficultySpin.value()
+            if (_difficultySpin != null)
+            {
+                utd.UnlockDiff = (int)_difficultySpin.Value;
+            }
+            // Python: utd.unlock_diff_mod = self.ui.difficultyModSpin.value()
+            if (_difficultyModSpin != null)
+            {
+                utd.UnlockDiffMod = (int)_difficultyModSpin.Value;
+            }
+            utd.KeyRequired = _needKeyCheckbox != null ? (_needKeyCheckbox.IsChecked == true) : utd.KeyRequired;
+            utd.AutoRemoveKey = _removeKeyCheckbox != null ? (_removeKeyCheckbox.IsChecked == true) : utd.AutoRemoveKey;
+            // Python: utd.key_name = self.ui.keyEdit.text()
+            if (_keyEdit != null)
+            {
+                utd.KeyName = _keyEdit.Text ?? "";
+            }
 
             // Scripts - read from UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:309-320
-            if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null && !string.IsNullOrEmpty(_scriptFields["OnClick"].Text))
-                utd.OnClick = new ResRef(_scriptFields["OnClick"].Text);
-            if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null && !string.IsNullOrEmpty(_scriptFields["OnClosed"].Text))
-                utd.OnClosed = new ResRef(_scriptFields["OnClosed"].Text);
-            if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null && !string.IsNullOrEmpty(_scriptFields["OnDamaged"].Text))
-                utd.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
-            if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null && !string.IsNullOrEmpty(_scriptFields["OnDeath"].Text))
-                utd.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
-            if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null && !string.IsNullOrEmpty(_scriptFields["OnOpenFailed"].Text))
-                utd.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text);
-            if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null && !string.IsNullOrEmpty(_scriptFields["OnHeartbeat"].Text))
-                utd.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
-            if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null && !string.IsNullOrEmpty(_scriptFields["OnMelee"].Text))
-                utd.OnMelee = new ResRef(_scriptFields["OnMelee"].Text);
-            if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null && !string.IsNullOrEmpty(_scriptFields["OnOpen"].Text))
-                utd.OnOpen = new ResRef(_scriptFields["OnOpen"].Text);
-            if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null && !string.IsNullOrEmpty(_scriptFields["OnUnlock"].Text))
-                utd.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text);
-            if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null && !string.IsNullOrEmpty(_scriptFields["OnUserDefined"].Text))
-                utd.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
+            // Python: utd.on_click = ResRef(self.ui.onClickEdit.currentText())
+            if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null)
+            {
+                utd.OnClick = new ResRef(_scriptFields["OnClick"].Text ?? "");
+            }
+            // Python: utd.on_closed = ResRef(self.ui.onClosedEdit.currentText())
+            if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
+            {
+                utd.OnClosed = new ResRef(_scriptFields["OnClosed"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
+            {
+                utd.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
+            {
+                utd.OnDeath = new ResRef(_scriptFields["OnDeath"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
+            {
+                utd.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
+            {
+                utd.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
+            {
+                utd.OnMelee = new ResRef(_scriptFields["OnMelee"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
+            {
+                utd.OnOpen = new ResRef(_scriptFields["OnOpen"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
+            {
+                utd.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text ?? "");
+            }
+            if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
+            {
+                utd.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text ?? "");
+            }
 
             // Comments
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:322
-            utd.Comment = _commentsEdit?.Text ?? utd.Comment ?? "";
+            // Python: utd.comment = self.ui.commentsEdit.toPlainText()
+            if (_commentsEdit != null)
+            {
+                utd.Comment = _commentsEdit.Text ?? "";
+            }
 
             // Build GFF
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:324-327
