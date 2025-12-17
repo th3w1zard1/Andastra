@@ -237,6 +237,24 @@ namespace HolocronToolset.Editors
             _fogFarSpin = new NumericUpDown { Minimum = 0.0, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(fogFarLabel);
             panel.Children.Add(_fogFarSpin);
+            
+            // Ambient Color edit - matching Python: self.ui.ambientColorEdit
+            var ambientColorLabel = new Avalonia.Controls.TextBlock { Text = "Sun Ambient:" };
+            _ambientColorEdit = new ColorEdit(null);
+            panel.Children.Add(ambientColorLabel);
+            panel.Children.Add(_ambientColorEdit);
+            
+            // Diffuse Color edit - matching Python: self.ui.diffuseColorEdit
+            var diffuseColorLabel = new Avalonia.Controls.TextBlock { Text = "Sun Diffuse:" };
+            _diffuseColorEdit = new ColorEdit(null);
+            panel.Children.Add(diffuseColorLabel);
+            panel.Children.Add(_diffuseColorEdit);
+            
+            // Dynamic Color edit - matching Python: self.ui.dynamicColorEdit
+            var dynamicColorLabel = new Avalonia.Controls.TextBlock { Text = "Dynamic Light:" };
+            _dynamicColorEdit = new ColorEdit(null);
+            panel.Children.Add(dynamicColorLabel);
+            panel.Children.Add(_dynamicColorEdit);
 
             Content = panel;
         }
@@ -372,42 +390,42 @@ namespace HolocronToolset.Editors
             // Matching Python: self.ui.mapImageX1Spin.setValue(are.map_point_1.x) (line 192)
             if (_mapImageX1Spin != null)
             {
-                _mapImageX1Spin.Value = are.MapPoint1.X;
+                _mapImageX1Spin.Value = (decimal)are.MapPoint1.X;
             }
             // Matching Python: self.ui.mapImageX2Spin.setValue(are.map_point_2.x) (line 193)
             if (_mapImageX2Spin != null)
             {
-                _mapImageX2Spin.Value = are.MapPoint2.X;
+                _mapImageX2Spin.Value = (decimal)are.MapPoint2.X;
             }
             // Matching Python: self.ui.mapImageY1Spin.setValue(are.map_point_1.y) (line 194)
             if (_mapImageY1Spin != null)
             {
-                _mapImageY1Spin.Value = are.MapPoint1.Y;
+                _mapImageY1Spin.Value = (decimal)are.MapPoint1.Y;
             }
             // Matching Python: self.ui.mapImageY2Spin.setValue(are.map_point_2.y) (line 195)
             if (_mapImageY2Spin != null)
             {
-                _mapImageY2Spin.Value = are.MapPoint2.Y;
+                _mapImageY2Spin.Value = (decimal)are.MapPoint2.Y;
             }
             // Matching Python: self.ui.mapWorldX1Spin.setValue(are.world_point_1.x) (line 196)
             if (_mapWorldX1Spin != null)
             {
-                _mapWorldX1Spin.Value = are.WorldPoint1.X;
+                _mapWorldX1Spin.Value = (decimal)are.WorldPoint1.X;
             }
             // Matching Python: self.ui.mapWorldX2Spin.setValue(are.world_point_2.x) (line 197)
             if (_mapWorldX2Spin != null)
             {
-                _mapWorldX2Spin.Value = are.WorldPoint2.X;
+                _mapWorldX2Spin.Value = (decimal)are.WorldPoint2.X;
             }
             // Matching Python: self.ui.mapWorldY1Spin.setValue(are.world_point_1.y) (line 198)
             if (_mapWorldY1Spin != null)
             {
-                _mapWorldY1Spin.Value = are.WorldPoint1.Y;
+                _mapWorldY1Spin.Value = (decimal)are.WorldPoint1.Y;
             }
             // Matching Python: self.ui.mapWorldY2Spin.setValue(are.world_point_2.y) (line 199)
             if (_mapWorldY2Spin != null)
             {
-                _mapWorldY2Spin.Value = are.WorldPoint2.Y;
+                _mapWorldY2Spin.Value = (decimal)are.WorldPoint2.Y;
             }
             // Matching Python: self.ui.fogEnabledCheck.setChecked(are.fog_enabled) (line 202)
             if (_fogEnabledCheck != null)
@@ -422,12 +440,12 @@ namespace HolocronToolset.Editors
             // Matching Python: self.ui.fogNearSpin.setValue(are.fog_near) (line 204)
             if (_fogNearSpin != null)
             {
-                _fogNearSpin.Value = are.FogNear;
+                _fogNearSpin.Value = (decimal)are.FogNear;
             }
             // Matching Python: self.ui.fogFarSpin.setValue(are.fog_far) (line 205)
             if (_fogFarSpin != null)
             {
-                _fogFarSpin.Value = are.FogFar;
+                _fogFarSpin.Value = (decimal)are.FogFar;
             }
         }
 
