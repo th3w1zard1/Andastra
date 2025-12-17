@@ -17,13 +17,15 @@ Currently, the Odyssey engine implementation is the most mature, with full suppo
 
 ### Project Name
 
-The name "Andastra" draws from multiple sources:
+**Andastra** is named to reflect the project's foundational principles and its technical heritage:
 
-- **Logical AND**: Represents the intersection and combination of multiple systems and technologies
-- **Astraea**: In Greek mythology, the daughter of Eos (goddess of dawn) and Astraeus, later identified with the constellation Virgo and associated with justice and precision. Xoreos 
-- **Andraste**: The Celtic war goddess historically associated with Boudica, and also referenced as "The Maker" in BioWare's Dragon Age series
+- **Logical AND**: Symbolizes the intersection and integration of diverse systems, technologies, and approaches unified within this project.
+- **Astraea**: In Greek mythology, Astraea is the daughter of Eos (goddess of the dawn). Similar to how Xoreos (which inspired our project's name) derives from XOR + EOS, the name "Andastra" draws inspiration from this mythological connection. This link emphasizes Andastra.NET's commitment to accuracy, justice, and the technical legacy of its predecessors.
+- **Andraste**: References the Celtic war goddess, a symbol of determination and strength, and connects to BioWare lore as "The Maker" in the Dragon Age series.
 
-This name reflects the project's goal of bringing together modern .NET technologies with the precision and faithfulness required to recreate BioWare's classic game engines across multiple engine families.
+This name tributes Xoreos and reflects the project's goal of bringing together modern .NET technologies with the 
+precision and faithfulness required to recreate BioWare's classic game engines across multiple engine 
+families.
 
 ### Supported Engine Families
 
