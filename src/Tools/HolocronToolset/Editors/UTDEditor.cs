@@ -10,6 +10,7 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using HolocronToolset.Widgets;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -22,8 +23,7 @@ namespace HolocronToolset.Editors
         private HTInstallation _installation;
 
         // UI Controls - Basic
-        private TextBox _nameEdit;
-        private Button _nameEditBtn;
+        private LocalizedStringEdit _nameEdit;
         private TextBox _tagEdit;
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
@@ -62,7 +62,7 @@ namespace HolocronToolset.Editors
         private TextBox _commentsEdit;
 
         // Matching PyKotor implementation: Expose UI controls for testing
-        public TextBox NameEdit => _nameEdit;
+        public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateBtn => _tagGenerateBtn;
         public TextBox ResrefEdit => _resrefEdit;
@@ -142,12 +142,13 @@ namespace HolocronToolset.Editors
 
             // Name
             var nameLabel = new TextBlock { Text = "Name:" };
-            _nameEdit = new TextBox { IsReadOnly = true };
-            _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => EditName();
+            _nameEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _nameEdit.SetInstallation(_installation);
+            }
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEdit);
-            basicPanel.Children.Add(_nameEditBtn);
 
             // Tag
             var tagLabel = new TextBlock { Text = "Tag:" };
@@ -326,9 +327,10 @@ namespace HolocronToolset.Editors
             _utd = utd;
 
             // Basic
+            // Matching Python: self.ui.nameEdit.set_locstring(utd.name)
             if (_nameEdit != null)
             {
-                _nameEdit.Text = _installation != null ? _installation.String(utd.Name) : utd.Name.StringRef.ToString();
+                _nameEdit.SetLocString(utd.Name);
             }
             if (_tagEdit != null)
             {
@@ -660,19 +662,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:336-340
         // Original: def change_name(self):
-        private void EditName()
-        {
-            if (_installation == null) return;
-            var dialog = new LocalizedStringDialog(this, _installation, _utd.Name);
-            if (dialog.ShowDialog())
-            {
-                _utd.Name = dialog.LocString;
-                if (_nameEdit != null)
-                {
-                    _nameEdit.Text = _installation.String(_utd.Name);
-                }
-            }
-        }
+        // Note: Name change is handled by LocalizedStringEdit's edit button (matches Python pattern)
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:342-345
         // Original: def generate_tag(self):
