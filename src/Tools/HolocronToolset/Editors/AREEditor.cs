@@ -41,6 +41,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _mapWorldY1Spin;
         private NumericUpDown _mapWorldX2Spin;
         private NumericUpDown _mapWorldY2Spin;
+        private CheckBox _fogEnabledCheck;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -186,30 +187,34 @@ namespace HolocronToolset.Editors
             _mapImageY2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapImageY2Label);
             panel.Children.Add(_mapImageY2Spin);
-            
+
             // Map World X1 spin - matching Python: self.ui.mapWorldX1Spin
             var mapWorldX1Label = new Avalonia.Controls.TextBlock { Text = "Map World X1:" };
             _mapWorldX1Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapWorldX1Label);
             panel.Children.Add(_mapWorldX1Spin);
-            
+
             // Map World Y1 spin - matching Python: self.ui.mapWorldY1Spin
             var mapWorldY1Label = new Avalonia.Controls.TextBlock { Text = "Map World Y1:" };
             _mapWorldY1Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapWorldY1Label);
             panel.Children.Add(_mapWorldY1Spin);
-            
+
             // Map World X2 spin - matching Python: self.ui.mapWorldX2Spin
             var mapWorldX2Label = new Avalonia.Controls.TextBlock { Text = "Map World X2:" };
             _mapWorldX2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapWorldX2Label);
             panel.Children.Add(_mapWorldX2Spin);
-            
+
             // Map World Y2 spin - matching Python: self.ui.mapWorldY2Spin
             var mapWorldY2Label = new Avalonia.Controls.TextBlock { Text = "Map World Y2:" };
             _mapWorldY2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapWorldY2Label);
             panel.Children.Add(_mapWorldY2Spin);
+            
+            // Fog Enabled checkbox - matching Python: self.ui.fogEnabledCheck
+            _fogEnabledCheck = new CheckBox { Content = "Fog Enabled" };
+            panel.Children.Add(_fogEnabledCheck);
 
             Content = panel;
         }
@@ -237,6 +242,7 @@ namespace HolocronToolset.Editors
         public NumericUpDown MapWorldY1Spin => _mapWorldY1Spin;
         public NumericUpDown MapWorldX2Spin => _mapWorldX2Spin;
         public NumericUpDown MapWorldY2Spin => _mapWorldY2Spin;
+        public CheckBox FogEnabledCheck => _fogEnabledCheck;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -378,6 +384,11 @@ namespace HolocronToolset.Editors
             {
                 _mapWorldY2Spin.Value = are.WorldPoint2.Y;
             }
+            // Matching Python: self.ui.fogEnabledCheck.setChecked(are.fog_enabled) (line 202)
+            if (_fogEnabledCheck != null)
+            {
+                _fogEnabledCheck.IsChecked = are.FogEnabled;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -462,7 +473,7 @@ namespace HolocronToolset.Editors
                     (float)_mapImageY1Spin.Value.Value);
             }
             // Matching Python: are.map_point_2 = Vector2(self.ui.mapImageX2Spin.value(), self.ui.mapImageY2Spin.value()) (line 299)
-            if (_mapImageX2Spin != null && _mapImageY2Spin != null && 
+            if (_mapImageX2Spin != null && _mapImageY2Spin != null &&
                 _mapImageX2Spin.Value.HasValue && _mapImageY2Spin.Value.HasValue)
             {
                 are.MapPoint2 = new System.Numerics.Vector2(
@@ -470,7 +481,7 @@ namespace HolocronToolset.Editors
                     (float)_mapImageY2Spin.Value.Value);
             }
             // Matching Python: are.world_point_1 = Vector2(self.ui.mapWorldX1Spin.value(), self.ui.mapWorldY1Spin.value()) (line 300)
-            if (_mapWorldX1Spin != null && _mapWorldY1Spin != null && 
+            if (_mapWorldX1Spin != null && _mapWorldY1Spin != null &&
                 _mapWorldX1Spin.Value.HasValue && _mapWorldY1Spin.Value.HasValue)
             {
                 are.WorldPoint1 = new System.Numerics.Vector2(
@@ -484,6 +495,11 @@ namespace HolocronToolset.Editors
                 are.WorldPoint2 = new System.Numerics.Vector2(
                     (float)_mapWorldX2Spin.Value.Value,
                     (float)_mapWorldY2Spin.Value.Value);
+            }
+            // Matching Python: are.fog_enabled = self.ui.fogEnabledCheck.isChecked() (line 304)
+            if (_fogEnabledCheck != null)
+            {
+                are.FogEnabled = _fogEnabledCheck.IsChecked == true;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
