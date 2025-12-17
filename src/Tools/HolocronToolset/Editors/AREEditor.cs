@@ -22,6 +22,7 @@ namespace HolocronToolset.Editors
         private LocalizedStringEdit _nameEdit;
         private TextBox _tagEdit;
         private Button _tagGenerateButton;
+        private ComboBox _cameraStyleSelect;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -73,6 +74,21 @@ namespace HolocronToolset.Editors
             panel.Children.Add(tagLabel);
             panel.Children.Add(tagPanel);
             
+            // Camera Style field - matching Python: self.ui.cameraStyleSelect
+            // Matching Python: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
+            var cameraStyleLabel = new Avalonia.Controls.TextBlock { Text = "Camera Style:" };
+            _cameraStyleSelect = new ComboBox();
+            // Add default camera style options (matching common camera styles from cameras.2da)
+            // In full implementation, this would load from cameras.2da via installation
+            _cameraStyleSelect.Items.Add("Standard");
+            _cameraStyleSelect.Items.Add("Close");
+            _cameraStyleSelect.Items.Add("Far");
+            _cameraStyleSelect.Items.Add("Top Down");
+            _cameraStyleSelect.Items.Add("Free Look");
+            _cameraStyleSelect.SelectedIndex = 0;
+            panel.Children.Add(cameraStyleLabel);
+            panel.Children.Add(_cameraStyleSelect);
+            
             Content = panel;
         }
 
@@ -80,6 +96,7 @@ namespace HolocronToolset.Editors
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateButton => _tagGenerateButton;
+        public ComboBox CameraStyleSelect => _cameraStyleSelect;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -118,6 +135,19 @@ namespace HolocronToolset.Editors
             {
                 _tagEdit.Text = are.Tag ?? "";
             }
+            // Matching Python: self.ui.cameraStyleSelect.setCurrentIndex(are.camera_style) (line 179)
+            if (_cameraStyleSelect != null)
+            {
+                // Ensure index is within bounds
+                if (are.CameraStyle >= 0 && are.CameraStyle < _cameraStyleSelect.ItemCount)
+                {
+                    _cameraStyleSelect.SelectedIndex = are.CameraStyle;
+                }
+                else
+                {
+                    _cameraStyleSelect.SelectedIndex = 0;
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -137,6 +167,11 @@ namespace HolocronToolset.Editors
             if (_tagEdit != null)
             {
                 are.Tag = _tagEdit.Text ?? "";
+            }
+            // Matching Python: are.camera_style = self.ui.cameraStyleSelect.currentIndex() (line 285)
+            if (_cameraStyleSelect != null && _cameraStyleSelect.SelectedIndex >= 0)
+            {
+                are.CameraStyle = _cameraStyleSelect.SelectedIndex;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
