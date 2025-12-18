@@ -874,15 +874,29 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // cmd = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=True)
-                // undo_stack.push(cmd)
-                // assert room.flip_x is True
-                // assert room.flip_y is True
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 576: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 578: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 579: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 581: cmd = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=True)
+                var cmd = new FlipRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, flipX: true, flipY: true);
+
+                // Matching Python line 582: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 584: assert room.flip_x is True
+                room.FlipX.Should().BeTrue("Room flip_x should be True after flip command");
+
+                // Matching Python line 585: assert room.flip_y is True
+                room.FlipY.Should().BeTrue("Room flip_y should be True after flip command");
             }
             finally
             {
