@@ -35,12 +35,15 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 ### 🔄 In Progress
 
 - **NCS VM Execution**:
-  - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730 - Dispatches script events to registered handlers
-  - `swkotor2.exe`: LogScriptEvent @ 0x004dcfb0 - Logs script events for debugging
-  - `swkotor2.exe`: LoadScriptHooks @ 0x0050c510 - Loads script hook references from GFF templates
-  - **Inheritance**: TODO - Establish base class `ScriptExecutor` (Runtime.Games.Common), engine-specific implementations
-  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
-  - Searching for actual NCS bytecode execution functions
+  - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730 - ✅ ANALYZED - Dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, calls FUN_004db870 to match event types, queues matching handlers
+  - `swkotor2.exe`: LogScriptEvent @ 0x004dcfb0 - ✅ ANALYZED - Logs script events for debugging, maps event types to string names, only executes if debug flag is set
+  - `swkotor2.exe`: LoadScriptHooks @ 0x0050c510 - ✅ ANALYZED - Loads script hook references from GFF templates (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue)
+  - `nwmain.exe`: ExecuteCommandExecuteScript @ 0x14051d5c0 - ✅ ANALYZED - Executes script command in NCS VM, thunk that calls FUN_140c10370, part of CNWSVirtualMachineCommands class
+  - `nwmain.exe`: CScriptEvent @ 0x1404c6490 - ✅ ANALYZED - Script event constructor, initializes event data structure
+  - `nwmain.exe`: InitializeFinalCode @ 0x140263c80 - ✅ FOUND - References "NCS V1.0" string @ 0x140dbfb50, likely NCS file format validation
+  - **Inheritance**: Base class `ScriptExecutor` (Runtime.Games.Common), `OdysseyScriptExecutor : ScriptExecutor` (Runtime.Games.Odyssey), `AuroraScriptExecutor : ScriptExecutor` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor2.exe, nwmain.exe equivalents, swkotor.exe/daorigins.exe TODO
+  - **TODO**: Find actual NCS bytecode execution/interpretation functions (VM opcode handlers)
 
 ### 📋 Pending Systems
 
