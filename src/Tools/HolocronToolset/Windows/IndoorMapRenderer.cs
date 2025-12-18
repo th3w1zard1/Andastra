@@ -13,11 +13,15 @@ namespace HolocronToolset.Windows
         private IndoorMap _map;
         private bool _dirty = false;
         
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2491-2492
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2491-2494
         // Original: self.snap_to_grid: bool = False
         // Original: self.snap_to_hooks: bool = True
+        // Original: self.grid_size: float = DEFAULT_GRID_SIZE
+        // Original: self.rotation_snap: float = float(DEFAULT_ROTATION_SNAP)
         public bool SnapToGrid { get; set; } = false;
         public bool SnapToHooks { get; set; } = true;
+        public float GridSize { get; set; } = 1.0f; // DEFAULT_GRID_SIZE = 1.0
+        public float RotationSnap { get; set; } = 15.0f; // DEFAULT_ROTATION_SNAP = 15
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2597-2600
         // Original: def mark_dirty(self):
@@ -141,6 +145,20 @@ namespace HolocronToolset.Windows
         public void SetSnapToHooks(bool enabled)
         {
             SnapToHooks = enabled;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2734-2735
+        // Original: def set_grid_size(self, size: float):
+        public void SetGridSize(float size)
+        {
+            GridSize = size;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2738-2739
+        // Original: def set_rotation_snap(self, snap: float):
+        public void SetRotationSnap(float snap)
+        {
+            RotationSnap = snap;
         }
     }
 }
