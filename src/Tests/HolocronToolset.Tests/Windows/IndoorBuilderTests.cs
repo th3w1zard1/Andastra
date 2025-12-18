@@ -701,14 +701,28 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 270.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // cmd = RotateRoomsCommand(builder._map, [room], [270.0], [450.0])  # 450 % 360 = 90
-                // undo_stack.push(cmd)
-                // assert room.rotation == 450.0 or abs((room.rotation % 360) - 90) < 0.001
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 530: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 532: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 270.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 270.0f, flipX: false, flipY: false);
+
+                // Matching Python line 533: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 536: cmd = RotateRoomsCommand(builder._map, [room], [270.0], [450.0])  # 450 % 360 = 90
+                var cmd = new RotateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, new List<float> { 270.0f }, new List<float> { 450.0f });
+
+                // Matching Python line 537: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 540: assert room.rotation == 450.0 or abs((room.rotation % 360) - 90) < 0.001
+                // The rotation should be stored as-is (the modulo happens elsewhere)
+                bool rotationMatches = (Math.Abs(room.Rotation - 450.0f) < 0.001f) || (Math.Abs((room.Rotation % 360) - 90) < 0.001f);
+                rotationMatches.Should().BeTrue("Rotation should be 450.0 or modulo 360 equals 90");
             }
             finally
             {
