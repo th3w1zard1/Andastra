@@ -558,20 +558,51 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room1 = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // room2 = IndoorMapRoom(real_kit_component, Vector3(10, 10, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.extend([room1, room2])
-                // old_positions = [copy(room1.position), copy(room2.position)]
-                // new_positions = [Vector3(5, 5, 0), Vector3(15, 15, 0)]
-                // cmd = MoveRoomsCommand(builder._map, [room1, room2], old_positions, new_positions)
-                // undo_stack.push(cmd)
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
+
+                // Matching Python line 490: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 492: room1 = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room1 = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 493: room2 = IndoorMapRoom(real_kit_component, Vector3(10, 10, 0), 0.0, flip_x=False, flip_y=False)
+                var room2 = new IndoorMapRoom(kitComponent, new Vector3(10, 10, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 494: builder._map.rooms.extend([room1, room2])
+                builder.Map.Rooms.Add(room1);
+                builder.Map.Rooms.Add(room2);
+
+                // Matching Python line 496: old_positions = [copy(room1.position), copy(room2.position)]
+                var oldPositions = new List<Vector3>
+                {
+                    new Vector3(room1.Position.X, room1.Position.Y, room1.Position.Z),
+                    new Vector3(room2.Position.X, room2.Position.Y, room2.Position.Z)
+                };
+
+                // Matching Python line 497: new_positions = [Vector3(5, 5, 0), Vector3(15, 15, 0)]
+                var newPositions = new List<Vector3>
+                {
+                    new Vector3(5, 5, 0),
+                    new Vector3(15, 15, 0)
+                };
+
+                // Matching Python line 499: cmd = MoveRoomsCommand(builder._map, [room1, room2], old_positions, new_positions)
+                var cmd = new MoveRoomsCommand(builder.Map, new List<IndoorMapRoom> { room1, room2 }, oldPositions, newPositions);
+
+                // Matching Python line 500: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python lines 503-506: Check relative distance is maintained
                 // dx = room2.position.x - room1.position.x
                 // dy = room2.position.y - room1.position.y
                 // assert abs(dx - 10) < 0.001
                 // assert abs(dy - 10) < 0.001
-
-                builder.Should().NotBeNull();
+                float dx = room2.Position.X - room1.Position.X;
+                float dy = room2.Position.Y - room1.Position.Y;
+                dx.Should().BeApproximately(10f, 0.001f, "Relative X distance should be maintained at 10");
+                dy.Should().BeApproximately(10f, 0.001f, "Relative Y distance should be maintained at 10");
             }
             finally
             {
