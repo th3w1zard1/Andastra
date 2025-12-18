@@ -936,7 +936,7 @@ When processing a file:
 
 #### Dialogue (4 files)
 
-- [ ] Dialogue/DialogueInterfaces.cs
+- [x] Dialogue/DialogueInterfaces.cs - ✅ COMPLETE - Ghidra references added: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38b0, "EndConversation" @ 0x007c38e0, "Conversation File: " @ 0x007cb1ac, "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60, "k_hen_dialogue01" @ 0x007bf548, "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE.  Please contact a Designer!" @ 0x007c3768, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [x] Dialogue/DialogueSystem.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ProcessDialogueEntry @ 0x005a13d0 (swkotor.exe)
 - [x] Dialogue/LipSyncController.cs - ✅ COMPLETE - Ghidra references added: LIPS:localization @ 0x007be654, LIPS:%s_loc @ 0x007be668, .\lips @ 0x007c6838, all LIP file format fields
 - [x] Dialogue/RuntimeDialogue.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
