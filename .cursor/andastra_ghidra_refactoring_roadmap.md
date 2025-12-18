@@ -923,8 +923,8 @@ When processing a file:
 - [ ] Odyssey/OdysseyGameSession.cs
 - [ ] Odyssey/OdysseyModuleLoader.cs
 - [x] Odyssey/Combat/CombatManager.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), CombatRoundData @ 0x007bf6b4, CombatInfo @ 0x007c2e60, CSWSCombatRound error messages
-- [ ] Odyssey/Combat/CombatRound.cs
-- [ ] Odyssey/Combat/DamageCalculator.cs
+- [x] Odyssey/Combat/CombatRound.cs - ✅ COMPLETE - Ghidra references added: FUN_00529470 @ 0x00529470 (save CombatRoundData), FUN_005226d0 @ 0x005226d0, CombatRoundData @ 0x007bf6b4, all combat round fields
+- [x] Odyssey/Combat/DamageCalculator.cs - ✅ COMPLETE - Ghidra references added: DamageValue @ 0x007bf890, DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70, CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14, all damage calculation fields
 - [ ] Odyssey/Combat/WeaponDamageCalculator.cs
 - [ ] Odyssey/Components/ActionQueueComponent.cs
 - [ ] Odyssey/Components/CreatureComponent.cs
@@ -949,12 +949,12 @@ When processing a file:
 - [ ] Odyssey/Dialogue/ConversationContext.cs
 - [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/DialogueState.cs
-- [ ] Odyssey/Dialogue/KotorDialogueLoader.cs
+- [x] Odyssey/Dialogue/KotorDialogueLoader.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/KotorLipDataLoader.cs
 - [ ] Odyssey/EngineApi/K1EngineApi.cs
 - [ ] Odyssey/EngineApi/K2EngineApi.cs
-- [ ] Odyssey/EngineApi/OdysseyK1EngineApi.cs
-- [ ] Odyssey/EngineApi/OdysseyK2EngineApi.cs
+- [x] Odyssey/EngineApi/OdysseyK1EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, function dispatch system, ScriptDefs.KOTOR_FUNCTIONS (~850 functions)
+- [x] Odyssey/EngineApi/OdysseyK2EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, TSL-specific functions (~950 total), PT_INFLUENCE @ 0x007c1788, Influence system
 - [ ] Odyssey/Game/GameSession.cs
 - [ ] Odyssey/Game/ModuleLoader.cs
 - [x] Odyssey/Game/ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (script event dispatch), all CSWSSCRIPTEVENT_EVENTTYPE_* constants, Script hook fields

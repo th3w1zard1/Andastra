@@ -92,6 +92,9 @@ namespace HolocronToolset.Windows
             // Setup deselect all action (matching Python: self.ui.actionDeselectAll.triggered.connect(self.deselect_all))
             Ui.ActionDeselectAll = DeselectAll;
 
+            // Setup delete selected action (matching Python: self.ui.actionDeleteSelected.triggered.connect(self.delete_selected))
+            Ui.ActionDeleteSelected = DeleteSelected;
+
             // Setup undo/redo actions (matching Python lines 690-703)
             // Matching Python: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)
             Ui.ActionUndo = () => UndoStack.Undo();
@@ -147,6 +150,28 @@ namespace HolocronToolset.Windows
             // Note: Additional UI clearing (componentList, moduleComponentList, preview image, status bar)
             // will be implemented when those UI components are available
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1628-1640
+        // Original: def delete_selected(self):
+        private void DeleteSelected()
+        {
+            // Matching Python implementation:
+            // def delete_selected(self):
+            //     selected = self.ui.mapRenderer.selected_rooms()
+            //     if not selected:
+            //         return
+            //     cmd = DeleteRoomsCommand(self._map, selected)
+            //     self._undo_stack.push(cmd)
+            var renderer = Ui.MapRenderer;
+            var selected = renderer.SelectedRooms();
+            if (selected == null || selected.Count == 0)
+            {
+                return;
+            }
+
+            var cmd = new DeleteRoomsCommand(Map, selected);
+            UndoStack.Push(cmd);
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
@@ -160,6 +185,10 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - actionDeselectAll menu action
         // Original: self.ui.actionDeselectAll.triggered.connect(self.deselect_all)
         public Action ActionDeselectAll { get; set; }
+
+        // Matching PyKotor implementation - actionDeleteSelected menu action
+        // Original: self.ui.actionDeleteSelected.triggered.connect(self.delete_selected)
+        public Action ActionDeleteSelected { get; set; }
 
         // Matching PyKotor implementation - actionUndo menu action
         // Original: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)

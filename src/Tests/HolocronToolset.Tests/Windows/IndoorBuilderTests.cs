@@ -1640,18 +1640,50 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // rooms_to_delete = builder._map.rooms[:2]
-                // for room in rooms_to_delete:
-                //     renderer.select_room(room, clear_existing=False)
-                // builder.ui.actionDeleteSelected.trigger()
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert len(builder._map.rooms) == 3
-                // for room in rooms_to_delete:
-                //     assert room not in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Add 5 rooms in a row (matching builder_with_rooms fixture)
+                for (int i = 0; i < 5; i++)
+                {
+                    var room = new IndoorMapRoom(
+                        kitComponent,
+                        new Vector3(i * 15, 0, 0),
+                        0.0f,
+                        flipX: false,
+                        flipY: false
+                    );
+                    builder.Map.Rooms.Add(room);
+                }
+
+                var renderer = builder.Ui.MapRenderer;
+
+                // Matching Python line 908: rooms_to_delete = builder._map.rooms[:2]
+                // Select first two rooms (matching Python lines 909-910)
+                var roomsToDelete = builder.Map.Rooms.Take(2).ToList();
+                foreach (var room in roomsToDelete)
+                {
+                    renderer.SelectRoom(room, clearExisting: false);
+                }
+
+                // Matching Python line 912: builder.ui.actionDeleteSelected.trigger()
+                builder.Ui.ActionDeleteSelected.Should().NotBeNull("ActionDeleteSelected should be initialized");
+                builder.Ui.ActionDeleteSelected.Invoke();
+
+                // Matching Python line 913: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python line 914: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python line 916: assert len(builder._map.rooms) == 3
+                builder.Map.Rooms.Should().HaveCount(3, "Should have 3 rooms remaining after deleting 2");
+
+                // Matching Python lines 917-918: for room in rooms_to_delete: assert room not in builder._map.rooms
+                foreach (var room in roomsToDelete)
+                {
+                    builder.Map.Rooms.Should().NotContain(room, $"Room should be deleted from map");
+                }
             }
             finally
             {

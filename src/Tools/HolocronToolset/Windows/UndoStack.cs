@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Windows
@@ -184,6 +185,65 @@ namespace HolocronToolset.Windows
                 _indoorMap.Rooms.Add(_room);
                 // Note: rebuild_room_connections will be implemented when needed
             }
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:178-210
+    // Original: class DeleteRoomsCommand(QUndoCommand):
+    public class DeleteRoomsCommand : IUndoCommand
+    {
+        private readonly IndoorMap _indoorMap;
+        private readonly List<IndoorMapRoom> _rooms;
+        private readonly List<int> _indices;
+
+        public string Text => $"Delete {_rooms.Count} Room(s)";
+
+        public DeleteRoomsCommand(IndoorMap indoorMap, List<IndoorMapRoom> rooms)
+        {
+            _indoorMap = indoorMap;
+            _rooms = new List<IndoorMapRoom>(rooms);
+            // Store indices for proper re-insertion order (matching Python line 192)
+            _indices = new List<int>();
+            foreach (var room in rooms)
+            {
+                int index = _indoorMap.Rooms.IndexOf(room);
+                if (index >= 0)
+                {
+                    _indices.Add(index);
+                }
+            }
+        }
+
+        // Matching Python: def undo(self)
+        public void Undo()
+        {
+            // Re-add rooms in original order (matching Python lines 196-198)
+            var sortedPairs = _indices.Zip(_rooms, (idx, room) => new { idx, room })
+                .OrderBy(p => p.idx)
+                .ToList();
+
+            foreach (var pair in sortedPairs)
+            {
+                if (!_indoorMap.Rooms.Contains(pair.room))
+                {
+                    _indoorMap.Rooms.Insert(pair.idx, pair.room);
+                }
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+
+        // Matching Python: def redo(self)
+        public void Redo()
+        {
+            // Remove rooms (matching Python lines 204-206)
+            foreach (var room in _rooms)
+            {
+                if (_indoorMap.Rooms.Contains(room))
+                {
+                    _indoorMap.Rooms.Remove(room);
+                }
+            }
+            // Note: rebuild_room_connections will be implemented when needed
         }
     }
 }
