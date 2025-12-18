@@ -873,7 +873,7 @@ When processing a file:
 
 - ArrayHead.cs, CaseInsensitiveDict.cs, ErrorHandling.cs, Geometry/ (4 files), KeyError.cs, LZMA/LzmaHelper.cs, Misc.cs, MiscString/ (3 files), OrderedSet.cs, System/OSHelper.cs, SystemHelpers.cs
 
-## Files to Process
+## Files Inventory and Completion Status
 
 ### Runtime/Core (99 files)
 
