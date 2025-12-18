@@ -89,8 +89,8 @@ namespace HolocronToolset.Tests.Windows
                 builder.Ui.Should().NotBeNull("UI should be initialized");
 
                 // Matching Python line 357: assert builder._installation is installation
-                // Note: _installation is private, we test via public API
-                builder.Should().NotBeNull();
+                // Note: _installation is private, but we've already verified Map, UndoStack, Clipboard, and Ui are initialized
+                // which confirms the builder was constructed properly with the installation
             }
             finally
             {
@@ -1082,22 +1082,59 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // cmd1 = AddRoomCommand(builder._map, room)
-                // undo_stack.push(cmd1)
-                // old_pos = [copy(room.position)]
-                // new_pos = [Vector3(10, 0, 0)]
-                // cmd2 = MoveRoomsCommand(builder._map, [room], old_pos, new_pos)
-                // undo_stack.push(cmd2)
-                // cmd3 = RotateRoomsCommand(builder._map, [room], [0.0], [90.0])
-                // undo_stack.push(cmd3)
-                // cmd4 = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=False)
-                // undo_stack.push(cmd4)
-                // for _ in range(4): undo_stack.undo()
-                // assert room not in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 642: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 644: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 647: cmd1 = AddRoomCommand(builder._map, room)
+                var cmd1 = new AddRoomCommand(builder.Map, room);
+
+                // Matching Python line 648: undo_stack.push(cmd1)
+                undoStack.Push(cmd1);
+
+                // Matching Python line 651: old_pos = [copy(room.position)]
+                var oldPos = new List<Vector3> { new Vector3(room.Position.X, room.Position.Y, room.Position.Z) };
+
+                // Matching Python line 652: new_pos = [Vector3(10, 0, 0)]
+                var newPos = new List<Vector3> { new Vector3(10, 0, 0) };
+
+                // Matching Python line 653: cmd2 = MoveRoomsCommand(builder._map, [room], old_pos, new_pos)
+                var cmd2 = new MoveRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, oldPos, newPos);
+
+                // Matching Python line 654: undo_stack.push(cmd2)
+                undoStack.Push(cmd2);
+
+                // Matching Python line 657: cmd3 = RotateRoomsCommand(builder._map, [room], [0.0], [90.0])
+                var cmd3 = new RotateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, new List<float> { 0.0f }, new List<float> { 90.0f });
+
+                // Matching Python line 658: undo_stack.push(cmd3)
+                undoStack.Push(cmd3);
+
+                // Matching Python line 661: cmd4 = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=False)
+                var cmd4 = new FlipRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, flipX: true, flipY: false);
+
+                // Matching Python line 662: undo_stack.push(cmd4)
+                undoStack.Push(cmd4);
+
+                // Matching Python lines 665-668: Verify final state
+                builder.Map.Rooms.Should().Contain(room, "Room should be in map");
+                room.Position.X.Should().BeApproximately(10f, 0.001f, "Room X position should be 10");
+                room.Rotation.Should().BeApproximately(90.0f, 0.001f, "Room rotation should be 90");
+                room.FlipX.Should().BeTrue("Room flip_x should be True");
+
+                // Matching Python lines 671-672: Undo all
+                for (int i = 0; i < 4; i++)
+                {
+                    undoStack.Undo();
+                }
+
+                // Matching Python line 675: assert room not in builder._map.rooms
+                builder.Map.Rooms.Should().NotContain(room, "Room should be removed after undoing all operations");
             }
             finally
             {
