@@ -636,18 +636,38 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // cmd = RotateRoomsCommand(builder._map, [room], [0.0], [90.0])
-                // undo_stack.push(cmd)
-                // assert abs(room.rotation - 90.0) < 0.001
-                // undo_stack.undo()
-                // assert abs(room.rotation - 0.0) < 0.001
-                // undo_stack.redo()
-                // assert abs(room.rotation - 90.0) < 0.001
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 511: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 513: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 514: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 516: cmd = RotateRoomsCommand(builder._map, [room], [0.0], [90.0])
+                var cmd = new RotateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, new List<float> { 0.0f }, new List<float> { 90.0f });
+
+                // Matching Python line 517: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 519: assert abs(room.rotation - 90.0) < 0.001
+                room.Rotation.Should().BeApproximately(90.0f, 0.001f, "Room rotation should be 90.0 after rotate command");
+
+                // Matching Python line 521: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 522: assert abs(room.rotation - 0.0) < 0.001
+                room.Rotation.Should().BeApproximately(0.0f, 0.001f, "Room rotation should be 0.0 after undo");
+
+                // Matching Python line 524: undo_stack.redo()
+                undoStack.Redo();
+
+                // Matching Python line 525: assert abs(room.rotation - 90.0) < 0.001
+                room.Rotation.Should().BeApproximately(90.0f, 0.001f, "Room rotation should be 90.0 after redo");
             }
             finally
             {

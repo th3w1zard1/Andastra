@@ -366,5 +366,51 @@ namespace HolocronToolset.Windows
             // Note: rebuild_room_connections will be implemented when needed
         }
     }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:246-276
+    // Original: class RotateRoomsCommand(QUndoCommand):
+    public class RotateRoomsCommand : IUndoCommand
+    {
+        private readonly IndoorMap _indoorMap;
+        private readonly List<IndoorMapRoom> _rooms;
+        private readonly List<float> _oldRotations;
+        private readonly List<float> _newRotations;
+
+        public string Text => $"Rotate {_rooms.Count} Room(s)";
+
+        public RotateRoomsCommand(
+            IndoorMap indoorMap,
+            List<IndoorMapRoom> rooms,
+            List<float> oldRotations,
+            List<float> newRotations)
+        {
+            _indoorMap = indoorMap;
+            _rooms = new List<IndoorMapRoom>(rooms);
+            _oldRotations = new List<float>(oldRotations);
+            _newRotations = new List<float>(newRotations);
+        }
+
+        // Matching Python: def undo(self)
+        public void Undo()
+        {
+            // Restore old rotations (matching Python lines 265-266)
+            for (int i = 0; i < _rooms.Count && i < _oldRotations.Count; i++)
+            {
+                _rooms[i].Rotation = _oldRotations[i];
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+
+        // Matching Python: def redo(self)
+        public void Redo()
+        {
+            // Apply new rotations (matching Python lines 272-273)
+            for (int i = 0; i < _rooms.Count && i < _newRotations.Count; i++)
+            {
+                _rooms[i].Rotation = _newRotations[i];
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+    }
 }
 

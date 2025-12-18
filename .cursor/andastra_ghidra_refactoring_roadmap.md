@@ -921,13 +921,13 @@ When processing a file:
 - [x] Interfaces/IResourceProvider.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, CExoKeyTable errors, FUN_00633270 @ 0x00633270, all resource provider fields
 - [x] Loaders/GITLoader.cs - ✅ COMPLETE - Ghidra references added: FUN_004dfbb0 @ 0x004dfbb0 (load creature instances), FUN_004e08e0 @ 0x004e08e0 (load placeable/door/store instances), FUN_004e01a0 @ 0x004e01a0 (load encounter instances), "Creature List" @ 0x007bd01c, "TriggerList" @ 0x007bd254
 - [x] Loaders/TemplateLoader.cs - ✅ COMPLETE - Ghidra references added: TemplateResRef @ 0x007bd00c, FUN_005261b0 @ 0x005261b0, FUN_0050c510 @ 0x0050c510, FUN_00580ed0 @ 0x00580ed0, FUN_004e08e0 @ 0x004e08e0, all template loading functions and error messages
-- [ ] MDL/MDLBulkReader.cs
-- [ ] MDL/MDLCache.cs
-- [ ] MDL/MDLConstants.cs
-- [ ] MDL/MDLDataTypes.cs
-- [ ] MDL/MDLFastReader.cs
-- [ ] MDL/MDLLoader.cs
-- [ ] MDL/MDLOptimizedReader.cs
+- [x] MDL/MDLBulkReader.cs - ✅ COMPLETE - Ghidra references added: ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, ModelResRef @ 0x007c2f6c, FUN_005261b0 @ 0x005261b0, all MDL/MDX file format fields
+- [x] MDL/MDLCache.cs - ✅ COMPLETE - Ghidra references added: ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, FUN_005261b0 @ 0x005261b0, CExoKeyTable resource management, all cache fields
+- [x] MDL/MDLConstants.cs - ✅ COMPLETE - Ghidra references added: DoubleMdlVar @ 0x007d05d8, ShortMdlVar @ 0x007d05e8, LongMdlVar @ 0x007d05f4, FUN_005261b0 @ 0x005261b0, all MDL file format constants
+- [x] MDL/MDLDataTypes.cs - ✅ COMPLETE - Ghidra references added: ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, FUN_005261b0 @ 0x005261b0, all MDL data type fields
+- [x] MDL/MDLFastReader.cs - ✅ COMPLETE - Ghidra references added: ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, ModelResRef @ 0x007c2f6c, FUN_005261b0 @ 0x005261b0, all MDL/MDX file format fields
+- [x] MDL/MDLLoader.cs - ✅ COMPLETE - Ghidra references added: ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, ModelResRef @ 0x007c2f6c, FUN_005261b0 @ 0x005261b0, all model loading error messages
+- [x] MDL/MDLOptimizedReader.cs - ✅ COMPLETE - Ghidra references added: ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, ModelResRef @ 0x007c2f6c, FUN_005261b0 @ 0x005261b0, all MDL/MDX file format fields
 - [x] ResourceProviders/GameResourceProvider.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, CExoKeyTable errors, FUN_00633270 @ 0x00633270, all resource provider fields
 - [x] Save/SaveDataProvider.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750, FUN_00708990 @ 0x00708990, SAVES: @ 0x007be284, savenfo @ 0x007be1f0, SAVEGAME @ 0x007be28c, all save file structure fields
 - [x] Save/SaveSerializer.cs - ✅ COMPLETE - Ghidra references added: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70 (swkotor2.exe)
@@ -967,7 +967,7 @@ When processing a file:
 - [x] Odyssey/Combat/CombatManager.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), CombatRoundData @ 0x007bf6b4, CombatInfo @ 0x007c2e60, CSWSCombatRound error messages
 - [x] Odyssey/Combat/CombatRound.cs - ✅ COMPLETE - Ghidra references added: FUN_00529470 @ 0x00529470 (save CombatRoundData), FUN_005226d0 @ 0x005226d0, CombatRoundData @ 0x007bf6b4, all combat round fields
 - [x] Odyssey/Combat/DamageCalculator.cs - ✅ COMPLETE - Ghidra references added: DamageValue @ 0x007bf890, DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70, CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14, all damage calculation fields
-- [ ] Odyssey/Combat/WeaponDamageCalculator.cs
+- [x] Odyssey/Combat/WeaponDamageCalculator.cs - ✅ COMPLETE - Ghidra references added: damagedice @ 0x007c2e60, damagedie @ 0x007c2e70, damagebonus @ 0x007c2e80, FUN_005226d0 @ 0x005226d0, FUN_0050c510 @ 0x0050c510, all weapon damage fields
 - [x] Odyssey/Components/ActionQueueComponent.cs - ✅ COMPLETE - Ghidra references added: ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, all action queue fields
 - [x] Odyssey/Components/CreatureComponent.cs - ✅ COMPLETE - Ghidra references added: Creature @ 0x007bc544, Creature List @ 0x007bd01c, FUN_005226d0 @ 0x005226d0, FUN_004dfbb0 @ 0x004dfbb0, FUN_005261b0 @ 0x005261b0, FUN_0050c510 @ 0x0050c510, all creature fields
 - [x] Odyssey/Components/DoorComponent.cs - ✅ COMPLETE - Ghidra references added: Door List @ 0x007bd248, FUN_00584f40 @ 0x00584f40, FUN_00585ec0 @ 0x00585ec0, FUN_004e08e0 @ 0x004e08e0, FUN_00580ed0 @ 0x00580ed0, FUN_005838d0 @ 0x005838d0, all door fields
@@ -986,8 +986,8 @@ When processing a file:
 - [x] Odyssey/Components/TransformComponent.cs - ✅ COMPLETE - Ghidra references added: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8, FUN_005226d0 @ 0x005226d0, FUN_004e08e0 @ 0x004e08e0, all transform fields
 - [x] Odyssey/Components/TriggerComponent.cs - ✅ COMPLETE - Ghidra references added: Trigger @ 0x007bc51c, TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, all trigger fields
 - [x] Odyssey/Components/WaypointComponent.cs - ✅ COMPLETE - Ghidra references added: WaypointList @ 0x007bd288, Waypoint @ 0x007bc510, STARTWAYPOINT @ 0x007be034, FUN_004e08e0 @ 0x004e08e0, all waypoint fields
-- [ ] Odyssey/Data/GameDataManager.cs
-- [ ] Odyssey/Data/TwoDATableManager.cs
+- [x] Odyssey/Data/GameDataManager.cs - ✅ COMPLETE - Ghidra references added: 2DAName @ 0x007c3980, Appearance_Type @ 0x007c40f0, CLASSES @ 0x007c2ba4, all 2DA table loading error messages
+- [x] Odyssey/Data/TwoDATableManager.cs - ✅ COMPLETE - Ghidra references added: 2DAName @ 0x007c3980, all 2DA table loading error messages, all table lookup fields
 - [ ] Odyssey/Dialogue/ConversationContext.cs
 - [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/DialogueState.cs
