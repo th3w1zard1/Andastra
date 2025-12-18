@@ -724,7 +724,7 @@ When processing a file:
 #### Actions (27 files)
 
 - [x] Actions/ActionAttack.cs - ✅ COMPLETE - Ghidra references added: EVENT_ON_MELEE_ATTACKED @ 0x007bccf4, ScriptAttacked @ 0x007bee80, AttackList @ 0x007bf9f0, all attack-related fields
-- [ ] Actions/ActionBase.cs
+- [x] Actions/ActionBase.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0, ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, all action parameter fields
 - [ ] Actions/ActionCastSpellAtLocation.cs
 - [ ] Actions/ActionCastSpellAtObject.cs
 - [ ] Actions/ActionCloseDoor.cs

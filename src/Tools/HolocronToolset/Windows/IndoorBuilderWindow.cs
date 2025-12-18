@@ -71,6 +71,10 @@ namespace HolocronToolset.Windows
         // Original: self._undo_stack: QUndoStack = QUndoStack(self)
         public UndoStack UndoStack { get; private set; }
 
+        // Matching PyKotor implementation - self._clipboard property
+        // Original: self._clipboard: list[RoomClipboardData] = []
+        public List<RoomClipboardData> Clipboard { get; private set; }
+
         private void SetupUI()
         {
             // Create UI wrapper for testing
@@ -81,6 +85,9 @@ namespace HolocronToolset.Windows
 
             // Initialize undo stack (matching Python: self._undo_stack: QUndoStack = QUndoStack(self))
             UndoStack = new UndoStack();
+
+            // Initialize clipboard (matching Python: self._clipboard: list[RoomClipboardData] = [])
+            Clipboard = new List<RoomClipboardData>();
 
             // Initialize MapRenderer (matching Python: self.ui.mapRenderer)
             Ui.MapRenderer = new IndoorMapRenderer();
