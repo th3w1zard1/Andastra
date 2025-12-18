@@ -1578,18 +1578,35 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // cmd = AddRoomCommand(builder._map, room)
-                // builder._undo_stack.push(cmd)
-                // builder._undo_stack.undo()
-                // assert room not in builder._map.rooms
-                // builder.ui.actionRedo.trigger()
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert room in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 889: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 890: cmd = AddRoomCommand(builder._map, room)
+                var cmd = new AddRoomCommand(builder.Map, room);
+
+                // Matching Python line 891: builder._undo_stack.push(cmd)
+                builder.UndoStack.Push(cmd);
+
+                // Matching Python line 892: builder._undo_stack.undo()
+                builder.UndoStack.Undo();
+
+                // Matching Python line 894: assert room not in builder._map.rooms
+                builder.Map.Rooms.Should().NotContain(room, "Room should be removed from map after undo");
+
+                // Matching Python line 896: builder.ui.actionRedo.trigger()
+                builder.Ui.ActionRedo.Invoke();
+
+                // Matching Python line 897: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python line 898: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python line 900: assert room in builder._map.rooms
+                builder.Map.Rooms.Should().Contain(room, "Room should be back in map after redo");
             }
             finally
             {

@@ -743,11 +743,11 @@ When processing a file:
 
 #### Animation (1 file)
 
-- [ ] Animation/AnimationSystem.cs
+- [x] Animation/AnimationSystem.cs - ✅ COMPLETE - Ghidra references added: Animation @ 0x007bf604, AnimationTime @ 0x007bf810, AnimationState @ 0x007c1f30, EVENT_PLAY_ANIMATION @ 0x007bcd74 (swkotor2.exe)
 
 #### Audio (1 file)
 
-- [ ] Audio/ISoundPlayer.cs
+- [x] Audio/ISoundPlayer.cs - ✅ COMPLETE - Ghidra references added: SaveSoundList @ 0x004e2d60, LoadSoundList @ 0x004e06a0 (swkotor2.exe), SoundList @ 0x007bd080
 
 #### Camera (1 file)
 
@@ -755,14 +755,14 @@ When processing a file:
 
 #### Combat (3 files)
 
-- [ ] Combat/CombatSystem.cs
+- [x] Combat/CombatSystem.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), EndCombatRound @ 0x004d4620 (swkotor.exe)
 - [ ] Combat/CombatTypes.cs
 - [ ] Combat/EffectSystem.cs
 
 #### Dialogue (4 files)
 
 - [ ] Dialogue/DialogueInterfaces.cs
-- [ ] Dialogue/DialogueSystem.cs
+- [x] Dialogue/DialogueSystem.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ProcessDialogueEntry @ 0x005a13d0 (swkotor.exe)
 - [ ] Dialogue/LipSyncController.cs
 - [ ] Dialogue/RuntimeDialogue.cs
 
@@ -831,11 +831,11 @@ When processing a file:
 
 - [ ] Party/PartyInventory.cs
 - [ ] Party/PartyMember.cs
-- [ ] Party/PartySystem.cs
+- [x] Party/PartySystem.cs - ✅ COMPLETE - Ghidra references added: SavePartyTable @ 0x0057bd70, FUN_0057dcd0 (swkotor2.exe), SavePartyTable @ 0x0052ade0 (swkotor.exe)
 
 #### Perception (1 file)
 
-- [ ] Perception/PerceptionSystem.cs
+- [x] Perception/PerceptionSystem.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0 (swkotor2.exe), PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4
 
 #### Save (3 files)
 
@@ -857,7 +857,7 @@ When processing a file:
 
 #### Triggers (1 file)
 
-- [ ] Triggers/TriggerSystem.cs
+- [x] Triggers/TriggerSystem.cs - ✅ COMPLETE - Ghidra references added: LoadTriggerList @ 0x004e5920, SaveTriggerList @ 0x004e2b20 (swkotor2.exe), TriggerList @ 0x007bd254
 
 #### Root (1 file)
 

@@ -65,12 +65,16 @@ namespace HolocronToolset.Windows
         }
 
         // Matching Python: def push(self, command: QUndoCommand)
+        // In Qt, QUndoCommand.redo() is called automatically when pushed
         public void Push(IUndoCommand command)
         {
             if (command == null)
             {
                 return;
             }
+
+            // Matching Python QUndoStack behavior: redo() is called automatically when command is pushed
+            command.Redo();
 
             _undoStack.Push(command);
             _redoStack.Clear();
