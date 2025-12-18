@@ -709,8 +709,8 @@ When processing a file:
 
 #### Entities (4 files)
 
-- [ ] Entities/Entity.cs
-- [ ] Entities/World.cs
+- [x] Entities/Entity.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0 (swkotor2.exe), ObjectId @ 0x007bce5c
+- [x] Entities/World.cs - ✅ COMPLETE - Ghidra references added: Entity management system, ObjectId @ 0x007bce5c, AreaId @ 0x007bef48
 - [ ] Entities/EventBus.cs
 - [ ] Entities/TimeManager.cs
 
@@ -830,7 +830,7 @@ When processing a file:
 
 #### Navigation (2 files)
 
-- [ ] Navigation/NavigationMesh.cs
+- [x] Navigation/NavigationMesh.cs - ✅ COMPLETE - Ghidra references added: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0 (swkotor2.exe), "BWM V1.0" @ 0x007c061c
 - [ ] Navigation/NavigationMeshFactory.cs
 
 #### Party (3 files)
@@ -872,12 +872,12 @@ When processing a file:
 ### Runtime/Content (18 files)
 
 - [ ] Cache/ContentCache.cs
-- [ ] Converters/BwmToNavigationMeshConverter.cs
+- [x] Converters/BwmToNavigationMeshConverter.cs - ✅ COMPLETE - Ghidra references added: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0 (swkotor2.exe), "BWM V1.0" @ 0x007c061c
 - [ ] Interfaces/IContentCache.cs
 - [ ] Interfaces/IContentConverter.cs
 - [ ] Interfaces/IGameResourceProvider.cs
 - [ ] Interfaces/IResourceProvider.cs
-- [ ] Loaders/GITLoader.cs
+- [x] Loaders/GITLoader.cs - ✅ COMPLETE - Ghidra references added: FUN_004dfbb0 @ 0x004dfbb0 (load creature instances), FUN_004e08e0 @ 0x004e08e0 (load placeable/door/store instances), FUN_004e01a0 @ 0x004e01a0 (load encounter instances), "Creature List" @ 0x007bd01c, "TriggerList" @ 0x007bd254
 - [ ] Loaders/TemplateLoader.cs
 - [ ] MDL/MDLBulkReader.cs
 - [ ] MDL/MDLCache.cs
