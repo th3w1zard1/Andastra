@@ -58,13 +58,46 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: InvSoundType @ 0x140dc3b80 (string reference)
   - **Inheritance**: Base class `AudioSystem` (Runtime.Games.Common), `OdysseyAudioSystem : AudioSystem` (Runtime.Games.Odyssey)
   - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
-- Entity Spawning
-- Animation System
-- Trigger System
-- Encounter System
-- Store System
-- Party Management
-- Perception System
+- **Entity Spawning**:
+  - `swkotor.exe`: SpawnPointList @ 0x007474ac (string reference, functions @ 0x00592430, 0x00591350, 0x00505060)
+  - `swkotor2.exe`: SpawnPointList @ 0x007bd034 (string reference, used in LoadEncounterList @ 0x004e01a0, LoadEncounterFromGFF @ 0x0056d770, SaveEncounterToGFF @ 0x0056c940)
+  - `nwmain.exe`: DungeonMaster_SpawnCreature @ 0x140dcbc00, DungeonMaster_SpawnItem @ 0x140dcbc20, DungeonMaster_SpawnTrigger @ 0x140dcbc38 (string references)
+  - **Inheritance**: Base class `SpawnSystem` (Runtime.Games.Common), `OdysseySpawnSystem : SpawnSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Animation System**:
+  - `swkotor.exe`: Animation @ 0x00746060, AnimationTime @ 0x00746050, AnimationState @ 0x007495b0, EVENT_PLAY_ANIMATION @ 0x00744b3c (string references)
+  - `swkotor2.exe`: Animation @ 0x007bf604, AnimationTime @ 0x007bf810, AnimationState @ 0x007c1f30, EVENT_PLAY_ANIMATION @ 0x007bcd74 (string references)
+  - `nwmain.exe`: Animation @ 0x140ddc0e0, AnimationTime @ 0x140ddc0f0, AnimationLength @ 0x140ddc218 (string references)
+  - **Inheritance**: Base class `AnimationSystem` (Runtime.Games.Common), `OdysseyAnimationSystem : AnimationSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Trigger System**:
+  - `swkotor.exe`: TriggerList @ 0x0074768c (string reference), EVENT_ENTERED_TRIGGER @ 0x00744bd0, EVENT_LEFT_TRIGGER @ 0x00744bbc (string references)
+  - `swkotor2.exe`: TriggerList @ 0x007bd254 (string reference, used in SaveTriggerList @ 0x004e2b20, LoadTriggerList @ 0x004e5920), EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4 (string references)
+  - `nwmain.exe`: TriggerList @ 0x140ddb780 (string reference), DungeonMaster_TriggerEntered @ 0x140dcbf08, DungeonMaster_TriggerExit @ 0x140dcbf28 (string references)
+  - **Inheritance**: Base class `TriggerSystem` (Runtime.Games.Common), `OdysseyTriggerSystem : TriggerSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Encounter System**:
+  - `swkotor.exe`: Encounter List @ 0x007474c8 (string reference)
+  - `swkotor2.exe`: Encounter List @ 0x007bd050 (string reference, used in LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0)
+  - `nwmain.exe`: Encounter List @ 0x140ddb790 (string reference), DungeonMaster_SpawnEncounter @ 0x140dcbc78 (string reference)
+  - **Inheritance**: Base class `EncounterSystem` (Runtime.Games.Common), `OdysseyEncounterSystem : EncounterSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Store System**:
+  - `swkotor2.exe`: StoreList @ 0x007bd098 (string reference, used in LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30)
+  - **Inheritance**: Base class `StoreSystem` (Runtime.Games.Common), `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+- **Party Management**:
+  - `swkotor.exe`: PARTYTABLE @ 0x0074930c (string reference, used in SavePartyTable @ 0x0052ade0)
+  - `swkotor2.exe`: PARTYTABLE @ 0x007c1910 (string reference, used in SavePartyTable @ 0x0057bd70)
+  - `nwmain.exe`: Party @ 0x140dc9d70, OnPartyDeath @ 0x140dc9740, NonPartyKillable @ 0x140dc95e0 (string references)
+  - **Inheritance**: Base class `PartySystem` (Runtime.Games.Common), `OdysseyPartySystem : PartySystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Perception System**:
+  - `swkotor.exe`: PerceptionData @ 0x00747304, PerceptionList @ 0x00747314, PERCEPTIONDIST @ 0x0074ae10, PerceptionRange @ 0x0074ae20 (string references)
+  - `swkotor2.exe`: PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4, PERCEPTIONDIST @ 0x007c4070, PerceptionRange @ 0x007c4080 (string references)
+  - `nwmain.exe`: PerceptionData @ 0x140dde100, PerceptionList @ 0x140dde0f0, PerceptionRange @ 0x140dde0e0, PERCEPTIONDIST @ 0x140de59b0 (string references)
+  - **Inheritance**: Base class `PerceptionSystem` (Runtime.Games.Common), `OdysseyPerceptionSystem : PerceptionSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 
 ## Class Inheritance Structure
 
