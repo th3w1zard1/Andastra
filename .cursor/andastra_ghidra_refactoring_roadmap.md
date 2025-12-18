@@ -68,7 +68,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseySaveSerializer : SaveSerializer` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: SaveGlobalVariables @ 0x0052ad10 (via GLOBALVARS @ 0x007484ec), SavePartyTable @ 0x0052ade0 (via PARTYTABLE @ 0x0074930c)
 - **Aurora Implementation**: `AuroraSaveSerializer : SaveSerializer` (Runtime.Games.Aurora)
   - `nwmain.exe`: TODO - Search for similar functions
 - **Eclipse Implementation**: `EclipseSaveSerializer : SaveSerializer` (Runtime.Games.Eclipse)
