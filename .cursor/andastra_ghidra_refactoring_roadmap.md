@@ -1055,8 +1055,8 @@ When processing a file:
 - [x] Odyssey/Components/TransformComponent.cs - ✅ COMPLETE - Ghidra references added: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8, FUN_005226d0 @ 0x005226d0, FUN_004e08e0 @ 0x004e08e0, all transform fields
 - [x] Odyssey/Components/TriggerComponent.cs - ✅ COMPLETE - Ghidra references added: Trigger @ 0x007bc51c, TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, all trigger fields
 - [x] Odyssey/Components/WaypointComponent.cs - ✅ COMPLETE - Ghidra references added: WaypointList @ 0x007bd288, Waypoint @ 0x007bc510, STARTWAYPOINT @ 0x007be034, FUN_004e08e0 @ 0x004e08e0, all waypoint fields
-- [ ] Odyssey/Data/GameDataManager.cs
-- [ ] Odyssey/Data/TwoDATableManager.cs
+- [x] Odyssey/Data/GameDataManager.cs - ✅ COMPLETE - Ghidra references added: FUN_005edd20 @ 0x005edd20, "2DAName" @ 0x007c3980, cross-engine analysis (Aurora: C2DA::Load2DArray @ 0x1401a73a0, Eclipse: UnrealScript-based), inheritance structure
+- [x] Odyssey/Data/TwoDATableManager.cs - ✅ COMPLETE - Ghidra references added: FUN_005edd20 @ 0x005edd20, "2DAName" @ 0x007c3980, cross-engine analysis (Aurora: C2DA::Load2DArray @ 0x1401a73a0, Eclipse: UnrealScript-based), inheritance structure
 - [ ] Odyssey/Dialogue/ConversationContext.cs
 - [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/DialogueState.cs
