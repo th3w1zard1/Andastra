@@ -187,7 +187,7 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
           ```
 
      - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
-       - **For base classes (Runtime.Games.Common)**: 
+       - **For base classes (Runtime.Games.Common)**:
          - MUST reverse engineer ALL engines first (Odyssey, Aurora, Eclipse)
          - MUST compare implementations across ALL engines
          - MUST only document common functionality (no engine-specific details)

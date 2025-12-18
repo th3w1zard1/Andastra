@@ -1249,15 +1249,27 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // for i in range(100):
-                //     cmd = RotateRoomsCommand(builder._map, [room], [float(i)], [float(i + 1)])
-                //     undo_stack.push(cmd)
-                // assert undo_stack.canUndo()
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 712: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 714: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 715: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python lines 718-720: Push many commands
+                for (int i = 0; i < 100; i++)
+                {
+                    var cmd = new RotateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, new List<float> { (float)i }, new List<float> { (float)(i + 1) });
+                    undoStack.Push(cmd);
+                }
+
+                // Matching Python line 723: assert undo_stack.canUndo()
+                undoStack.CanUndo().Should().BeTrue("Should be able to undo after pushing many commands");
             }
             finally
             {
