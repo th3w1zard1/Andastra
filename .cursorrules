@@ -153,13 +153,15 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
           - Create base classes in `Runtime.Games.Common` for shared functionality
           - Create engine-specific implementations in `Runtime.Games.{Engine}` that inherit from base classes
           - Document which functions map to base class methods vs. engine-specific overrides
-       4. Document inheritance structure in roadmap with format:
+       4. Document inheritance structure in roadmap with format (example):
+
           ```
           Base Class: `CommonScriptExecutor` (Runtime.Games.Common)
           - Odyssey: `OdysseyScriptExecutor : CommonScriptExecutor` (swkotor.exe: 0x..., swkotor2.exe: 0x...)
           - Aurora: `AuroraScriptExecutor : CommonScriptExecutor` (nwmain.exe: 0x...)
           - Eclipse: `EclipseScriptExecutor : CommonScriptExecutor` (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
           ```
+
      - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
        - Search Ghidra for related functions using string searches and function name searches across ALL loaded executables
        - Decompile relevant functions to understand original implementation

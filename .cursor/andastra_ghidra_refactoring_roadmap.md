@@ -79,12 +79,16 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: DungeonMaster_SpawnCreature @ 0x140dcbc00, DungeonMaster_SpawnItem @ 0x140dcbc20, DungeonMaster_SpawnTrigger @ 0x140dcbc38 (string references) - ✅ FOUND
   - **Inheritance**: Base class `SpawnSystem` (Runtime.Games.Common), `OdysseySpawnSystem : SpawnSystem` (Runtime.Games.Odyssey), `AuroraSpawnSystem : SpawnSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
-- **Animation System**:
-  - `swkotor.exe`: Animation @ 0x00746060, AnimationTime @ 0x00746050, AnimationState @ 0x007495b0, EVENT_PLAY_ANIMATION @ 0x00744b3c (string references)
-  - `swkotor2.exe`: Animation @ 0x007bf604, AnimationTime @ 0x007bf810, AnimationState @ 0x007c1f30, EVENT_PLAY_ANIMATION @ 0x007bcd74 (string references)
-  - `nwmain.exe`: Animation @ 0x140ddc0e0, AnimationTime @ 0x140ddc0f0, AnimationLength @ 0x140ddc218 (string references)
+- **Animation System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: SaveActionState @ 0x005270f0 - ✅ ANALYZED - Saves action state to GFF save data, writes ActionTimer, Animation, AnimationTime, NumAttacks, ActionType, Target, Retargettable, InventorySlot, TargetRepository to GFF (via "Animation" @ 0x007bf604, "AnimationTime" @ 0x007bf810)
+  - `swkotor2.exe`: LoadActionState @ 0x005271b0 - ✅ ANALYZED - Loads action state from GFF save data, reads ActionTimer, Animation, AnimationTime, NumAttacks, ActionType, Target, Retargettable, InventorySlot, TargetRepository from GFF (via "Animation" @ 0x007bf604, "AnimationTime" @ 0x007bf810)
+  - `swkotor2.exe`: EVENT_PLAY_ANIMATION @ 0x007bcd74 - ✅ FOUND - Script event type constant (event type 9) used in LogScriptEvent @ 0x004dcfb0 for logging animation events
+  - `swkotor2.exe`: AnimationState @ 0x007c1f30 - ✅ FOUND - Animation state GFF field reference
+  - `swkotor.exe`: Animation @ 0x00746060, AnimationTime @ 0x00746050, AnimationState @ 0x007495b0, EVENT_PLAY_ANIMATION @ 0x00744b3c (string references) - ✅ FOUND
+  - `nwmain.exe`: Animation @ 0x140ddc0e0, AnimationTime @ 0x140ddc0f0, AnimationLength @ 0x140ddc218 (string references) - ✅ FOUND
   - **Inheritance**: Base class `AnimationSystem` (Runtime.Games.Common), `OdysseyAnimationSystem : AnimationSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+  - **Note**: Animation data is primarily stored in action system (ActionState), not a separate animation system. Animation field stores animation ID/type, AnimationTime stores timing information.
 - **Trigger System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadTriggerList @ 0x004e5920 - ✅ ANALYZED - Loads trigger list from GIT GFF into area, iterates through "TriggerList" GFF list, reads ObjectId, TemplateResRef, position, geometry polygon, LinkedToModule, TransitionDestination, LinkedTo, LinkedToFlags (via "TriggerList" @ 0x007bd254)
   - `swkotor2.exe`: SaveTriggerList @ 0x004e2b20 - ✅ ANALYZED - Saves trigger list from area to GFF save data, iterates through trigger array, gets trigger objects from world, saves each trigger state (via "TriggerList" @ 0x007bd254)
@@ -107,18 +111,25 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `swkotor.exe`: LoadStoreList @ 0x005057a0 - ✅ ANALYZED - Loads store list from GFF format, reads store entities from GFF, creates store objects, sets position, orientation, inventory (via "StoreList" @ 0x00747510)
   - **Inheritance**: Base class `StoreSystem` (Runtime.Games.Common), `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey), `AuroraStoreSystem : StoreSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
-- **Party Management**:
-  - `swkotor.exe`: PARTYTABLE @ 0x0074930c (string reference, used in SavePartyTable @ 0x0052ade0)
-  - `swkotor2.exe`: PARTYTABLE @ 0x007c1910 (string reference, used in SavePartyTable @ 0x0057bd70)
-  - `nwmain.exe`: Party @ 0x140dc9d70, OnPartyDeath @ 0x140dc9740, NonPartyKillable @ 0x140dc95e0 (string references)
-  - **Inheritance**: Base class `PartySystem` (Runtime.Games.Common), `OdysseyPartySystem : PartySystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
-- **Perception System**:
-  - `swkotor.exe`: PerceptionData @ 0x00747304, PerceptionList @ 0x00747314, PERCEPTIONDIST @ 0x0074ae10, PerceptionRange @ 0x0074ae20 (string references)
-  - `swkotor2.exe`: PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4, PERCEPTIONDIST @ 0x007c4070, PerceptionRange @ 0x007c4080 (string references)
-  - `nwmain.exe`: PerceptionData @ 0x140dde100, PerceptionList @ 0x140dde0f0, PerceptionRange @ 0x140dde0e0, PERCEPTIONDIST @ 0x140de59b0 (string references)
-  - **Inheritance**: Base class `PerceptionSystem` (Runtime.Games.Common), `OdysseyPerceptionSystem : PerceptionSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Party Management**: ✅ **ANALYZED**
+  - `swkotor2.exe`: SavePartyTable @ 0x0057bd70 - ✅ ANALYZED - Saves party data to GFF format, constructs path {savePath}\PARTYTABLE, creates GFF with "PT  " signature (V2.0) containing PT_PCNAME, PT_GOLD, PT_NUM_MEMBERS, PT_MEMBERS array, PT_PLAYEDSECONDS, PT_XP_POOL, PT_CONTROLLED_NPC, PT_SOLOMODE, PT_CHEAT_USED, and item storage fields (via "PARTYTABLE" @ 0x007c1910)
+  - `swkotor2.exe`: FUN_0057dcd0 - ✅ FOUND - Loads party table from GFF (via "PARTYTABLE" @ 0x007c1910)
+  - `swkotor.exe`: SavePartyTable @ 0x0052ade0 - ✅ ANALYZED - Saves party table to GFF format (via "PARTYTABLE" @ 0x0074930c)
+  - `swkotor.exe`: FUN_005648c0 - ✅ FOUND - Loads party table from GFF (via "PARTYTABLE" @ 0x0074930c)
+  - `nwmain.exe`: Party @ 0x140dc9d70, OnPartyDeath @ 0x140dc9740, NonPartyKillable @ 0x140dc95e0 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `PartySystem` (Runtime.Games.Common), `OdysseyPartySystem : PartySystem` (Runtime.Games.Odyssey), `AuroraPartySystem : PartySystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Perception System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: SaveEntityState @ 0x005226d0 - ✅ ANALYZED - Saves entity state including perception list (PerceptionList) to GFF save data (via "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4)
+  - `swkotor2.exe`: LoadEntityState @ 0x005fb0f0 - ✅ FOUND - Loads entity state including perception list from GFF (via "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4)
+  - `swkotor.exe`: FUN_005afce0 - ✅ FOUND - Saves entity state including perception (via "PerceptionData" @ 0x00747304, "PerceptionList" @ 0x00747314)
+  - `swkotor.exe`: FUN_00500610 - ✅ FOUND - Loads entity state including perception (via "PerceptionData" @ 0x00747304, "PerceptionList" @ 0x00747314)
+  - `swkotor2.exe`: PERCEPTIONDIST @ 0x007c4070, PerceptionRange @ 0x007c4080 (string references) - ✅ FOUND
+  - `swkotor.exe`: PERCEPTIONDIST @ 0x0074ae10, PerceptionRange @ 0x0074ae20 (string references) - ✅ FOUND
+  - `nwmain.exe`: PerceptionData @ 0x140dde100, PerceptionList @ 0x140dde0f0, PerceptionRange @ 0x140dde0e0, PERCEPTIONDIST @ 0x140de59b0 (string references) - ✅ FOUND
+  - `swkotor2.exe`: CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION @ 0x007bcb68 (string reference) - ✅ FOUND - Perception event type
+  - **Inheritance**: Base class `PerceptionSystem` (Runtime.Games.Common), `OdysseyPerceptionSystem : PerceptionSystem` (Runtime.Games.Odyssey), `AuroraPerceptionSystem : PerceptionSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 
 ## Class Inheritance Structure
 

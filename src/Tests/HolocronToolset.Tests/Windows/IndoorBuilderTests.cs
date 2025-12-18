@@ -1395,8 +1395,8 @@ namespace HolocronToolset.Tests.Windows
                 builder.Show();
 
                 // Matching Python: assert not builder.ui.actionUndo.isEnabled()
-
-                builder.Should().NotBeNull();
+                // Matching Python line 848: assert not builder.ui.actionUndo.isEnabled()
+                builder.Ui.ActionUndoEnabled.Should().BeFalse("Undo action should be disabled when stack is empty");
             }
             finally
             {
@@ -1431,8 +1431,8 @@ namespace HolocronToolset.Tests.Windows
                 builder.Show();
 
                 // Matching Python: assert not builder.ui.actionRedo.isEnabled()
-
-                builder.Should().NotBeNull();
+                // Matching Python line 854: assert not builder.ui.actionRedo.isEnabled()
+                builder.Ui.ActionRedoEnabled.Should().BeFalse("Redo action should be disabled when stack is empty");
             }
             finally
             {
@@ -1466,15 +1466,26 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // cmd = AddRoomCommand(builder._map, room)
-                // builder._undo_stack.push(cmd)
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert builder.ui.actionUndo.isEnabled()
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 860: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 861: cmd = AddRoomCommand(builder._map, room)
+                var cmd = new AddRoomCommand(builder.Map, room);
+
+                // Matching Python line 862: builder._undo_stack.push(cmd)
+                builder.UndoStack.Push(cmd);
+
+                // Matching Python line 864: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python line 865: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python line 867: assert builder.ui.actionUndo.isEnabled()
+                builder.Ui.ActionUndoEnabled.Should().BeTrue("Undo action should be enabled after push");
             }
             finally
             {
@@ -1508,17 +1519,32 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // cmd = AddRoomCommand(builder._map, room)
-                // builder._undo_stack.push(cmd)
-                // assert room in builder._map.rooms
-                // builder.ui.actionUndo.trigger()
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert room not in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 873: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 874: cmd = AddRoomCommand(builder._map, room)
+                var cmd = new AddRoomCommand(builder.Map, room);
+
+                // Matching Python line 875: builder._undo_stack.push(cmd)
+                builder.UndoStack.Push(cmd);
+
+                // Matching Python line 877: assert room in builder._map.rooms
+                builder.Map.Rooms.Should().Contain(room, "Room should be in map after push");
+
+                // Matching Python line 879: builder.ui.actionUndo.trigger()
+                builder.Ui.ActionUndo.Invoke();
+
+                // Matching Python line 880: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python line 881: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python line 883: assert room not in builder._map.rooms
+                builder.Map.Rooms.Should().NotContain(room, "Room should be removed from map after undo");
             }
             finally
             {

@@ -65,6 +65,10 @@ namespace HolocronToolset.Windows
         // Original: self._map = IndoorMap()
         public IndoorMap Map { get; private set; }
 
+        // Matching PyKotor implementation - self._undo_stack property
+        // Original: self._undo_stack: QUndoStack = QUndoStack(self)
+        public UndoStack UndoStack { get; private set; }
+
         private void SetupUI()
         {
             // Create UI wrapper for testing
@@ -73,15 +77,35 @@ namespace HolocronToolset.Windows
             // Initialize map (matching Python: self._map = IndoorMap())
             Map = new IndoorMap();
 
+            // Initialize undo stack (matching Python: self._undo_stack: QUndoStack = QUndoStack(self))
+            UndoStack = new UndoStack();
+
             // Initialize MapRenderer (matching Python: self.ui.mapRenderer)
             Ui.MapRenderer = new IndoorMapRenderer();
             Ui.MapRenderer.SetMap(Map);
+            // Matching Python: self.ui.mapRenderer.set_undo_stack(self._undo_stack)
+            // Note: SetUndoStack will be implemented in IndoorMapRenderer when needed
 
             // Setup select all action (matching Python: self.ui.actionSelectAll.triggered.connect(self.select_all))
             Ui.ActionSelectAll = SelectAll;
 
             // Setup deselect all action (matching Python: self.ui.actionDeselectAll.triggered.connect(self.deselect_all))
             Ui.ActionDeselectAll = DeselectAll;
+
+            // Setup undo/redo actions (matching Python lines 690-703)
+            // Matching Python: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)
+            Ui.ActionUndo = () => UndoStack.Undo();
+            // Matching Python: self.ui.actionRedo.triggered.connect(self._undo_stack.redo)
+            Ui.ActionRedo = () => UndoStack.Redo();
+
+            // Matching Python: self._undo_stack.canUndoChanged.connect(self.ui.actionUndo.setEnabled)
+            UndoStack.CanUndoChanged += (sender, canUndo) => Ui.ActionUndoEnabled = canUndo;
+            // Matching Python: self._undo_stack.canRedoChanged.connect(self.ui.actionRedo.setEnabled)
+            UndoStack.CanRedoChanged += (sender, canRedo) => Ui.ActionRedoEnabled = canRedo;
+
+            // Matching Python lines 702-703: self.ui.actionUndo.setEnabled(False); self.ui.actionRedo.setEnabled(False)
+            Ui.ActionUndoEnabled = false;
+            Ui.ActionRedoEnabled = false;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1751-1755
@@ -136,6 +160,22 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - actionDeselectAll menu action
         // Original: self.ui.actionDeselectAll.triggered.connect(self.deselect_all)
         public Action ActionDeselectAll { get; set; }
+
+        // Matching PyKotor implementation - actionUndo menu action
+        // Original: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)
+        public Action ActionUndo { get; set; }
+
+        // Matching PyKotor implementation - actionRedo menu action
+        // Original: self.ui.actionRedo.triggered.connect(self._undo_stack.redo)
+        public Action ActionRedo { get; set; }
+
+        // Matching PyKotor implementation - actionUndo.isEnabled property
+        // Original: self.ui.actionUndo.isEnabled()
+        public bool ActionUndoEnabled { get; set; }
+
+        // Matching PyKotor implementation - actionRedo.isEnabled property
+        // Original: self.ui.actionRedo.isEnabled()
+        public bool ActionRedoEnabled { get; set; }
 
         // Matching PyKotor implementation - mapRenderer widget
         // Original: self.ui.mapRenderer
