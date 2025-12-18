@@ -728,13 +728,13 @@ When processing a file:
 - [ ] Actions/ActionJumpToLocation.cs
 - [ ] Actions/ActionJumpToObject.cs
 - [ ] Actions/ActionMoveAwayFromObject.cs
-- [ ] Actions/ActionMoveToLocation.cs
+- [x] Actions/ActionMoveToLocation.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_0054be70 @ 0x0054be70 (walking collision), ActionList @ 0x007bebdc, MOVETO @ 0x007b6b24
 - [ ] Actions/ActionMoveToObject.cs
 - [ ] Actions/ActionOpenDoor.cs
 - [ ] Actions/ActionPickUpItem.cs
 - [ ] Actions/ActionPlayAnimation.cs
 - [ ] Actions/ActionPutDownItem.cs
-- [ ] Actions/ActionQueue.cs
+- [x] Actions/ActionQueue.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260 (load ActionList), FUN_00505bc0 @ 0x00505bc0 (save ActionList), ActionList @ 0x007bebdc, ActionId @ 0x007bebd0
 - [ ] Actions/ActionRandomWalk.cs
 - [ ] Actions/ActionSpeakString.cs
 - [ ] Actions/ActionUnequipItem.cs
