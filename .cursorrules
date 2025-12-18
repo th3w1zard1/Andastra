@@ -144,11 +144,28 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
    - Use `mcp_ghidra_*` tools to discover, search, and analyze functions across ALL loaded executables
    - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh", "GLOBALVARS", "PARTYTABLE")
    - Verify implementation faithfulness against original engine behavior
-   - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
-     - Search Ghidra for related functions using string searches and function name searches across ALL loaded executables
-     - Decompile relevant functions to understand original implementation
-     - Add detailed comments with Ghidra function addresses and context
-     - Use consistent comment format matching the MonoGame API documentation pattern
+   - **MANDATORY: Cross-Engine Analysis and Inheritance Structure**:
+     - **NEVER document a function without specifying which .exe it's from** (e.g., `swkotor2.exe: 0x004eb750`, `nwmain.exe: 0x14051d5c0`)
+     - **MANDATORY**: When finding ANY function in ANY engine, AI agents MUST:
+       1. Search for similar/equivalent functions in ALL other engines (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, etc.)
+       2. Compare implementations across engines to identify common patterns
+       3. Establish base class inheritance structure:
+          - Create base classes in `Runtime.Games.Common` for shared functionality
+          - Create engine-specific implementations in `Runtime.Games.{Engine}` that inherit from base classes
+          - Document which functions map to base class methods vs. engine-specific overrides
+       4. Document inheritance structure in roadmap with format:
+          ```
+          Base Class: `CommonScriptExecutor` (Runtime.Games.Common)
+          - Odyssey: `OdysseyScriptExecutor : CommonScriptExecutor` (swkotor.exe: 0x..., swkotor2.exe: 0x...)
+          - Aurora: `AuroraScriptExecutor : CommonScriptExecutor` (nwmain.exe: 0x...)
+          - Eclipse: `EclipseScriptExecutor : CommonScriptExecutor` (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
+          ```
+     - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
+       - Search Ghidra for related functions using string searches and function name searches across ALL loaded executables
+       - Decompile relevant functions to understand original implementation
+       - Add detailed comments with Ghidra function addresses, executable name, and context
+       - Use consistent comment format matching the MonoGame API documentation pattern
+       - **ALWAYS specify the source executable** in comments (e.g., `swkotor2.exe: 0x004eb750`)
    - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra using Ghidra MCP tools:
      - Use `mcp_ghidra_set_decompiler_comment` to add comments to decompiled code
      - Use `mcp_ghidra_set_disassembly_comment` to add comments to assembly code
@@ -254,8 +271,10 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 
    ```csharp
    // Brief description of operation
-   // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+   // Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
    // Located via string reference: "savenfo" @ 0x007be1f0
+   // Cross-engine: Similar functions in swkotor.exe: 0x..., nwmain.exe: 0x..., daorigins.exe: 0x...
+   // Inheritance: Base class SaveSerializer (Runtime.Games.Common), Odyssey override (Runtime.Games.Odyssey)
    // Original implementation: [key detail from decompiled code]
    actualCodeHere();
    ```
@@ -307,6 +326,8 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
    - Use natural language and intuitive terminology relevant to the task
    - Be concise but thorough - provide enough context to find the function in Ghidra
    - C# code comments should reference the renamed function name from Ghidra, not generic names like `FUN_004eb750`
+   - **ALWAYS specify the source executable** in all documentation (roadmap, comments, etc.)
+   - **ALWAYS establish inheritance structure** when documenting functions across multiple engines
 
 5. **Clean-Room Process**:
    - Derive behavior from observation and specs, not code copying

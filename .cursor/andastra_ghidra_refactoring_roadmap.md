@@ -10,18 +10,32 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 ## Progress Summary
 
 ### ✅ Completed Systems
-- **Save/Load System**: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70, SaveModuleState @ 0x004f0c50, SaveModuleIFO @ 0x005018b0
-- **Walkmesh System**: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0
-- **Module Loading**: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
+
+- **Save/Load System**:
+  - `swkotor2.exe`: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70, SaveModuleState @ 0x004f0c50, SaveModuleIFO @ 0x005018b0
+  - **Inheritance**: Base class `SaveSerializer` (Runtime.Games.Common), `OdysseySaveSerializer : SaveSerializer` (Runtime.Games.Odyssey)
+  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
+- **Walkmesh System**:
+  - `swkotor2.exe`: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0
+  - **Inheritance**: Base class `WalkmeshSystem` (Runtime.Games.Common), `OdysseyWalkmeshSystem : WalkmeshSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
+- **Module Loading**:
+  - `swkotor2.exe`: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
+  - **Inheritance**: Base class `ModuleLoader` (Runtime.Games.Common), `OdysseyModuleLoader : ModuleLoader` (Runtime.Games.Odyssey)
+  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
 
 ### 🔄 In Progress
-- **NCS VM Execution**: 
-  - DispatchScriptEvent @ 0x004dd730 - Dispatches script events to registered handlers
-  - LogScriptEvent @ 0x004dcfb0 - Logs script events for debugging
-  - LoadScriptHooks @ 0x0050c510 - Loads script hook references from GFF templates
+
+- **NCS VM Execution**:
+  - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730 - Dispatches script events to registered handlers
+  - `swkotor2.exe`: LogScriptEvent @ 0x004dcfb0 - Logs script events for debugging
+  - `swkotor2.exe`: LoadScriptHooks @ 0x0050c510 - Loads script hook references from GFF templates
+  - **Inheritance**: TODO - Establish base class `ScriptExecutor` (Runtime.Games.Common), engine-specific implementations
+  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
   - Searching for actual NCS bytecode execution functions
 
 ### 📋 Pending Systems
+
 - Dialogue System (DLG, TLK, VO)
 - Combat System
 - Entity Spawning
@@ -32,6 +46,34 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - Store System
 - Party Management
 - Perception System
+
+## Class Inheritance Structure
+
+### Script Execution System
+
+**Base Class**: `ScriptExecutor` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyScriptExecutor : ScriptExecutor` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730, LogScriptEvent @ 0x004dcfb0, LoadScriptHooks @ 0x0050c510
+  - `swkotor.exe`: TODO - Search for similar functions
+- **Aurora Implementation**: `AuroraScriptExecutor : ScriptExecutor` (Runtime.Games.Aurora)
+  - `nwmain.exe`: CScriptEvent @ 0x1404c6490, ExecuteCommandExecuteScript @ 0x14051d5c0
+- **Eclipse Implementation**: `EclipseScriptExecutor : ScriptExecutor` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: COMMAND_EXECUTESCRIPT @ 0x00af4aac (string reference)
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Save/Load System
+
+**Base Class**: `SaveSerializer` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseySaveSerializer : SaveSerializer` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70
+  - `swkotor.exe`: TODO - Search for similar functions
+- **Aurora Implementation**: `AuroraSaveSerializer : SaveSerializer` (Runtime.Games.Aurora)
+  - `nwmain.exe`: TODO - Search for similar functions
+- **Eclipse Implementation**: `EclipseSaveSerializer : SaveSerializer` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
 
 ## Ghidra Executables Inventory
 
