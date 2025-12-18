@@ -26,6 +26,7 @@ using Andastra.Parsing.Installation; // For Installation
 ```
 
 **Affected Files**:
+
 - `Runtime/Content/ResourceProviders/GameResourceProvider.cs`
 - `Runtime/Content/Loaders/GITLoader.cs`
 - `Runtime/Content/Loaders/TemplateLoader.cs`
@@ -42,6 +43,7 @@ using Andastra.Parsing.Installation; // For Installation
 **Location**: `Runtime/Games/Common/Combat/`
 
 1. **BaseCombatManager.cs** - Abstract base for combat state management
+
    ```csharp
    namespace Andastra.Runtime.Games.Common.Combat
    {
@@ -70,6 +72,7 @@ using Andastra.Parsing.Installation; // For Installation
 **Location**: `Runtime/Games/Common/Components/`
 
 Create base class for EACH of these:
+
 - ActionQueueComponent
 - AnimationComponent
 - CreatureComponent
@@ -164,6 +167,7 @@ Create Eclipse version of EVERY system from Odyssey
 **Location**: `Runtime/Games/Aurora/`
 
 Same structure as Eclipse - create versions for:
+
 - Combat
 - Dialogue
 - Components
@@ -225,6 +229,7 @@ Add ALL of the above to `andastra_ghidra_refactoring_roadmap.md`:
 ## ✅ Current State is GOOD
 
 The architecture is now:
+
 - ✅ Properly structured (Runtime.Engines.Odyssey)
 - ✅ No duplicates
 - ✅ Clean git history
@@ -232,4 +237,3 @@ The architecture is now:
 - ✅ Ready for Eclipse/Aurora implementations
 
 **The foundation is solid - now it's implementation work.**
-
