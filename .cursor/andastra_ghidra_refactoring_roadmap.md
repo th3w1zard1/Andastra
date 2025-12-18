@@ -188,9 +188,12 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Area Effect System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadAreaEffectList @ 0x004e0c30 - ✅ ANALYZED - Loads area effect list from GIT GFF into area, iterates through "AreaEffectList" GFF list, reads ObjectId, creates area effect entities (via FUN_00571a20), loads area effect data from GFF (via FUN_005720a0 which is LoadAreaEffectFromGFF), reads Position (X, Y, Z), Orientation (X, Y, Z), normalizes orientation vector, sets orientation (via FUN_00506550), loads action list if param3 is not null (via FUN_0050b650), adds area effect to area (via FUN_00573490) (via "AreaEffectList" @ 0x007bd0d4, "ObjectId", "PositionX", "PositionY", "PositionZ", "OrientationX", "OrientationY", "OrientationZ")
   - `swkotor2.exe`: SaveAreaEffectList @ 0x004e2fb0 - ✅ ANALYZED - Saves area effect list from area to GFF save data, iterates through area effect array, gets area effect objects from world (via FUN_00503bd0), checks object type (DAT_007beb24, type 0xd), saves each area effect state with ObjectId field, calls FUN_00572320 (SaveAreaEffectToGFF) and FUN_00508200 (SaveActionList) for each area effect (via "AreaEffectList" @ 0x007bd0d4)
+  - `swkotor.exe`: LoadAreaEffectList @ 0x00505af0 - ✅ FOUND - Loads area effect list from GFF format (swkotor.exe version), similar to swkotor2.exe version, iterates through "AreaEffectList" GFF list, reads ObjectId, creates area effect entities (via "AreaEffectList" @ 0x0074751c)
+  - `swkotor.exe`: SaveAreaEffectList @ 0x00507d60 - ✅ FOUND - Saves area effect list to GFF format (swkotor.exe version), similar to swkotor2.exe version, writes area effect entities to GFF with ObjectId, position, orientation, etc. (via "AreaEffectList" @ 0x0074751c)
   - `swkotor2.exe`: "AreaEffectList" @ 0x007bd0d4, "AreaEffectId" @ 0x007c13f8 (string references) - ✅ FOUND
+  - `swkotor.exe`: "AreaEffectList" @ 0x0074751c, "AreaEffectId" @ 0x0074a040 (string references) - ✅ FOUND
   - **Inheritance**: Base class `AreaEffectSystem` (Runtime.Games.Common), `OdysseyAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Odyssey), `AuroraAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Aurora)
-  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
   - **Note**: Area effect system handles area-wide effects (environmental effects, spell effects that affect an area, etc.). Area effects are loaded from GIT files with ObjectId, position, orientation, and effect data. Area effects can have action lists and are saved to GFF save data. Different from entity-specific effects (Effect System) - these are area-wide persistent effects.
 - **Door System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadDoorList @ 0x004e56b0 - ✅ ANALYZED - Loads door list from GIT GFF into area, iterates through "Door List" GFF list, reads ObjectId, creates door entities (via FUN_00580ba0), loads door data from GFF (Bearing, position X/Y/Z), adds doors to area. If param4 is 0, loads from template; if 1, loads from save data (via "Door List" @ 0x007bd248, "ObjectId", "Bearing", "XPosition", "YPosition", "ZPosition")
@@ -484,7 +487,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseyAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: LoadAreaEffectList @ 0x004e0c30, SaveAreaEffectList @ 0x004e2fb0
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: LoadAreaEffectList @ 0x00505af0, SaveAreaEffectList @ 0x00507d60
 - **Aurora Implementation**: `AuroraAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: TODO - Search for similar functions
 - **Eclipse Implementation**: `EclipseAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Eclipse)
