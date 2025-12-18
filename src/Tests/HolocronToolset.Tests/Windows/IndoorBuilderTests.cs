@@ -1013,19 +1013,38 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // old_position = copy(builder._map.warp_point)
-                // new_position = Vector3(10, 20, 5)
-                // cmd = MoveWarpCommand(builder._map, old_position, new_position)
-                // undo_stack.push(cmd)
-                // assert abs(builder._map.warp_point.x - 10) < 0.001
-                // assert abs(builder._map.warp_point.y - 20) < 0.001
-                // assert abs(builder._map.warp_point.z - 5) < 0.001
-                // undo_stack.undo()
-                // assert abs(builder._map.warp_point.x - old_position.x) < 0.001
-                // assert abs(builder._map.warp_point.y - old_position.y) < 0.001
+                // Matching Python line 619: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
 
-                builder.Should().NotBeNull();
+                // Matching Python line 621: old_position = copy(builder._map.warp_point)
+                var oldPosition = new Vector3(builder.Map.WarpPoint.X, builder.Map.WarpPoint.Y, builder.Map.WarpPoint.Z);
+
+                // Matching Python line 622: new_position = Vector3(10, 20, 5)
+                var newPosition = new Vector3(10, 20, 5);
+
+                // Matching Python line 624: cmd = MoveWarpCommand(builder._map, old_position, new_position)
+                var cmd = new MoveWarpCommand(builder.Map, oldPosition, newPosition);
+
+                // Matching Python line 625: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 627: assert abs(builder._map.warp_point.x - 10) < 0.001
+                builder.Map.WarpPoint.X.Should().BeApproximately(10f, 0.001f, "Warp point X should be 10");
+
+                // Matching Python line 628: assert abs(builder._map.warp_point.y - 20) < 0.001
+                builder.Map.WarpPoint.Y.Should().BeApproximately(20f, 0.001f, "Warp point Y should be 20");
+
+                // Matching Python line 629: assert abs(builder._map.warp_point.z - 5) < 0.001
+                builder.Map.WarpPoint.Z.Should().BeApproximately(5f, 0.001f, "Warp point Z should be 5");
+
+                // Matching Python line 631: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 632: assert abs(builder._map.warp_point.x - old_position.x) < 0.001
+                builder.Map.WarpPoint.X.Should().BeApproximately(oldPosition.X, 0.001f, "Warp point X should be restored to old position");
+
+                // Matching Python line 633: assert abs(builder._map.warp_point.y - old_position.y) < 0.001
+                builder.Map.WarpPoint.Y.Should().BeApproximately(oldPosition.Y, 0.001f, "Warp point Y should be restored to old position");
             }
             finally
             {

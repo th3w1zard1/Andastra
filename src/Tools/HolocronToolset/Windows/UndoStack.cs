@@ -476,5 +476,40 @@ namespace HolocronToolset.Windows
             // Note: rebuild_room_connections will be implemented when needed
         }
     }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:368-386
+    // Original: class MoveWarpCommand(QUndoCommand):
+    public class MoveWarpCommand : IUndoCommand
+    {
+        private readonly IndoorMap _indoorMap;
+        private readonly Vector3 _oldPosition;
+        private readonly Vector3 _newPosition;
+
+        public string Text => "Move Warp Point";
+
+        public MoveWarpCommand(
+            IndoorMap indoorMap,
+            Vector3 oldPosition,
+            Vector3 newPosition)
+        {
+            _indoorMap = indoorMap;
+            _oldPosition = new Vector3(oldPosition.X, oldPosition.Y, oldPosition.Z);
+            _newPosition = new Vector3(newPosition.X, newPosition.Y, newPosition.Z);
+        }
+
+        // Matching Python: def undo(self)
+        public void Undo()
+        {
+            // Restore old position (matching Python line 383)
+            _indoorMap.WarpPoint = new Vector3(_oldPosition.X, _oldPosition.Y, _oldPosition.Z);
+        }
+
+        // Matching Python: def redo(self)
+        public void Redo()
+        {
+            // Apply new position (matching Python line 386)
+            _indoorMap.WarpPoint = new Vector3(_newPosition.X, _newPosition.Y, _newPosition.Z);
+        }
+    }
 }
 
