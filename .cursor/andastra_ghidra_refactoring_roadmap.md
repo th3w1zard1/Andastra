@@ -369,6 +369,9 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 **Base Class**: `FactionSystem` (Runtime.Games.Common)
 
 - **Odyssey Implementation**: `OdysseyFactionSystem : FactionSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: SetCreatureFaction @ 0x00513440 - ✅ ANALYZED - Sets a creature's faction ID and updates faction-related state, validates faction exists, if faction not found logs error and defaults to Hostile1 (faction ID 1), updates creature's faction ID at offset 0x43a (via "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8)
+  - `swkotor2.exe`: FUN_00501fa0 @ 0x00501fa0 - ✅ FOUND - Loads faction data from REPUTE GFF (repute.2da resource), reads FactionList and RepList from GFF, initializes faction reputation matrix (via "FactionList" @ 0x007be604)
+  - `swkotor2.exe`: FUN_004fcab0 @ 0x004fcab0 - ✅ FOUND - Saves faction data to REPUTE GFF, writes FactionList and RepList to GFF save data (via "FactionList" @ 0x007be604)
   - `swkotor.exe`: FactionList @ 0x00745848, Faction @ 0x007497c8, FactionID @ 0x0074ae48, FactionID1 @ 0x0074865c, FactionID2 @ 0x00748650, FactionRep @ 0x00748644, FactionName @ 0x00748638, FactionParentID @ 0x00748628, FactionGlobal @ 0x00748618, "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x00746fa0 (string references) - ✅ FOUND
   - `swkotor2.exe`: FactionList @ 0x007be604, Faction @ 0x007c0ca0, FACTIONREP @ 0x007bcec8, FactionID1 @ 0x007c2918, FactionID2 @ 0x007c2924, FactionRep @ 0x007c290c, FactionName @ 0x007c2900, FactionParentID @ 0x007c28f0, FactionGlobal @ 0x007c28e0, FactionID @ 0x007c40b4, "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8 (string references) - ✅ FOUND
 - **Aurora Implementation**: `AuroraFactionSystem : FactionSystem` (Runtime.Games.Aurora)
@@ -889,7 +892,7 @@ When processing a file:
 - [ ] Interfaces/INcsVm.cs
 - [ ] Interfaces/IScriptGlobals.cs
 - [ ] Interfaces/Variable.cs
-- [ ] ScriptExecutor.cs
+- [x] ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: DispatchScriptEvent @ 0x004dd730, LoadScriptHooks @ 0x0050c510, LogScriptEvent @ 0x004dcfb0 (swkotor2.exe), ExecuteCommandExecuteScript @ 0x14051d5c0 (nwmain.exe)
 - [ ] Types/Location.cs
 - [ ] VM/ExecutionContext.cs
 - [ ] VM/NcsVm.cs
