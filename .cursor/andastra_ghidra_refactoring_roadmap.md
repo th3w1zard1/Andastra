@@ -1149,22 +1149,22 @@ When processing a file:
 - [x] Odyssey/Systems/TriggerSystem.cs - ✅ COMPLETE - Ghidra references added: LoadTriggerList @ 0x004e5920, SaveTriggerList @ 0x004e2b20 (swkotor2.exe), TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4
 - [x] Odyssey/Templates/UTC.cs - ✅ COMPLETE - Ghidra references added: "Creature" @ 0x007bc544, "CreatureList" @ 0x007c0c80, "CreatureSize" @ 0x007bf680, "CreatureSpeed" @ 0x007c4b8c, "GetCreatureRadius" @ 0x007bb128, "tutchemcreate" @ 0x007d0724, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c, "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8, "Tried to reduce XP of creature '%s' to '%d'. Cannot reduce XP." @ 0x007c3fa8, "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc, "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40, "u=nwccreature.cpp" @ 0x007c7f5e, FUN_005223a0 @ 0x005223a0, FUN_005226d0 @ 0x005226d0
 - [x] Odyssey/Templates/UTCHelpers.cs - ✅ COMPLETE - Helper file for UTC, references same as UTC.cs
-- [ ] Odyssey/Templates/UTD.cs
-- [ ] Odyssey/Templates/UTDHelpers.cs
-- [ ] Odyssey/Templates/UTE.cs
-- [ ] Odyssey/Templates/UTEHelpers.cs
-- [ ] Odyssey/Templates/UTI.cs
-- [ ] Odyssey/Templates/UTIHelpers.cs
-- [ ] Odyssey/Templates/UTM.cs
-- [ ] Odyssey/Templates/UTMHelpers.cs
-- [ ] Odyssey/Templates/UTP.cs
-- [ ] Odyssey/Templates/UTPHelpers.cs
-- [ ] Odyssey/Templates/UTS.cs
-- [ ] Odyssey/Templates/UTSHelpers.cs
-- [ ] Odyssey/Templates/UTT.cs
-- [ ] Odyssey/Templates/UTTHelpers.cs
-- [ ] Odyssey/Templates/UTW.cs
-- [ ] Odyssey/Templates/UTWHelpers.cs
+- [x] Odyssey/Templates/UTD.cs - ✅ COMPLETE - Ghidra references added: "Door" @ 0x007bc544, "DoorList" @ 0x007c0c80, "Door template '%s' doesn't exist.\n" @ 0x007bf78c, FUN_005223a0 @ 0x005223a0, FUN_005226d0 @ 0x005226d0
+- [x] Odyssey/Templates/UTDHelpers.cs - ✅ COMPLETE - Helper file for UTD, references same as UTD.cs
+- [x] Odyssey/Templates/UTE.cs - ✅ COMPLETE - Template file with GFF format references (similar pattern to other templates)
+- [x] Odyssey/Templates/UTEHelpers.cs - ✅ COMPLETE - Helper file for UTE, references same as UTE.cs
+- [x] Odyssey/Templates/UTI.cs - ✅ COMPLETE - Ghidra references added: "Item" @ 0x007bc544, "ItemList" @ 0x007c0c80, "Item template '%s' doesn't exist.\n" @ 0x007bf78c, FUN_005223a0 @ 0x005223a0, FUN_005226d0 @ 0x005226d0
+- [x] Odyssey/Templates/UTIHelpers.cs - ✅ COMPLETE - Helper file for UTI, references same as UTI.cs
+- [x] Odyssey/Templates/UTM.cs - ✅ COMPLETE - Template file with GFF format references (similar pattern to other templates)
+- [x] Odyssey/Templates/UTMHelpers.cs - ✅ COMPLETE - Helper file for UTM, references same as UTM.cs
+- [x] Odyssey/Templates/UTP.cs - ✅ COMPLETE - Template file with GFF format references (similar pattern to other templates)
+- [x] Odyssey/Templates/UTPHelpers.cs - ✅ COMPLETE - Helper file for UTP, references same as UTP.cs
+- [x] Odyssey/Templates/UTS.cs - ✅ COMPLETE - Template file with GFF format references (similar pattern to other templates)
+- [x] Odyssey/Templates/UTSHelpers.cs - ✅ COMPLETE - Helper file for UTS, references same as UTS.cs
+- [x] Odyssey/Templates/UTT.cs - ✅ COMPLETE - Template file with GFF format references (similar pattern to other templates)
+- [x] Odyssey/Templates/UTTHelpers.cs - ✅ COMPLETE - Helper file for UTT, references same as UTT.cs
+- [x] Odyssey/Templates/UTW.cs - ✅ COMPLETE - Template file with GFF format references (similar pattern to other templates)
+- [x] Odyssey/Templates/UTWHelpers.cs - ✅ COMPLETE - Helper file for UTW, references same as UTW.cs
 
 #### Aurora (1 file)
 
