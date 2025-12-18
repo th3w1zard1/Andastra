@@ -903,14 +903,14 @@ When processing a file:
 
 ### Runtime/Content (18 files)
 
-- [ ] Cache/ContentCache.cs
+- [x] Cache/ContentCache.cs - ✅ COMPLETE - Ghidra references added: CACHE @ 0x007c6848, z:\cache @ 0x007c6850, CExoKeyTable resource management, all cache fields
 - [x] Converters/BwmToNavigationMeshConverter.cs - ✅ COMPLETE - Ghidra references added: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0 (swkotor2.exe), "BWM V1.0" @ 0x007c061c
-- [ ] Interfaces/IContentCache.cs
-- [ ] Interfaces/IContentConverter.cs
-- [ ] Interfaces/IGameResourceProvider.cs
-- [ ] Interfaces/IResourceProvider.cs
+- [x] Interfaces/IContentCache.cs - ✅ COMPLETE - Ghidra references added: CACHE @ 0x007c6848, z:\cache @ 0x007c6850, CExoKeyTable resource management, all cache interface fields
+- [x] Interfaces/IContentConverter.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, Loading @ 0x007c7e40, CExoKeyTable resource loading, all converter interface fields
+- [x] Interfaces/IGameResourceProvider.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, FUN_00633270 @ 0x00633270, CExoKeyTable/CExoResMan resource management, all resource provider fields
+- [x] Interfaces/IResourceProvider.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, CExoKeyTable errors, FUN_00633270 @ 0x00633270, all resource provider fields
 - [x] Loaders/GITLoader.cs - ✅ COMPLETE - Ghidra references added: FUN_004dfbb0 @ 0x004dfbb0 (load creature instances), FUN_004e08e0 @ 0x004e08e0 (load placeable/door/store instances), FUN_004e01a0 @ 0x004e01a0 (load encounter instances), "Creature List" @ 0x007bd01c, "TriggerList" @ 0x007bd254
-- [ ] Loaders/TemplateLoader.cs
+- [x] Loaders/TemplateLoader.cs - ✅ COMPLETE - Ghidra references added: TemplateResRef @ 0x007bd00c, FUN_005261b0 @ 0x005261b0, FUN_0050c510 @ 0x0050c510, FUN_00580ed0 @ 0x00580ed0, FUN_004e08e0 @ 0x004e08e0, all template loading functions and error messages
 - [ ] MDL/MDLBulkReader.cs
 - [ ] MDL/MDLCache.cs
 - [ ] MDL/MDLConstants.cs
@@ -918,8 +918,8 @@ When processing a file:
 - [ ] MDL/MDLFastReader.cs
 - [ ] MDL/MDLLoader.cs
 - [ ] MDL/MDLOptimizedReader.cs
-- [ ] ResourceProviders/GameResourceProvider.cs
-- [ ] Save/SaveDataProvider.cs
+- [x] ResourceProviders/GameResourceProvider.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, CExoKeyTable errors, FUN_00633270 @ 0x00633270, all resource provider fields
+- [x] Save/SaveDataProvider.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750, FUN_00708990 @ 0x00708990, SAVES: @ 0x007be284, savenfo @ 0x007be1f0, SAVEGAME @ 0x007be28c, all save file structure fields
 - [x] Save/SaveSerializer.cs - ✅ COMPLETE - Ghidra references added: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70 (swkotor2.exe)
 
 ### Runtime/Scripting (11 files)
