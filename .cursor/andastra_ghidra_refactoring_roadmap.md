@@ -445,6 +445,38 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `MassEffect.exe`: TODO - Search for similar functions
   - `MassEffect2.exe`: TODO - Search for similar functions
 
+### Camera System
+
+**Base Class**: `CameraSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyCameraSystem : CameraSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: LoadCameraList @ 0x004e0ff0, SaveCameraList @ 0x004e13f0
+  - `swkotor.exe`: TODO - Search for similar functions
+- **Aurora Implementation**: `AuroraCameraSystem : CameraSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: TODO - Search for similar functions
+- **Eclipse Implementation**: `EclipseCameraSystem : CameraSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectCameraSystem : CameraSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
+
+### Area Effect System
+
+**Base Class**: `AreaEffectSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: LoadAreaEffectList @ 0x004e0c30, SaveAreaEffectList @ 0x004e2fb0
+  - `swkotor.exe`: TODO - Search for similar functions
+- **Aurora Implementation**: `AuroraAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: TODO - Search for similar functions
+- **Eclipse Implementation**: `EclipseAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectAreaEffectSystem : AreaEffectSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
+
 ## Ghidra Executables Inventory
 
 ### ✅ PRIMARY TARGET: Odyssey Engine (KotOR 1 & 2)
