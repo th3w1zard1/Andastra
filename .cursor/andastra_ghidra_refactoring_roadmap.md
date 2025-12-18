@@ -1053,7 +1053,7 @@ When processing a file:
 - [x] MDL/MDLConstants.cs - ✅ COMPLETE - MDL format constants based on file format specification, not reverse engineered
 - [x] MDL/MDLDataTypes.cs - ✅ COMPLETE - MDL data type definitions based on file format specification, not reverse engineered
 - [x] MDL/MDLFastReader.cs - ✅ COMPLETE - MDL format reader implementation based on file format specification, not reverse engineered
-- [x] MDL/MDLLoader.cs - ✅ COMPLETE - MDL loader implementation based on file format specification, not reverse engineered
+- [x] MDL/MDLLoader.cs - ✅ COMPLETE - Ghidra references added: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, "ModelResRef" @ 0x007c2f6c, "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc, "Model %s nor the default model %s could be loaded." @ 0x007cad14, "Cannot load door model '%s'." @ 0x007d2488, "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8, "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40, FUN_005261b0 @ 0x005261b0 (loads creature models from appearance.2da)
 - [x] MDL/MDLOptimizedReader.cs - ✅ COMPLETE - MDL optimized reader implementation based on file format specification, not reverse engineered
 - [x] ResourceProviders/GameResourceProvider.cs - ✅ COMPLETE - Ghidra references added: Resource @ 0x007c14d4, CExoKeyTable errors, FUN_00633270 @ 0x00633270, all resource provider fields
 - [x] Save/SaveDataProvider.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750, FUN_00708990 @ 0x00708990, SAVES: @ 0x007be284, savenfo @ 0x007be1f0, SAVEGAME @ 0x007be28c, all save file structure fields
