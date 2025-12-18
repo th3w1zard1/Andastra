@@ -16,7 +16,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `swkotor.exe`: SerializeSaveNfo @ 0x004b3110, 0x006ca250, 0x006c8e50, 0x004b8300 (via savenfo @ 0x0074542c), SaveGlobalVariables @ 0x0052ad10 (via GLOBALVARS @ 0x007484ec), SavePartyTable @ 0x0052ade0 (via PARTYTABLE @ 0x0074930c)
   - `nwmain.exe`: savenfo @ 0x140df01d0 (string reference, function @ 0x1408187c4)
   - **Inheritance**: Base class `SaveSerializer` (Runtime.Games.Common), `OdysseySaveSerializer : SaveSerializer` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe and nwmain.exe equivalents, daorigins.exe TODO
+  - **Cross-engine**: Found swkotor.exe and nwmain.exe equivalents, daorigins.exe/nwmain.exe/masseffect.exe/masseffect2.exe/dragonage2.exe TODO
 - **Walkmesh System**:
   - `swkotor2.exe`: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0
   - **Inheritance**: Base class `WalkmeshSystem` (Runtime.Games.Common), `OdysseyWalkmeshSystem : WalkmeshSystem` (Runtime.Games.Odyssey)
@@ -40,11 +40,26 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ### 📋 Pending Systems
 
-- Dialogue System (DLG, TLK, VO)
-- Combat System
+- **Dialogue System (DLG, TLK, VO)**:
+  - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920 (via "Error: dialogue can't find object '%s'!" @ 0x007c3730)
+  - `swkotor.exe`: TODO - Search for similar functions
+  - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
+  - **Inheritance**: Base class `DialogueSystem` (Runtime.Games.Common), `OdysseyDialogueSystem : DialogueSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor2.exe and nwmain.exe equivalents, swkotor.exe/daorigins.exe TODO
+- **Combat System**:
+  - `swkotor2.exe`: EndCombatRound @ 0x00529c30 (via "CSWSCombatRound::EndCombatRound" @ 0x007bfb80)
+  - `swkotor.exe`: EndCombatRound @ 0x004d4620 (via "CSWSCombatRound::EndCombatRound" @ 0x007463d0)
+  - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference)
+  - **Inheritance**: Base class `CombatSystem` (Runtime.Games.Common), `OdysseyCombatSystem : CombatSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
+- **Audio System**:
+  - `swkotor2.exe`: SaveSoundList @ 0x004e2d60, LoadSoundList @ 0x004e06a0 (via "SoundList" @ 0x007bd080)
+  - `swkotor.exe`: SaveSoundList @ 0x00507b10, LoadSoundList @ 0x00505560 (via "SoundList" @ 0x007474f8)
+  - `nwmain.exe`: InvSoundType @ 0x140dc3b80 (string reference)
+  - **Inheritance**: Base class `AudioSystem` (Runtime.Games.Common), `OdysseyAudioSystem : AudioSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
 - Entity Spawning
 - Animation System
-- Audio System
 - Trigger System
 - Encounter System
 - Store System
@@ -59,7 +74,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseyScriptExecutor : ScriptExecutor` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730, LogScriptEvent @ 0x004dcfb0, LoadScriptHooks @ 0x0050c510
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: LogScriptEvent @ 0x004af630 (via "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x0074488c)
 - **Aurora Implementation**: `AuroraScriptExecutor : ScriptExecutor` (Runtime.Games.Aurora)
   - `nwmain.exe`: CScriptEvent @ 0x1404c6490, ExecuteCommandExecuteScript @ 0x14051d5c0
 - **Eclipse Implementation**: `EclipseScriptExecutor : ScriptExecutor` (Runtime.Games.Eclipse)
@@ -76,6 +91,45 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Aurora Implementation**: `AuroraSaveSerializer : SaveSerializer` (Runtime.Games.Aurora)
   - `nwmain.exe`: savenfo @ 0x140df01d0 (string reference, function @ 0x1408187c4), GLOBAL_VARIABLES @ 0x140dbf3d0 (string reference)
 - **Eclipse Implementation**: `EclipseSaveSerializer : SaveSerializer` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Dialogue System
+
+**Base Class**: `DialogueSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyDialogueSystem : DialogueSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920
+  - `swkotor.exe`: TODO - Search for similar functions
+- **Aurora Implementation**: `AuroraDialogueSystem : DialogueSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
+- **Eclipse Implementation**: `EclipseDialogueSystem : DialogueSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Combat System
+
+**Base Class**: `CombatSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyCombatSystem : CombatSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: EndCombatRound @ 0x00529c30
+  - `swkotor.exe`: EndCombatRound @ 0x004d4620
+- **Aurora Implementation**: `AuroraCombatSystem : CombatSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference)
+- **Eclipse Implementation**: `EclipseCombatSystem : CombatSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: COMMAND_GETCOMBATSTATE @ 0x00af12fc, COMMAND_SETCOMBATSTATE @ 0x00af1314 (string references)
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Audio System
+
+**Base Class**: `AudioSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyAudioSystem : AudioSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: SaveSoundList @ 0x004e2d60, LoadSoundList @ 0x004e06a0
+  - `swkotor.exe`: SaveSoundList @ 0x00507b10, LoadSoundList @ 0x00505560
+- **Aurora Implementation**: `AuroraAudioSystem : AudioSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: InvSoundType @ 0x140dc3b80 (string reference)
+- **Eclipse Implementation**: `EclipseAudioSystem : AudioSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
   - `DragonAge2.exe`: TODO - Search for similar functions
 
