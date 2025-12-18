@@ -493,7 +493,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseyDoorSystem : DoorSystem` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: LoadDoorList @ 0x004e56b0, SaveDoorList @ 0x004e2a60
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: LoadDoorList @ 0x0050a0e0, SaveDoorList @ 0x00507810
 - **Aurora Implementation**: `AuroraDoorSystem : DoorSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: TODO - Search for similar functions
 - **Eclipse Implementation**: `EclipseDoorSystem : DoorSystem` (Runtime.Games.Eclipse)
