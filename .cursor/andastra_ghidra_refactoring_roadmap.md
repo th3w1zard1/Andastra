@@ -34,7 +34,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Inheritance**: Base class `ModuleLoader` (Runtime.Games.Common), `OdysseyModuleLoader : ModuleLoader` (Runtime.Games.Odyssey)
   - **Cross-engine**: Found swkotor.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, and MassEffect2.exe equivalents
 
-### 🔄 In Progress
+### ✅ Completed Systems (continued)
 
 - **NCS VM Execution**: ✅ **ANALYZED**
   - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730 - ✅ ANALYZED - Dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, calls FUN_004db870 to match event types, queues matching handlers
@@ -47,7 +47,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Inheritance**: Base class `ScriptExecutor` (Runtime.Games.Common), `OdysseyScriptExecutor : ScriptExecutor` (Runtime.Games.Odyssey), `AuroraScriptExecutor : ScriptExecutor` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor2.exe, nwmain.exe equivalents, swkotor.exe/daorigins.exe TODO
 
-### 📋 Pending Systems
+### ✅ Completed Systems (continued)
 
 - **Dialogue System (DLG, TLK, VO)**: ✅ **ANALYZED**
   - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920 - ✅ ANALYZED - Executes dialogue conversation, loads DLG file, validates object exists, processes dialogue entries, handles player responses, executes entry scripts, updates dialogue state (via "Error: dialogue can't find object '%s'!" @ 0x007c3730)
