@@ -1215,7 +1215,7 @@ namespace HolocronToolset.Tests.Windows
                 undoStack.Push(cmd4);
 
                 // Matching Python line 707: assert not undo_stack.canRedo()
-                undoStack.CanRedo.Should().BeFalse("Redo stack should be cleared after new operation");
+                undoStack.CanRedo().Should().BeFalse("Redo stack should be cleared after new operation");
             }
             finally
             {
