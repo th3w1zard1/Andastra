@@ -1141,8 +1141,8 @@ When processing a file:
 - [ ] Odyssey/Systems/ComponentInitializer.cs
 - [x] Odyssey/Systems/EncounterSystem.cs - ✅ COMPLETE - Ghidra references added: LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0 (swkotor2.exe), "Encounter List" @ 0x007bd050
 - [x] Odyssey/Systems/FactionManager.cs - ✅ COMPLETE - Ghidra references added: FactionRep @ 0x007c290c, FactionID1 @ 0x007c2924, FactionID2 @ 0x007c2918, FACTIONREP @ 0x007bcec8, FactionList @ 0x007be604
-- [ ] Odyssey/Systems/HeartbeatSystem.cs
-- [ ] Odyssey/Systems/ModelResolver.cs
+- [x] Odyssey/Systems/HeartbeatSystem.cs - ✅ COMPLETE - Ghidra references added: "ScriptHeartbeat" @ 0x007beeb0, "OnHeartbeat" @ 0x007bd720, "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90, "HEARTBEAT" @ 0x007c1348, "HeartbeatTime" @ 0x007c0c30, "HeartbeatDay" @ 0x007c0c40, "Mod_OnHeartbeat" @ 0x007be840, "HeartbeatInterval" @ 0x007c38e8, FUN_005226d0 @ 0x005226d0, FUN_004139e0
+- [x] Odyssey/Systems/ModelResolver.cs - ✅ COMPLETE - Ghidra references added: "Appearance_Type" @ 0x007c40f0, "AppearanceType" @ 0x007c84c8, "ModelResRef" @ 0x007c2f6c, "ModelName" @ 0x007c1c8c, "ModelA" @ 0x007bf4bc, "ModelVariation" @ 0x007c0990, "Appearance" @ 0x007bf144, "Appearance_Head" @ 0x007c40e0, "Appearance_01" @ 0x007c0220, "MODELTYPE" @ 0x007c036c, "MODEL01" @ 0x007c4b48, FUN_005261b0 @ 0x005261b0, "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc, "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
 - [x] Odyssey/Systems/PartyManager.cs - ✅ COMPLETE - Ghidra references added: PARTYTABLE @ 0x007c1910, SavePartyTable @ 0x0057bd70, FUN_0057dcd0 @ 0x0057dcd0
 - [x] Odyssey/Systems/PerceptionManager.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0, PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4, PERCEPTIONDIST @ 0x007c4070
 - [x] Odyssey/Systems/StoreSystem.cs - ✅ COMPLETE - Ghidra references added: LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30 (swkotor2.exe), StoreList @ 0x007bd098
