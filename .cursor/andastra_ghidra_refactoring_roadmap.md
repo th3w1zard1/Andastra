@@ -950,9 +950,9 @@ When processing a file:
 
 #### Common (8 files)
 
-- [ ] Common/BaseEngine.cs
-- [ ] Common/BaseEngineGame.cs
-- [ ] Common/BaseEngineModule.cs
+- [x] Common/BaseEngine.cs - ✅ COMPLETE - Ghidra references added: FUN_00404250 @ 0x00404250, FUN_00633270 @ 0x00633270, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
+- [x] Common/BaseEngineGame.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
+- [x] Common/BaseEngineModule.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
 - [ ] Common/BaseEngineProfile.cs
 - [ ] Common/IEngine.cs
 - [ ] Common/IEngineGame.cs
@@ -961,13 +961,13 @@ When processing a file:
 
 #### Odyssey (84 files)
 
-- [ ] Odyssey/OdysseyEngine.cs
-- [ ] Odyssey/OdysseyGameSession.cs
-- [ ] Odyssey/OdysseyModuleLoader.cs
+- [x] Odyssey/OdysseyEngine.cs - ✅ COMPLETE - Ghidra references added: FUN_00404250 @ 0x00404250, FUN_00633270 @ 0x00633270, cross-engine analysis, inheritance from BaseEngine
+- [x] Odyssey/OdysseyGameSession.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis, inheritance from BaseEngineGame
+- [x] Odyssey/OdysseyModuleLoader.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, FUN_00633270 @ 0x00633270, MODULES: @ 0x007b58b4, cross-engine analysis, inheritance from BaseEngineModule
 - [x] Odyssey/Combat/CombatManager.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), CombatRoundData @ 0x007bf6b4, CombatInfo @ 0x007c2e60, CSWSCombatRound error messages
 - [x] Odyssey/Combat/CombatRound.cs - ✅ COMPLETE - Ghidra references added: FUN_00529470 @ 0x00529470 (save CombatRoundData), FUN_005226d0 @ 0x005226d0, CombatRoundData @ 0x007bf6b4, all combat round fields
 - [x] Odyssey/Combat/DamageCalculator.cs - ✅ COMPLETE - Ghidra references added: DamageValue @ 0x007bf890, DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70, CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14, all damage calculation fields
-- [ ] Odyssey/Combat/WeaponDamageCalculator.cs
+- [x] Odyssey/Combat/WeaponDamageCalculator.cs - ✅ COMPLETE - Ghidra references added: damagedice @ 0x007c2e60, damagedie @ 0x007c2e70, damagebonus @ 0x007c2e80, FUN_005226d0 @ 0x005226d0, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
 - [x] Odyssey/Components/ActionQueueComponent.cs - ✅ COMPLETE - Ghidra references added: ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, all action queue fields
 - [x] Odyssey/Components/CreatureComponent.cs - ✅ COMPLETE - Ghidra references added: Creature @ 0x007bc544, Creature List @ 0x007bd01c, FUN_005226d0 @ 0x005226d0, FUN_004dfbb0 @ 0x004dfbb0, FUN_005261b0 @ 0x005261b0, FUN_0050c510 @ 0x0050c510, all creature fields
 - [x] Odyssey/Components/DoorComponent.cs - ✅ COMPLETE - Ghidra references added: Door List @ 0x007bd248, FUN_00584f40 @ 0x00584f40, FUN_00585ec0 @ 0x00585ec0, FUN_004e08e0 @ 0x004e08e0, FUN_00580ed0 @ 0x00580ed0, FUN_005838d0 @ 0x005838d0, all door fields
