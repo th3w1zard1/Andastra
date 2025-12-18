@@ -42,10 +42,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Dialogue System (DLG, TLK, VO)**:
   - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920 (via "Error: dialogue can't find object '%s'!" @ 0x007c3730)
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: ExecuteDialogue @ 0x005a1c00, ProcessDialogueEntry @ 0x005a13d0 (via "Error: dialogue can't find object '%s'!" @ 0x0074a61c)
   - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
   - **Inheritance**: Base class `DialogueSystem` (Runtime.Games.Common), `OdysseyDialogueSystem : DialogueSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor2.exe and nwmain.exe equivalents, swkotor.exe/daorigins.exe TODO
+  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 - **Combat System**:
   - `swkotor2.exe`: EndCombatRound @ 0x00529c30 (via "CSWSCombatRound::EndCombatRound" @ 0x007bfb80)
   - `swkotor.exe`: EndCombatRound @ 0x004d4620 (via "CSWSCombatRound::EndCombatRound" @ 0x007463d0)
@@ -84,8 +84,9 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 - **Store System**:
   - `swkotor2.exe`: StoreList @ 0x007bd098 (string reference, used in LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30)
+  - `swkotor.exe`: SaveStoreList @ 0x00507ca0, LoadStoreList @ 0x005057a0 (via "StoreList" @ 0x00747510)
   - **Inheritance**: Base class `StoreSystem` (Runtime.Games.Common), `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
 - **Party Management**:
   - `swkotor.exe`: PARTYTABLE @ 0x0074930c (string reference, used in SavePartyTable @ 0x0052ade0)
   - `swkotor2.exe`: PARTYTABLE @ 0x007c1910 (string reference, used in SavePartyTable @ 0x0057bd70)
@@ -133,7 +134,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseyDialogueSystem : DialogueSystem` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: ExecuteDialogue @ 0x005a1c00, ProcessDialogueEntry @ 0x005a13d0
 - **Aurora Implementation**: `AuroraDialogueSystem : DialogueSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
 - **Eclipse Implementation**: `EclipseDialogueSystem : DialogueSystem` (Runtime.Games.Eclipse)
@@ -178,6 +179,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Eclipse Implementation**: `EclipseSpawnSystem : SpawnSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
   - `DragonAge2.exe`: TODO - Search for similar functions
+- **TODO: masseffect.exe, masseffect2.exe**
 
 ### Animation System
 
