@@ -1192,7 +1192,7 @@ namespace HolocronToolset.Tests.Editors
                 var modifiedAre = AREHelpers.ReadAre(data);
 
                 // Matching Python: assert abs(modified_are.map_zoom - float(val)) < 0.001
-                System.Math.Abs(modifiedAre.MapZoom - val).Should().BeLessThan(0.001);
+                System.Math.Abs((double)modifiedAre.MapZoom - val).Should().BeLessThan(0.001);
             }
         }
 
@@ -1329,22 +1329,22 @@ namespace HolocronToolset.Tests.Editors
                 // Matching Python: editor.ui.mapImageX1Spin.setValue(point1.x)
                 if (editor.MapImageX1Spin != null)
                 {
-                    editor.MapImageX1Spin.Value = point1.X;
+                    editor.MapImageX1Spin.Value = (decimal)point1.X;
                 }
                 // Matching Python: editor.ui.mapImageY1Spin.setValue(point1.y)
                 if (editor.MapImageY1Spin != null)
                 {
-                    editor.MapImageY1Spin.Value = point1.Y;
+                    editor.MapImageY1Spin.Value = (decimal)point1.Y;
                 }
                 // Matching Python: editor.ui.mapImageX2Spin.setValue(point2.x)
                 if (editor.MapImageX2Spin != null)
                 {
-                    editor.MapImageX2Spin.Value = point2.X;
+                    editor.MapImageX2Spin.Value = (decimal)point2.X;
                 }
                 // Matching Python: editor.ui.mapImageY2Spin.setValue(point2.y)
                 if (editor.MapImageY2Spin != null)
                 {
-                    editor.MapImageY2Spin.Value = point2.Y;
+                    editor.MapImageY2Spin.Value = (decimal)point2.Y;
                 }
 
                 // Matching Python: data, _ = editor.build()
@@ -1423,22 +1423,22 @@ namespace HolocronToolset.Tests.Editors
                 // Matching Python: editor.ui.mapWorldX1Spin.setValue(point1.x)
                 if (editor.MapWorldX1Spin != null)
                 {
-                    editor.MapWorldX1Spin.Value = point1.X;
+                    editor.MapWorldX1Spin.Value = (decimal)point1.X;
                 }
                 // Matching Python: editor.ui.mapWorldY1Spin.setValue(point1.y)
                 if (editor.MapWorldY1Spin != null)
                 {
-                    editor.MapWorldY1Spin.Value = point1.Y;
+                    editor.MapWorldY1Spin.Value = (decimal)point1.Y;
                 }
                 // Matching Python: editor.ui.mapWorldX2Spin.setValue(point2.x)
                 if (editor.MapWorldX2Spin != null)
                 {
-                    editor.MapWorldX2Spin.Value = point2.X;
+                    editor.MapWorldX2Spin.Value = (decimal)point2.X;
                 }
                 // Matching Python: editor.ui.mapWorldY2Spin.setValue(point2.y)
                 if (editor.MapWorldY2Spin != null)
                 {
-                    editor.MapWorldY2Spin.Value = point2.Y;
+                    editor.MapWorldY2Spin.Value = (decimal)point2.Y;
                 }
 
                 // Matching Python: data, _ = editor.build()
@@ -1671,7 +1671,7 @@ namespace HolocronToolset.Tests.Editors
                 // Matching Python: editor.ui.fogNearSpin.setValue(near_val)
                 if (editor.FogNearSpin != null)
                 {
-                    editor.FogNearSpin.Value = nearVal;
+                    editor.FogNearSpin.Value = (decimal)nearVal;
                 }
 
                 // Matching Python: data, _ = editor.build()
@@ -1691,7 +1691,7 @@ namespace HolocronToolset.Tests.Editors
                 // Matching Python: editor.ui.fogFarSpin.setValue(far_val)
                 if (editor.FogFarSpin != null)
                 {
-                    editor.FogFarSpin.Value = farVal;
+                    editor.FogFarSpin.Value = (decimal)farVal;
                 }
 
                 // Matching Python: data, _ = editor.build()

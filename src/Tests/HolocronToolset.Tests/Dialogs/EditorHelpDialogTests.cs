@@ -435,7 +435,7 @@ namespace HolocronToolset.Tests.Dialogs
             dialog.TextBrowser.Text.Should().NotBeNullOrEmpty();
             // Should contain some content (if file exists)
             string text = dialog.TextBrowser.Text ?? "";
-            text.Length.Should().BeGreaterOrEqualTo(0);
+            text.Length.Should().BeGreaterThanOrEqualTo(0);
 
             dialog.Close();
         }

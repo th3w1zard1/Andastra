@@ -293,7 +293,7 @@ namespace HolocronToolset.Tests.Windows
                 for (int i = 1; i < results.Count; i++)
                 {
                     // Allow small variance due to smoothing
-                    (results[i].Item1).Should().BeGreaterOrEqualTo(results[i - 1].Item1 - 1.0f,
+                    (results[i].Item1).Should().BeGreaterThanOrEqualTo(results[i - 1].Item1 - 1.0f,
                         $"X should generally increase: {results[i].Item1} < {results[i - 1].Item1}");
                 }
             }
