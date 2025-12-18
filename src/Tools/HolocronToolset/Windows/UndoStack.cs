@@ -268,7 +268,7 @@ namespace HolocronToolset.Windows
             _indoorMap = indoorMap;
             _originalRooms = new List<IndoorMapRoom>(rooms);
             _offset = offset ?? new System.Numerics.Vector3(DUPLICATE_OFFSET_X, DUPLICATE_OFFSET_Y, DUPLICATE_OFFSET_Z);
-            
+
             // Create duplicates (matching Python lines 335-349)
             Duplicates = new List<IndoorMapRoom>();
             foreach (var room in rooms)
@@ -316,6 +316,52 @@ namespace HolocronToolset.Windows
                 {
                     _indoorMap.Rooms.Add(room);
                 }
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:213-243
+    // Original: class MoveRoomsCommand(QUndoCommand):
+    public class MoveRoomsCommand : IUndoCommand
+    {
+        private readonly IndoorMap _indoorMap;
+        private readonly List<IndoorMapRoom> _rooms;
+        private readonly List<System.Numerics.Vector3> _oldPositions;
+        private readonly List<System.Numerics.Vector3> _newPositions;
+
+        public string Text => $"Move {_rooms.Count} Room(s)";
+
+        public MoveRoomsCommand(
+            IndoorMap indoorMap,
+            List<IndoorMapRoom> rooms,
+            List<System.Numerics.Vector3> oldPositions,
+            List<System.Numerics.Vector3> newPositions)
+        {
+            _indoorMap = indoorMap;
+            _rooms = new List<IndoorMapRoom>(rooms);
+            _oldPositions = new List<System.Numerics.Vector3>(oldPositions);
+            _newPositions = new List<System.Numerics.Vector3>(newPositions);
+        }
+
+        // Matching Python: def undo(self)
+        public void Undo()
+        {
+            // Restore old positions (matching Python lines 232-233)
+            for (int i = 0; i < _rooms.Count && i < _oldPositions.Count; i++)
+            {
+                _rooms[i].Position = _oldPositions[i];
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+
+        // Matching Python: def redo(self)
+        public void Redo()
+        {
+            // Apply new positions (matching Python lines 239-240)
+            for (int i = 0; i < _rooms.Count && i < _newPositions.Count; i++)
+            {
+                _rooms[i].Position = _newPositions[i];
             }
             // Note: rebuild_room_connections will be implemented when needed
         }

@@ -390,17 +390,46 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // rooms = [IndoorMapRoom(real_kit_component, Vector3(i * 10, 0, 0), 0.0, flip_x=False, flip_y=False) for i in range(3)]
-                // for room in rooms: builder._map.rooms.append(room)
-                // cmd = DeleteRoomsCommand(builder._map, rooms)
-                // undo_stack.push(cmd)
-                // assert len(builder._map.rooms) == 0
-                // undo_stack.undo()
-                // assert len(builder._map.rooms) == 3
-                // for room in rooms: assert room in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 451: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 452: rooms = [IndoorMapRoom(real_kit_component, Vector3(i * 10, 0, 0), 0.0, flip_x=False, flip_y=False) for i in range(3)]
+                var rooms = new List<IndoorMapRoom>();
+                for (int i = 0; i < 3; i++)
+                {
+                    var room = new IndoorMapRoom(kitComponent, new Vector3(i * 10, 0, 0), 0.0f, flipX: false, flipY: false);
+                    rooms.Add(room);
+                }
+
+                // Matching Python lines 453-454: for room in rooms: builder._map.rooms.append(room)
+                foreach (var room in rooms)
+                {
+                    builder.Map.Rooms.Add(room);
+                }
+
+                // Matching Python line 456: cmd = DeleteRoomsCommand(builder._map, rooms)
+                var cmd = new DeleteRoomsCommand(builder.Map, rooms);
+
+                // Matching Python line 457: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 459: assert len(builder._map.rooms) == 0
+                builder.Map.Rooms.Should().BeEmpty("All rooms should be removed after delete command");
+
+                // Matching Python line 461: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 462: assert len(builder._map.rooms) == 3
+                builder.Map.Rooms.Should().HaveCount(3, "All 3 rooms should be back after undo");
+
+                // Matching Python lines 463-464: for room in rooms: assert room in builder._map.rooms
+                foreach (var room in rooms)
+                {
+                    builder.Map.Rooms.Should().Contain(room, $"Room should be back in map after undo");
+                }
             }
             finally
             {
@@ -458,20 +487,44 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // old_positions = [copy(room.position)]
-                // new_positions = [Vector3(25.5, 30.5, 0)]
-                // cmd = MoveRoomsCommand(builder._map, [room], old_positions, new_positions)
-                // undo_stack.push(cmd)
-                // assert abs(room.position.x - 25.5) < 0.001
-                // assert abs(room.position.y - 30.5) < 0.001
-                // undo_stack.undo()
-                // assert abs(room.position.x - 0) < 0.001
-                // assert abs(room.position.y - 0) < 0.001
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 469: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 471: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 472: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 474: old_positions = [copy(room.position)]
+                var oldPositions = new List<Vector3> { new Vector3(room.Position.X, room.Position.Y, room.Position.Z) };
+
+                // Matching Python line 475: new_positions = [Vector3(25.5, 30.5, 0)]
+                var newPositions = new List<Vector3> { new Vector3(25.5f, 30.5f, 0) };
+
+                // Matching Python line 477: cmd = MoveRoomsCommand(builder._map, [room], old_positions, new_positions)
+                var cmd = new MoveRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, oldPositions, newPositions);
+
+                // Matching Python line 478: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 480: assert abs(room.position.x - 25.5) < 0.001
+                room.Position.X.Should().BeApproximately(25.5f, 0.001f, "Room X position should be 25.5 after move");
+
+                // Matching Python line 481: assert abs(room.position.y - 30.5) < 0.001
+                room.Position.Y.Should().BeApproximately(30.5f, 0.001f, "Room Y position should be 30.5 after move");
+
+                // Matching Python line 483: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 484: assert abs(room.position.x - 0) < 0.001
+                room.Position.X.Should().BeApproximately(0f, 0.001f, "Room X position should be 0 after undo");
+
+                // Matching Python line 485: assert abs(room.position.y - 0) < 0.001
+                room.Position.Y.Should().BeApproximately(0f, 0.001f, "Room Y position should be 0 after undo");
             }
             finally
             {
