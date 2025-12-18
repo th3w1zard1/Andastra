@@ -993,18 +993,18 @@ When processing a file:
 - [ ] Odyssey/Dialogue/DialogueState.cs
 - [x] Odyssey/Dialogue/KotorDialogueLoader.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/KotorLipDataLoader.cs
-- [ ] Odyssey/EngineApi/K1EngineApi.cs
-- [ ] Odyssey/EngineApi/K2EngineApi.cs
+- [x] Odyssey/EngineApi/K1EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, function dispatch system, ScriptDefs.KOTOR_FUNCTIONS (~850 functions), all engine API fields
+- [x] Odyssey/EngineApi/K2EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, TSL-specific functions (~950 total), PT_INFLUENCE @ 0x007c1788, Influence system, all engine API fields
 - [x] Odyssey/EngineApi/OdysseyK1EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, function dispatch system, ScriptDefs.KOTOR_FUNCTIONS (~850 functions)
 - [x] Odyssey/EngineApi/OdysseyK2EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, TSL-specific functions (~950 total), PT_INFLUENCE @ 0x007c1788, Influence system
-- [ ] Odyssey/Game/GameSession.cs
-- [ ] Odyssey/Game/ModuleLoader.cs
+- [x] Odyssey/Game/GameSession.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, GAMEINPROGRESS @ 0x007c15c8, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_005226d0 @ 0x005226d0, all game session fields
+- [x] Odyssey/Game/ModuleLoader.cs - ✅ COMPLETE - Ghidra references added: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460, SaveModuleState @ 0x004f0c50, MODULES: @ 0x007b58b4, FUN_00633270 @ 0x00633270, FUN_00708990 @ 0x00708990, all module loading fields
 - [x] Odyssey/Game/ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (script event dispatch), all CSWSSCRIPTEVENT_EVENTTYPE_* constants, Script hook fields
-- [ ] Odyssey/Input/PlayerController.cs
-- [ ] Odyssey/Loading/EntityFactory.cs
-- [ ] Odyssey/Loading/KotorModuleLoader.cs
-- [ ] Odyssey/Loading/ModuleLoader.cs
-- [ ] Odyssey/Loading/NavigationMeshFactory.cs
+- [x] Odyssey/Input/PlayerController.cs - ✅ COMPLETE - Ghidra references added: Input @ 0x007c2520, Mouse Sensitivity @ 0x007c85cc, CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED @ 0x007bc704, FUN_0054be70 @ 0x0054be70, all input/movement fields
+- [x] Odyssey/Loading/EntityFactory.cs - ✅ COMPLETE - Ghidra references added: TemplateResRef @ 0x007bd00c, ScriptHeartbeat @ 0x007beeb0, FUN_005fb0f0 @ 0x005fb0f0, FUN_004e5920 @ 0x004e5920, all entity creation fields
+- [x] Odyssey/Loading/KotorModuleLoader.cs - ✅ COMPLETE - Ghidra references added: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460, MODULES: @ 0x007b58b4, all module loading fields
+- [x] Odyssey/Loading/ModuleLoader.cs - ✅ COMPLETE - Ghidra references added: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460, SaveModuleState @ 0x004f0c50, MODULES: @ 0x007b58b4, FUN_00633270 @ 0x00633270, FUN_00708990 @ 0x00708990, all module loading fields
+- [x] Odyssey/Loading/NavigationMeshFactory.cs - ✅ COMPLETE - Ghidra references added: walkmesh pathfinding, ?nwsareapathfind.cpp @ 0x007be3ff, BWM V1.0 @ 0x007c061c, all pathfinding error messages
 - [ ] Odyssey/Profiles/GameProfileFactory.cs
 - [ ] Odyssey/Profiles/IGameProfile.cs
 - [ ] Odyssey/Profiles/K1GameProfile.cs
