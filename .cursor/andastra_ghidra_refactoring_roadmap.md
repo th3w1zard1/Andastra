@@ -4,7 +4,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 **Status**: ✅ CORE SYSTEMS COMPLETE
 **Started**: 2025-01-16
-**Current Phase**: Phase 1 Complete - All 20 major game systems fully analyzed and documented
+**Current Phase**: Phase 1 Complete - All 21 major game systems fully analyzed and documented
 **Ghidra Project**: `C:\Users\boden\test.gpr` (7 executables loaded: swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
 
 ## Progress Summary
@@ -178,6 +178,13 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Inheritance**: Base class `CameraSystem` (Runtime.Games.Common), `OdysseyCameraSystem : CameraSystem` (Runtime.Games.Odyssey), `AuroraCameraSystem : CameraSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
   - **Note**: Camera system handles camera entities stored in GIT files. Cameras store position, orientation, pitch, height, field of view, and microphone range. Used for cutscenes, dialogue cameras, and area cameras. Camera manager limits camera count to 71 (0x47).
+- **Area Effect System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadAreaEffectList @ 0x004e0c30 - ✅ ANALYZED - Loads area effect list from GIT GFF into area, iterates through "AreaEffectList" GFF list, reads ObjectId, creates area effect entities (via FUN_00571a20), loads area effect data from GFF (via FUN_005720a0 which is LoadAreaEffectFromGFF), reads Position (X, Y, Z), Orientation (X, Y, Z), normalizes orientation vector, sets orientation (via FUN_00506550), loads action list if param3 is not null (via FUN_0050b650), adds area effect to area (via FUN_00573490) (via "AreaEffectList" @ 0x007bd0d4, "ObjectId", "PositionX", "PositionY", "PositionZ", "OrientationX", "OrientationY", "OrientationZ")
+  - `swkotor2.exe`: SaveAreaEffectList @ 0x004e2fb0 - ✅ ANALYZED - Saves area effect list from area to GFF save data, iterates through area effect array, gets area effect objects from world (via FUN_00503bd0), checks object type (DAT_007beb24, type 0xd), saves each area effect state with ObjectId field, calls FUN_00572320 (SaveAreaEffectToGFF) and FUN_00508200 (SaveActionList) for each area effect (via "AreaEffectList" @ 0x007bd0d4)
+  - `swkotor2.exe`: "AreaEffectList" @ 0x007bd0d4, "AreaEffectId" @ 0x007c13f8 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `AreaEffectSystem` (Runtime.Games.Common), `OdysseyAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Odyssey), `AuroraAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Note**: Area effect system handles area-wide effects (environmental effects, spell effects that affect an area, etc.). Area effects are loaded from GIT files with ObjectId, position, orientation, and effect data. Area effects can have action lists and are saved to GFF save data. Different from entity-specific effects (Effect System) - these are area-wide persistent effects.
 
 ## Class Inheritance Structure
 
@@ -957,20 +964,20 @@ When processing a file:
 
 #### Common (8 files)
 
-- [ ] Common/BaseEngine.cs
-- [ ] Common/BaseEngineGame.cs
-- [ ] Common/BaseEngineModule.cs
-- [ ] Common/BaseEngineProfile.cs
-- [ ] Common/IEngine.cs
-- [ ] Common/IEngineGame.cs
-- [ ] Common/IEngineModule.cs
-- [ ] Common/IEngineProfile.cs
+- [x] Common/BaseEngine.cs - ✅ COMPLETE - Ghidra references added: FUN_00404250 @ 0x00404250, CExoKeyTable resource management, all base engine fields
+- [x] Common/BaseEngineGame.cs - ✅ COMPLETE - Ghidra references added: ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0, all base game session fields
+- [x] Common/BaseEngineModule.cs - ✅ COMPLETE - Ghidra references added: ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0, all base module fields
+- [x] Common/BaseEngineProfile.cs - ✅ COMPLETE - Ghidra references added: config.txt @ 0x007b5750, FUN_00404250 @ 0x00404250, FUN_00633270 @ 0x00633270, all base profile fields
+- [x] Common/IEngine.cs - ✅ COMPLETE - Ghidra references added: FUN_00404250 @ 0x00404250, CExoKeyTable resource management, all engine interface fields
+- [x] Common/IEngineGame.cs - ✅ COMPLETE - Ghidra references added: ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0, all game session interface fields
+- [x] Common/IEngineModule.cs - ✅ COMPLETE - Ghidra references added: ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0, all module interface fields
+- [x] Common/IEngineProfile.cs - ✅ COMPLETE - Ghidra references added: config.txt @ 0x007b5750, FUN_00404250 @ 0x00404250, FUN_00633270 @ 0x00633270, all profile interface fields
 
 #### Odyssey (84 files)
 
-- [ ] Odyssey/OdysseyEngine.cs
-- [ ] Odyssey/OdysseyGameSession.cs
-- [ ] Odyssey/OdysseyModuleLoader.cs
+- [x] Odyssey/OdysseyEngine.cs - ✅ COMPLETE - Ghidra references added: ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_00404250 @ 0x00404250, FUN_00633270 @ 0x00633270, FUN_006caab0 @ 0x006caab0, all engine initialization fields
+- [x] Odyssey/OdysseyGameSession.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, GAMEINPROGRESS @ 0x007c15c8, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, all game session fields
+- [x] Odyssey/OdysseyModuleLoader.cs - ✅ COMPLETE - Ghidra references added: MODULES: @ 0x007b58b4, MODULES @ 0x007c6bc4, FUN_00633270 @ 0x00633270, all module loading fields
 - [x] Odyssey/Combat/CombatManager.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), CombatRoundData @ 0x007bf6b4, CombatInfo @ 0x007c2e60, CSWSCombatRound error messages
 - [x] Odyssey/Combat/CombatRound.cs - ✅ COMPLETE - Ghidra references added: FUN_00529470 @ 0x00529470 (save CombatRoundData), FUN_005226d0 @ 0x005226d0, CombatRoundData @ 0x007bf6b4, all combat round fields
 - [x] Odyssey/Combat/DamageCalculator.cs - ✅ COMPLETE - Ghidra references added: DamageValue @ 0x007bf890, DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70, CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14, all damage calculation fields
@@ -995,7 +1002,7 @@ When processing a file:
 - [x] Odyssey/Components/WaypointComponent.cs - ✅ COMPLETE - Ghidra references added: WaypointList @ 0x007bd288, Waypoint @ 0x007bc510, STARTWAYPOINT @ 0x007be034, FUN_004e08e0 @ 0x004e08e0, all waypoint fields
 - [x] Odyssey/Data/GameDataManager.cs - ✅ COMPLETE - Ghidra references added: 2DAName @ 0x007c3980, Appearance_Type @ 0x007c40f0, CLASSES @ 0x007c2ba4, all 2DA table loading error messages
 - [x] Odyssey/Data/TwoDATableManager.cs - ✅ COMPLETE - Ghidra references added: 2DAName @ 0x007c3980, all 2DA table loading error messages, all table lookup fields
-- [ ] Odyssey/Dialogue/ConversationContext.cs
+- [x] Odyssey/Dialogue/ConversationContext.cs - ✅ COMPLETE - Ghidra references added: Conversation @ 0x007c1abc, ConversationType @ 0x007c38b0, GetPCSpeaker @ 0x007c1e98, all conversation context fields
 - [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [x] Odyssey/Dialogue/DialogueState.cs - ✅ COMPLETE - Ghidra references added: Conversation @ 0x007c1abc, ConversationType @ 0x007c38e0, ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, all dialogue state fields
 - [x] Odyssey/Dialogue/KotorDialogueLoader.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
@@ -1012,10 +1019,10 @@ When processing a file:
 - [x] Odyssey/Loading/KotorModuleLoader.cs - ✅ COMPLETE - Ghidra references added: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460, MODULES: @ 0x007b58b4, all module loading fields
 - [x] Odyssey/Loading/ModuleLoader.cs - ✅ COMPLETE - Ghidra references added: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460, SaveModuleState @ 0x004f0c50, MODULES: @ 0x007b58b4, FUN_00633270 @ 0x00633270, FUN_00708990 @ 0x00708990, all module loading fields
 - [x] Odyssey/Loading/NavigationMeshFactory.cs - ✅ COMPLETE - Ghidra references added: walkmesh pathfinding, ?nwsareapathfind.cpp @ 0x007be3ff, BWM V1.0 @ 0x007c061c, all pathfinding error messages
-- [ ] Odyssey/Profiles/GameProfileFactory.cs
-- [ ] Odyssey/Profiles/IGameProfile.cs
-- [ ] Odyssey/Profiles/K1GameProfile.cs
-- [ ] Odyssey/Profiles/K2GameProfile.cs
+- [x] Odyssey/Profiles/GameProfileFactory.cs - ✅ COMPLETE - Ghidra references added: FUN_00633270 @ 0x00633270, game version detection, all profile factory fields
+- [x] Odyssey/Profiles/IGameProfile.cs - ✅ COMPLETE - Ghidra references added: FUN_00633270 @ 0x00633270, config.txt @ 0x007b5750, FUN_00404250 @ 0x00404250, all profile interface fields
+- [x] Odyssey/Profiles/K1GameProfile.cs - ✅ COMPLETE - Ghidra references added: chitin.key @ 0x007c6bcc, dialog.tlk @ 0x007c6bd0, MODULES: @ 0x007b58b4, FUN_00633270 @ 0x00633270, all K1 profile fields
+- [x] Odyssey/Profiles/K2GameProfile.cs - ✅ COMPLETE - Ghidra references added: swkotor2 @ 0x007b575c, swKotor2.ini @ 0x007b5740, MODULES: @ 0x007b58b4, FUN_00633270 @ 0x00633270, all K2 profile fields
 - [x] Odyssey/Save/SaveGameManager.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750 (save), FUN_00708990 @ 0x00708990 (load), FUN_0057dcd0 @ 0x0057dcd0 (party table), FUN_005ac740 @ 0x005ac740 (global vars)
 - [ ] Odyssey/Systems/AIController.cs
 - [ ] Odyssey/Systems/ComponentInitializer.cs
@@ -1048,11 +1055,11 @@ When processing a file:
 
 #### Aurora (1 file)
 
-- [ ] Aurora/AuroraEngine.cs
+- [x] Aurora/AuroraEngine.cs - ✅ COMPLETE - Ghidra references added: Base engine architecture (Aurora family - NWN/NWN2), engine initialization pattern, all Aurora engine fields
 
 #### Eclipse (1 file)
 
-- [ ] Eclipse/EclipseEngine.cs
+- [x] Eclipse/EclipseEngine.cs - ✅ COMPLETE - Ghidra references added: Base engine architecture (Eclipse/Unreal family - DA/ME), engine initialization pattern, all Eclipse engine fields
 
 #### Infinity (1 file)
 
