@@ -25,8 +25,12 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `swkotor2.exe`: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
   - `swkotor.exe`: LoadModule @ 0x0067bc40, 0x004ba920, 0x00579b50, 0x004094a0, 0x004b95b0, 0x006cfa70, 0x004b51a0, 0x004c44d0 (via MODULES: @ 0x0073d90c)
   - `nwmain.exe`: LoadModule @ 0x140dfdb20 (string reference, functions @ 0x140566fd6, 0x1407cd384, 0x1407cd400)
+  - `daorigins.exe`: LoadModule @ 0x00b17da4 (string reference)
+  - `DragonAge2.exe`: Module system found (string references: "MODULES:" @ 0x00bf5d10, "MODULE DOES NOT EXIST" @ 0x00be5d34, "ModuleID" @ 0x00be9688, "ModuleStartupInfo" @ 0x00bebb64) - UnrealScript-based, different architecture
+  - `MassEffect.exe`: Module system found (string references: "Engine.DLCModules" @ 0x1187dd7c, "Package %s does not belong to any DLC module" @ 0x1187ddb0) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Module system found (string references: "MODULES:", "ModuleID") - UnrealScript-based, different architecture
   - **Inheritance**: Base class `ModuleLoader` (Runtime.Games.Common), `OdysseyModuleLoader : ModuleLoader` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe and nwmain.exe equivalents, daorigins.exe TODO
+  - **Cross-engine**: Found swkotor.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, and MassEffect2.exe equivalents
 
 ### 🔄 In Progress
 
@@ -113,7 +117,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: CScriptEvent @ 0x1404c6490, ExecuteCommandExecuteScript @ 0x14051d5c0
 - **Eclipse Implementation**: `EclipseScriptExecutor : ScriptExecutor` (Runtime.Games.Eclipse)
   - `daorigins.exe`: COMMAND_EXECUTESCRIPT @ 0x00af4aac (string reference)
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Script system found (string references: "ScriptDialogResultMessage" @ 0x00be5abc, "ScriptResRefID" @ 0x00bf34cc, "EventScripts" @ 0x00bf5464, "Initialize - Scripting Engine" @ 0x00bf81b0) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectScriptExecutor : ScriptExecutor` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Script system found (string references: "intUBioPowerScriptexecPlayForceFeedback" @ 0x117e9368, "intUBioPowerScriptexecPlayGuiSound" @ 0x117e93b8, "intUBioPowerScriptexecGetFloorLocation" @ 0x117e9400) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Script system found (string references: "ScriptDialogResultMessage", "ScriptResRefID", "EventScripts") - UnrealScript-based, different architecture
 
 ### Save/Load System
 
@@ -126,7 +133,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: savenfo @ 0x140df01d0 (string reference, function @ 0x1408187c4), GLOBAL_VARIABLES @ 0x140dbf3d0 (string reference)
 - **Eclipse Implementation**: `EclipseSaveSerializer : SaveSerializer` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: SaveLoad system found (string references: "vSaveLoad" @ 0x00be255a, "SaveGameMessage" @ 0x00be37a8, "LoadGameMessage" @ 0x00be37c8, "LoadExternalSaveMessage" @ 0x00be386c) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectSaveSerializer : SaveSerializer` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Save system found (string references: "intABioWorldInfoexecIsAbleToSave" @ 0x117ff8d8, "intABioWorldInfoexecBioSaveGame" @ 0x11800ca0) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Save system found (string references: Save/Load messages) - UnrealScript-based, different architecture
 
 ### Dialogue System
 
@@ -139,7 +149,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
 - **Eclipse Implementation**: `EclipseDialogueSystem : DialogueSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Dialogue system found (string references: "TargetDialogue" @ 0x00bf6974, "ScriptDialogResultMessage" @ 0x00be5abc, "DialogBoxClosedMessage" @ 0x00be51f0) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectDialogueSystem : DialogueSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Dialogue system found (string references: "WM_INITDIALOG" @ 0x118edfb0) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Dialogue system found (string references: "TargetDialogue", "ScriptDialogResultMessage") - UnrealScript-based, different architecture
 
 ### Combat System
 
@@ -152,7 +165,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference)
 - **Eclipse Implementation**: `EclipseCombatSystem : CombatSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: COMMAND_GETCOMBATSTATE @ 0x00af12fc, COMMAND_SETCOMBATSTATE @ 0x00af1314 (string references)
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Combat system found (string references: "Combat_%u" @ 0x00be0ba4, "GameModeCombat" @ 0x00beaf3c, "InCombat" @ 0x00bf4c10, "CombatTarget" @ 0x00bf4dc0) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectCombatSystem : CombatSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Combat system found (string references: "intUBioGamerProfileexecGetCombatDifficulty" @ 0x117e7fe8, "intUBioGamerProfileexecSetCombatDifficulty" @ 0x117e8040, "intUBioActorBehaviorexecEnterCombatStasis" @ 0x117ed418, "intUBioActorBehaviorexecExitCombatStasis" @ 0x117ed3c0) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Combat system found (string references: "GameModeCombat", "InCombat", "CombatTarget") - UnrealScript-based, different architecture
 
 ### Audio System
 
@@ -165,7 +181,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: InvSoundType @ 0x140dc3b80 (string reference)
 - **Eclipse Implementation**: `EclipseAudioSystem : AudioSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Audio system found (string references: "SoundSet" @ 0x00beb484, "SoundList" @ 0x00bf1a48, "Sound" @ 0x00bf8abc, "SoundFXVolume" @ 0x00bfaf80) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectAudioSystem : AudioSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Audio system found (string references: "intUBioGamerProfileexecUpdateSoundOptions" @ 0x117e7d58, "intUBioPhysicsSoundsexecRequestSound" @ 0x117e92d0, "intUBioPowerScriptexecPlayGuiSound" @ 0x117e93b8, "SoundResource" @ 0x117e6f8c) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Audio system found (string references: "SoundSet", "SoundList", "Sound") - UnrealScript-based, different architecture
 
 ### Entity Spawning System
 
@@ -178,8 +197,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: DungeonMaster_SpawnCreature @ 0x140dcbc00, DungeonMaster_SpawnItem @ 0x140dcbc20, DungeonMaster_SpawnTrigger @ 0x140dcbc38 (string references)
 - **Eclipse Implementation**: `EclipseSpawnSystem : SpawnSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
-- **TODO: masseffect.exe, masseffect2.exe**
+  - `DragonAge2.exe`: Spawn system found (string references: "spawnhook" @ 0x00bfb254, "SpawnVolume" classes) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectSpawnSystem : SpawnSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Spawn system found (string references: "intUBioActorBehaviorexecSpawnActorFromType" @ 0x117ed4c8) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Spawn system found (string references: "spawnhook", "SpawnVolume" classes) - UnrealScript-based, different architecture
 
 ### Animation System
 
@@ -192,7 +213,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: Animation @ 0x140ddc0e0, AnimationTime @ 0x140ddc0f0, AnimationLength @ 0x140ddc218 (string references)
 - **Eclipse Implementation**: `EclipseAnimationSystem : AnimationSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Animation system found (string references: "Animation" @ 0x00bddda0, "AnimationNode" @ 0x00bdde14, "AnimationTree" @ 0x00bdde30, "ModelAnimationTree" @ 0x00bdde4c, "AnimationEventDispatch" @ 0x00bddbc0) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectAnimationSystem : AnimationSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Animation system found (string references: "intUBioAnimNodeBlendByWeaponActionexecPlayCurrentChildAnimation" @ 0x117e96d8, "intUBioActorBehaviorexecSoftResetMovementAndAnimationState" @ 0x117ee020, "intUBioActorBehaviorexecHardResetActionAndAnimationState" @ 0x117ee098) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Animation system found (string references: "Animation", "AnimationNode", "AnimationTree", "AnimationEventDispatch") - UnrealScript-based, different architecture
 
 ### Trigger System
 
@@ -205,7 +229,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: TriggerList @ 0x140ddb780 (string reference), DungeonMaster_TriggerEntered @ 0x140dcbf08, DungeonMaster_TriggerExit @ 0x140dcbf28 (string references)
 - **Eclipse Implementation**: `EclipseTriggerSystem : TriggerSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Trigger system found (string references: "TriggerList" @ 0x00bf4a44, "COBJECT_TYPE_TRIGGER" @ 0x00c0f804, "DisableTriggers" @ 0x00bee1f4) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectTriggerSystem : TriggerSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Trigger system found (string references: "intABioTriggerStreamexecDoTouch" @ 0x117e9520, "intABioTriggerStreamexecDoUntouch" @ 0x117e94d8, "intABioTriggerStreamexecRetouch" @ 0x117e9450, "intUBioUIWorldexecTriggerEvent" @ 0x117fd53c) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Trigger system found (string references: "TriggerList", "COBJECT_TYPE_TRIGGER") - UnrealScript-based, different architecture
 
 ### Encounter System
 
@@ -257,7 +284,10 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: PerceptionData @ 0x140dde100, PerceptionList @ 0x140dde0f0, PerceptionRange @ 0x140dde0e0, PERCEPTIONDIST @ 0x140de59b0 (string references)
 - **Eclipse Implementation**: `EclipsePerceptionSystem : PerceptionSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: Perception system found (string references: "PerceptionClass" @ 0x00bf52e0) - UnrealScript-based, different architecture
+- **Mass Effect Implementation**: `MassEffectPerceptionSystem : PerceptionSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: Perception system found (string references: "intABioHUDexecDisplayPerceptionList" @ 0x117fc5d8, "intABioHUDexecProfilePerception" @ 0x117fc838, "intABioBaseSquadexecAddSquadToPerception" @ 0x118080d8, "intABioBaseSquadexecRemoveSquadFromPerception" @ 0x11807fe0, "PERCEPTION" @ 0x11981194) - UnrealScript-based, different architecture
+  - `MassEffect2.exe`: Perception system found (string references: "PerceptionClass", "PERCEPTION") - UnrealScript-based, different architecture
 
 ## Ghidra Executables Inventory
 
