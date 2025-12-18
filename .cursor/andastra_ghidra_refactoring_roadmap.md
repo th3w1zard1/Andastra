@@ -85,23 +85,28 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: Animation @ 0x140ddc0e0, AnimationTime @ 0x140ddc0f0, AnimationLength @ 0x140ddc218 (string references)
   - **Inheritance**: Base class `AnimationSystem` (Runtime.Games.Common), `OdysseyAnimationSystem : AnimationSystem` (Runtime.Games.Odyssey)
   - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
-- **Trigger System**:
-  - `swkotor.exe`: TriggerList @ 0x0074768c (string reference), EVENT_ENTERED_TRIGGER @ 0x00744bd0, EVENT_LEFT_TRIGGER @ 0x00744bbc (string references)
-  - `swkotor2.exe`: TriggerList @ 0x007bd254 (string reference, used in SaveTriggerList @ 0x004e2b20, LoadTriggerList @ 0x004e5920), EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4 (string references)
-  - `nwmain.exe`: TriggerList @ 0x140ddb780 (string reference), DungeonMaster_TriggerEntered @ 0x140dcbf08, DungeonMaster_TriggerExit @ 0x140dcbf28 (string references)
-  - **Inheritance**: Base class `TriggerSystem` (Runtime.Games.Common), `OdysseyTriggerSystem : TriggerSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Trigger System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadTriggerList @ 0x004e5920 - ✅ ANALYZED - Loads trigger list from GIT GFF into area, iterates through "TriggerList" GFF list, reads ObjectId, TemplateResRef, position, geometry polygon, LinkedToModule, TransitionDestination, LinkedTo, LinkedToFlags (via "TriggerList" @ 0x007bd254)
+  - `swkotor2.exe`: SaveTriggerList @ 0x004e2b20 - ✅ ANALYZED - Saves trigger list from area to GFF save data, iterates through trigger array, gets trigger objects from world, saves each trigger state (via "TriggerList" @ 0x007bd254)
+  - `swkotor.exe`: TriggerList @ 0x0074768c (string reference) - ✅ FOUND
+  - `swkotor2.exe`: EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4 (string references) - ✅ FOUND
+  - `swkotor.exe`: EVENT_ENTERED_TRIGGER @ 0x00744bd0, EVENT_LEFT_TRIGGER @ 0x00744bbc (string references) - ✅ FOUND
+  - `nwmain.exe`: TriggerList @ 0x140ddb780 (string reference), DungeonMaster_TriggerEntered @ 0x140dcbf08, DungeonMaster_TriggerExit @ 0x140dcbf28 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `TriggerSystem` (Runtime.Games.Common), `OdysseyTriggerSystem : TriggerSystem` (Runtime.Games.Odyssey), `AuroraTriggerSystem : TriggerSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 - **Encounter System**:
   - `swkotor.exe`: Encounter List @ 0x007474c8 (string reference)
   - `swkotor2.exe`: Encounter List @ 0x007bd050 (string reference, used in LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0)
   - `nwmain.exe`: Encounter List @ 0x140ddb790 (string reference), DungeonMaster_SpawnEncounter @ 0x140dcbc78 (string reference)
   - **Inheritance**: Base class `EncounterSystem` (Runtime.Games.Common), `OdysseyEncounterSystem : EncounterSystem` (Runtime.Games.Odyssey)
   - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
-- **Store System**:
-  - `swkotor2.exe`: StoreList @ 0x007bd098 (string reference, used in LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30)
-  - `swkotor.exe`: SaveStoreList @ 0x00507ca0, LoadStoreList @ 0x005057a0 (via "StoreList" @ 0x00747510)
-  - **Inheritance**: Base class `StoreSystem` (Runtime.Games.Common), `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
+- **Store System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadStoreFromGFF @ 0x00571310 - ✅ ANALYZED - Loads store data from GIT GFF into store object, reads Tag, LocName, MarkDown, MarkUp, OnOpenStore, BuySellFlag, ItemList (ObjectId, Infinite, InventoryRes), creates item objects, adds items to store inventory sorted by value (via "StoreList" @ 0x007bd098)
+  - `swkotor2.exe`: SaveStoreToGFF @ 0x00570e30 - ✅ ANALYZED - Saves store data to GFF save data, writes Tag, LocName, MarkDown, MarkUp, OnOpenStore, BuySellFlag, ItemList (ObjectId, Infinite), position, orientation (via "StoreList" @ 0x007bd098)
+  - `swkotor.exe`: SaveStoreList @ 0x00507ca0 - ✅ ANALYZED - Saves store list to GFF format, writes store entities to GFF with ObjectId, position, orientation, inventory (via "StoreList" @ 0x00747510)
+  - `swkotor.exe`: LoadStoreList @ 0x005057a0 - ✅ ANALYZED - Loads store list from GFF format, reads store entities from GFF, creates store objects, sets position, orientation, inventory (via "StoreList" @ 0x00747510)
+  - **Inheritance**: Base class `StoreSystem` (Runtime.Games.Common), `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey), `AuroraStoreSystem : StoreSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
 - **Party Management**:
   - `swkotor.exe`: PARTYTABLE @ 0x0074930c (string reference, used in SavePartyTable @ 0x0052ade0)
   - `swkotor2.exe`: PARTYTABLE @ 0x007c1910 (string reference, used in SavePartyTable @ 0x0057bd70)
