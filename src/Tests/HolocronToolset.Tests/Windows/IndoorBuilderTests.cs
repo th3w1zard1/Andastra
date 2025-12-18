@@ -1159,6 +1159,7 @@ namespace HolocronToolset.Tests.Windows
         public void TestSelectAllAction()
         {
             // Matching Python: Test select all menu action.
+            // Matching Python fixture builder_with_rooms (lines 307-326): Creates builder with 5 rooms
             string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             string kitsDir = Path.Combine(tempPath, "kits");
             Directory.CreateDirectory(kitsDir);
@@ -1168,17 +1169,61 @@ namespace HolocronToolset.Tests.Windows
             {
                 Directory.SetCurrentDirectory(tempPath);
 
+                // Create builder (matching builder_no_kits fixture)
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // builder.ui.actionSelectAll.trigger()
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // selected = builder.ui.mapRenderer.selected_rooms()
-                // assert len(selected) == 5
+                // Create KitComponent matching real_kit_component fixture (lines 65-117)
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Add 5 rooms in a row (matching builder_with_rooms fixture lines 311-320)
+                for (int i = 0; i < 5; i++)
+                {
+                    var room = new IndoorMapRoom(
+                        kitComponent,
+                        new Vector3(i * 15, 0, 0),
+                        0.0f,
+                        flipX: false,
+                        flipY: false
+                    );
+                    builder.Map.Rooms.Add(room);
+                }
+
+                // Matching Python: builder.ui.mapRenderer.mark_dirty()
+                // Matching Python line 322: builder.ui.mapRenderer.mark_dirty()
+                builder.Ui.MapRenderer.MarkDirty();
+
+                // Matching Python: qtbot.wait(10)
+                // Matching Python line 323: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python: QApplication.processEvents()
+                // Note: In headless tests, we don't have QApplication, but the operations are synchronous
+                // The test logic is complete and matches Python exactly
+
+                // Verify rooms were added (matching Python fixture builder_with_rooms)
+                builder.Map.Rooms.Should().HaveCount(5, "Should have 5 rooms added");
+
+                // Matching Python: builder.ui.actionSelectAll.trigger()
+                // Matching Python line 813: builder.ui.actionSelectAll.trigger()
+                builder.Ui.ActionSelectAll.Should().NotBeNull("ActionSelectAll should be initialized");
+                builder.Ui.ActionSelectAll.Invoke();
+
+                // Matching Python: qtbot.wait(10)
+                // Matching Python line 814: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python: QApplication.processEvents()
+                // Matching Python line 815: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous, so this is handled by the sleep above
+
+                // Matching Python: selected = builder.ui.mapRenderer.selected_rooms()
+                // Matching Python line 817: selected = builder.ui.mapRenderer.selected_rooms()
+                var selected = builder.Ui.MapRenderer.SelectedRooms();
+
+                // Matching Python: assert len(selected) == 5
+                // Matching Python line 818: assert len(selected) == 5
+                selected.Should().HaveCount(5, "All 5 rooms should be selected after SelectAll action");
             }
             finally
             {
@@ -1192,6 +1237,59 @@ namespace HolocronToolset.Tests.Windows
                     // Cleanup may fail if files are locked
                 }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:65-117
+        // Original: @pytest.fixture def real_kit_component():
+        private KitComponent CreateRealKitComponent()
+        {
+            // Create a minimal image for the component (matching Python lines 72-74)
+            // In Python: image = QImage(128, 128, QImage.Format.Format_RGB32); image.fill(0x808080)
+            // In C# Avalonia: Use WriteableBitmap or similar
+            object image = new { Width = 128, Height = 128 }; // Placeholder until Avalonia image implementation
+
+            // Create minimal BWM with multiple faces (matching Python lines 76-94)
+            var bwm = new BWM();
+            // First triangle (matching Python lines 79-84)
+            var face1 = new Andastra.Parsing.Formats.BWM.BWMFace(
+                new Vector3(0, 0, 0),
+                new Vector3(10, 0, 0),
+                new Vector3(10, 10, 0)
+            );
+            face1.Material = Andastra.Parsing.Common.SurfaceMaterial.Stone;
+            bwm.Faces.Add(face1);
+
+            // Second triangle to complete quad (matching Python lines 87-93)
+            var face2 = new Andastra.Parsing.Formats.BWM.BWMFace(
+                new Vector3(0, 0, 0),
+                new Vector3(10, 10, 0),
+                new Vector3(0, 10, 0)
+            );
+            face2.Material = Andastra.Parsing.Common.SurfaceMaterial.Stone;
+            bwm.Faces.Add(face2);
+
+            // Create real kit (matching Python line 97)
+            var kit = new Kit("TestKit");
+
+            // Create component (matching Python line 100)
+            var component = new KitComponent(kit, "TestComponent", image, bwm, new byte[] { 0x6D, 0x64, 0x6C }, new byte[] { 0x6D, 0x64, 0x78 });
+
+            // Add hooks at different edges (matching Python lines 103-114)
+            var utdK1 = new Andastra.Parsing.Resource.Generics.UTD();
+            var utdK2 = new Andastra.Parsing.Resource.Generics.UTD();
+            var door = new KitDoor(utdK1, utdK2, 2.0f, 3.0f);
+            kit.Doors.Add(door);
+
+            // Add hooks (matching Python lines 109-113)
+            var hookNorth = new KitComponentHook(new Vector3(5, 10, 0), 0.0f, 0, door); // "N"
+            var hookSouth = new KitComponentHook(new Vector3(5, 0, 0), 180.0f, 2, door); // "S"
+            var hookEast = new KitComponentHook(new Vector3(10, 5, 0), 90.0f, 1, door); // "E"
+            var hookWest = new KitComponentHook(new Vector3(0, 5, 0), 270.0f, 3, door); // "W"
+
+            component.Hooks.AddRange(new[] { hookNorth, hookSouth, hookEast, hookWest });
+            kit.Components.Add(component);
+
+            return component;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:820-833
