@@ -957,7 +957,7 @@ When processing a file:
 - [ ] Odyssey/EngineApi/OdysseyK2EngineApi.cs
 - [ ] Odyssey/Game/GameSession.cs
 - [ ] Odyssey/Game/ModuleLoader.cs
-- [ ] Odyssey/Game/ScriptExecutor.cs
+- [x] Odyssey/Game/ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (script event dispatch), all CSWSSCRIPTEVENT_EVENTTYPE_* constants, Script hook fields
 - [ ] Odyssey/Input/PlayerController.cs
 - [ ] Odyssey/Loading/EntityFactory.cs
 - [ ] Odyssey/Loading/KotorModuleLoader.cs
@@ -967,17 +967,17 @@ When processing a file:
 - [ ] Odyssey/Profiles/IGameProfile.cs
 - [ ] Odyssey/Profiles/K1GameProfile.cs
 - [ ] Odyssey/Profiles/K2GameProfile.cs
-- [ ] Odyssey/Save/SaveGameManager.cs
+- [x] Odyssey/Save/SaveGameManager.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750 (save), FUN_00708990 @ 0x00708990 (load), FUN_0057dcd0 @ 0x0057dcd0 (party table), FUN_005ac740 @ 0x005ac740 (global vars)
 - [ ] Odyssey/Systems/AIController.cs
 - [ ] Odyssey/Systems/ComponentInitializer.cs
 - [ ] Odyssey/Systems/EncounterSystem.cs
 - [ ] Odyssey/Systems/FactionManager.cs
 - [ ] Odyssey/Systems/HeartbeatSystem.cs
 - [ ] Odyssey/Systems/ModelResolver.cs
-- [ ] Odyssey/Systems/PartyManager.cs
+- [x] Odyssey/Systems/PartyManager.cs - ✅ COMPLETE - Ghidra references added: PARTYTABLE @ 0x007c1910, SavePartyTable @ 0x0057bd70, FUN_0057dcd0 @ 0x0057dcd0
 - [ ] Odyssey/Systems/PerceptionManager.cs
-- [ ] Odyssey/Systems/StoreSystem.cs
-- [ ] Odyssey/Systems/TriggerSystem.cs
+- [x] Odyssey/Systems/StoreSystem.cs - ✅ COMPLETE - Ghidra references added: LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30 (swkotor2.exe), StoreList @ 0x007bd098
+- [x] Odyssey/Systems/TriggerSystem.cs - ✅ COMPLETE - Ghidra references added: LoadTriggerList @ 0x004e5920, SaveTriggerList @ 0x004e2b20 (swkotor2.exe), TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4
 - [ ] Odyssey/Templates/UTC.cs
 - [ ] Odyssey/Templates/UTCHelpers.cs
 - [ ] Odyssey/Templates/UTD.cs
