@@ -145,6 +145,14 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Inheritance**: Base class `JournalSystem` (Runtime.Games.Common), `OdysseyJournalSystem : JournalSystem` (Runtime.Games.Odyssey)
   - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
   - **Note**: Journal system is integrated with party table system - journal flags stored in party table GFF. Quest state changes stored as global variables. Journal entries loaded from JRL files (GFF with "JRL " signature).
+- **Waypoint System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadWaypointList @ 0x004e04a0 - ✅ ANALYZED - Loads waypoint list from GIT GFF into area, iterates through "WaypointList" GFF list, reads ObjectId, creates waypoint entities, loads waypoint data from GFF (XPosition, YPosition, ZPosition), validates position on walkmesh, adds waypoints to area (via "WaypointList" @ 0x007bd060)
+  - `swkotor2.exe`: SaveWaypointList @ 0x004e2ca0 - ✅ FOUND - Saves waypoint list from area to GFF save data (via "WaypointList" @ 0x007bd060)
+  - `swkotor2.exe`: FUN_0056f5a0 - ✅ FOUND - Loads waypoint from GFF (LoadWaypointFromGFF), called by LoadWaypointList
+  - `swkotor2.exe`: "WaypointList" @ 0x007bd060 (string reference) - ✅ FOUND
+  - **Inheritance**: Base class `WaypointSystem` (Runtime.Games.Common), `OdysseyWaypointSystem : WaypointSystem` (Runtime.Games.Odyssey), `AuroraWaypointSystem : WaypointSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Note**: Waypoint system handles waypoint entities used for map navigation and area markers. Waypoints store position data and are used for pathfinding and map pinning.
 
 ## Class Inheritance Structure
 
