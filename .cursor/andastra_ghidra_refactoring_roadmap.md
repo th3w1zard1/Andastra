@@ -61,18 +61,24 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference) - ✅ FOUND
   - **Inheritance**: Base class `CombatSystem` (Runtime.Games.Common), `OdysseyCombatSystem : CombatSystem` (Runtime.Games.Odyssey), `AuroraCombatSystem : CombatSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe found, daorigins.exe TODO
-- **Audio System**:
-  - `swkotor2.exe`: SaveSoundList @ 0x004e2d60, LoadSoundList @ 0x004e06a0 (via "SoundList" @ 0x007bd080)
-  - `swkotor.exe`: SaveSoundList @ 0x00507b10, LoadSoundList @ 0x00505560 (via "SoundList" @ 0x007474f8)
-  - `nwmain.exe`: InvSoundType @ 0x140dc3b80 (string reference)
-  - **Inheritance**: Base class `AudioSystem` (Runtime.Games.Common), `OdysseyAudioSystem : AudioSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
-- **Entity Spawning**:
-  - `swkotor.exe`: SpawnPointList @ 0x007474ac (string reference, functions @ 0x00592430, 0x00591350, 0x00505060)
-  - `swkotor2.exe`: SpawnPointList @ 0x007bd034 (string reference, used in LoadEncounterList @ 0x004e01a0, LoadEncounterFromGFF @ 0x0056d770, SaveEncounterToGFF @ 0x0056c940)
-  - `nwmain.exe`: DungeonMaster_SpawnCreature @ 0x140dcbc00, DungeonMaster_SpawnItem @ 0x140dcbc20, DungeonMaster_SpawnTrigger @ 0x140dcbc38 (string references)
-  - **Inheritance**: Base class `SpawnSystem` (Runtime.Games.Common), `OdysseySpawnSystem : SpawnSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Audio System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: SaveSoundList @ 0x004e2d60 - ✅ ANALYZED - Saves sound list to GFF format (via "SoundList" @ 0x007bd080)
+  - `swkotor2.exe`: LoadSoundList @ 0x004e06a0 - ✅ ANALYZED - Loads sound list from GFF format (via "SoundList" @ 0x007bd080)
+  - `swkotor.exe`: SaveSoundList @ 0x00507b10 - ✅ ANALYZED - Similar to swkotor2.exe version (via "SoundList" @ 0x007474f8)
+  - `swkotor.exe`: LoadSoundList @ 0x00505560 - ✅ ANALYZED - Similar to swkotor2.exe version (via "SoundList" @ 0x007474f8)
+  - `nwmain.exe`: InvSoundType @ 0x140dc3b80 (string reference) - ✅ FOUND
+  - **Inheritance**: Base class `AudioSystem` (Runtime.Games.Common), `OdysseyAudioSystem : AudioSystem` (Runtime.Games.Odyssey), `AuroraAudioSystem : AudioSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe found, daorigins.exe TODO
+- **Entity Spawning**: ✅ **ANALYZED**
+  - `swkotor.exe`: LoadEncounterFromGFF @ 0x00592430 - ✅ ANALYZED - Loads encounter data from GFF format, reads Active, Reset, ResetTime, Respawns, SpawnOption, MaxCreatures, RecCreatures, PlayerOnly, Faction, Difficulty, position, geometry, and SpawnPointList (via "SpawnPointList" @ 0x007474ac)
+  - `swkotor.exe`: SaveEncounterToGFF @ 0x00591350 - ✅ FOUND - Saves encounter data to GFF format (via "SpawnPointList" @ 0x007474ac)
+  - `swkotor.exe`: LoadEncounterList @ 0x00505060 - ✅ FOUND - Loads encounter list from GIT (via "SpawnPointList" @ 0x007474ac)
+  - `swkotor2.exe`: LoadEncounterList @ 0x004e01a0 - ✅ ANALYZED - Loads encounter list from GIT GFF into area, iterates through "Encounter List" GFF list, reads ObjectId, TemplateResRef, position, geometry polygon, SpawnPointList (via "Encounter List" @ 0x007bd050, "SpawnPointList" @ 0x007bd034)
+  - `swkotor2.exe`: LoadEncounterFromGFF @ 0x0056d770 - ✅ FOUND - Loads encounter from GFF (via "SpawnPointList" @ 0x007bd034)
+  - `swkotor2.exe`: SaveEncounterToGFF @ 0x0056c940 - ✅ FOUND - Saves encounter to GFF (via "SpawnPointList" @ 0x007bd034)
+  - `nwmain.exe`: DungeonMaster_SpawnCreature @ 0x140dcbc00, DungeonMaster_SpawnItem @ 0x140dcbc20, DungeonMaster_SpawnTrigger @ 0x140dcbc38 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `SpawnSystem` (Runtime.Games.Common), `OdysseySpawnSystem : SpawnSystem` (Runtime.Games.Odyssey), `AuroraSpawnSystem : SpawnSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 - **Animation System**:
   - `swkotor.exe`: Animation @ 0x00746060, AnimationTime @ 0x00746050, AnimationState @ 0x007495b0, EVENT_PLAY_ANIMATION @ 0x00744b3c (string references)
   - `swkotor2.exe`: Animation @ 0x007bf604, AnimationTime @ 0x007bf810, AnimationState @ 0x007c1f30, EVENT_PLAY_ANIMATION @ 0x007bcd74 (string references)
