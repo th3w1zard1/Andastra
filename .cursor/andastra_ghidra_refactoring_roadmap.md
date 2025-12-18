@@ -968,10 +968,10 @@ When processing a file:
 - [x] Odyssey/Combat/CombatRound.cs - ✅ COMPLETE - Ghidra references added: FUN_00529470 @ 0x00529470 (save CombatRoundData), FUN_005226d0 @ 0x005226d0, CombatRoundData @ 0x007bf6b4, all combat round fields
 - [x] Odyssey/Combat/DamageCalculator.cs - ✅ COMPLETE - Ghidra references added: DamageValue @ 0x007bf890, DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70, CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14, all damage calculation fields
 - [ ] Odyssey/Combat/WeaponDamageCalculator.cs
-- [ ] Odyssey/Components/ActionQueueComponent.cs
-- [ ] Odyssey/Components/CreatureComponent.cs
-- [ ] Odyssey/Components/DoorComponent.cs
-- [ ] Odyssey/Components/EncounterComponent.cs
+- [x] Odyssey/Components/ActionQueueComponent.cs - ✅ COMPLETE - Ghidra references added: ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, all action queue fields
+- [x] Odyssey/Components/CreatureComponent.cs - ✅ COMPLETE - Ghidra references added: Creature @ 0x007bc544, Creature List @ 0x007bd01c, FUN_005226d0 @ 0x005226d0, FUN_004dfbb0 @ 0x004dfbb0, FUN_005261b0 @ 0x005261b0, FUN_0050c510 @ 0x0050c510, all creature fields
+- [x] Odyssey/Components/DoorComponent.cs - ✅ COMPLETE - Ghidra references added: Door List @ 0x007bd248, FUN_00584f40 @ 0x00584f40, FUN_00585ec0 @ 0x00585ec0, FUN_004e08e0 @ 0x004e08e0, FUN_00580ed0 @ 0x00580ed0, FUN_005838d0 @ 0x005838d0, all door fields
+- [x] Odyssey/Components/EncounterComponent.cs - ✅ COMPLETE - Ghidra references added: Encounter @ 0x007bc524, Encounter List @ 0x007bd050, FUN_004e01a0 @ 0x004e01a0, all encounter fields
 - [x] Odyssey/Components/FactionComponent.cs - ✅ COMPLETE - Ghidra references added: FactionID @ 0x007c40b4, FactionRep @ 0x007c290c, FactionList @ 0x007be604, FACTIONREP @ 0x007bcec8, FactionID1 @ 0x007c2924, FactionID2 @ 0x007c2918
 - [x] Odyssey/Components/InventoryComponent.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0 (save inventory), InventoryRes @ 0x007bf570, InventorySlot @ 0x007bf7d0, ItemList @ 0x007bf580, Equip_ItemList @ 0x007bf5a4
 - [ ] Odyssey/Components/ItemComponent.cs
