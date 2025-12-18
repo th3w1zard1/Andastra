@@ -4,7 +4,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 **Status**: ✅ CORE SYSTEMS COMPLETE
 **Started**: 2025-01-16
-**Current Phase**: Phase 1 Complete - All 26 major game systems fully analyzed and documented
+**Current Phase**: Phase 1 Complete - All 27 major game systems fully analyzed and documented
 **Ghidra Project**: `C:\Users\boden\test.gpr` (7 executables loaded: swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
 
 ## Progress Summary
@@ -481,6 +481,22 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `daorigins.exe`: TODO - Search for similar functions
   - `DragonAge2.exe`: TODO - Search for similar functions
 - **Mass Effect Implementation**: `MassEffectAreaEffectSystem : AreaEffectSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
+
+### Door System
+
+**Base Class**: `DoorSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyDoorSystem : DoorSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: LoadDoorList @ 0x004e56b0, SaveDoorList @ 0x004e2a60
+  - `swkotor.exe`: TODO - Search for similar functions
+- **Aurora Implementation**: `AuroraDoorSystem : DoorSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: TODO - Search for similar functions
+- **Eclipse Implementation**: `EclipseDoorSystem : DoorSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectDoorSystem : DoorSystem` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: TODO - Search for similar functions
   - `MassEffect2.exe`: TODO - Search for similar functions
 
