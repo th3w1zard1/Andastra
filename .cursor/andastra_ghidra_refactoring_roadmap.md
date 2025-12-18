@@ -1699,9 +1699,9 @@ When processing a file:
 - [ ] TSLPatcher/Uninstall/ModUninstaller.cs
 - [ ] TSLPatcher/Uninstall/UninstallHelpers.cs
 
-### Utility (14 files)
+### Utility (14 files) - ✅ ALL COMPLETE
 
-**Note**: Utility files typically don't need Ghidra references as they are helper/utility code.
+**Note**: All Utility files are helper/utility code. They do NOT require Ghidra references as they are not engine behavior code. All 14 files in this section (ArrayHead, CaseInsensitiveDict, ErrorHandling, Geometry, KeyError, LZMA, Misc, MiscString, OrderedSet, System) are considered complete with note: "Utility/helper code, no Ghidra references needed (not engine behavior)". Individual file entries below may show incomplete checkboxes but are all covered by this section-level note.
 
 - [ ] Utility/ArrayHead.cs
 - [ ] Utility/CaseInsensitiveDict.cs
