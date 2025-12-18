@@ -176,9 +176,12 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Camera System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadCameraList @ 0x004e0ff0 - ✅ ANALYZED - Loads camera list from GIT GFF into camera manager, iterates through "CameraList" GFF list, reads CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView (default 55.0), MicRange, creates camera entries in camera manager (via FUN_00680430 and FUN_00680450), validates camera count < 0x47 (71) (via "CameraList" @ 0x007bd16c, "CameraID" @ 0x007bd160, "Position", "Orientation", "Pitch", "Height", "FieldOfView" @ 0x007bd12c, "MicRange")
   - `swkotor2.exe`: SaveCameraList @ 0x004e13f0 - ✅ ANALYZED - Saves camera list from camera manager to GFF save data, iterates through camera manager entries (via FUN_00680600), writes CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView, MicRange to GFF (via "CameraList" @ 0x007bd16c)
+  - `swkotor.exe`: LoadCameraList @ 0x00505eb0 - ✅ ANALYZED - Loads camera list from GFF format (swkotor.exe version), iterates through "CameraList" GFF list, reads CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView, MicRange, creates camera entries in camera manager (via "CameraList" @ 0x007475b4, "CameraID" @ 0x007475a8)
+  - `swkotor.exe`: SaveCameraList @ 0x005062a0 - ✅ ANALYZED - Saves camera list from camera manager to GFF save data (swkotor.exe version), iterates through camera manager entries, writes CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView, MicRange to GFF (via "CameraList" @ 0x007475b4)
   - `swkotor2.exe`: "CameraList" @ 0x007bd16c, "CameraID" @ 0x007bd160, "FieldOfView" @ 0x007bd12c, "CameraStyle" @ 0x007bd6e0, "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490, "CameraModel" @ 0x007c3908, "CameraHeightOffset" @ 0x007c5114, "CameraRotate" @ 0x007cb910, "CameraViewAngle" @ 0x007cb940 (string references) - ✅ FOUND
+  - `swkotor.exe`: "CameraList" @ 0x007475b4, "CameraID" @ 0x007475a8, "CameraStyle" @ 0x00747a14, "CameraAnimation" @ 0x0074a4f8, "CameraAngle" @ 0x0074a528, "CameraModel" @ 0x0074a7e8, "CameraHeightOffset" @ 0x0074b6fc (string references) - ✅ FOUND
   - **Inheritance**: Base class `CameraSystem` (Runtime.Games.Common), `OdysseyCameraSystem : CameraSystem` (Runtime.Games.Odyssey), `AuroraCameraSystem : CameraSystem` (Runtime.Games.Aurora)
-  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
   - **Note**: Camera system handles camera entities stored in GIT files. Cameras store position, orientation, pitch, height, field of view, and microphone range. Used for cutscenes, dialogue cameras, and area cameras. Camera manager limits camera count to 71 (0x47).
 - **Area Effect System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadAreaEffectList @ 0x004e0c30 - ✅ ANALYZED - Loads area effect list from GIT GFF into area, iterates through "AreaEffectList" GFF list, reads ObjectId, creates area effect entities (via FUN_00571a20), loads area effect data from GFF (via FUN_005720a0 which is LoadAreaEffectFromGFF), reads Position (X, Y, Z), Orientation (X, Y, Z), normalizes orientation vector, sets orientation (via FUN_00506550), loads action list if param3 is not null (via FUN_0050b650), adds area effect to area (via FUN_00573490) (via "AreaEffectList" @ 0x007bd0d4, "ObjectId", "PositionX", "PositionY", "PositionZ", "OrientationX", "OrientationY", "OrientationZ")
@@ -463,7 +466,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseyCameraSystem : CameraSystem` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: LoadCameraList @ 0x004e0ff0, SaveCameraList @ 0x004e13f0
-  - `swkotor.exe`: TODO - Search for similar functions
+  - `swkotor.exe`: LoadCameraList @ 0x00505eb0, SaveCameraList @ 0x005062a0
 - **Aurora Implementation**: `AuroraCameraSystem : CameraSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: TODO - Search for similar functions
 - **Eclipse Implementation**: `EclipseCameraSystem : CameraSystem` (Runtime.Games.Eclipse)
