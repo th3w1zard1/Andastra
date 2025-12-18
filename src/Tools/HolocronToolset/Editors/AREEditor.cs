@@ -46,6 +46,9 @@ namespace HolocronToolset.Editors
         private ColorEdit _fogColorEdit;
         private NumericUpDown _fogNearSpin;
         private NumericUpDown _fogFarSpin;
+        private ColorEdit _ambientColorEdit;
+        private ColorEdit _diffuseColorEdit;
+        private ColorEdit _dynamicColorEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -151,7 +154,7 @@ namespace HolocronToolset.Editors
             // Map Axis select - matching Python: self.ui.mapAxisSelect
             var mapAxisLabel = new Avalonia.Controls.TextBlock { Text = "Map Axis:" };
             _mapAxisSelect = new ComboBox();
-            _mapAxisSelect.Items = new[] { "PositiveY", "NegativeY", "PositiveX", "NegativeX" };
+            _mapAxisSelect.ItemsSource = new[] { "PositiveY", "NegativeY", "PositiveX", "NegativeX" };
             _mapAxisSelect.SelectedIndex = 0;
             panel.Children.Add(mapAxisLabel);
             panel.Children.Add(_mapAxisSelect);
@@ -170,49 +173,49 @@ namespace HolocronToolset.Editors
 
             // Map Image X1 spin - matching Python: self.ui.mapImageX1Spin
             var mapImageX1Label = new Avalonia.Controls.TextBlock { Text = "Map Image X1:" };
-            _mapImageX1Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            _mapImageX1Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageX1Label);
             panel.Children.Add(_mapImageX1Spin);
 
             // Map Image Y1 spin - matching Python: self.ui.mapImageY1Spin
             var mapImageY1Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y1:" };
-            _mapImageY1Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            _mapImageY1Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageY1Label);
             panel.Children.Add(_mapImageY1Spin);
 
             // Map Image X2 spin - matching Python: self.ui.mapImageX2Spin
             var mapImageX2Label = new Avalonia.Controls.TextBlock { Text = "Map Image X2:" };
-            _mapImageX2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            _mapImageX2Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageX2Label);
             panel.Children.Add(_mapImageX2Spin);
 
             // Map Image Y2 spin - matching Python: self.ui.mapImageY2Spin
             var mapImageY2Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y2:" };
-            _mapImageY2Spin = new NumericUpDown { Minimum = 0.0, Maximum = 1.0, DecimalPlaces = 6, Value = 0.0 };
+            _mapImageY2Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageY2Label);
             panel.Children.Add(_mapImageY2Spin);
 
             // Map World X1 spin - matching Python: self.ui.mapWorldX1Spin
             var mapWorldX1Label = new Avalonia.Controls.TextBlock { Text = "Map World X1:" };
-            _mapWorldX1Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            _mapWorldX1Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldX1Label);
             panel.Children.Add(_mapWorldX1Spin);
 
             // Map World Y1 spin - matching Python: self.ui.mapWorldY1Spin
             var mapWorldY1Label = new Avalonia.Controls.TextBlock { Text = "Map World Y1:" };
-            _mapWorldY1Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            _mapWorldY1Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldY1Label);
             panel.Children.Add(_mapWorldY1Spin);
 
             // Map World X2 spin - matching Python: self.ui.mapWorldX2Spin
             var mapWorldX2Label = new Avalonia.Controls.TextBlock { Text = "Map World X2:" };
-            _mapWorldX2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            _mapWorldX2Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldX2Label);
             panel.Children.Add(_mapWorldX2Spin);
 
             // Map World Y2 spin - matching Python: self.ui.mapWorldY2Spin
             var mapWorldY2Label = new Avalonia.Controls.TextBlock { Text = "Map World Y2:" };
-            _mapWorldY2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            _mapWorldY2Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldY2Label);
             panel.Children.Add(_mapWorldY2Spin);
 
@@ -225,31 +228,31 @@ namespace HolocronToolset.Editors
             _fogColorEdit = new ColorEdit(null);
             panel.Children.Add(fogColorLabel);
             panel.Children.Add(_fogColorEdit);
-            
+
             // Fog Near spin - matching Python: self.ui.fogNearSpin
             var fogNearLabel = new Avalonia.Controls.TextBlock { Text = "Fog Near:" };
-            _fogNearSpin = new NumericUpDown { Minimum = 0.0, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            _fogNearSpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(fogNearLabel);
             panel.Children.Add(_fogNearSpin);
-            
+
             // Fog Far spin - matching Python: self.ui.fogFarSpin
             var fogFarLabel = new Avalonia.Controls.TextBlock { Text = "Fog Far:" };
-            _fogFarSpin = new NumericUpDown { Minimum = 0.0, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
+            _fogFarSpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(fogFarLabel);
             panel.Children.Add(_fogFarSpin);
-            
+
             // Ambient Color edit - matching Python: self.ui.ambientColorEdit
             var ambientColorLabel = new Avalonia.Controls.TextBlock { Text = "Sun Ambient:" };
             _ambientColorEdit = new ColorEdit(null);
             panel.Children.Add(ambientColorLabel);
             panel.Children.Add(_ambientColorEdit);
-            
+
             // Diffuse Color edit - matching Python: self.ui.diffuseColorEdit
             var diffuseColorLabel = new Avalonia.Controls.TextBlock { Text = "Sun Diffuse:" };
             _diffuseColorEdit = new ColorEdit(null);
             panel.Children.Add(diffuseColorLabel);
             panel.Children.Add(_diffuseColorEdit);
-            
+
             // Dynamic Color edit - matching Python: self.ui.dynamicColorEdit
             var dynamicColorLabel = new Avalonia.Controls.TextBlock { Text = "Dynamic Light:" };
             _dynamicColorEdit = new ColorEdit(null);
@@ -286,6 +289,9 @@ namespace HolocronToolset.Editors
         public ColorEdit FogColorEdit => _fogColorEdit;
         public NumericUpDown FogNearSpin => _fogNearSpin;
         public NumericUpDown FogFarSpin => _fogFarSpin;
+        public ColorEdit AmbientColorEdit => _ambientColorEdit;
+        public ColorEdit DiffuseColorEdit => _diffuseColorEdit;
+        public ColorEdit DynamicColorEdit => _dynamicColorEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -447,6 +453,21 @@ namespace HolocronToolset.Editors
             {
                 _fogFarSpin.Value = (decimal)are.FogFar;
             }
+            // Matching Python: self.ui.ambientColorEdit.set_color(are.sun_ambient) (line 206)
+            if (_ambientColorEdit != null)
+            {
+                _ambientColorEdit.SetColor(are.SunAmbient);
+            }
+            // Matching Python: self.ui.diffuseColorEdit.set_color(are.sun_diffuse) (line 207)
+            if (_diffuseColorEdit != null)
+            {
+                _diffuseColorEdit.SetColor(are.SunDiffuse);
+            }
+            // Matching Python: self.ui.dynamicColorEdit.set_color(are.dynamic_light) (line 208)
+            if (_dynamicColorEdit != null)
+            {
+                _dynamicColorEdit.SetColor(are.DynamicLight);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -573,6 +594,21 @@ namespace HolocronToolset.Editors
             if (_fogFarSpin != null && _fogFarSpin.Value.HasValue)
             {
                 are.FogFar = (float)_fogFarSpin.Value.Value;
+            }
+            // Matching Python: are.sun_ambient = self.ui.ambientColorEdit.color() (line 308)
+            if (_ambientColorEdit != null)
+            {
+                are.SunAmbient = _ambientColorEdit.GetColor();
+            }
+            // Matching Python: are.sun_diffuse = self.ui.diffuseColorEdit.color() (line 309)
+            if (_diffuseColorEdit != null)
+            {
+                are.SunDiffuse = _diffuseColorEdit.GetColor();
+            }
+            // Matching Python: are.dynamic_light = self.ui.dynamicColorEdit.color() (line 310)
+            if (_dynamicColorEdit != null)
+            {
+                are.DynamicLight = _dynamicColorEdit.GetColor();
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -874,6 +910,9 @@ namespace HolocronToolset.Editors
             copy.SunFogNear = source.SunFogNear;
             copy.SunFogFar = source.SunFogFar;
             copy.SunFogColor = source.SunFogColor;
+            copy.SunAmbient = source.SunAmbient;
+            copy.SunDiffuse = source.SunDiffuse;
+            copy.DynamicLight = source.DynamicLight;
             copy.WindPower = source.WindPower;
             copy.ShadowOpacity = source.ShadowOpacity;
             copy.ChancesOfRain = source.ChancesOfRain;

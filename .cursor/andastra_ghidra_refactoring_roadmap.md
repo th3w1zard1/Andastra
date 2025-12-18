@@ -4,8 +4,30 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 **Status**: IN PROGRESS
 **Started**: 2025-01-16
-**Current Phase**: Initial file inventory and systematic review
+**Current Phase**: Phase 1 - Core Systems (Save/Load, Walkmesh, Module Loading)
 **Ghidra Project**: `C:\Users\boden\test.gpr` (20 programs loaded)
+
+## Progress Summary
+
+### ✅ Completed Systems
+- **Save/Load System**: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70, SaveModuleState @ 0x004f0c50, SaveModuleIFO @ 0x005018b0
+- **Walkmesh System**: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0
+- **Module Loading**: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
+
+### 🔄 In Progress
+- **NCS VM Execution**: Searching for script execution functions
+
+### 📋 Pending Systems
+- Dialogue System (DLG, TLK, VO)
+- Combat System
+- Entity Spawning
+- Animation System
+- Audio System
+- Trigger System
+- Encounter System
+- Store System
+- Party Management
+- Perception System
 
 ## Ghidra Executables Inventory
 
@@ -784,6 +806,7 @@ When processing a file:
 #### Resource/Formats (500+ files)
 
 **BIF Format** (5 files)
+
 - [ ] Resource/Formats/BIF/BIF.cs
 - [ ] Resource/Formats/BIF/BIFBinaryReader.cs
 - [ ] Resource/Formats/BIF/BIFBinaryWriter.cs
@@ -792,6 +815,7 @@ When processing a file:
 - [ ] Resource/Formats/BIF/BZF.cs
 
 **BWM Format** (9 files) - **HIGH PRIORITY** (walkmesh navigation)
+
 - [ ] Resource/Formats/BWM/BWM.cs
 - [ ] Resource/Formats/BWM/BWMAdjacency.cs
 - [ ] Resource/Formats/BWM/BWMAuto.cs
@@ -804,6 +828,7 @@ When processing a file:
 - [ ] Resource/Formats/BWM/BWMType.cs
 
 **ERF Format** (4 files)
+
 - [ ] Resource/Formats/ERF/ERF.cs
 - [ ] Resource/Formats/ERF/ERFAuto.cs
 - [ ] Resource/Formats/ERF/ERFBinaryReader.cs
@@ -811,6 +836,7 @@ When processing a file:
 - [ ] Resource/Formats/ERF/ERFType.cs
 
 **GFF Format** (50+ files) - **HIGH PRIORITY** (save/load, templates)
+
 - [ ] Resource/Formats/GFF/GFF.cs
 - [ ] Resource/Formats/GFF/GFFAuto.cs
 - [ ] Resource/Formats/GFF/GFFBinaryReader.cs
@@ -822,6 +848,7 @@ When processing a file:
 - [ ] Resource/Formats/GFF/Generics/* (46 files)
 
 **KEY Format** (5 files)
+
 - [ ] Resource/Formats/KEY/BifEntry.cs
 - [ ] Resource/Formats/KEY/KEY.cs
 - [ ] Resource/Formats/KEY/KEYAuto.cs
@@ -830,6 +857,7 @@ When processing a file:
 - [ ] Resource/Formats/KEY/KeyEntry.cs
 
 **LIP Format** (6 files) - **MEDIUM PRIORITY** (lip sync)
+
 - [ ] Resource/Formats/LIP/LIP.cs
 - [ ] Resource/Formats/LIP/LIPAuto.cs
 - [ ] Resource/Formats/LIP/LIPBinaryReader.cs
@@ -838,6 +866,7 @@ When processing a file:
 - [ ] Resource/Formats/LIP/LIPShape.cs
 
 **LTR Format** (4 files)
+
 - [ ] Resource/Formats/LTR/LTR.cs
 - [ ] Resource/Formats/LTR/LTRAuto.cs
 - [ ] Resource/Formats/LTR/LTRBinaryReader.cs
@@ -845,36 +874,47 @@ When processing a file:
 - [ ] Resource/Formats/LTR/LTRBlock.cs
 
 **LYT Format** (9 files) - **HIGH PRIORITY** (area layout)
+
 - [ ] Resource/Formats/LYT/* (9 files)
 
 **MDL Format** (7 files) - **HIGH PRIORITY** (3D models)
+
 - [ ] Resource/Formats/MDL/* (7 files)
 
 **NCS Format** (375+ files) - **HIGHEST PRIORITY** (script VM)
+
 - [ ] Resource/Formats/NCS/* (375 files including compiler, decompiler, VM)
 
 **RIM Format** (4 files)
+
 - [ ] Resource/Formats/RIM/* (4 files)
 
 **SSF Format** (5 files)
+
 - [ ] Resource/Formats/SSF/* (5 files)
 
 **TLK Format** (6 files) - **HIGH PRIORITY** (dialogue text)
+
 - [ ] Resource/Formats/TLK/* (6 files)
 
 **TPC Format** (12 files) - **HIGH PRIORITY** (textures)
+
 - [ ] Resource/Formats/TPC/* (12 files)
 
 **TwoDA Format** (5 files) - **HIGH PRIORITY** (game data tables)
+
 - [ ] Resource/Formats/TwoDA/* (5 files)
 
 **TXI Format** (7 files)
+
 - [ ] Resource/Formats/TXI/* (7 files)
 
 **VIS Format** (5 files) - **HIGH PRIORITY** (area visibility)
+
 - [ ] Resource/Formats/VIS/* (5 files)
 
 **WAV Format** (10 files)
+
 - [ ] Resource/Formats/WAV/* (10 files)
 
 #### Resource Core (6 files)
