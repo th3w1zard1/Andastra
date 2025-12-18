@@ -13,16 +13,20 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Save/Load System**:
   - `swkotor2.exe`: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70, SaveModuleState @ 0x004f0c50, SaveModuleIFO @ 0x005018b0
+  - `swkotor.exe`: SerializeSaveNfo @ 0x004b3110, 0x006ca250, 0x006c8e50, 0x004b8300 (via savenfo @ 0x0074542c), SaveGlobalVariables @ 0x0052ad10 (via GLOBALVARS @ 0x007484ec), SavePartyTable @ 0x0052ade0 (via PARTYTABLE @ 0x0074930c)
+  - `nwmain.exe`: savenfo @ 0x140df01d0 (string reference, function @ 0x1408187c4)
   - **Inheritance**: Base class `SaveSerializer` (Runtime.Games.Common), `OdysseySaveSerializer : SaveSerializer` (Runtime.Games.Odyssey)
-  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
+  - **Cross-engine**: Found swkotor.exe and nwmain.exe equivalents, daorigins.exe TODO
 - **Walkmesh System**:
   - `swkotor2.exe`: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0
   - **Inheritance**: Base class `WalkmeshSystem` (Runtime.Games.Common), `OdysseyWalkmeshSystem : WalkmeshSystem` (Runtime.Games.Odyssey)
   - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
 - **Module Loading**:
   - `swkotor2.exe`: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
+  - `swkotor.exe`: LoadModule @ 0x0067bc40, 0x004ba920, 0x00579b50, 0x004094a0, 0x004b95b0, 0x006cfa70, 0x004b51a0, 0x004c44d0 (via MODULES: @ 0x0073d90c)
+  - `nwmain.exe`: LoadModule @ 0x140dfdb20 (string reference, functions @ 0x140566fd6, 0x1407cd384, 0x1407cd400)
   - **Inheritance**: Base class `ModuleLoader` (Runtime.Games.Common), `OdysseyModuleLoader : ModuleLoader` (Runtime.Games.Odyssey)
-  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
+  - **Cross-engine**: Found swkotor.exe and nwmain.exe equivalents, daorigins.exe TODO
 
 ### 🔄 In Progress
 
@@ -70,7 +74,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `swkotor2.exe`: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70
   - `swkotor.exe`: SaveGlobalVariables @ 0x0052ad10 (via GLOBALVARS @ 0x007484ec), SavePartyTable @ 0x0052ade0 (via PARTYTABLE @ 0x0074930c)
 - **Aurora Implementation**: `AuroraSaveSerializer : SaveSerializer` (Runtime.Games.Aurora)
-  - `nwmain.exe`: TODO - Search for similar functions
+  - `nwmain.exe`: savenfo @ 0x140df01d0 (string reference, function @ 0x1408187c4), GLOBAL_VARIABLES @ 0x140dbf3d0 (string reference)
 - **Eclipse Implementation**: `EclipseSaveSerializer : SaveSerializer` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
   - `DragonAge2.exe`: TODO - Search for similar functions
