@@ -139,11 +139,14 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Journal/Quest System**: ✅ **ANALYZED**
   - `swkotor2.exe`: SaveJournalFlagsToGFF @ 0x004eac50 - ✅ ANALYZED - Saves journal flags to GFF format, writes JOURNAL flag (bit 4), NEWQUESTSOUND flag (bit 6), COMPLETESOUND flag (bit 7), and other party status flags to GFF, called by SavePartyTable (via "JOURNAL" @ 0x007bdf44, "NEWQUESTSOUND" @ 0x007bded8)
   - `swkotor2.exe`: LoadJournalFlagsFromGFF @ 0x00579360 - ✅ ANALYZED - Loads journal flags from GFF format, reads JOURNAL flag (bit 4), NEWQUESTSOUND flag (bit 6), COMPLETESOUND flag (bit 7), and other party status flags from GFF, called by LoadPartyTable (via "JOURNAL" @ 0x007bdf44, "NEWQUESTSOUND" @ 0x007bded8)
+  - `swkotor.exe`: SaveJournalFlagsToGFF @ 0x004b26c0 - ✅ FOUND - Saves journal flags to GFF format (swkotor.exe version), writes JOURNAL flag (bit 4), NEWQUESTSOUND flag (bit 6), COMPLETESOUND flag (bit 7), and other party status flags to GFF (via "JOURNAL" @ 0x00745204, "NEWQUESTSOUND")
+  - `swkotor.exe`: LoadJournalFlagsFromGFF @ 0x006c8490 - ✅ FOUND - Loads journal flags from GFF format (swkotor.exe version), reads JOURNAL flag (bit 4), NEWQUESTSOUND flag (bit 6), COMPLETESOUND flag (bit 7), and other party status flags from GFF (via "JOURNAL" @ 0x00745204, "NEWQUESTSOUND")
   - `swkotor2.exe`: FUN_005e6ac0 - ✅ FOUND - Loads dialogue entry from GFF, reads Quest and QuestEntry fields from dialogue entry data (via "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8)
   - `swkotor2.exe`: FUN_005a9210 - ✅ FOUND - Server-side journal message handler, handles journal update messages from server to client (via "Journal" @ 0x007c2490)
   - `swkotor2.exe`: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8, "Journal" @ 0x007c2490, "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8, "NEWQUESTSOUND" @ 0x007bded8 (string references) - ✅ FOUND
+  - `swkotor.exe`: "JOURNAL" @ 0x00745204, "Journal" @ 0x007481c0, "NW_JOURNAL" @ 0x0074a110, "Quest" @ 0x0074a5dc, "QuestEntry" @ 0x0074a5d0 (string references) - ✅ FOUND
   - **Inheritance**: Base class `JournalSystem` (Runtime.Games.Common), `OdysseyJournalSystem : JournalSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
   - **Note**: Journal system is integrated with party table system - journal flags stored in party table GFF. Quest state changes stored as global variables. Journal entries loaded from JRL files (GFF with "JRL " signature).
 - **Waypoint System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadWaypointList @ 0x004e04a0 - ✅ ANALYZED - Loads waypoint list from GIT GFF into area, iterates through "WaypointList" GFF list, reads ObjectId, creates waypoint entities, loads waypoint data from GFF (XPosition, YPosition, ZPosition), validates position on walkmesh, adds waypoints to area (via "WaypointList" @ 0x007bd060)
