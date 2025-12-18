@@ -359,17 +359,18 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 **Most Relevant for Current Project Goals** - This is the primary focus for implementation/unification with class inheritance.
 
+- **swkotor2.exe** (KotOR 2: The Sith Lords) - **🎯 HIGHEST PRIORITY**
+  - Path: `/swkotor2.exe`
+  - Functions: **13,818** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **HIGHEST** - Most complete Odyssey implementation, PRIMARY reference for all systems
+  - **This is the MOST RELEVANT executable for current project goals**
+
 - **swkotor.exe** (KotOR 1)
   - Path: `/swkotor.exe`
-  - Functions: **12,045** (filtered, excluding default names)
+  - Functions: **12,066** (filtered, excluding default names)
   - Status: ✅ Loaded and available
   - Priority: **HIGH** - Primary reference for KotOR 1 engine behavior
-
-- **swkotor2.exe** (KotOR 2: The Sith Lords)
-  - Path: `/swkotor2.exe`
-  - Functions: **13,782** (filtered, excluding default names)
-  - Status: ✅ Loaded and available
-  - Priority: **HIGHEST** - Most complete Odyssey implementation, primary reference for KotOR 2
 
 ### Aurora Engine (Neverwinter Nights)
 
@@ -426,9 +427,31 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ### Total Executables Available: 20
 
-- Game Executables: 8 (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe, nwnnsscomp.exe, nwnnsscomp_kscript.exe)
-- System DLLs: 11
-- **Total Functions Available**: ~120,000+ across all game executables
+**Project Path**: `C:\Users\boden\test.gpr`  
+**Status**: ✅ **ALL PROGRAMS LOADED INTO MEMORY**
+
+- **Game Executables**: 9
+  - Odyssey: swkotor.exe (12,066 functions), swkotor2.exe (13,818 functions) ⭐ **PRIMARY TARGET**
+  - Aurora: nwmain.exe (52,644 functions), nwnnsscomp.exe, nwnnsscomp_kscript.exe
+  - Eclipse: daorigins.exe (8,420 functions), DragonAge2.exe (12,069 functions)
+  - Eclipse-derived: MassEffect.exe (12,558 functions), MassEffect2.exe (3 functions - launcher)
+- **System DLLs**: 11 (USER32.DLL, KERNEL32.DLL, GDI32.DLL, IMM32.DLL, VERSION.DLL, OLE32.DLL, DINPUT8.DLL, OPENGL32.DLL, GLU32.DLL, MSS32.DLL, BINKW32.DLL)
+- **Total Functions Available**: **~120,000+** across all game executables
+
+### Executable Summary Table
+
+| Executable | Engine | Functions | Priority | Status |
+|------------|--------|-----------|----------|--------|
+| **swkotor2.exe** | Odyssey | 13,818 | **🎯 HIGHEST** | ✅ Loaded |
+| **swkotor.exe** | Odyssey | 12,066 | **HIGH** | ✅ Loaded |
+| **nwmain.exe** | Aurora | 52,644 | MEDIUM | ✅ Loaded |
+| **daorigins.exe** | Eclipse | 8,420 | MEDIUM | ✅ Loaded |
+| **DragonAge2.exe** | Eclipse | 12,069 | MEDIUM | ✅ Loaded |
+| **MassEffect.exe** | Eclipse | 12,558 | LOW | ✅ Loaded |
+| **MassEffect2.exe** | Eclipse | 3 | LOW | ✅ Loaded |
+| **nwnnsscomp.exe** | Tool | - | LOW | ✅ Loaded |
+| **nwnnsscomp_kscript.exe** | Tool | - | LOW | ✅ Loaded |
+| **System DLLs (11)** | System | - | LOW | ✅ Loaded |
 
 ## Reverse Engineering Strategy by Engine
 
@@ -498,6 +521,151 @@ When processing a file:
 6. Rename functions in Ghidra with descriptive names
 7. Set function prototypes in Ghidra
 8. Add comprehensive comments in Ghidra
+
+## Complete File Inventory - src/Andastra
+
+**Total Files**: ~1,200+ C# files across all projects  
+**Organization**: Organized by layer (Core → Games → Graphics → Content → Scripting → Parsing)
+
+### Runtime Layer (Core Engine Logic)
+
+#### Runtime/Core (99 files) - **HIGHEST PRIORITY FOR REVERSE ENGINEERING**
+
+**Purpose**: Core domain logic, no MonoGame dependency  
+**Ghidra References Required**: ✅ **YES - ALL FILES**
+
+- **Entities** (4 files): Entity.cs, World.cs, EventBus.cs, TimeManager.cs
+- **Actions** (27 files): ActionAttack.cs, ActionBase.cs, ActionCastSpellAtLocation.cs, ActionCastSpellAtObject.cs, ActionCloseDoor.cs, ActionDestroyObject.cs, ActionDoCommand.cs, ActionEquipItem.cs, ActionFollowObject.cs, ActionJumpToLocation.cs, ActionJumpToObject.cs, ActionMoveAwayFromObject.cs, ActionMoveToLocation.cs, ActionMoveToObject.cs, ActionOpenDoor.cs, ActionPickUpItem.cs, ActionPlayAnimation.cs, ActionPutDownItem.cs, ActionQueue.cs, ActionRandomWalk.cs, ActionSpeakString.cs, ActionUnequipItem.cs, ActionUseItem.cs, ActionUseObject.cs, ActionWait.cs, DelayScheduler.cs
+- **AI** (1 file): AIController.cs
+- **Animation** (1 file): AnimationSystem.cs
+- **Audio** (1 file): ISoundPlayer.cs
+- **Camera** (1 file): CameraController.cs
+- **Combat** (3 files): CombatSystem.cs, CombatTypes.cs, EffectSystem.cs
+- **Dialogue** (4 files): DialogueInterfaces.cs, DialogueSystem.cs, LipSyncController.cs, RuntimeDialogue.cs
+- **Enums** (5 files): Ability.cs, ActionStatus.cs, ActionType.cs, ObjectType.cs, ScriptEvent.cs
+- **GameLoop** (1 file): FixedTimestepGameLoop.cs
+- **Interfaces** (25 files): IAction.cs, IActionQueue.cs, IArea.cs, IComponent.cs, IDelayScheduler.cs, IEntity.cs, IEventBus.cs, IGameServicesContext.cs, IModule.cs, INavigationMesh.cs, ITimeManager.cs, IWorld.cs, Components/IActionQueueComponent.cs, Components/IAnimationComponent.cs, Components/IDoorComponent.cs, Components/IFactionComponent.cs, Components/IInventoryComponent.cs, Components/IItemComponent.cs, Components/IPerceptionComponent.cs, Components/IPlaceableComponent.cs, Components/IQuickSlotComponent.cs, Components/IRenderableComponent.cs, Components/IScriptHooksComponent.cs, Components/IStatsComponent.cs, Components/ITransformComponent.cs, Components/ITriggerComponent.cs
+- **Journal** (1 file): JournalSystem.cs
+- **Module** (3 files): ModuleTransitionSystem.cs, RuntimeArea.cs, RuntimeModule.cs
+- **Movement** (2 files): CharacterController.cs, PlayerInputHandler.cs
+- **Navigation** (2 files): NavigationMesh.cs, NavigationMeshFactory.cs
+- **Party** (3 files): PartyInventory.cs, PartyMember.cs, PartySystem.cs
+- **Perception** (1 file): PerceptionSystem.cs
+- **Save** (3 files): AreaState.cs, SaveGameData.cs, SaveSystem.cs
+- **Templates** (9 files): CreatureTemplate.cs, DoorTemplate.cs, EncounterTemplate.cs, IEntityTemplate.cs, PlaceableTemplate.cs, SoundTemplate.cs, StoreTemplate.cs, TriggerTemplate.cs, WaypointTemplate.cs
+- **Triggers** (1 file): TriggerSystem.cs
+- **Root** (1 file): GameSettings.cs
+
+#### Runtime/Games (99 files) - **HIGHEST PRIORITY FOR REVERSE ENGINEERING**
+
+**Purpose**: Engine-specific implementations with class inheritance  
+**Ghidra References Required**: ✅ **YES - ALL FILES**
+
+- **Common** (8 files): BaseEngine.cs, BaseEngineGame.cs, BaseEngineModule.cs, BaseEngineProfile.cs, IEngine.cs, IEngineGame.cs, IEngineModule.cs, IEngineProfile.cs
+- **Odyssey** (84 files) - **PRIMARY TARGET**:
+  - **Core**: OdysseyEngine.cs, OdysseyGameSession.cs, OdysseyModuleLoader.cs
+  - **Combat** (4 files): CombatManager.cs, CombatRound.cs, DamageCalculator.cs, WeaponDamageCalculator.cs
+  - **Components** (18 files): ActionQueueComponent.cs, AnimationComponent.cs, CreatureComponent.cs, DoorComponent.cs, EncounterComponent.cs, FactionComponent.cs, InventoryComponent.cs, ItemComponent.cs, PerceptionComponent.cs, PlaceableComponent.cs, QuickSlotComponent.cs, RenderableComponent.cs, ScriptHooksComponent.cs, SoundComponent.cs, StatsComponent.cs, StoreComponent.cs, TransformComponent.cs, TriggerComponent.cs, WaypointComponent.cs
+  - **Data** (2 files): GameDataManager.cs, TwoDATableManager.cs
+  - **Dialogue** (5 files): ConversationContext.cs, DialogueManager.cs, DialogueState.cs, KotorDialogueLoader.cs, KotorLipDataLoader.cs
+  - **EngineApi** (4 files): K1EngineApi.cs, K2EngineApi.cs, OdysseyK1EngineApi.cs, OdysseyK2EngineApi.cs
+  - **Game** (5 files): GameSession.cs, ModuleLoader.cs, ModuleTransitionSystem.cs, PlayerController.cs, ScriptExecutor.cs
+  - **Input** (1 file): PlayerController.cs
+  - **Loading** (4 files): EntityFactory.cs, KotorModuleLoader.cs, ModuleLoader.cs, NavigationMeshFactory.cs
+  - **Profiles** (5 files): GameProfileFactory.cs, IGameProfile.cs, K1GameProfile.cs, K2GameProfile.cs, OdysseyK1GameProfile.cs, OdysseyK2GameProfile.cs
+  - **Save** (1 file): SaveGameManager.cs
+  - **Systems** (10 files): AIController.cs, ComponentInitializer.cs, EncounterSystem.cs, FactionManager.cs, HeartbeatSystem.cs, ModelResolver.cs, PartyManager.cs, PerceptionManager.cs, StoreSystem.cs, TriggerSystem.cs
+  - **Templates** (20 files): UTC.cs, UTCHelpers.cs, UTD.cs, UTDHelpers.cs, UTE.cs, UTEHelpers.cs, UTI.cs, UTIHelpers.cs, UTM.cs, UTMHelpers.cs, UTP.cs, UTPHelpers.cs, UTS.cs, UTSHelpers.cs, UTT.cs, UTTHelpers.cs, UTW.cs, UTWHelpers.cs
+- **Aurora** (1 file): AuroraEngine.cs
+- **Eclipse** (1 file): EclipseEngine.cs
+- **Infinity** (1 file): InfinityEngine.cs
+
+#### Runtime/Scripting (11 files) - **HIGHEST PRIORITY FOR REVERSE ENGINEERING**
+
+**Purpose**: NCS VM implementation and Engine API  
+**Ghidra References Required**: ✅ **YES - ALL FILES**
+
+- **EngineApi** (2 files): BaseEngineApi.cs, K1EngineApi.cs.backup
+- **Interfaces** (5 files): IEngineApi.cs, IExecutionContext.cs, INcsVm.cs, IScriptGlobals.cs, Variable.cs
+- **Types** (1 file): Location.cs
+- **VM** (3 files): ExecutionContext.cs, NcsVm.cs, ScriptGlobals.cs
+- **Root** (1 file): ScriptExecutor.cs
+
+#### Runtime/Content (18 files) - **SELECTED FILES REQUIRE REVERSE ENGINEERING**
+
+**Purpose**: Asset conversion/caching  
+**Ghidra References Required**: ⚠️ **SELECTED FILES ONLY**
+
+- **Cache** (1 file): ContentCache.cs
+- **Converters** (1 file): **BwmToNavigationMeshConverter.cs** ⚠️ **REQUIRES GHIDRA**
+- **Interfaces** (4 files): IContentCache.cs, IContentConverter.cs, IGameResourceProvider.cs, IResourceProvider.cs
+- **Loaders** (2 files): **GITLoader.cs** ⚠️ **REQUIRES GHIDRA**, **TemplateLoader.cs** ⚠️ **REQUIRES GHIDRA**
+- **MDL** (7 files): MDLBulkReader.cs, MDLCache.cs, MDLConstants.cs, MDLDataTypes.cs, MDLFastReader.cs, MDLLoader.cs, MDLOptimizedReader.cs
+- **ResourceProviders** (1 file): GameResourceProvider.cs
+- **Save** (2 files): **SaveDataProvider.cs** ⚠️ **REQUIRES GHIDRA**, **SaveSerializer.cs** ⚠️ **REQUIRES GHIDRA**
+
+#### Runtime/Graphics (247 files) - **LOW PRIORITY**
+
+**Purpose**: Modern MonoGame/Stride rendering adapters  
+**Ghidra References Required**: ❌ **NO** (Modern implementation, not original engine code)
+
+- **Common** (50 files): Base graphics backends, interfaces, post-processing, raytracing, upscaling
+- **MonoGame** (158 files): Complete MonoGame rendering pipeline, modern enhancements
+- **Stride** (37 files): Stride rendering backend
+- **Enums** (1 file): GraphicsBackendType.cs
+
+### Parsing Layer (File Format Parsing)
+
+#### Parsing (600+ files) - **SELECTED FILES REQUIRE REVERSE ENGINEERING**
+
+**Purpose**: File format parsing and extraction  
+**Ghidra References Required**: ⚠️ **SELECTED FILES ONLY** (BWM, GFF, NCS formats)
+
+- **Common** (18 files): BinaryExtensions.cs, BinaryReader.cs, BinaryWriter.cs, CaseAwarePath.cs, Face.cs, Game.cs, GameObject.cs, Language.cs, LocalizedString.cs, Misc.cs, Module.cs, ModuleDataLoader.cs, Pathfinding.cs, ResRef.cs, SurfaceMaterial.cs, Script/DataType.cs, Script/DataTypeExtensions.cs, Script/NwscriptParser.cs, Script/ScriptConstant.cs, Script/ScriptDefs.cs, Script/ScriptFunction.cs, Script/ScriptLib.cs, Script/ScriptParam.cs
+- **Extract** (15 files): Capsule/, Chitin/, ChitinWrapper.cs, FileResource.cs, FileResourceHelpers.cs, InstallationWrapper.cs, KeyFileWrapper.cs, KeyWriterWrapper.cs, **SaveData/** ⚠️ **REQUIRES GHIDRA** (GlobalVars.cs, PartyTable.cs, SaveInfo.cs), TalkTable.cs, TwoDAManager.cs, TwoDARegistry.cs
+- **Installation** (4 files): Installation.cs, InstallationResourceManager.cs, ResourceResult.cs, SearchLocation.cs
+- **Merge** (1 file): ModuleManager.cs
+- **Resource/Formats** (500+ files):
+  - **BIF** (6 files): BIF format parsing
+  - **BWM** (10 files) ⚠️ **REQUIRES GHIDRA**: BWM.cs, BWMAdjacency.cs, BWMAuto.cs, BWMBinaryReader.cs, BWMBinaryWriter.cs, BWMEdge.cs, BWMFace.cs, BWMMostSignificantPlane.cs, BWMNodeAABB.cs, BWMType.cs
+  - **ERF** (5 files): ERF format parsing
+  - **GFF** (54 files) ⚠️ **REQUIRES GHIDRA**: GFF format parsing (save/load, templates)
+  - **KEY** (6 files): KEY format parsing
+  - **LIP** (6 files): LIP format parsing (lip sync)
+  - **LTR** (5 files): LTR format parsing
+  - **LYT** (9 files): LYT format parsing (area layout)
+  - **MDL** (7 files): MDL format parsing (3D models)
+  - **NCS** (375+ files) ⚠️ **REQUIRES GHIDRA**: NCS format parsing, compiler, decompiler, VM
+  - **RIM** (4 files): RIM format parsing
+  - **SSF** (5 files): SSF format parsing
+  - **TLK** (6 files): TLK format parsing (dialogue text)
+  - **TPC** (12 files): TPC format parsing (textures)
+  - **TwoDA** (5 files): TwoDA format parsing (game data tables)
+  - **TXI** (7 files): TXI format parsing
+  - **VIS** (5 files): VIS format parsing (area visibility)
+  - **WAV** (10 files): WAV format parsing
+- **Tools** (24 files): Archives.cs, Conversions.cs, Creature.cs, Door.cs, Encoding.cs, Heuristics.cs, Kit.cs, Misc.cs, Model.cs, Module.cs, Patching.cs, Path.cs, Placeable.cs, PlayPazaak.cs, ReferenceCache.cs, Registry.cs, ResourceConversions.cs, Scripts.cs, StringUtils.cs, Template.cs, Utilities.cs, Validation.cs
+- **TSLPatcher** (40+ files): Modding tool, not engine code (no Ghidra references needed)
+
+### Game Layer (Executable Launcher)
+
+#### Game (8 files) - **LOW PRIORITY**
+
+**Purpose**: Executable launcher and game initialization  
+**Ghidra References Required**: ❌ **NO** (Application layer, not engine code)
+
+- **Core** (5 files): GamePathDetector.cs, GameSettings.cs, GameState.cs, GraphicsBackendFactory.cs, OdysseyGame.cs
+- **GUI** (2 files): MenuRenderer.cs, SaveLoadMenu.cs
+- **Root** (1 file): Program.cs
+
+### Utility Layer
+
+#### Utility (14 files) - **NO REVERSE ENGINEERING NEEDED**
+
+**Purpose**: Helper/utility code  
+**Ghidra References Required**: ❌ **NO**
+
+- ArrayHead.cs, CaseInsensitiveDict.cs, ErrorHandling.cs, Geometry/ (4 files), KeyError.cs, LZMA/LzmaHelper.cs, Misc.cs, MiscString/ (3 files), OrderedSet.cs, System/OSHelper.cs, SystemHelpers.cs
 
 ## Files to Process
 
