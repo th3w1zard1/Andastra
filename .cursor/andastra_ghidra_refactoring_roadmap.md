@@ -98,12 +98,18 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: TriggerList @ 0x140ddb780 (string reference), DungeonMaster_TriggerEntered @ 0x140dcbf08, DungeonMaster_TriggerExit @ 0x140dcbf28 (string references) - ✅ FOUND
   - **Inheritance**: Base class `TriggerSystem` (Runtime.Games.Common), `OdysseyTriggerSystem : TriggerSystem` (Runtime.Games.Odyssey), `AuroraTriggerSystem : TriggerSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
-- **Encounter System**:
-  - `swkotor.exe`: Encounter List @ 0x007474c8 (string reference)
-  - `swkotor2.exe`: Encounter List @ 0x007bd050 (string reference, used in LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0)
-  - `nwmain.exe`: Encounter List @ 0x140ddb790 (string reference), DungeonMaster_SpawnEncounter @ 0x140dcbc78 (string reference)
+- **Encounter System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadEncounterList @ 0x004e01a0 - ✅ ANALYZED - Loads encounter list from GIT GFF into area, iterates through "Encounter List" GFF list, reads ObjectId, TemplateResRef, position (XPosition, YPosition, ZPosition), geometry polygon, SpawnPointList, creates encounter entities and adds to area (via "Encounter List" @ 0x007bd050, "SpawnPointList" @ 0x007bd034)
+  - `swkotor2.exe`: SaveEncounterList @ 0x004e2be0 - ✅ ANALYZED - Saves encounter list from area to GFF save data, iterates through encounter array, gets encounter objects from world, saves each encounter state to "Encounter List" GFF list with ObjectId field (via "Encounter List" @ 0x007bd050)
+  - `swkotor2.exe`: LoadEncounterFromGFF @ 0x0056d770 - ✅ FOUND - Loads encounter from GFF (via "SpawnPointList" @ 0x007bd034)
+  - `swkotor2.exe`: SaveEncounterToGFF @ 0x0056c940 - ✅ FOUND - Saves encounter to GFF (via "SpawnPointList" @ 0x007bd034)
+  - `swkotor.exe`: LoadEncounterFromGFF @ 0x00592430 - ✅ ANALYZED - Loads encounter data from GFF format, reads Active, Reset, ResetTime, Respawns, SpawnOption, MaxCreatures, RecCreatures, PlayerOnly, Faction, Difficulty, position, geometry, and SpawnPointList (via "SpawnPointList" @ 0x007474ac)
+  - `swkotor.exe`: SaveEncounterToGFF @ 0x00591350 - ✅ FOUND - Saves encounter data to GFF format (via "SpawnPointList" @ 0x007474ac)
+  - `swkotor.exe`: LoadEncounterList @ 0x00505060 - ✅ FOUND - Loads encounter list from GIT (via "Encounter List" @ 0x007474c8)
+  - `swkotor.exe`: Encounter List @ 0x007474c8 (string reference) - ✅ FOUND
+  - `nwmain.exe`: Encounter List @ 0x140ddb790 (string reference), DungeonMaster_SpawnEncounter @ 0x140dcbc78 (string reference) - ✅ FOUND
   - **Inheritance**: Base class `EncounterSystem` (Runtime.Games.Common), `OdysseyEncounterSystem : EncounterSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
 - **Store System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadStoreFromGFF @ 0x00571310 - ✅ ANALYZED - Loads store data from GIT GFF into store object, reads Tag, LocName, MarkDown, MarkUp, OnOpenStore, BuySellFlag, ItemList (ObjectId, Infinite, InventoryRes), creates item objects, adds items to store inventory sorted by value (via "StoreList" @ 0x007bd098)
   - `swkotor2.exe`: SaveStoreToGFF @ 0x00570e30 - ✅ ANALYZED - Saves store data to GFF save data, writes Tag, LocName, MarkDown, MarkUp, OnOpenStore, BuySellFlag, ItemList (ObjectId, Infinite), position, orientation (via "StoreList" @ 0x007bd098)
