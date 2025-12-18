@@ -148,10 +148,12 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Waypoint System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadWaypointList @ 0x004e04a0 - ✅ ANALYZED - Loads waypoint list from GIT GFF into area, iterates through "WaypointList" GFF list, reads ObjectId, creates waypoint entities, loads waypoint data from GFF (XPosition, YPosition, ZPosition), validates position on walkmesh, adds waypoints to area (via "WaypointList" @ 0x007bd060)
   - `swkotor2.exe`: SaveWaypointList @ 0x004e2ca0 - ✅ FOUND - Saves waypoint list from area to GFF save data (via "WaypointList" @ 0x007bd060)
+  - `swkotor.exe`: LoadWaypointList @ 0x00505360 - ✅ FOUND - Loads waypoint list from GFF format (swkotor.exe version), similar to swkotor2.exe version
+  - `swkotor.exe`: SaveWaypointList @ 0x00507a50 - ✅ FOUND - Saves waypoint list to GFF format (swkotor.exe version), similar to swkotor2.exe version
   - `swkotor2.exe`: FUN_0056f5a0 - ✅ FOUND - Loads waypoint from GFF (LoadWaypointFromGFF), called by LoadWaypointList
   - `swkotor2.exe`: "WaypointList" @ 0x007bd060 (string reference) - ✅ FOUND
   - **Inheritance**: Base class `WaypointSystem` (Runtime.Games.Common), `OdysseyWaypointSystem : WaypointSystem` (Runtime.Games.Odyssey), `AuroraWaypointSystem : WaypointSystem` (Runtime.Games.Aurora)
-  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
   - **Note**: Waypoint system handles waypoint entities used for map navigation and area markers. Waypoints store position data and are used for pathfinding and map pinning.
 - **Placeable System**: ✅ **ANALYZED**
   - `swkotor2.exe`: FUN_004e5d80 - ✅ FOUND - Loads placeable list from GIT GFF into area, iterates through "Placeable List" GFF list, reads ObjectId, creates placeable entities, loads placeable data from GFF (TemplateResRef, Bearing, position X/Y/Z), adds placeables to area, calls LoadPlaceableFromGFF for each placeable (via "Placeable List" string reference)
