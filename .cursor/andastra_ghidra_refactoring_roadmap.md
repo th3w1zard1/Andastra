@@ -15,7 +15,11 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Module Loading**: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
 
 ### 🔄 In Progress
-- **NCS VM Execution**: Searching for script execution functions
+- **NCS VM Execution**: 
+  - DispatchScriptEvent @ 0x004dd730 - Dispatches script events to registered handlers
+  - LogScriptEvent @ 0x004dcfb0 - Logs script events for debugging
+  - LoadScriptHooks @ 0x0050c510 - Loads script hook references from GFF templates
+  - Searching for actual NCS bytecode execution functions
 
 ### 📋 Pending Systems
 - Dialogue System (DLG, TLK, VO)
