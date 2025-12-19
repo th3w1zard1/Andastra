@@ -17,7 +17,7 @@ namespace Andastra.Runtime.MonoGame.Scene
     /// Builds rendering structures from LYT (layout) and VIS (visibility) files.
     /// </summary>
     /// <remarks>
-    /// Odyssey Scene Builder:
+    /// Odyssey Scene Builder (MonoGame):
     /// - Based on swkotor.exe, swkotor2.exe area/room loading system
     /// - Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484, "roomcount" @ 0x007b96c0
     /// - Original implementation: Builds rendering structures from LYT (layout) and VIS (visibility) files
@@ -29,7 +29,8 @@ namespace Andastra.Runtime.MonoGame.Scene
     ///
     /// Inheritance:
     /// - BaseSceneBuilder (Runtime.Graphics.Common.Scene) - Common scene building patterns
-    ///   - OdysseySceneBuilder (this class) - Odyssey-specific LYT/VIS file handling
+    ///   - OdysseySceneBuilder (this class) - Odyssey-specific LYT/VIS file handling for MonoGame backend
+    ///   - StrideOdysseySceneBuilder (Runtime.Stride.Scene) - Same functionality for Stride backend
     /// </remarks>
     public class OdysseySceneBuilder : BaseSceneBuilder
     {
