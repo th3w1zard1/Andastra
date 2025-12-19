@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics.DLG;
@@ -1016,24 +1017,33 @@ namespace HolocronToolset.Editors
             // Create item for the focused link
             var item = new DLGStandardItem(link);
             
-            // Add the item to the model
+            // Add the item to the model's root items directly
+            // We need to access the private _rootItems, so we'll use InsertStarter which adds it
+            // But we need to ensure the item we created is the one used
             _model.InsertStarter(0, link);
             
-            // Recursively load the item and its children
-            _model.LoadDlgItemRec(item);
+            // Get the item that was actually added to the model
+            var rootItems = _model.GetRootItems();
+            DLGStandardItem focusedItem = null;
+            if (rootItems.Count > 0)
+            {
+                focusedItem = rootItems[0];
+                // Recursively load the item and its children
+                _model.LoadDlgItemRec(focusedItem);
+            }
             
             // Update the tree view
             UpdateTreeView();
             
             // Select the focused item in the tree
-            if (_dialogTree != null && _dialogTree.ItemsSource != null)
+            if (_dialogTree != null && _dialogTree.ItemsSource != null && focusedItem != null)
             {
                 var treeItems = _dialogTree.ItemsSource as System.Collections.IEnumerable;
                 if (treeItems != null)
                 {
                     foreach (TreeViewItem treeItem in treeItems)
                     {
-                        if (treeItem.Tag == item)
+                        if (treeItem.Tag == focusedItem)
                         {
                             _dialogTree.SelectedItem = treeItem;
                             break;
@@ -1042,7 +1052,7 @@ namespace HolocronToolset.Editors
                 }
             }
             
-            return item;
+            return focusedItem ?? item;
         }
 
         /// <summary>
