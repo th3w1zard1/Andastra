@@ -1,9 +1,0 @@
-  1. TestIndoorBuilderInitialization::test_builder_creates_with_installation
-  2. TestIndoorBuilderInitialization::test_builder_creates_without_installation
-  3. TestIndoorBuilderInitialization::test_renderer_initializes_correctly
-  4. TestUndoRedoCommands::test_add_room_command_undo_redo
-  5. TestUndoRedoCommands::test_delete_single_room_command
-  6. TestUndoRedoCommands::test_delete_multiple_rooms_command
-  7. TestUndoRedoCommands::test_move_rooms_command_single
-  8. TestUndoRedoCommands::test_move_rooms_command_multiple
-  9. TestUndoRedoCommands::test_rotate_rooms_command
