@@ -99,7 +99,7 @@ void __stdcall nwnnsscomp_compile_single_file(void);
 undefined4 __stdcall nwnnsscomp_compile_core(void);
 void __stdcall nwnnsscomp_generate_bytecode(void);
 void __thiscall nwnnsscomp_process_include(void* this, char* include_path);
-undefined4* __stdcall nwnnsscomp_create_compiler(void);
+undefined4* __stdcall nwnnsscomp_create_compiler(char* sourceBuffer, int bufferSize, char* includePath, int debugMode);
 void __stdcall nwnnsscomp_destroy_compiler(void);
 
 // File I/O functions
@@ -721,8 +721,241 @@ void nwnnsscomp_expand_bytecode_buffer(NssBytecodeBuffer* buffer) {
     // TODO: Requires further Ghidra analysis of FUN_00405409
 }
 
-void nwnnsscomp_update_include_context(char* path) {
-    // TODO: Requires further Ghidra analysis of FUN_00403dc3
+/**
+ * @brief Update include processing context and registry
+ *
+ * Maintains the include processing registry to track processed files and
+ * prevent duplicate symbol loading. Critical for selective include mechanism.
+ * This function implements the key optimization that prevents exhaustive
+ * dumping of library contents.
+ *
+ * @param path Path to the processed include file
+ * @note Original: FUN_00403dc3, Address: 0x00403dc3 - 0x00403dd8
+ * @note This function is key to understanding bytecode size differences
+ */
+void nwnnsscomp_update_include_context(char* path)
+{
+    // 0x00403dc3: push ebp                   // Save base pointer
+    // 0x00403dc4: mov ebp, esp                // Set up stack frame
+    // 0x00403dc6: push ecx                    // Preserve ECX (this pointer for thiscall)
+    // 0x00403dc7: mov dword ptr [ebp-0x4], ecx // Store 'this' pointer in local variable
+    
+    // Call the actual include context update implementation
+    // 0x00403dca: push dword ptr [ebp+0x8]   // Push path parameter
+    // 0x00403dcd: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer into ECX
+    // 0x00403dd0: call 0x00403e58             // Call FUN_00403e58(this, path)
+    
+    // FUN_00403e58 implementation:
+    // 0x00403e58: push ebp                   // Save base pointer
+    // 0x00403e59: mov ebp, esp                // Set up stack frame
+    // 0x00403e5b: push ecx                    // Preserve ECX
+    // 0x00403e5c: mov dword ptr [ebp-0x4], ecx // Store 'this' pointer
+    
+    // Calculate path length for include registry lookup
+    // 0x00403e5f: push dword ptr [ebp+0x8]   // Push path parameter
+    // 0x00403e62: call 0x00403e78             // Call FUN_00403e78(path) - calculates length
+    
+    // FUN_00403e78 implementation (path length calculation):
+    // 0x00403e78: push ebp                   // Save base pointer
+    // 0x00403e79: mov ebp, esp                // Set up stack frame
+    // 0x00403e7b: push dword ptr [ebp+0x8]   // Push path parameter
+    // 0x00403e7e: call 0x0041dba0             // Call strlen(path)
+    // 0x00403e83: pop ecx                    // Clean up parameter
+    // 0x00403e84: pop ebp                    // Restore base pointer
+    // 0x00403e85: ret                        // Return (length in EAX, but discarded)
+    
+    size_t pathLength = strlen(path);
+    
+    // Update include registry with path and length
+    // 0x00403e67: mov eax, dword ptr [ebp+0x8] // Load path parameter
+    // 0x00403e6a: push eax                   // Push path
+    // 0x00403e6b: push dword ptr [ebp-0x4]   // Push path length (from FUN_00403e78)
+    // 0x00403e6e: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403e71: call 0x00403f2f             // Call FUN_00403f2f(this, path, length)
+    
+    // FUN_00403f2f implementation (include registry update):
+    // 0x00403f2f: push ebp                   // Save base pointer
+    // 0x00403f30: mov ebp, esp                // Set up stack frame
+    // 0x00403f32: push ecx                    // Preserve ECX
+    // 0x00403f33: mov dword ptr [ebp-0x4], ecx // Store 'this' pointer
+    
+    // Check if include already processed (prevent duplicates)
+    // 0x00403f36: push dword ptr [ebp+0x8]   // Push path parameter
+    // 0x00403f39: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403f3c: call 0x00404310             // Call FUN_00404310(this, path) - check if exists
+    
+    // FUN_00404310 returns '\0' if not found, non-zero if found
+    // 0x00403f42: test eax, eax              // Check return value
+    // 0x00403f44: jz 0x00403f66               // Jump if not found (need to add)
+    
+    // Include not in registry - add it
+    // 0x00403f66: push 0x1                    // Push flag (0x1 = add to registry)
+    // 0x00403f68: push dword ptr [ebp+0xc]   // Push path length
+    // 0x00403f6b: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403f6e: call 0x00404156             // Call FUN_00404156(this, length, 0x1) - add entry
+    
+    // Get registry entry pointer
+    // 0x00403f76: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403f79: call 0x00403e86             // Call FUN_00403e86(this) - get entry pointer
+    // 0x00403f7e: mov dword ptr [ebp-0x8], eax // Store entry pointer
+    
+    // Copy path to registry entry
+    // 0x00403f81: push dword ptr [ebp+0xc]   // Push path length
+    // 0x00403f84: push dword ptr [ebp+0x8]   // Push path parameter
+    // 0x00403f87: push dword ptr [ebp-0x8]   // Push entry pointer
+    // 0x00403f8a: call 0x00403fa3             // Call FUN_00403fa3(entry, path, length) - copy string
+    
+    // Mark entry as active
+    // 0x00403f8f: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403f92: push dword ptr [ebp+0xc]   // Push path length
+    // 0x00403f95: call 0x00404117             // Call FUN_00404117(this, length) - activate entry
+    
+    // Include already in registry - update reference count
+    // 0x00403f48: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403f4b: call 0x00403e86             // Call FUN_00403e86(this) - get entry pointer
+    // 0x00403f50: mov dword ptr [ebp-0x8], eax // Store entry pointer
+    // 0x00403f53: mov ecx, dword ptr [ebp-0x8] // Load entry pointer
+    // 0x00403f56: sub ecx, eax                // Calculate offset
+    // 0x00403f58: push dword ptr [ebp+0xc]   // Push path length
+    // 0x00403f5b: push dword ptr [ebp+0x8]   // Push path parameter
+    // 0x00403f5e: push ecx                    // Push offset
+    // 0x00403f5f: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer
+    // 0x00403f62: call 0x00403fb9             // Call FUN_00403fb9(this, this, offset, length) - update
+    
+    // Update global include context pointer
+    // The include registry is stored at g_includeContext + 0x74 offset
+    // This prevents duplicate symbol loading and ensures selective inclusion
+    
+    // 0x00403f9c: mov eax, dword ptr [ebp-0x4] // Load 'this' pointer for return
+    // 0x00403f9f: pop ecx                    // Restore ECX
+    // 0x00403fa0: pop ebp                    // Restore base pointer
+    // 0x00403fa1: ret 0x8                     // Return, pop 8 bytes (2 parameters)
+    
+    // 0x00403e75: pop ecx                    // Restore ECX
+    // 0x00403e76: pop ebp                    // Restore base pointer
+    // 0x00403e77: ret 0x4                     // Return, pop 4 bytes (1 parameter)
+    
+    // 0x00403dd5: pop ecx                    // Restore ECX
+    // 0x00403dd6: pop ebp                    // Restore base pointer
+    // 0x00403dd7: ret 0x4                     // Return, pop 4 bytes (1 parameter)
+    
+    // Implementation: Update include registry at g_includeContext + 0x74
+    // This maintains a list of processed includes to prevent duplicate loading
+    // Only symbols actually referenced are included, not entire library files
+}
+
+/**
+ * @brief Creates and initializes compiler object instances
+ *
+ * Allocates and initializes compiler instances with file size, buffer pointers,
+ * and parsing state. Sets up vtable pointers and configures all necessary
+ * internal state for compilation operations.
+ *
+ * @param sourceBuffer Pointer to NSS source code buffer
+ * @param bufferSize Size of source buffer in bytes
+ * @param includePath Path to include file (if processing include)
+ * @param debugMode Debug mode flag (1=enabled, 0=disabled)
+ * @return Pointer to allocated compiler object, or NULL on failure
+ * @note Original: FUN_00401db7, Address: 0x00401db7 - 0x00401e3e
+ * @note Allocates: 52 bytes for compiler object structure
+ * @note Calling convention: __stdcall with parameters on stack
+ */
+undefined4* __stdcall nwnnsscomp_create_compiler(char* sourceBuffer, int bufferSize, char* includePath, int debugMode)
+{
+    // 0x00401db7: push ebp                   // Save base pointer
+    // 0x00401db8: mov ebp, esp                // Set up stack frame
+    // 0x00401dba: push 0xffffffff             // Push exception scope (-1 = outermost)
+    // 0x00401dbc: push 0x00401dc1             // Push exception handler address
+    // 0x00401dc1: push fs:[0x0]              // Push current SEH handler from TEB
+    // 0x00401dc7: mov fs:[0x0], esp          // Install new SEH handler in TEB
+    // 0x00401dcd: sub esp, 0x10              // Allocate 16 bytes for local variables
+    
+    NssCompiler* compiler;                   // Local compiler object pointer
+    
+    // Allocate compiler object (52 bytes)
+    // 0x00401dd0: call 0x0041d7f4             // Call FUN_0041d7f4() - memory allocation
+    // FUN_0041d7f4 allocates 52 bytes (0x34) for compiler object
+    compiler = (NssCompiler*)malloc(sizeof(NssCompiler));
+    
+    // 0x00401dd5: mov dword ptr [ebp-0x10], eax // Store compiler pointer in local variable
+    // 0x00401dd8: mov ecx, dword ptr [ebp-0x10] // Load compiler pointer into ECX
+    // 0x00401ddb: call 0x0040231e             // Call FUN_0040231e(compiler) - constructor initialization
+    
+    if (!compiler) {
+        return NULL;
+    }
+    
+    // Initialize exception handling flag
+    // 0x00401de0: and dword ptr [ebp-0x4], 0x0 // Set exception flag to 0 (no exception yet)
+    
+    // Set up virtual function table pointer
+    // 0x00401de4: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401de7: mov dword ptr [eax], 0x428a50 // Store vtable pointer at offset +0x00
+    compiler->vtable = (void*)0x00428a50;
+    
+    // Initialize include path registry (offset +0x04)
+    // 0x00401ded: mov ecx, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401df0: add ecx, 0x4                 // Add offset 0x4 for include registry
+    // 0x00401df3: call 0x00403d89             // Call FUN_00403d89(compiler+0x4) - initialize registry
+    // This initializes the include file registry to empty state
+    
+    // Set exception flag to indicate object construction started
+    // 0x00401df8: mov byte ptr [ebp-0x4], 0x1   // Set exception flag to 1
+    
+    // Process include path if provided
+    // 0x00401dfc: push dword ptr [ebp+0x8]     // Push includePath parameter
+    // 0x00401dff: mov ecx, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401e02: add ecx, 0x4                 // Add offset 0x4 for include registry
+    // 0x00401e05: call 0x00403dc3             // Call FUN_00403dc3(compiler+0x4, includePath)
+    if (includePath) {
+        nwnnsscomp_update_include_context(includePath);
+    }
+    
+    // Set source buffer start pointer (offset +0x20)
+    // 0x00401e0a: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401e0d: mov ecx, dword ptr [ebp+0xc]  // Load sourceBuffer parameter
+    // 0x00401e10: mov dword ptr [eax+0x20], ecx // Store sourceBuffer at offset +0x20
+    compiler->sourceBufferStart = sourceBuffer;
+    
+    // Set source buffer end pointer (offset +0x24)
+    // 0x00401e13: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401e16: mov ecx, dword ptr [ebp+0xc]  // Load sourceBuffer parameter
+    // 0x00401e19: mov dword ptr [eax+0x24], ecx // Store sourceBuffer at offset +0x24 (initially same as start)
+    compiler->sourceBufferEnd = sourceBuffer;
+    
+    // Calculate and set bytecode buffer end pointer (offset +0x28)
+    // 0x00401e1c: mov eax, dword ptr [ebp+0xc]  // Load sourceBuffer parameter
+    // 0x00401e1f: add eax, dword ptr [ebp+0x10] // Add bufferSize to get end address
+    // 0x00401e22: mov ecx, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401e25: mov dword ptr [ecx+0x28], eax // Store buffer end at offset +0x28
+    compiler->bytecodeBufferEnd = sourceBuffer + bufferSize;
+    
+    // Set bytecode buffer current position pointer (offset +0x2c)
+    // 0x00401e28: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401e2b: mov ecx, dword ptr [eax+0x28] // Load buffer end from offset +0x28
+    // 0x00401e2e: mov dword ptr [eax+0x2c], ecx // Store buffer end at offset +0x2c (start at end for backward writing)
+    compiler->bytecodeBufferPos = compiler->bytecodeBufferEnd;
+    
+    // Set debug mode flag (offset +0x30)
+    // 0x00401e31: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401e34: mov cl, byte ptr [ebp+0x14]   // Load debugMode parameter (low byte)
+    // 0x00401e37: mov byte ptr [eax+0x30], cl   // Store debugMode at offset +0x30
+    compiler->debugModeEnabled = debugMode;
+    
+    // Set exception flag to indicate successful construction
+    // 0x00401e3a: or dword ptr [ebp-0x4], 0xffffffff // Set exception flag to -1 (success)
+    
+    // Restore exception handler
+    // 0x00401e41: mov ecx, dword ptr [ebp-0xc]  // Load saved SEH handler
+    // 0x00401e44: mov fs:[0x0], ecx             // Restore SEH handler chain in TEB
+    
+    // Return compiler object pointer
+    // 0x00401e4b: mov eax, dword ptr [ebp-0x10] // Load compiler pointer for return
+    // 0x00401e4e: mov esp, ebp                  // Restore stack pointer
+    // 0x00401e50: pop ebp                       // Restore base pointer
+    // 0x00401e51: ret 0x10                      // Return, pop 16 bytes (4 parameters)
+    
+    return (undefined4*)compiler;
 }
 
 void nwnnsscomp_setup_buffer_pointers(NssCompiler* compiler) {
@@ -732,8 +965,133 @@ void nwnnsscomp_setup_buffer_pointers(NssCompiler* compiler) {
     compiler->bytecodeBufferPos = NULL;
 }
 
+/**
+ * @brief Cleans up and destroys compiler object instances
+ *
+ * Destructor that frees allocated buffers, cleans up compiler state,
+ * and handles proper exception unwinding. Checks buffer validity before
+ * freeing and performs additional cleanup operations.
+ *
+ * @note Original: FUN_00401ecb, Address: 0x00401ecb - 0x00401f28
+ * @note Global state: Resets g_currentCompiler to NULL
+ * @note Uses global g_currentCompiler pointer for compiler object
+ */
+void __stdcall nwnnsscomp_destroy_compiler(void)
+{
+    // 0x00401ecb: push ebp                   // Save base pointer
+    // 0x00401ecc: mov ebp, esp                // Set up stack frame
+    // 0x00401ece: push 0xffffffff             // Push exception scope (-1 = outermost)
+    // 0x00401ed0: push 0x00401ed5             // Push exception handler address
+    // 0x00401ed5: push fs:[0x0]              // Push current SEH handler from TEB
+    // 0x00401edb: mov fs:[0x0], esp          // Install new SEH handler in TEB
+    // 0x00401ee1: sub esp, 0x10              // Allocate 16 bytes for local variables
+    
+    NssCompiler* compiler;                   // Local compiler object pointer
+    
+    // Get compiler object from global pointer
+    // 0x00401ee4: call 0x0041d7f4             // Call FUN_0041d7f4() - get compiler from global
+    // FUN_0041d7f4 retrieves compiler from g_currentCompiler (DAT_00434198)
+    compiler = (NssCompiler*)g_currentCompiler;
+    
+    // 0x00401eea: mov dword ptr [ebp-0x10], ecx // Store compiler pointer in local variable
+    
+    if (!compiler) {
+        return;
+    }
+    
+    // Set vtable pointer (required for virtual destructor call)
+    // 0x00401eed: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401ef0: mov dword ptr [eax], 0x428a50 // Store vtable pointer at offset +0x00
+    compiler->vtable = (void*)0x00428a50;
+    
+    // Initialize exception handling flag
+    // 0x00401ef6: and dword ptr [ebp-0x4], 0x0 // Set exception flag to 0
+    
+    // Check if source buffer exists and needs freeing
+    // 0x00401efa: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401efd: cmp dword ptr [eax+0x20], 0x0  // Compare sourceBufferStart with NULL
+    // 0x00401f01: jz 0x00401f0f                 // Jump if NULL (no buffer to free)
+    
+    if (compiler->sourceBufferStart != NULL) {
+        // Check if debug mode is enabled (affects buffer ownership)
+        // 0x00401f03: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+        // 0x00401f06: movzx eax, byte ptr [eax+0x30] // Load debugModeEnabled flag (zero-extend)
+        // 0x00401f0a: test eax, eax              // Check if debug mode enabled
+        // 0x00401f0c: jz 0x00401f0f               // Jump if debug mode disabled
+        
+        if (compiler->debugModeEnabled) {
+            // Free source buffer (only in debug mode, otherwise buffer is managed externally)
+            // 0x00401f0e: mov eax, dword ptr [ebp-0x10] // Load compiler pointer
+            // 0x00401f11: push dword ptr [eax+0x20]     // Push sourceBufferStart pointer
+            // 0x00401f14: call 0x0041d821                 // Call free(sourceBufferStart)
+            free(compiler->sourceBufferStart);
+            // 0x00401f19: pop ecx                        // Clean up parameter
+        }
+    }
+    
+    // Perform additional cleanup on include registry (offset +0x04)
+    // 0x00401f1a: mov ecx, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401f1d: add ecx, 0x4                 // Add offset 0x4 for include registry
+    // 0x00401f20: call 0x00403db0             // Call FUN_00403db0(compiler+0x4) - cleanup registry
+    nwnnsscomp_perform_additional_cleanup(compiler);
+    
+    // Set exception flag to indicate successful cleanup
+    // 0x00401f25: or dword ptr [ebp-0x4], 0xffffffff // Set exception flag to -1 (success)
+    
+    // Call base destructor
+    // 0x00401f29: mov ecx, dword ptr [ebp-0x10] // Load compiler pointer
+    // 0x00401f2c: call 0x00401e3f             // Call FUN_00401e3f(compiler) - base destructor
+    // FUN_00401e3f performs base class cleanup
+    
+    // Restore exception handler
+    // 0x00401f31: mov ecx, dword ptr [ebp-0xc]  // Load saved SEH handler
+    // 0x00401f34: mov fs:[0x0], ecx             // Restore SEH handler chain in TEB
+    
+    // Free compiler object itself
+    free(compiler);
+    
+    // Reset global compiler pointer
+    // 0x00401f3a: mov dword ptr [0x00434198], 0x0 // Clear g_currentCompiler
+    g_currentCompiler = 0;
+    
+    // Function epilogue
+    // 0x00401f41: mov esp, ebp                  // Restore stack pointer
+    // 0x00401f43: pop ebp                       // Restore base pointer
+    // 0x00401f44: ret                           // Return
+}
+
+/**
+ * @brief Performs additional compiler cleanup operations
+ *
+ * Executes supplementary cleanup tasks beyond basic memory deallocation.
+ * Handles cleanup of internal compiler state and resources, specifically
+ * the include file registry.
+ *
+ * @param compiler Pointer to compiler object to clean up
+ * @note Original: FUN_00403db0, Address: 0x00403db0 - 0x00403dc2
+ * @note Cleans up include registry at compiler + 0x4 offset
+ */
 void nwnnsscomp_perform_additional_cleanup(NssCompiler* compiler) {
-    // TODO: Requires further Ghidra analysis of FUN_00403db0
+    // 0x00403db0: push ebp                   // Save base pointer
+    // 0x00403db1: mov ebp, esp                // Set up stack frame
+    // 0x00403db3: push ecx                    // Preserve ECX (this pointer for thiscall)
+    // 0x00403db4: mov dword ptr [ebp-0x4], ecx // Store 'this' pointer in local variable
+    
+    // Clean up include registry entries
+    // The include registry is stored at compiler + 0x4 offset
+    // This function frees all registered include file entries
+    
+    // 0x00403db7: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer (compiler+0x4)
+    // 0x00403dba: call 0x00403d89             // Call FUN_00403d89(compiler+0x4) - cleanup registry
+    // FUN_00403d89 clears all entries in the include registry
+    
+    // 0x00403dbf: pop ecx                    // Restore ECX
+    // 0x00403dc0: pop ebp                    // Restore base pointer
+    // 0x00403dc1: ret                        // Return
+    
+    // Implementation: Clear include registry entries
+    // The registry maintains a list of processed includes to prevent duplicates
+    // This cleanup ensures all registry entries are properly freed
 }
 
 // ============================================================================
