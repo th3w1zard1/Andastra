@@ -31,18 +31,21 @@ namespace Andastra.Runtime.Core.Module
     /// - ":: Server mode: Module Running.\n" @ 0x007cbc44, ":: Server mode: Module Loaded.\n" @ 0x007cbc68 (module state debug)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves module state including creature positions, door states, placeable states
     /// - Module loading sequence:
-    ///   1. Show loading screen (LoadScreenResRef from IFO)
-    ///   2. Save current module state (creature positions, door/placeable states, triggered triggers)
-    ///   3. Fire OnModuleLeave script on current module (ScriptOnExit field in IFO)
-    ///   4. Unload current module (destroy all entities, clear areas)
-    ///   5. Load new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
-    ///   6. Restore module state if previously visited (from SaveSystem module state cache)
-    ///   7. Position party at waypoint (TransitionDestination from door, or default entry waypoint)
-    ///   8. Fire OnModuleLoad script on new module (ScriptOnLoad field in IFO, executes before OnModuleStart)
-    ///   9. Fire OnModuleStart script on new module (ScriptOnStart field in IFO, executes after OnModuleLoad)
-    ///   10. Fire OnEnter script on current area for each party member (ScriptOnEnter field in ARE)
-    ///   11. Fire OnSpawn script on newly spawned creatures (ScriptSpawn field in UTC template)
-    ///   12. Hide loading screen
+    ///   1. Play movies sequentially (if provided) - BIK format, blocking playback
+    ///   2. Show loading screen (LoadScreenResRef from IFO)
+    ///   3. Save current module state (creature positions, door/placeable states, triggered triggers)
+    ///   4. Fire OnClientLeave script on current module (before OnModuleLeave)
+    ///   4.5. Fire OnModuleLeave script on current module (ScriptOnExit field in IFO)
+    ///   5. Unload current module (destroy all entities, clear areas)
+    ///   6. Load new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
+    ///   7. Restore module state if previously visited (from SaveSystem module state cache)
+    ///   8. Position party at waypoint (TransitionDestination from door, or default entry waypoint)
+    ///   9. Fire OnModuleLoad script on new module (ScriptOnLoad field in IFO, executes before OnModuleStart)
+    ///   10. Fire OnModuleStart script on new module (ScriptOnStart field in IFO, executes after OnModuleLoad)
+    ///   10.5. Fire OnClientEnter script on new module (after OnModuleStart)
+    ///   11. Fire OnEnter script on current area for each party member (ScriptOnEnter field in ARE)
+    ///   12. Fire OnSpawn script on newly spawned creatures (ScriptSpawn field in UTC template)
+    ///   13. Hide loading screen
     /// - Module state persistence: Module states saved per-module (creature positions, door/placeable states) persist across visits
     /// - Waypoint positioning: Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
     /// - Loading screen: Displays LoadScreenResRef image from module IFO during transition
@@ -69,8 +72,9 @@ namespace Andastra.Runtime.Core.Module
         /// </summary>
         /// <param name="moduleResRef">Module resource reference.</param>
         /// <param name="waypointTag">Waypoint tag to position party at.</param>
+        /// <param name="movies">Optional array of movie file names (BIK format) to play before transition. Maximum 6 movies.</param>
         /// <returns>Task that completes when transition is done.</returns>
-        public async Task TransitionToModule(string moduleResRef, string waypointTag)
+        public async Task TransitionToModule(string moduleResRef, string waypointTag, string[] movies = null)
         {
             if (_isTransitioning)
             {
@@ -81,16 +85,26 @@ namespace Andastra.Runtime.Core.Module
 
             try
             {
-                // 1. Show loading screen
+                // 1. Play movies sequentially (if provided) - BEFORE loading screen
+                // Based on swkotor.exe/swkotor2.exe: Movie playback before module transition
+                // Movies play blocking (wait for each to finish before playing next)
+                // Movie files are BIK format (Bink video) - requires BINKW32.DLL
+                // If movie playback fails, continues with module transition
+                if (movies != null && movies.Length > 0)
+                {
+                    await PlayMoviesSequentially(movies);
+                }
+
+                // 2. Show loading screen
                 ShowLoadingScreen(GetLoadscreenForModule(moduleResRef));
 
-                // 2. Save current module state
+                // 3. Save current module state
                 if (_world.CurrentModule != null)
                 {
                     ModuleState moduleState = SaveCurrentModuleState();
                     _saveSystem.StoreModuleState(_world.CurrentModule.ResRef, moduleState);
 
-                    // 3. Fire OnClientLeave script (before OnModuleLeave)
+                    // 4. Fire OnClientLeave script (before OnModuleLeave)
                     // Based on swkotor2.exe: Client leave script execution
                     // Located via string references: "Mod_OnClientLeav" @ 0x007be718
                     // Original implementation: OnClientLeave fires when player/client leaves the module (before OnModuleLeave)
@@ -112,7 +126,7 @@ namespace Andastra.Runtime.Core.Module
                         _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnClientLeave, player);
                     }
 
-                    // 3.5. Fire OnModuleLeave script
+                    // 4.5. Fire OnModuleLeave script
                     // Based on swkotor2.exe: Module leave script execution
                     // Located via string references: "OnModuleLeave" @ 0x007bee50, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
                     // Original implementation: FUN_005226d0 @ 0x005226d0 executes module leave scripts before unloading
@@ -132,10 +146,10 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
 
-                // 4. Unload current module
+                // 5. Unload current module
                 await UnloadCurrentModule();
 
-                // 5. Load new module
+                // 6. Load new module
                 IModule newModule = await _moduleLoader.LoadModule(moduleResRef);
                 if (newModule == null)
                 {
@@ -148,7 +162,7 @@ namespace Andastra.Runtime.Core.Module
                     world.SetCurrentModule(newModule);
                 }
 
-                // 6. Check if we've been here before
+                // 7. Check if we've been here before
                 // Based on swkotor2.exe: Module state restoration
                 // Original implementation: Restores entity positions, door/placeable states if module was previously visited
                 if (_saveSystem.HasModuleState(moduleResRef))
@@ -160,7 +174,7 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
 
-                // 7. Position party at waypoint
+                // 8. Position party at waypoint
                 if (!string.IsNullOrEmpty(waypointTag))
                 {
                     IEntity waypoint = _world.GetEntityByTag(waypointTag, 0);
@@ -180,7 +194,7 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
 
-                // 8. Fire OnModuleLoad script
+                // 9. Fire OnModuleLoad script
                 // Based on swkotor2.exe: Module load script execution
                 // Located via string references: "OnModuleLoad" @ 0x007bee40, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes module load scripts after loading
@@ -198,7 +212,7 @@ namespace Andastra.Runtime.Core.Module
                     _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLoad, null);
                 }
 
-                // 9. Fire OnModuleStart script
+                // 10. Fire OnModuleStart script
                 // Based on swkotor2.exe: Module start script execution
                 // Located via string references: "OnModuleStart" script, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x15)
                 // Original implementation: OnModuleStart fires after OnModuleLoad, before gameplay starts
@@ -216,7 +230,7 @@ namespace Andastra.Runtime.Core.Module
                     _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleStart, null);
                 }
 
-                // 9.5. Fire OnClientEnter script
+                // 10.5. Fire OnClientEnter script
                 // Based on swkotor2.exe: Client enter script execution
                 // Located via string references: "Mod_OnClientEntr" @ 0x007be718, "Mod_OnClientEntrance" @ 0x007be718
                 // Original implementation: OnClientEnter fires when player/client enters the module (after OnModuleStart)
@@ -238,7 +252,7 @@ namespace Andastra.Runtime.Core.Module
                     _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnClientEnter, player);
                 }
 
-                // 10. Fire OnEnter for area
+                // 11. Fire OnEnter for area
                 // Based on swkotor2.exe: Area enter script execution
                 // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes area enter scripts for each party member
@@ -279,7 +293,7 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
 
-                // 11. Fire OnSpawn for any new creatures
+                // 12. Fire OnSpawn for any new creatures
                 // Based on swkotor2.exe: Creature spawn script execution
                 // Located via string references: "OnSpawn" @ 0x007beec0 (spawn script field)
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes spawn scripts when creatures are created
@@ -304,7 +318,7 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
 
-                // 11. Hide loading screen
+                // 13. Hide loading screen
                 HideLoadingScreen();
             }
             finally
@@ -585,6 +599,50 @@ namespace Andastra.Runtime.Core.Module
         private void HideLoadingScreen()
         {
             // TODO: Hide loading screen UI
+        }
+
+        /// <summary>
+        /// Plays movies sequentially before module transition.
+        /// Based on swkotor.exe/swkotor2.exe: Movie playback system
+        /// Located via string references: Movie playback occurs before module transition
+        /// Original implementation: Movies play blocking (wait for each to finish before playing next)
+        /// Movie files are BIK format (Bink video) - requires BINKW32.DLL
+        /// </summary>
+        /// <param name="movies">Array of movie file names (BIK format) to play sequentially.</param>
+        /// <returns>Task that completes when all movies have finished playing.</returns>
+        private async Task PlayMoviesSequentially(string[] movies)
+        {
+            if (movies == null || movies.Length == 0)
+            {
+                return;
+            }
+
+            // TODO: STUB - Implement BIK video playback
+            // Based on swkotor.exe/swkotor2.exe: Bink video playback system
+            // Original implementation: Uses BINKW32.DLL for BIK format video playback
+            // Movies play sequentially, blocking (waits for each movie to finish before playing next)
+            // If movie playback fails, continues with module transition
+            // 
+            // Implementation requirements:
+            // 1. Load BIK file from game resources (movies directory)
+            // 2. Initialize Bink video decoder (BINKW32.DLL)
+            // 3. Play video fullscreen, blocking until completion
+            // 4. Handle playback errors gracefully (continue if movie fails)
+            // 5. Support up to 6 movies played sequentially
+            //
+            // For now, log the movie names that would be played
+            for (int i = 0; i < movies.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(movies[i]))
+                {
+                    System.Console.WriteLine("[ModuleTransitionSystem] Movie playback (STUB): Would play movie '{0}' ({1}/{2})", movies[i], i + 1, movies.Length);
+                    // TODO: PLACEHOLDER - Replace with actual BIK video playback
+                    // await PlayBikMovie(movies[i]);
+                }
+            }
+
+            // Simulate async movie playback delay (remove when actual playback is implemented)
+            await Task.CompletedTask;
         }
     }
 

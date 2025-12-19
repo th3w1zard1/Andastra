@@ -5531,12 +5531,18 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             // Movie playback would occur before module transition, but ModuleTransitionSystem doesn't support movies yet
             if (ctx.World != null)
             {
-                // Extract movie parameters for future implementation
-                // Movies would play before module transition in original engine
+                // Extract movie parameters (up to 6 movies: sMovie1-sMovie6)
+                // Movies play sequentially before module transition in original engine
                 string[] movies = new string[6];
+                int movieCount = 0;
                 for (int i = 0; i < 6 && (i + 2) < args.Count; i++)
                 {
-                    movies[i] = args[i + 2].AsString();
+                    string movieName = args[i + 2].AsString();
+                    if (!string.IsNullOrEmpty(movieName))
+                    {
+                        movies[i] = movieName;
+                        movieCount++;
+                    }
                 }
 
                 // Access ModuleTransitionSystem directly from World
@@ -5550,7 +5556,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         // Fire-and-forget the async task - the game loop will handle the transition
                         // This matches original engine behavior where StartNewModule returns immediately
                         // and the transition happens asynchronously in the game loop
-                        System.Threading.Tasks.Task transitionTask = moduleTransitionSystem.TransitionToModule(moduleName, waypointTag);
+                        // Pass movie parameters to TransitionToModule (null if no movies provided)
+                        string[] moviesToPlay = movieCount > 0 ? movies : null;
+                        System.Threading.Tasks.Task transitionTask = moduleTransitionSystem.TransitionToModule(moduleName, waypointTag, moviesToPlay);
                         
                         // Note: We don't await here because:
                         // 1. NWScript functions are synchronous
