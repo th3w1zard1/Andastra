@@ -3906,6 +3906,11 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Based on swkotor.exe: Caster level is typically the total character level or Force user class levels
         /// For Force powers, caster level = total level of Force-using classes (Jedi Consular, Guardian, Sentinel, Master, Lord)
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe: GetCasterLevel returns the sum of levels in Force-using classes
+        /// Force-using classes are determined by the "forcedie" column in classes.2da (if forcedie > 0, class is Force-using)
+        /// This matches the original engine behavior where caster level for Force powers is based on Force-using class levels only
+        /// </remarks>
         private Variable Func_GetCasterLevel(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -3917,16 +3922,34 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             }
 
             // Get caster level from CreatureComponent class list
-            // In KOTOR, caster level for Force powers is typically the sum of Force-using class levels
+            // In KOTOR, caster level for Force powers is the sum of Force-using class levels
             CreatureComponent creatureComp = entity.GetComponent<CreatureComponent>();
             if (creatureComp != null)
             {
-                // TODO: SIMPLIFIED - For now, return total character level as caster level
-                // Full implementation would filter for Force-using classes only
-                // Force-using classes: Jedi Consular (2), Jedi Guardian (3), Jedi Sentinel (4),
-                //                     Jedi Master (8), Sith Lord (9), etc.
-                int totalLevel = creatureComp.GetTotalLevel();
-                return Variable.FromInt(totalLevel);
+                // Get GameDataManager from context to look up class data
+                Data.GameDataManager gameDataManager = null;
+                if (ctx != null && ctx.World != null && ctx.World.GameDataProvider != null)
+                {
+                    Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Data.OdysseyGameDataProvider;
+                    if (odysseyProvider != null)
+                    {
+                        gameDataManager = odysseyProvider.GameDataManager;
+                    }
+                }
+
+                if (gameDataManager != null)
+                {
+                    // Get caster level as sum of Force-using class levels
+                    int casterLevel = creatureComp.GetForceUsingClassLevels(gameDataManager);
+                    return Variable.FromInt(casterLevel);
+                }
+                else
+                {
+                    // Fallback: if GameDataManager not available, return total level
+                    // This should not happen in normal gameplay, but provides graceful degradation
+                    int totalLevel = creatureComp.GetTotalLevel();
+                    return Variable.FromInt(totalLevel);
+                }
             }
 
             return Variable.FromInt(0);

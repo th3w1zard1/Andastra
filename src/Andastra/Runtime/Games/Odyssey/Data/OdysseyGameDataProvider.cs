@@ -25,6 +25,14 @@ namespace Andastra.Runtime.Games.Odyssey.Data
         }
 
         /// <summary>
+        /// Gets the underlying GameDataManager.
+        /// </summary>
+        public GameDataManager GameDataManager
+        {
+            get { return _gameDataManager; }
+        }
+
+        /// <summary>
         /// Gets the creature collision radius for a given appearance type.
         /// </summary>
         /// <param name="appearanceType">The appearance type index (row index in appearance.2da).</param>

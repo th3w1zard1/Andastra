@@ -250,6 +250,39 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             return bab;
         }
 
+        /// <summary>
+        /// Gets total levels in Force-using classes (caster level for Force powers).
+        /// </summary>
+        /// <param name="gameDataManager">GameDataManager to look up class data.</param>
+        /// <returns>Sum of levels in all Force-using classes.</returns>
+        /// <remarks>
+        /// Based on swkotor.exe, swkotor2.exe: Caster level for Force powers is the sum of levels in Force-using classes
+        /// Force-using classes are determined by the "forcedie" column in classes.2da (if forcedie > 0, class is Force-using)
+        /// Force-using classes include: Jedi Guardian (3), Jedi Consular (4), Jedi Sentinel (5),
+        /// Jedi Master (12), Jedi Watchman (13), Jedi Weapon Master (11),
+        /// Sith Lord (15), Sith Marauder (14), Sith Assassin (16)
+        /// </remarks>
+        public int GetForceUsingClassLevels(Data.GameDataManager gameDataManager)
+        {
+            if (gameDataManager == null || ClassList == null)
+            {
+                return 0;
+            }
+
+            int totalLevel = 0;
+            foreach (CreatureClass cls in ClassList)
+            {
+                // Look up class data to check if it's a Force-using class
+                Data.ClassData classData = gameDataManager.GetClass(cls.ClassId);
+                if (classData != null && classData.ForceUser)
+                {
+                    totalLevel += cls.Level;
+                }
+            }
+
+            return totalLevel;
+        }
+
         #endregion
 
         #region Feats and Powers
