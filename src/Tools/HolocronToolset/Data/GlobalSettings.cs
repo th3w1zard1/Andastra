@@ -25,6 +25,14 @@ namespace HolocronToolset.Data
         public List<string> RecentFiles { get; set; } = new List<string>();
         private bool _firstTime = true;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:311
+        // Original: app_env_variables: SettingsProperty[dict[str, str]] = Settings.addSetting("EnvironmentVariables", {...})
+        public Dictionary<string, string> AppEnvVariables
+        {
+            get => GetValue<Dictionary<string, string>>("EnvironmentVariables", new Dictionary<string, string>());
+            set => SetValue("EnvironmentVariables", value);
+        }
+
         public GlobalSettings() : base("Global")
         {
             // Load settings from base class
