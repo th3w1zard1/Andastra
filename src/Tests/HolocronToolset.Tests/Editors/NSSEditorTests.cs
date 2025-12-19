@@ -170,14 +170,233 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestNssEditorLoadRealNcsFile: Load real NCS file test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_save_load_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:206-232)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:206-232
         // Original: def test_nss_editor_save_load_roundtrip(qtbot, installation: HTInstallation, tmp_path: Path): Test save/load roundtrip
         [Fact]
         public void TestNssEditorSaveLoadRoundtrip()
         {
-            // TODO: STUB - Implement save/load roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:206-232
-            throw new NotImplementedException("TestNssEditorSaveLoadRoundtrip: Save/load roundtrip test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Create temporary directory for test files
+            string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nss_roundtrip_test_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            try
+            {
+                System.IO.Directory.CreateDirectory(tempDir);
+
+                // Test Case 1: Basic NSS file roundtrip with simple script
+                string originalScript1 = "void main()\n{\n    int x = 5;\n    int y = 10;\n    int z = x + y;\n}\n";
+                string originalFile1 = System.IO.Path.Combine(tempDir, "test_script1.nss");
+                System.IO.File.WriteAllText(originalFile1, originalScript1, Encoding.UTF8);
+
+                var editor1 = new NSSEditor(null, installation);
+                byte[] originalData1 = System.IO.File.ReadAllBytes(originalFile1);
+                editor1.Load(originalFile1, "test_script1", ResourceType.NSS, originalData1);
+
+                // Build (save) the content
+                var (savedData1, _) = editor1.Build();
+                savedData1.Should().NotBeNull("Build should return data");
+                savedData1.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
+
+                // Write saved data to a new file
+                string savedFile1 = System.IO.Path.Combine(tempDir, "test_script1_saved.nss");
+                System.IO.File.WriteAllBytes(savedFile1, savedData1);
+
+                // Reload the saved file
+                var editor1Reload = new NSSEditor(null, installation);
+                byte[] reloadedData1 = System.IO.File.ReadAllBytes(savedFile1);
+                editor1Reload.Load(savedFile1, "test_script1_saved", ResourceType.NSS, reloadedData1);
+
+                // Verify content matches
+                var (reloadedBuilt1, _) = editor1Reload.Build();
+                reloadedBuilt1.Should().NotBeNull("Reloaded build should return data");
+                
+                // Compare byte arrays for exact match
+                savedData1.Should().BeEquivalentTo(reloadedBuilt1, "Saved and reloaded data should match exactly");
+
+                // Verify text content matches (allowing for encoding differences)
+                string originalText1 = Encoding.UTF8.GetString(originalData1);
+                string savedText1 = Encoding.UTF8.GetString(savedData1);
+                string reloadedText1 = Encoding.UTF8.GetString(reloadedBuilt1);
+                
+                // Normalize line endings for comparison (Windows vs Unix)
+                originalText1 = originalText1.Replace("\r\n", "\n").Replace("\r", "\n");
+                savedText1 = savedText1.Replace("\r\n", "\n").Replace("\r", "\n");
+                reloadedText1 = reloadedText1.Replace("\r\n", "\n").Replace("\r", "\n");
+                
+                savedText1.Should().Contain("void main", "Saved text should contain main function");
+                savedText1.Should().Contain("int x = 5", "Saved text should contain original content");
+                reloadedText1.Should().Contain("void main", "Reloaded text should contain main function");
+                reloadedText1.Should().Contain("int x = 5", "Reloaded text should contain original content");
+
+                // Test Case 2: NSS file with special characters and comments
+                string originalScript2 = "// Test script with special characters\nvoid main()\n{\n    string msg = \"Hello, World!\";\n    int value = 42;\n    // Comment with special chars: <>&\"'\n}\n";
+                string originalFile2 = System.IO.Path.Combine(tempDir, "test_script2.nss");
+                System.IO.File.WriteAllText(originalFile2, originalScript2, Encoding.UTF8);
+
+                var editor2 = new NSSEditor(null, installation);
+                byte[] originalData2 = System.IO.File.ReadAllBytes(originalFile2);
+                editor2.Load(originalFile2, "test_script2", ResourceType.NSS, originalData2);
+
+                var (savedData2, _) = editor2.Build();
+                savedData2.Should().NotBeNull("Build should return data for script with special chars");
+
+                string savedFile2 = System.IO.Path.Combine(tempDir, "test_script2_saved.nss");
+                System.IO.File.WriteAllBytes(savedFile2, savedData2);
+
+                var editor2Reload = new NSSEditor(null, installation);
+                byte[] reloadedData2 = System.IO.File.ReadAllBytes(savedFile2);
+                editor2Reload.Load(savedFile2, "test_script2_saved", ResourceType.NSS, reloadedData2);
+
+                var (reloadedBuilt2, _) = editor2Reload.Build();
+                savedData2.Should().BeEquivalentTo(reloadedBuilt2, "Saved and reloaded data with special chars should match");
+
+                // Test Case 3: Multiple save/load cycles (stress test)
+                string originalScript3 = "void main()\n{\n    int counter = 0;\n    counter++;\n}\n";
+                string originalFile3 = System.IO.Path.Combine(tempDir, "test_script3.nss");
+                System.IO.File.WriteAllText(originalFile3, originalScript3, Encoding.UTF8);
+
+                byte[] currentData = System.IO.File.ReadAllBytes(originalFile3);
+                string currentFile = originalFile3;
+
+                // Perform 5 save/load cycles
+                for (int cycle = 1; cycle <= 5; cycle++)
+                {
+                    var editorCycle = new NSSEditor(null, installation);
+                    editorCycle.Load(currentFile, $"test_script3_cycle{cycle}", ResourceType.NSS, currentData);
+
+                    var (cycleData, _) = editorCycle.Build();
+                    cycleData.Should().NotBeNull($"Cycle {cycle} build should return data");
+                    cycleData.Length.Should().BeGreaterThan(0, $"Cycle {cycle} build should return non-empty data");
+
+                    string cycleFile = System.IO.Path.Combine(tempDir, $"test_script3_cycle{cycle}.nss");
+                    System.IO.File.WriteAllBytes(cycleFile, cycleData);
+
+                    // Reload for next cycle
+                    currentData = System.IO.File.ReadAllBytes(cycleFile);
+                    currentFile = cycleFile;
+                }
+
+                // Verify final content still matches original intent
+                string finalText = Encoding.UTF8.GetString(currentData);
+                finalText.Should().Contain("void main", "Final cycle should contain main function");
+                finalText.Should().Contain("int counter", "Final cycle should contain counter variable");
+
+                // Test Case 4: Empty file handling
+                string emptyFile = System.IO.Path.Combine(tempDir, "test_empty.nss");
+                System.IO.File.WriteAllText(emptyFile, "", Encoding.UTF8);
+
+                var editorEmpty = new NSSEditor(null, installation);
+                byte[] emptyData = System.IO.File.ReadAllBytes(emptyFile);
+                editorEmpty.Load(emptyFile, "test_empty", ResourceType.NSS, emptyData);
+
+                var (emptyBuilt, _) = editorEmpty.Build();
+                // Empty file should still return some data (default template from New())
+                emptyBuilt.Should().NotBeNull("Empty file build should return data (default template)");
+
+                // Test Case 5: File with only whitespace
+                string whitespaceScript = "   \n\t\n  \n";
+                string whitespaceFile = System.IO.Path.Combine(tempDir, "test_whitespace.nss");
+                System.IO.File.WriteAllText(whitespaceFile, whitespaceScript, Encoding.UTF8);
+
+                var editorWhitespace = new NSSEditor(null, installation);
+                byte[] whitespaceData = System.IO.File.ReadAllBytes(whitespaceFile);
+                editorWhitespace.Load(whitespaceFile, "test_whitespace", ResourceType.NSS, whitespaceData);
+
+                var (whitespaceBuilt, _) = editorWhitespace.Build();
+                whitespaceBuilt.Should().NotBeNull("Whitespace file build should return data");
+
+                // Test Case 6: Large file roundtrip (performance and correctness)
+                StringBuilder largeScript = new StringBuilder();
+                largeScript.Append("void main()\n{\n");
+                for (int i = 0; i < 100; i++)
+                {
+                    largeScript.Append($"    int var{i} = {i};\n");
+                }
+                largeScript.Append("}\n");
+
+                string largeFile = System.IO.Path.Combine(tempDir, "test_large.nss");
+                System.IO.File.WriteAllText(largeFile, largeScript.ToString(), Encoding.UTF8);
+
+                var editorLarge = new NSSEditor(null, installation);
+                byte[] largeData = System.IO.File.ReadAllBytes(largeFile);
+                editorLarge.Load(largeFile, "test_large", ResourceType.NSS, largeData);
+
+                var (largeBuilt, _) = editorLarge.Build();
+                largeBuilt.Should().NotBeNull("Large file build should return data");
+                largeBuilt.Length.Should().BeGreaterThan(0, "Large file build should return non-empty data");
+
+                string largeSavedFile = System.IO.Path.Combine(tempDir, "test_large_saved.nss");
+                System.IO.File.WriteAllBytes(largeSavedFile, largeBuilt);
+
+                var editorLargeReload = new NSSEditor(null, installation);
+                byte[] largeReloadedData = System.IO.File.ReadAllBytes(largeSavedFile);
+                editorLargeReload.Load(largeSavedFile, "test_large_saved", ResourceType.NSS, largeReloadedData);
+
+                var (largeReloadedBuilt, _) = editorLargeReload.Build();
+                largeBuilt.Should().BeEquivalentTo(largeReloadedBuilt, "Large file saved and reloaded data should match");
+
+                // Test Case 7: File path persistence through save/load
+                string pathTestFile = System.IO.Path.Combine(tempDir, "path_test.nss");
+                string pathTestScript = "void main() { }\n";
+                System.IO.File.WriteAllText(pathTestFile, pathTestScript, Encoding.UTF8);
+
+                var editorPath = new NSSEditor(null, installation);
+                byte[] pathTestData = System.IO.File.ReadAllBytes(pathTestFile);
+                editorPath.Load(pathTestFile, "path_test", ResourceType.NSS, pathTestData);
+
+                // Verify filepath is stored
+                string originalTitle = editorPath.Title;
+                originalTitle.Should().Contain("path_test", "Title should contain file name");
+
+                var (pathTestBuilt, _) = editorPath.Build();
+                string pathTestSavedFile = System.IO.Path.Combine(tempDir, "path_test_saved.nss");
+                System.IO.File.WriteAllBytes(pathTestSavedFile, pathTestBuilt);
+
+                // Reload and verify path updates
+                editorPath.Load(pathTestSavedFile, "path_test_saved", ResourceType.NSS, pathTestBuilt);
+                string updatedTitle = editorPath.Title;
+                updatedTitle.Should().Contain("path_test_saved", "Title should update with new file name");
+            }
+            finally
+            {
+                // Cleanup: Delete temporary directory and all files
+                try
+                {
+                    if (System.IO.Directory.Exists(tempDir))
+                    {
+                        System.IO.Directory.Delete(tempDir, true);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors - temp directory will be cleaned up by system eventually
+                }
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_bookmark_add_and_navigate (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:234-276)
