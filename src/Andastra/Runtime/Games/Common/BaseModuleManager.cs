@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: Enhanced module system with transitions
     /// - nwmain.exe: Aurora module management
     /// - daorigins.exe: Eclipse module streaming
-    /// - TODO: dragonage2, masseffect 1/2
+    /// - TODO: dragonage2
     /// - Common concepts: Module definition, area loading, entity spawning, transitions
     ///
     /// Common functionality across engines:

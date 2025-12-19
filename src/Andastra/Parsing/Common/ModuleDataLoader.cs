@@ -3,7 +3,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Tools;
+// TODO: TEMPORARY - Commented out Tools to fix build errors`r`n// using Andastra.Parsing.Tools;
 using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Common

@@ -124,7 +124,7 @@ namespace Andastra.Parsing.Tools
                 Check("AppIcon50x50~ipad.png"),
             };
 
-            bool[] gaPcChecks = new[]
+            bool[] gaK2PcChecks = new[]
             {
                 Check("streamvoice"),
                 Check("swkotor2.exe"),
@@ -139,7 +139,7 @@ namespace Andastra.Parsing.Tools
                 Check("data/Dialogs.bif"),
             };
 
-            bool[] gaXboxChecks = new[]
+            bool[] gaK2XboxChecks = new[]
             {
                 Check("combat.erf"),
                 Check("effects.erf"),
@@ -176,7 +176,7 @@ namespace Andastra.Parsing.Tools
                 Check("SWRC/Textures/GUIContent.utx"),
             };
 
-            bool[] gaIosChecks = new[]
+            bool[] gaIosChecks2 = new[]
             {
                 Check("override/ios_mfi_deu.tga"),
                 Check("override/ios_mfi_eng.tga"),
@@ -209,12 +209,11 @@ namespace Andastra.Parsing.Tools
 
             // Determine the game with the most checks passed
             int gaScore = gaPcChecks.Count(x => x);
-            int gaScore = gaPcChecks.Count(x => x);
+            int gaScore2 = gaPcChecks2.Count(x => x);
             int gaXboxScore = gaXboxChecks.Count(x => x);
-            int gaXboxScore = gaXboxChecks.Count(x => x);
+            int gaXboxScore2 = gaXboxChecks2.Count(x => x);
             int gaIosScore = gaIosChecks.Count(x => x);
-            int gaIosScore = gaIosChecks.Count(x => x);
-            int gaAndroidScore = gaAndroidChecks.Count(x => x);
+            int gaIosScore2 = gaIosChecks2.Count(x => x);
             int gaAndroidScore = gaAndroidChecks.Count(x => x);
 
             Game? highestScoringGame = null;
@@ -226,9 +225,9 @@ namespace Andastra.Parsing.Tools
                 highestScoringGame = Game.K1;
             }
 
-            if (gaScore > highestScore)
+            if (gaScore2 > highestScore)
             {
-                highestScore = gaScore;
+                highestScore = gaScore2;
                 highestScoringGame = Game.K2;
             }
 
@@ -238,9 +237,9 @@ namespace Andastra.Parsing.Tools
                 highestScoringGame = Game.K1_XBOX;
             }
 
-            if (gaXboxScore > highestScore)
+            if (gaXboxScore2 > highestScore)
             {
-                highestScore = gaXboxScore;
+                highestScore = gaXboxScore2;
                 highestScoringGame = Game.K2_XBOX;
             }
 
@@ -250,9 +249,9 @@ namespace Andastra.Parsing.Tools
                 highestScoringGame = Game.K1_IOS;
             }
 
-            if (gaIosScore > highestScore)
+            if (gaIosScore2 > highestScore)
             {
-                highestScore = gaIosScore;
+                highestScore = gaIosScore2;
                 highestScoringGame = Game.K2_IOS;
             }
 

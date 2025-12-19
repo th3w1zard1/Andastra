@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: Advanced combat mechanics with force powers, feats
     /// - nwmain.exe: D20-based combat system
     /// - daorigins.exe: Tactical combat with positioning and abilities
-    /// - TODO: dragonage2, masseffect 1/2
+    /// - TODO: dragonage2
     /// - Common combat concepts: Initiative, rounds, attacks, damage, effects
     ///
     /// Common functionality across engines:

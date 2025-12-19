@@ -43,7 +43,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// <param name="fileFormat">File format (default: GAM, must be GAM).</param>
         /// <remarks>
         /// GAM Writing:
-        /// - Validates game type (Aurora or Infinity only, not Odyssey)
+        /// - Validates game type (Aurora only, not Odyssey)
         /// - Dismantles GAM object to GFF structure
         /// - Writes GFF format file with "GAM " signature
         /// - Supports file paths and streams
@@ -93,7 +93,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// <returns>Byte array containing GAM file data.</returns>
         /// <remarks>
         /// GAM Bytes Conversion:
-        /// - Validates game type (Aurora or Infinity only, not Odyssey)
+        /// - Validates game type (Aurora only, not Odyssey)
         /// - Dismantles GAM object to GFF structure
         /// - Converts GFF to bytes with "GAM " signature
         /// </remarks>

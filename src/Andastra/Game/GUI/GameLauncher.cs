@@ -19,7 +19,7 @@ namespace Andastra.Game.GUI
     /// Launcher UI:
     /// - Cross-platform using Eto.Forms (Windows/Mac/Linux)
     /// - Native look-and-feel on each platform
-    /// - Game selection combobox (K1, K2, NWN, DA:O, DA2, ME, , ME3)
+    /// - Game selection combobox (K1, K2, NWN, DA:O, DA2)
     /// - Editable installation path combobox with browse button
     /// - Start button to launch the game
     /// - Error dialog for launch failures
@@ -219,10 +219,6 @@ namespace Andastra.Game.GUI
             _gameComboBox.Items.Add(new GameItem(Game.DA, "Dragon Age: Origins"));
             _gameComboBox.Items.Add(new GameItem(Game.DA2, "Dragon Age II"));
 
-            // Eclipse Engine - 
-            _gameComboBox.Items.Add(new GameItem(Game.ME, ""));
-            _gameComboBox.Items.Add(new GameItem(Game., " 2"));
-            _gameComboBox.Items.Add(new GameItem(Game.ME3, " 3"));
         }
 
         private void PopulateGraphicsBackendComboBox()
@@ -427,14 +423,6 @@ namespace Andastra.Game.GUI
                            File.Exists(Path.Combine(path, "DragonAge.exe")) ||
                            File.Exists(Path.Combine(path, "DragonAge2.exe"));
 
-                case Game.ME:
-                case Game.:
-                case Game.ME3:
-                    // TODO: Validate  installation
-                    return Directory.Exists(Path.Combine(path, "BioGame")) ||
-                           File.Exists(Path.Combine(path, "")) ||
-                           File.Exists(Path.Combine(path, "")) ||
-                           File.Exists(Path.Combine(path, "MassEffect3.exe"));
 
                 default:
                     // For unknown games, just check if directory exists
@@ -452,9 +440,6 @@ namespace Andastra.Game.GUI
                 case Game.NWN2: return "Neverwinter Nights 2";
                 case Game.DA: return "Dragon Age: Origins";
                 case Game.DA2: return "Dragon Age II";
-                case Game.ME: return "";
-                case Game.: return " 2";
-                case Game.ME3: return " 3";
                 default: return "Game";
             }
         }

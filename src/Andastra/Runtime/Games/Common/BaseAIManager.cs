@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: Advanced AI with influence, factions, complex behaviors
     /// - nwmain.exe: D20-based AI with tactical positioning
     /// - daorigins.exe: Complex tactical AI with positioning and abilities
-    /// - TODO: dragonage2, masseffect 1/2
+    /// - TODO: dragonage2
     /// - Common AI concepts: Perception, decision trees, action queues, behavior states
     ///
     /// Common functionality across engines:
