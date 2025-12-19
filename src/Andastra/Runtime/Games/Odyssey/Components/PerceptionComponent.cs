@@ -9,9 +9,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// Concrete implementation of perception component for KOTOR.
     /// </summary>
     /// <remarks>
-    /// Perception Component:
-    /// - Based on swkotor2.exe perception system
-    /// - Located via string references: "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4
+    /// Perception Component (Odyssey-specific):
+    /// - Based on swkotor.exe: FUN_00500610 @ 0x00500610, FUN_005afce0 @ 0x005afce0 (perception data serialization)
+    /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking), FUN_005226d0 @ 0x005226d0 (perception data serialization)
+    /// - Located via string references: "PerceptionData" @ 0x007bf6c4 (swkotor2.exe), "PerceptionList" @ 0x007bf6d4 (swkotor2.exe)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68, "PerceptionRange" @ 0x007c4080
     /// - "PERCEPTIONDIST" @ 0x007c4070
     /// - Original implementation: Creatures have sight and hearing perception ranges
@@ -20,7 +21,18 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - Perception fires OnPerception script event on creature when new entities are detected
     /// - Default ranges: From appearances.2da PERSPACE column (~20m sight, ~15m hearing for standard creatures)
     /// - Can be modified by effects/feats (perception bonuses)
-    /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
+    /// 
+    /// Cross-Engine Analysis:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): PerceptionData/PerceptionList structures, FUN_005fb0f0 perception checking
+    /// - Aurora (nwmain.exe): PerceptionList/PerceptionData in SaveCreature @ 0x1403a0a60 (perception data serialization)
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): No direct perception component found (uses different AI system)
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): DisplayPerceptionList found but no component implementation
+    /// 
+    /// Inheritance Structure:
+    /// - Currently only Odyssey has PerceptionComponent implementation
+    /// - When other engines implement PerceptionComponent, common functionality should be extracted to BasePerceptionComponent
+    /// - Common functionality: SightRange, HearingRange, GetSeenObjects(), GetHeardObjects(), WasSeen(), WasHeard()
+    /// - Engine-specific: PerceptionManager integration, perception event types, serialization format
     /// </remarks>
     public class PerceptionComponent : IPerceptionComponent
     {
@@ -82,6 +94,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <summary>
         /// Gets entities that are currently seen.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
+        /// When perception manager is available, uses centralized tracking.
+        /// Falls back to local component tracking using Owner.World.GetEntity() for entity lookup.
+        /// </remarks>
         public IEnumerable<IEntity> GetSeenObjects()
         {
             if (_perceptionManager != null && Owner != null)
@@ -90,21 +107,30 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Fall back to local tracking
-            foreach (KeyValuePair<uint, PerceptionInfo> kvp in _perceivedEntities)
+            if (Owner != null && Owner.World != null)
             {
-                if (kvp.Value.Seen && Owner != null)
+                foreach (KeyValuePair<uint, PerceptionInfo> kvp in _perceivedEntities)
                 {
-                    // Would need World reference to look up entity
-                    // TODO: SIMPLIFIED - For now, skip
+                    if (kvp.Value.Seen)
+                    {
+                        IEntity entity = Owner.World.GetEntity(kvp.Key);
+                        if (entity != null && entity.IsValid)
+                        {
+                            yield return entity;
+                        }
+                    }
                 }
             }
-
-            return new List<IEntity>();
         }
 
         /// <summary>
         /// Gets entities that are currently heard.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
+        /// When perception manager is available, uses centralized tracking.
+        /// Falls back to local component tracking using Owner.World.GetEntity() for entity lookup.
+        /// </remarks>
         public IEnumerable<IEntity> GetHeardObjects()
         {
             if (_perceptionManager != null && Owner != null)
@@ -112,7 +138,21 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 return _perceptionManager.GetHeardObjects(Owner);
             }
 
-            return new List<IEntity>();
+            // Fall back to local tracking
+            if (Owner != null && Owner.World != null)
+            {
+                foreach (KeyValuePair<uint, PerceptionInfo> kvp in _perceivedEntities)
+                {
+                    if (kvp.Value.Heard)
+                    {
+                        IEntity entity = Owner.World.GetEntity(kvp.Key);
+                        if (entity != null && entity.IsValid)
+                        {
+                            yield return entity;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
