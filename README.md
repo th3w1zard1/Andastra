@@ -61,7 +61,14 @@ The Andastra runtime is organized into a layered architecture with strict depend
 └─────────────────────────────────────────────────────────────┘
 ```
 
+<<<<<<< Updated upstream
 ### Project Organization
+=======
+**Object Layout** (inferred from assembly):
+
+- Offset 0x10: `FColumns` (TList of column names)
+- Offset 0x18: `FLoaded` (byte, 1 = loaded, 0 = not loaded)
+>>>>>>> Stashed changes
 
 **Runtime Projects:**
 
@@ -93,6 +100,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 ### Engine Runtime
 
+<<<<<<< Updated upstream
 - **Area System**: Complete area loading with LYT layout, VIS visibility culling, and room mesh rendering
 - **Navigation**: Walkmesh-based pathfinding with A* algorithm, surface material support, and dynamic obstacle handling
 - **Entity System**: Component-based architecture supporting creatures, doors, placeables, triggers, waypoints, and more
@@ -101,6 +109,19 @@ The Andastra runtime is organized into a layered architecture with strict depend
 - **Combat**: Round-based combat system with d20 mechanics, damage calculation, and effect application
 - **Save/Load**: Complete save game serialization compatible with original game formats
 - **Mod Support**: Full resource precedence chain (override → module → save → chitin) matching original behavior
+=======
+```
+Delphi/
+├── TSLPatcher.pas              # Main application unit
+├── TSLPatcher.dpr              # Delphi project file
+├── FileFormats/
+│   ├── TwoDAPatcher.pas        # 2DA file patcher
+│   ├── TLKPatcher.pas          # TLK file patcher
+│   ├── GFFPatcher.pas          # GFF file patcher
+│   └── ...
+└── ...
+```
+>>>>>>> Stashed changes
 
 ### Development Tools
 
@@ -143,6 +164,7 @@ dotnet build src/Andastra/Runtime/
 # Build only the tools
 dotnet build src/Tools/
 
+<<<<<<< Updated upstream
 # Build with release configuration
 dotnet build Andastra.sln --configuration Release
 ```
@@ -248,6 +270,9 @@ dotnet test --collect:"XPlat Code Coverage"
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Getting started with development
 - **[Engine Roadmap](docs/engine_roadmap.md)** - Implementation roadmap and status
 - **[Architecture Documentation](docs/)** - Detailed architecture and design documents
+=======
+**Total Estimated**: 105-155 hours of reverse engineering work
+>>>>>>> Stashed changes
 
 ## Contributing
 
@@ -269,6 +294,20 @@ This project is licensed under the Business Source License 1.1 (BSL-1.1). See th
 
 **Production Use**: Use of this software in a production environment, to provide services to third parties, or to generate revenue requires explicit authorization from the Licensor.
 
+<<<<<<< Updated upstream
 ## Status
 
 Andastra is under active development. The Odyssey engine implementation is the most mature, with core systems functional for KOTOR and TSL. The Aurora, Eclipse, and Infinity engine families have foundational implementations with ongoing development. See the [engine roadmap](docs/engine_roadmap.md) for detailed implementation status across all engine families.
+=======
+## Notes
+
+- The original TSLPatcher.exe is a Delphi application, so all source code must be in Delphi/Object Pascal
+- Many functions are not automatically identified by Ghidra due to Delphi's compilation model
+- Manual function identification and decompilation is required
+- String analysis has provided significant insight into functionality
+- File format knowledge from existing implementations can accelerate parser development
+
+---
+
+**Status**: Active reverse engineering project - Contributions welcome!
+>>>>>>> Stashed changes

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
@@ -93,3 +94,42 @@ catch {
     exit 1
 }
 
+=======
+<#
+.SYNOPSIS
+    Generates a random number within a specified range.
+
+.DESCRIPTION
+    This script generates a random integer between 0 (inclusive) and the specified upper bound (exclusive).
+    The upper bound must be a positive integer greater than 0.
+
+.PARAMETER UpperBound
+    The exclusive upper bound for the random number generation. Must be a positive integer.
+
+.EXAMPLE
+    .\Get-RandomNumber.ps1 -UpperBound 10
+    Generates a random number between 0 and 9 (inclusive).
+
+.EXAMPLE
+    .\Get-RandomNumber.ps1 -UpperBound 100
+    Generates a random number between 0 and 99 (inclusive).
+
+.OUTPUTS
+    System.Int32
+    Returns a random integer in the range [0, UpperBound).
+#>
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateScript({
+        if ($_ -le 0) {
+            throw "UpperBound must be a positive integer greater than 0."
+        }
+        $true
+    })]
+    [int]$UpperBound
+)
+
+# Generate and return a random number between 0 (inclusive) and UpperBound (exclusive)
+$randomNumber = Get-Random -Minimum 0 -Maximum $UpperBound
+Write-Output $randomNumber
+>>>>>>> Stashed changes

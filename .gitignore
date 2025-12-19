@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 
 _ReSharper*/
 !.vscode/launch.json
@@ -121,3 +122,7 @@ TestResults/
 Thumbs.db
 x64/
 x86/
+=======
+.backups/
+.history/
+>>>>>>> Stashed changes
