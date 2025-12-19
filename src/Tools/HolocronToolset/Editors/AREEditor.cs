@@ -105,7 +105,7 @@ namespace HolocronToolset.Editors
             var cameraStyleLabel = new Avalonia.Controls.TextBlock { Text = "Camera Style:" };
             _cameraStyleSelect = new ComboBox();
             // Add default camera style options (matching common camera styles from cameras.2da)
-            // In full implementation, this would load from cameras.2da via installation
+            // TODO: SIMPLIFIED - In full implementation, this would load from cameras.2da via installation
             _cameraStyleSelect.Items.Add("Standard");
             _cameraStyleSelect.Items.Add("Close");
             _cameraStyleSelect.Items.Add("Far");
