@@ -352,7 +352,9 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on swkotor2.exe: FUN_0054a1f0 @ 0x0054a1f0 - pathfinding around obstacles
+        /// Based on swkotor2.exe: FUN_0061c390 @ 0x0061c390 - pathfinding around obstacles
+        /// Called from FUN_0054be70 @ 0x0054be70 (line 183) when creature collision detected
+        /// Equivalent in swkotor.exe: FUN_005d0840 @ 0x005d0840 (called from FUN_00516630 @ 0x00516630, line 254)
         /// </summary>
         public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
         {

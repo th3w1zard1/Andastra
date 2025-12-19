@@ -226,17 +226,33 @@ namespace Andastra.Runtime.Core.Actions
                 SetLastBlockingCreature(actor, blockingCreatureId);
 
                 // Try to navigate around the blocking creature
-                // Based on swkotor2.exe: FUN_0054be70 calls FUN_0054a1f0 for pathfinding around obstacles
+                // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 calls FUN_0061c390 @ 0x0061c390 for pathfinding around obstacles
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
-                // Original implementation: FUN_0054a1f0 @ 0x0054a1f0 finds alternative path around blocking creature
-                // Function signature: `undefined4 FUN_0054a1f0(void *this, float *param_1, float *param_2, float *param_3, float *param_4)`
-                // param_1: Current position (float[3])
-                // param_2: Destination position (float[3])
-                // param_3: Obstacle position (float[3]) - position of blocking creature
-                // param_4: Obstacle radius (float) - radius to avoid around obstacle
-                // Returns: New path waypoints array, or null if no path found
-                // Implementation: Marks faces within obstacle radius as temporarily blocked, then runs A* pathfinding
-                // If pathfinding fails, attempts to find alternative routes by expanding obstacle avoidance radius
+                // Original implementation: FUN_0061c390 @ 0x0061c390 finds alternative path around blocking creature
+                // Function signature: `undefined4 __thiscall FUN_0061c390(void *this, int param_1, void *param_2)`
+                // this: Pathfinding context object (contains obstacle polygon data)
+                // param_1: Entity pointer (int offset to entity structure)
+                // param_2: Blocking creature object pointer
+                // Returns: float* pointer to new path waypoints, or DAT_007c52ec (null) if no path found
+                // Implementation details (from Ghidra analysis):
+                //   - Line 57: Loads "k_def_pathfail01" string for error reporting
+                //   - Line 75: Calls FUN_0061a670 to set up obstacle avoidance polygon from creature bounding box
+                //   - Line 80-85: Calls FUN_0061b7d0 to check if start/end points are within obstacle polygon
+                //   - Line 92: Calls FUN_0061bcb0 to validate path against obstacles
+                //   - Line 100-105: Calls FUN_0061c1e0 to get waypoints, then FUN_0061c2c0 to check path segments
+                //   - Line 131-142: Calls FUN_0061b520 to insert waypoints into path to avoid obstacles
+                //   - If pathfinding fails, returns null pointer (DAT_007c52ec)
+                // Helper functions:
+                //   - FUN_0061b7d0: Checks if point is within obstacle polygon (6-sided polygon test)
+                //   - FUN_0061bcb0: Validates entire path against obstacles
+                //   - FUN_0061c2c0: Checks path segments for collisions (calls FUN_0061b310 per segment)
+                //   - FUN_0061b310: Checks single path segment for creature collision
+                //   - FUN_0061b520: Inserts waypoints into existing path array to route around obstacles
+                //   - FUN_0061c1e0: Gets waypoint array from pathfinding context
+                // Equivalent functions in other engines:
+                //   - swkotor.exe: FUN_005d0840 @ 0x005d0840 (called from FUN_00516630 @ 0x00516630, line 254)
+                //   - nwmain.exe: CPathfindInformation class with obstacle avoidance in pathfinding system
+                //   - daorigins.exe/DragonAge2.exe: Advanced dynamic obstacle system (different architecture)
                 IArea currentArea = actor.World.CurrentArea;
                 if (currentArea != null && currentArea.NavigationMesh != null)
                 {

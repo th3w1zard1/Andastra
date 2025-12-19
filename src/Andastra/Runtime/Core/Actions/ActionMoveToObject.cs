@@ -210,9 +210,13 @@ namespace Andastra.Runtime.Core.Actions
                 SetLastBlockingCreature(actor, blockingCreatureId);
 
                 // Try to navigate around the blocking creature
-                // Based on swkotor2.exe: FUN_0054be70 calls FUN_0054a1f0 for pathfinding around obstacles
+                // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 calls FUN_0061c390 @ 0x0061c390 for pathfinding around obstacles
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
-                // Original implementation: FUN_0054a1f0 @ 0x0054a1f0 finds alternative path around blocking creature
+                // Original implementation: FUN_0061c390 @ 0x0061c390 finds alternative path around blocking creature
+                // Equivalent functions:
+                //   - swkotor.exe: FUN_005d0840 @ 0x005d0840 (called from FUN_00516630 @ 0x00516630)
+                //   - nwmain.exe: CPathfindInformation obstacle avoidance in pathfinding system
+                //   - daorigins.exe/DragonAge2.exe: Dynamic obstacle system with cover integration
                 // For ActionMoveToObject, we use direct movement but still try to avoid obstacles when blocked
                 IArea currentArea = actor.World.CurrentArea;
                 if (currentArea != null && currentArea.NavigationMesh != null)
