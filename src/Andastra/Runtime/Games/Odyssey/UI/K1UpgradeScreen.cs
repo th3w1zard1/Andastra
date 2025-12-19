@@ -152,11 +152,31 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Check stack count and remove from inventory
             // Based on swkotor.exe: FUN_006c59a0 @ 0x006c59a0 line 18 - checks stack count at offset 0xa3
-            // TODO: Get stack count from item component
+            // Get stack count from item component
             // If stack count < 2, remove from inventory (FUN_00555fd0)
             // If stack count >= 2, decrement stack (FUN_0055f280)
-            // For now, just remove from inventory
-            characterInventory.RemoveItem(upgradeItem);
+            IItemComponent upgradeItemComponent = upgradeItem.GetComponent<IItemComponent>();
+            if (upgradeItemComponent != null)
+            {
+                int stackSize = upgradeItemComponent.StackSize;
+                if (stackSize < 2)
+                {
+                    // Stack count is 1 or less - remove item completely from inventory
+                    // Based on swkotor.exe: FUN_00555fd0 @ 0x00555fd0 - removes item from inventory
+                    characterInventory.RemoveItem(upgradeItem);
+                }
+                else
+                {
+                    // Stack count is 2 or more - decrement stack count by 1
+                    // Based on swkotor.exe: FUN_0055f280 @ 0x0055f280 - decrements item stack
+                    upgradeItemComponent.StackSize = stackSize - 1;
+                }
+            }
+            else
+            {
+                // Item component not found - remove item as fallback
+                characterInventory.RemoveItem(upgradeItem);
+            }
 
             // Load upgrade item UTI template and apply properties
             // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item

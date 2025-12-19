@@ -227,8 +227,57 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 IEntity character = _character;
                 if (character == null)
                 {
-                    // TODO: Get player character from world - needs world.GetPlayerCharacter() or similar
-                    // For now, use _character if set
+                    // Get player character from world using multiple fallback strategies
+                    // Based on swkotor2.exe: Player character is typically tagged "Player"
+                    // Based on swkotor.exe: Player character is typically tagged "Player"
+                    // Strategy 1: Try to get entity by tag "Player" (Odyssey standard)
+                    // Located via string references: "Player" tag is set in GameSession.SpawnPlayer() @ GameSession.cs:473
+                    character = _world.GetEntityByTag("Player", 0);
+                    
+                    // Strategy 2: Fall back to "PlayerCharacter" tag (Eclipse standard, but may be used in some contexts)
+                    // Based on Eclipse engine: "PlayerCharacter" @ 0x00b08188 (daorigins.exe)
+                    // Cross-engine compatibility: Some implementations may use "PlayerCharacter" tag
+                    if (character == null)
+                    {
+                        character = _world.GetEntityByTag("PlayerCharacter", 0);
+                    }
+                    
+                    // Strategy 3: Fall back to searching all entities for player character
+                    // This is a comprehensive fallback if tag-based lookup fails
+                    // Based on EclipseEngineApi.Func_GetPlayerCharacter implementation pattern
+                    if (character == null)
+                    {
+                        foreach (IEntity entity in _world.GetAllEntities())
+                        {
+                            if (entity == null)
+                            {
+                                continue;
+                            }
+                            
+                            // Check if entity has player character tag
+                            string tag = entity.Tag;
+                            if (!string.IsNullOrEmpty(tag))
+                            {
+                                // Check for common player character tag patterns
+                                if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    character = entity;
+                                    break;
+                                }
+                            }
+                            
+                            // Check if entity has IsPlayer data flag
+                            // Based on GameSession.SpawnPlayer() @ GameSession.cs:474 - sets "IsPlayer" data flag
+                            object isPlayerData = entity.GetData("IsPlayer");
+                            if (isPlayerData is bool && (bool)isPlayerData)
+                            {
+                                character = entity;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 // Collect all inventory items from character

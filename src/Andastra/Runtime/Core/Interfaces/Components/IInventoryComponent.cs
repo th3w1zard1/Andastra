@@ -7,22 +7,18 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Inventory Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe inventory system
-    /// - Located via string references: "Inventory" @ 0x007c2504, "InventoryRes" @ 0x007bf570, "InventorySlot" @ 0x007bf7d0
-    /// - "INVENTORY_SLOT_*" @ 0x007c1fb0 (inventory slot constants: RIGHTWEAPON=4, LEFTWEAPON=5, ARMOR=6, etc.)
-    /// - "Equip_ItemList" @ 0x007c2f20 (equipped item list in UTC GFF), "ItemList" @ 0x007c2f28 (inventory item list)
+    /// - Common interface for inventory management across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
+    /// - Provides slot-based inventory system with equipped items and inventory bag
     /// - Inventory slots: Equipped items (weapon, armor, shield, etc.) and inventory bag (array of slots)
-    /// - Slot constants: 0=Head, 1=Gloves, 2=LeftRing, 3=RightRing, 4=RightWeapon, 5=LeftWeapon, 6=Armor, 7=Implant, 8=Belt, etc.
+    /// - Slot-based system: Items are stored in numbered slots, with specific slots reserved for equipment
     /// - GetItemInSlot: Retrieves item entity in specified slot (returns null if empty)
     /// - SetItemInSlot: Places item entity in slot (null to clear/unequip)
-    /// - AddItem: Adds item to first available inventory slot (slots 18+ are inventory bag slots)
+    /// - AddItem: Adds item to first available inventory slot
     /// - RemoveItem: Removes item from inventory (from any slot)
     /// - HasItemByTag: Checks if entity possesses item with matching tag string
     /// - GetAllItems: Returns all items in inventory (equipped + inventory bag)
-    /// - Original engine: Inventory stored in GFF format (Equip_ItemList and ItemList arrays in UTC creature templates, save files)
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save creature inventory), FUN_0050c510 @ 0x0050c510 (load creature inventory)
+    /// - Engine-specific implementations handle slot numbering, equipment types, and storage formats
+    /// - Inventory state is typically persisted in save files and entity templates
     /// </remarks>
     public interface IInventoryComponent : IComponent
     {
