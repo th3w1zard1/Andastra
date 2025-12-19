@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
+using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
@@ -479,7 +481,25 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Based on Aurora entity serialization functions in nwmain.exe.
         /// Serializes ObjectId, Tag, components, and custom data.
-        /// Uses Aurora-specific save format.
+        /// Uses Aurora-specific GFF save format.
+        ///
+        /// Reverse Engineering Notes:
+        /// - nwmain.exe: CNWSCreature::SaveCreature @ 0x1403a0a60
+        ///   - Uses CResGFF::WriteField* functions to write GFF fields
+        ///   - Writes ObjectId, DisplayName, DetectMode, StealthMode, MasterID, CreatureSize
+        ///   - Calls CNWSCreatureStats::SaveStats to save stats component
+        ///   - Writes script hooks: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked
+        ///   - Saves inventory items in Equip_ItemList GFFList
+        /// - nwmain.exe: CNWSPlaceable::SavePlaceable @ 0x1404b6a60
+        ///   - Saves placeable data to GFF structure
+        /// - nwmain.exe: CNWSDoor::SaveDoor @ 0x1404228e0
+        ///   - Saves door data to GFF structure
+        /// - nwmain.exe: CNWSTrigger::SaveTrigger @ 0x1404c9b40
+        ///   - Saves trigger data to GFF structure
+        /// - Implementation uses GFF format (GFFContent.GFF) similar to Odyssey
+        ///   - GFF structure: Root struct with nested structs and lists
+        ///   - Field names match Aurora engine conventions (e.g., "ScriptHeartbeat" not "OnHeartbeat")
+        ///   - Tag stored as CExoString in original, serialized as string here
         ///
         /// Serialized data includes:
         /// - Basic entity properties (ObjectId, Tag, ObjectType, AreaId)
@@ -493,10 +513,313 @@ namespace Andastra.Runtime.Games.Aurora
         /// </remarks>
         public override byte[] Serialize()
         {
-            // TODO: Implement Aurora entity serialization
-            // Based on nwmain.exe save format
-            // Serialize ObjectId, Tag (CExoString), components, and custom data
-            throw new NotImplementedException("Aurora entity serialization not yet implemented");
+            // Create GFF structure for entity data
+            // Based on nwmain.exe: CNWSCreature::SaveCreature @ 0x1403a0a60 saves entity to GFF
+            // Uses generic GFF format (GFFContent.GFF) for entity serialization
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+
+            // Serialize basic entity properties
+            // Based on nwmain.exe: CResGFF::WriteFieldDWORD writes ObjectId
+            root.SetUInt32("ObjectId", _objectId);
+            // Tag stored as CExoString in original engine, serialized as string here
+            root.SetString("Tag", _tag ?? "");
+            root.SetInt32("ObjectType", (int)_objectType);
+            root.SetUInt32("AreaId", _areaId);
+            root.SetUInt8("IsValid", _isValid ? (byte)1 : (byte)0);
+
+            // Serialize transform component
+            // Based on nwmain.exe: Position stored as XPosition, YPosition, ZPosition in GFF
+            // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF
+            var transformComponent = GetComponent<ITransformComponent>();
+            if (transformComponent != null)
+            {
+                root.SetSingle("XPosition", transformComponent.Position.X);
+                root.SetSingle("YPosition", transformComponent.Position.Y);
+                root.SetSingle("ZPosition", transformComponent.Position.Z);
+                // Aurora uses orientation vectors (XOrientation, YOrientation, ZOrientation)
+                // We convert facing angle to orientation vector
+                float facing = transformComponent.Facing;
+                root.SetSingle("XOrientation", (float)Math.Cos(facing));
+                root.SetSingle("YOrientation", 0.0f);
+                root.SetSingle("ZOrientation", (float)Math.Sin(facing));
+                root.SetSingle("ScaleX", transformComponent.Scale.X);
+                root.SetSingle("ScaleY", transformComponent.Scale.Y);
+                root.SetSingle("ScaleZ", transformComponent.Scale.Z);
+
+                // Serialize parent entity reference if present
+                if (transformComponent.Parent != null)
+                {
+                    root.SetUInt32("ParentObjectId", transformComponent.Parent.ObjectId);
+                }
+            }
+
+            // Serialize stats component (for creatures)
+            // Based on nwmain.exe: CNWSCreatureStats::SaveStats saves stats to GFF
+            var statsComponent = GetComponent<IStatsComponent>();
+            if (statsComponent != null)
+            {
+                root.SetInt32("CurrentHP", statsComponent.CurrentHP);
+                root.SetInt32("MaxHP", statsComponent.MaxHP);
+                root.SetInt32("CurrentFP", statsComponent.CurrentFP);
+                root.SetInt32("MaxFP", statsComponent.MaxFP);
+                root.SetUInt8("IsDead", statsComponent.IsDead ? (byte)1 : (byte)0);
+                root.SetInt32("BaseAttackBonus", statsComponent.BaseAttackBonus);
+                root.SetInt32("ArmorClass", statsComponent.ArmorClass);
+                root.SetInt32("FortitudeSave", statsComponent.FortitudeSave);
+                root.SetInt32("ReflexSave", statsComponent.ReflexSave);
+                root.SetInt32("WillSave", statsComponent.WillSave);
+                root.SetSingle("WalkSpeed", statsComponent.WalkSpeed);
+                root.SetSingle("RunSpeed", statsComponent.RunSpeed);
+                root.SetInt32("Level", statsComponent.Level);
+
+                // Serialize ability scores
+                // Based on nwmain.exe: Ability scores stored in nested GFF struct
+                var abilityStruct = root.Acquire<GFFStruct>("Abilities", new GFFStruct());
+                abilityStruct.SetInt32("STR", statsComponent.GetAbility(Ability.Strength));
+                abilityStruct.SetInt32("DEX", statsComponent.GetAbility(Ability.Dexterity));
+                abilityStruct.SetInt32("CON", statsComponent.GetAbility(Ability.Constitution));
+                abilityStruct.SetInt32("INT", statsComponent.GetAbility(Ability.Intelligence));
+                abilityStruct.SetInt32("WIS", statsComponent.GetAbility(Ability.Wisdom));
+                abilityStruct.SetInt32("CHA", statsComponent.GetAbility(Ability.Charisma));
+
+                // Serialize ability modifiers
+                var abilityModStruct = root.Acquire<GFFStruct>("AbilityModifiers", new GFFStruct());
+                abilityModStruct.SetInt32("STR", statsComponent.GetAbilityModifier(Ability.Strength));
+                abilityModStruct.SetInt32("DEX", statsComponent.GetAbilityModifier(Ability.Dexterity));
+                abilityModStruct.SetInt32("CON", statsComponent.GetAbilityModifier(Ability.Constitution));
+                abilityModStruct.SetInt32("INT", statsComponent.GetAbilityModifier(Ability.Intelligence));
+                abilityModStruct.SetInt32("WIS", statsComponent.GetAbilityModifier(Ability.Wisdom));
+                abilityModStruct.SetInt32("CHA", statsComponent.GetAbilityModifier(Ability.Charisma));
+
+                // Serialize known spells (if any)
+                // Note: This is a simplified implementation - full version would iterate through all spell IDs
+                var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
+                // In a full implementation, we would iterate through all possible spell IDs and check HasSpell
+                // For now, we serialize an empty list as a placeholder for the structure
+            }
+
+            // Serialize door component
+            // Based on nwmain.exe: CNWSDoor::SaveDoor @ 0x1404228e0 saves door data to GFF
+            var doorComponent = GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                root.SetUInt8("IsOpen", doorComponent.IsOpen ? (byte)1 : (byte)0);
+                root.SetUInt8("IsLocked", doorComponent.IsLocked ? (byte)1 : (byte)0);
+                root.SetUInt8("LockableByScript", doorComponent.LockableByScript ? (byte)1 : (byte)0);
+                root.SetInt32("LockDC", doorComponent.LockDC);
+                root.SetUInt8("IsBashed", doorComponent.IsBashed ? (byte)1 : (byte)0);
+                root.SetInt32("HitPoints", doorComponent.HitPoints);
+                root.SetInt32("MaxHitPoints", doorComponent.MaxHitPoints);
+                root.SetInt32("Hardness", doorComponent.Hardness);
+                root.SetString("KeyTag", doorComponent.KeyTag ?? "");
+                root.SetUInt8("KeyRequired", doorComponent.KeyRequired ? (byte)1 : (byte)0);
+                root.SetInt32("OpenState", doorComponent.OpenState);
+                root.SetString("LinkedTo", doorComponent.LinkedTo ?? "");
+                root.SetString("LinkedToModule", doorComponent.LinkedToModule ?? "");
+            }
+
+            // Serialize placeable component
+            // Based on nwmain.exe: CNWSPlaceable::SavePlaceable @ 0x1404b6a60 saves placeable data to GFF
+            var placeableComponent = GetComponent<IPlaceableComponent>();
+            if (placeableComponent != null)
+            {
+                root.SetUInt8("IsUseable", placeableComponent.IsUseable ? (byte)1 : (byte)0);
+                root.SetUInt8("HasInventory", placeableComponent.HasInventory ? (byte)1 : (byte)0);
+                root.SetUInt8("IsStatic", placeableComponent.IsStatic ? (byte)1 : (byte)0);
+                root.SetUInt8("IsOpen", placeableComponent.IsOpen ? (byte)1 : (byte)0);
+                root.SetUInt8("IsLocked", placeableComponent.IsLocked ? (byte)1 : (byte)0);
+                root.SetInt32("LockDC", placeableComponent.LockDC);
+                root.SetString("KeyTag", placeableComponent.KeyTag ?? "");
+                root.SetInt32("HitPoints", placeableComponent.HitPoints);
+                root.SetInt32("MaxHitPoints", placeableComponent.MaxHitPoints);
+                root.SetInt32("Hardness", placeableComponent.Hardness);
+                root.SetInt32("AnimationState", placeableComponent.AnimationState);
+            }
+
+            // Serialize inventory component
+            // Based on nwmain.exe: CNWSCreature::SaveCreature saves items in Equip_ItemList GFFList
+            // Equipment slots: 0-19 (INVENTORY_SLOT_HEAD through INVENTORY_SLOT_LEFTWEAPON2)
+            // Inventory bag: Typically starts at slot 20+ (varies by implementation)
+            var inventoryComponent = GetComponent<IInventoryComponent>();
+            if (inventoryComponent != null)
+            {
+                var inventoryList = root.Acquire<GFFList>("Equip_ItemList", new GFFList());
+
+                // Search through all possible inventory slots (0-255 is a reasonable upper bound)
+                // This ensures we capture all items including those in inventory bag slots
+                for (int slot = 0; slot < 256; slot++)
+                {
+                    var item = inventoryComponent.GetItemInSlot(slot);
+                    if (item != null)
+                    {
+                        var itemStruct = inventoryList.Add();
+                        itemStruct.SetInt32("Slot", slot);
+                        itemStruct.SetUInt32("ObjectId", item.ObjectId);
+                        itemStruct.SetString("ItemTag", item.Tag ?? "");
+                        itemStruct.SetInt32("ItemObjectType", (int)item.ObjectType);
+                    }
+                }
+            }
+
+            // Serialize script hooks component
+            // Based on nwmain.exe: CNWSCreature::SaveCreature writes script ResRefs with Aurora field names
+            // Aurora uses: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked
+            var scriptHooksComponent = GetComponent<IScriptHooksComponent>();
+            if (scriptHooksComponent != null)
+            {
+                // Serialize script ResRefs for all event types
+                // Map ScriptEvent enum to Aurora field names
+                var scriptsStruct = root.Acquire<GFFStruct>("Scripts", new GFFStruct());
+                
+                // Aurora-specific script field name mapping
+                var scriptFieldMap = new Dictionary<ScriptEvent, string>
+                {
+                    { ScriptEvent.OnHeartbeat, "ScriptHeartbeat" },
+                    { ScriptEvent.OnNotice, "ScriptOnNotice" },
+                    { ScriptEvent.OnSpellAt, "ScriptSpellAt" },
+                    { ScriptEvent.OnAttacked, "ScriptAttacked" },
+                    { ScriptEvent.OnDamaged, "ScriptDamaged" },
+                    { ScriptEvent.OnDisturbed, "ScriptDisturbed" },
+                    { ScriptEvent.OnEndRound, "ScriptEndRound" },
+                    { ScriptEvent.OnDialogue, "ScriptDialogue" },
+                    { ScriptEvent.OnSpawn, "ScriptSpawn" },
+                    { ScriptEvent.OnRested, "ScriptRested" },
+                    { ScriptEvent.OnDeath, "ScriptDeath" },
+                    { ScriptEvent.OnUserDefined, "ScriptUserDefine" },
+                    { ScriptEvent.OnBlocked, "ScriptOnBlocked" }
+                };
+
+                foreach (ScriptEvent eventType in Enum.GetValues(typeof(ScriptEvent)))
+                {
+                    string scriptResRef = scriptHooksComponent.GetScript(eventType);
+                    if (!string.IsNullOrEmpty(scriptResRef))
+                    {
+                        // Use Aurora field name if mapped, otherwise use enum name
+                        string fieldName = scriptFieldMap.ContainsKey(eventType) 
+                            ? scriptFieldMap[eventType] 
+                            : eventType.ToString();
+                        scriptsStruct.SetString(fieldName, scriptResRef);
+                    }
+                }
+
+                // Serialize local variables using reflection to access private dictionaries
+                // Based on nwmain.exe: Local variables are stored in ScriptHooksComponent
+                // and serialized to GFF LocalVars structure
+                var localVarsStruct = root.Acquire<GFFStruct>("LocalVariables", new GFFStruct());
+
+                // Access private _localInts, _localFloats, _localStrings dictionaries via reflection
+                Type componentType = scriptHooksComponent.GetType();
+                FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo localFloatsField = componentType.GetField("_localFloats", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo localStringsField = componentType.GetField("_localStrings", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (localIntsField != null)
+                {
+                    var localInts = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
+                    if (localInts != null && localInts.Count > 0)
+                    {
+                        var intList = localVarsStruct.Acquire<GFFList>("IntList", new GFFList());
+                        foreach (var kvp in localInts)
+                        {
+                            var varStruct = intList.Add();
+                            varStruct.SetString("Name", kvp.Key);
+                            varStruct.SetInt32("Value", kvp.Value);
+                        }
+                    }
+                }
+
+                if (localFloatsField != null)
+                {
+                    var localFloats = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
+                    if (localFloats != null && localFloats.Count > 0)
+                    {
+                        var floatList = localVarsStruct.Acquire<GFFList>("FloatList", new GFFList());
+                        foreach (var kvp in localFloats)
+                        {
+                            var varStruct = floatList.Add();
+                            varStruct.SetString("Name", kvp.Key);
+                            varStruct.SetSingle("Value", kvp.Value);
+                        }
+                    }
+                }
+
+                if (localStringsField != null)
+                {
+                    var localStrings = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
+                    if (localStrings != null && localStrings.Count > 0)
+                    {
+                        var stringList = localVarsStruct.Acquire<GFFList>("StringList", new GFFList());
+                        foreach (var kvp in localStrings)
+                        {
+                            var varStruct = stringList.Add();
+                            varStruct.SetString("Name", kvp.Key);
+                            varStruct.SetString("Value", kvp.Value ?? "");
+                        }
+                    }
+                }
+            }
+
+            // Serialize custom data dictionary using reflection to access private _data field
+            // BaseEntity stores custom data in _data dictionary for script variables and temporary state
+            var customDataStruct = root.Acquire<GFFStruct>("CustomData", new GFFStruct());
+            Type baseEntityType = typeof(BaseEntity);
+            FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (dataField != null)
+            {
+                var data = dataField.GetValue(this) as Dictionary<string, object>;
+                if (data != null && data.Count > 0)
+                {
+                    var dataList = customDataStruct.Acquire<GFFList>("DataList", new GFFList());
+                    foreach (var kvp in data)
+                    {
+                        var dataStruct = dataList.Add();
+                        dataStruct.SetString("Key", kvp.Key);
+
+                        // Serialize value based on type
+                        if (kvp.Value == null)
+                        {
+                            dataStruct.SetString("Type", "null");
+                            dataStruct.SetString("Value", "");
+                        }
+                        else
+                        {
+                            Type valueType = kvp.Value.GetType();
+                            dataStruct.SetString("Type", valueType.Name);
+
+                            if (valueType == typeof(int))
+                            {
+                                dataStruct.SetInt32("Value", (int)kvp.Value);
+                            }
+                            else if (valueType == typeof(float))
+                            {
+                                dataStruct.SetSingle("Value", (float)kvp.Value);
+                            }
+                            else if (valueType == typeof(string))
+                            {
+                                dataStruct.SetString("Value", (string)kvp.Value ?? "");
+                            }
+                            else if (valueType == typeof(bool))
+                            {
+                                dataStruct.SetUInt8("Value", (bool)kvp.Value ? (byte)1 : (byte)0);
+                            }
+                            else if (valueType == typeof(uint))
+                            {
+                                dataStruct.SetUInt32("Value", (uint)kvp.Value);
+                            }
+                            else
+                            {
+                                // For other types, serialize as string representation
+                                dataStruct.SetString("Value", kvp.Value.ToString());
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Convert GFF to byte array
+            return gff.ToBytes();
         }
 
         /// <summary>
@@ -506,14 +829,635 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on Aurora entity deserialization functions in nwmain.exe.
         /// Restores ObjectId, Tag, components, and custom data.
         /// Recreates component attachments and state.
+        ///
+        /// Reverse Engineering Notes:
+        /// - nwmain.exe: CNWSCreature::LoadCreature @ 0x1403975e0
+        ///   - Uses CResGFF::ReadField* functions to read GFF fields
+        ///   - Reads ObjectId, DisplayName, DetectMode, StealthMode, MasterID, CreatureSize
+        ///   - Calls CNWSCreatureStats::LoadStats to load stats component
+        ///   - Reads script hooks: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, etc.
+        ///   - Loads inventory items from Equip_ItemList GFFList
+        /// - nwmain.exe: CNWSPlaceable::LoadPlaceable @ 0x1404b4900
+        ///   - Loads placeable data from GFF structure
+        /// - nwmain.exe: CNWSDoor::LoadDoor @ 0x1404208a0
+        ///   - Loads door data from GFF structure
+        /// - nwmain.exe: CNWSTrigger::LoadTrigger @ 0x1404c8a00
+        ///   - Loads trigger data from GFF structure
+        /// - Implementation uses GFF format (GFFContent.GFF) similar to Odyssey
+        ///   - GFF structure: Root struct with nested structs and lists
+        ///   - Field names match Aurora engine conventions
+        ///   - Tag stored as CExoString in original, deserialized as string here
         /// </remarks>
         public override void Deserialize(byte[] data)
         {
-            // TODO: Implement Aurora entity deserialization
-            // Read ObjectId, Tag (CExoString), ObjectType
-            // Recreate and deserialize components
-            // Restore custom data dictionary
-            throw new NotImplementedException("Aurora entity deserialization not yet implemented");
+            if (data == null || data.Length == 0)
+            {
+                throw new ArgumentException("Entity deserialization data cannot be null or empty", nameof(data));
+            }
+
+            // Parse GFF from byte array
+            // Based on nwmain.exe: CResGFF::LoadGFFFile loads GFF structure
+            GFF gff = GFF.FromBytes(data);
+            if (gff == null || gff.Root == null)
+            {
+                throw new InvalidDataException("Invalid GFF data for entity deserialization");
+            }
+
+            var root = gff.Root;
+
+            // Deserialize basic entity properties
+            // Based on nwmain.exe: CResGFF::ReadFieldDWORD reads ObjectId
+            if (root.Exists("ObjectId"))
+            {
+                _objectId = root.GetUInt32("ObjectId");
+            }
+            // Tag stored as CExoString in original engine, deserialized as string here
+            if (root.Exists("Tag"))
+            {
+                _tag = root.GetString("Tag") ?? "";
+            }
+            // ObjectType is read-only, so we verify it matches
+            if (root.Exists("ObjectType"))
+            {
+                int objectTypeValue = root.GetInt32("ObjectType");
+                if (objectTypeValue != (int)_objectType)
+                {
+                    throw new InvalidDataException($"Deserialized ObjectType {objectTypeValue} does not match entity ObjectType {(int)_objectType}");
+                }
+            }
+            if (root.Exists("AreaId"))
+            {
+                _areaId = root.GetUInt32("AreaId");
+            }
+            if (root.Exists("IsValid"))
+            {
+                _isValid = root.GetUInt8("IsValid") != 0;
+            }
+
+            // Deserialize Transform component
+            // Based on nwmain.exe: Position stored as XPosition, YPosition, ZPosition in GFF
+            // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF
+            if (root.Exists("XPosition") && root.Exists("YPosition") && root.Exists("ZPosition"))
+            {
+                var transformComponent = GetComponent<ITransformComponent>();
+                if (transformComponent == null)
+                {
+                    transformComponent = new AuroraTransformComponent();
+                    AddComponent<ITransformComponent>(transformComponent);
+                }
+
+                float x = root.GetSingle("XPosition");
+                float y = root.GetSingle("YPosition");
+                float z = root.GetSingle("ZPosition");
+                transformComponent.Position = new System.Numerics.Vector3(x, y, z);
+
+                // Aurora uses orientation vectors (XOrientation, YOrientation, ZOrientation)
+                // Convert orientation vector to facing angle
+                if (root.Exists("XOrientation") && root.Exists("ZOrientation"))
+                {
+                    float xOrientation = root.GetSingle("XOrientation");
+                    float zOrientation = root.GetSingle("ZOrientation");
+                    // Calculate facing angle from orientation vector
+                    float facing = (float)Math.Atan2(zOrientation, xOrientation);
+                    transformComponent.Facing = facing;
+                }
+                else if (root.Exists("Facing"))
+                {
+                    // Fallback to Facing field if orientation vectors not present
+                    transformComponent.Facing = root.GetSingle("Facing");
+                }
+
+                if (root.Exists("ScaleX") && root.Exists("ScaleY") && root.Exists("ScaleZ"))
+                {
+                    float scaleX = root.GetSingle("ScaleX");
+                    float scaleY = root.GetSingle("ScaleY");
+                    float scaleZ = root.GetSingle("ScaleZ");
+                    transformComponent.Scale = new System.Numerics.Vector3(scaleX, scaleY, scaleZ);
+                }
+
+                // Parent will be resolved later when all entities are loaded
+                if (root.Exists("ParentObjectId"))
+                {
+                    uint parentObjectId = root.GetUInt32("ParentObjectId");
+                    if (parentObjectId != 0)
+                    {
+                        Type baseEntityTypeForParent = typeof(BaseEntity);
+                        FieldInfo dataFieldForParent = baseEntityTypeForParent.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (dataFieldForParent != null)
+                        {
+                            var data = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
+                            if (data == null)
+                            {
+                                data = new Dictionary<string, object>();
+                                dataFieldForParent.SetValue(this, data);
+                            }
+                            data["_ParentObjectId"] = parentObjectId;
+                        }
+                    }
+                }
+            }
+
+            // Deserialize Stats component
+            // Based on nwmain.exe: CNWSCreatureStats::LoadStats loads stats from GFF
+            if (root.Exists("CurrentHP"))
+            {
+                // Stats component should already exist for creatures, but we ensure it's present
+                var statsComponent = GetComponent<IStatsComponent>();
+                if (statsComponent == null)
+                {
+                    // Create stats component - we'll need to check what the Aurora stats component type is
+                    // For now, we'll use reflection or a factory method
+                    // TODO: Create AuroraStatsComponent if it exists
+                    throw new InvalidOperationException("Stats component not found and cannot be created automatically");
+                }
+
+                statsComponent.CurrentHP = root.GetInt32("CurrentHP");
+                if (root.Exists("MaxHP"))
+                {
+                    statsComponent.MaxHP = root.GetInt32("MaxHP");
+                }
+                if (root.Exists("CurrentFP"))
+                {
+                    statsComponent.CurrentFP = root.GetInt32("CurrentFP");
+                }
+                if (root.Exists("MaxFP"))
+                {
+                    statsComponent.MaxFP = root.GetInt32("MaxFP");
+                }
+                // IsDead is computed from CurrentHP, so we don't deserialize it directly
+
+                if (root.Exists("BaseAttackBonus"))
+                {
+                    // BaseAttackBonus is read-only, so we can't set it directly
+                }
+                if (root.Exists("ArmorClass"))
+                {
+                    // ArmorClass is read-only, so we can't set it directly
+                }
+                if (root.Exists("FortitudeSave"))
+                {
+                    // FortitudeSave is read-only, so we can't set it directly
+                }
+                if (root.Exists("ReflexSave"))
+                {
+                    // ReflexSave is read-only, so we can't set it directly
+                }
+                if (root.Exists("WillSave"))
+                {
+                    // WillSave is read-only, so we can't set it directly
+                }
+                if (root.Exists("WalkSpeed"))
+                {
+                    // WalkSpeed is read-only, so we can't set it directly
+                }
+                if (root.Exists("RunSpeed"))
+                {
+                    // RunSpeed is read-only, so we can't set it directly
+                }
+                if (root.Exists("Level"))
+                {
+                    // Level is read-only, so we can't set it directly
+                }
+
+                // Deserialize ability scores
+                if (root.Exists("Abilities"))
+                {
+                    var abilityStruct = root.GetStruct("Abilities");
+                    if (abilityStruct != null && abilityStruct.Count > 0)
+                    {
+                        if (abilityStruct.Exists("STR"))
+                        {
+                            statsComponent.SetAbility(Ability.Strength, abilityStruct.GetInt32("STR"));
+                        }
+                        if (abilityStruct.Exists("DEX"))
+                        {
+                            statsComponent.SetAbility(Ability.Dexterity, abilityStruct.GetInt32("DEX"));
+                        }
+                        if (abilityStruct.Exists("CON"))
+                        {
+                            statsComponent.SetAbility(Ability.Constitution, abilityStruct.GetInt32("CON"));
+                        }
+                        if (abilityStruct.Exists("INT"))
+                        {
+                            statsComponent.SetAbility(Ability.Intelligence, abilityStruct.GetInt32("INT"));
+                        }
+                        if (abilityStruct.Exists("WIS"))
+                        {
+                            statsComponent.SetAbility(Ability.Wisdom, abilityStruct.GetInt32("WIS"));
+                        }
+                        if (abilityStruct.Exists("CHA"))
+                        {
+                            statsComponent.SetAbility(Ability.Charisma, abilityStruct.GetInt32("CHA"));
+                        }
+                    }
+                }
+
+                // Deserialize ability modifiers (read but don't set - they're computed)
+                if (root.Exists("AbilityModifiers"))
+                {
+                    var abilityModStruct = root.GetStruct("AbilityModifiers");
+                    // Modifiers are computed from ability scores, so we don't need to restore them
+                }
+
+                // Deserialize known spells
+                if (root.Exists("KnownSpells"))
+                {
+                    var spellsList = root.GetList("KnownSpells");
+                    // In a full implementation, we would iterate through spell entries and restore them
+                    // For now, we skip the spell data
+                }
+            }
+
+            // Deserialize Inventory component
+            // Based on nwmain.exe: CNWSCreature::LoadCreature loads items from Equip_ItemList GFFList
+            if (root.Exists("Equip_ItemList"))
+            {
+                var inventoryComponent = GetComponent<IInventoryComponent>();
+                if (inventoryComponent == null)
+                {
+                    // Inventory component should exist for creatures, but we ensure it's present
+                    // TODO: Create AuroraInventoryComponent if it exists
+                    throw new InvalidOperationException("Inventory component not found and cannot be created automatically");
+                }
+
+                var inventoryList = root.GetList("Equip_ItemList");
+                if (inventoryList != null)
+                {
+                    // Store item references for later resolution when all entities are loaded
+                    var itemReferences = new List<(int slot, uint objectId, string tag, int objectType)>();
+                    for (int i = 0; i < inventoryList.Count; i++)
+                    {
+                        var itemStruct = inventoryList.At(i);
+                        if (itemStruct != null)
+                        {
+                            int slot = itemStruct.GetInt32("Slot");
+                            uint itemObjectId = itemStruct.GetUInt32("ObjectId");
+                            string itemTag = itemStruct.GetString("ItemTag") ?? "";
+                            int itemObjectType = itemStruct.GetInt32("ItemObjectType");
+                            itemReferences.Add((slot, itemObjectId, itemTag, itemObjectType));
+                        }
+                    }
+                    // Store item references in custom data for later resolution
+                    Type baseEntityTypeForItems = typeof(BaseEntity);
+                    FieldInfo dataFieldForItems = baseEntityTypeForItems.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (dataFieldForItems != null)
+                    {
+                        var data = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
+                        if (data == null)
+                        {
+                            data = new Dictionary<string, object>();
+                            dataFieldForItems.SetValue(this, data);
+                        }
+                        data["_ItemReferences"] = itemReferences;
+                    }
+                }
+            }
+
+            // Deserialize ScriptHooks component
+            // Based on nwmain.exe: CNWSCreature::LoadCreature reads script ResRefs with Aurora field names
+            if (root.Exists("Scripts"))
+            {
+                var scriptHooksComponent = GetComponent<IScriptHooksComponent>();
+                if (scriptHooksComponent == null)
+                {
+                    // Script hooks component should exist for all entities
+                    scriptHooksComponent = new BaseScriptHooksComponent();
+                    AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+                }
+
+                var scriptsStruct = root.GetStruct("Scripts");
+                if (scriptsStruct != null && scriptsStruct.Count > 0)
+                {
+                    // Aurora-specific script field name mapping
+                    var scriptFieldMap = new Dictionary<string, ScriptEvent>
+                    {
+                        { "ScriptHeartbeat", ScriptEvent.OnHeartbeat },
+                        { "ScriptOnNotice", ScriptEvent.OnNotice },
+                        { "ScriptSpellAt", ScriptEvent.OnSpellAt },
+                        { "ScriptAttacked", ScriptEvent.OnAttacked },
+                        { "ScriptDamaged", ScriptEvent.OnDamaged },
+                        { "ScriptDisturbed", ScriptEvent.OnDisturbed },
+                        { "ScriptEndRound", ScriptEvent.OnEndRound },
+                        { "ScriptDialogue", ScriptEvent.OnDialogue },
+                        { "ScriptSpawn", ScriptEvent.OnSpawn },
+                        { "ScriptRested", ScriptEvent.OnRested },
+                        { "ScriptDeath", ScriptEvent.OnDeath },
+                        { "ScriptUserDefine", ScriptEvent.OnUserDefined },
+                        { "ScriptOnBlocked", ScriptEvent.OnBlocked }
+                    };
+
+                    // Read all script fields from GFF
+                    // Iterate through all fields in the struct
+                    foreach (var (fieldName, fieldType, fieldValue) in scriptsStruct)
+                    {
+                        if (fieldType == GFFFieldType.String || fieldType == GFFFieldType.ResRef)
+                        {
+                            string resRef = fieldValue?.ToString() ?? "";
+                            if (!string.IsNullOrEmpty(resRef))
+                            {
+                                // Map Aurora field name to ScriptEvent enum
+                                if (scriptFieldMap.ContainsKey(fieldName))
+                                {
+                                    scriptHooksComponent.SetScript(scriptFieldMap[fieldName], resRef);
+                                }
+                                else
+                                {
+                                    // Try to parse as enum name if not in map
+                                    if (Enum.TryParse<ScriptEvent>(fieldName, out ScriptEvent eventType))
+                                    {
+                                        scriptHooksComponent.SetScript(eventType, resRef);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Deserialize local variables using reflection
+                if (root.Exists("LocalVariables"))
+                {
+                    var localVarsStruct = root.GetStruct("LocalVariables");
+                    if (localVarsStruct != null && localVarsStruct.Count > 0)
+                    {
+                        Type componentType = scriptHooksComponent.GetType();
+                        FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
+                        FieldInfo localFloatsField = componentType.GetField("_localFloats", BindingFlags.NonPublic | BindingFlags.Instance);
+                        FieldInfo localStringsField = componentType.GetField("_localStrings", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        // Deserialize local ints
+                        if (localVarsStruct.Exists("IntList"))
+                        {
+                            var intList = localVarsStruct.GetList("IntList");
+                            if (intList != null && intList.Count > 0 && localIntsField != null)
+                            {
+                                var localInts = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
+                                if (localInts == null)
+                                {
+                                    localInts = new Dictionary<string, int>();
+                                    localIntsField.SetValue(scriptHooksComponent, localInts);
+                                }
+                                localInts.Clear();
+                                for (int i = 0; i < intList.Count; i++)
+                                {
+                                    var varStruct = intList.At(i);
+                                    if (varStruct != null && varStruct.Exists("Name") && varStruct.Exists("Value"))
+                                    {
+                                        string name = varStruct.GetString("Name");
+                                        int value = varStruct.GetInt32("Value");
+                                        localInts[name] = value;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Deserialize local floats
+                        if (localVarsStruct.Exists("FloatList"))
+                        {
+                            var floatList = localVarsStruct.GetList("FloatList");
+                            if (floatList != null && floatList.Count > 0 && localFloatsField != null)
+                            {
+                                var localFloats = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
+                                if (localFloats == null)
+                                {
+                                    localFloats = new Dictionary<string, float>();
+                                    localFloatsField.SetValue(scriptHooksComponent, localFloats);
+                                }
+                                localFloats.Clear();
+                                for (int i = 0; i < floatList.Count; i++)
+                                {
+                                    var varStruct = floatList.At(i);
+                                    if (varStruct != null && varStruct.Exists("Name") && varStruct.Exists("Value"))
+                                    {
+                                        string name = varStruct.GetString("Name");
+                                        float value = varStruct.GetSingle("Value");
+                                        localFloats[name] = value;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Deserialize local strings
+                        if (localVarsStruct.Exists("StringList"))
+                        {
+                            var stringList = localVarsStruct.GetList("StringList");
+                            if (stringList != null && stringList.Count > 0 && localStringsField != null)
+                            {
+                                var localStrings = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
+                                if (localStrings == null)
+                                {
+                                    localStrings = new Dictionary<string, string>();
+                                    localStringsField.SetValue(scriptHooksComponent, localStrings);
+                                }
+                                localStrings.Clear();
+                                for (int i = 0; i < stringList.Count; i++)
+                                {
+                                    var varStruct = stringList.At(i);
+                                    if (varStruct != null && varStruct.Exists("Name") && varStruct.Exists("Value"))
+                                    {
+                                        string name = varStruct.GetString("Name");
+                                        string value = varStruct.GetString("Value") ?? "";
+                                        localStrings[name] = value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Deserialize Door component
+            // Based on nwmain.exe: CNWSDoor::LoadDoor @ 0x1404208a0 loads door data from GFF
+            if (root.Exists("IsOpen") || root.Exists("IsLocked"))
+            {
+                var doorComponent = GetComponent<IDoorComponent>();
+                if (doorComponent == null)
+                {
+                    doorComponent = new AuroraDoorComponent();
+                    doorComponent.Owner = this;
+                    AddComponent<IDoorComponent>(doorComponent);
+                }
+
+                if (root.Exists("IsOpen"))
+                {
+                    doorComponent.IsOpen = root.GetUInt8("IsOpen") != 0;
+                }
+                if (root.Exists("IsLocked"))
+                {
+                    doorComponent.IsLocked = root.GetUInt8("IsLocked") != 0;
+                }
+                if (root.Exists("LockableByScript"))
+                {
+                    doorComponent.LockableByScript = root.GetUInt8("LockableByScript") != 0;
+                }
+                if (root.Exists("LockDC"))
+                {
+                    doorComponent.LockDC = root.GetInt32("LockDC");
+                }
+                if (root.Exists("IsBashed"))
+                {
+                    doorComponent.IsBashed = root.GetUInt8("IsBashed") != 0;
+                }
+                if (root.Exists("HitPoints"))
+                {
+                    doorComponent.HitPoints = root.GetInt32("HitPoints");
+                }
+                if (root.Exists("MaxHitPoints"))
+                {
+                    doorComponent.MaxHitPoints = root.GetInt32("MaxHitPoints");
+                }
+                if (root.Exists("Hardness"))
+                {
+                    doorComponent.Hardness = root.GetInt32("Hardness");
+                }
+                if (root.Exists("KeyTag"))
+                {
+                    doorComponent.KeyTag = root.GetString("KeyTag");
+                }
+                if (root.Exists("KeyRequired"))
+                {
+                    doorComponent.KeyRequired = root.GetUInt8("KeyRequired") != 0;
+                }
+                if (root.Exists("OpenState"))
+                {
+                    doorComponent.OpenState = root.GetInt32("OpenState");
+                }
+                if (root.Exists("LinkedTo"))
+                {
+                    doorComponent.LinkedTo = root.GetString("LinkedTo");
+                }
+                if (root.Exists("LinkedToModule"))
+                {
+                    doorComponent.LinkedToModule = root.GetString("LinkedToModule");
+                }
+            }
+
+            // Deserialize Placeable component
+            // Based on nwmain.exe: CNWSPlaceable::LoadPlaceable @ 0x1404b4900 loads placeable data from GFF
+            if (root.Exists("IsUseable") || root.Exists("HasInventory"))
+            {
+                var placeableComponent = GetComponent<IPlaceableComponent>();
+                if (placeableComponent == null)
+                {
+                    placeableComponent = new AuroraPlaceableComponent();
+                    placeableComponent.Owner = this;
+                    AddComponent<IPlaceableComponent>(placeableComponent);
+                }
+
+                if (root.Exists("IsUseable"))
+                {
+                    placeableComponent.IsUseable = root.GetUInt8("IsUseable") != 0;
+                }
+                if (root.Exists("HasInventory"))
+                {
+                    placeableComponent.HasInventory = root.GetUInt8("HasInventory") != 0;
+                }
+                if (root.Exists("IsStatic"))
+                {
+                    placeableComponent.IsStatic = root.GetUInt8("IsStatic") != 0;
+                }
+                if (root.Exists("IsOpen"))
+                {
+                    placeableComponent.IsOpen = root.GetUInt8("IsOpen") != 0;
+                }
+                if (root.Exists("IsLocked"))
+                {
+                    placeableComponent.IsLocked = root.GetUInt8("IsLocked") != 0;
+                }
+                if (root.Exists("LockDC"))
+                {
+                    placeableComponent.LockDC = root.GetInt32("LockDC");
+                }
+                if (root.Exists("KeyTag"))
+                {
+                    placeableComponent.KeyTag = root.GetString("KeyTag");
+                }
+                if (root.Exists("HitPoints"))
+                {
+                    placeableComponent.HitPoints = root.GetInt32("HitPoints");
+                }
+                if (root.Exists("MaxHitPoints"))
+                {
+                    placeableComponent.MaxHitPoints = root.GetInt32("MaxHitPoints");
+                }
+                if (root.Exists("Hardness"))
+                {
+                    placeableComponent.Hardness = root.GetInt32("Hardness");
+                }
+                if (root.Exists("AnimationState"))
+                {
+                    placeableComponent.AnimationState = root.GetInt32("AnimationState");
+                }
+            }
+
+            // Deserialize custom data dictionary
+            if (root.Exists("CustomData"))
+            {
+                var customDataStruct = root.GetStruct("CustomData");
+                if (customDataStruct != null && customDataStruct.Exists("DataList"))
+                {
+                    var dataList = customDataStruct.GetList("DataList");
+                    if (dataList != null && dataList.Count > 0)
+                    {
+                        Type baseEntityType = typeof(BaseEntity);
+                        FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if (dataField != null)
+                        {
+                            var data = dataField.GetValue(this) as Dictionary<string, object>;
+                            if (data == null)
+                            {
+                                data = new Dictionary<string, object>();
+                                dataField.SetValue(this, data);
+                            }
+                            data.Clear();
+
+                            for (int i = 0; i < dataList.Count; i++)
+                            {
+                                var dataStruct = dataList.At(i);
+                                if (dataStruct != null && dataStruct.Exists("Key") && dataStruct.Exists("Type") && dataStruct.Exists("Value"))
+                                {
+                                    string key = dataStruct.GetString("Key");
+                                    string type = dataStruct.GetString("Type");
+                                    object value = null;
+
+                                    switch (type)
+                                    {
+                                        case "null":
+                                            value = null;
+                                            break;
+                                        case "Int32":
+                                        case "int":
+                                            value = dataStruct.GetInt32("Value");
+                                            break;
+                                        case "Single":
+                                        case "float":
+                                            value = dataStruct.GetSingle("Value");
+                                            break;
+                                        case "String":
+                                        case "string":
+                                            value = dataStruct.GetString("Value");
+                                            break;
+                                        case "Boolean":
+                                        case "bool":
+                                            value = dataStruct.GetUInt8("Value") != 0;
+                                            break;
+                                        case "UInt32":
+                                        case "uint":
+                                            value = dataStruct.GetUInt32("Value");
+                                            break;
+                                        default:
+                                            // For other types, try to deserialize as string
+                                            value = dataStruct.GetString("Value");
+                                            break;
+                                    }
+
+                                    data[key] = value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
