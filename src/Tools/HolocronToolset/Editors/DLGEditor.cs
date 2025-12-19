@@ -1281,6 +1281,9 @@ namespace HolocronToolset.Editors
             var item = new DLGStandardItem(link);
             _rootItems.Add(item);
             
+            // Register link in link_to_items dictionary
+            RegisterLinkItem(link, item);
+            
             // Also add to CoreDlg.Starters if editor is available
             if (_editor != null && _editor.CoreDlg != null)
             {
@@ -1367,6 +1370,9 @@ namespace HolocronToolset.Editors
             var newItem = new DLGStandardItem(link);
             parentItem.AddChild(newItem);
             
+            // Register link in link_to_items dictionary
+            RegisterLinkItem(link, newItem);
+            
             UpdateItemDisplayText(newItem);
             UpdateItemDisplayText(parentItem);
             
@@ -1430,6 +1436,48 @@ namespace HolocronToolset.Editors
         {
             // This would update the display text in the tree view
             // For now, it's a placeholder
+        }
+
+        /// <summary>
+        /// Registers a link-item mapping in the link_to_items dictionary.
+        /// Matching PyKotor implementation: items are automatically registered when added to model
+        /// </summary>
+        private void RegisterLinkItem(DLGLink link, DLGStandardItem item)
+        {
+            if (link == null || item == null)
+            {
+                return;
+            }
+
+            if (!_linkToItems.ContainsKey(link))
+            {
+                _linkToItems[link] = new List<DLGStandardItem>();
+            }
+
+            if (!_linkToItems[link].Contains(item))
+            {
+                _linkToItems[link].Add(item);
+            }
+        }
+
+        /// <summary>
+        /// Unregisters a link-item mapping from the link_to_items dictionary.
+        /// </summary>
+        private void UnregisterLinkItem(DLGLink link, DLGStandardItem item)
+        {
+            if (link == null || item == null)
+            {
+                return;
+            }
+
+            if (_linkToItems.TryGetValue(link, out var items))
+            {
+                items.Remove(item);
+                if (items.Count == 0)
+                {
+                    _linkToItems.Remove(link);
+                }
+            }
         }
 
         /// <summary>
