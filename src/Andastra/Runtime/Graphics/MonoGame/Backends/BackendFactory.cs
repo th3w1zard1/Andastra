@@ -331,9 +331,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private static bool IsOpenGLAvailable()
         {
-            // OpenGL is generally available on all desktop platforms
-            // TODO: SIMPLIFIED - In a real implementation, we would try to create an OpenGL context
-            return true;
+            // Attempt to create a temporary OpenGL context to verify availability
+            // This provides accurate detection across Windows (WGL), Linux (GLX), and macOS (CGL)
+            try
+            {
+                return OpenGLContextHelper.TryCreateContext();
+            }
+            catch
+            {
+                // If context creation fails, OpenGL is not available
+                return false;
+            }
         }
 
         private static bool IsVulkanAvailable()
