@@ -26,8 +26,11 @@ namespace HolocronToolset.Editors
     //   K2-specific root fields: AlienRaceOwner, PostProcOwner, RecordNoVO, NextNodeID
     //   K2-specific node fields: ActionParam1-5, Script2, AlienRaceNode, NodeID, Emotion, FacialAnim, etc.
     //   K2-specific link fields: Active2, Logic, Not, Not2, Param1-5, ParamStrA/B, etc.
-    // NOTE: Eclipse games (DAO/DA2/ME) use .cnv "conversation" format, NOT DLG!
-    //   Ghidra analysis confirms: daorigins.exe, DragonAge2.exe, MassEffect.exe use "conversation" string, not EntryList/ReplyList
+    // - Eclipse Engine games (Dragon Age Origins, Dragon Age 2, Mass Effect 1/2):
+    //   Eclipse games primarily use .cnv "conversation" format, but DLG files follow K1-style base format
+    //   (no K2-specific fields). This editor supports DLG files for Eclipse games using K1 format.
+    //   Ghidra analysis: daorigins.exe, DragonAge2.exe, MassEffect.exe use "conversation" strings
+    //   Note: CNV format support may be added in the future if CNV is not DLG-compatible
     public class DLGEditor : Editor
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
@@ -94,6 +97,7 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QSpinBox script1Param1Spin, script1Param2Spin, etc.
         private NumericUpDown _script1Param1Spin;
+        private StackPanel _script1Param1Panel; // Panel containing script1Param1 control for visibility management
         
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
@@ -116,6 +120,7 @@ namespace HolocronToolset.Editors
             _actionHistory = new DLGActionHistory(this);
             InitializeComponent();
             SetupUI();
+            UpdateUIForGame(); // Update UI visibility based on game type
             UpdateTreeView();
             New();
         }
@@ -157,16 +162,18 @@ namespace HolocronToolset.Editors
             linkPanel.Children.Add(_logicSpin);
             panel.Children.Add(linkPanel);
 
-            // Initialize script parameter widgets
+            // Initialize script parameter widgets (K2-specific)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             // Original: QSpinBox script1Param1Spin
+            // K2-specific: ActionParam1 field only exists in KotOR 2 (swkotor2.exe: 0x005ea880)
+            // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
             _script1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
             _script1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
 
-            var scriptPanel = new StackPanel();
-            scriptPanel.Children.Add(new TextBlock { Text = "Script1 Param1:" });
-            scriptPanel.Children.Add(_script1Param1Spin);
-            panel.Children.Add(scriptPanel);
+            _script1Param1Panel = new StackPanel();
+            _script1Param1Panel.Children.Add(new TextBlock { Text = "Script1 Param1 (K2 only):" });
+            _script1Param1Panel.Children.Add(_script1Param1Spin);
+            panel.Children.Add(_script1Param1Panel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -194,6 +201,7 @@ namespace HolocronToolset.Editors
 
             _coreDlg = DLGHelper.ReadDlg(data);
             LoadDLG(_coreDlg);
+            UpdateUIForGame(); // Update UI visibility after loading (game may have changed)
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1193-1227
@@ -224,12 +232,48 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2)
-            // Eclipse games (DA, DA2) use K1-style DLG format (no K2-specific fields)
-            // Default to K2 if no installation is provided (for backward compatibility)
+            // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2/ME)
+            // Game-specific format handling:
+            // - K2 (TSL): Extended DLG format with K2-specific fields (ActionParam1-5, Script2, etc.)
+            // - K1, NWN, Eclipse (DA/DA2/ME): Base DLG format (no K2-specific fields)
+            //   Eclipse games use K1-style DLG format (no K2 extensions)
+            //   Note: Eclipse games may also use .cnv format, but DLG files follow K1 format
             Game gameToUse = _installation?.Game ?? Game.K2;
+            
+            // For Eclipse games, use K1 format (no K2-specific fields)
+            // Matching PyKotor: Eclipse games don't have K2 extensions
+            if (gameToUse.IsEclipse())
+            {
+                gameToUse = Game.K1; // Use K1 format for Eclipse (no K2-specific fields)
+            }
+            // For Aurora (NWN), use K1 format (base DLG, no K2 extensions)
+            else if (gameToUse.IsAurora())
+            {
+                gameToUse = Game.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
+            }
+            
             byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUse, ResourceType.DLG);
             return Tuple.Create(data, new byte[0]);
+        }
+        
+        /// <summary>
+        /// Updates UI visibility based on game type.
+        /// K2-specific controls are only shown for KotOR 2 (TSL).
+        /// Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions.
+        /// </summary>
+        private void UpdateUIForGame()
+        {
+            Game currentGame = _installation?.Game ?? Game.K2;
+            bool isK2 = currentGame.IsK2();
+            
+            // Show/hide K2-specific controls
+            // K2-specific: Script1Param1 (ActionParam1) only exists in KotOR 2 (swkotor2.exe: 0x005ea880)
+            // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
+            // Matching PyKotor: K2-specific widgets are shown/hidden based on game type
+            if (_script1Param1Panel != null)
+            {
+                _script1Param1Panel.IsVisible = isK2;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1256-1260
