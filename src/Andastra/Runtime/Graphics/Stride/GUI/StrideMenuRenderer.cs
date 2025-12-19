@@ -105,6 +105,20 @@ namespace Andastra.Runtime.Stride.GUI
             {
                 Console.WriteLine($"[StrideMenuRenderer] ERROR: Failed to initialize Stride menu renderer: {ex.Message}");
                 Console.WriteLine($"[StrideMenuRenderer] Stack trace: {ex.StackTrace}");
+                
+                // Dispose any resources that were created before the exception
+                if (_whiteTexture != null)
+                {
+                    _whiteTexture.Dispose();
+                    _whiteTexture = null;
+                }
+                
+                if (_spriteBatch != null)
+                {
+                    _spriteBatch.Dispose();
+                    _spriteBatch = null;
+                }
+                
                 IsInitialized = false;
             }
         }
@@ -152,31 +166,38 @@ namespace Andastra.Runtime.Stride.GUI
                 // Stride SpriteBatch uses ImmediateContext from GraphicsDevice
                 _spriteBatch.Begin(_graphicsDevice.ImmediateContext, SpriteSortMode.Deferred, BlendStates.AlphaBlend);
 
-                // Draw menu background (full screen dark blue)
-                var backgroundColor = new Color4(20.0f / 255.0f, 30.0f / 255.0f, 60.0f / 255.0f, 1.0f);
-                var viewport = _graphicsDevice.Viewport;
-                _spriteBatch.Draw(_whiteTexture, new RectangleF(0, 0, viewport.Width, viewport.Height), backgroundColor);
-
-                // Draw menu panel background
-                var panelColor = new Color4(40.0f / 255.0f, 50.0f / 255.0f, 80.0f / 255.0f, 1.0f);
-                var panelRect = CalculateMenuPanelRect(viewport.Width, viewport.Height);
-                _spriteBatch.Draw(_whiteTexture, panelRect, panelColor);
-
-                // Draw menu header
-                var headerColor = new Color4(255.0f / 255.0f, 200.0f / 255.0f, 50.0f / 255.0f, 1.0f);
-                var headerRect = CalculateHeaderRect(panelRect);
-                _spriteBatch.Draw(_whiteTexture, headerRect, headerColor);
-
-                // Draw menu text if font is available
-                if (_font != null)
+                try
                 {
-                    var textColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-                    var titlePosition = new Vector2(panelRect.X + 20, headerRect.Y + 10);
-                    _spriteBatch.DrawString(_font, "Main Menu", titlePosition, textColor);
-                }
+                    // Draw menu background (full screen dark blue)
+                    var backgroundColor = new Color4(20.0f / 255.0f, 30.0f / 255.0f, 60.0f / 255.0f, 1.0f);
+                    var viewport = _graphicsDevice.Viewport;
+                    _spriteBatch.Draw(_whiteTexture, new RectangleF(0, 0, viewport.Width, viewport.Height), backgroundColor);
 
-                // End sprite batch rendering
-                _spriteBatch.End();
+                    // Draw menu panel background
+                    var panelColor = new Color4(40.0f / 255.0f, 50.0f / 255.0f, 80.0f / 255.0f, 1.0f);
+                    var panelRect = CalculateMenuPanelRect(viewport.Width, viewport.Height);
+                    _spriteBatch.Draw(_whiteTexture, panelRect, panelColor);
+
+                    // Draw menu header
+                    var headerColor = new Color4(255.0f / 255.0f, 200.0f / 255.0f, 50.0f / 255.0f, 1.0f);
+                    var headerRect = CalculateHeaderRect(panelRect);
+                    _spriteBatch.Draw(_whiteTexture, headerRect, headerColor);
+
+                    // Draw menu text if font is available
+                    if (_font != null)
+                    {
+                        var textColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+                        var titlePosition = new Vector2(panelRect.X + 20, headerRect.Y + 10);
+                        _spriteBatch.DrawString(_font, "Main Menu", titlePosition, textColor);
+                    }
+                }
+                finally
+                {
+                    // Always end sprite batch rendering, even if an exception occurred
+                    // This prevents leaving SpriteBatch in a "begun" state which would cause
+                    // InvalidOperationException on subsequent Begin() calls
+                    _spriteBatch.End();
+                }
             }
             catch (Exception ex)
             {

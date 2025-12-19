@@ -28,7 +28,8 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - Odyssey K1 (swkotor.exe): FUN_004ed6e0 @ 0x004ed6e0 (updates bounding box), FUN_004f1310 @ 0x004f1310 (collision distance), FUN_00413350 @ 0x00413350 (2DA lookup), FUN_0060e170 @ 0x0060e170 (GetCreatureRadius wrapper), bounding box at offset 0x340
     ///   - Odyssey K2 (swkotor2.exe): FUN_005479f0 @ 0x005479f0 (creature bounding box), FUN_004e17a0 @ 0x004e17a0 (spatial query), FUN_004f5290 @ 0x004f5290 (detailed collision), FUN_0041d2c0 @ 0x0041d2c0 (2DA lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius wrapper), bounding box at offset 0x380
     ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSArea::NoCreaturesOnLine @ 0x14036ec90, CNWSCreature::GetIsCreatureBumpable @ 0x140391100, CNWSCreature::BumpFriends @ 0x140385130, C2DA::GetFloatingPoint (appearance.2da lookup), bounding box at offset 0x530
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe): Similar bounding box system using appearance.2da hitradius (needs Ghidra verification)
+    ///   - Eclipse DAO (daorigins.exe): PhysX-based collision, collision masks (TAG_COLLISIONMASK_CREATURES @ 0x00b14c40), appearance.2da hitradius, "BoundingBox" @ 0x00b13674, "CollisionGroup" @ 0x00b13aa8
+    ///   - Eclipse DA2 (DragonAge2.exe): PhysX-based collision, similar collision masks, appearance.2da hitradius, "Appearance_Type" @ 0x00bf0b9c, "TargetRadius" @ 0x00be1314
     ///   - Infinity (MassEffect.exe, MassEffect2.exe): Similar bounding box system using appearance.2da hitradius (needs Ghidra verification)
     /// - Common pattern: All engines use appearance.2da hitradius column for creature collision radius
     /// - Bounding box structure: CNWSCreature stores bounding box pointer at offset 0x530, radius at offset +8 from pointer
@@ -42,7 +43,9 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (swkotor2.exe: offset 0x380)
     ///   - K1CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K1-specific (swkotor.exe: offset 0x340)
     ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (swkotor2.exe: offset 0x380)
-    ///   - EclipseCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): Eclipse-specific bounding box (daorigins.exe, DragonAge2.exe)
+    ///   - EclipseCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): Common Eclipse logic (defaults to DA2)
+    ///   - DAOCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): DAO-specific (daorigins.exe: PhysX-based)
+    ///   - DA2CreatureCollisionDetector (Runtime.Games.Eclipse.Collision): DA2-specific (DragonAge2.exe: PhysX-based)
     ///   - InfinityCreatureCollisionDetector (Runtime.Games.Infinity.Collision): Infinity-specific bounding box (MassEffect.exe, MassEffect2.exe)
     /// </remarks>
     public class AuroraCreatureCollisionDetector : BaseCreatureCollisionDetector
