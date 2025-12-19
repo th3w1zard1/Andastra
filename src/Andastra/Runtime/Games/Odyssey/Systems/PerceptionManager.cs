@@ -64,12 +64,19 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         public HashSet<uint> LastSeenObjects { get; private set; }
         public HashSet<uint> LastHeardObjects { get; private set; }
 
+        // Track timestamps for when entities were first perceived (for most recent tracking)
+        // Key: entity ID, Value: timestamp when first perceived in this update cycle
+        public Dictionary<uint, float> SeenTimestamps { get; private set; }
+        public Dictionary<uint, float> HeardTimestamps { get; private set; }
+
         public PerceptionData()
         {
             SeenObjects = new HashSet<uint>();
             HeardObjects = new HashSet<uint>();
             LastSeenObjects = new HashSet<uint>();
             LastHeardObjects = new HashSet<uint>();
+            SeenTimestamps = new Dictionary<uint, float>();
+            HeardTimestamps = new Dictionary<uint, float>();
         }
 
         public void SwapBuffers()
@@ -84,6 +91,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             LastHeardObjects = HeardObjects;
             HeardObjects = tempHeard;
             HeardObjects.Clear();
+
+            // Clear timestamps when swapping buffers
+            SeenTimestamps.Clear();
+            HeardTimestamps.Clear();
         }
     }
 
@@ -126,7 +137,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     {
         private readonly EffectSystem _effectSystem;
         private readonly Dictionary<uint, PerceptionData> _perceptionData;
-        
+
         // Track last perceived entity per creature (for GetLastPerceived engine API)
         private readonly Dictionary<uint, IEntity> _lastPerceivedEntity;
         private readonly Dictionary<uint, bool> _lastPerceptionWasHeard;
@@ -220,6 +231,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             float sightRangeSq = sightRange * sightRange;
             float hearingRangeSq = hearingRange * hearingRange;
 
+            // Track perception order for most recent entity determination
+            // Entities perceived later in the update cycle are more recent
+            float perceptionOrder = 0.0f;
+            const float perceptionOrderIncrement = 1.0f;
+
             // Check all potential targets
             foreach (IEntity target in _world.GetAllEntities())
             {
@@ -249,54 +265,118 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 float distance = (float)Math.Sqrt(distSq);
                 if (distSq <= sightRangeSq && CanSee(creature, target))
                 {
+                    // Track timestamp only if not already seen (first time in this cycle)
+                    if (!data.SeenObjects.Contains(target.ObjectId))
+                    {
+                        data.SeenTimestamps[target.ObjectId] = perceptionOrder;
+                    }
                     data.SeenObjects.Add(target.ObjectId);
+                    perceptionOrder += perceptionOrderIncrement;
                 }
 
                 // Check hearing
                 if (distSq <= hearingRangeSq && CanHear(creature, target))
                 {
+                    // Track timestamp only if not already heard (first time in this cycle)
+                    if (!data.HeardObjects.Contains(target.ObjectId))
+                    {
+                        data.HeardTimestamps[target.ObjectId] = perceptionOrder;
+                    }
                     data.HeardObjects.Add(target.ObjectId);
+                    perceptionOrder += perceptionOrderIncrement;
                 }
             }
 
             // Fire events for changes
             FirePerceptionEvents(creature, data);
-            
+
             // Update last perceived entity (for GetLastPerceived engine API)
-            // Track the most recently perceived entity (seen or heard)
+            // Track the most recently perceived entity (seen or heard) based on timestamps
+            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 - tracks last perceived entity
+            // Based on nwmain.exe: ExecuteCommandGetLastPerceived @ 0x14052a6c0 - retrieves last perceived entity
+            // Original implementation: Tracks most recently perceived entity for GetLastPerceived NWScript function
             IEntity lastPerceived = null;
             bool wasHeard = false;
-            
-            // Prioritize seen over heard
-            if (data.SeenObjects.Count > 0)
+            float mostRecentTimestamp = -1.0f;
+
+            // Find the most recently perceived entity based on timestamps
+            // Prioritize seen over heard when timestamps are equal
+            // Check all seen entities first
+            foreach (uint seenId in data.SeenObjects)
             {
-                // TODO: SIMPLIFIED - Get the most recently seen entity (first in set for now, could be improved with timestamps)
-                foreach (uint seenId in data.SeenObjects)
+                float timestamp;
+                if (data.SeenTimestamps.TryGetValue(seenId, out timestamp))
                 {
-                    IEntity seen = _world.GetEntity(seenId);
-                    if (seen != null)
+                    if (timestamp > mostRecentTimestamp)
                     {
-                        lastPerceived = seen;
-                        wasHeard = data.HeardObjects.Contains(seenId);
-                        break; // Use first seen entity
+                        IEntity seen = _world.GetEntity(seenId);
+                        if (seen != null)
+                        {
+                            mostRecentTimestamp = timestamp;
+                            lastPerceived = seen;
+                            wasHeard = data.HeardObjects.Contains(seenId);
+                        }
                     }
                 }
             }
-            else if (data.HeardObjects.Count > 0)
+
+            // Check heard entities (only if no seen entities or if heard entity is more recent)
+            foreach (uint heardId in data.HeardObjects)
             {
-                // If nothing seen, use first heard entity
-                foreach (uint heardId in data.HeardObjects)
+                // Skip if already found as seen entity
+                if (lastPerceived != null && lastPerceived.ObjectId == heardId)
                 {
-                    IEntity heard = _world.GetEntity(heardId);
-                    if (heard != null)
+                    continue;
+                }
+
+                float timestamp;
+                if (data.HeardTimestamps.TryGetValue(heardId, out timestamp))
+                {
+                    if (timestamp > mostRecentTimestamp)
                     {
-                        lastPerceived = heard;
-                        wasHeard = true;
-                        break; // Use first heard entity
+                        IEntity heard = _world.GetEntity(heardId);
+                        if (heard != null)
+                        {
+                            mostRecentTimestamp = timestamp;
+                            lastPerceived = heard;
+                            wasHeard = true;
+                        }
                     }
                 }
             }
-            
+
+            // If no timestamps found (shouldn't happen, but fallback to first entity)
+            if (lastPerceived == null)
+            {
+                // Fallback: prioritize seen over heard
+                if (data.SeenObjects.Count > 0)
+                {
+                    foreach (uint seenId in data.SeenObjects)
+                    {
+                        IEntity seen = _world.GetEntity(seenId);
+                        if (seen != null)
+                        {
+                            lastPerceived = seen;
+                            wasHeard = data.HeardObjects.Contains(seenId);
+                            break;
+                        }
+                    }
+                }
+                else if (data.HeardObjects.Count > 0)
+                {
+                    foreach (uint heardId in data.HeardObjects)
+                    {
+                        IEntity heard = _world.GetEntity(heardId);
+                        if (heard != null)
+                        {
+                            lastPerceived = heard;
+                            wasHeard = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (lastPerceived != null)
             {
                 _lastPerceivedEntity[creature.ObjectId] = lastPerceived;
@@ -404,7 +484,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             {
                 // Check if creature has See Invisibility (TrueSeeing effect or feat)
                 bool canSeeInvisible = _effectSystem.HasEffect(creature, EffectType.TrueSeeing);
-                
+
                 // Also check for See Invisibility feat/ability from creature component
                 if (!canSeeInvisible)
                 {
@@ -418,7 +498,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                         canSeeInvisible = creatureComp.FeatList.Contains(FEAT_SEE_INVISIBILITY);
                     }
                 }
-                
+
                 if (!canSeeInvisible)
                 {
                     return false; // Target is invisible and creature cannot see invisible
@@ -662,7 +742,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             _lastPerceivedEntity.Clear();
             _lastPerceptionWasHeard.Clear();
         }
-        
+
         /// <summary>
         /// Gets the last perceived entity for a creature (for GetLastPerceived engine API).
         /// </summary>
@@ -672,7 +752,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             {
                 return null;
             }
-            
+
             IEntity lastPerceived;
             if (_lastPerceivedEntity.TryGetValue(creature.ObjectId, out lastPerceived))
             {
@@ -680,7 +760,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
             return null;
         }
-        
+
         /// <summary>
         /// Checks if the last perception was heard (for GetLastPerceptionHeard engine API).
         /// </summary>
@@ -690,7 +770,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             {
                 return false;
             }
-            
+
             bool wasHeard;
             if (_lastPerceptionWasHeard.TryGetValue(creature.ObjectId, out wasHeard))
             {
