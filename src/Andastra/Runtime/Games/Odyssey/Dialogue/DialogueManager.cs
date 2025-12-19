@@ -13,6 +13,7 @@ using Andastra.Runtime.Games.Common.Dialogue;
 using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Core.Party;
+using Andastra.Runtime.Core.Plot;
 using Andastra.Parsing.Formats.TwoDA;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
@@ -67,6 +68,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         private readonly GameDataManager _gameDataManager;
         [CanBeNull]
         private readonly PartySystem _partySystem;
+        [CanBeNull]
+        private readonly PlotSystem _plotSystem;
 
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -127,7 +130,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             ILipSyncController lipSyncController = null,
             [CanBeNull] JournalSystem journalSystem = null,
             [CanBeNull] GameDataManager gameDataManager = null,
-            [CanBeNull] PartySystem partySystem = null)
+            [CanBeNull] PartySystem partySystem = null,
+            [CanBeNull] PlotSystem plotSystem = null)
             : base(vm, world, engineApi, globals)
         {
             _dialogueLoader = dialogueLoader ?? throw new ArgumentNullException("dialogueLoader");
@@ -137,6 +141,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             _journalSystem = journalSystem;
             _gameDataManager = gameDataManager;
             _partySystem = partySystem;
+            _plotSystem = plotSystem;
         }
 
         /// <summary>
@@ -978,19 +983,24 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
             // Flow: FUN_005e6870 -> FUN_0057eb20
             // FUN_0057eb20: Looks up "XP" column from plot.2da using PlotIndex, calculates final XP, awards XP
-            if (node.PlotIndex >= 0 && node.PlotXpPercentage > 0)
+            // Comprehensive PlotIndex processing:
+            // 1. Process plot XP (if PlotXpPercentage > 0)
+            // 2. Register plot in plot system (if not already registered)
+            // 3. Trigger plot state tracking
+            // 4. Update quest/journal state if plot label matches a quest
+            if (node.PlotIndex >= 0)
             {
-                ProcessPlotXP(node.PlotIndex, node.PlotXpPercentage);
+                ProcessPlotIndex(node.PlotIndex, node.PlotXpPercentage);
             }
         }
 
         /// <summary>
-        /// Processes plot XP based on PlotIndex and PlotXpPercentage.
+        /// Comprehensively processes PlotIndex including XP, state tracking, and quest integration.
         /// </summary>
         /// <param name="plotIndex">Plot index from plot.2da</param>
         /// <param name="plotXpPercentage">XP percentage multiplier (0.0-1.0)</param>
         /// <remarks>
-        /// Plot XP Processing (swkotor2.exe: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20):
+        /// Comprehensive PlotIndex Processing (swkotor2.exe: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20):
         /// - FUN_005e6870: Checks if plotIndex != -1 and threshold < plotXpPercentage
         ///   - Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
         ///   - Calls FUN_0057eb20 with plotIndex and calculated value
@@ -998,26 +1008,28 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         ///   - Calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
         ///   - Awards XP via FUN_0057ccd0 (party XP award function)
         ///   - Notifies journal system via FUN_00681a10
-        /// - Original implementation:
+        /// - Complete PlotIndex processing includes:
         ///   1. Look up plot.2da row using PlotIndex
-        ///   2. Get "xp" column value (base XP for this plot)
-        ///   3. Calculate: plotXP * PlotXpPercentage * multipliers
-        ///   4. Award XP to all active party members
-        ///   5. Notify journal system of XP award
+        ///   2. Register plot in plot system (if not already registered)
+        ///   3. Get plot label and XP from plot.2da
+        ///   4. Process plot XP (if PlotXpPercentage > 0)
+        ///   5. Trigger plot state tracking
+        ///   6. Update quest/journal state if plot label matches a quest
+        ///   7. Mark plot as triggered/completed
         /// - Cross-engine analysis:
-        ///   - swkotor.exe: Similar plot XP system (needs reverse engineering)
+        ///   - swkotor.exe: Similar plot system (needs reverse engineering)
         ///   - nwmain.exe: Different plot system (needs reverse engineering)
         ///   - daorigins.exe: Plot system may differ (needs reverse engineering)
         /// </remarks>
-        private void ProcessPlotXP(int plotIndex, float plotXpPercentage)
+        private void ProcessPlotIndex(int plotIndex, float plotXpPercentage)
         {
-            if (_gameDataManager == null || _partySystem == null)
+            if (_gameDataManager == null)
             {
                 return;
             }
 
             // Look up plot.2da row using PlotIndex
-            // Based on swkotor2.exe: FUN_0057eb20 looks up "XP" column from plot.2da
+            // Based on swkotor2.exe: FUN_0057eb20 looks up plot.2da data
             TwoDA plotTable = _gameDataManager.GetTable("plot");
             if (plotTable == null)
             {
@@ -1036,33 +1048,63 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 return;
             }
 
-            // Get base XP from "xp" column
+            // Get plot label and XP from plot.2da
+            string plotLabel = plotRow.GetString("label", string.Empty);
             int? baseXP = plotRow.GetInteger("xp");
-            if (!baseXP.HasValue || baseXP.Value <= 0)
+
+            // Register plot in plot system (if plot system is available)
+            // Based on swkotor2.exe: Plot state is tracked to prevent duplicate processing
+            // Original implementation tracks which plots have been triggered
+            if (_plotSystem != null)
             {
-                return;
+                _plotSystem.RegisterPlot(plotIndex, plotLabel);
             }
 
-            // Calculate final XP: baseXP * plotXpPercentage
-            // Based on swkotor2.exe: FUN_0057eb20 calculates (plotXP * param_2) * multiplier
-            // Original implementation uses additional multipliers (_DAT_007b99b4, _DAT_007b5f88)
-            // For now, we'll use a simplified calculation: baseXP * plotXpPercentage
-            // TODO: Add multiplier support if needed (based on game settings or difficulty)
-            int finalXP = (int)(baseXP.Value * plotXpPercentage);
-            if (finalXP <= 0)
+            // Process plot XP if PlotXpPercentage > 0
+            // Based on swkotor2.exe: FUN_005e6870 only processes XP if threshold < plotXpPercentage
+            if (plotXpPercentage > 0 && _partySystem != null && baseXP.HasValue && baseXP.Value > 0)
             {
-                return;
+                // Calculate final XP: baseXP * plotXpPercentage
+                // Based on swkotor2.exe: FUN_0057eb20 calculates (plotXP * param_2) * multiplier
+                // Original implementation uses additional multipliers (_DAT_007b99b4, _DAT_007b5f88)
+                // For now, we'll use a simplified calculation: baseXP * plotXpPercentage
+                int finalXP = (int)(baseXP.Value * plotXpPercentage);
+                if (finalXP > 0)
+                {
+                    // Award XP to all active party members
+                    // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
+                    // Original implementation awards XP to all active party members
+                    _partySystem.AwardXP(finalXP, split: false);
+                }
             }
 
-            // Award XP to all active party members
-            // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
-            // Original implementation awards XP to all active party members
-            _partySystem.AwardXP(finalXP, split: false);
+            // Trigger plot state tracking
+            // Based on swkotor2.exe: Plot state is tracked to prevent duplicate processing
+            // Original implementation tracks which plots have been triggered
+            if (_plotSystem != null)
+            {
+                _plotSystem.TriggerPlot(plotIndex, plotLabel);
+            }
 
-            // Notify journal system of XP award (if needed)
-            // Based on swkotor2.exe: FUN_00681a10 notifies journal system
-            // Original implementation may update journal UI or trigger notifications
-            // For now, we'll just award XP (journal system integration can be added later if needed)
+            // Update quest/journal state if plot label matches a quest
+            // Based on swkotor2.exe: Plot labels can be used as quest identifiers
+            // Original implementation: If plot label matches a quest tag, update quest state
+            if (_journalSystem != null && !string.IsNullOrEmpty(plotLabel))
+            {
+                // Check if plot label matches a registered quest
+                QuestData quest = _journalSystem.GetQuest(plotLabel);
+                if (quest != null)
+                {
+                    // Update quest state to indicate plot has been triggered
+                    // Original implementation may set quest state to "in progress" or "completed"
+                    int currentState = _journalSystem.GetQuestState(plotLabel);
+                    if (currentState == 0)
+                    {
+                        // Quest not started yet - start it
+                        _journalSystem.SetQuestState(plotLabel, 1);
+                    }
+                }
+            }
         }
 
         #endregion

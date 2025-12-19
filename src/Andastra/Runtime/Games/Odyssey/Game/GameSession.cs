@@ -26,6 +26,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Journal;
+using Andastra.Runtime.Core.Plot;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {
@@ -68,6 +69,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private readonly IEngineApi _engineApi;
         private readonly Systems.EncounterSystem _encounterSystem;
         private readonly JournalSystem _journalSystem;
+        private readonly PlotSystem _plotSystem;
         private readonly FixedTimestepGameLoop _gameLoop;
         private readonly PlayerInputHandler _inputHandler;
 
@@ -246,6 +248,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Initialize AI controller
             _aiController = new AIController(_world, FireScriptEvent);
 
+            // Initialize journal system
+            _journalSystem = new JournalSystem();
+
+            // Initialize plot system
+            _plotSystem = new PlotSystem();
+
             // Initialize dialogue manager
             _dialogueManager = new DialogueManager(
                 _vm,
@@ -258,7 +266,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 null, // lipSyncController
                 _journalSystem, // journalSystem
                 _gameDataManager, // gameDataManager (for plot.2da access)
-                _partySystem // partySystem (for XP awards)
+                _partySystem, // partySystem (for XP awards)
+                _plotSystem // plotSystem (for plot state tracking)
             );
 
             // Initialize module transition system
