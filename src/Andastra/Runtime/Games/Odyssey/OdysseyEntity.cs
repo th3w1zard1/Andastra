@@ -267,11 +267,38 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Placeables have interaction state, inventory, use logic.
         /// Based on placeable component structure in swkotor2.exe.
+        /// - LoadPlaceableFromGFF @ 0x00588010 (swkotor2.exe) - Loads placeable data from GIT GFF into placeable object
+        ///   - Located via string reference: "Placeable List" @ 0x007bd260 (GFF list field in GIT)
+        ///   - Reads Tag, TemplateResRef, LocName, AutoRemoveKey, Faction, Invulnerable, Plot, NotBlastable, Min1HP, PartyInteract, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, and other placeable properties from GFF
+        /// - SavePlaceableToGFF @ 0x00589520 (swkotor2.exe) - Saves placeable data to GFF save data
+        ///   - Located via string reference: "Placeable List" @ 0x007bd260
+        ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
+        /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
+        /// - Placeables have appearance, useability, locks, inventory, HP, traps
+        /// - Based on UTP file format (GFF with "UTP " signature)
+        /// - Script events: OnUsed (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED @ 0x007bc7d8, 0x19), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+        /// - Containers (HasInventory=true) can store items, open/close states (AnimationState 0=closed, 1=open)
+        /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class (checked via Security skill)
+        /// - Use distance: ~2.0 units (InteractRange), checked before OnUsed script fires
+        /// - Odyssey-specific: Fort/Will/Ref saves, BodyBag, Plot flag, FactionId, AppearanceType, trap system
+        /// 
+        /// Component attachment pattern:
+        /// - Based on swkotor2.exe: Placeable components are attached during entity creation from GIT templates
+        /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
+        /// - Component provides: IsUseable, HasInventory, IsStatic, IsOpen, IsLocked, LockDC, KeyTag, HitPoints, MaxHitPoints, Hardness, AnimationState, Conversation
+        /// - Odyssey-specific properties: AppearanceType, CurrentHP, MaxHP, Fort, Will, Reflex, KeyRequired, KeyName, IsContainer, FactionId, BodyBag, Plot
         /// </remarks>
         private void AttachPlaceableComponents()
         {
-            // TODO: Attach placeable-specific components
-            // PlaceableComponent with use/interaction state
+            // Attach placeable component if not already present
+            // Based on swkotor2.exe: Placeable component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<IPlaceableComponent>())
+            {
+                var placeableComponent = new PlaceableComponent();
+                placeableComponent.Owner = this;
+                AddComponent<IPlaceableComponent>(placeableComponent);
+            }
         }
 
         /// <summary>
@@ -279,12 +306,42 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Triggers have enter/exit detection, script firing.
-        /// Based on trigger component structure in swkotor2.exe.
+        /// Based on trigger component structure in swkotor.exe and swkotor2.exe.
+        /// - FUN_004e5920 @ 0x004e5920 (swkotor2.exe) loads trigger instances from GIT TriggerList, reads UTT templates
+        ///   - Function signature: `undefined4 FUN_004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
+        ///   - Reads "TriggerList" list from GFF structure
+        ///   - For each trigger entry in TriggerList:
+        ///     - Checks trigger type (must be type 1 = Trigger)
+        ///     - Reads ObjectId (uint32) via "ObjectId" field name (default 0x7f000000)
+        ///     - Reads Tag, TemplateResRef, LinkedTo, LinkedToModule, LinkedToFlags, TransitionDestination
+        ///     - Reads Geometry vertices from GIT Geometry field
+        ///     - Reads trap properties: TrapFlag, TrapType, TrapDetectable, TrapDetectDC, TrapDisarmable, TrapDisarmDC, TrapOneShot
+        ///     - Reads script hooks: OnEnter, OnExit, OnHeartbeat, OnClick, OnDisarm, OnTrapTriggered
+        /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254 (swkotor2.exe)
+        /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (swkotor2.exe)
+        /// - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac (swkotor2.exe)
+        /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788 (swkotor2.exe)
+        /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition) (swkotor2.exe)
+        /// - Original implementation: UTT (Trigger) GFF templates define trigger properties and geometry
+        /// - Triggers are invisible polygonal volumes that fire scripts on enter/exit
+        /// - Trigger types: Generic (0), Transition (1), Trap (2)
+        /// - Transition triggers: LinkedTo, LinkedToModule, LinkedToFlags for area/module transitions
+        /// - Trap triggers: OnTrapTriggered script fires when trap is activated
+        /// - Geometry: Triggers have polygon geometry (Geometry field in GIT) defining trigger volume
+        /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
+        /// - Component provides: Geometry, IsEnabled, TriggerType, LinkedTo, LinkedToModule, IsTrap, TrapActive, TrapDetected, TrapDisarmed, TrapDetectDC, TrapDisarmDC, FireOnce, HasFired, ContainsPoint, ContainsEntity
         /// </remarks>
         private void AttachTriggerComponents()
         {
-            // TODO: Attach trigger-specific components
-            // TriggerComponent with enter/exit detection
+            // Attach trigger component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Trigger component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<ITriggerComponent>())
+            {
+                var triggerComponent = new TriggerComponent();
+                triggerComponent.Owner = this;
+                AddComponent<ITriggerComponent>(triggerComponent);
+            }
         }
 
         /// <summary>

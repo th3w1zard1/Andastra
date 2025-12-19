@@ -228,12 +228,108 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Creatures have stats, inventory, combat capabilities, etc.
         /// Based on creature component structure in daorigins.exe and DragonAge2.exe.
         /// Uses talents/abilities system instead of feats.
+        /// 
+        /// Component attachment pattern:
+        /// - Based on daorigins.exe and DragonAge2.exe: Creature components are attached during entity creation from templates
+        /// - Component provides: Stats (HP, abilities, skills), Inventory (equipped items and inventory bag), Faction (hostility relationships),
+        ///   Animation (model animations), Renderable (3D model rendering), Perception (sight/hearing detection)
+        /// - Eclipse-specific: Uses talents/abilities system instead of feats (different from Odyssey/Aurora)
+        /// - Component initialization: Properties loaded from entity template files and can be modified at runtime
+        /// 
+        /// Cross-engine analysis:
+        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
+        ///   - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
+        /// - Aurora (nwmain.exe, nwn2main.exe): Similar component structure with AuroraCreatureComponent, StatsComponent, InventoryComponent, AuroraFactionComponent
+        /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system with StatsComponent, InventoryComponent, EclipseFactionComponent, EclipseAnimationComponent
+        ///   - Eclipse-specific: Talents/abilities system, different property calculations, enhanced component interactions
+        /// - Infinity (MassEffect.exe, MassEffect2.exe): Streamlined component system (to be reverse engineered)
+        /// 
+        /// Note: Currently using Odyssey StatsComponent and InventoryComponent implementations as they implement the common interfaces.
+        /// TODO: Create Eclipse-specific StatsComponent and InventoryComponent implementations if Eclipse-specific behavior is needed.
         /// </remarks>
         private void AttachCreatureComponents()
         {
-            // TODO: Attach creature-specific components
-            // StatsComponent, InventoryComponent, CombatComponent, etc.
-            // Eclipse-specific: Talents/abilities system
+            // Attach stats component for creatures
+            // Based on daorigins.exe and DragonAge2.exe: Creatures have stats (HP, abilities, skills, saves)
+            // Stats component provides: CurrentHP, MaxHP, Abilities (STR, DEX, CON, INT, WIS, CHA), Skills, Saves, BaseAttackBonus, ArmorClass
+            // Eclipse-specific: Different ability score calculations and skill systems compared to Odyssey/Aurora
+            // Stats are loaded from entity templates and can be modified at runtime
+            if (!HasComponent<IStatsComponent>())
+            {
+                // TODO: Create EclipseStatsComponent if Eclipse-specific stats behavior is needed
+                // For now, using Odyssey StatsComponent as it implements IStatsComponent interface
+                // Eclipse may have different ability score calculations, skill systems, or HP regeneration mechanics
+                var statsComponent = new StatsComponent();
+                AddComponent<IStatsComponent>(statsComponent);
+            }
+
+            // Attach inventory component for creatures
+            // Based on daorigins.exe and DragonAge2.exe: Creatures have inventory (equipped items and inventory bag)
+            // Inventory component provides: Equipped items (weapon, armor, shield, etc.), Inventory bag (array of item slots)
+            // Eclipse-specific: Different inventory slot system and equipment types compared to Odyssey/Aurora
+            // Inventory is loaded from entity templates and can be modified at runtime
+            if (!HasComponent<IInventoryComponent>())
+            {
+                // TODO: Create EclipseInventoryComponent if Eclipse-specific inventory behavior is needed
+                // For now, using Odyssey InventoryComponent as it implements IInventoryComponent interface
+                // Eclipse may have different inventory slot numbering, equipment types, or storage formats
+                var inventoryComponent = new InventoryComponent(this);
+                AddComponent<IInventoryComponent>(inventoryComponent);
+            }
+
+            // Attach faction component for creatures
+            // Based on daorigins.exe and DragonAge2.exe: Creatures have faction relationships (hostility, friendliness)
+            // Faction component provides: FactionId, IsHostile, IsFriendly checks
+            // Eclipse-specific: Uses EclipseFactionManager for reputation-based hostility determination
+            // Faction relationships: Similar to Odyssey/Aurora but Eclipse-specific implementation with reputation system
+            if (!HasComponent<IFactionComponent>())
+            {
+                var factionComponent = new EclipseFactionComponent();
+                factionComponent.Owner = this;
+                // Set FactionID from entity data if available (loaded from entity template)
+                if (GetData("FactionID") is int factionId)
+                {
+                    factionComponent.FactionId = factionId;
+                }
+                AddComponent<IFactionComponent>(factionComponent);
+            }
+
+            // Attach animation component for creatures
+            // Based on daorigins.exe and DragonAge2.exe: Creatures have animation capabilities (model animations)
+            // Animation component provides: PlayAnimation, StopAnimation, GetCurrentAnimation, AnimationState
+            // Eclipse-specific: Uses EclipseAnimationComponent for Eclipse-specific animation system
+            // Animations are loaded from model files and can be triggered by scripts or game systems
+            if (!HasComponent<IAnimationComponent>())
+            {
+                var animationComponent = new EclipseAnimationComponent();
+                AddComponent<IAnimationComponent>(animationComponent);
+            }
+
+            // Attach renderable component for creatures
+            // Based on daorigins.exe and DragonAge2.exe: Creatures are renderable entities (3D models)
+            // Renderable component provides: ModelResRef, AppearanceRow, TextureResRefs, ModelType
+            // Eclipse-specific: Uses RenderableComponent for 3D model rendering
+            // Renderable data is loaded from entity templates and appearance.2da table
+            if (!HasComponent<IRenderableComponent>())
+            {
+                // TODO: Create EclipseRenderableComponent if Eclipse-specific rendering behavior is needed
+                // For now, using Odyssey RenderableComponent as it implements IRenderableComponent interface
+                // Eclipse may have different model formats, texture systems, or appearance data structures
+                var renderableComponent = new RenderableComponent();
+                AddComponent<IRenderableComponent>(renderableComponent);
+            }
+
+            // Attach perception component for creatures (optional, may be attached by other systems)
+            // Based on daorigins.exe and DragonAge2.exe: Creatures have perception capabilities (sight, hearing)
+            // Perception component provides: PerceptionRange, CanSee, CanHear, Perception checks
+            // Eclipse-specific: Uses BasePerceptionComponent for perception system
+            // Perception data is loaded from appearance.2da table (PERCEPTIONDIST, PerceptionRange columns)
+            // Note: Perception component may be attached by PerceptionManager system, so we check before attaching
+            if (!HasComponent<IPerceptionComponent>())
+            {
+                // Perception component will be attached by PerceptionManager if needed
+                // We don't attach it here to avoid duplicate attachment
+            }
         }
 
         /// <summary>
