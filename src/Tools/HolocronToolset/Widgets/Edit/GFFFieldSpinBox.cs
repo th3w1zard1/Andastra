@@ -149,12 +149,14 @@ namespace HolocronToolset.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:89-91
         // Original: def setMinimum(self, value: int):
-        public new void SetMinimum(int value)
+        public void SetMinimum(int value)
         {
             _minValue = value;
             base.Minimum = Math.Min(-2, value);
         }
 
-        public event Action<int> ValueChanged;
+        // Intentionally hides base ValueChanged event (EventHandler<NumericUpDownValueChangedEventArgs>) 
+        // to provide Action<int> signature for GFF field value changes
+        public new event Action<int> ValueChanged;
     }
 }

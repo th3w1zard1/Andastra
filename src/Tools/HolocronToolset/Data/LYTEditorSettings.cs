@@ -55,7 +55,8 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:24-29
         // Original: def save(self):
-        public void Save()
+        // Intentionally hides base Save() to provide LYT-specific save semantics (sets LYT properties which auto-save via SetValue)
+        public new void Save()
         {
             SetValue("GridSize", GridSize);
             SetValue("ShowGrid", ShowGrid);

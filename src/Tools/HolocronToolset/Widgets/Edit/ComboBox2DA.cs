@@ -56,7 +56,7 @@ namespace HolocronToolset.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:70-88
         // Original: def setCurrentIndex(self, row_in_2da: int):
-        public new void SetSelectedIndex(int rowIn2DA)
+        public void SetSelectedIndex(int rowIn2DA)
         {
             // TODO: Find item with matching row index
             // For now, just set the index directly
