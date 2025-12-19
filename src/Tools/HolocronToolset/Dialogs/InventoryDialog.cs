@@ -121,7 +121,7 @@ namespace HolocronToolset.Dialogs
         public bool ShowDialog()
         {
             // Show dialog and return result
-            // This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
+            // TODO: SIMPLIFIED - This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
             // For now, we'll track if OK was clicked
             bool result = false;
             var okButton = this.FindControl<Button>("okButton");
@@ -137,7 +137,7 @@ namespace HolocronToolset.Dialogs
                 okButton.Click += okHandler;
             }
             this.Show();
-            // Note: This is a simplified synchronous implementation
+            // TODO: SIMPLIFIED - Note: This is a simplified synchronous implementation
             // In a full implementation, we'd use ShowDialogAsync and await the result
             return result;
         }

@@ -27,3 +27,9 @@ test-full-output.txt
 test-output.txt
 test-run.txt
 test-run2.txt
+
+vendor/NCSDecomp/tools/nwnnsscomp_incompatible_tslpatcher.exe
+vendor/NCSDecomp/tools/nwnnsscomp_incompatible_v1.exe
+vendor/NCSDecomp/tools/nwnnsscomp_kscript.exe
+vendor/NCSDecomp/tools/nwnnsscomp_ktool.exe
+*.exe
