@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -32,7 +33,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// - Multi-level navigation (ground, elevated surfaces)
     /// </remarks>
     [PublicAPI]
-    public class EclipseNavigationMesh : INavigationMesh
+    public class EclipseNavigationMesh : BaseNavigationMesh
     {
         // Static geometry data
         private readonly Vector3[] _staticVertices;
@@ -1796,97 +1797,69 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - MassEffect.exe: Physics-aware line of sight (search for physics integration in line of sight)
         /// - MassEffect2.exe: Enhanced physics-aware line of sight (search for improved line of sight functions)
         /// </remarks>
-        public bool HasLineOfSight(Vector3 start, Vector3 end)
+        /// <summary>
+        /// Checks line of sight between two points.
+        /// </summary>
+        /// <remarks>
+        /// Eclipse-specific: Uses base class common algorithm with dynamic obstacles and destructible modifications.
+        /// </remarks>
+        public new bool HasLineOfSight(Vector3 start, Vector3 end)
         {
-            // Handle edge case: same point
-            Vector3 direction = end - start;
-            float distance = direction.Length();
-            if (distance < 1e-6f)
-            {
-                return true; // Same point, line of sight is clear
-            }
+            return base.HasLineOfSight(start, end);
+        }
 
-            // Normalize direction for raycast
-            Vector3 normalizedDir = direction / distance;
-
-            // Tolerance for hit distance checks (0.5 unit tolerance for precision)
-            const float tolerance = 0.5f;
-
-            // 1. Check static geometry with destructible modifications
-            Vector3 staticHitPoint = Vector3.Zero;
-            int staticHitFace = -1;
-            bool staticHit = false;
-            if (_staticAabbRoot != null)
+        /// <summary>
+        /// Eclipse-specific check: handles destructible modifications and walkable faces.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe:
+        /// - Destroyed faces don't block line of sight
+        /// - Modified faces check walkability
+        /// - Walkable faces don't block line of sight
+        /// </remarks>
+        protected override bool CheckHitBlocksLineOfSight(Vector3 hitPoint, int hitFace, Vector3 start, Vector3 end)
+        {
+            // Check if hit face is destroyed (destructible objects don't block line of sight)
+            if (_modificationByFaceId.ContainsKey(hitFace))
             {
-                staticHit = RaycastAabb(_staticAabbRoot, start, normalizedDir, distance, out staticHitPoint, out staticHitFace);
-            }
-            else if (_staticFaceCount > 0)
-            {
-                // Brute force fallback for static geometry
-                float bestDist = distance;
-                staticHitFace = -1;
-                for (int i = 0; i < _staticFaceCount; i++)
+                DestructibleModification mod = _modificationByFaceId[hitFace];
+                if (mod.IsDestroyed)
                 {
-                    float dist;
-                    if (RayTriangleIntersect(start, normalizedDir, i, bestDist, out dist))
-                    {
-                        if (dist < bestDist)
-                        {
-                            bestDist = dist;
-                            staticHitFace = i;
-                            staticHitPoint = start + normalizedDir * dist;
-                            staticHit = true;
-                        }
-                    }
+                    // Face is destroyed - doesn't block line of sight
+                    return true; // Line of sight is clear
                 }
+                // Face is modified but not destroyed - check if it blocks
+                // Modified faces can still block line of sight if they're non-walkable
+                if (!IsWalkable(hitFace))
+                {
+                    return false; // Modified non-walkable face blocks line of sight
+                }
+                // Modified walkable face doesn't block
+                return true;
             }
 
-            if (staticHit)
+            // Unmodified face - check if it blocks line of sight
+            // Walkable faces don't block line of sight (e.g., through doorways, over walkable terrain)
+            if (hitFace >= 0 && IsWalkable(hitFace))
             {
-                // Check if hit is very close to destination (within tolerance)
-                float distToHit = Vector3.Distance(start, staticHitPoint);
-                float distToDest = distance;
-                if (distToDest - distToHit < tolerance)
-                {
-                    // Hit is at or very close to destination, line of sight is clear
-                    // Continue to check dynamic obstacles
-                }
-                else
-                {
-                    // Check if hit face is destroyed (destructible objects don't block line of sight)
-                    if (_modificationByFaceId.ContainsKey(staticHitFace))
-                    {
-                        DestructibleModification mod = _modificationByFaceId[staticHitFace];
-                        if (mod.IsDestroyed)
-                        {
-                            // Face is destroyed - doesn't block line of sight
-                            // Continue to check dynamic obstacles
-                        }
-                        else
-                        {
-                            // Face is modified but not destroyed - check if it blocks
-                            // Modified faces can still block line of sight if they're non-walkable
-                            if (!IsWalkable(staticHitFace))
-                            {
-                                return false; // Modified non-walkable face blocks line of sight
-                            }
-                            // Modified walkable face doesn't block - continue to check dynamic obstacles
-                        }
-                    }
-                    else
-                    {
-                        // Unmodified face - check if it blocks line of sight
-                        // Walkable faces don't block line of sight (e.g., through doorways, over walkable terrain)
-                        if (!IsWalkable(staticHitFace))
-                        {
-                            return false; // Non-walkable face blocks line of sight
-                        }
-                        // Walkable face doesn't block - continue to check dynamic obstacles
-                    }
-                }
+                return true; // Walkable face doesn't block
             }
 
-            // 2. Check dynamic obstacles
+            // Non-walkable face blocks line of sight
+            return false;
+        }
+
+        /// <summary>
+        /// Eclipse-specific check for dynamic obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe:
+        /// - Only active, non-walkable obstacles block line of sight
+        /// - Walkable obstacles (platforms, movable surfaces) don't block
+        /// </remarks>
+        protected override bool CheckDynamicObstacles(Vector3 start, Vector3 end, Vector3 direction, float distance)
+        {
+            // Check dynamic obstacles
             // Only active, non-walkable obstacles block line of sight
             float closestObstacleHit = float.MaxValue;
             bool obstacleBlocks = false;
@@ -1903,12 +1876,12 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 // Check if ray intersects obstacle's bounding box
-                if (RayAabbIntersect(start, normalizedDir, obstacle.BoundsMin, obstacle.BoundsMax, distance))
+                if (RayAabbIntersect(start, direction, obstacle.BoundsMin, obstacle.BoundsMax, distance))
                 {
                     // Calculate intersection point with obstacle AABB
                     Vector3 obstacleHitPoint;
                     float obstacleHitDist;
-                    if (RayAabbIntersectPoint(start, normalizedDir, obstacle.BoundsMin, obstacle.BoundsMax, distance, out obstacleHitPoint, out obstacleHitDist))
+                    if (RayAabbIntersectPoint(start, direction, obstacle.BoundsMin, obstacle.BoundsMax, distance, out obstacleHitPoint, out obstacleHitDist))
                     {
                         if (obstacleHitDist < closestObstacleHit)
                         {
@@ -1922,7 +1895,7 @@ namespace Andastra.Runtime.Games.Eclipse
             if (obstacleBlocks)
             {
                 // Check if obstacle hit is very close to destination (within tolerance)
-                if (distance - closestObstacleHit < tolerance)
+                if (distance - closestObstacleHit < LineOfSightTolerance)
                 {
                     // Obstacle hit is at or very close to destination, line of sight is clear
                     return true;
@@ -1931,13 +1904,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 return false;
             }
 
-            // 3. Check multi-level navigation surfaces
-            // Ground-level surfaces don't block line of sight
-            // Only elevated surfaces that intersect the ray would block
-            // For now, we assume multi-level surfaces don't block line of sight
-            // (This could be enhanced in the future to check for blocking elevated surfaces)
-
-            // No blocking geometry found - line of sight is clear
+            // No blocking dynamic obstacles found - line of sight is clear
             return true;
         }
 

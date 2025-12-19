@@ -5,6 +5,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -31,7 +32,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Raycast for line-of-sight and collision detection
     /// </remarks>
     [PublicAPI]
-    public class OdysseyNavigationMesh : INavigationMesh
+    public class OdysseyNavigationMesh : BaseNavigationMesh
     {
         // Walkmesh data structures
         private Vector3[] _vertices;
@@ -182,51 +183,35 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Projectile collision detection
         /// - Movement collision detection
         /// </remarks>
-        public bool HasLineOfSight(Vector3 start, Vector3 end)
+        /// <summary>
+        /// Checks line of sight between two points.
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Uses base class common algorithm with walkable face checks.
+        /// </remarks>
+        public new bool HasLineOfSight(Vector3 start, Vector3 end)
         {
-            // Handle edge case: same point
-            Vector3 direction = end - start;
-            float distance = direction.Length();
-            if (distance < 1e-6f)
+            return base.HasLineOfSight(start, end);
+        }
+
+        /// <summary>
+        /// Odyssey-specific check: walkable faces don't block line of sight.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe: walkable faces allow line of sight
+        /// (e.g., through doorways, over walkable terrain).
+        /// </remarks>
+        protected override bool CheckHitBlocksLineOfSight(Vector3 hitPoint, int hitFace, Vector3 start, Vector3 end)
+        {
+            // Check if the hit face is walkable - walkable faces don't block line of sight
+            // This allows entities to see through walkable surfaces (e.g., through doorways, over walkable terrain)
+            if (hitFace >= 0 && IsWalkable(hitFace))
             {
-                return true; // Same point, line of sight is clear
+                return true; // Hit a walkable face, line of sight is clear
             }
-
-            // Normalize direction for raycast
-            Vector3 normalizedDir = direction / distance;
-
-            // Perform raycast to check for obstructions
-            Vector3 hitPoint;
-            int hitFace;
-            if (Raycast(start, normalizedDir, distance, out hitPoint, out hitFace))
-            {
-                // A hit was found - check if it blocks line of sight
-                
-                // Calculate distances
-                float distToHit = Vector3.Distance(start, hitPoint);
-                float distToDest = distance;
-                
-                // If hit is very close to destination (within tolerance), consider line of sight clear
-                // This handles cases where the raycast hits the destination face itself
-                const float tolerance = 0.5f; // 0.5 unit tolerance for walkmesh precision
-                if (distToDest - distToHit < tolerance)
-                {
-                    return true; // Hit is at or very close to destination, line of sight is clear
-                }
-                
-                // Check if the hit face is walkable - walkable faces don't block line of sight
-                // This allows entities to see through walkable surfaces (e.g., through doorways, over walkable terrain)
-                if (hitFace >= 0 && IsWalkable(hitFace))
-                {
-                    return true; // Hit a walkable face, line of sight is clear
-                }
-                
-                // Hit a non-walkable face that blocks line of sight
-                return false;
-            }
-
-            // No hit found - line of sight is clear
-            return true;
+            
+            // Hit a non-walkable face that blocks line of sight
+            return false;
         }
 
         // INavigationMesh interface methods

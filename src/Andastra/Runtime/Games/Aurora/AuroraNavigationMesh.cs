@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -70,7 +71,7 @@ namespace Andastra.Runtime.Games.Aurora
     /// - Height-based terrain following
     /// </remarks>
     [PublicAPI]
-    public class AuroraNavigationMesh : INavigationMesh
+    public class AuroraNavigationMesh : BaseNavigationMesh
     {
         // Tile grid data
         private readonly AuroraTile[,] _tiles;
@@ -211,44 +212,28 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Projectile collision detection
         /// - Movement collision detection
         /// </remarks>
-        public bool HasLineOfSight(Vector3 start, Vector3 end)
+        /// <summary>
+        /// Checks line of sight between two points.
+        /// </summary>
+        /// <remarks>
+        /// Aurora-specific: Uses base class common algorithm with tile-based blocking checks.
+        /// </remarks>
+        public new bool HasLineOfSight(Vector3 start, Vector3 end)
         {
-            // Handle edge case: same point
-            Vector3 direction = end - start;
-            float distance = direction.Length();
-            if (distance < 1e-6f)
-            {
-                return true; // Same point, line of sight is clear
-            }
+            return base.HasLineOfSight(start, end);
+        }
 
-            // Normalize direction for raycast
-            Vector3 normalizedDir = direction / distance;
-
-            // Perform raycast to check for obstructions
-            Vector3 hitPoint;
-            int hitFace;
-            if (Raycast(start, normalizedDir, distance, out hitPoint, out hitFace))
-            {
-                // A hit was found - check if it blocks line of sight
-                
-                // Calculate distances
-                float distToHit = Vector3.Distance(start, hitPoint);
-                float distToDest = distance;
-                
-                // If hit is very close to destination (within tolerance), consider line of sight clear
-                // This handles cases where the raycast hits the destination tile itself
-                const float tolerance = 0.5f; // 0.5 unit tolerance for tile precision
-                if (distToDest - distToHit < tolerance)
-                {
-                    return true; // Hit is at or very close to destination, line of sight is clear
-                }
-                
-                // Hit a blocking tile that obstructs line of sight
-                return false;
-            }
-
-            // No hit found - line of sight is clear
-            return true;
+        /// <summary>
+        /// Aurora-specific check: blocking tiles obstruct line of sight.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: blocking tiles block line of sight.
+        /// </remarks>
+        protected override bool CheckHitBlocksLineOfSight(Vector3 hitPoint, int hitFace, Vector3 start, Vector3 end)
+        {
+            // Aurora: Hit a blocking tile that obstructs line of sight
+            // (Aurora doesn't have walkable face concept like Odyssey - tiles either block or don't)
+            return false; // Hit blocks line of sight
         }
 
         /// <summary>
