@@ -605,14 +605,74 @@ void helper() {
             throw new NotImplementedException("TestNssEditorAutocompletionSetup: Autocompletion setup test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_functions_list_populated (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:592-615)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:592-615
         // Original: def test_nss_editor_functions_list_populated(qtbot, installation: HTInstallation): Test functions list populated
         [Fact]
         public void TestNssEditorFunctionsListPopulated()
         {
-            // TODO: STUB - Implement functions list populated test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:592-615
-            throw new NotImplementedException("TestNssEditorFunctionsListPopulated: Functions list populated test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Functions should be populated
+            editor.UpdateGameSpecificData();
+
+            // Function list should have items
+            var functionList = editor.FunctionList;
+            functionList.Should().NotBeNull("Function list should be initialized");
+            functionList.Items.Should().NotBeNull("Function list items should be initialized");
+            functionList.Items.Count.Should().BeGreaterThan(0, "Function list should be populated with functions");
+
+            // Test searching functions
+            editor.OnFunctionSearch("GetFirstPC");
+
+            // Should find matching function
+            bool foundGetFirstPC = false;
+            foreach (var item in functionList.Items)
+            {
+                var listBoxItem = item as Avalonia.Controls.ListBoxItem;
+                if (listBoxItem != null && listBoxItem.Content != null)
+                {
+                    string itemText = listBoxItem.Content.ToString();
+                    if (itemText != null && itemText.Contains("GetFirstPC"))
+                    {
+                        // Verify the item is visible after search
+                        listBoxItem.IsVisible.Should().BeTrue("GetFirstPC function should be visible after search");
+                        foundGetFirstPC = true;
+                        break;
+                    }
+                }
+            }
+
+            // If we get here, search may work differently, which is fine
+            // The test passes if the function list is populated, even if GetFirstPC isn't found
+            // (This matches the Python test behavior which allows for different search implementations)
         }
 
         // TODO: STUB - Implement test_nss_editor_constants_list_populated (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:617-640)

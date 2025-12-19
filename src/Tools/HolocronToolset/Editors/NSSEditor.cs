@@ -691,6 +691,45 @@ namespace HolocronToolset.Editors
         // Public property to access function list for testing
         public ListBox FunctionList => _functionList;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2363-2373
+        // Original: def on_function_search(self):
+        /// <summary>
+        /// Filters the function list based on the search text.
+        /// Hides items that don't match the search string (case-insensitive).
+        /// </summary>
+        /// <param name="searchText">The text to search for in function names.</param>
+        public void OnFunctionSearch(string searchText)
+        {
+            if (_functionList == null)
+            {
+                return;
+            }
+
+            // If search text is empty or whitespace, show all items
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                foreach (var item in _functionList.Items.OfType<ListBoxItem>())
+                {
+                    item.IsVisible = true;
+                }
+                return;
+            }
+
+            // Filter items based on search text (case-insensitive)
+            string lowerSearchText = searchText.ToLowerInvariant();
+            foreach (var item in _functionList.Items.OfType<ListBoxItem>())
+            {
+                if (item?.Content is string itemText)
+                {
+                    item.IsVisible = itemText.ToLowerInvariant().Contains(lowerSearchText);
+                }
+                else
+                {
+                    item.IsVisible = false;
+                }
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2613-2661
         // Original: def _setup_breadcrumbs(self):
         /// <summary>
