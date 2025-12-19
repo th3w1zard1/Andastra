@@ -100,6 +100,58 @@ namespace Andastra.Runtime.Games.Aurora.Components
             return false;
         }
 
+        /// <summary>
+        /// Gets feat data from game data provider (Aurora-specific implementation).
+        /// </summary>
+        /// <param name="featId">The feat ID to look up.</param>
+        /// <param name="gameDataProvider">GameDataProvider instance (AuroraGameDataProvider or AuroraTwoDATableManager).</param>
+        /// <returns>IFeatData if found, null otherwise.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: Feat data lookup from feat.2da
+        /// Located via string references: Feat data in 2DA tables
+        /// Original implementation: Aurora uses C2DA class to access feat.2da table
+        /// TODO: Implement full Aurora FeatData class and lookup when Aurora data structures are complete
+        /// For now, returns null which makes feats always usable if creature has them (acceptable fallback)
+        /// </remarks>
+        protected override IFeatData GetFeatData(int featId, object gameDataProvider)
+        {
+            // TODO: Implement Aurora FeatData lookup from AuroraTwoDATableManager
+            // For now, return null which will make feats always usable if creature has them
+            // This is acceptable as a fallback until Aurora data structures are fully implemented
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the list of all feat IDs for this creature (for daily use reset).
+        /// </summary>
+        /// <returns>Enumerable of feat IDs.</returns>
+        private System.Collections.Generic.IEnumerable<int> GetAllFeatIds()
+        {
+            System.Collections.Generic.List<int> allFeats = new System.Collections.Generic.List<int>();
+            if (FeatList != null)
+            {
+                allFeats.AddRange(FeatList);
+            }
+            if (BonusFeatList != null)
+            {
+                allFeats.AddRange(BonusFeatList);
+            }
+            return allFeats;
+        }
+
+        /// <summary>
+        /// Resets daily feat uses (Aurora-specific override).
+        /// </summary>
+        /// <param name="gameDataProvider">GameDataProvider to look up feat data.</param>
+        /// <remarks>
+        /// Based on nwmain.exe: Daily feat use reset on rest
+        /// Uses Aurora-specific feat list (both FeatList and BonusFeatList)
+        /// </remarks>
+        public void ResetDailyFeatUses(object gameDataProvider)
+        {
+            ResetDailyFeatUses(gameDataProvider, GetAllFeatIds);
+        }
+
         #endregion
     }
 }

@@ -214,6 +214,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             TwoDARow row = table.GetRow(featId);
+            int? usesPerDay = row.GetInteger("usesperday");
             return new FeatData
             {
                 RowIndex = featId,
@@ -225,7 +226,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 PrereqFeat2 = row.GetInteger("prereqfeat2") ?? -1,
                 MinLevel = row.GetInteger("minlevel") ?? 1,
                 MinLevelClass = row.GetInteger("minlevelclass") ?? -1,
-                Selectable = row.GetInteger("allclassescanuse") == 1 || row.GetInteger("selectable") == 1
+                Selectable = row.GetInteger("allclassescanuse") == 1 || row.GetInteger("selectable") == 1,
+                UsesPerDay = usesPerDay ?? -1 // -1 = unlimited or special handling, 0+ = daily limit
             };
         }
 
@@ -499,7 +501,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     /// <summary>
     /// Feat data from feat.2da.
     /// </summary>
-    public class FeatData
+    public class FeatData : Andastra.Runtime.Games.Common.Components.BaseCreatureComponent.IFeatData
     {
         public int RowIndex { get; set; }
         public int FeatId { get { return RowIndex; } set { RowIndex = value; } }
@@ -516,6 +518,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         public int MinLevelClass { get; set; }
         public bool Selectable { get; set; }
         public bool RequiresAction { get; set; }
+        /// <summary>
+        /// Uses per day limit for the feat.
+        /// -1 = unlimited uses or special handling (e.g., based on class levels)
+        /// 0+ = maximum uses per day
+        /// </summary>
+        public int UsesPerDay { get; set; }
     }
 
     /// <summary>

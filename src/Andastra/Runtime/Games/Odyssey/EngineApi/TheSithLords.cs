@@ -62,6 +62,13 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         {
             // TheSithLords has the same base functions as Kotor1 with additional functions
             // Most functions 0-799 are shared, TheSithLords adds functions 800+
+            // Some TSL-specific functions are in the 0-799 range (e.g., GetFeatAcquired = 783)
+
+            // Check for TSL-specific functions in 0-799 range
+            if (routineId == 783) // GetFeatAcquired (TSL only, but in shared range)
+            {
+                return Func_GetFeatAcquired(args, ctx);
+            }
 
             // Check if this is a TheSithLords-specific function (800+)
             if (routineId >= 800)
@@ -614,6 +621,44 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             }
 
             return Variable.Void();
+        }
+
+        /// <summary>
+        /// GetFeatAcquired(int nFeat, object oCreature=OBJECT_SELF) - Returns whether creature has access to a feat, even if unusable
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetFeatAcquired function (TSL only, function ID 783)
+        /// Located via string references: Feat acquisition checking (separate from usability)
+        /// Original implementation: Checks if creature has the feat in their feat list, regardless of daily limits or restrictions
+        /// Returns TRUE if creature has the feat (even if exhausted or restricted)
+        /// Returns FALSE if creature doesn't have the feat
+        /// Difference from GetHasFeat: GetHasFeat checks usability (daily limits, restrictions), GetFeatAcquired only checks acquisition
+        /// </remarks>
+        private Variable Func_GetFeatAcquired(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 1)
+            {
+                return Variable.FromInt(0);
+            }
+
+            int featId = args[0].AsInt();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+
+            Components.CreatureComponent creature = entity.GetComponent<Components.CreatureComponent>();
+            if (creature == null || creature.FeatList == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // GetFeatAcquired only checks if creature has the feat, not if it's usable
+            // This is different from GetHasFeat which also checks daily limits and restrictions
+            bool hasFeat = creature.HasFeat(featId);
+            return Variable.FromInt(hasFeat ? 1 : 0);
         }
 
         #endregion
