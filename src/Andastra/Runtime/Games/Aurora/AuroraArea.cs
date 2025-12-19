@@ -944,18 +944,212 @@ namespace Andastra.Runtime.Games.Aurora
         /// Loads area geometry and walkmesh from ARE file.
         /// </summary>
         /// <remarks>
-        /// Based on Aurora ARE file loading.
-        /// Aurora uses tile-based area construction.
-        /// Loads tile layout, terrain, and navigation data.
+        /// Based on Aurora ARE file loading in nwmain.exe.
+        /// 
+        /// Function addresses (require Ghidra verification):
+        /// - nwmain.exe: CNWSArea::LoadArea @ 0x140365160 - Loads ARE file structure
+        /// - nwmain.exe: CNWSArea::LoadTileSetInfo @ 0x14035faf0 (approximate) - Loads tileset information
+        /// - nwmain.exe: CNWSArea::LoadTileList @ 0x14035f780 (approximate) - Loads Tile_List from ARE file
+        /// 
+        /// Aurora uses tile-based area construction:
+        /// - ARE file contains Tile_List (GFFList) with AreaTile structs (StructID 1)
+        /// - Each AreaTile specifies: Tile_ID, Tile_Orientation, Tile_Height, lighting, animations
+        /// - Tile coordinates calculated from index: x = i % Width, y = i / Width
+        /// - Tiles are stored in 2D grid: [y, x] indexed array
+        /// - Tile size: 10.0f units per tile (DAT_140dc2df4 in nwmain.exe)
+        /// 
+        /// ARE file format (GFF with "ARE " signature):
+        /// - Root struct contains Width, Height, Tileset, Tile_List
+        /// - Tile_List is GFFList containing AreaTile structs (StructID 1)
+        /// - AreaTile fields: Tile_ID (INT), Tile_Orientation (INT 0-3), Tile_Height (INT), 
+        ///   Tile_AnimLoop1/2/3 (INT), Tile_MainLight1/2 (BYTE), Tile_SrcLight1/2 (BYTE)
+        /// 
+        /// Based on official BioWare Aurora Engine ARE format specification:
+        /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md (Section 2.5: Area Tile List)
+        /// - vendor/xoreos-docs/specs/bioware/AreaFile_Format.pdf
         /// </remarks>
         protected override void LoadAreaGeometry(byte[] areData)
         {
-            // TODO: Implement Aurora ARE file parsing
-            // Parse GFF with "ARE " signature
-            // Load tile-based area layout
-            // Construct walkmesh from tile data
-            // Create AuroraNavigationMesh instance
-            _navigationMesh = new AuroraNavigationMesh(); // Placeholder
+            if (areData == null || areData.Length == 0)
+            {
+                // No ARE data - create empty navigation mesh
+                _navigationMesh = new AuroraNavigationMesh();
+                return;
+            }
+
+            try
+            {
+                // Parse GFF from byte array
+                GFF gff = GFF.FromBytes(areData);
+                if (gff == null || gff.Root == null)
+                {
+                    // Invalid GFF - create empty navigation mesh
+                    _navigationMesh = new AuroraNavigationMesh();
+                    return;
+                }
+
+                // Verify GFF content type is ARE
+                if (gff.ContentType != GFFContent.ARE)
+                {
+                    // Try to parse anyway - some ARE files may have incorrect content type
+                    // This is a defensive measure for compatibility
+                }
+
+                GFFStruct root = gff.Root;
+
+                // Read Width and Height from root struct
+                // Based on ARE format: Width and Height are INT (tile counts)
+                // Width: x-direction (west-east), Height: y-direction (north-south)
+                int width = 0;
+                int height = 0;
+
+                if (root.Exists("Width"))
+                {
+                    width = root.GetInt32("Width");
+                    if (width < 0) width = 0;
+                }
+
+                if (root.Exists("Height"))
+                {
+                    height = root.GetInt32("Height");
+                    if (height < 0) height = 0;
+                }
+
+                // Store width and height for later use
+                _width = width;
+                _height = height;
+
+                // If width or height is 0, create empty navigation mesh
+                if (width <= 0 || height <= 0)
+                {
+                    _navigationMesh = new AuroraNavigationMesh();
+                    return;
+                }
+
+                // Read Tile_List from root struct
+                // Based on ARE format: Tile_List is GFFList containing AreaTile structs (StructID 1)
+                GFFList tileList = root.GetList("Tile_List");
+                if (tileList == null || tileList.Count == 0)
+                {
+                    // No tiles - create empty navigation mesh with correct dimensions
+                    AuroraTile[,] emptyTiles = new AuroraTile[height, width];
+                    _navigationMesh = new AuroraNavigationMesh(emptyTiles, width, height);
+                    return;
+                }
+
+                // Create 2D tile array indexed by [y, x]
+                // Based on nwmain.exe: CNWSArea tile storage at offset 0x1c8
+                // Tiles stored as 2D grid: [height, width] = [y, x]
+                AuroraTile[,] tiles = new AuroraTile[height, width];
+
+                // Initialize all tiles to default values
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        tiles[y, x] = new AuroraTile
+                        {
+                            TileId = -1, // Invalid tile ID indicates empty tile
+                            Orientation = 0,
+                            Height = 0,
+                            IsLoaded = false,
+                            IsWalkable = false
+                        };
+                    }
+                }
+
+                // Parse each AreaTile struct from Tile_List
+                // Based on ARE format: Tile coordinates calculated from index
+                // Formula: x = i % Width, y = i / Width (integer division)
+                for (int i = 0; i < tileList.Count; i++)
+                {
+                    GFFStruct tileStruct = tileList.At(i);
+                    if (tileStruct == null)
+                    {
+                        continue;
+                    }
+
+                    // Calculate tile coordinates from index
+                    // Based on ARE format specification (Section 2.5):
+                    // x = i % w, y = i / w (where w = Width, integer division rounds down)
+                    int tileX = i % width;
+                    int tileY = i / width;
+
+                    // Validate tile coordinates are within bounds
+                    if (tileX < 0 || tileX >= width || tileY < 0 || tileY >= height)
+                    {
+                        // Tile index out of bounds - skip this tile
+                        // This can happen if Tile_List has more entries than Width * Height
+                        continue;
+                    }
+
+                    // Read Tile_ID (index into tileset file's list of tiles)
+                    // Based on ARE format: Tile_ID is INT, must be >= 0
+                    int tileId = -1;
+                    if (tileStruct.Exists("Tile_ID"))
+                    {
+                        tileId = tileStruct.GetInt32("Tile_ID");
+                        if (tileId < 0)
+                        {
+                            tileId = -1; // Invalid tile ID
+                        }
+                    }
+
+                    // Read Tile_Orientation (rotation: 0 = normal, 1 = 90° CCW, 2 = 180° CCW, 3 = 270° CCW)
+                    // Based on ARE format: Tile_Orientation is INT (0-3)
+                    int orientation = 0;
+                    if (tileStruct.Exists("Tile_Orientation"))
+                    {
+                        orientation = tileStruct.GetInt32("Tile_Orientation");
+                        // Clamp to valid range (0-3)
+                        if (orientation < 0) orientation = 0;
+                        if (orientation > 3) orientation = 3;
+                    }
+
+                    // Read Tile_Height (number of height transitions)
+                    // Based on ARE format: Tile_Height is INT, should never be negative
+                    int tileHeight = 0;
+                    if (tileStruct.Exists("Tile_Height"))
+                    {
+                        tileHeight = tileStruct.GetInt32("Tile_Height");
+                        if (tileHeight < 0) tileHeight = 0;
+                    }
+
+                    // Determine if tile is loaded and walkable
+                    // Based on nwmain.exe: CNWTileSet::GetTileData() validation
+                    // Tiles with valid Tile_ID (>= 0) are considered loaded
+                    // Walkability is determined by tileset data (not stored in ARE file)
+                    // For now, assume tiles with valid Tile_ID are walkable
+                    // A full implementation would query the tileset file to determine walkability
+                    bool isLoaded = (tileId >= 0);
+                    bool isWalkable = isLoaded; // Simplified: valid tiles are walkable
+                    // TODO: Query tileset file to determine actual walkability from tile model data
+
+                    // Create AuroraTile instance
+                    AuroraTile tile = new AuroraTile
+                    {
+                        TileId = tileId,
+                        Orientation = orientation,
+                        Height = tileHeight,
+                        IsLoaded = isLoaded,
+                        IsWalkable = isWalkable
+                    };
+
+                    // Store tile in 2D array at calculated coordinates
+                    // Based on nwmain.exe: Tile array access pattern [y, x]
+                    tiles[tileY, tileX] = tile;
+                }
+
+                // Create AuroraNavigationMesh from parsed tile data
+                // Based on nwmain.exe: CNWSArea tile storage structure
+                _navigationMesh = new AuroraNavigationMesh(tiles, width, height);
+            }
+            catch (Exception)
+            {
+                // If parsing fails, create empty navigation mesh
+                // This ensures the area can still be created even with invalid/corrupt ARE data
+                _navigationMesh = new AuroraNavigationMesh();
+            }
         }
 
         /// <summary>
