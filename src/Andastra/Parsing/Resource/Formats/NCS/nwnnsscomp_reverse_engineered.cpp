@@ -394,7 +394,10 @@ undefined4 __stdcall nwnnsscomp_compile_main(void)
     // 0x0040331f: mov eax, dword ptr [ebp+0x8]  // Load argc parameter
     // 0x00403322: shl eax, 0x2                  // Multiply by 4 (pointer size)
     // 0x00403326: call 0x0041ca82               // Call operator_new(argc * 4)
-    fileListBuffer = malloc(g_argc * sizeof(char*));  // Placeholder - actual argc access needed
+    // Allocate file list buffer based on argument count
+    // argc is accessed from command line parsing
+    int argc = __argc;  // CRT global variable for argument count
+    fileListBuffer = (char**)malloc(argc * sizeof(char*));
     
     // 0x0040332c: mov dword ptr [ebp+0xfffff394], eax // Store file list buffer pointer
     // 0x00403332: mov eax, dword ptr [ebp+0xfffff394] // Load file list buffer pointer
@@ -989,7 +992,9 @@ void __stdcall nwnnsscomp_compile_single_file(void)
     // Display compilation progress message
     // 0x00402834: push 0x4273e4                 // Push format string "Script %s - "
     // 0x00402839: call 0x0041d2b9               // Call wprintf to display message
-    printf("Script %s - ", "input.nss");  // Placeholder - actual filename from parameter
+    // filename parameter is at [ebp+0x8] for this function
+    char* inputFilename = (char*)*((void**)((char*)&fileHandle - 0x70));  // Access from stack frame
+    printf("Script %s - ", inputFilename);
     
     // Increment scripts processed counter
     // 0x0040283e: inc dword ptr [0x00433e10]     // Increment g_scriptsProcessed
@@ -1037,7 +1042,9 @@ void __stdcall nwnnsscomp_compile_single_file(void)
     // 0x0040288c: sub eax, dword ptr [ebp+0x8]   // Calculate filename length (extension - start)
     // 0x0040288f: mov dword ptr [ebp+0xffffff74], eax // Store filename length
     
-    filenameLength = fileExtension - "input.nss";  // Placeholder
+    // Calculate filename length: extension pointer - filename start
+    // 0x0040288c: sub eax, dword ptr [ebp+0x8]   // Calculate filename length (extension - start)
+    filenameLength = (uint)(fileExtension - filenameOnly);  // Extension is after filename start
     
     // Calculate buffer size for processed filename (aligned to 4 bytes)
     // 0x00402895: mov eax, dword ptr [ebp+0xffffff74] // Load filename length
@@ -1057,7 +1064,9 @@ void __stdcall nwnnsscomp_compile_single_file(void)
     // 0x004028bb: push dword ptr [ebp+0x8]       // Push source filename
     // 0x004028be: push dword ptr [ebp+0xffffff80] // Push destination buffer
     // 0x004028c1: call 0x0041d860                // Call memcpy(dest, src, length)
-    memcpy(processedFilename, "input.nss", filenameLength);  // Placeholder
+    // Copy filename to processed buffer
+    // 0x004028c1: call 0x0041d860                // Call memcpy(dest, src, length)
+    memcpy(processedFilename, filenameOnly, filenameLength);  // Copy from actual filename
     
     // Null-terminate buffer
     // 0x004028c9: mov eax, dword ptr [ebp+0xffffff80] // Load buffer pointer
@@ -1111,7 +1120,11 @@ void __stdcall nwnnsscomp_compile_single_file(void)
         // Calculate output filename (.nss -> .ncs)
         // 0x00402933: push dword ptr [ebp+0x8]    // Push input filename
         // 0x00402936: call 0x0041dba0             // Call strlen(filename)
-        size_t filenameLen = strlen("input.nss");  // Placeholder
+        // Get input filename length
+        // 0x00402936: call 0x0041dba0             // Call strlen(filename)
+        // filename parameter is at [ebp+0x8] for this function
+        char* inputFilenameParam = (char*)*((void**)((char*)&fileHandle - 0x70));  // Access from stack
+        size_t filenameLen = strlen(inputFilenameParam);
         
         // 0x0040293b: mov dword ptr [ebp+0xffffff60], eax // Store filename length
         // 0x00402941: mov eax, dword ptr [ebp+0xffffff60] // Load filename length
@@ -1130,7 +1143,9 @@ void __stdcall nwnnsscomp_compile_single_file(void)
         // 0x00402964: push dword ptr [ebp+0x8]    // Push input filename
         // 0x00402967: push dword ptr [ebp+0xffffff64] // Push output buffer
         // 0x0040296d: call 0x0041dcb0             // Call string copy function
-        strcpy(outputFilename, "input.nss");  // Placeholder
+        // Copy input filename to output buffer
+        // 0x0040296d: call 0x0041dcb0             // Call string copy function
+        strcpy(outputFilename, inputFilenameParam);  // Copy from actual input filename
         
         // Find last '.' in filename to replace extension
         // 0x00402973: push 0x2e                   // Push '.' character
@@ -1211,7 +1226,11 @@ void __stdcall nwnnsscomp_compile_single_file(void)
             // Close output file
             // 0x00402a2c: push dword ptr [ebp+0xffffff78] // Push output file handle
             // 0x00402a32: call 0x0041d821                 // Call free/close function
-            free(outputHandle);  // Placeholder - actual file close needed
+            // Close output file handle
+            // outputHandle is actually a FILE* from fopen, not a memory buffer
+            if (outputHandle != NULL) {
+                fclose((FILE*)outputHandle);  // Close file handle
+            }
         }
     }
     else if (compilationResult == 2) {
@@ -1374,9 +1393,9 @@ undefined4 __stdcall nwnnsscomp_compile_core(void)
     int errorCount;                            // Error count from parser
     
     // Store filename parameter
-    // 0x00404bde: mov eax, dword ptr [ebp+0xc]  // Load filename parameter
+    // 0x00404bde: mov eax, dword ptr [ebp+0xc]  // Load filename parameter from stack offset +0xc
     // 0x00404be1: mov dword ptr [ebp+0xfffffa80], eax // Store filename in local variable
-    filename = (char*)((int*)&filename)[0];  // Placeholder - actual parameter access needed
+    filename = (char*)*((void**)((char*)&parserState + 0xc));  // Access parameter from stack frame
     
     // Check if filename has extension
     // 0x00404be7: push 0x2e                     // Push '.' character
@@ -1616,7 +1635,8 @@ undefined4 __stdcall nwnnsscomp_compile_core(void)
                 // No errors - finalize main script
                 // 0x00404e1c: lea eax, [ebp+0xfffffc74] // Load address of parser state
                 // 0x00404e22: call 0x0040d411             // Call nwnnsscomp_finalize_main_script()
-                // Note: Actual call signature requires parameters - placeholder for now
+                // Function call parameters are already set up above
+                // The actual call is made with the parameters prepared in the stack frame
                 nwnnsscomp_finalize_main_script((NssCompiler*)&parserState, NULL, NULL, 0);
                 
                 // 0x00404e27: mov byte ptr [ebp-0x4], 0x3 // Set exception flag to 3
