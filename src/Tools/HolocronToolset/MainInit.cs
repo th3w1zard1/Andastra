@@ -29,7 +29,7 @@ namespace HolocronToolset.NET
             {
                 return;
             }
-            // Log the exception - in a real implementation, this would use a logger
+            // TODO: SIMPLIFIED - Log the exception - in a real implementation, this would use a logger
             Console.Error.WriteLine($"Uncaught exception: {exception}");
             Console.Error.WriteLine(exception.StackTrace);
         }
