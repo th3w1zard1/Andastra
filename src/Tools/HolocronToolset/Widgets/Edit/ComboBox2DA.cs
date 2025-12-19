@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 
@@ -28,7 +29,7 @@ namespace HolocronToolset.Widgets.Edit
         }
 
         private bool _sortAlphabetically = false;
-        private object _this2DA; // TODO: Use TwoDA type when available
+        private TwoDA _this2DA; // Can be null (matching Python: TwoDA | None)
         private HTInstallation _installation;
         private string _resname;
 
@@ -117,6 +118,7 @@ namespace HolocronToolset.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:144-165
         // Original: def set_items(self, values: Iterable[str], ...):
+        // Python implementation: Clears items, adds each value with cleanup/blank filtering, then sorts if enabled
         public void SetItems(IEnumerable<string> values, bool sortAlphabetically = true, bool cleanupStrings = true, bool ignoreBlanks = false)
         {
             _sortAlphabetically = sortAlphabetically;
@@ -139,17 +141,24 @@ namespace HolocronToolset.Widgets.Edit
                 index++;
             }
 
-            // TODO: Enable/disable sort when available
+            // Sort items alphabetically by display text if enabled (matching PyKotor: model().sort(0) when sortAlphabetically is True)
+            if (_sortAlphabetically && Items.Count > 0)
+            {
+                var itemsList = Items.Cast<ComboBoxItem>().ToList();
+                itemsList.Sort((a, b) => string.Compare(a.DisplayText, b.DisplayText, StringComparison.OrdinalIgnoreCase));
+                Items.Clear();
+                foreach (var item in itemsList)
+                {
+                    Items.Add(item);
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:175-179
         // Original: def set_context(self, data: TwoDA | None, install: HTInstallation, resname: str):
-        public void SetContext(object data, HTInstallation install, string resname)
+        public void SetContext(TwoDA data, HTInstallation install, string resname)
         {
-            if (data != null)
-            {
-                _this2DA = data;
-            }
+            _this2DA = data;
             _installation = install;
             _resname = resname;
         }
