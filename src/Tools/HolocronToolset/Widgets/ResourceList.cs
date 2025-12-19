@@ -223,7 +223,82 @@ namespace HolocronToolset.Widgets
         // Original: def set_resource_selection(self, resource: FileResource):
         public void SetResourceSelection(FileResource resource)
         {
-            // TODO: Select resource in TreeView when binding is implemented
+            if (resource == null || _resourceTree == null)
+            {
+                return;
+            }
+
+            // Traverse the tree to find the matching resource item and its parent category
+            TreeViewItem targetItem = null;
+            TreeViewItem parentCategory = null;
+            FindResourceItem(_resourceTree, resource, out targetItem, out parentCategory);
+
+            if (targetItem != null)
+            {
+                // Expand the parent category if it exists
+                if (parentCategory != null)
+                {
+                    parentCategory.IsExpanded = true;
+                }
+
+                // Select the item
+                _resourceTree.SelectedItem = targetItem;
+
+                // Scroll the item into view
+                // Schedule on the next UI thread tick to ensure tree is updated (matching PyKotor's QTimer.singleShot(0, ...))
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    targetItem.BringIntoView();
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
+        }
+
+        // Helper method to recursively find a TreeViewItem containing the specified resource
+        // Tree structure: TreeView.ItemsSource = List<TreeViewItem> (categories)
+        //                 Each category.ItemsSource = List<TreeViewItem> (resources)
+        private void FindResourceItem(TreeView treeView, FileResource resource, out TreeViewItem resourceItem, out TreeViewItem parentCategory)
+        {
+            resourceItem = null;
+            parentCategory = null;
+
+            if (treeView?.ItemsSource == null)
+            {
+                return;
+            }
+
+            // Iterate through category items (top level)
+            foreach (var categoryItemObj in treeView.ItemsSource)
+            {
+                if (!(categoryItemObj is TreeViewItem categoryItem))
+                {
+                    continue;
+                }
+
+                // Check if this category item itself has the resource (shouldn't happen, but be safe)
+                if (categoryItem.Tag is FileResource categoryResource && resource.Equals(categoryResource))
+                {
+                    resourceItem = categoryItem;
+                    parentCategory = null; // Top level item
+                    return;
+                }
+
+                // Search through resource items in this category
+                if (categoryItem.ItemsSource != null)
+                {
+                    foreach (var resourceItemObj in categoryItem.ItemsSource)
+                    {
+                        if (resourceItemObj is TreeViewItem item)
+                        {
+                            if (item.Tag is FileResource itemResource && resource.Equals(itemResource))
+                            {
+                                resourceItem = item;
+                                parentCategory = categoryItem;
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:229-232
