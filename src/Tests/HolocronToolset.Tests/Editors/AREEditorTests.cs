@@ -1707,12 +1707,90 @@ namespace HolocronToolset.Tests.Editors
 
         // TODO: STUB - Implement test_are_editor_manipulate_sun_colors (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:543-574)
         // Original: def test_are_editor_manipulate_sun_colors(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating sun ambient, diffuse, and dynamic light colors.
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:543-574
+        // Original: def test_are_editor_manipulate_sun_colors(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating sun color fields (ambient, diffuse, dynamic light).
         [Fact]
         public void TestAreEditorManipulateSunColors()
         {
-            // TODO: STUB - Implement sun color manipulation tests (ambient, diffuse, dynamic light)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:543-574
-            throw new NotImplementedException("TestAreEditorManipulateSunColors: Sun color manipulation tests not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new AREEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Test SunAmbient color
+            // Matching Python: sun_ambient = Color(0.8, 0.6, 0.4)
+            var sunAmbientColor = new Color(0.8f, 0.6f, 0.4f);
+            if (editor.AmbientColorEdit != null)
+            {
+                editor.AmbientColorEdit.SetColor(sunAmbientColor);
+            }
+            var (data, _) = editor.Build();
+            var modifiedAre = AREHelpers.ReadAre(data);
+            System.Math.Abs(modifiedAre.SunAmbient.R - sunAmbientColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunAmbient.G - sunAmbientColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunAmbient.B - sunAmbientColor.B).Should().BeLessThan(0.01f);
+
+            // Test SunDiffuse color
+            // Matching Python: sun_diffuse = Color(0.9, 0.7, 0.5)
+            var sunDiffuseColor = new Color(0.9f, 0.7f, 0.5f);
+            if (editor.DiffuseColorEdit != null)
+            {
+                editor.DiffuseColorEdit.SetColor(sunDiffuseColor);
+            }
+            (data, _) = editor.Build();
+            modifiedAre = AREHelpers.ReadAre(data);
+            System.Math.Abs(modifiedAre.SunDiffuse.R - sunDiffuseColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunDiffuse.G - sunDiffuseColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunDiffuse.B - sunDiffuseColor.B).Should().BeLessThan(0.01f);
+
+            // Test DynamicLight color
+            // Matching Python: dynamic_light = Color(0.2, 0.3, 0.4)
+            var dynamicLightColor = new Color(0.2f, 0.3f, 0.4f);
+            if (editor.DynamicColorEdit != null)
+            {
+                editor.DynamicColorEdit.SetColor(dynamicLightColor);
+            }
+            (data, _) = editor.Build();
+            modifiedAre = AREHelpers.ReadAre(data);
+            System.Math.Abs(modifiedAre.DynamicLight.R - dynamicLightColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.DynamicLight.G - dynamicLightColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.DynamicLight.B - dynamicLightColor.B).Should().BeLessThan(0.01f);
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_wind_power (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:576-596)
@@ -2431,6 +2509,322 @@ namespace HolocronToolset.Tests.Editors
             // TODO: STUB - Implement map coordinates roundtrip test (validates MapPt1X, MapPt1Y, MapPt2X, MapPt2Y, WorldPt1X, WorldPt1Y, WorldPt2X, WorldPt2Y, NorthAxis, MapZoom, MapResX preserved exactly)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1806-1898
             throw new NotImplementedException("TestAreEditorMapCoordinatesRoundtrip: Map coordinates roundtrip test not yet implemented");
+        }
+
+        // Comprehensive tests for AREHelpers with all game types
+        // Testing game-specific field handling for Odyssey (K1/K2), Aurora (NWN), and Eclipse (DA/ME)
+
+        [Theory]
+        [InlineData(Game.K1)]
+        [InlineData(Game.K2)]
+        [InlineData(Game.K1_XBOX)]
+        [InlineData(Game.K2_XBOX)]
+        [InlineData(Game.K1_IOS)]
+        [InlineData(Game.K2_IOS)]
+        [InlineData(Game.K1_ANDROID)]
+        [InlineData(Game.K2_ANDROID)]
+        [InlineData(Game.NWN)]
+        [InlineData(Game.NWN2)]
+        [InlineData(Game.DA)]
+        [InlineData(Game.DA2)]
+        [InlineData(Game.ME)]
+        [InlineData(Game.ME2)]
+        [InlineData(Game.ME3)]
+        public void TestAreHelpersColorFieldsRoundtripForAllGameTypes(Game game)
+        {
+            // Test that all color fields (SunAmbient, SunDiffuse, DynamicLight, FogColor, GrassAmbient, GrassDiffuse)
+            // are correctly written and read for ALL game types
+            var are = new ARE();
+            
+            // Set all color fields
+            are.SunAmbient = new Color(0.8f, 0.6f, 0.4f);
+            are.SunDiffuse = new Color(0.9f, 0.7f, 0.5f);
+            are.DynamicLight = new Color(0.2f, 0.3f, 0.4f);
+            are.FogColor = new Color(0.1f, 0.2f, 0.3f);
+            are.GrassAmbient = new Color(0.4f, 0.5f, 0.6f);
+            are.GrassDiffuse = new Color(0.5f, 0.6f, 0.7f);
+            are.GrassEmissive = new Color(0.0f, 0.0f, 0.0f); // Will only be written for K2
+
+            // Dismantle ARE with specific game type
+            var bytes = AREHelpers.BytesAre(are, game);
+            
+            // Reconstruct ARE
+            var reconstructedAre = AREHelpers.ReadAre(bytes);
+            
+            // Verify all color fields are preserved (written for ALL game types)
+            System.Math.Abs(reconstructedAre.SunAmbient.R - are.SunAmbient.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.SunAmbient.G - are.SunAmbient.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.SunAmbient.B - are.SunAmbient.B).Should().BeLessThan(0.01f);
+            
+            System.Math.Abs(reconstructedAre.SunDiffuse.R - are.SunDiffuse.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.SunDiffuse.G - are.SunDiffuse.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.SunDiffuse.B - are.SunDiffuse.B).Should().BeLessThan(0.01f);
+            
+            System.Math.Abs(reconstructedAre.DynamicLight.R - are.DynamicLight.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.DynamicLight.G - are.DynamicLight.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.DynamicLight.B - are.DynamicLight.B).Should().BeLessThan(0.01f);
+            
+            System.Math.Abs(reconstructedAre.FogColor.R - are.FogColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.FogColor.G - are.FogColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.FogColor.B - are.FogColor.B).Should().BeLessThan(0.01f);
+            
+            System.Math.Abs(reconstructedAre.GrassAmbient.R - are.GrassAmbient.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.GrassAmbient.G - are.GrassAmbient.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.GrassAmbient.B - are.GrassAmbient.B).Should().BeLessThan(0.01f);
+            
+            System.Math.Abs(reconstructedAre.GrassDiffuse.R - are.GrassDiffuse.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.GrassDiffuse.G - are.GrassDiffuse.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.GrassDiffuse.B - are.GrassDiffuse.B).Should().BeLessThan(0.01f);
+        }
+
+        [Theory]
+        [InlineData(Game.K1)]
+        [InlineData(Game.K1_XBOX)]
+        [InlineData(Game.K1_IOS)]
+        [InlineData(Game.K1_ANDROID)]
+        [InlineData(Game.NWN)]
+        [InlineData(Game.NWN2)]
+        [InlineData(Game.DA)]
+        [InlineData(Game.DA2)]
+        [InlineData(Game.ME)]
+        [InlineData(Game.ME2)]
+        [InlineData(Game.ME3)]
+        public void TestAreHelpersK2SpecificFieldsNotWrittenForNonK2Games(Game game)
+        {
+            // Test that Grass_Emissive is NOT written for non-K2 games
+            var are = new ARE();
+            are.GrassEmissive = new Color(1.0f, 1.0f, 1.0f); // Set to non-default value
+            
+            // Dismantle ARE with non-K2 game type
+            var bytes = AREHelpers.BytesAre(are, game);
+            
+            // Reconstruct ARE
+            var reconstructedAre = AREHelpers.ReadAre(bytes);
+            
+            // For non-K2 games, GrassEmissive should be default (0,0,0) because it wasn't written
+            // Note: This test verifies that K2-specific fields are conditionally written
+            // The field may still be read as 0 if not present in the GFF
+            if (!game.IsK2())
+            {
+                // GrassEmissive should not be written for non-K2 games
+                // When reading back, it will be 0 if not present
+                reconstructedAre.GrassEmissive.R.Should().Be(0.0f);
+                reconstructedAre.GrassEmissive.G.Should().Be(0.0f);
+                reconstructedAre.GrassEmissive.B.Should().Be(0.0f);
+            }
+        }
+
+        [Theory]
+        [InlineData(Game.K2)]
+        [InlineData(Game.K2_XBOX)]
+        [InlineData(Game.K2_IOS)]
+        [InlineData(Game.K2_ANDROID)]
+        public void TestAreHelpersK2SpecificFieldsWrittenForK2Games(Game game)
+        {
+            // Test that Grass_Emissive IS written for K2 games
+            var are = new ARE();
+            are.GrassEmissive = new Color(0.7f, 0.8f, 0.9f);
+            
+            // Dismantle ARE with K2 game type
+            var bytes = AREHelpers.BytesAre(are, game);
+            
+            // Reconstruct ARE
+            var reconstructedAre = AREHelpers.ReadAre(bytes);
+            
+            // For K2 games, GrassEmissive should be preserved
+            System.Math.Abs(reconstructedAre.GrassEmissive.R - are.GrassEmissive.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.GrassEmissive.G - are.GrassEmissive.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(reconstructedAre.GrassEmissive.B - are.GrassEmissive.B).Should().BeLessThan(0.01f);
+        }
+
+        [Fact]
+        public void TestAreHelpersComprehensiveRoundtripAllGameTypes()
+        {
+            // Comprehensive roundtrip test for all game types with all basic fields
+            var gameTypes = new[]
+            {
+                Game.K1, Game.K2, Game.K1_XBOX, Game.K2_XBOX,
+                Game.K1_IOS, Game.K2_IOS, Game.K1_ANDROID, Game.K2_ANDROID,
+                Game.NWN, Game.NWN2,
+                Game.DA, Game.DA2,
+                Game.ME, Game.ME2, Game.ME3
+            };
+
+            foreach (var game in gameTypes)
+            {
+                var are = new ARE();
+                
+                // Set all basic fields
+                are.Tag = "test_tag_" + game.ToString();
+                are.Name = LocalizedString.FromString("Test Area " + game.ToString());
+                are.AlphaTest = 100;
+                are.CameraStyle = 1;
+                are.DefaultEnvMap = ResRef.FromString("envmap");
+                are.Unescapable = true;
+                are.DisableTransit = false;
+                are.StealthXp = true;
+                are.StealthXpMax = 500;
+                are.StealthXpLoss = 10;
+                are.GrassTexture = ResRef.FromString("grass");
+                are.GrassDensity = 0.5f;
+                are.GrassSize = 1.0f;
+                are.GrassProbLL = 0.25f;
+                are.GrassProbLR = 0.25f;
+                are.GrassProbUL = 0.25f;
+                are.GrassProbUR = 0.25f;
+                are.FogEnabled = true;
+                are.FogNear = 10.0f;
+                are.FogFar = 200.0f;
+                are.WindPower = 1;
+                are.ShadowOpacity = ResRef.FromString("shadow");
+                are.OnEnter = ResRef.FromString("onenter");
+                are.OnExit = ResRef.FromString("onexit");
+                are.OnHeartbeat = ResRef.FromString("onheartbeat");
+                are.OnUserDefined = ResRef.FromString("onuserdefined");
+                are.LoadScreenID = 5;
+                are.Comment = "Test comment for " + game.ToString();
+                
+                // Set all color fields
+                are.SunAmbient = new Color(0.8f, 0.6f, 0.4f);
+                are.SunDiffuse = new Color(0.9f, 0.7f, 0.5f);
+                are.DynamicLight = new Color(0.2f, 0.3f, 0.4f);
+                are.FogColor = new Color(0.1f, 0.2f, 0.3f);
+                are.GrassAmbient = new Color(0.4f, 0.5f, 0.6f);
+                are.GrassDiffuse = new Color(0.5f, 0.6f, 0.7f);
+                are.GrassEmissive = new Color(0.0f, 0.0f, 0.0f);
+                
+                // Map fields
+                are.NorthAxis = ARENorthAxis.PositiveY;
+                are.MapZoom = 2;
+                are.MapResX = 512;
+                are.MapPoint1 = new System.Numerics.Vector2(0.1f, 0.2f);
+                are.MapPoint2 = new System.Numerics.Vector2(0.9f, 0.8f);
+                are.WorldPoint1 = new System.Numerics.Vector2(100.0f, 200.0f);
+                are.WorldPoint2 = new System.Numerics.Vector2(300.0f, 400.0f);
+                
+                // Roundtrip
+                var bytes = AREHelpers.BytesAre(are, game);
+                var reconstructedAre = AREHelpers.ReadAre(bytes);
+                
+                // Verify all basic fields are preserved
+                reconstructedAre.Tag.Should().Be(are.Tag);
+                reconstructedAre.AlphaTest.Should().Be(are.AlphaTest);
+                reconstructedAre.CameraStyle.Should().Be(are.CameraStyle);
+                reconstructedAre.Unescapable.Should().Be(are.Unescapable);
+                reconstructedAre.DisableTransit.Should().Be(are.DisableTransit);
+                reconstructedAre.StealthXp.Should().Be(are.StealthXp);
+                reconstructedAre.StealthXpMax.Should().Be(are.StealthXpMax);
+                reconstructedAre.StealthXpLoss.Should().Be(are.StealthXpLoss);
+                reconstructedAre.FogEnabled.Should().Be(are.FogEnabled);
+                System.Math.Abs(reconstructedAre.FogNear - are.FogNear).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.FogFar - are.FogFar).Should().BeLessThan(0.001f);
+                reconstructedAre.WindPower.Should().Be(are.WindPower);
+                reconstructedAre.LoadScreenID.Should().Be(are.LoadScreenID);
+                reconstructedAre.Comment.Should().Be(are.Comment);
+                
+                // Verify map fields
+                reconstructedAre.NorthAxis.Should().Be(are.NorthAxis);
+                reconstructedAre.MapZoom.Should().Be(are.MapZoom);
+                reconstructedAre.MapResX.Should().Be(are.MapResX);
+                System.Math.Abs(reconstructedAre.MapPoint1.X - are.MapPoint1.X).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.MapPoint1.Y - are.MapPoint1.Y).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.MapPoint2.X - are.MapPoint2.X).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.MapPoint2.Y - are.MapPoint2.Y).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.WorldPoint1.X - are.WorldPoint1.X).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.WorldPoint1.Y - are.WorldPoint1.Y).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.WorldPoint2.X - are.WorldPoint2.X).Should().BeLessThan(0.001f);
+                System.Math.Abs(reconstructedAre.WorldPoint2.Y - are.WorldPoint2.Y).Should().BeLessThan(0.001f);
+            }
+        }
+
+        [Fact]
+        public void TestAreHelpersEdgeCaseColors()
+        {
+            // Test edge cases for color fields: black, white, and extreme values
+            var testCases = new[]
+            {
+                new { Name = "Black", Color = new Color(0.0f, 0.0f, 0.0f) },
+                new { Name = "White", Color = new Color(1.0f, 1.0f, 1.0f) },
+                new { Name = "Red", Color = new Color(1.0f, 0.0f, 0.0f) },
+                new { Name = "Green", Color = new Color(0.0f, 1.0f, 0.0f) },
+                new { Name = "Blue", Color = new Color(0.0f, 0.0f, 1.0f) },
+                new { Name = "Gray", Color = new Color(0.5f, 0.5f, 0.5f) }
+            };
+
+            foreach (var testCase in testCases)
+            {
+                var are = new ARE();
+                are.SunAmbient = testCase.Color;
+                are.SunDiffuse = testCase.Color;
+                are.DynamicLight = testCase.Color;
+                are.FogColor = testCase.Color;
+                are.GrassAmbient = testCase.Color;
+                are.GrassDiffuse = testCase.Color;
+                
+                // Test for all game types
+                foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA, Game.ME })
+                {
+                    var bytes = AREHelpers.BytesAre(are, game);
+                    var reconstructedAre = AREHelpers.ReadAre(bytes);
+                    
+                    System.Math.Abs(reconstructedAre.SunAmbient.R - testCase.Color.R).Should().BeLessThan(0.01f, 
+                        $"SunAmbient {testCase.Name} failed for {game}");
+                    System.Math.Abs(reconstructedAre.SunDiffuse.R - testCase.Color.R).Should().BeLessThan(0.01f,
+                        $"SunDiffuse {testCase.Name} failed for {game}");
+                    System.Math.Abs(reconstructedAre.DynamicLight.R - testCase.Color.R).Should().BeLessThan(0.01f,
+                        $"DynamicLight {testCase.Name} failed for {game}");
+                    System.Math.Abs(reconstructedAre.FogColor.R - testCase.Color.R).Should().BeLessThan(0.01f,
+                        $"FogColor {testCase.Name} failed for {game}");
+                    System.Math.Abs(reconstructedAre.GrassAmbient.R - testCase.Color.R).Should().BeLessThan(0.01f,
+                        $"GrassAmbient {testCase.Name} failed for {game}");
+                    System.Math.Abs(reconstructedAre.GrassDiffuse.R - testCase.Color.R).Should().BeLessThan(0.01f,
+                        $"GrassDiffuse {testCase.Name} failed for {game}");
+                }
+            }
+        }
+
+        [Fact]
+        public void TestAreHelpersDefaultValues()
+        {
+            // Test that default ARE values are correctly handled
+            var are = new ARE(); // All defaults
+            
+            foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA, Game.ME })
+            {
+                var bytes = AREHelpers.BytesAre(are, game);
+                var reconstructedAre = AREHelpers.ReadAre(bytes);
+                
+                // Verify defaults are preserved
+                reconstructedAre.Tag.Should().BeEmpty();
+                reconstructedAre.AlphaTest.Should().Be(0);
+                reconstructedAre.CameraStyle.Should().Be(0);
+                reconstructedAre.Unescapable.Should().BeFalse();
+                reconstructedAre.DisableTransit.Should().BeFalse();
+                reconstructedAre.StealthXp.Should().BeFalse();
+                reconstructedAre.FogEnabled.Should().BeFalse();
+                reconstructedAre.WindPower.Should().Be(0);
+                reconstructedAre.LoadScreenID.Should().Be(0);
+                
+                // Color defaults should be black (0,0,0)
+                reconstructedAre.SunAmbient.R.Should().Be(0.0f);
+                reconstructedAre.SunAmbient.G.Should().Be(0.0f);
+                reconstructedAre.SunAmbient.B.Should().Be(0.0f);
+                reconstructedAre.SunDiffuse.R.Should().Be(0.0f);
+                reconstructedAre.SunDiffuse.G.Should().Be(0.0f);
+                reconstructedAre.SunDiffuse.B.Should().Be(0.0f);
+                reconstructedAre.DynamicLight.R.Should().Be(0.0f);
+                reconstructedAre.DynamicLight.G.Should().Be(0.0f);
+                reconstructedAre.DynamicLight.B.Should().Be(0.0f);
+                reconstructedAre.FogColor.R.Should().Be(0.0f);
+                reconstructedAre.FogColor.G.Should().Be(0.0f);
+                reconstructedAre.FogColor.B.Should().Be(0.0f);
+                reconstructedAre.GrassAmbient.R.Should().Be(0.0f);
+                reconstructedAre.GrassAmbient.G.Should().Be(0.0f);
+                reconstructedAre.GrassAmbient.B.Should().Be(0.0f);
+                reconstructedAre.GrassDiffuse.R.Should().Be(0.0f);
+                reconstructedAre.GrassDiffuse.G.Should().Be(0.0f);
+                reconstructedAre.GrassDiffuse.B.Should().Be(0.0f);
+            }
         }
     }
 }
