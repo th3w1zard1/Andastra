@@ -82,28 +82,28 @@ namespace HolocronToolset.Editors
         private ComboBox _condition2ResrefEdit;
         private NumericUpDown _logicSpin;
         private TreeView _dialogTree;
-        
+
         // UI Controls - Node widgets (Quest/Plot)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QLineEdit questEdit, QSpinBox questEntrySpin, QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
         private TextBox _questEdit;
         private NumericUpDown _questEntrySpin;
-        
+
         // UI Controls - Speaker widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QLineEdit speakerEdit, QLabel speakerEditLabel
         private TextBox _speakerEdit;
         private TextBlock _speakerEditLabel;
-        
+
         // UI Controls - Script widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QSpinBox script1Param1Spin, script1Param2Spin, etc.
         private NumericUpDown _script1Param1Spin;
         private StackPanel _script1Param1Panel; // Panel containing script1Param1 control for visibility management
-        
+
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
-        
+
         // Flag to track if editor is in focus mode (showing only a specific node and its children)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
         // Original: self._focused: bool = False
@@ -222,10 +222,10 @@ namespace HolocronToolset.Editors
                 _dialogTree.Background = null; // Reset background color
             }
             _focused = false;
-            
+
             _coreDlg = dlg;
             _model.ResetModel();
-            
+
             // Matching PyKotor: Create items for each starter and load them recursively
             // Original: for start in dlg.starters:
             //              item = DLGStandardItem(link=start)
@@ -243,7 +243,7 @@ namespace HolocronToolset.Editors
                     _model.LoadDlgItemRec(addedItem);
                 }
             }
-            
+
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
             UpdateTreeView();
@@ -260,7 +260,7 @@ namespace HolocronToolset.Editors
             //   Eclipse games use K1-style DLG format (no K2 extensions)
             //   Note: Eclipse games may also use .cnv format, but DLG files follow K1 format
             Game gameToUse = _installation?.Game ?? Game.K2;
-            
+
             // For Eclipse games, use K1 format (no K2-specific fields)
             // Matching PyKotor: Eclipse games don't have K2 extensions
             if (gameToUse.IsEclipse())
@@ -272,11 +272,11 @@ namespace HolocronToolset.Editors
             {
                 gameToUse = Game.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
             }
-            
+
             byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUse, ResourceType.DLG);
             return Tuple.Create(data, new byte[0]);
         }
-        
+
         /// <summary>
         /// Updates UI visibility based on game type.
         /// K2-specific controls are only shown for KotOR 2 (TSL).
@@ -286,7 +286,7 @@ namespace HolocronToolset.Editors
         {
             Game currentGame = _installation?.Game ?? Game.K2;
             bool isK2 = currentGame.IsK2();
-            
+
             // Show/hide K2-specific controls
             // K2-specific: Script1Param1 (ActionParam1) only exists in KotOR 2 (swkotor2.exe: 0x005ea880)
             // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
@@ -432,24 +432,24 @@ namespace HolocronToolset.Editors
         public Button AddAnimButton => _addAnimButton;
         public Button RemoveAnimButton => _removeAnimButton;
         public Button EditAnimButton => _editAnimButton;
-        
+
         // Expose link widgets for testing
         // Matching PyKotor implementation: editor.ui.condition1ResrefEdit, etc.
         public ComboBox Condition1ResrefEdit => _condition1ResrefEdit;
         public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
         public NumericUpDown LogicSpin => _logicSpin;
         public TreeView DialogTree => _dialogTree;
-        
+
         // Expose quest widgets for testing
         // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
-        
+
         // Expose speaker widgets for testing
         // Matching PyKotor implementation: editor.ui.speakerEdit, editor.ui.speakerEditLabel
         public TextBox SpeakerEdit => _speakerEdit;
         public TextBlock SpeakerEditLabel => _speakerEditLabel;
-        
+
         // Expose script widgets for testing
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
@@ -462,7 +462,7 @@ namespace HolocronToolset.Editors
         private void OnSelectionChanged()
         {
             _nodeLoadedIntoUi = false;
-            
+
             if (_dialogTree?.SelectedItem == null)
             {
                 // Clear UI when nothing is selected
@@ -513,7 +513,7 @@ namespace HolocronToolset.Editors
             {
                 LoadLinkIntoUI(dlgItemDirect);
             }
-            
+
             _nodeLoadedIntoUi = true;
         }
 
@@ -530,25 +530,25 @@ namespace HolocronToolset.Editors
 
             var link = item.Link;
             var node = link.Node;
-            
+
             // Load condition1
             if (_condition1ResrefEdit != null)
             {
                 _condition1ResrefEdit.Text = link.Active1?.ToString() ?? string.Empty;
             }
-            
+
             // Load condition2
             if (_condition2ResrefEdit != null)
             {
                 _condition2ResrefEdit.Text = link.Active2?.ToString() ?? string.Empty;
             }
-            
+
             // Load logic (0 = AND/false, 1 = OR/true)
             if (_logicSpin != null)
             {
                 _logicSpin.Value = link.Logic ? 1 : 0;
             }
-            
+
             // Load speaker field from node (only for Entry nodes)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2397-2405
             // Original: if isinstance(item.link.node, DLGEntry): self.ui.speakerEditLabel.setVisible(True), self.ui.speakerEdit.setVisible(True), self.ui.speakerEdit.setText(item.link.node.speaker)
@@ -576,7 +576,7 @@ namespace HolocronToolset.Editors
                     _speakerEdit.IsVisible = false;
                 }
             }
-            
+
             // Load quest fields from node
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2433-2434
             // Original: self.ui.questEdit.setText(item.link.node.quest), self.ui.questEntrySpin.setValue(item.link.node.quest_entry or 0)
@@ -584,12 +584,12 @@ namespace HolocronToolset.Editors
             {
                 _questEdit.Text = node.Quest ?? string.Empty;
             }
-            
+
             if (_questEntrySpin != null && node != null)
             {
                 _questEntrySpin.Value = node.QuestEntry ?? 0;
             }
-            
+
             // Load script1 param1
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2410
             // Original: self.ui.script1Param1Spin.setValue(item.link.node.script1_param1)
@@ -655,7 +655,7 @@ namespace HolocronToolset.Editors
             {
                 link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
             }
-            
+
             // Update speaker field in node (only for Entry nodes)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2523
             // Original: if isinstance(item.link.node, DLGEntry): item.link.node.speaker = self.ui.speakerEdit.text()
@@ -663,7 +663,7 @@ namespace HolocronToolset.Editors
             {
                 entry.Speaker = _speakerEdit.Text ?? string.Empty;
             }
-            
+
             // Update quest fields in node
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2521-2522
             // Original: item.link.node.quest = self.ui.questEdit.text(), item.link.node.quest_entry = self.ui.questEntrySpin.value()
@@ -671,12 +671,12 @@ namespace HolocronToolset.Editors
             {
                 node.Quest = _questEdit.Text ?? string.Empty;
             }
-            
+
             if (_questEntrySpin != null && node != null)
             {
                 node.QuestEntry = _questEntrySpin.Value.HasValue ? (int)_questEntrySpin.Value.Value : 0;
             }
-            
+
             // Update script1 param1
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2499
             // Original: item.link.node.script1_param1 = self.ui.script1Param1Spin.value()
@@ -1089,12 +1089,12 @@ namespace HolocronToolset.Editors
 
             // Create item for the focused link
             var item = new DLGStandardItem(link);
-            
+
             // Add the item to the model's root items directly
             // We need to access the private _rootItems, so we'll use InsertStarter which adds it
             // But we need to ensure the item we created is the one used
             _model.InsertStarter(0, link);
-            
+
             // Get the item that was actually added to the model
             var rootItems = _model.GetRootItems();
             DLGStandardItem focusedItem = null;
@@ -1104,10 +1104,10 @@ namespace HolocronToolset.Editors
                 // Recursively load the item and its children
                 _model.LoadDlgItemRec(focusedItem);
             }
-            
+
             // Update the tree view
             UpdateTreeView();
-            
+
             // Select the focused item in the tree
             if (_dialogTree != null && _dialogTree.ItemsSource != null && focusedItem != null)
             {
@@ -1124,7 +1124,7 @@ namespace HolocronToolset.Editors
                     }
                 }
             }
-            
+
             return focusedItem ?? item;
         }
 
@@ -1296,7 +1296,7 @@ namespace HolocronToolset.Editors
 
             // Delete the node everywhere using the model
             _model.DeleteNodeEverywhere(link.Node);
-            
+
             // Update tree view after deletion
             UpdateTreeView();
         }
@@ -1403,7 +1403,7 @@ namespace HolocronToolset.Editors
         // Original: self.keys_down: set[int] = set()
         // Expose for testing
         public HashSet<Key> KeysDown => _keysDown;
-        
+
         /// <summary>
         /// Gets whether the editor is in focus mode (showing only a specific node and its children).
         /// Matching PyKotor implementation: self._focused
@@ -1563,6 +1563,19 @@ namespace HolocronToolset.Editors
             return _rootItems[row];
         }
 
+        /// <summary>
+        /// Creates MIME data for drag and drop operations.
+        /// Matching PyKotor implementation: def mimeData(self, indexes: Iterable[QModelIndex]) -> QMimeData
+        /// TODO: Full implementation needed for Avalonia drag and drop (currently returns null for test compatibility)
+        /// </summary>
+        public object MimeData(List<object> indexes)
+        {
+            // TODO: Implement full MIME data serialization for Avalonia drag and drop
+            // For now, return null to allow tests to compile
+            // Full implementation should serialize DLG items similar to Python version
+            return null;
+        }
+
         private int _selectedIndex = -1;
         public int SelectedIndex
         {
@@ -1601,7 +1614,7 @@ namespace HolocronToolset.Editors
             }
             var item = new DLGStandardItem(link);
             _rootItems.Add(item);
-            
+
             // Register in dictionaries
             if (!_linkToItems.ContainsKey(link))
             {
@@ -1623,7 +1636,7 @@ namespace HolocronToolset.Editors
                     _nodeToItems[link.Node].Add(item);
                 }
             }
-            
+
             // Also add to CoreDlg.Starters if editor is available
             if (_editor != null && _editor.CoreDlg != null)
             {
@@ -1645,24 +1658,24 @@ namespace HolocronToolset.Editors
             newEntry.PlotIndex = -1;
             var newLink = new DLGLink(newEntry);
             newLink.Node.ListIndex = GetNewNodeListIndex(newLink.Node);
-            
+
             var newItem = new DLGStandardItem(newLink);
             _rootItems.Add(newItem);
-            
+
             // Add to CoreDlg.Starters
             if (_editor != null && _editor.CoreDlg != null)
             {
                 _editor.CoreDlg.Starters.Add(newLink);
             }
-            
+
             UpdateItemDisplayText(newItem);
-            
+
             // Update tree view if editor is available
             if (_editor != null)
             {
                 _editor.UpdateTreeView();
             }
-            
+
             return newItem;
         }
 
@@ -1677,7 +1690,7 @@ namespace HolocronToolset.Editors
             {
                 throw new ArgumentNullException(nameof(parentItem));
             }
-            
+
             if (parentItem.Link == null)
             {
                 throw new InvalidOperationException("Parent item must have a valid link");
@@ -1709,7 +1722,7 @@ namespace HolocronToolset.Editors
 
             var newItem = new DLGStandardItem(link);
             parentItem.AddChild(newItem);
-            
+
             // Register in dictionaries
             if (!_linkToItems.ContainsKey(link))
             {
@@ -1731,10 +1744,10 @@ namespace HolocronToolset.Editors
                     _nodeToItems[link.Node].Add(newItem);
                 }
             }
-            
+
             UpdateItemDisplayText(newItem);
             UpdateItemDisplayText(parentItem);
-            
+
             return newItem;
         }
 
@@ -1862,7 +1875,7 @@ namespace HolocronToolset.Editors
             _rootItems.RemoveAt(oldIndex);
             _rootItems.Insert(newIndex, item);
         }
-        
+
         /// <summary>
         /// Moves the selected item up in the starter list.
         /// Returns true if the move was successful, false if the move was invalid (already at top or no selection).
@@ -1871,7 +1884,7 @@ namespace HolocronToolset.Editors
         public bool MoveItemUp()
         {
             int selectedIndex = _selectedIndex;
-            
+
             // Check if selection is valid and not already at top
             if (selectedIndex <= 0 || selectedIndex >= _rootItems.Count)
             {
@@ -1880,20 +1893,20 @@ namespace HolocronToolset.Editors
 
             int newIndex = selectedIndex - 1;
             DLGLink link = _rootItems[selectedIndex].Link;
-            
+
             // Synchronize with CoreDlg.Starters if editor is available (before moving in model)
             if (_editor != null && _editor.CoreDlg != null && selectedIndex < _editor.CoreDlg.Starters.Count)
             {
                 _editor.CoreDlg.Starters.RemoveAt(selectedIndex);
                 _editor.CoreDlg.Starters.Insert(newIndex, link);
             }
-            
+
             // Move in model
             MoveStarter(selectedIndex, newIndex);
-            
+
             // Update selected index to track the moved item
             _selectedIndex = newIndex;
-            
+
             return true;
         }
 
@@ -1905,7 +1918,7 @@ namespace HolocronToolset.Editors
         public bool MoveItemDown()
         {
             int selectedIndex = _selectedIndex;
-            
+
             // Check if selection is valid and not already at bottom
             if (selectedIndex < 0 || selectedIndex >= _rootItems.Count - 1)
             {
@@ -1914,20 +1927,20 @@ namespace HolocronToolset.Editors
 
             int newIndex = selectedIndex + 1;
             DLGLink link = _rootItems[selectedIndex].Link;
-            
+
             // Synchronize with CoreDlg.Starters if editor is available (before moving in model)
             if (_editor != null && _editor.CoreDlg != null && selectedIndex < _editor.CoreDlg.Starters.Count)
             {
                 _editor.CoreDlg.Starters.RemoveAt(selectedIndex);
                 _editor.CoreDlg.Starters.Insert(newIndex, link);
             }
-            
+
             // Move in model
             MoveStarter(selectedIndex, newIndex);
-            
+
             // Update selected index to track the moved item
             _selectedIndex = newIndex;
-            
+
             return true;
         }
 
@@ -1954,7 +1967,7 @@ namespace HolocronToolset.Editors
 
             var link = itemToLoad.Link;
             var node = link.Node;
-            
+
             if (node == null)
             {
                 return;
@@ -1989,7 +2002,7 @@ namespace HolocronToolset.Editors
 
                 var childItem = new DLGStandardItem(childLink);
                 itemToLoad.AddChild(childItem);
-                
+
                 // Recursively load children of this child
                 LoadDlgItemRec(childItem);
             }
@@ -2011,7 +2024,7 @@ namespace HolocronToolset.Editors
 
             var parent = item.Parent;
             var oldRow = parent == null ? _rootItems.IndexOf(item) : parent.Children.ToList().IndexOf(item);
-            
+
             if (oldRow < 0)
             {
                 return;
@@ -2042,7 +2055,7 @@ namespace HolocronToolset.Editors
                         var linkToMove = links[oldRow];
                         links.RemoveAt(oldRow);
                         links.Insert(newRow, linkToMove);
-                        
+
                         // Update list_index for all affected links
                         for (int i = 0; i < links.Count; i++)
                         {
@@ -2069,7 +2082,7 @@ namespace HolocronToolset.Editors
 
             // Create a new item for the pasted link
             var newItem = new DLGStandardItem(pastedLink);
-            
+
             if (parentItem == null)
             {
                 // Add to root
