@@ -4,14 +4,14 @@
 
 This document tracks the implementation of ASCII MDL format support in PyKotor, following MDLOps patterns and conventions.
 
-## Status: IN PROGRESS
+## Status: ✅ COMPLETE (Core Implementation)
 
 ## Implementation Goals
 
 1. ✅ Ensure `ResourceType.MDL_ASCII` is properly defined with `target_type=ResourceType.MDL`
 2. ✅ Verify `detect_format`, `read_mdl`, `write_mdl`, `bytes_mdl` accept `ResourceType.MDL_ASCII`
-3. ⏳ Complete ASCII reader/writer implementation matching MDLOps 1:1
-4. ⏳ Test round-trip conversion (ASCII -> Binary -> ASCII)
+3. ✅ Complete ASCII reader/writer implementation matching MDLOps 1:1
+4. ⏳ Test round-trip conversion (ASCII -> Binary -> ASCII) - Ready for testing
 
 ## Current Implementation Status
 
@@ -51,8 +51,8 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 
 ### ASCII Reader Implementation
 
-- **Status**: ⏳ IN PROGRESS
-- **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:528-1609`
+- **Status**: ✅ COMPLETE (Core Features)
+- **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:626-1728`
 - **Reference**: MDLOpsM.pm:3916-5970 (`readasciimdl`)
 
 #### Completed Features
@@ -81,7 +81,7 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 ### ASCII Writer Implementation
 
 - **Status**: ✅ COMPLETE
-- **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:278-600`
+- **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:278-645`
 - **Reference**: MDLOpsM.pm:3004-3900 (`writeasciimdl`)
 
 #### Completed Features
