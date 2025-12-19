@@ -2115,6 +2115,766 @@ namespace Andastra.Runtime.Games.Eclipse
 
         #endregion
 
+        #region Creature State Serialization Helpers
+
+        /// <summary>
+        /// Serializes creature state (player character or party member).
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Creature state serialization functions
+        /// - DragonAge2.exe: Enhanced creature state serialization
+        /// - MassEffect.exe: Creature state serialization
+        /// - MassEffect2.exe: Advanced creature state with relationships
+        /// </summary>
+        private void SerializeCreatureState(BinaryWriter writer, CreatureState creature)
+        {
+            if (creature == null)
+            {
+                writer.Write(0); // Has creature
+                return;
+            }
+
+            writer.Write(1); // Has creature
+
+            // Serialize base entity state
+            SerializeEntityState(writer, creature);
+
+            // Serialize creature-specific fields
+            writer.Write(creature.Level);
+            writer.Write(creature.XP);
+            writer.Write(creature.CurrentFP);
+            writer.Write(creature.MaxFP);
+            writer.Write(creature.Alignment);
+
+            // Serialize equipment
+            SerializeEquipmentState(writer, creature.Equipment);
+
+            // Serialize inventory
+            int inventoryCount = creature.Inventory != null ? creature.Inventory.Count : 0;
+            writer.Write(inventoryCount);
+            if (creature.Inventory != null)
+            {
+                foreach (ItemState item in creature.Inventory)
+                {
+                    SerializeItemState(writer, item);
+                }
+            }
+
+            // Serialize known powers
+            int powersCount = creature.KnownPowers != null ? creature.KnownPowers.Count : 0;
+            writer.Write(powersCount);
+            if (creature.KnownPowers != null)
+            {
+                foreach (string power in creature.KnownPowers)
+                {
+                    WriteString(writer, power);
+                }
+            }
+
+            // Serialize known feats
+            int featsCount = creature.KnownFeats != null ? creature.KnownFeats.Count : 0;
+            writer.Write(featsCount);
+            if (creature.KnownFeats != null)
+            {
+                foreach (string feat in creature.KnownFeats)
+                {
+                    WriteString(writer, feat);
+                }
+            }
+
+            // Serialize class levels
+            int classLevelsCount = creature.ClassLevels != null ? creature.ClassLevels.Count : 0;
+            writer.Write(classLevelsCount);
+            if (creature.ClassLevels != null)
+            {
+                foreach (ClassLevel classLevel in creature.ClassLevels)
+                {
+                    writer.Write(classLevel.ClassId);
+                    writer.Write(classLevel.Level);
+                    int powersGainedCount = classLevel.PowersGained != null ? classLevel.PowersGained.Count : 0;
+                    writer.Write(powersGainedCount);
+                    if (classLevel.PowersGained != null)
+                    {
+                        foreach (string power in classLevel.PowersGained)
+                        {
+                            WriteString(writer, power);
+                        }
+                    }
+                }
+            }
+
+            // Serialize skills
+            int skillsCount = creature.Skills != null ? creature.Skills.Count : 0;
+            writer.Write(skillsCount);
+            if (creature.Skills != null)
+            {
+                foreach (var kvp in creature.Skills)
+                {
+                    WriteString(writer, kvp.Key);
+                    writer.Write(kvp.Value);
+                }
+            }
+
+            // Serialize attributes
+            if (creature.Attributes != null)
+            {
+                writer.Write(1);
+                writer.Write(creature.Attributes.Strength);
+                writer.Write(creature.Attributes.Dexterity);
+                writer.Write(creature.Attributes.Constitution);
+                writer.Write(creature.Attributes.Intelligence);
+                writer.Write(creature.Attributes.Wisdom);
+                writer.Write(creature.Attributes.Charisma);
+            }
+            else
+            {
+                writer.Write(0);
+            }
+        }
+
+        /// <summary>
+        /// Deserializes creature state.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Creature state deserialization functions
+        /// - DragonAge2.exe: Enhanced creature state deserialization
+        /// - MassEffect.exe: Creature state deserialization
+        /// - MassEffect2.exe: Advanced creature state with relationships
+        /// </summary>
+        private CreatureState DeserializeCreatureState(BinaryReader reader)
+        {
+            bool hasCreature = reader.ReadInt32() != 0;
+            if (!hasCreature)
+            {
+                return null;
+            }
+
+            var creature = new CreatureState();
+
+            // Deserialize base entity state
+            DeserializeEntityState(reader, creature);
+
+            // Deserialize creature-specific fields
+            creature.Level = reader.ReadInt32();
+            creature.XP = reader.ReadInt32();
+            creature.CurrentFP = reader.ReadInt32();
+            creature.MaxFP = reader.ReadInt32();
+            creature.Alignment = reader.ReadInt32();
+
+            // Deserialize equipment
+            creature.Equipment = DeserializeEquipmentState(reader);
+
+            // Deserialize inventory
+            int inventoryCount = reader.ReadInt32();
+            for (int i = 0; i < inventoryCount; i++)
+            {
+                creature.Inventory.Add(DeserializeItemState(reader));
+            }
+
+            // Deserialize known powers
+            int powersCount = reader.ReadInt32();
+            for (int i = 0; i < powersCount; i++)
+            {
+                creature.KnownPowers.Add(ReadString(reader));
+            }
+
+            // Deserialize known feats
+            int featsCount = reader.ReadInt32();
+            for (int i = 0; i < featsCount; i++)
+            {
+                creature.KnownFeats.Add(ReadString(reader));
+            }
+
+            // Deserialize class levels
+            int classLevelsCount = reader.ReadInt32();
+            for (int i = 0; i < classLevelsCount; i++)
+            {
+                var classLevel = new ClassLevel
+                {
+                    ClassId = reader.ReadInt32(),
+                    Level = reader.ReadInt32()
+                };
+                int powersGainedCount = reader.ReadInt32();
+                for (int j = 0; j < powersGainedCount; j++)
+                {
+                    classLevel.PowersGained.Add(ReadString(reader));
+                }
+                creature.ClassLevels.Add(classLevel);
+            }
+
+            // Deserialize skills
+            int skillsCount = reader.ReadInt32();
+            for (int i = 0; i < skillsCount; i++)
+            {
+                string skillName = ReadString(reader);
+                int skillValue = reader.ReadInt32();
+                creature.Skills[skillName] = skillValue;
+            }
+
+            // Deserialize attributes
+            bool hasAttributes = reader.ReadInt32() != 0;
+            if (hasAttributes)
+            {
+                creature.Attributes = new AttributeSet
+                {
+                    Strength = reader.ReadInt32(),
+                    Dexterity = reader.ReadInt32(),
+                    Constitution = reader.ReadInt32(),
+                    Intelligence = reader.ReadInt32(),
+                    Wisdom = reader.ReadInt32(),
+                    Charisma = reader.ReadInt32()
+                };
+            }
+
+            return creature;
+        }
+
+        /// <summary>
+        /// Serializes entity state (base class for all entities).
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Entity state serialization functions
+        /// - DragonAge2.exe: Enhanced entity state serialization
+        /// - MassEffect.exe: Entity state serialization
+        /// - MassEffect2.exe: Advanced entity state with relationships
+        /// </summary>
+        private void SerializeEntityState(BinaryWriter writer, EntityState entity)
+        {
+            if (entity == null)
+            {
+                writer.Write(0); // Has entity
+                return;
+            }
+
+            writer.Write(1); // Has entity
+
+            WriteString(writer, entity.Tag ?? "");
+            writer.Write(entity.ObjectId);
+            writer.Write((int)entity.ObjectType);
+            WriteString(writer, entity.TemplateResRef ?? "");
+            writer.Write(entity.Position.X);
+            writer.Write(entity.Position.Y);
+            writer.Write(entity.Position.Z);
+            writer.Write(entity.Facing);
+            writer.Write(entity.CurrentHP);
+            writer.Write(entity.MaxHP);
+            writer.Write(entity.IsDestroyed ? 1 : 0);
+            writer.Write(entity.IsPlot ? 1 : 0);
+            writer.Write(entity.IsOpen ? 1 : 0);
+            writer.Write(entity.IsLocked ? 1 : 0);
+            writer.Write(entity.AnimationState);
+
+            // Serialize local variables
+            SerializeLocalVariableSet(writer, entity.LocalVariables);
+
+            // Serialize active effects
+            int effectsCount = entity.ActiveEffects != null ? entity.ActiveEffects.Count : 0;
+            writer.Write(effectsCount);
+            if (entity.ActiveEffects != null)
+            {
+                foreach (SavedEffect effect in entity.ActiveEffects)
+                {
+                    SerializeSavedEffect(writer, effect);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserializes entity state.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Entity state deserialization functions
+        /// - DragonAge2.exe: Enhanced entity state deserialization
+        /// - MassEffect.exe: Entity state deserialization
+        /// - MassEffect2.exe: Advanced entity state with relationships
+        /// </summary>
+        private void DeserializeEntityState(BinaryReader reader, EntityState entity)
+        {
+            bool hasEntity = reader.ReadInt32() != 0;
+            if (!hasEntity)
+            {
+                return;
+            }
+
+            entity.Tag = ReadString(reader);
+            entity.ObjectId = reader.ReadUInt32();
+            entity.ObjectType = (ObjectType)reader.ReadInt32();
+            entity.TemplateResRef = ReadString(reader);
+            float x = reader.ReadSingle();
+            float y = reader.ReadSingle();
+            float z = reader.ReadSingle();
+            entity.Position = new Vector3(x, y, z);
+            entity.Facing = reader.ReadSingle();
+            entity.CurrentHP = reader.ReadInt32();
+            entity.MaxHP = reader.ReadInt32();
+            entity.IsDestroyed = reader.ReadInt32() != 0;
+            entity.IsPlot = reader.ReadInt32() != 0;
+            entity.IsOpen = reader.ReadInt32() != 0;
+            entity.IsLocked = reader.ReadInt32() != 0;
+            entity.AnimationState = reader.ReadInt32();
+
+            // Deserialize local variables
+            entity.LocalVariables = DeserializeLocalVariableSet(reader);
+
+            // Deserialize active effects
+            int effectsCount = reader.ReadInt32();
+            for (int i = 0; i < effectsCount; i++)
+            {
+                entity.ActiveEffects.Add(DeserializeSavedEffect(reader));
+            }
+        }
+
+        /// <summary>
+        /// Serializes equipment state.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Equipment state serialization functions
+        /// - DragonAge2.exe: Enhanced equipment state serialization
+        /// - MassEffect.exe: Equipment state serialization
+        /// - MassEffect2.exe: Advanced equipment state
+        /// </summary>
+        private void SerializeEquipmentState(BinaryWriter writer, EquipmentState equipment)
+        {
+            if (equipment == null)
+            {
+                writer.Write(0); // Has equipment
+                return;
+            }
+
+            writer.Write(1); // Has equipment
+
+            SerializeItemState(writer, equipment.Head);
+            SerializeItemState(writer, equipment.Armor);
+            SerializeItemState(writer, equipment.Gloves);
+            SerializeItemState(writer, equipment.RightHand);
+            SerializeItemState(writer, equipment.LeftHand);
+            SerializeItemState(writer, equipment.Belt);
+            SerializeItemState(writer, equipment.Implant);
+            SerializeItemState(writer, equipment.RightArm);
+            SerializeItemState(writer, equipment.LeftArm);
+        }
+
+        /// <summary>
+        /// Deserializes equipment state.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Equipment state deserialization functions
+        /// - DragonAge2.exe: Enhanced equipment state deserialization
+        /// - MassEffect.exe: Equipment state deserialization
+        /// - MassEffect2.exe: Advanced equipment state
+        /// </summary>
+        private EquipmentState DeserializeEquipmentState(BinaryReader reader)
+        {
+            bool hasEquipment = reader.ReadInt32() != 0;
+            if (!hasEquipment)
+            {
+                return new EquipmentState();
+            }
+
+            return new EquipmentState
+            {
+                Head = DeserializeItemState(reader),
+                Armor = DeserializeItemState(reader),
+                Gloves = DeserializeItemState(reader),
+                RightHand = DeserializeItemState(reader),
+                LeftHand = DeserializeItemState(reader),
+                Belt = DeserializeItemState(reader),
+                Implant = DeserializeItemState(reader),
+                RightArm = DeserializeItemState(reader),
+                LeftArm = DeserializeItemState(reader)
+            };
+        }
+
+        /// <summary>
+        /// Serializes item state.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Item state serialization functions
+        /// - DragonAge2.exe: Enhanced item state serialization
+        /// - MassEffect.exe: Item state serialization
+        /// - MassEffect2.exe: Advanced item state
+        /// </summary>
+        private void SerializeItemState(BinaryWriter writer, ItemState item)
+        {
+            if (item == null)
+            {
+                writer.Write(0); // Has item
+                return;
+            }
+
+            writer.Write(1); // Has item
+
+            WriteString(writer, item.TemplateResRef ?? "");
+            writer.Write(item.StackSize);
+            writer.Write(item.Charges);
+            writer.Write(item.Identified ? 1 : 0);
+
+            // Serialize upgrades
+            int upgradesCount = item.Upgrades != null ? item.Upgrades.Count : 0;
+            writer.Write(upgradesCount);
+            if (item.Upgrades != null)
+            {
+                foreach (ItemUpgrade upgrade in item.Upgrades)
+                {
+                    writer.Write(upgrade.UpgradeSlot);
+                    WriteString(writer, upgrade.UpgradeResRef ?? "");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserializes item state.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Item state deserialization functions
+        /// - DragonAge2.exe: Enhanced item state deserialization
+        /// - MassEffect.exe: Item state deserialization
+        /// - MassEffect2.exe: Advanced item state
+        /// </summary>
+        private ItemState DeserializeItemState(BinaryReader reader)
+        {
+            bool hasItem = reader.ReadInt32() != 0;
+            if (!hasItem)
+            {
+                return null;
+            }
+
+            var item = new ItemState
+            {
+                TemplateResRef = ReadString(reader),
+                StackSize = reader.ReadInt32(),
+                Charges = reader.ReadInt32(),
+                Identified = reader.ReadInt32() != 0
+            };
+
+            // Deserialize upgrades
+            int upgradesCount = reader.ReadInt32();
+            for (int i = 0; i < upgradesCount; i++)
+            {
+                item.Upgrades.Add(new ItemUpgrade
+                {
+                    UpgradeSlot = reader.ReadInt32(),
+                    UpgradeResRef = ReadString(reader)
+                });
+            }
+
+            return item;
+        }
+
+        /// <summary>
+        /// Serializes local variable set.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Local variable serialization functions
+        /// - DragonAge2.exe: Enhanced local variable serialization
+        /// - MassEffect.exe: Local variable serialization
+        /// - MassEffect2.exe: Advanced local variable state
+        /// </summary>
+        private void SerializeLocalVariableSet(BinaryWriter writer, LocalVariableSet localVars)
+        {
+            if (localVars == null)
+            {
+                writer.Write(0); // Has local variables
+                return;
+            }
+
+            writer.Write(1); // Has local variables
+
+            // Serialize integer variables
+            int intCount = localVars.Ints != null ? localVars.Ints.Count : 0;
+            writer.Write(intCount);
+            if (localVars.Ints != null)
+            {
+                foreach (var kvp in localVars.Ints)
+                {
+                    WriteString(writer, kvp.Key);
+                    writer.Write(kvp.Value);
+                }
+            }
+
+            // Serialize float variables
+            int floatCount = localVars.Floats != null ? localVars.Floats.Count : 0;
+            writer.Write(floatCount);
+            if (localVars.Floats != null)
+            {
+                foreach (var kvp in localVars.Floats)
+                {
+                    WriteString(writer, kvp.Key);
+                    writer.Write(kvp.Value);
+                }
+            }
+
+            // Serialize string variables
+            int stringCount = localVars.Strings != null ? localVars.Strings.Count : 0;
+            writer.Write(stringCount);
+            if (localVars.Strings != null)
+            {
+                foreach (var kvp in localVars.Strings)
+                {
+                    WriteString(writer, kvp.Key);
+                    WriteString(writer, kvp.Value ?? "");
+                }
+            }
+
+            // Serialize object reference variables
+            int objectCount = localVars.Objects != null ? localVars.Objects.Count : 0;
+            writer.Write(objectCount);
+            if (localVars.Objects != null)
+            {
+                foreach (var kvp in localVars.Objects)
+                {
+                    WriteString(writer, kvp.Key);
+                    writer.Write(kvp.Value);
+                }
+            }
+
+            // Serialize location variables
+            int locationCount = localVars.Locations != null ? localVars.Locations.Count : 0;
+            writer.Write(locationCount);
+            if (localVars.Locations != null)
+            {
+                foreach (var kvp in localVars.Locations)
+                {
+                    WriteString(writer, kvp.Key);
+                    SerializeSavedLocation(writer, kvp.Value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserializes local variable set.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Local variable deserialization functions
+        /// - DragonAge2.exe: Enhanced local variable deserialization
+        /// - MassEffect.exe: Local variable deserialization
+        /// - MassEffect2.exe: Advanced local variable state
+        /// </summary>
+        private LocalVariableSet DeserializeLocalVariableSet(BinaryReader reader)
+        {
+            bool hasLocalVars = reader.ReadInt32() != 0;
+            if (!hasLocalVars)
+            {
+                return new LocalVariableSet();
+            }
+
+            var localVars = new LocalVariableSet();
+
+            // Deserialize integer variables
+            int intCount = reader.ReadInt32();
+            for (int i = 0; i < intCount; i++)
+            {
+                string name = ReadString(reader);
+                int value = reader.ReadInt32();
+                localVars.Ints[name] = value;
+            }
+
+            // Deserialize float variables
+            int floatCount = reader.ReadInt32();
+            for (int i = 0; i < floatCount; i++)
+            {
+                string name = ReadString(reader);
+                float value = reader.ReadSingle();
+                localVars.Floats[name] = value;
+            }
+
+            // Deserialize string variables
+            int stringCount = reader.ReadInt32();
+            for (int i = 0; i < stringCount; i++)
+            {
+                string name = ReadString(reader);
+                string value = ReadString(reader);
+                localVars.Strings[name] = value;
+            }
+
+            // Deserialize object reference variables
+            int objectCount = reader.ReadInt32();
+            for (int i = 0; i < objectCount; i++)
+            {
+                string name = ReadString(reader);
+                uint value = reader.ReadUInt32();
+                localVars.Objects[name] = value;
+            }
+
+            // Deserialize location variables
+            int locationCount = reader.ReadInt32();
+            for (int i = 0; i < locationCount; i++)
+            {
+                string name = ReadString(reader);
+                SavedLocation location = DeserializeSavedLocation(reader);
+                localVars.Locations[name] = location;
+            }
+
+            return localVars;
+        }
+
+        /// <summary>
+        /// Serializes saved effect.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Effect serialization functions
+        /// - DragonAge2.exe: Enhanced effect serialization
+        /// - MassEffect.exe: Effect serialization
+        /// - MassEffect2.exe: Advanced effect state
+        /// </summary>
+        private void SerializeSavedEffect(BinaryWriter writer, SavedEffect effect)
+        {
+            if (effect == null)
+            {
+                writer.Write(0); // Has effect
+                return;
+            }
+
+            writer.Write(1); // Has effect
+
+            writer.Write(effect.EffectType);
+            writer.Write(effect.SubType);
+            writer.Write(effect.DurationType);
+            writer.Write(effect.RemainingDuration);
+            writer.Write(effect.CreatorId);
+            writer.Write(effect.SpellId);
+
+            // Serialize parameters
+            int intParamCount = effect.IntParams != null ? effect.IntParams.Count : 0;
+            writer.Write(intParamCount);
+            if (effect.IntParams != null)
+            {
+                foreach (int param in effect.IntParams)
+                {
+                    writer.Write(param);
+                }
+            }
+
+            int floatParamCount = effect.FloatParams != null ? effect.FloatParams.Count : 0;
+            writer.Write(floatParamCount);
+            if (effect.FloatParams != null)
+            {
+                foreach (float param in effect.FloatParams)
+                {
+                    writer.Write(param);
+                }
+            }
+
+            int stringParamCount = effect.StringParams != null ? effect.StringParams.Count : 0;
+            writer.Write(stringParamCount);
+            if (effect.StringParams != null)
+            {
+                foreach (string param in effect.StringParams)
+                {
+                    WriteString(writer, param);
+                }
+            }
+
+            int objectParamCount = effect.ObjectParams != null ? effect.ObjectParams.Count : 0;
+            writer.Write(objectParamCount);
+            if (effect.ObjectParams != null)
+            {
+                foreach (uint param in effect.ObjectParams)
+                {
+                    writer.Write(param);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserializes saved effect.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Effect deserialization functions
+        /// - DragonAge2.exe: Enhanced effect deserialization
+        /// - MassEffect.exe: Effect deserialization
+        /// - MassEffect2.exe: Advanced effect state
+        /// </summary>
+        private SavedEffect DeserializeSavedEffect(BinaryReader reader)
+        {
+            bool hasEffect = reader.ReadInt32() != 0;
+            if (!hasEffect)
+            {
+                return null;
+            }
+
+            var effect = new SavedEffect
+            {
+                EffectType = reader.ReadInt32(),
+                SubType = reader.ReadInt32(),
+                DurationType = reader.ReadInt32(),
+                RemainingDuration = reader.ReadSingle(),
+                CreatorId = reader.ReadUInt32(),
+                SpellId = reader.ReadInt32()
+            };
+
+            // Deserialize parameters
+            int intParamCount = reader.ReadInt32();
+            for (int i = 0; i < intParamCount; i++)
+            {
+                effect.IntParams.Add(reader.ReadInt32());
+            }
+
+            int floatParamCount = reader.ReadInt32();
+            for (int i = 0; i < floatParamCount; i++)
+            {
+                effect.FloatParams.Add(reader.ReadSingle());
+            }
+
+            int stringParamCount = reader.ReadInt32();
+            for (int i = 0; i < stringParamCount; i++)
+            {
+                effect.StringParams.Add(ReadString(reader));
+            }
+
+            int objectParamCount = reader.ReadInt32();
+            for (int i = 0; i < objectParamCount; i++)
+            {
+                effect.ObjectParams.Add(reader.ReadUInt32());
+            }
+
+            return effect;
+        }
+
+        /// <summary>
+        /// Serializes saved location.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Location serialization functions
+        /// - DragonAge2.exe: Enhanced location serialization
+        /// - MassEffect.exe: Location serialization
+        /// - MassEffect2.exe: Advanced location state
+        /// </summary>
+        private void SerializeSavedLocation(BinaryWriter writer, SavedLocation location)
+        {
+            if (location == null)
+            {
+                writer.Write(0); // Has location
+                return;
+            }
+
+            writer.Write(1); // Has location
+
+            WriteString(writer, location.AreaResRef ?? "");
+            writer.Write(location.Position.X);
+            writer.Write(location.Position.Y);
+            writer.Write(location.Position.Z);
+            writer.Write(location.Facing);
+        }
+
+        /// <summary>
+        /// Deserializes saved location.
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Location deserialization functions
+        /// - DragonAge2.exe: Enhanced location deserialization
+        /// - MassEffect.exe: Location deserialization
+        /// - MassEffect2.exe: Advanced location state
+        /// </summary>
+        private SavedLocation DeserializeSavedLocation(BinaryReader reader)
+        {
+            bool hasLocation = reader.ReadInt32() != 0;
+            if (!hasLocation)
+            {
+                return null;
+            }
+
+            var location = new SavedLocation
+            {
+                AreaResRef = ReadString(reader)
+            };
+            float x = reader.ReadSingle();
+            float y = reader.ReadSingle();
+            float z = reader.ReadSingle();
+            location.Position = new Vector3(x, y, z);
+            location.Facing = reader.ReadSingle();
+
+            return location;
+        }
+
+        #endregion
+
         #region Entity Serialization Helpers
 
         /// <summary>
