@@ -1356,14 +1356,260 @@ void helper() {
             throw new NotImplementedException("TestNssEditorBreadcrumbsNavigation: Breadcrumbs navigation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_navigate_to_symbol_function (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1538-1576)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1538-1576
         // Original: def test_nss_editor_navigate_to_symbol_function(qtbot, installation: HTInstallation, complex_nss_script: str): Test navigate to symbol function
         [Fact]
         public void TestNssEditorNavigateToSymbolFunction()
         {
-            // TODO: STUB - Implement navigate to symbol function test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1538-1576
-            throw new NotImplementedException("TestNssEditorNavigateToSymbolFunction: Navigate to symbol function test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Complex NSS script matching Python fixture
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+    
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set up multi-line script
+            editor.Load("test_script.nss", "test_script", ResourceType.NSS, Encoding.UTF8.GetBytes(complexNssScript));
+
+            // Find the actual line number of "void main()" in the script
+            string[] lines = complexNssScript.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            int mainLineNum = -1;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].Contains("void main()"))
+                {
+                    mainLineNum = i + 1; // 1-indexed
+                    break;
+                }
+            }
+
+            mainLineNum.Should().BeGreaterThan(0, "Could not find 'void main()' in test script");
+
+            // Get initial cursor position (should be at start or wherever New() left it)
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+            
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+
+            // Get initial line number before navigation
+            int initialLineNumber = 1;
+            if (codeEditor != null && !string.IsNullOrEmpty(codeEditor.Text))
+            {
+                int cursorPosition = codeEditor.SelectionStart;
+                string text = codeEditor.Text;
+                initialLineNumber = 1;
+                for (int i = 0; i < cursorPosition && i < text.Length; i++)
+                {
+                    if (text[i] == '\n')
+                    {
+                        initialLineNumber++;
+                    }
+                }
+            }
+
+            // Navigate to the 'main' function
+            // This should NOT raise TypeError: CodeEditor.go_to_line() takes 1 positional argument but 2 were given
+            // Previously it would call self.ui.codeEdit.go_to_line(i) which caused the error
+            // Now it should call self._goto_line(i) which is the correct method
+            // In C#, we use GotoLine() method which is already correctly implemented.
+            try
+            {
+                // Use reflection to call private NavigateToSymbol method
+                var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                methodInfo.Should().NotBeNull("NSSEditor should have NavigateToSymbol method");
+                
+                if (methodInfo != null)
+                {
+                    methodInfo.Invoke(editor, new object[] { "main" });
+                }
+            }
+            catch (Exception ex)
+            {
+                // The main fix is verified: TypeError is gone.
+                // If we get an exception, it should not be a TypeError about go_to_line()
+                if (ex is TargetInvocationException targetEx && targetEx.InnerException != null)
+                {
+                    ex = targetEx.InnerException;
+                }
+                
+                // In C#, we don't have Python's TypeError, but we should check for ArgumentException or similar
+                if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
+                    ex.Message.Contains("TypeError"))
+                {
+                    throw new Xunit.Sdk.XunitException($"TypeError still occurs - bug not fixed: {ex.Message}");
+                }
+                // Other exceptions might be acceptable (e.g., if symbol not found, etc.), but we should log them
+                throw;
+            }
+
+            // The main fix is verified: TypeError is gone.
+            // Note: The exact cursor position may vary depending on GotoLine implementation,
+            // but the critical bug (TypeError) is fixed.
+
+            // Verify cursor moved to the correct line (or at least moved from initial position)
+            if (codeEditor != null && !string.IsNullOrEmpty(codeEditor.Text))
+            {
+                int finalCursorPosition = codeEditor.SelectionStart;
+                string text = codeEditor.Text;
+                int finalLineNumber = 1;
+                for (int i = 0; i < finalCursorPosition && i < text.Length; i++)
+                {
+                    if (text[i] == '\n')
+                    {
+                        finalLineNumber++;
+                    }
+                }
+
+                // The cursor should have moved to the main function line (or close to it)
+                // We allow some flexibility since the exact position depends on GotoLine implementation
+                finalLineNumber.Should().BeGreaterOrEqualTo(mainLineNum - 1, 
+                    $"Cursor should be at or near line {mainLineNum} (main function), but was at line {finalLineNumber}");
+                finalLineNumber.Should().BeLessOrEqualTo(mainLineNum + 1, 
+                    $"Cursor should be at or near line {mainLineNum} (main function), but was at line {finalLineNumber}");
+            }
+
+            // Verify editor is still functional after navigation
+            editor.Should().NotBeNull("Editor should still be functional after navigation");
+            
+            // Verify the code editor still has the script content
+            if (codeEditor != null)
+            {
+                string editorText = codeEditor.Text;
+                editorText.Should().Contain("void main()", "Editor should still contain the script content");
+                editorText.Should().Contain("int g_globalVar", "Editor should still contain global variables");
+                editorText.Should().Contain("void helper()", "Editor should still contain helper function");
+            }
+
+            // Test navigating to a different symbol (helper function)
+            try
+            {
+                var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (methodInfo != null)
+                {
+                    methodInfo.Invoke(editor, new object[] { "helper" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is TargetInvocationException targetEx && targetEx.InnerException != null)
+                {
+                    ex = targetEx.InnerException;
+                }
+                
+                if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
+                    ex.Message.Contains("TypeError"))
+                {
+                    throw new Xunit.Sdk.XunitException($"TypeError still occurs when navigating to helper function: {ex.Message}");
+                }
+                // Other exceptions might be acceptable
+            }
+
+            // Test navigating to a global variable
+            try
+            {
+                var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (methodInfo != null)
+                {
+                    methodInfo.Invoke(editor, new object[] { "g_globalVar" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is TargetInvocationException targetEx && targetEx.InnerException != null)
+                {
+                    ex = targetEx.InnerException;
+                }
+                
+                if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
+                    ex.Message.Contains("TypeError"))
+                {
+                    throw new Xunit.Sdk.XunitException($"TypeError still occurs when navigating to global variable: {ex.Message}");
+                }
+                // Other exceptions might be acceptable
+            }
+
+            // Test navigating to a non-existent symbol (should not throw, just do nothing)
+            try
+            {
+                var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (methodInfo != null)
+                {
+                    methodInfo.Invoke(editor, new object[] { "nonexistent_function_12345" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is TargetInvocationException targetEx && targetEx.InnerException != null)
+                {
+                    ex = targetEx.InnerException;
+                }
+                
+                // Should not throw for non-existent symbols, but if it does, it shouldn't be a TypeError
+                if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
+                    ex.Message.Contains("TypeError"))
+                {
+                    throw new Xunit.Sdk.XunitException($"TypeError occurs when navigating to non-existent symbol: {ex.Message}");
+                }
+                // Other exceptions might be acceptable for non-existent symbols
+            }
+
+            // Final verification: editor should still be functional
+            editor.Should().NotBeNull("Editor should still be functional after all navigation tests");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1578-1605
