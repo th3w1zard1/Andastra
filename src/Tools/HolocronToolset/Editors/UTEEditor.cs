@@ -929,5 +929,433 @@ namespace HolocronToolset.Editors
         {
             Save();
         }
+
+        // Setup context menus for file resource fields (scripts and creatures)
+        // Based on PyKotor implementation: self._installation.setup_file_context_menu(...)
+        // Provides right-click menus to open, create, or view referenced files
+        private void SetupFileContextMenus()
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Setup context menus for script ComboBoxes (NSS/NCS files)
+            SetupScriptComboBoxContextMenu(_onEnterSelect, "OnEnter Script");
+            SetupScriptComboBoxContextMenu(_onExitSelect, "OnExit Script");
+            SetupScriptComboBoxContextMenu(_onExhaustedEdit, "OnExhausted Script");
+            SetupScriptComboBoxContextMenu(_onHeartbeatSelect, "OnHeartbeat Script");
+            SetupScriptComboBoxContextMenu(_onUserDefinedSelect, "OnUserDefined Script");
+
+            // Setup context menu for creature table (UTP files)
+            SetupCreatureTableContextMenu();
+        }
+
+        // Create context menu for script ComboBox controls
+        // Allows opening existing scripts in editor, creating new scripts, or viewing resource details
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open in Editor" menu item - opens the script if it exists
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in Editor",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
+            menuItems.Add(openInEditorItem);
+
+            // Enable/disable based on whether script name is set
+            comboBox.TextChanged += (sender, e) =>
+            {
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(comboBox.Text);
+            };
+
+            // "Create New Script" menu item - creates a new NSS file
+            var createNewItem = new MenuItem
+            {
+                Header = "Create New Script"
+            };
+            createNewItem.Click += (sender, e) => CreateNewScript(comboBox, scriptTypeName);
+            menuItems.Add(createNewItem);
+
+            // Separator
+            menuItems.Add(new Separator());
+
+            // "View Resource Location" menu item - shows where the script is located
+            var viewLocationItem = new MenuItem
+            {
+                Header = "View Resource Location",
+                IsEnabled = false
+            };
+            viewLocationItem.Click += (sender, e) => ViewScriptResourceLocation(comboBox, scriptTypeName);
+            menuItems.Add(viewLocationItem);
+
+            // Enable/disable based on whether script name is set
+            comboBox.TextChanged += (sender, e) =>
+            {
+                viewLocationItem.IsEnabled = !string.IsNullOrWhiteSpace(comboBox.Text);
+            };
+
+            contextMenu.Items.AddRange(menuItems);
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        // Open the script referenced in the ComboBox in an appropriate editor
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null)
+            {
+                return;
+            }
+
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return;
+            }
+
+            try
+            {
+                // Try to find the script resource (NSS source preferred, fallback to NCS)
+                var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
+                ResourceType resourceType = ResourceType.NSS;
+                
+                if (resourceResult == null)
+                {
+                    // Try compiled version
+                    resourceResult = _installation.Resource(scriptName, ResourceType.NCS, null);
+                    resourceType = ResourceType.NCS;
+                }
+
+                if (resourceResult == null)
+                {
+                    // Resource not found - show message or create new
+                    System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                    // Optionally create new script here
+                    return;
+                }
+
+                // Open the script in the NSS editor
+                var fileResource = new FileResource(
+                    scriptName,
+                    resourceType,
+                    resourceResult.Data.Length,
+                    0,
+                    resourceResult.FilePath
+                );
+
+                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error opening script '{scriptName}': {ex.Message}");
+            }
+        }
+
+        // Create a new script file and open it in the editor
+        private void CreateNewScript(ComboBox comboBox, string scriptTypeName)
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Generate a default script name if not already set
+                string scriptName = comboBox.Text?.Trim();
+                if (string.IsNullOrEmpty(scriptName))
+                {
+                    // Generate based on encounter resref and script type
+                    string baseName = !string.IsNullOrEmpty(_resrefEdit?.Text) 
+                        ? _resrefEdit.Text 
+                        : "m00xx_enc_000";
+                    scriptName = $"{baseName}_{scriptTypeName.ToLowerInvariant().Replace(" ", "_")}";
+                }
+
+                // Limit to 16 characters (ResRef max length)
+                if (scriptName.Length > 16)
+                {
+                    scriptName = scriptName.Substring(0, 16);
+                }
+
+                // Create a new NSS editor with empty content
+                var nssEditor = new NSSEditor(this, _installation);
+                nssEditor.New();
+                
+                // Show the editor - user will set the resref when saving
+                HolocronToolset.Utils.WindowUtils.AddWindow(nssEditor, show: true);
+
+                // Update the combo box with the suggested script name
+                // User can change this before saving
+                comboBox.Text = scriptName;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error creating new script: {ex.Message}");
+            }
+        }
+
+        // View the location/details of the script resource
+        private void ViewScriptResourceLocation(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null)
+            {
+                return;
+            }
+
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return;
+            }
+
+            try
+            {
+                // Find the script resource
+                var locations = _installation.Locations(
+                    new List<ResourceIdentifier> { new ResourceIdentifier(scriptName, ResourceType.NSS) },
+                    null,
+                    null);
+
+                if (locations.Count > 0 && locations.ContainsKey(new ResourceIdentifier(scriptName, ResourceType.NSS)) &&
+                    locations[new ResourceIdentifier(scriptName, ResourceType.NSS)].Count > 0)
+                {
+                    var location = locations[new ResourceIdentifier(scriptName, ResourceType.NSS)][0];
+                    System.Console.WriteLine($"Script '{scriptName}' found at: {location.FilePath}");
+                    // TODO: Show dialog with resource location details when MessageBox/dialog system is available
+                }
+                else
+                {
+                    // Try compiled version
+                    locations = _installation.Locations(
+                        new List<ResourceIdentifier> { new ResourceIdentifier(scriptName, ResourceType.NCS) },
+                        null,
+                        null);
+
+                    if (locations.Count > 0 && locations.ContainsKey(new ResourceIdentifier(scriptName, ResourceType.NCS)) &&
+                        locations[new ResourceIdentifier(scriptName, ResourceType.NCS)].Count > 0)
+                    {
+                        var location = locations[new ResourceIdentifier(scriptName, ResourceType.NCS)][0];
+                        System.Console.WriteLine($"Compiled script '{scriptName}' found at: {location.FilePath}");
+                        // TODO: Show dialog with resource location details when MessageBox/dialog system is available
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                        // TODO: Show dialog with "not found" message when MessageBox/dialog system is available
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error viewing script location '{scriptName}': {ex.Message}");
+            }
+        }
+
+        // Setup context menu for creature table (UTP files)
+        private void SetupCreatureTableContextMenu()
+        {
+            if (_creatureTable == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open Creature in Editor" menu item
+            var openCreatureItem = new MenuItem
+            {
+                Header = "Open Creature in Editor",
+                IsEnabled = false
+            };
+            openCreatureItem.Click += (sender, e) => OpenCreatureInEditor();
+            menuItems.Add(openCreatureItem);
+
+            // "Create New Creature" menu item
+            var createNewCreatureItem = new MenuItem
+            {
+                Header = "Create New Creature"
+            };
+            createNewCreatureItem.Click += (sender, e) => CreateNewCreature();
+            menuItems.Add(createNewCreatureItem);
+
+            // Separator
+            menuItems.Add(new Separator());
+
+            // "View Creature Resource Location" menu item
+            var viewCreatureLocationItem = new MenuItem
+            {
+                Header = "View Creature Resource Location",
+                IsEnabled = false
+            };
+            viewCreatureLocationItem.Click += (sender, e) => ViewCreatureResourceLocation();
+            menuItems.Add(viewCreatureLocationItem);
+
+            contextMenu.Items.AddRange(menuItems);
+            _creatureTable.ContextMenu = contextMenu;
+
+            // Update menu enabled state when selection changes
+            _creatureTable.SelectionChanged += (sender, e) =>
+            {
+                bool hasSelection = _creatureTable.SelectedItem != null;
+                openCreatureItem.IsEnabled = hasSelection;
+                viewCreatureLocationItem.IsEnabled = hasSelection;
+            };
+        }
+
+        // Open the selected creature in the UTP editor
+        private void OpenCreatureInEditor()
+        {
+            if (_creatureTable?.SelectedItem == null || _installation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Extract ResRef from selected row
+                var selectedItem = _creatureTable.SelectedItem;
+                var itemType = selectedItem.GetType();
+                var resRefProp = itemType.GetProperty("ResRef");
+                
+                if (resRefProp == null)
+                {
+                    return;
+                }
+
+                var resRefValue = resRefProp.GetValue(selectedItem);
+                if (resRefValue == null || string.IsNullOrEmpty(resRefValue.ToString()))
+                {
+                    return;
+                }
+
+                string creatureResRef = resRefValue.ToString().Trim();
+
+                // Find the creature resource (UTP)
+                var resourceResult = _installation.Resource(creatureResRef, ResourceType.UTP, null);
+                
+                if (resourceResult == null)
+                {
+                    System.Console.WriteLine($"Creature '{creatureResRef}' not found in installation.");
+                    return;
+                }
+
+                // Open the creature in the UTP editor
+                var fileResource = new FileResource(
+                    creatureResRef,
+                    ResourceType.UTP,
+                    resourceResult.Data.Length,
+                    0,
+                    resourceResult.FilePath
+                );
+
+                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error opening creature: {ex.Message}");
+            }
+        }
+
+        // Create a new creature file and open it in the editor
+        private void CreateNewCreature()
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Generate a default creature name based on encounter resref
+                string baseName = !string.IsNullOrEmpty(_resrefEdit?.Text) 
+                    ? _resrefEdit.Text 
+                    : "m00xx_enc_000";
+                string creatureName = $"{baseName}_cre_000";
+
+                // Limit to 16 characters (ResRef max length)
+                if (creatureName.Length > 16)
+                {
+                    creatureName = creatureName.Substring(0, 16);
+                }
+
+                // Create a new UTP editor
+                var utpEditor = new UTPEditor(this, _installation);
+                utpEditor.New();
+
+                // Show the editor
+                HolocronToolset.Utils.WindowUtils.AddWindow(utpEditor, show: true);
+
+                // Optionally add the new creature to the encounter table
+                // TODO: SIMPLIFIED - This would require updating the table's ItemsSource
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error creating new creature: {ex.Message}");
+            }
+        }
+
+        // View the location/details of the selected creature resource
+        private void ViewCreatureResourceLocation()
+        {
+            if (_creatureTable?.SelectedItem == null || _installation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Extract ResRef from selected row
+                var selectedItem = _creatureTable.SelectedItem;
+                var itemType = selectedItem.GetType();
+                var resRefProp = itemType.GetProperty("ResRef");
+                
+                if (resRefProp == null)
+                {
+                    return;
+                }
+
+                var resRefValue = resRefProp.GetValue(selectedItem);
+                if (resRefValue == null || string.IsNullOrEmpty(resRefValue.ToString()))
+                {
+                    return;
+                }
+
+                string creatureResRef = resRefValue.ToString().Trim();
+
+                // Find the creature resource location
+                var locations = _installation.Locations(
+                    new List<ResourceIdentifier> { new ResourceIdentifier(creatureResRef, ResourceType.UTP) },
+                    null,
+                    null);
+
+                if (locations.Count > 0 && locations.ContainsKey(new ResourceIdentifier(creatureResRef, ResourceType.UTP)) &&
+                    locations[new ResourceIdentifier(creatureResRef, ResourceType.UTP)].Count > 0)
+                {
+                    var location = locations[new ResourceIdentifier(creatureResRef, ResourceType.UTP)][0];
+                    System.Console.WriteLine($"Creature '{creatureResRef}' found at: {location.FilePath}");
+                    // TODO: Show dialog with resource location details when MessageBox/dialog system is available
+                }
+                else
+                {
+                    System.Console.WriteLine($"Creature '{creatureResRef}' not found in installation.");
+                    // TODO: Show dialog with "not found" message when MessageBox/dialog system is available
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error viewing creature location: {ex.Message}");
+            }
+        }
     }
 }
