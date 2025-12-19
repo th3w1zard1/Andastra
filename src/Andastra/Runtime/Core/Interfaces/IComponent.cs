@@ -5,6 +5,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe component-based entity system
     /// - Located via string references: Component system used throughout entity management
     /// - Original implementation: Entities use component-based architecture for modular functionality

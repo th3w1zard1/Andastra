@@ -55,8 +55,8 @@
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Single target framework for fastest Debug builds -->
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <!-- Target frameworks for Debug builds - include net9.0 for test project compatibility -->
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>

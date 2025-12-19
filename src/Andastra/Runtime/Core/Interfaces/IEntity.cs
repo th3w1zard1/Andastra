@@ -8,6 +8,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Entity Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe entity system
     /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
     /// - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging

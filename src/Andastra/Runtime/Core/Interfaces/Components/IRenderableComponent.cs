@@ -5,6 +5,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Renderable Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe rendering system
     /// - Located via string references: Model loading and rendering functions handle entity models
     /// - "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)

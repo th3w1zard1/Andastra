@@ -698,21 +698,9 @@ namespace Andastra.Runtime.Core.Camera
         /// </summary>
         private Vector3 GetEntityForward(Interfaces.Components.ITransformComponent transform)
         {
-            // Extract forward vector from orientation quaternion
-            // KOTOR uses Z-up, Y-forward coordinate system
-            // Forward = (0, 1, 0) rotated by orientation
-            var orientation = transform.Orientation;
-            float x = orientation.X;
-            float y = orientation.Y;
-            float z = orientation.Z;
-            float w = orientation.W;
-
-            // Rotate (0, 1, 0) by quaternion
-            return new Vector3(
-                2.0f * (x * z + w * y),
-                1.0f - 2.0f * (x * x + z * z),
-                2.0f * (y * z - w * x)
-            );
+            // ITransformComponent has Forward property directly
+            // Use the Forward property which is computed from Facing angle
+            return transform.Forward;
         }
 
         /// <summary>
@@ -720,19 +708,9 @@ namespace Andastra.Runtime.Core.Camera
         /// </summary>
         private Vector3 GetEntityRight(Interfaces.Components.ITransformComponent transform)
         {
-            // Right = (1, 0, 0) rotated by orientation
-            var orientation = transform.Orientation;
-            float x = orientation.X;
-            float y = orientation.Y;
-            float z = orientation.Z;
-            float w = orientation.W;
-
-            // Rotate (1, 0, 0) by quaternion
-            return new Vector3(
-                1.0f - 2.0f * (y * y + z * z),
-                2.0f * (x * y - w * z),
-                2.0f * (x * z + w * y)
-            );
+            // ITransformComponent has Right property directly
+            // Use the Right property which is computed from Facing angle
+            return transform.Right;
         }
 
         /// <summary>
@@ -740,12 +718,12 @@ namespace Andastra.Runtime.Core.Camera
         /// </summary>
         private Vector3 GetEntityUp(Interfaces.Components.ITransformComponent transform)
         {
-            // Up = (0, 0, 1) rotated by orientation
-            var orientation = transform.Orientation;
-            float x = orientation.X;
-            float y = orientation.Y;
-            float z = orientation.Z;
-            float w = orientation.W;
+            // Compute up vector from forward and right using cross product
+            // Up = Forward × Right (right-handed coordinate system)
+            Vector3 forward = transform.Forward;
+            Vector3 right = transform.Right;
+            return Vector3.Cross(forward, right);
+        }
 
             // Rotate (0, 0, 1) by quaternion
             return new Vector3(

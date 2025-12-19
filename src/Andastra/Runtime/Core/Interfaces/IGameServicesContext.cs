@@ -10,6 +10,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Game Services Context:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
     /// - Based on swkotor2.exe script execution context system
     /// - Located via string references: Script execution context provides access to game systems
     /// - Original implementation: NWScript execution context (IExecutionContext) provides access to game services

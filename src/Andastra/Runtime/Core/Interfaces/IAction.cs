@@ -7,6 +7,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Action Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe action system
     /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
     /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)

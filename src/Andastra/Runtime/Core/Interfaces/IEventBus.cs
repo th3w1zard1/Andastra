@@ -8,6 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Event Bus Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
     /// - Based on swkotor2.exe script event system
     /// - Located via string references: Script event constants (EVENT_ON_*, CSWSSCRIPTEVENT_EVENTTYPE_*)
     /// - Subscribe/Unsubscribe: Register/unregister event handlers for specific event types

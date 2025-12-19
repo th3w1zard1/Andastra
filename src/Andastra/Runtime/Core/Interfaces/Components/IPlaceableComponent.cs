@@ -5,6 +5,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Placeable Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe placeable system
     /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
     /// - Script hooks: "OnUsed" @ 0x007be1c4, "ScriptOnUsed" @ 0x007beeb8

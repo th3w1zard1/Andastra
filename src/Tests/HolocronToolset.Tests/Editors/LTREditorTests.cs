@@ -616,24 +616,37 @@ namespace HolocronToolset.Tests.Editors
             var editor = new LTREditor(null, null);
             editor.New();
 
-            // Get initial state
+            // Get initial state - check if alternating row style is applied
             var tableSinglesField = editor.GetType().GetField("_tableSingles", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (tableSinglesField?.GetValue(editor) is Avalonia.Controls.DataGrid table)
             {
-                // TODO: AlternatingRowBackground property removed in newer Avalonia versions
-                // var initialState = table.AlternatingRowBackground != null;
+                // Get the _alternateRowColorsEnabled field to check initial state
+                var alternateRowColorsEnabledField = editor.GetType().GetField("_alternateRowColorsEnabled",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                bool initialState = alternateRowColorsEnabledField?.GetValue(editor) is bool initial && initial;
+
+                // Verify initial state is false
+                initialState.Should().BeFalse("Alternate row colors should be disabled initially");
 
                 // Toggle alternate row colors
                 editor.ToggleAlternateRowColors();
 
-                // TODO: AlternatingRowBackground property removed in newer Avalonia versions
                 // Verify state changed
-                // (table.AlternatingRowBackground != null).Should().NotBe(initialState);
+                bool newState = alternateRowColorsEnabledField?.GetValue(editor) is bool ns && ns;
+                newState.Should().BeTrue("Alternate row colors should be enabled after toggle");
+                newState.Should().NotBe(initialState, "State should have changed");
+
+                // Verify style was added to table
+                table.Styles.Count.Should().BeGreaterThan(0, "Style should be added to table");
 
                 // Toggle back
                 editor.ToggleAlternateRowColors();
-                // (table.AlternatingRowBackground != null).Should().Be(initialState);
+
+                // Verify state changed back
+                bool finalState = alternateRowColorsEnabledField?.GetValue(editor) is bool fs && fs;
+                finalState.Should().BeFalse("Alternate row colors should be disabled after second toggle");
+                finalState.Should().Be(initialState, "State should match initial state");
             }
         }
 

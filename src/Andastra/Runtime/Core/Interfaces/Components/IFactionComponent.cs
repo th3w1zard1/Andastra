@@ -5,6 +5,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Faction Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe faction system
     /// - Located via string references: "repute.2da" @ 0x007c0a28 (faction reputation table)
     /// - "Faction" @ 0x007c0ca0, "FactionID" @ 0x007c40b4, "FactionName" @ 0x007c2900

@@ -8,6 +8,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Navigation Mesh Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe walkmesh/navigation system
     /// - Located via string references: "BWM V1.0" @ 0x007c061c (BWM format signature), "BWM" (walkmesh format), walkmesh-related functions
     /// - BWM format: Binary walkmesh format (WOK = area walkmesh, PWK = placeable walkmesh, DWK = door walkmesh)

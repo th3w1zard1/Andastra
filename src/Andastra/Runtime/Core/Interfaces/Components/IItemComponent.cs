@@ -8,6 +8,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Item Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe item system
     /// - Located via string references: "Item" @ 0x007bc550 (item object type), "Item List" @ 0x007bd028 (item list field)
     /// - "BaseItem" @ 0x007c0a78 (base item ID field), "ItemType" @ 0x007c437c (item type field)

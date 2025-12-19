@@ -575,7 +575,7 @@ namespace HolocronToolset.Tests.Editors
                 var (data, _) = editor.Build();
                 var modifiedGff = GFF.FromBytes(data);
                 var modifiedUte = UTEHelpers.ConstructUte(modifiedGff);
-                modifiedUte.Creatures.Count.Should().BeGreaterOrEqualTo(initialCount + 1);
+                modifiedUte.Creatures.Count.Should().BeGreaterThanOrEqualTo(initialCount + 1);
                 if (modifiedUte.Creatures.Count > 0)
                 {
                     modifiedUte.Creatures[modifiedUte.Creatures.Count - 1].ResRef.ToString().Should().Be("test_creature");

@@ -5,6 +5,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Door Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe door system
     /// - Located via string references: "Door" @ 0x007bc538, "Door List" @ 0x007bd270
     /// - "LinkedTo" @ 0x007c13a0, "LinkedToModule" @ 0x007bd7bc (door transition links)

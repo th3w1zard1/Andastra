@@ -71,5 +71,13 @@ namespace HolocronToolset.Data
         {
             SetValue("Installations", installations);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:358
+        // Original: showPreviewUTC: SettingsProperty[bool] = Settings.addSetting("showPreviewUTC", ...)
+        public bool ShowPreviewUTC
+        {
+            get => GetValue<bool>("showPreviewUTC", false);
+            set => SetValue("showPreviewUTC", value);
+        }
     }
 }

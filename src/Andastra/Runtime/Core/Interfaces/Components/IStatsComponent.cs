@@ -7,6 +7,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Stats Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe stats system
     /// - Located via string references: "CurrentHP" @ 0x007c1b40, "Max_HPs" @ 0x007cb714, "ArmorClassColumn" @ 0x007c1230, "ArmorClass" @ 0x007c0b10
     /// - HP fields: "CurrentHP" @ 0x007c1b40 (current HP field), "Max_HPs" @ 0x007cb714 (max HP field)

@@ -9,6 +9,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Upgrade Screen Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe upgrade screen system
     /// - Located via string references: "upgradeitems_p" @ 0x007d09e4, "BTN_UPGRADEITEM" @ 0x007d09d4
     /// - "BTN_UPGRADEITEMS" @ 0x007d0b58, "BTN_CREATEITEMS" @ 0x007d0b48

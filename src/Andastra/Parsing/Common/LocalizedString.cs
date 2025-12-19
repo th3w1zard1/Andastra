@@ -280,6 +280,12 @@ namespace Andastra.Parsing.Common
             return Get(LanguageExtensions.FromValue(language), Gender.Male, useFallback);
         }
 
+        // Convenience method for tests - alias for Get(Language, Gender)
+        public string GetString(Language language, Gender gender, bool useFallback = false)
+        {
+            return Get(language, gender, useFallback);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/language.py:704-749
         // Original: def remove(self, language: Language | int, gender: Gender | int) -> None:
         public void Remove(Language language, Gender gender)

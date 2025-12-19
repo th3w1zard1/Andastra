@@ -21,6 +21,8 @@ namespace HolocronToolset.Editors
     {
         private UTC _utc;
         private HTInstallation _installation;
+        private UTCEditorSettings _settings;
+        private static GlobalSettings _globalSettings;
 
         // UI Controls - Basic
         private TextBox _firstNameEdit;
@@ -110,6 +112,8 @@ namespace HolocronToolset.Editors
             _installation = installation;
             _utc = new UTC();
             _scriptFields = new Dictionary<string, TextBox>();
+            _settings = new UTCEditorSettings();
+            _globalSettings = new GlobalSettings();
 
             InitializeComponent();
             SetupUI();
@@ -858,5 +862,12 @@ namespace HolocronToolset.Editors
         {
             Save();
         }
+
+        // Expose Settings for testing (matching Python implementation)
+        public UTCEditorSettings Settings => _settings;
+
+        // Expose GlobalSettings for testing (matching Python implementation)
+        public GlobalSettings GlobalSettings => _globalSettings;
     }
 }
+

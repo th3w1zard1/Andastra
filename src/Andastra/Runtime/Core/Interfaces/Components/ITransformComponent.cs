@@ -7,6 +7,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Transform Component Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe entity transform system
     /// - Located via string references: "XPosition" @ 0x007bd000, "YPosition" @ 0x007bd00c, "ZPosition" @ 0x007bd018
     ///   "XOrientation" @ 0x007bcfb8, "YOrientation" @ 0x007bcfc8, "ZOrientation" @ 0x007bcfd8

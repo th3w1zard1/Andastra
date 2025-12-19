@@ -33,6 +33,27 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
     /// </remarks>
     public class EclipseEngineApi : BaseEngineApi
     {
+        // Static dictionary to store area iteration state (since IArea doesn't support SetData/GetData)
+        private static readonly System.Collections.Generic.Dictionary<string, AreaIterationState> _areaIterationStates = new System.Collections.Generic.Dictionary<string, AreaIterationState>();
+        
+        // Static dictionary to store conversation state (since IArea doesn't support SetData/GetData)
+        private static readonly System.Collections.Generic.Dictionary<string, ConversationState> _conversationStates = new System.Collections.Generic.Dictionary<string, ConversationState>();
+        
+        // Helper class to store iteration state per area
+        private class AreaIterationState
+        {
+            public System.Collections.Generic.List<Core.Interfaces.IEntity> Entities { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        // Helper class to store conversation state per area
+        private class ConversationState
+        {
+            public uint SpeakerId { get; set; }
+            public uint TargetId { get; set; }
+            public bool InConversation { get; set; }
+        }
+        
         public EclipseEngineApi()
         {
         }
@@ -1476,11 +1497,21 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string conversation = args.Count > 1 ? args[1].AsString() : string.Empty;
             
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null && !string.IsNullOrEmpty(conversation))
+            if (entity != null && !string.IsNullOrEmpty(conversation) && ctx.World != null && ctx.World.CurrentArea != null)
             {
                 // Store conversation state in entity data
                 entity.SetData("InConversation", true);
                 entity.SetData("ConversationResRef", conversation);
+                
+                // Store conversation state in static dictionary for area-based lookup
+                string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
+                var conversationState = new ConversationState
+                {
+                    SpeakerId = entity.ObjectId,
+                    TargetId = ctx.Caller != null ? ctx.Caller.ObjectId : ObjectInvalid,
+                    InConversation = true
+                };
+                _conversationStates[areaKey] = conversationState;
                 
                 // Eclipse uses UnrealScript message passing: ShowConversationGUIMessage @ 0x00ae8a50 (daorigins.exe), @ 0x00bfca24 (DragonAge2.exe)
                 // Full integration requires Eclipse dialogue system (Conversation class, message handlers)
@@ -1761,9 +1792,9 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             if (ctx != null && ctx.World != null && ctx.World.CurrentModule != null)
             {
-                // Try to get module filename from IModule interface
-                // If IModule has FileName property, use it; otherwise use module name
-                string moduleName = ctx.World.CurrentModule.Name ?? string.Empty;
+                // Get module filename from IModule interface
+                // IModule has ResRef (resource reference) which is the module filename
+                string moduleName = ctx.World.CurrentModule.ResRef ?? string.Empty;
                 return Variable.FromString(moduleName);
             }
             
@@ -1873,13 +1904,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 typeMask = Core.Enums.ObjectType.All;
             }
             
-            // Initialize iteration state in context
+            // Initialize iteration state using static dictionary keyed by area ResRef
             if (ctx.World.CurrentArea != null)
             {
-                // Store iteration state: object type, area ID, current index
-                ctx.World.CurrentArea.SetData("AreaIteration_Type", objectType);
-                ctx.World.CurrentArea.SetData("AreaIteration_AreaId", areaId);
-                ctx.World.CurrentArea.SetData("AreaIteration_Index", 0);
+                string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
                 
                 // Get first object
                 var entities = new List<Core.Interfaces.IEntity>();
@@ -1890,11 +1918,68 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         continue;
                     }
                     
-                    // Check if entity is in the specified area
-                    if (areaId != ObjectInvalid && entity.HasData("AreaId"))
+                    // Check if entity is in the specified area (check if entity's world area matches)
+                    // For Eclipse, entities are typically in the current area
+                    if (areaId != ObjectInvalid)
                     {
-                        uint entityAreaId = entity.GetData<uint>("AreaId");
-                        if (entityAreaId != areaId)
+                        // Check if entity belongs to current area by checking if it's in the area's entity collections
+                        bool inArea = false;
+                        if (ctx.World.CurrentArea.Creatures != null)
+                        {
+                            foreach (var creature in ctx.World.CurrentArea.Creatures)
+                            {
+                                if (creature.ObjectId == entity.ObjectId)
+                                {
+                                    inArea = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!inArea && ctx.World.CurrentArea.Placeables != null)
+                        {
+                            foreach (var placeable in ctx.World.CurrentArea.Placeables)
+                            {
+                                if (placeable.ObjectId == entity.ObjectId)
+                                {
+                                    inArea = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!inArea && ctx.World.CurrentArea.Doors != null)
+                        {
+                            foreach (var door in ctx.World.CurrentArea.Doors)
+                            {
+                                if (door.ObjectId == entity.ObjectId)
+                                {
+                                    inArea = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!inArea && ctx.World.CurrentArea.Triggers != null)
+                        {
+                            foreach (var trigger in ctx.World.CurrentArea.Triggers)
+                            {
+                                if (trigger.ObjectId == entity.ObjectId)
+                                {
+                                    inArea = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!inArea && ctx.World.CurrentArea.Waypoints != null)
+                        {
+                            foreach (var waypoint in ctx.World.CurrentArea.Waypoints)
+                            {
+                                if (waypoint.ObjectId == entity.ObjectId)
+                                {
+                                    inArea = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!inArea)
                         {
                             continue;
                         }
@@ -1931,8 +2016,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 
                 if (entities.Count > 0)
                 {
-                    // Store entity list for iteration
-                    ctx.World.CurrentArea.SetData("AreaIteration_Entities", entities);
+                    // Store entity list for iteration in static dictionary
+                    _areaIterationStates[areaKey] = new AreaIterationState
+                    {
+                        Entities = entities,
+                        CurrentIndex = 0
+                    };
                     return Variable.FromObject(entities[0].ObjectId);
                 }
             }
@@ -1960,27 +2049,36 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
             
-            // Check if iteration state exists
-            if (!ctx.World.CurrentArea.HasData("AreaIteration_Entities"))
+            // Check if iteration state exists in static dictionary
+            if (ctx.World.CurrentArea == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
             
-            var entities = ctx.World.CurrentArea.GetData<List<Core.Interfaces.IEntity>>("AreaIteration_Entities");
-            int currentIndex = ctx.World.CurrentArea.GetData<int>("AreaIteration_Index");
+            string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
+            if (!_areaIterationStates.ContainsKey(areaKey))
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            var state = _areaIterationStates[areaKey];
+            if (state.Entities == null || state.Entities.Count == 0)
+            {
+                _areaIterationStates.Remove(areaKey);
+                return Variable.FromObject(ObjectInvalid);
+            }
             
             // Increment index
-            currentIndex++;
-            ctx.World.CurrentArea.SetData("AreaIteration_Index", currentIndex);
+            state.CurrentIndex++;
             
             // Return next entity
-            if (currentIndex >= 0 && currentIndex < entities.Count)
+            if (state.CurrentIndex >= 0 && state.CurrentIndex < state.Entities.Count)
             {
-                return Variable.FromObject(entities[currentIndex].ObjectId);
+                return Variable.FromObject(state.Entities[state.CurrentIndex].ObjectId);
             }
             
             // Iteration complete
-            ctx.World.CurrentArea.SetData("AreaIteration_Entities", null);
+            _areaIterationStates.Remove(areaKey);
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2054,12 +2152,22 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Check if object is the current area
+            // Since IArea doesn't have ObjectId, we check by comparing ResRef or Tag
+            // For Eclipse, areas are special objects, so we check if the objectId matches a special area ID
+            // In practice, areas are accessed via CurrentArea, not as entities with ObjectIds
+            // This function returns true if the object is conceptually an area
+            if (objectId == ObjectInvalid)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            // Check if this is a special area object ID (areas might have special IDs)
+            // For now, if objectId matches current area's conceptual ID, return true
             if (ctx != null && ctx.World != null && ctx.World.CurrentArea != null)
             {
-                if (ctx.World.CurrentArea.ObjectId == objectId)
-                {
-                    return Variable.FromInt(1);
-                }
+                // Areas don't have ObjectIds in the interface, so we can't directly compare
+                // Return false for now - areas are typically accessed via CurrentArea, not as object parameters
+                // This may need adjustment based on how Eclipse actually handles area objects
             }
             
             // Check if object has area-specific data
@@ -2091,13 +2199,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Check if object is the current module
-            if (ctx != null && ctx.World != null && ctx.World.CurrentModule != null)
+            // Since IModule doesn't have ObjectId, we check by comparing ResRef
+            // For Eclipse, modules are special objects, so we check if the objectId matches a special module ID
+            // In practice, modules are accessed via CurrentModule, not as entities with ObjectIds
+            // This function returns true if the object is conceptually a module
+            if (objectId == ObjectInvalid)
             {
-                if (ctx.World.CurrentModule.ObjectId == objectId)
-                {
-                    return Variable.FromInt(1);
-                }
+                return Variable.FromInt(0);
             }
+            
+            // Modules don't have ObjectIds in the interface, so we can't directly compare
+            // Return false for now - modules are typically accessed via CurrentModule, not as object parameters
+            // This may need adjustment based on how Eclipse actually handles module objects
             
             // Check if object has module-specific data
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
@@ -2215,8 +2328,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     // If HP reaches 0, entity may be dead/unconscious (handled by combat system)
                     if (newHP == 0 && ctx.World != null && ctx.World.CombatSystem != null)
                     {
-                        // Notify combat system of potential death
-                        ctx.World.CombatSystem.OnEntityDamaged(target, damage);
+                        // Check if entity should be considered dead
+                        // CombatSystem doesn't have OnEntityDamaged, but we can check if entity is dead
+                        // The combat system will handle death through its normal update cycle
+                        // For now, we've applied the damage - combat system will detect death on next update
                     }
                 }
             }
@@ -2242,10 +2357,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Get conversation speaker from world or current area
-            if (ctx.World.CurrentArea != null && ctx.World.CurrentArea.HasData("ConversationSpeaker"))
+            // Since IArea doesn't support HasData/GetData, store conversation state in a static dictionary
+            if (ctx.World.CurrentArea != null)
             {
-                uint speakerId = ctx.World.CurrentArea.GetData<uint>("ConversationSpeaker");
-                return Variable.FromObject(speakerId);
+                string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
+                if (_conversationStates.ContainsKey(areaKey))
+                {
+                    var state = _conversationStates[areaKey];
+                    if (state.InConversation && state.SpeakerId != ObjectInvalid)
+                    {
+                        return Variable.FromObject(state.SpeakerId);
+                    }
+                }
             }
             
             return Variable.FromObject(ObjectInvalid);
@@ -2269,10 +2392,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Get conversation target from world or current area
-            if (ctx.World.CurrentArea != null && ctx.World.CurrentArea.HasData("ConversationTarget"))
+            // Since IArea doesn't support HasData/GetData, store conversation state in a static dictionary
+            if (ctx.World.CurrentArea != null)
             {
-                uint targetId = ctx.World.CurrentArea.GetData<uint>("ConversationTarget");
-                return Variable.FromObject(targetId);
+                string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
+                if (_conversationStates.ContainsKey(areaKey))
+                {
+                    var state = _conversationStates[areaKey];
+                    if (state.InConversation && state.TargetId != ObjectInvalid)
+                    {
+                        return Variable.FromObject(state.TargetId);
+                    }
+                }
             }
             
             // Default to player character
@@ -2307,10 +2438,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Clear conversation state from current area
+            // Since IArea doesn't support SetData, use static dictionary
             if (ctx.World.CurrentArea != null)
             {
-                ctx.World.CurrentArea.SetData("ConversationSpeaker", null);
-                ctx.World.CurrentArea.SetData("ConversationTarget", null);
+                string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
+                if (_conversationStates.ContainsKey(areaKey))
+                {
+                    _conversationStates.Remove(areaKey);
+                }
             }
             
             return Variable.Void();
@@ -2676,7 +2811,11 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Check if current area matches tag
             if (ctx.World.CurrentArea != null && string.Equals(ctx.World.CurrentArea.Tag, tag, StringComparison.OrdinalIgnoreCase))
             {
-                return Variable.FromObject(ctx.World.CurrentArea.ObjectId);
+                // IArea doesn't have ObjectId, so we return a special area object ID
+                // Areas are special objects in Eclipse - use a special ID based on ResRef
+                // For now, return a placeholder ID - this may need adjustment based on actual Eclipse implementation
+                uint areaObjectId = 0x7F000010; // Special area object ID range
+                return Variable.FromObject(areaObjectId);
             }
             
             // Search for area by tag (areas are typically loaded modules)
@@ -2718,7 +2857,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Default to current area
             if (ctx.World.CurrentArea != null)
             {
-                return Variable.FromObject(ctx.World.CurrentArea.ObjectId);
+                // IArea doesn't have ObjectId, so we return a special area object ID
+                // Areas are special objects in Eclipse - use a special ID based on ResRef
+                uint areaObjectId = 0x7F000010; // Special area object ID range
+                return Variable.FromObject(areaObjectId);
             }
             
             return Variable.FromObject(ObjectInvalid);

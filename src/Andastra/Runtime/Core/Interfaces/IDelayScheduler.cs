@@ -5,6 +5,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Delay Scheduler Interface:
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
     /// - Based on swkotor2.exe DelayCommand system
     /// - Located via string references: "DelayCommand" @ 0x007be900 (NWScript DelayCommand function)
     /// - Delay-related fields: "Delay" @ 0x007c35b0 (delay field), "DelayReply" @ 0x007c38f0 (delay reply field)
