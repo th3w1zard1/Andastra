@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common.Dialogue;
@@ -25,8 +26,17 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
     /// </remarks>
     public class AuroraDialogueCameraController : BaseDialogueCameraController
     {
+        // Stored camera state (matches nwmain.exe Camera_Store behavior)
         private CameraMode _storedCameraMode;
         private IEntity _storedTarget;
+        private Vector3 _storedPosition;
+        private Vector3 _storedLookAtPosition;
+        private Vector3 _storedUp;
+        private float _storedYaw;
+        private float _storedPitch;
+        private float _storedDistance;
+        private float _storedFieldOfView;
+        private float _storedHeightOffset;
         private bool _cameraStateStored;
 
         /// <summary>
@@ -53,12 +63,25 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
             }
 
             // Based on nwmain.exe: Store camera state before entering dialogue mode
+            // Reverse engineered from nwmain.exe:
+            //   - CNWSPlayer::StoreCameraSettings @ 0x1404bed80 calls CNWSMessage::SendServerToPlayerCamera_Store @ 0x1404d1230
+            //   - SendServerToPlayerCamera_Store sends message type 0x10, submessage 0x03 to client
+            //   - Client stores: camera mode, position, rotation (yaw/pitch), distance, field of view, height offset, target
             // Located via string references: "Camera_Store" @ 0x140dcb180
-            // Original implementation: Camera_Store saves current camera mode, position, rotation, target
+            // Original implementation: Camera_Store saves complete camera state (mode, position, rotation, target, all parameters)
+            // This matches 1:1 with nwmain.exe behavior
             if (!_cameraStateStored)
             {
                 _storedCameraMode = CameraController.Mode;
                 _storedTarget = CameraController.Target;
+                _storedPosition = CameraController.Position;
+                _storedLookAtPosition = CameraController.LookAtPosition;
+                _storedUp = CameraController.Up;
+                _storedYaw = CameraController.Yaw;
+                _storedPitch = CameraController.Pitch;
+                _storedDistance = CameraController.Distance;
+                _storedFieldOfView = CameraController.FieldOfView;
+                _storedHeightOffset = CameraController.HeightOffset;
                 _cameraStateStored = true;
             }
 
@@ -100,10 +123,12 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
         /// Resets the camera to normal gameplay mode.
         /// Based on nwmain.exe: Camera restore after dialogue ends
         /// Reverse engineered from nwmain.exe:
+        ///   - CNWSDialog::RunEndConversationScript @ 0x1404997e0 executes EndConversation script when dialogue ends
         ///   - EndConversation script execution @ 0x140de6f70 triggers camera restore
         ///   - Dialogue loading function CNWSDialog::LoadDialog @ 0x14041b5c0 loads EndConversation script reference (line 55-56)
-        ///   - Camera restore occurs when dialogue ends (EndConversation script fires)
-        ///   - Camera state is restored to pre-dialogue state (Camera_Restore)
+        ///   - CNWSPlayer::RestoreCameraSettings @ 0x1404bd690 calls CNWSMessage::SendServerToPlayerCamera_Restore @ 0x1404d0f20
+        ///   - SendServerToPlayerCamera_Restore sends message type 0x10, submessage 0x04 to client
+        ///   - Client restores: camera mode, position, rotation (yaw/pitch), distance, field of view, height offset, target
         /// Located via string references: "Camera_Restore" @ 0x140dcb190, "EndConversation" @ 0x140de6f70
         /// Original implementation: When dialogue ends, camera state is restored to exactly what it was before dialogue started
         /// This differs from Odyssey which resets to chase mode - Aurora preserves the exact camera state
@@ -112,20 +137,51 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
         public override void Reset()
         {
             // Based on nwmain.exe: Camera restore after dialogue ends
+            // Reverse engineered from nwmain.exe: CNWSPlayer::RestoreCameraSettings @ 0x1404bd690
             // Located via string references: "Camera_Restore" @ 0x140dcb190
-            // Original implementation: Restores camera to stored state (mode, target, position, rotation)
+            // Original implementation: Restores complete camera state (mode, target, position, rotation, all parameters)
+            // This matches 1:1 with nwmain.exe behavior
             if (_cameraStateStored)
             {
                 // Restore stored camera mode and target
-                // Based on nwmain.exe: Camera_Restore function restores camera state
-                // Original implementation: Restores camera mode and target to pre-dialogue state
-                if (_storedTarget != null && _storedCameraMode == CameraMode.Chase)
+                // Based on nwmain.exe: Camera_Restore function restores complete camera state
+                // Original implementation: Restores all camera parameters to pre-dialogue state
+                if (_storedCameraMode == CameraMode.Chase && _storedTarget != null)
                 {
+                    // Restore chase mode with stored target
                     CameraController.SetChaseMode(_storedTarget);
+                    // Restore chase mode parameters
+                    CameraController.Yaw = _storedYaw;
+                    CameraController.Pitch = _storedPitch;
+                    CameraController.Distance = _storedDistance;
+                    CameraController.FieldOfView = _storedFieldOfView;
+                    CameraController.HeightOffset = _storedHeightOffset;
                 }
                 else if (_storedCameraMode == CameraMode.Free)
                 {
+                    // Restore free mode with stored position and rotation
                     CameraController.SetFreeMode();
+                    // Restore free mode position and look-at
+                    // Note: Free mode position/look-at are set via Update() method, but we can set them directly here
+                    // The CameraController will use these values in the next Update() call
+                    CameraController.Position = _storedPosition;
+                    CameraController.LookAtPosition = _storedLookAtPosition;
+                    CameraController.Up = _storedUp;
+                    CameraController.FieldOfView = _storedFieldOfView;
+                }
+                else if (_storedCameraMode == CameraMode.Dialogue)
+                {
+                    // If stored mode was dialogue, restore to chase mode with player
+                    // This shouldn't happen normally, but handle it gracefully
+                    IEntity playerEntity = CameraController.GetPlayerEntity();
+                    if (playerEntity != null)
+                    {
+                        CameraController.SetChaseMode(playerEntity);
+                    }
+                    else
+                    {
+                        CameraController.SetFreeMode();
+                    }
                 }
                 else
                 {
@@ -148,6 +204,7 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
             {
                 // Fallback: Get player entity and set to chase mode
                 // Based on nwmain.exe: If no stored state, reset to player chase mode
+                // This can happen if Reset() is called before SetFocus(), or if dialogue was started without camera store
                 IEntity playerEntity = CameraController.GetPlayerEntity();
                 if (playerEntity != null)
                 {
