@@ -225,30 +225,45 @@ end;
 
 procedure TMainForm.ValidateGamePath;
 begin
+  // Validate game path (TSLPatcher.exe: 0x00486000+)
+  // Assembly: Validates game directory, checks for dialog.tlk file
+  // String: "Error! No valid game folder selected! Installation aborted."
+  // String: "Invalid game directory specified!"
+  // String: "Invalid game folder specified, dialog.tlk file not found! Make sure you have selected the correct folder."
+  
   if FGamePath = '' then
   begin
-    LogError('Error! No install path has been set!');
+    LogError('Error! No valid game folder selected! Installation aborted.');
     Exit;
   end;
   
   if not DirectoryExists(FGamePath) then
   begin
-    LogError(Format('Game path does not exist: %s', [FGamePath]));
+    LogError('Invalid game directory specified!');
     Exit;
   end;
   
-  // Check for game executable (TSLPatcher.exe: reverse engineered from assembly)
-  // Validate that dialog.tlk exists for TLK patching
+  // Check for game executable - validate that dialog.tlk exists for TLK patching
   if not FileExists(FGamePath + 'dialog.tlk') then
   begin
-    LogError('Invalid game folder specified, dialog.tlk file not found!');
+    LogError('Invalid game folder specified, dialog.tlk file not found! Make sure you have selected the correct folder.');
     Exit;
   end;
 end;
 
 procedure TMainForm.StartPatching;
 begin
-  LogInfo('Patch operation started...');
+  // Start patching operation (TSLPatcher.exe: 0x00486000+)
+  // Assembly: Main patching entry point, validates paths, processes patches, displays completion messages
+  // String: "&Start patching"
+  // String: "This will start patching the necessary game files. Do you want to do this?"
+  // String: "Done. Changes have been applied, but %s warnings were encountered."
+  // String: "Done. Some changes may have been applied, but %s errors were encountered!"
+  // String: "Done. Some changes may have been applied, but %s errors and %s warnings were encountered!"
+  // String: "The Installer is finished, but %s warnings were encountered! The Mod may or may not be properly installed. Please check the progress log for further details."
+  
+  // String: "Patch operation started %s..." (may include timestamp or mode)
+  LogInfo(Format('Patch operation started %s...', [TimeToStr(Now)]));
   
   // Validate paths
   ValidateGamePath;
@@ -259,7 +274,12 @@ begin
   // Process patch operations
   ProcessPatchOperations;
   
-  // Display completion message
+  // Display completion message (TSLPatcher.exe: 0x00486000+)
+  // Assembly: Determines completion status and displays appropriate message based on error/warning counts
+  // String: "The Patcher is finished. Please check the progress log for details about what has been done."
+  // String: "The Patcher is finished, but %s warnings were encountered! The Mod may or may not be properly installed. Please check the progress log for further details."
+  // String: "The Patcher is finished, but %s errors were encountered! The Mod has likely not been properly installed. Please check the progress log for further details."
+  // String: "The Patcher is finished, but %s errors and %s warnings were encountered! The Mod most likely has not been properly installed. Please check the progress log for further details."
   if FErrorCount = 0 then
   begin
     if FWarningCount = 0 then
