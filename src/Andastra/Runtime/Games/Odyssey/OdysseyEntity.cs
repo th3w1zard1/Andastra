@@ -9,7 +9,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Games.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -285,11 +285,15 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Waypoints have position data, pathfinding integration.
         /// Based on waypoint component structure in swkotor2.exe.
+        /// FUN_004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
         /// </remarks>
         private void AttachWaypointComponents()
         {
-            // TODO: Attach waypoint-specific components
-            // WaypointComponent with position and path data
+            if (!HasComponent<IWaypointComponent>())
+            {
+                var waypointComponent = new OdysseyWaypointComponent();
+                AddComponent<IWaypointComponent>(waypointComponent);
+            }
         }
 
         /// <summary>

@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Games.Aurora.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Common.Components;
 
@@ -264,11 +265,15 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Waypoints have position data, pathfinding integration.
         /// Based on waypoint component structure in nwmain.exe.
+        /// CNWSWaypoint constructor @ 0x140508d60, LoadWaypoint @ 0x140509f80, SaveWaypoint @ 0x14050a4d0
         /// </remarks>
         private void AttachWaypointComponents()
         {
-            // TODO: Attach waypoint-specific components
-            // WaypointComponent with position and path data
+            if (!HasComponent<IWaypointComponent>())
+            {
+                var waypointComponent = new AuroraWaypointComponent();
+                AddComponent<IWaypointComponent>(waypointComponent);
+            }
         }
 
         /// <summary>

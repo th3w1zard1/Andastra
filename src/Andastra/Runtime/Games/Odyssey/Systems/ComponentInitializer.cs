@@ -3,7 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Games.Odyssey.Components;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
 
@@ -122,9 +122,9 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                     break;
 
                 case ObjectType.Waypoint:
-                    if (!entity.HasComponent<WaypointComponent>())
+                    if (!entity.HasComponent<IWaypointComponent>())
                     {
-                        entity.AddComponent(new WaypointComponent());
+                        entity.AddComponent(new OdysseyWaypointComponent());
                     }
                     break;
 

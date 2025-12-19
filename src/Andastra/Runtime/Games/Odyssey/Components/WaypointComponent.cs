@@ -1,13 +1,13 @@
-using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Runtime.Games.Odyssey.Components
 {
     /// <summary>
-    /// Component for waypoint entities.
+    /// Odyssey Engine (KotOR, KotOR2) specific waypoint component implementation.
     /// </summary>
     /// <remarks>
-    /// Waypoint Component:
-    /// - Based on swkotor2.exe waypoint system
+    /// Odyssey Waypoint Component:
+    /// - Based on swkotor.exe, swkotor2.exe waypoint system
     /// - Located via string references: "WaypointList" @ 0x007bd288 (GIT waypoint list), "Waypoint" @ 0x007bc510 (waypoint entity type)
     /// - "WaypointList" @ 0x007bd060 (waypoint list variant), "STARTWAYPOINT" @ 0x007be034 (start waypoint constant)
     /// - "MapNote" @ 0x007bd10c (map note text field), "MapNoteEnabled" @ 0x007bd118 (map note enabled flag)
@@ -21,48 +21,46 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - Waypoints used for: Module transitions (LinkedTo field), script positioning, area navigation, party spawning
     /// - STARTWAYPOINT: Special waypoint tag used for module entry positioning (party spawns at STARTWAYPOINT if no TransitionDestination)
     /// - Based on UTW file format documentation in vendor/PyKotor/wiki/
+    ///
+    /// Odyssey-specific properties:
+    /// - Appearance: Appearance type (for visual representation in editor)
+    /// - Description: Localized string reference (int) for waypoint description
     /// </remarks>
-    public class WaypointComponent : IComponent
+    public class OdysseyWaypointComponent : BaseWaypointComponent
     {
-        public IEntity Owner { get; set; }
+        private int _appearance;
+        private int _description;
 
-        public void OnAttach() { }
-        public void OnDetach() { }
-
-        public WaypointComponent()
+        public OdysseyWaypointComponent()
         {
-            TemplateResRef = string.Empty;
-            MapNote = string.Empty;
+            _appearance = 0;
+            _description = 0;
         }
-
-        /// <summary>
-        /// Template resource reference.
-        /// </summary>
-        public string TemplateResRef { get; set; }
-
-        /// <summary>
-        /// Map note text.
-        /// </summary>
-        public string MapNote { get; set; }
-
-        /// <summary>
-        /// Whether the map note is enabled.
-        /// </summary>
-        public bool MapNoteEnabled { get; set; }
-
-        /// <summary>
-        /// Whether this waypoint has a map note.
-        /// </summary>
-        public bool HasMapNote { get; set; }
 
         /// <summary>
         /// Appearance type (for visual representation in editor).
         /// </summary>
-        public int Appearance { get; set; }
+        /// <remarks>
+        /// Odyssey-specific: Appearance identifier used in toolset for visual representation.
+        /// Based on Appearance field in UTW GFF structure.
+        /// </remarks>
+        public int Appearance
+        {
+            get => _appearance;
+            set => _appearance = value;
+        }
 
         /// <summary>
         /// Description (localized string reference).
         /// </summary>
-        public int Description { get; set; }
+        /// <remarks>
+        /// Odyssey-specific: Localized string reference (int) for waypoint description.
+        /// Based on Description field in UTW GFF structure.
+        /// </remarks>
+        public int Description
+        {
+            get => _description;
+            set => _description = value;
+        }
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Games.Infinity.Components;
 using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Infinity
@@ -249,8 +251,11 @@ namespace Andastra.Runtime.Games.Infinity
         /// </remarks>
         private void AttachWaypointComponents()
         {
-            // TODO: Attach waypoint-specific components
-            // WaypointComponent with position and path data
+            if (!HasComponent<IWaypointComponent>())
+            {
+                var waypointComponent = new InfinityWaypointComponent();
+                AddComponent<IWaypointComponent>(waypointComponent);
+            }
         }
 
         /// <summary>
