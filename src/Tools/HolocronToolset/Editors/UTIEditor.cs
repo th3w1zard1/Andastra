@@ -75,6 +75,8 @@ namespace HolocronToolset.Editors
         // Property to expose ItemCount for testing (matching Python's topLevelItemCount())
         public int AvailablePropertyListItemCount => _availablePropertyList?.Items?.Count ?? 0;
         public ListBox AssignedPropertiesList => _assignedPropertiesList;
+        // Property to expose ItemCount for testing (matching Python's count())
+        public int AssignedPropertiesListItemCount => _assignedPropertiesList?.Items?.Count ?? 0;
         public Button AddPropertyBtn => _addPropertyBtn;
         public Button RemovePropertyBtn => _removePropertyBtn;
         public Button EditPropertyBtn => _editPropertyBtn;
