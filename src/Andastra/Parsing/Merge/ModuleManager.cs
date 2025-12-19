@@ -10,7 +10,7 @@ using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-// TODO: TEMPORARY - Commented out Tools to fix build errors`r`n// using Andastra.Parsing.Tools;
+using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Merge
@@ -275,11 +275,10 @@ namespace Andastra.Parsing.Merge
 
             try
             {
-                // TODO: TEMPORARY - Commented out Tools to fix build errors
-                // var textures = ModelTools.IterateTextures(modelData);
-                // var lightmaps = ModelTools.IterateLightmaps(modelData);
-                // lookupTextureQueries.UnionWith(textures);
-                // lookupTextureQueries.UnionWith(lightmaps);
+                var textures = ModelTools.IterateTextures(modelData);
+                var lightmaps = ModelTools.IterateLightmaps(modelData);
+                lookupTextureQueries.UnionWith(textures);
+                lookupTextureQueries.UnionWith(lightmaps);
             }
             catch (Exception ex)
             {
@@ -369,9 +368,7 @@ namespace Andastra.Parsing.Merge
         // Original: def extract_all_resources(self, module_name: str, output_dir: str) -> None:
         public void ExtractAllResources(string moduleName, string outputDir)
         {
-                // TODO: TEMPORARY - Commented out Tools to fix build errors
-                // bool useDotMod = FileHelpers.IsModFile(moduleName);
-                bool useDotMod = false; // Temporary default
+            bool useDotMod = FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             var moduleDir = Path.Combine(outputDir, moduleName);
             Directory.CreateDirectory(moduleDir);
@@ -494,9 +491,7 @@ namespace Andastra.Parsing.Merge
         // Original: def find_missing_resources(self, module_name: str) -> None:
         public void FindMissingResources(string moduleName)
         {
-                // TODO: TEMPORARY - Commented out Tools to fix build errors
-                // bool useDotMod = FileHelpers.IsModFile(moduleName);
-                bool useDotMod = false; // Temporary default
+            bool useDotMod = FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             Console.WriteLine($"Checking for missing resources in module '{moduleName}'...");
 
@@ -526,9 +521,7 @@ namespace Andastra.Parsing.Merge
         // Original: def find_unused_resources(self, module_name: str) -> None:
         public void FindUnusedResources(string moduleName)
         {
-                // TODO: TEMPORARY - Commented out Tools to fix build errors
-                // bool useDotMod = FileHelpers.IsModFile(moduleName);
-                bool useDotMod = false; // Temporary default
+            bool useDotMod = FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             Console.WriteLine($"Checking for unused resources in module '{moduleName}'...");
 

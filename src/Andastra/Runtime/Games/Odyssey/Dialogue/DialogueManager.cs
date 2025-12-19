@@ -70,6 +70,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         private readonly PartySystem _partySystem;
         [CanBeNull]
         private readonly PlotSystem _plotSystem;
+        [CanBeNull]
+        private readonly JRLLoader _jrlLoader;
 
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -131,7 +133,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             [CanBeNull] JournalSystem journalSystem = null,
             [CanBeNull] GameDataManager gameDataManager = null,
             [CanBeNull] PartySystem partySystem = null,
-            [CanBeNull] PlotSystem plotSystem = null)
+            [CanBeNull] PlotSystem plotSystem = null,
+            [CanBeNull] JRLLoader jrlLoader = null)
             : base(vm, world, engineApi, globals)
         {
             _dialogueLoader = dialogueLoader ?? throw new ArgumentNullException("dialogueLoader");
@@ -142,6 +145,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             _gameDataManager = gameDataManager;
             _partySystem = partySystem;
             _plotSystem = plotSystem;
+            _jrlLoader = jrlLoader;
         }
 
         /// <summary>
@@ -151,6 +155,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         {
             _baseTlk = baseTlk;
             _customTlk = customTlk;
+
+            // Also set talk tables for JRL loader
+            if (_jrlLoader != null)
+            {
+                _jrlLoader.SetTalkTables(baseTlk, customTlk);
+            }
         }
 
         /// <summary>
@@ -899,21 +909,26 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 JournalEntry existingEntry = existingEntries[questEntryIndex];
                 if (existingEntry != null)
                 {
-                    // Get quest data to determine entry text
-                    QuestData quest = _journalSystem.GetQuest(questTag);
-                    string entryText = string.Empty;
+                    // Look up quest entry text from JRL file
+                    // Based on swkotor2.exe: Quest entry text is loaded from JRL files
+                    // Original implementation: Looks up text from JRL file using quest tag and entry ID
+                    string entryText = GetQuestEntryTextFromJRL(questTag, questEntryIndex);
 
-                    if (quest != null)
+                    // Fallback to quest stage data if JRL lookup fails
+                    if (string.IsNullOrEmpty(entryText))
                     {
-                        // Get text from quest stage data
-                        QuestStage stage = quest.GetStage(questEntryIndex);
-                        if (stage != null)
+                        QuestData quest = _journalSystem.GetQuest(questTag);
+                        if (quest != null)
                         {
-                            entryText = stage.Text;
+                            QuestStage stage = quest.GetStage(questEntryIndex);
+                            if (stage != null)
+                            {
+                                entryText = stage.Text;
+                            }
                         }
                     }
 
-                    // If no quest data or stage text, keep existing text
+                    // If still no text, keep existing text
                     if (string.IsNullOrEmpty(entryText))
                     {
                         entryText = existingEntry.Text ?? string.Empty;
@@ -942,25 +957,30 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 // - Updates journal UI
                 // - Notifies journal system
 
-                // Get quest data to determine entry text
-                QuestData quest = _journalSystem.GetQuest(questTag);
-                string entryText = string.Empty;
+                // Look up quest entry text from JRL file
+                // Based on swkotor2.exe: Quest entry text is loaded from JRL files
+                // Original implementation: Looks up text from JRL file using quest tag and entry ID
+                string entryText = GetQuestEntryTextFromJRL(questTag, questEntryIndex);
 
-                if (quest != null)
+                // Fallback to quest stage data if JRL lookup fails
+                if (string.IsNullOrEmpty(entryText))
                 {
-                    // Get text from quest stage data
-                    QuestStage stage = quest.GetStage(questEntryIndex);
-                    if (stage != null)
+                    QuestData quest = _journalSystem.GetQuest(questTag);
+                    if (quest != null)
                     {
-                        entryText = stage.Text;
+                        QuestStage stage = quest.GetStage(questEntryIndex);
+                        if (stage != null)
+                        {
+                            entryText = stage.Text;
+                        }
                     }
                 }
 
-                // If no quest data or stage text, use empty string
-                // Original engine would look up text from JRL file
+                // If still no text, use empty string (original engine behavior)
+                // Based on swkotor2.exe: If JRL lookup fails, entry text may be empty
                 if (string.IsNullOrEmpty(entryText))
                 {
-                    entryText = $"Quest entry {questEntryIndex}"; // Placeholder
+                    entryText = string.Empty;
                 }
 
                 // Add journal entry
@@ -1105,6 +1125,48 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets quest entry text from JRL file.
+        /// </summary>
+        /// <param name="questTag">Quest tag to look up.</param>
+        /// <param name="entryId">Entry ID (0-based index in entry list).</param>
+        /// <returns>The entry text, or null if not found.</returns>
+        /// <remarks>
+        /// Quest Entry Text Lookup (swkotor2.exe):
+        /// - Based on swkotor2.exe: Quest entry text is loaded from JRL files
+        /// - Original implementation:
+        ///   1. Loads JRL file by quest tag (or uses global.jrl)
+        ///   2. Finds quest by tag in JRL
+        ///   3. Finds entry by EntryId in quest's entry list
+        ///   4. Returns entry Text (LocalizedString) resolved to string
+        /// - JRL files are typically named after quest tags (e.g., "quest_001.jrl")
+        /// - Fallback: Uses global.jrl if quest-specific JRL not found
+        /// </remarks>
+        [CanBeNull]
+        private string GetQuestEntryTextFromJRL(string questTag, int entryId)
+        {
+            if (string.IsNullOrEmpty(questTag) || _jrlLoader == null)
+            {
+                return null;
+            }
+
+            // Try to get text from quest-specific JRL file first
+            string entryText = _jrlLoader.GetQuestEntryText(questTag, entryId, questTag);
+            if (!string.IsNullOrEmpty(entryText))
+            {
+                return entryText;
+            }
+
+            // Fallback to global.jrl
+            entryText = _jrlLoader.GetQuestEntryTextFromGlobal(questTag, entryId);
+            if (!string.IsNullOrEmpty(entryText))
+            {
+                return entryText;
+            }
+
+            return null;
         }
 
         #endregion

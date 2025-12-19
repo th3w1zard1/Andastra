@@ -128,9 +128,8 @@ namespace Andastra.Parsing.TSLPatcher
         private int _next2DaTokenId = 0;
 
         // StrRef and 2DA memory reference caches for linking patches
-        // TODO: TEMPORARY - Commented out Tools to fix build errors
-        // [CanBeNull] private readonly StrRefReferenceCache _strrefCache;
-        // [CanBeNull] private readonly Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> _twodaCaches;
+        [CanBeNull] private readonly StrRefReferenceCache _strrefCache;
+        [CanBeNull] private readonly Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> _twodaCaches;
 
         // Track TLK modifications with their source paths for intelligent cache building
         // Key: source_index (0=first/vanilla, 1=second/modded, 2=third, etc.)
@@ -162,9 +161,8 @@ namespace Andastra.Parsing.TSLPatcher
             _iniPath = Path.Combine(tslpatchdataPath, iniFilename);
             _baseDataPath = baseDataPath;
             _moddedDataPath = moddedDataPath;
-            // TODO: TEMPORARY - Commented out Tools to fix build errors
-            // _strrefCache = strrefCache;
-            // _twodaCaches = twodaCaches ?? new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
+            _strrefCache = strrefCache;
+            _twodaCaches = twodaCaches ?? new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
             _logFunc = logFunc ?? Console.WriteLine;
 
             // Create tslpatchdata directory

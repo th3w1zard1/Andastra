@@ -235,8 +235,8 @@ namespace Andastra.Parsing.Resource.Generics
                 root.SetResRef("PlayerCharacter", gam.PlayerCharacter);
             }
 
-            // Set Infinity-specific fields (only for  games)
-            if (Is(game))
+            // Set Infinity-specific fields (only for Infinity games)
+            if (game.IsEclipse())
             {
                 root.SetString("GameName", gam.GameName);
                 root.SetInt32("Chapter", gam.Chapter);

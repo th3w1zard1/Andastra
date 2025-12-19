@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-// TODO: TEMPORARY - Commented out Tools to fix build errors`r`n// using Andastra.Parsing.Tools;
+using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Formats.BIF

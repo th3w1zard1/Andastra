@@ -7,8 +7,8 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Formats.LYT;
-// TODO: TEMPORARY - Commented out MDL to fix build errors
-// using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.PCC;
 using Andastra.Parsing.Formats.RIM;
@@ -19,6 +19,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Resource.Generics.CNV;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
@@ -118,8 +119,6 @@ namespace Andastra.Parsing.Resource
                     NCS ncs = source is string s8 ? NCSAuto.ReadNcs(s8) : NCSAuto.ReadNcs(source as byte[]);
                     return NCSAuto.BytesNcs(ncs);
                 }
-                // TODO: TEMPORARY - Commented out MDL to fix build errors
-                /*
                 if (resourceExt == "mdl")
                 {
                     MDL mdl = MDLAuto.ReadMdl(source);
@@ -129,7 +128,6 @@ namespace Andastra.Parsing.Resource
                         return ms.ToArray();
                     }
                 }
-                */
                 if (resourceExt == "vis")
                 {
                     VIS vis = VISAuto.ReadVis(source);
@@ -229,9 +227,6 @@ namespace Andastra.Parsing.Resource
                 return GFFAuto.BytesGff(gff, ResourceType.GFF);
             }
             catch { }
-
-            // TODO: TEMPORARY - Commented out MDL to fix build errors
-            /*
             try
             {
                 MDL mdl = MDLAuto.ReadMdl(source);
@@ -242,7 +237,6 @@ namespace Andastra.Parsing.Resource
                 }
             }
             catch { }
-            */
 
             try
             {
@@ -289,15 +283,12 @@ namespace Andastra.Parsing.Resource
             {
                 return DLGHelper.BytesDlg(dlg, Game.K2);
             }
-            // TODO: TEMPORARY - Commented out CNV to fix build errors in CNV files
-            /*
             if (resource is CNV cnv)
             {
                 // CNV format is only used by Eclipse Engine games
                 // Default to Dragon Age Origins if game type is not specified
                 return Andastra.Parsing.Resource.Generics.CNV.CNVHelper.BytesCnv(cnv, Game.DA);
             }
-            */
             if (resource is GIT git)
             {
                 return GITHelpers.BytesGit(git, Game.K2);
@@ -387,8 +378,6 @@ namespace Andastra.Parsing.Resource
             {
                 return LYTAuto.BytesLyt(lyt);
             }
-            // TODO: TEMPORARY - Commented out MDL to fix build errors
-            /*
             if (resource is MDL mdl)
             {
                 using (var ms = new MemoryStream())
@@ -397,7 +386,6 @@ namespace Andastra.Parsing.Resource
                     return ms.ToArray();
                 }
             }
-            */
             if (resource is NCS ncs)
             {
                 return NCSAuto.BytesNcs(ncs);
@@ -480,12 +468,8 @@ namespace Andastra.Parsing.Resource
                     case 2019: // TwoDA
                         var twodaReader = new TwoDABinaryReader(data);
                         return twodaReader.Load();
-
-                    // TODO: TEMPORARY - Commented out CNV to fix build errors in CNV files
-                    /*
                     case 2034: // CNV
                         return Andastra.Parsing.Resource.Generics.CNV.CNVHelper.ReadCnv(data);
-                    */
 
                     // Add more resource types as they are implemented
                     default:

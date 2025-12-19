@@ -27,6 +27,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Core.Plot;
+using Andastra.Parsing.Installation;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {
@@ -248,8 +249,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Initialize AI controller
             _aiController = new AIController(_world, FireScriptEvent);
 
-            // Initialize journal system
-            _journalSystem = new JournalSystem();
+            // Initialize JRL loader for quest entry text lookup
+            // Based on swkotor2.exe: JRL files contain quest entry text
+            // Original implementation: Loads JRL files to look up quest entry text
+            JRLLoader jrlLoader = new JRLLoader(_installation);
+
+            // Initialize journal system with JRL loader
+            _journalSystem = new JournalSystem(jrlLoader);
 
             // Initialize plot system
             _plotSystem = new PlotSystem();
@@ -267,7 +273,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 _journalSystem, // journalSystem
                 _gameDataManager, // gameDataManager (for plot.2da access)
                 _partySystem, // partySystem (for XP awards)
-                _plotSystem // plotSystem (for plot state tracking)
+                _plotSystem, // plotSystem (for plot state tracking)
+                jrlLoader // jrlLoader (for quest entry text lookup)
             );
 
             // Initialize module transition system

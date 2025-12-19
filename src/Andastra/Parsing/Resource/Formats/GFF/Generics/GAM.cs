@@ -92,8 +92,42 @@ namespace Andastra.Parsing.Resource.Generics
         /// </summary>
         public ResRef PlayerCharacter { get; set; } = ResRef.FromBlank();
 
-        // Note: GAM files are used by Aurora Engine
-        // Infinity Engine-specific fields (GameName, Chapter, JournalEntries) have been removed
+        // Infinity Engine-specific fields (Mass Effect, Dragon Age)
+        /// <summary>
+        /// Game name (Infinity Engine-specific).
+        /// </summary>
+        public string GameName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Current chapter number (Infinity Engine-specific).
+        /// </summary>
+        public int Chapter { get; set; }
+
+        /// <summary>
+        /// Journal entries (Infinity Engine-specific).
+        /// </summary>
+        public List<GAMJournalEntry> JournalEntries { get; set; } = new List<GAMJournalEntry>();
+
+        /// <summary>
+        /// Journal entry structure for Infinity Engine games.
+        /// </summary>
+        public sealed class GAMJournalEntry
+        {
+            /// <summary>
+            /// String reference ID for the journal entry text.
+            /// </summary>
+            public int TextStrRef { get; set; }
+
+            /// <summary>
+            /// Whether the journal entry is completed.
+            /// </summary>
+            public bool Completed { get; set; }
+
+            /// <summary>
+            /// Journal entry category ID.
+            /// </summary>
+            public int Category { get; set; }
+        }
     }
 }
 

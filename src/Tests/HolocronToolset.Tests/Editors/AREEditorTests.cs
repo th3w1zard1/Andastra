@@ -2619,9 +2619,6 @@ namespace HolocronToolset.Tests.Editors
         [InlineData(Game.NWN2)]
         [InlineData(Game.DA)]
         [InlineData(Game.DA2)]
-        [InlineData(Game.ME)]
-        [InlineData(Game.ME2)]
-        [InlineData(Game.ME3)]
         public void TestAreHelpersColorFieldsRoundtripForAllGameTypes(Game game)
         {
             // Test that all color fields (SunAmbient, SunDiffuse, DynamicLight, FogColor, GrassAmbient, GrassDiffuse)
@@ -2678,9 +2675,10 @@ namespace HolocronToolset.Tests.Editors
         [InlineData(Game.NWN2)]
         [InlineData(Game.DA)]
         [InlineData(Game.DA2)]
-        [InlineData(Game.ME)]
-        [InlineData(Game.ME2)]
-        [InlineData(Game.ME3)]
+        // TODO: Add Mass Effect games to Game enum when supported
+        // [InlineData(Game.ME)]
+        // [InlineData(Game.ME2)]
+        // [InlineData(Game.ME3)]
         public void TestAreHelpersK2SpecificFieldsNotWrittenForNonK2Games(Game game)
         {
             // Test that Grass_Emissive is NOT written for non-K2 games
@@ -2738,8 +2736,7 @@ namespace HolocronToolset.Tests.Editors
                 Game.K1, Game.K2, Game.K1_XBOX, Game.K2_XBOX,
                 Game.K1_IOS, Game.K2_IOS, Game.K1_ANDROID, Game.K2_ANDROID,
                 Game.NWN, Game.NWN2,
-                Game.DA, Game.DA2,
-                Game.ME, Game.ME2, Game.ME3
+                Game.DA, Game.DA2
             };
 
             foreach (var game in gameTypes)

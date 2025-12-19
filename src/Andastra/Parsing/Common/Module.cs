@@ -1510,9 +1510,8 @@ namespace Andastra.Parsing.Common
                         continue;
                     }
 
-                    // TODO: TEMPORARY - Commented out Tools to fix build errors
-                    // lookupTextureQueries.UnionWith(Andastra.Parsing.Tools.ModelTools.IterateTextures(modelData));
-                    // lookupLightmapQueries.UnionWith(Andastra.Parsing.Tools.ModelTools.IterateLightmaps(modelData));
+                    lookupTextureQueries.UnionWith(Andastra.Parsing.Tools.ModelTools.IterateTextures(modelData));
+                    lookupLightmapQueries.UnionWith(Andastra.Parsing.Tools.ModelTools.IterateLightmaps(modelData));
                 }
                 catch (Exception ex)
                 {

@@ -9,7 +9,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.TSLPatcher;
-// TODO: TEMPORARY - Commented out Tools to fix build errors`r`n// using Andastra.Parsing.Tools;
+using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Diff

@@ -31,6 +31,8 @@ namespace Andastra.Runtime.Core.Journal
         private readonly Dictionary<string, QuestData> _quests;
         private readonly Dictionary<string, int> _questStates;
         private readonly List<JournalEntry> _entries;
+        [CanBeNull]
+        private readonly JRLLoader _jrlLoader;
 
         /// <summary>
         /// Event fired when quest state changes.
@@ -47,11 +49,12 @@ namespace Andastra.Runtime.Core.Journal
         /// </summary>
         public event Action<string> OnQuestCompleted;
 
-        public JournalSystem()
+        public JournalSystem([CanBeNull] JRLLoader jrlLoader = null)
         {
             _quests = new Dictionary<string, QuestData>(StringComparer.OrdinalIgnoreCase);
             _questStates = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             _entries = new List<JournalEntry>();
+            _jrlLoader = jrlLoader;
         }
 
         #region Quest Registration
@@ -143,13 +146,41 @@ namespace Andastra.Runtime.Core.Journal
 
             // Add journal entry for this state
             QuestData quest = GetQuest(questTag);
-            if (quest != null)
+            string entryText = null;
+
+            // Try to get text from JRL file first
+            if (_jrlLoader != null)
+            {
+                entryText = _jrlLoader.GetQuestEntryText(questTag, state, questTag);
+                if (string.IsNullOrEmpty(entryText))
+                {
+                    entryText = _jrlLoader.GetQuestEntryTextFromGlobal(questTag, state);
+                }
+            }
+
+            // Fallback to quest stage data
+            if (string.IsNullOrEmpty(entryText) && quest != null)
             {
                 QuestStage stageData = quest.GetStage(state);
                 if (stageData != null)
                 {
-                    AddEntry(questTag, state, stageData.Text, stageData.XPReward);
+                    entryText = stageData.Text;
                 }
+            }
+
+            // Add entry if we have text
+            if (!string.IsNullOrEmpty(entryText))
+            {
+                int xpReward = 0;
+                if (quest != null)
+                {
+                    QuestStage stageData = quest.GetStage(state);
+                    if (stageData != null)
+                    {
+                        xpReward = stageData.XPReward;
+                    }
+                }
+                AddEntry(questTag, state, entryText, xpReward);
             }
 
             if (OnQuestStateChanged != null)
