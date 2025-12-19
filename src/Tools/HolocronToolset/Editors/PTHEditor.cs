@@ -16,6 +16,12 @@ namespace HolocronToolset.Editors
     // Stub for renderArea UI component - will be fully implemented when UI is available
     public class PTHRenderArea
     {
+        private PTH _pth;
+        private Vector2 _mousePosition;
+
+        public RenderCamera Camera { get; private set; }
+        public PathSelection PathSelection { get; private set; }
+
         // Signal properties for test compatibility
         public object SigMousePressed { get; private set; }
         public object SigMouseMoved { get; private set; }
@@ -25,12 +31,138 @@ namespace HolocronToolset.Editors
 
         public PTHRenderArea()
         {
+            _pth = new PTH();
+            _mousePosition = Vector2.Zero;
+            Camera = new RenderCamera();
+            PathSelection = new PathSelection();
+
             // Initialize signal properties - will be fully implemented when UI is available
             SigMousePressed = new object();
             SigMouseMoved = new object();
             SigMouseScrolled = new object();
             SigMouseReleased = new object();
             SigKeyPressed = new object();
+        }
+
+        public void SetPth(PTH pth)
+        {
+            _pth = pth ?? new PTH();
+        }
+
+        public void SetMousePosition(Vector2 position)
+        {
+            _mousePosition = position;
+        }
+
+        public void CenterCamera()
+        {
+            if (_pth.Count == 0)
+            {
+                Camera.SetPosition(Vector2.Zero);
+                return;
+            }
+
+            float sumX = 0f;
+            float sumY = 0f;
+            foreach (var point in _pth.GetPoints())
+            {
+                sumX += point.X;
+                sumY += point.Y;
+            }
+
+            Camera.SetPosition(new Vector2(sumX / _pth.Count, sumY / _pth.Count));
+        }
+
+        public List<Vector2> PathNodesUnderMouse(float tolerance = 0.1f)
+        {
+            var hits = new List<Vector2>();
+            foreach (var point in _pth.GetPoints())
+            {
+                var dx = point.X - _mousePosition.X;
+                var dy = point.Y - _mousePosition.Y;
+                if ((dx * dx) + (dy * dy) <= tolerance * tolerance)
+                {
+                    hits.Add(point);
+                }
+            }
+
+            return hits;
+        }
+    }
+
+    public class RenderCamera
+    {
+        public Vector2 Position { get; private set; }
+        public float Zoom { get; private set; }
+        public float Rotation { get; private set; }
+
+        public RenderCamera()
+        {
+            Position = Vector2.Zero;
+            Zoom = 1.0f;
+            Rotation = 0.0f;
+        }
+
+        public void SetPosition(Vector2 position)
+        {
+            Position = position;
+        }
+
+        public void NudgePosition(float x, float y)
+        {
+            Position = new Vector2(Position.X + x, Position.Y + y);
+        }
+
+        public void NudgeZoom(float amount)
+        {
+            Zoom = amount <= 0 ? Zoom : Zoom * amount;
+        }
+
+        public void NudgeRotation(float angle)
+        {
+            Rotation += angle;
+        }
+    }
+
+    public class PathSelection
+    {
+        private readonly List<Vector2> _selected = new List<Vector2>();
+
+        public void Select(IEnumerable<Vector2> points)
+        {
+            _selected.Clear();
+            if (points == null)
+            {
+                return;
+            }
+
+            foreach (var point in points)
+            {
+                if (!_selected.Contains(point))
+                {
+                    _selected.Add(point);
+                }
+            }
+        }
+
+        public void Clear()
+        {
+            _selected.Clear();
+        }
+
+        public List<Vector2> All()
+        {
+            return new List<Vector2>(_selected);
+        }
+
+        public Vector2? Last()
+        {
+            if (_selected.Count == 0)
+            {
+                return null;
+            }
+
+            return _selected[_selected.Count - 1];
         }
     }
 
@@ -78,6 +210,7 @@ namespace HolocronToolset.Editors
             SetupStatusBar();
             StatusOut = new PTHStatusOut(this);
             RenderArea = new PTHRenderArea();
+            RenderArea.SetPth(_pth);
             SetupUI();
             AddHelpAction("GFF-PTH.md");
             New();
@@ -199,6 +332,7 @@ namespace HolocronToolset.Editors
         public void RemoveNode(int index)
         {
             _pth.Remove(index);
+            RenderArea.PathSelection.Clear();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:356-359
@@ -223,58 +357,90 @@ namespace HolocronToolset.Editors
         // Original: def points_under_mouse(self) -> list[Vector2]:
         public List<Vector2> PointsUnderMouse()
         {
-            // Will be implemented when render area is available
-            return new List<Vector2>();
+            return RenderArea.PathNodesUnderMouse();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:365-367
         // Original: def selected_nodes(self) -> list[Vector2]:
         public List<Vector2> SelectedNodes()
         {
-            // Will be implemented when render area is available
-            return new List<Vector2>();
+            return RenderArea.PathSelection.All();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:307-310
         // Original: def moveCameraToSelection(self):
         public void MoveCameraToSelection()
         {
-            // Will be implemented when render area is available
+            var selection = RenderArea.PathSelection.Last();
+            if (selection.HasValue)
+            {
+                RenderArea.Camera.SetPosition(selection.Value);
+            }
+            else
+            {
+                RenderArea.CenterCamera();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:313-314
         // Original: def move_camera(self, x: float, y: float):
         public void MoveCamera(float x, float y)
         {
-            // Will be implemented when render area is available
+            RenderArea.Camera.NudgePosition(x, y);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:317-318
         // Original: def zoom_camera(self, amount: float):
         public void ZoomCamera(float amount)
         {
-            // Will be implemented when render area is available
+            RenderArea.Camera.NudgeZoom(amount);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:321-322
         // Original: def rotate_camera(self, angle: float):
         public void RotateCamera(float angle)
         {
-            // Will be implemented when render area is available
+            RenderArea.Camera.NudgeRotation(angle);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:325-326
         // Original: def move_selected(self, x: float, y: float):
         public void MoveSelected(float x, float y)
         {
-            // Will be implemented when render area is available
+            var selected = RenderArea.PathSelection.All();
+            if (selected.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < selected.Count; i++)
+            {
+                var point = selected[i];
+                var index = _pth.Find(point);
+                if (index.HasValue)
+                {
+                    var updated = new Vector2(x, y);
+                    _pth.SetPoint(index.Value, updated);
+                    selected[i] = updated;
+                }
+            }
+
+            RenderArea.PathSelection.Select(selected);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:373-374
         // Original: def select_node_under_mouse(self):
         public void SelectNodeUnderMouse()
         {
-            // Will be implemented when render area is available
+            var underMouse = PointsUnderMouse();
+            if (underMouse.Count > 0)
+            {
+                RenderArea.PathSelection.Select(new[] { underMouse[0] });
+            }
+            else
+            {
+                RenderArea.PathSelection.Clear();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:249-269
@@ -300,6 +466,9 @@ namespace HolocronToolset.Editors
         private void LoadPTH(PTH pth)
         {
             _pth = pth;
+            RenderArea.SetPth(_pth);
+            RenderArea.PathSelection.Clear();
+            RenderArea.CenterCamera();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:277-278
@@ -316,6 +485,9 @@ namespace HolocronToolset.Editors
         {
             base.New();
             _pth = new PTH();
+            RenderArea.SetPth(_pth);
+            RenderArea.PathSelection.Clear();
+            RenderArea.CenterCamera();
         }
 
         public override void SaveAs()
@@ -336,6 +508,11 @@ namespace HolocronToolset.Editors
         public PTHStatusOut(PTHEditor editor)
         {
             _editor = editor;
+        }
+
+        public Vector2 MousePosition
+        {
+            get { return _mousePos; }
         }
 
         public void Write(string text)
@@ -367,6 +544,12 @@ namespace HolocronToolset.Editors
             string centerStatus = _prevStatusOut;
             string rightStatus = _prevStatusError;
             _editor.UpdateStatusBar(leftStatus, centerStatus, rightStatus);
+            _editor.RenderArea.SetMousePosition(_mousePos);
+        }
+
+        public void SetMousePosition(Vector2 position)
+        {
+            _mousePos = position;
         }
     }
 

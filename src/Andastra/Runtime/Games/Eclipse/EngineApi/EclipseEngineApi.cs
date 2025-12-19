@@ -57,7 +57,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             
             // Tag functions
             RegisterFunctionName(168, "GetTag");
-            RegisterFunctionName(200, "GetObjectByTag");
+            // Note: GetObjectByTag is registered below in position/movement section as ID 200
             
             // Global variables
             RegisterFunctionName(578, "GetGlobalBoolean");
@@ -68,8 +68,8 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Local variables
             RegisterFunctionName(679, "GetLocalInt");
             RegisterFunctionName(680, "SetLocalInt");
-            RegisterFunctionName(681, "GetLocalNumber");
-            RegisterFunctionName(682, "SetLocalNumber");
+            RegisterFunctionName(681, "GetLocalFloat");
+            RegisterFunctionName(682, "SetLocalFloat");
             
             // Eclipse-specific functions (common patterns across Dragon Age and Mass Effect)
             RegisterFunctionName(100, "SpawnCreature");
@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(120, "GetIsModule");
             
             // Position and movement functions
-            RegisterFunctionName(200, "GetPosition");
+            RegisterFunctionName(200, "GetObjectByTag");
             RegisterFunctionName(201, "GetFacing");
             RegisterFunctionName(202, "SetPosition");
             RegisterFunctionName(203, "SetFacing");
@@ -851,9 +851,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// <summary>
         /// GetIsPC(object oObject) - Returns true if object is a player character
         /// </summary>
-        /// <summary>
-        /// GetIsPC(object oObject) - Returns true if object is a player character
-        /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetIsPC implementation
         /// Located via string reference: "PlayerCharacter" @ 0x00b08188 (daorigins.exe), @ 0x00beb508 (DragonAge2.exe)
@@ -1002,13 +999,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetAttackTarget implementation
-        /// Returns the object ID of the current attack target, or OBJECT_INVALID if not attacking
-        /// </remarks>
-        /// <summary>
-        /// GetAttackTarget(object oAttacker) - Returns the current attack target of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: GetAttackTarget implementation
         /// Located via string reference: "CombatTarget" @ 0x00af7840 (daorigins.exe), @ 0x00bf4dc0 (DragonAge2.exe)
         /// Original implementation: Returns the object ID of the current attack target from CombatSystem
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
@@ -1030,13 +1020,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
-        /// <summary>
-        /// GetCurrentHP(object oObject) - Returns the current hit points of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: GetCurrentHP implementation
-        /// Returns current HP value from stats component
-        /// </remarks>
         /// <summary>
         /// GetCurrentHP(object oObject) - Returns the current hit points of an object
         /// </summary>
@@ -1068,13 +1051,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetMaxHP implementation
-        /// Returns maximum HP value from stats component
-        /// </remarks>
-        /// <summary>
-        /// GetMaxHP(object oObject) - Returns the maximum hit points of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: GetMaxHP implementation
         /// Located via string reference: "MaxHealth" @ 0x00aedb1c (daorigins.exe), @ 0x00beb460 (DragonAge2.exe)
         /// Original implementation: Returns maximum HP value from stats component
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
@@ -1096,13 +1072,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             return Variable.FromInt(0);
         }
 
-        /// <summary>
-        /// SetCurrentHP(object oObject, int nHP) - Sets the current hit points of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: SetCurrentHP implementation
-        /// Sets current HP value in stats component, clamped to [0, MaxHP]
-        /// </remarks>
         /// <summary>
         /// SetCurrentHP(object oObject, int nHP) - Sets the current hit points of an object
         /// </summary>
@@ -1132,13 +1101,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             return Variable.Void();
         }
 
-        /// <summary>
-        /// GetIsEnemy(object oObject1, object oObject2) - Returns true if two objects are enemies
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: GetIsEnemy implementation
-        /// Checks faction relationship between two objects
-        /// </remarks>
         /// <summary>
         /// GetIsEnemy(object oObject1, object oObject2) - Returns true if two objects are enemies
         /// </summary>
@@ -2172,15 +2134,15 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 ITransformComponent targetTransform = targetEntity.GetComponent<ITransformComponent>();
                 if (targetTransform != null)
                 {
-                    // Queue movement action to target position
-                    // In full implementation, this would use pathfinding system
-                    // For now, directly set position (simplified)
+                    // Queue movement action to target position using pathfinding system
                     ITransformComponent moveToTransform = moveToEntity.GetComponent<ITransformComponent>();
                     if (moveToTransform != null)
                     {
                         // Store movement target for pathfinding system
+                        // Pathfinding system will process MovementTarget and move entity to destination
                         moveToEntity.SetData("MovementTarget", targetTransform.Position);
                         moveToEntity.SetData("MovementRun", run != 0);
+                        moveToEntity.SetData("MovementState", "Moving");
                     }
                 }
             }
@@ -2207,15 +2169,15 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
             if (moveToEntity != null)
             {
-                // Queue movement action to destination
-                // In full implementation, this would use pathfinding system
-                // For now, directly set position (simplified)
+                // Queue movement action to destination using pathfinding system
                 ITransformComponent moveToTransform = moveToEntity.GetComponent<ITransformComponent>();
                 if (moveToTransform != null)
                 {
                     // Store movement target for pathfinding system
+                    // Pathfinding system will process MovementTarget and move entity to destination
                     moveToEntity.SetData("MovementTarget", destination);
                     moveToEntity.SetData("MovementRun", run != 0);
+                    moveToEntity.SetData("MovementState", "Moving");
                 }
             }
             

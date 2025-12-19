@@ -55,6 +55,27 @@ namespace Andastra.Parsing.Resource.Generics
             get => _points[index];
         }
 
+        /// <summary>
+        /// Updates the position of an existing point.
+        /// </summary>
+        /// <param name="index">Index of the point to update.</param>
+        /// <param name="point">New coordinates for the point.</param>
+        public void SetPoint(int index, Vector2 point)
+        {
+            _points[index] = point;
+        }
+
+        /// <summary>
+        /// Updates the position of an existing point using individual components.
+        /// </summary>
+        /// <param name="index">Index of the point to update.</param>
+        /// <param name="x">New X coordinate.</param>
+        /// <param name="y">New Y coordinate.</param>
+        public void SetPoint(int index, float x, float y)
+        {
+            _points[index] = new Vector2(x, y);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:57-63
         // Original: def add(self, x: float, y: float) -> int:
         public int Add(float x, float y)
