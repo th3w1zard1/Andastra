@@ -3646,15 +3646,10 @@ namespace HolocronToolset.Tests.Editors
             // Test lastnameEdit - LocalizedString widget
             var lastNameEdit = GetLastNameEdit(editor);
             lastNameEdit.Text = "TestLast";
-            // Use reflection to access private _utc field
-            if (utcField != null)
-            {
-                var utc = utcField.GetValue(editor) as UTC;
-                if (utc != null)
-                {
-                    utc.LastName.Get(Language.English, Gender.Male).Should().Be("TestLast");
-                }
-            }
+            // Verify the change was made by building and checking the result
+            var (data3, _) = editor.Build();
+            var utc3 = UTCHelpers.ConstructUtc(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data3));
+            utc3.LastName.Get(Language.English, Gender.Male).Should().Be("TestLast");
 
             // Test tagEdit - TextBox
             var tagEdit = GetTagEdit(editor);
@@ -4328,7 +4323,7 @@ namespace HolocronToolset.Tests.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2435-2488
         // Original: def test_utc_editor_menu_actions(qtbot, installation: HTInstallation): Test menu actions (duplicate name, different test).
-        [Fact(Skip = "Settings/GlobalSettings properties not yet implemented in UTCEditor")]
+        [Fact]
         public void TestUtcEditorMenuActions2()
         {
             var editor = CreateEditorWithInstallation();
@@ -4339,25 +4334,25 @@ namespace HolocronToolset.Tests.Editors
             // The Python test checks `editor.settings.saveUnusedFields` and `editor.settings.alwaysSaveK2Fields`.
             // In C#, these are properties of the UTCEditorSettings class.
 
-            // TODO: Settings and GlobalSettings properties not yet implemented in UTCEditor
+            // Settings and GlobalSettings properties are now exposed in UTCEditor
             // Simulate setting actionSaveUnusedFields
-            // editor.Settings.SaveUnusedFields = true;
-            // editor.Settings.SaveUnusedFields.Should().BeTrue();
-            // editor.Settings.SaveUnusedFields = false;
-            // editor.Settings.SaveUnusedFields.Should().BeFalse();
+            editor.Settings.SaveUnusedFields = true;
+            editor.Settings.SaveUnusedFields.Should().BeTrue();
+            editor.Settings.SaveUnusedFields = false;
+            editor.Settings.SaveUnusedFields.Should().BeFalse();
 
             // Simulate setting actionAlwaysSaveK2Fields
-            // editor.Settings.AlwaysSaveK2Fields = true;
-            // editor.Settings.AlwaysSaveK2Fields.Should().BeTrue();
-            // editor.Settings.AlwaysSaveK2Fields = false;
-            // editor.Settings.AlwaysSaveK2Fields.Should().BeFalse();
+            editor.Settings.AlwaysSaveK2Fields = true;
+            editor.Settings.AlwaysSaveK2Fields.Should().BeTrue();
+            editor.Settings.AlwaysSaveK2Fields = false;
+            editor.Settings.AlwaysSaveK2Fields.Should().BeFalse();
 
             // actionShowPreview toggles a global setting.
             // We can't directly trigger the menu action without UI automation,
             // but we can verify the underlying setting can be toggled.
-            // bool initialPreviewSetting = editor.GlobalSettings.ShowPreviewUTC;
-            // editor.GlobalSettings.ShowPreviewUTC = !initialPreviewSetting;
-            // editor.GlobalSettings.ShowPreviewUTC.Should().Be(!initialPreviewSetting);
+            bool initialPreviewSetting = editor.GlobalSettings.ShowPreviewUTC;
+            editor.GlobalSettings.ShowPreviewUTC = !initialPreviewSetting;
+            editor.GlobalSettings.ShowPreviewUTC.Should().Be(!initialPreviewSetting);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2490-2544
