@@ -11,6 +11,7 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Engines.Odyssey.UI
 {
@@ -18,108 +19,32 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
     /// Base class for upgrade screen implementation common to both K1 and K2.
     /// </summary>
     /// <remarks>
-    /// Common Upgrade Screen Implementation:
+    /// Odyssey Upgrade Screen Implementation:
     /// - Shared functionality between swkotor.exe (K1) and swkotor2.exe (K2)
     /// - Both use "upcrystals" for lightsabers
     /// - Both use "UpgradeType" and "Template" columns in upgrade tables
     /// - Both check inventory using similar logic
     /// - Differences: K2 uses "upgradeitems_p", K1 uses "upgradeitems" for regular items
     /// - Differences: K2 has 6 upgrade slots for lightsabers, K1 has 4
+    /// - Based on swkotor.exe: FUN_006c7630 (constructor), FUN_006c6500 (button handler), FUN_006c59a0 (ApplyUpgrade)
+    /// - Based on swkotor2.exe: FUN_00731a00 (constructor), FUN_0072e260 (button handler), FUN_00729640 (ApplyUpgrade)
     /// </remarks>
-    public abstract class OdysseyUpgradeScreenBase : IUpgradeScreen
+    public abstract class OdysseyUpgradeScreenBase : BaseUpgradeScreen
     {
-        protected readonly Installation _installation;
-        protected readonly IWorld _world;
-        protected IEntity _targetItem;
-        protected IEntity _character;
-        protected bool _disableItemCreation;
-        protected bool _disableUpgrade;
-        protected string _override2DA;
-        protected bool _isVisible;
-        
-        // Track upgrade ResRefs by item+slot for removal
-        // Key: item ObjectId + "_" + upgradeSlot, Value: upgrade ResRef
-        protected readonly Dictionary<string, string> _upgradeResRefMap = new Dictionary<string, string>();
-
         /// <summary>
         /// Initializes a new instance of the upgrade screen.
         /// </summary>
         /// <param name="installation">Game installation for accessing 2DA files.</param>
         /// <param name="world">World context for entity access.</param>
         protected OdysseyUpgradeScreenBase(Installation installation, IWorld world)
+            : base(installation, world)
         {
-            if (installation == null)
-            {
-                throw new ArgumentNullException("installation");
-            }
-            if (world == null)
-            {
-                throw new ArgumentNullException("world");
-            }
-
-            _installation = installation;
-            _world = world;
-            _isVisible = false;
-            _override2DA = string.Empty;
-        }
-
-        /// <summary>
-        /// Gets or sets the item being upgraded (null for all items).
-        /// </summary>
-        public IEntity TargetItem
-        {
-            get { return _targetItem; }
-            set { _targetItem = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the character whose skills will be used (null for player).
-        /// </summary>
-        public IEntity Character
-        {
-            get { return _character; }
-            set { _character = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets whether item creation is disabled.
-        /// </summary>
-        public bool DisableItemCreation
-        {
-            get { return _disableItemCreation; }
-            set { _disableItemCreation = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets whether upgrading is disabled (forces item creation).
-        /// </summary>
-        public bool DisableUpgrade
-        {
-            get { return _disableUpgrade; }
-            set { _disableUpgrade = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the override 2DA file name (empty for default).
-        /// </summary>
-        public string Override2DA
-        {
-            get { return _override2DA; }
-            set { _override2DA = value ?? string.Empty; }
-        }
-
-        /// <summary>
-        /// Gets whether the upgrade screen is visible.
-        /// </summary>
-        public bool IsVisible
-        {
-            get { return _isVisible; }
         }
 
         /// <summary>
         /// Shows the upgrade screen.
         /// </summary>
-        public void Show()
+        public override void Show()
         {
             _isVisible = true;
             // TODO: STUB - UI rendering system not yet implemented
@@ -133,7 +58,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <summary>
         /// Hides the upgrade screen.
         /// </summary>
-        public void Hide()
+        public override void Hide()
         {
             _isVisible = false;
             // TODO: STUB - UI rendering system not yet implemented
@@ -147,7 +72,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Gets the upgrade table name for regular items (not lightsabers).
         /// </summary>
         /// <returns>Table name for regular item upgrades.</returns>
-        protected abstract string GetRegularUpgradeTableName();
+        protected abstract override string GetRegularUpgradeTableName();
 
         /// <summary>
         /// Gets available upgrade items for a given item and upgrade slot.
@@ -155,7 +80,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="item">Item to upgrade.</param>
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <returns>List of available upgrade items (ResRefs).</returns>
-        public List<string> GetAvailableUpgrades(IEntity item, int upgradeSlot)
+        public override List<string> GetAvailableUpgrades(IEntity item, int upgradeSlot)
         {
             if (item == null)
             {
@@ -188,7 +113,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 // Default: Use regular upgrade table for most items, upcrystals for lightsabers
                 // Check baseitems.2da to determine if item is a lightsaber
                 bool isLightsaber = IsLightsaberItem(baseItemId);
-                upgradeTableName = isLightsaber ? "upcrystals" : GetRegularUpgradeTableName();
+                upgradeTableName = isLightsaber ? GetLightsaberUpgradeTableName() : GetRegularUpgradeTableName();
             }
 
             List<string> availableUpgrades = new List<string>();
@@ -223,90 +148,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     return availableUpgrades;
                 }
 
-                // Get character inventory (use _character if set, otherwise try to get party leader/player)
-                IEntity character = _character;
-                if (character == null)
-                {
-                    // Get player character from world using multiple fallback strategies
-                    // Based on swkotor2.exe: Player character is typically tagged "Player"
-                    // Based on swkotor.exe: Player character is typically tagged "Player"
-                    // Strategy 1: Try to get entity by tag "Player" (Odyssey standard)
-                    // Located via string references: "Player" tag is set in GameSession.SpawnPlayer() @ GameSession.cs:473
-                    character = _world.GetEntityByTag("Player", 0);
-                    
-                    // Strategy 2: Fall back to "PlayerCharacter" tag (Eclipse standard, but may be used in some contexts)
-                    // Based on Eclipse engine: "PlayerCharacter" @ 0x00b08188 (daorigins.exe)
-                    // Cross-engine compatibility: Some implementations may use "PlayerCharacter" tag
-                    if (character == null)
-                    {
-                        character = _world.GetEntityByTag("PlayerCharacter", 0);
-                    }
-                    
-                    // Strategy 3: Fall back to searching all entities for player character
-                    // This is a comprehensive fallback if tag-based lookup fails
-                    // Based on EclipseEngineApi.Func_GetPlayerCharacter implementation pattern
-                    if (character == null)
-                    {
-                        foreach (IEntity entity in _world.GetAllEntities())
-                        {
-                            if (entity == null)
-                            {
-                                continue;
-                            }
-                            
-                            // Check if entity has player character tag
-                            string tag = entity.Tag;
-                            if (!string.IsNullOrEmpty(tag))
-                            {
-                                // Check for common player character tag patterns
-                                if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
-                                    string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
-                                    string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    character = entity;
-                                    break;
-                                }
-                            }
-                            
-                            // Check if entity has IsPlayer data flag
-                            // Based on GameSession.SpawnPlayer() @ GameSession.cs:474 - sets "IsPlayer" data flag
-                            object isPlayerData = entity.GetData("IsPlayer");
-                            if (isPlayerData is bool && (bool)isPlayerData)
-                            {
-                                character = entity;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Collect all inventory items from character
+                // Get character inventory ResRefs using base class helper
                 // Based on swkotor2.exe: FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
                 // Based on swkotor.exe: FUN_00555ed0 @ 0x00555ed0 - searches inventory by ResRef
                 // These functions iterate through inventory items and compare ResRefs
-                HashSet<string> inventoryResRefs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                if (character != null)
-                {
-                    IInventoryComponent characterInventory = character.GetComponent<IInventoryComponent>();
-                    if (characterInventory != null)
-                    {
-                        foreach (IEntity inventoryItem in characterInventory.GetAllItems())
-                        {
-                            IItemComponent invItemComponent = inventoryItem.GetComponent<IItemComponent>();
-                            if (invItemComponent != null && !string.IsNullOrEmpty(invItemComponent.TemplateResRef))
-                            {
-                                // Normalize ResRef (remove extension, lowercase)
-                                // Based on FUN_00631140 (K2) / FUN_005e6080 (K1) - ResRef normalization
-                                string resRef = invItemComponent.TemplateResRef.ToLowerInvariant();
-                                if (resRef.EndsWith(".uti"))
-                                {
-                                    resRef = resRef.Substring(0, resRef.Length - 4);
-                                }
-                                inventoryResRefs.Add(resRef);
-                            }
-                        }
-                    }
-                }
+                HashSet<string> inventoryResRefs = GetCharacterInventoryResRefs(_character);
 
                 // Get column headers to check if required columns exist
                 // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - uses "UpgradeType" and "Template" columns
@@ -437,86 +283,6 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
         }
 
-        /// <summary>
-        /// Determines if an item is a lightsaber by checking baseitems.2da.
-        /// </summary>
-        /// <param name="baseItemId">Base item ID from baseitems.2da.</param>
-        /// <returns>True if the item is a lightsaber, false otherwise.</returns>
-        /// <remarks>
-        /// Lightsaber Detection:
-        /// - Common to both K1 and K2
-        /// - Based on swkotor2.exe: Lightsaber item type detection
-        /// - Original implementation: Checks baseitems.2da "itemclass" or "weapontype" column
-        /// - Lightsabers have specific item class values (typically itemclass = 15 for lightsabers)
-        /// - Alternative: Check "weapontype" column for lightsaber weapon type
-        /// - Falls back to base item ID range check if 2DA lookup fails
-        /// </remarks>
-        protected bool IsLightsaberItem(int baseItemId)
-        {
-            if (baseItemId <= 0)
-            {
-                return false;
-            }
-
-            try
-            {
-                // Load baseitems.2da to check item class
-                ResourceResult baseitemsResult = _installation.Resource("baseitems", ResourceType.TwoDA, null, null);
-                if (baseitemsResult != null && baseitemsResult.Data != null)
-                {
-                    using (var stream = new MemoryStream(baseitemsResult.Data))
-                    {
-                        var reader = new TwoDABinaryReader(stream);
-                        TwoDA baseitems = reader.Load();
-
-                        if (baseitems != null && baseItemId >= 0 && baseItemId < baseitems.GetHeight())
-                        {
-                            TwoDARow row = baseitems.GetRow(baseItemId);
-
-                            // Check itemclass column (lightsabers typically have itemclass = 15)
-                            // ItemClass 15 = Lightsaber in baseitems.2da
-                            int? itemClass = row.GetInteger("itemclass", null);
-                            if (itemClass.HasValue && itemClass.Value == 15)
-                            {
-                                return true;
-                            }
-
-                            // Alternative: Check weapontype column if available
-                            // Some implementations use weapontype to identify lightsabers
-                            int? weaponType = row.GetInteger("weapontype", null);
-                            if (weaponType.HasValue)
-                            {
-                                // Lightsaber weapon type is typically 4 or 5 (varies by game)
-                                // For KOTOR/TSL, lightsabers are weapontype 4
-                                if (weaponType.Value == 4)
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Error loading baseitems.2da, fall through to ID range check
-            }
-
-            // Fallback: Check base item ID range
-            // Lightsabers in KOTOR/TSL typically have base item IDs in specific ranges
-            // This is a heuristic fallback if 2DA lookup fails
-            // KOTOR: Lightsabers are base item IDs 1-3 (single, double, short)
-            // TSL: Lightsabers are base item IDs 1-3 (single, double, short)
-            // Note: This is approximate and may need adjustment based on actual game data
-            if (baseItemId >= 1 && baseItemId <= 3)
-            {
-                // Could be a lightsaber, but not definitive without 2DA lookup
-                // Return false to be safe (use upgradeitems.2da by default)
-                return false;
-            }
-
-            return false;
-        }
 
         /// <summary>
         /// Applies an upgrade to an item.
@@ -525,7 +291,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <param name="upgradeResRef">ResRef of upgrade item to apply.</param>
         /// <returns>True if upgrade was successful.</returns>
-        public abstract bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef);
+        public abstract override bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef);
 
         /// <summary>
         /// Removes an upgrade from an item.
@@ -533,243 +299,8 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="item">Item to modify.</param>
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <returns>True if upgrade was removed.</returns>
-        public abstract bool RemoveUpgrade(IEntity item, int upgradeSlot);
+        public abstract override bool RemoveUpgrade(IEntity item, int upgradeSlot);
 
-        /// <summary>
-        /// Loads an upgrade item UTI template from the installation.
-        /// </summary>
-        /// <param name="upgradeResRef">ResRef of the upgrade item template to load.</param>
-        /// <returns>UTI template if loaded successfully, null otherwise.</returns>
-        /// <remarks>
-        /// Load Upgrade UTI Template:
-        /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (load item from UTI template)
-        /// - Based on swkotor.exe: FUN_005fb0f0 @ 0x005fb0f0 (item creation from template)
-        /// - Original implementation: Loads UTI GFF file, parses into UTI structure
-        /// - UTI files contain item properties that modify item stats when applied as upgrades
-        /// </remarks>
-        protected UTI LoadUpgradeUTITemplate(string upgradeResRef)
-        {
-            if (string.IsNullOrEmpty(upgradeResRef))
-            {
-                return null;
-            }
-
-            try
-            {
-                // Normalize ResRef (ensure .uti extension if needed)
-                string normalizedResRef = upgradeResRef;
-                if (!normalizedResRef.EndsWith(".uti", StringComparison.OrdinalIgnoreCase))
-                {
-                    normalizedResRef = normalizedResRef + ".uti";
-                }
-
-                // Load UTI resource from installation
-                // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 - loads UTI from resource provider
-                // Based on swkotor.exe: FUN_005fb0f0 @ 0x005fb0f0 - loads UTI from installation
-                ResourceResult utiResult = _installation.Resource(normalizedResRef, ResourceType.UTI, null, null);
-                if (utiResult == null || utiResult.Data == null || utiResult.Data.Length == 0)
-                {
-                    return null;
-                }
-
-                // Parse UTI GFF data
-                // Based on swkotor2.exe: UTI parsing - reads GFF with "UTI " signature
-                // Based on swkotor.exe: UTI parsing - reads GFF with "UTI " signature
-                using (var stream = new MemoryStream(utiResult.Data))
-                {
-                    var reader = new GFFBinaryReader(stream);
-                    GFF gff = reader.Load();
-                    if (gff == null)
-                    {
-                        return null;
-                    }
-
-                    // Construct UTI from GFF
-                    // Based on PyKotor UTIHelpers.ConstructUti implementation
-                    UTI utiTemplate = UTIHelpers.ConstructUti(gff);
-                    return utiTemplate;
-                }
-            }
-            catch (Exception)
-            {
-                // Error loading or parsing UTI template
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Applies properties from an upgrade UTI template to an item.
-        /// </summary>
-        /// <param name="item">Item to apply upgrade properties to.</param>
-        /// <param name="upgradeUTI">UTI template of the upgrade item.</param>
-        /// <returns>True if properties were applied successfully.</returns>
-        /// <remarks>
-        /// Apply Upgrade Properties:
-        /// - Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 (applies upgrade stats to item)
-        /// - Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 (applies upgrade stats to item)
-        /// - Original implementation: Extracts properties from upgrade UTI, adds to item's property list
-        /// - Upgrade properties modify item stats (damage bonuses, AC bonuses, effects, etc.)
-        /// - Properties are additive - multiple upgrades stack their bonuses
-        /// </remarks>
-        protected bool ApplyUpgradeProperties(IEntity item, UTI upgradeUTI)
-        {
-            if (item == null || upgradeUTI == null)
-            {
-                return false;
-            }
-
-            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
-            if (itemComponent == null)
-            {
-                return false;
-            }
-
-            // Extract properties from upgrade UTI template and add to item
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - iterates through upgrade properties
-            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - iterates through upgrade properties
-            // Original implementation: Adds each property from upgrade UTI to item's property list
-            foreach (var utiProp in upgradeUTI.Properties)
-            {
-                // Convert UTI property to ItemProperty
-                // Based on Kotor1.cs: Func_CreateItem implementation (lines 2344-2356)
-                var itemProperty = new ItemProperty
-                {
-                    PropertyType = utiProp.PropertyName,
-                    Subtype = utiProp.Subtype,
-                    CostTable = utiProp.CostTable,
-                    CostValue = utiProp.CostValue,
-                    Param1 = utiProp.Param1,
-                    Param1Value = utiProp.Param1Value
-                };
-
-                // Add property to item
-                // Properties from upgrades modify item stats (damage, AC, etc.)
-                itemComponent.AddProperty(itemProperty);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Removes properties from an item that match those in an upgrade UTI template.
-        /// </summary>
-        /// <param name="item">Item to remove upgrade properties from.</param>
-        /// <param name="upgradeUTI">UTI template of the upgrade item to remove.</param>
-        /// <returns>True if properties were removed successfully.</returns>
-        /// <remarks>
-        /// Remove Upgrade Properties:
-        /// - Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 (removes upgrade stats from item)
-        /// - Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 (removes upgrade stats from item)
-        /// - Original implementation: Removes properties that match upgrade UTI from item's property list
-        /// - When removing an upgrade, its properties must be removed to restore original item stats
-        /// </remarks>
-        protected bool RemoveUpgradeProperties(IEntity item, UTI upgradeUTI)
-        {
-            if (item == null || upgradeUTI == null)
-            {
-                return false;
-            }
-
-            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
-            if (itemComponent == null)
-            {
-                return false;
-            }
-
-            // Remove properties from item that match upgrade UTI template
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - removes matching properties
-            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - removes matching properties
-            // Original implementation: Iterates through item properties, removes those matching upgrade
-            // Note: Property matching is done by PropertyType, Subtype, CostTable, CostValue, Param1, Param1Value
-            var propertiesToRemove = new List<ItemProperty>();
-            foreach (var itemProp in itemComponent.Properties)
-            {
-                // Check if this property matches any property in the upgrade UTI
-                foreach (var utiProp in upgradeUTI.Properties)
-                {
-                    if (itemProp.PropertyType == utiProp.PropertyName &&
-                        itemProp.Subtype == utiProp.Subtype &&
-                        itemProp.CostTable == utiProp.CostTable &&
-                        itemProp.CostValue == utiProp.CostValue &&
-                        itemProp.Param1 == utiProp.Param1 &&
-                        itemProp.Param1Value == utiProp.Param1Value)
-                    {
-                        // Property matches upgrade property - mark for removal
-                        propertiesToRemove.Add(itemProp);
-                        break; // Only remove first matching property (in case of duplicates)
-                    }
-                }
-            }
-
-            // Remove matched properties from item
-            foreach (var propToRemove in propertiesToRemove)
-            {
-                itemComponent.RemoveProperty(propToRemove);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Recalculates item stats after applying or removing upgrades.
-        /// </summary>
-        /// <param name="item">Item to recalculate stats for.</param>
-        /// <remarks>
-        /// Recalculate Item Stats:
-        /// - Based on swkotor2.exe: Item stat recalculation after upgrade changes
-        /// - Based on swkotor.exe: Item stat recalculation after upgrade changes
-        /// - Original implementation: Recalculates item damage, AC, and other stats based on current properties
-        /// - This method triggers stat recalculation and UI update notifications
-        /// - In full implementation, this would:
-        ///   1. Recalculate base stats from item properties
-        ///   2. Apply upgrade property bonuses
-        ///   3. Update item display (damage, AC, etc.)
-        ///   4. Notify UI system to refresh item display
-        /// - Currently, this is a placeholder that will be expanded when stat calculation system is implemented
-        /// </remarks>
-        protected void RecalculateItemStats(IEntity item)
-        {
-            if (item == null)
-            {
-                return;
-            }
-
-            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
-            if (itemComponent == null)
-            {
-                return;
-            }
-
-            // Recalculate item stats based on current properties and upgrades
-            // Based on swkotor2.exe: Item stat calculation system
-            // Based on swkotor.exe: Item stat calculation system
-            // Original implementation: Iterates through all properties, calculates cumulative bonuses
-            // Stats affected by upgrades include:
-            // - Damage bonuses (weapon damage, critical hit bonuses)
-            // - AC bonuses (armor class improvements)
-            // - Saving throw bonuses
-            // - Skill bonuses
-            // - Ability score bonuses
-            // - Other property-based stat modifications
-
-            // Note: Full stat calculation would require:
-            // 1. Base item stats from baseitems.2da
-            // 2. Property effect calculation (from itempropdef.2da)
-            // 3. Cumulative bonus application
-            // 4. UI display update
-
-            // For now, this method provides the framework for stat recalculation
-            // When the stat calculation system is implemented, this will:
-            // - Call stat calculation methods
-            // - Update item component with calculated stats
-            // - Trigger UI refresh events
-
-            // TODO: When stat calculation system is implemented, expand this method to:
-            // 1. Calculate base item stats from baseitems.2da
-            // 2. Apply property bonuses from all properties
-            // 3. Update item component stat fields
-            // 4. Notify UI system to refresh display
-        }
     }
 }
 

@@ -9,18 +9,22 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Upgrade Screen Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe upgrade screen system
-    /// - Located via string references: "upgradeitems_p" @ 0x007d09e4, "BTN_UPGRADEITEM" @ 0x007d09d4
-    /// - "BTN_UPGRADEITEMS" @ 0x007d0b58, "BTN_CREATEITEMS" @ 0x007d0b48
-    /// - Original implementation: Upgrade screen allows players to modify weapons and armor
+    /// - Common interface for item upgrade systems across all BioWare engines
+    /// - Upgrade screen allows players to modify weapons and armor
     /// - Upgrade types: Crystals (lightsabers), modifications (weapons/armor), components
     /// - Upgrade slots: Items have upgrade slots (UpgradeType field in UTI)
-    /// - Upgrade items: Defined in upgradeitems.2da, upcrystals.2da, etc.
+    /// - Upgrade items: Defined in 2DA files (engine-specific table names)
     /// - Item creation: Can create items from components (if enabled)
-    /// - Skill requirements: Character skills affect upgrade success (not implemented in original)
-    /// - Based on swkotor2.exe: ShowUpgradeScreen function @ routine ID 850
+    /// - Skill requirements: Character skills affect upgrade success (engine-specific)
+    ///
+    /// Engine-specific implementations:
+    /// - Odyssey (swkotor.exe/swkotor2.exe): Full upgrade screen system with 2DA-based upgrades
+    /// - Aurora (nwmain.exe): No upgrade screen system (uses different item modification)
+    /// - Eclipse (daorigins.exe/DragonAge2.exe): ItemUpgrade system with GUIItemUpgrade class
+    /// - Infinity: No upgrade screen system (uses different item modification)
+    ///
+    /// Base implementation: BaseUpgradeScreen in Runtime.Games.Common
+    /// Engine implementations: OdysseyUpgradeScreenBase, AuroraUpgradeScreen, EclipseUpgradeScreen, InfinityUpgradeScreen
     /// </remarks>
     public interface IUpgradeScreen
     {
