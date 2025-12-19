@@ -43,9 +43,12 @@ namespace Andastra.Runtime.Games.Aurora.Save
     /// - ✅ game.git GFF file creation and loading (Game Instance Template)
     /// - ✅ module_uuid.txt creation and loading (Module UUID)
     /// - ✅ nwsync.txt and nwsyncad.txt creation (NWN sync data, empty for single-player)
-    /// - ⚠️ TODO: Full AreaState to GIT conversion (currently creates basic GIT structure)
-    /// - ⚠️ TODO: GAM file support for game state (party, globals, etc.)
-    /// - ⚠️ TODO: Full GIT to AreaState conversion (currently creates basic AreaState)
+    /// - ✅ Full AreaState to GIT conversion (ConvertAreaStateToGIT)
+    /// - ✅ Full GIT to AreaState conversion (ConvertGITToAreaState)
+    /// - ✅ GAM file support for game state (ConvertSaveGameDataToGAM, ConvertGAMToSaveGameData)
+    /// - ✅ Complete entity state conversions (creatures, doors, placeables, triggers, waypoints, stores, sounds, encounters, cameras)
+    /// - ✅ Spawned entity support (dynamically created entities not in original GIT)
+    /// - ✅ Global variables, party state, and game time conversion
     /// </remarks>
     public class AuroraSaveGameManager : BaseSaveGameManager
     {
