@@ -1572,6 +1572,11 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Loads an MDL model from the current module.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: MDL models are loaded from module resources using cached Module object.
+        /// Located via string references: "MDL" @ resource type constants, model loading functions.
+        /// Original implementation: Uses cached Module object for efficient resource access.
+        /// </remarks>
         [CanBeNull]
         private Andastra.Parsing.Formats.MDLData.MDL LoadMDLModel(string modelResRef)
         {
@@ -1582,19 +1587,13 @@ namespace Andastra.Runtime.Game.Core
 
             try
             {
-                // Get module from session - we need access to the Andastra.Parsing Module object
-                // TODO: SIMPLIFIED - For now, we'll need to store it or access it differently
-                // TODO: SIMPLIFIED - This is a simplified approach - in a full implementation, we'd cache the Module object
-                string moduleName = _session.CurrentModuleName;
-                if (string.IsNullOrEmpty(moduleName))
+                // Get cached Module object from session for efficient resource access
+                // Based on swkotor2.exe: Module objects are cached and reused for resource lookups
+                Andastra.Parsing.Common.Module module = _session.GetCurrentParsingModule();
+                if (module == null)
                 {
                     return null;
                 }
-
-                // TODO: SIMPLIFIED - Create a temporary module to load the resource
-                // TODO: SIMPLIFIED - This is inefficient - we should cache the Module object
-                var installation = new Installation(_settings.GamePath);
-                var module = new Module(moduleName, installation);
 
                 ModuleResource mdlResource = module.Resource(modelResRef, ResourceType.MDL);
                 if (mdlResource == null)

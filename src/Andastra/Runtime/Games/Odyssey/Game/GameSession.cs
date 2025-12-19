@@ -139,6 +139,18 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         /// <summary>
+        /// Gets the cached Andastra.Parsing Module object for the currently loaded module.
+        /// Returns null if no module is loaded. This provides efficient access to module resources
+        /// without creating a new Module object on every access.
+        /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
+        /// </summary>
+        [CanBeNull]
+        public Andastra.Parsing.Common.Module GetCurrentParsingModule()
+        {
+            return _moduleLoader?.GetCurrentModule();
+        }
+
+        /// <summary>
         /// Gets whether the game is currently paused.
         /// </summary>
         public bool IsPaused
@@ -248,7 +260,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 FireScriptEvent,
                 null, // Loading.ModuleLoader not used - we use Game.ModuleLoader instead
                 (entity) => entity == _playerEntity || (entity != null && entity.GetData<bool>("IsPlayer")),
-                () => _currentModule != null ? new Andastra.Parsing.Common.Module(_currentModuleName, _installation) : null
+                () => _moduleLoader?.GetCurrentModule() // Use cached Module object for efficiency
             );
 
             // Initialize input handler for player control

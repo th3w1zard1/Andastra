@@ -120,6 +120,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             // Create Andastra.Parsing Module wrapper
             var module = new Module(moduleName, _installation);
 
+            // Cache the Module object for efficient resource access
+            // Based on swkotor2.exe: Module objects are cached and reused for resource lookups
+            _cachedParsingModule = module;
+
             // Create runtime module
             var runtimeModule = new RuntimeModule();
 
@@ -678,6 +682,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         private RuntimeModule _currentModule;
 
         /// <summary>
+        /// Cached Andastra.Parsing Module object for the currently loaded module.
+        /// This avoids creating a new Module object every time resources are accessed.
+        /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
+        /// </summary>
+        private Andastra.Parsing.Common.Module _cachedParsingModule;
+
+        /// <summary>
         /// Gets the currently loaded module.
         /// </summary>
         public RuntimeModule CurrentModule => _currentModule;
@@ -688,15 +699,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         public EntityFactory EntityFactory => _entityFactory;
 
         /// <summary>
-        /// Gets the Andastra.Parsing Module for the currently loaded runtime module.
+        /// Gets the cached Andastra.Parsing Module for the currently loaded runtime module.
+        /// Returns the cached Module object to avoid recreating it on every access.
+        /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
         /// </summary>
         public Andastra.Parsing.Common.Module GetCurrentModule()
         {
-            if (_currentModule == null)
-            {
-                return null;
-            }
-            return new Module(_currentModule.ResRef, _installation);
+            return _cachedParsingModule;
         }
 
         /// <summary>
@@ -704,14 +713,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// </summary>
         public Andastra.Parsing.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
         {
-            if (_currentModule == null)
+            if (_cachedParsingModule == null)
             {
                 return null;
             }
 
-            // Load from module resources
-            var module = new Module(_currentModule.ResRef, _installation);
-            ModuleResource dlgResource = module.Resource(resRef, ResourceType.DLG);
+            // Load from module resources using cached Module object
+            ModuleResource dlgResource = _cachedParsingModule.Resource(resRef, ResourceType.DLG);
             if (dlgResource == null)
             {
                 return null;
@@ -726,14 +734,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// </summary>
         public byte[] LoadScript(string resRef)
         {
-            if (_currentModule == null)
+            if (_cachedParsingModule == null)
             {
                 return null;
             }
 
-            // Load from module resources
-            var module = new Module(_currentModule.ResRef, _installation);
-            ModuleResource ncsResource = module.Resource(resRef, ResourceType.NCS);
+            // Load from module resources using cached Module object
+            ModuleResource ncsResource = _cachedParsingModule.Resource(resRef, ResourceType.NCS);
             if (ncsResource == null)
             {
                 return null;
