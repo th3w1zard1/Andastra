@@ -84,6 +84,11 @@
     <ProjectReference Include="..\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 
+  <!-- This test project targets Parsing/TSLPatcher. Runtime/graphics tests live elsewhere. -->
+  <ItemGroup>
+    <Compile Remove="Runtime\**\*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="test_files\**\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

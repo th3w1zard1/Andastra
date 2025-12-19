@@ -304,12 +304,22 @@ namespace Andastra.Runtime.Core.Actions
             return ActionStatus.InProgress;
         }
 
-
+        /// <summary>
+        /// Returns an approximate collision radius for an entity.
+        /// </summary>
+        /// <remarks>
+        /// TODO: SIMPLIFIED - Derive from actual model bounds / collision component once available.
+        /// </remarks>
+        private float GetEntityCollisionRadius(IEntity entity)
         {
             if (entity == null)
             {
-                return 0.5f; // Default radius
+                return 0.5f;
             }
+
+            return 0.5f;
+        }
+
         /// <summary>
         /// Gets the bump counter for an entity.
         /// Based on swkotor2.exe: Bump counter stored at offset 0x268 in entity structure.

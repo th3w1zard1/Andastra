@@ -28,6 +28,8 @@ namespace Andastra.Parsing.Common
 
         public static ResRef FromBlank() => new ResRef(string.Empty);
 
+        public static ResRef FromString(string text) => new ResRef(text);
+
         public static ResRef FromPath(string filePath)
         {
             string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);

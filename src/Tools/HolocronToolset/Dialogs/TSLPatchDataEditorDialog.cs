@@ -149,8 +149,8 @@ namespace HolocronToolset.Dialogs
             var tab = new TabItem { Header = "General Settings" };
             var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
 
-            // Mod Information Group
-            var modInfoGroup = new GroupBox { Header = "Mod Information", Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+            // Mod Information Group (using Expander instead of GroupBox - Avalonia doesn't have GroupBox)
+            var modInfoGroup = new Expander { Header = "Mod Information", IsExpanded = true, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
             var modInfoLayout = new StackPanel { Spacing = 5 };
 
             // Mod name
@@ -175,8 +175,8 @@ namespace HolocronToolset.Dialogs
             modInfoGroup.Content = modInfoLayout;
             content.Children.Add(modInfoGroup);
 
-            // Installation Options Group
-            var installOptionsGroup = new GroupBox { Header = "Installation Options", Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+            // Installation Options Group (using Expander instead of GroupBox - Avalonia doesn't have GroupBox)
+            var installOptionsGroup = new Expander { Header = "Installation Options", IsExpanded = true, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
             var installOptionsLayout = new StackPanel { Spacing = 5 };
 
             _installToOverrideCheck = new CheckBox { Content = "Install files to Override folder", IsChecked = true };
@@ -384,7 +384,7 @@ namespace HolocronToolset.Dialogs
                         "Error",
                         "TSLPatchData path is not set. Please specify a path first.",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     await msgBox.ShowAsync();
                     return;
                 }
@@ -422,7 +422,7 @@ namespace HolocronToolset.Dialogs
                     "Saved",
                     $"Configuration saved to:\n{iniPath}",
                     ButtonEnum.Ok,
-                    Icon.Success);
+                    MsBox.Avalonia.Enums.Icon.Success);
                 await successBox.ShowAsync();
             }
             catch (Exception ex)
@@ -432,7 +432,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     $"Failed to save configuration:\n{ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorBox.ShowAsync();
             }
         }

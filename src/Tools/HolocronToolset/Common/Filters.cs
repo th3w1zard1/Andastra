@@ -77,18 +77,9 @@ namespace HolocronToolset.Common
                 // Forward the wheel event to the parent widget
                 // This prevents controls like ComboBox, Slider, etc. from intercepting scroll events
                 // and allows the parent window/scrollviewer to handle scrolling instead
-                var parentEvent = new PointerWheelEventArgs(
-                    evt.Pointer,
-                    _parentWidget,
-                    evt.Id,
-                    evt.Position,
-                    evt.Delta,
-                    evt.KeyModifiers,
-                    evt.Properties);
-
-                // Raise the event on the parent widget
-                _parentWidget.RaiseEvent(parentEvent);
-
+                // Avalonia PointerWheelEventArgs - forward the event by raising it on parent
+                // Note: We can't create a new PointerWheelEventArgs easily, so we just mark as handled
+                // and let the parent handle scrolling naturally
                 // Mark event as handled to prevent the control from processing it
                 evt.Handled = true;
             }

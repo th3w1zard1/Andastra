@@ -2656,16 +2656,16 @@ namespace HolocronToolset.Tests.Editors
                 
                 // Set all basic fields
                 are.Tag = "test_tag_" + game.ToString();
-                are.Name = LocalizedString.FromString("Test Area " + game.ToString());
+                are.Name = LocalizedString.FromEnglish("Test Area " + game.ToString());
                 are.AlphaTest = 100;
                 are.CameraStyle = 1;
-                are.DefaultEnvMap = ResRef.FromString("envmap");
+                are.DefaultEnvMap = new ResRef("envmap");
                 are.Unescapable = true;
                 are.DisableTransit = false;
                 are.StealthXp = true;
                 are.StealthXpMax = 500;
                 are.StealthXpLoss = 10;
-                are.GrassTexture = ResRef.FromString("grass");
+                are.GrassTexture = new ResRef("grass");
                 are.GrassDensity = 0.5f;
                 are.GrassSize = 1.0f;
                 are.GrassProbLL = 0.25f;
@@ -2676,11 +2676,11 @@ namespace HolocronToolset.Tests.Editors
                 are.FogNear = 10.0f;
                 are.FogFar = 200.0f;
                 are.WindPower = 1;
-                are.ShadowOpacity = ResRef.FromString("shadow");
-                are.OnEnter = ResRef.FromString("onenter");
-                are.OnExit = ResRef.FromString("onexit");
-                are.OnHeartbeat = ResRef.FromString("onheartbeat");
-                are.OnUserDefined = ResRef.FromString("onuserdefined");
+                are.ShadowOpacity = new ResRef("shadow");
+                are.OnEnter = new ResRef("onenter");
+                are.OnExit = new ResRef("onexit");
+                are.OnHeartbeat = new ResRef("onheartbeat");
+                are.OnUserDefined = new ResRef("onuserdefined");
                 are.LoadScreenID = 5;
                 are.Comment = "Test comment for " + game.ToString();
                 

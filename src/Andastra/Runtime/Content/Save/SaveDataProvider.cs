@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Andastra.Parsing.Extract.SaveData;
 using Andastra.Runtime.Core.Save;
 
 namespace Andastra.Runtime.Content.Save
@@ -60,10 +61,7 @@ namespace Andastra.Runtime.Content.Save
             _serializer = serializer ?? throw new ArgumentNullException("serializer");
 
             // Ensure saves directory exists
-            if (!Directory.Exists(_savesDirectory))
-            {
-                Directory.CreateDirectory(_savesDirectory);
-            }
+            SaveFolderIO.EnsureDirectoryExists(_savesDirectory);
         }
 
         /// <summary>
@@ -134,10 +132,7 @@ namespace Andastra.Runtime.Content.Save
             try
             {
                 // Create save directory if it doesn't exist
-                if (!Directory.Exists(savePath))
-                {
-                    Directory.CreateDirectory(savePath);
-                }
+                SaveFolderIO.EnsureDirectoryExists(savePath);
 
                 // Write save NFO (metadata)
                 WriteSaveNfo(savePath, saveData);
@@ -163,7 +158,7 @@ namespace Andastra.Runtime.Content.Save
         {
             string savePath = GetSavePath(saveName);
 
-            if (!Directory.Exists(savePath))
+            if (!SaveFolderIO.DirectoryExists(savePath))
             {
                 return null;
             }
@@ -195,12 +190,12 @@ namespace Andastra.Runtime.Content.Save
         {
             var saves = new List<SaveGameInfo>();
 
-            if (!Directory.Exists(_savesDirectory))
+            if (!SaveFolderIO.DirectoryExists(_savesDirectory))
             {
                 return saves;
             }
 
-            foreach (string dir in Directory.GetDirectories(_savesDirectory))
+            foreach (string dir in SaveFolderIO.GetDirectories(_savesDirectory))
             {
                 SaveGameInfo info = TryReadSaveInfo(dir);
                 if (info != null)
@@ -219,14 +214,14 @@ namespace Andastra.Runtime.Content.Save
         {
             string savePath = GetSavePath(saveName);
 
-            if (!Directory.Exists(savePath))
+            if (!SaveFolderIO.DirectoryExists(savePath))
             {
                 return false;
             }
 
             try
             {
-                Directory.Delete(savePath, true);
+                SaveFolderIO.DeleteDirectoryRecursive(savePath);
                 return true;
             }
             catch (Exception)
@@ -238,7 +233,7 @@ namespace Andastra.Runtime.Content.Save
         public bool SaveExists(string saveName)
         {
             string savePath = GetSavePath(saveName);
-            return Directory.Exists(savePath);
+            return SaveFolderIO.DirectoryExists(savePath);
         }
 
         #endregion
@@ -251,24 +246,15 @@ namespace Andastra.Runtime.Content.Save
         // Original implementation: Constructs path "SAVES:\{saveName}\savenfo", writes GFF with "NFO " signature
         private void WriteSaveNfo(string savePath, SaveGameData saveData)
         {
-            string nfoPath = Path.Combine(savePath, "savenfo.res");
-
             // Convert save metadata to bytes
             byte[] nfoData = _serializer.SerializeSaveNfo(saveData);
-
-            File.WriteAllBytes(nfoPath, nfoData);
+            SaveFolderIO.WriteSaveNfo(savePath, nfoData);
         }
 
         private SaveGameData ReadSaveNfo(string savePath)
         {
-            string nfoPath = Path.Combine(savePath, "savenfo.res");
-
-            if (!File.Exists(nfoPath))
-            {
-                return null;
-            }
-
-            byte[] nfoData = File.ReadAllBytes(nfoPath);
+            byte[] nfoData = SaveFolderIO.ReadSaveNfo(savePath);
+            if (nfoData == null || nfoData.Length == 0) return null;
             return _serializer.DeserializeSaveNfo(nfoData);
         }
 
@@ -278,57 +264,38 @@ namespace Andastra.Runtime.Content.Save
         // Original implementation: Constructs path "SAVES:\{saveName}\SAVEGAME", writes ERF with "MOD V1.0" signature
         private void WriteSaveArchive(string savePath, SaveGameData saveData)
         {
-            string savFile = Path.Combine(savePath, "savegame.sav");
-
             // Build ERF archive containing save data
             byte[] archiveData = _serializer.SerializeSaveArchive(saveData);
-
-            File.WriteAllBytes(savFile, archiveData);
+            SaveFolderIO.WriteSaveArchive(savePath, archiveData);
         }
 
         private void ReadSaveArchive(string savePath, SaveGameData saveData)
         {
-            string savFile = Path.Combine(savePath, "savegame.sav");
-
-            if (!File.Exists(savFile))
-            {
-                return;
-            }
-
-            byte[] archiveData = File.ReadAllBytes(savFile);
+            byte[] archiveData = SaveFolderIO.ReadSaveArchive(savePath);
+            if (archiveData == null || archiveData.Length == 0) return;
             _serializer.DeserializeSaveArchive(archiveData, saveData);
         }
 
         private void WriteScreenshot(string savePath, byte[] screenshot)
         {
-            string screenshotPath = Path.Combine(savePath, "screen.tga");
-            File.WriteAllBytes(screenshotPath, screenshot);
+            SaveFolderIO.WriteScreenshot(savePath, screenshot);
         }
 
         private byte[] ReadScreenshot(string savePath)
         {
-            string screenshotPath = Path.Combine(savePath, "screen.tga");
-
-            if (!File.Exists(screenshotPath))
-            {
-                return null;
-            }
-
-            return File.ReadAllBytes(screenshotPath);
+            return SaveFolderIO.ReadScreenshot(savePath);
         }
 
         private SaveGameInfo TryReadSaveInfo(string savePath)
         {
             try
             {
-                string nfoPath = Path.Combine(savePath, "savenfo.res");
-
-                if (!File.Exists(nfoPath))
+                byte[] nfoData = SaveFolderIO.ReadSaveNfo(savePath);
+                if (nfoData == null || nfoData.Length == 0)
                 {
                     return null;
                 }
 
-                byte[] nfoData = File.ReadAllBytes(nfoPath);
                 SaveGameData saveData = _serializer.DeserializeSaveNfo(nfoData);
 
                 if (saveData == null)
@@ -362,7 +329,7 @@ namespace Andastra.Runtime.Content.Save
         public int GetNextSlotNumber()
         {
             int slot = 1;
-            while (Directory.Exists(GetSlotPath(slot)))
+            while (SaveFolderIO.DirectoryExists(GetSlotPath(slot)))
             {
                 slot++;
                 if (slot > 999)
@@ -408,7 +375,7 @@ namespace Andastra.Runtime.Content.Save
         {
             string quickSavePath = Path.Combine(_savesDirectory, "quicksave");
 
-            if (!Directory.Exists(quickSavePath))
+            if (!SaveFolderIO.DirectoryExists(quickSavePath))
             {
                 return null;
             }

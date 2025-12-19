@@ -341,7 +341,7 @@ namespace HolocronToolset.Dialogs
                     // Write ERF to file
                     ERFAuto.WriteErf(erf, filepath, outputFormat);
                 }
-                else if (Andastra.Parsing.Common.Misc.IsRimFile(fileName))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
                 {
                     // Handle RIM files
                     RIM rim;

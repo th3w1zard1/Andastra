@@ -2,9 +2,8 @@ using System;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource.Generics;
 
 namespace Andastra.Parsing.Extract.SaveData
 {
@@ -61,70 +60,61 @@ namespace Andastra.Parsing.Extract.SaveData
         public void Load()
         {
             byte[] data = File.ReadAllBytes(_saveInfoPath);
-            GFF gff = GFF.FromBytes(data);
-            GFFStruct root = gff.Root;
+            NFOData nfo = NFOAuto.ReadNfo(data);
 
-            AreaName = root.Acquire("AREANAME", string.Empty);
-            LastModule = root.Acquire("LASTMODULE", string.Empty);
-            SavegameName = root.Acquire("SAVEGAMENAME", string.Empty);
-            TimePlayed = root.Acquire("TIMEPLAYED", 0);
-            Timestamp = root.Exists("TIMESTAMP") ? (ulong?)root.GetUInt64("TIMESTAMP") : null;
+            AreaName = nfo.AreaName ?? string.Empty;
+            LastModule = nfo.LastModule ?? string.Empty;
+            SavegameName = nfo.SavegameName ?? string.Empty;
+            TimePlayed = nfo.TimePlayedSeconds;
+            Timestamp = nfo.TimestampFileTime;
 
-            CheatUsed = root.Acquire("CHEATUSED", (byte)0) != 0;
-            GameplayHint = root.Acquire("GAMEPLAYHINT", (byte)0);
-            StoryHint = root.Acquire("STORYHINT", (byte)0);
+            CheatUsed = nfo.CheatUsed;
+            GameplayHint = nfo.GameplayHint;
+            StoryHint = nfo.StoryHintLegacy;
 
-            Portrait0 = root.Acquire("PORTRAIT0", ResRef.FromBlank());
-            Portrait1 = root.Acquire("PORTRAIT1", ResRef.FromBlank());
-            Portrait2 = root.Acquire("PORTRAIT2", ResRef.FromBlank());
+            Portrait0 = nfo.Portrait0 ?? ResRef.FromBlank();
+            Portrait1 = nfo.Portrait1 ?? ResRef.FromBlank();
+            Portrait2 = nfo.Portrait2 ?? ResRef.FromBlank();
 
-            Live1 = root.Acquire("LIVE1", string.Empty);
-            Live2 = root.Acquire("LIVE2", string.Empty);
-            Live3 = root.Acquire("LIVE3", string.Empty);
-            Live4 = root.Acquire("LIVE4", string.Empty);
-            Live5 = root.Acquire("LIVE5", string.Empty);
-            Live6 = root.Acquire("LIVE6", string.Empty);
-            LiveContent = root.Acquire("LIVECONTENT", (byte)0);
+            Live1 = nfo.LiveEntries.Count > 0 ? (nfo.LiveEntries[0] ?? string.Empty) : string.Empty;
+            Live2 = nfo.LiveEntries.Count > 1 ? (nfo.LiveEntries[1] ?? string.Empty) : string.Empty;
+            Live3 = nfo.LiveEntries.Count > 2 ? (nfo.LiveEntries[2] ?? string.Empty) : string.Empty;
+            Live4 = nfo.LiveEntries.Count > 3 ? (nfo.LiveEntries[3] ?? string.Empty) : string.Empty;
+            Live5 = nfo.LiveEntries.Count > 4 ? (nfo.LiveEntries[4] ?? string.Empty) : string.Empty;
+            Live6 = nfo.LiveEntries.Count > 5 ? (nfo.LiveEntries[5] ?? string.Empty) : string.Empty;
+            LiveContent = nfo.LiveContentBitmask;
 
-            PcName = root.Acquire("PCNAME", string.Empty);
+            PcName = nfo.PcName ?? string.Empty;
         }
 
         public void Save()
         {
-            GFF gff = new GFF(GFFContent.NFO);
-            GFFStruct root = gff.Root;
-
-            root.SetString("AREANAME", AreaName);
-            root.SetString("LASTMODULE", LastModule);
-            root.SetString("SAVEGAMENAME", SavegameName);
-            root.SetUInt32("TIMEPLAYED", (uint)TimePlayed);
-            if (Timestamp.HasValue)
+            var nfo = new NFOData
             {
-                root.SetUInt64("TIMESTAMP", Timestamp.Value);
-            }
+                AreaName = AreaName ?? string.Empty,
+                LastModule = LastModule ?? string.Empty,
+                SavegameName = SavegameName ?? string.Empty,
+                TimePlayedSeconds = TimePlayed,
+                TimestampFileTime = Timestamp,
+                CheatUsed = CheatUsed,
+                GameplayHint = GameplayHint,
+                StoryHintLegacy = StoryHint,
+                Portrait0 = Portrait0 ?? ResRef.FromBlank(),
+                Portrait1 = Portrait1 ?? ResRef.FromBlank(),
+                Portrait2 = Portrait2 ?? ResRef.FromBlank(),
+                LiveContentBitmask = LiveContent,
+                PcName = PcName ?? string.Empty,
+            };
 
-            root.SetUInt8("CHEATUSED", (byte)(CheatUsed ? 1 : 0));
-            root.SetUInt8("GAMEPLAYHINT", GameplayHint);
-            root.SetUInt8("STORYHINT", StoryHint);
+            // Mirror legacy SaveInfo fields (LIVE1..6).
+            nfo.LiveEntries[0] = Live1 ?? string.Empty;
+            nfo.LiveEntries[1] = Live2 ?? string.Empty;
+            nfo.LiveEntries[2] = Live3 ?? string.Empty;
+            nfo.LiveEntries[3] = Live4 ?? string.Empty;
+            nfo.LiveEntries[4] = Live5 ?? string.Empty;
+            nfo.LiveEntries[5] = Live6 ?? string.Empty;
 
-            root.SetResRef("PORTRAIT0", Portrait0);
-            root.SetResRef("PORTRAIT1", Portrait1);
-            root.SetResRef("PORTRAIT2", Portrait2);
-
-            root.SetString("LIVE1", Live1);
-            root.SetString("LIVE2", Live2);
-            root.SetString("LIVE3", Live3);
-            root.SetString("LIVE4", Live4);
-            root.SetString("LIVE5", Live5);
-            root.SetString("LIVE6", Live6);
-            root.SetUInt8("LIVECONTENT", LiveContent);
-
-            if (!string.IsNullOrEmpty(PcName))
-            {
-                root.SetString("PCNAME", PcName);
-            }
-
-            byte[] bytes = new GFFBinaryWriter(gff).Write();
+            byte[] bytes = NFOAuto.BytesNfo(nfo);
             File.WriteAllBytes(_saveInfoPath, bytes);
         }
     }

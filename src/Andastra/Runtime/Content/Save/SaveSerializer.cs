@@ -8,6 +8,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using Andastra.Runtime.Core.Save;
 
 namespace Andastra.Runtime.Content.Save
@@ -101,59 +102,36 @@ namespace Andastra.Runtime.Content.Save
         // Note: GFF signature is "NFO " (4 bytes), version string is "V2.0"
         public byte[] SerializeSaveNfo(SaveGameData saveData)
         {
-            // Use Andastra.Parsing GFF writer
-            // Original creates GFF with "NFO " signature and "V2.0" version
-            // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750 creates GFF with "NFO " signature
-            // Located via string reference: "savenfo" @ 0x007be1f0
-            // Note: Andastra.Parsing GFFBinaryWriter always writes "V3.2" version, but signature is correct
-            var gff = new GFF(GFFContent.NFO);
-            GFFStruct root = gff.Root;
+            if (saveData == null) throw new ArgumentNullException(nameof(saveData));
 
-            // AREANAME - Current area name
-            root.SetString(FIELD_AREA_NAME, saveData.CurrentAreaName ?? "");
-
-            // LASTMODULE - Last module ResRef
-            root.SetString(FIELD_MODULE_NAME, saveData.CurrentModule ?? "");
-
-            // TIMEPLAYED - Total seconds played
-            root.SetInt32(FIELD_TIME_PLAYED, (int)saveData.PlayTime.TotalSeconds);
-
-            // CHEATUSED - Whether cheats were used (byte)
-            root.SetUInt8(FIELD_CHEAT_USED, saveData.CheatUsed ? (byte)1 : (byte)0);
-
-            // SAVEGAMENAME - Save name
-            root.SetString(FIELD_SAVE_NAME, saveData.Name ?? "");
-
-            // TIMESTAMP - FileTime (64-bit integer: dwLowDateTime, dwHighDateTime)
-            // Original uses GetLocalTime + SystemTimeToFileTime to create FILETIME
-            DateTime saveTime = saveData.SaveTime;
-            long fileTime = saveTime.ToFileTime();
-            root.SetInt64(FIELD_TIMESTAMP, fileTime);
-
-            // PCNAME - Player character name
-            string playerName = "";
-            if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
+            var nfo = new NFOData
             {
-                playerName = saveData.PartyState.PlayerCharacter.Tag ?? "";
-            }
-            root.SetString(FIELD_PLAYER_NAME, playerName);
+                AreaName = saveData.CurrentAreaName ?? string.Empty,
+                LastModule = saveData.CurrentModule ?? string.Empty,
+                SavegameName = saveData.Name ?? string.Empty,
+                TimePlayedSeconds = (int)saveData.PlayTime.TotalSeconds,
+                CheatUsed = saveData.CheatUsed,
+                GameplayHint = (byte)(saveData.GameplayHint ? 1 : 0),
+                PcName = saveData.PlayerName ?? string.Empty,
+            };
 
-            // SAVENUMBER - Save slot number
-            root.SetInt32(FIELD_SAVE_NUMBER, saveData.SaveNumber);
-
-            // GAMEPLAYHINT - Gameplay hint flag (byte)
-            root.SetUInt8(FIELD_GAMEPLAY_HINT, saveData.GameplayHint ? (byte)1 : (byte)0);
-
-            // STORYHINT0-9 - Story hint flags (bytes)
-            for (int i = 0; i < 10; i++)
+            // Timestamp stored as FILETIME (uint64) in many saves.
+            long ft = saveData.SaveTime.ToFileTime();
+            if (ft > 0)
             {
-                string hintField = FIELD_STORY_HINT + i.ToString();
-                bool hintValue = saveData.StoryHints != null && i < saveData.StoryHints.Count && saveData.StoryHints[i];
-                root.SetUInt8(hintField, hintValue ? (byte)1 : (byte)0);
+                nfo.TimestampFileTime = (ulong)ft;
             }
 
-            // LIVECONTENT - Bitmask for live content flags (byte)
-            // Original uses bitmask: 1 << (i-1) for each enabled live content
+            // Story hints (0..9)
+            if (saveData.StoryHints != null)
+            {
+                for (int i = 0; i < 10 && i < saveData.StoryHints.Count; i++)
+                {
+                    nfo.StoryHints[i] = saveData.StoryHints[i];
+                }
+            }
+
+            // Live content bitmask
             byte liveContent = 0;
             if (saveData.LiveContent != null)
             {
@@ -165,9 +143,9 @@ namespace Andastra.Runtime.Content.Save
                     }
                 }
             }
-            root.SetUInt8(FIELD_LIVE_CONTENT, liveContent);
+            nfo.LiveContentBitmask = liveContent;
 
-            return gff.ToBytes();
+            return NFOAuto.BytesNfo(nfo);
         }
 
         // Deserialize save metadata from NFO GFF format
@@ -178,102 +156,60 @@ namespace Andastra.Runtime.Content.Save
         // REBOOTAUTOSAVE, PCAUTOSAVE, SCREENSHOT
         public SaveGameData DeserializeSaveNfo(byte[] data)
         {
-            // Use Andastra.Parsing GFF reader
-            GFF gff;
+            if (data == null || data.Length == 0)
+            {
+                return null;
+            }
+
+            NFOData nfo;
             try
             {
-                gff = GFF.FromBytes(data);
+                nfo = NFOAuto.ReadNfo(data);
             }
             catch (Exception)
             {
                 return null;
             }
 
-            if (gff == null || gff.Root == null)
-            {
-                return null;
-            }
-
             var saveData = new SaveGameData();
-            var root = gff.Root;
+            saveData.CurrentAreaName = nfo.AreaName ?? string.Empty;
+            saveData.CurrentModule = nfo.LastModule ?? string.Empty;
+            saveData.PlayTime = TimeSpan.FromSeconds(nfo.TimePlayedSeconds);
+            saveData.CheatUsed = nfo.CheatUsed;
+            saveData.Name = string.IsNullOrEmpty(nfo.SavegameName) ? "Old Save Game" : nfo.SavegameName;
+            saveData.PlayerName = nfo.PcName ?? string.Empty;
+            saveData.GameplayHint = nfo.GameplayHint != 0;
 
-            // AREANAME
-            saveData.CurrentAreaName = root.GetString(FIELD_AREA_NAME);
-
-            // LASTMODULE
-            saveData.CurrentModule = root.GetString(FIELD_MODULE_NAME);
-
-            // TIMEPLAYED - Total seconds played
-            int seconds = root.GetInt32(FIELD_TIME_PLAYED);
-            saveData.PlayTime = TimeSpan.FromSeconds(seconds);
-
-            // CHEATUSED
-            saveData.CheatUsed = root.GetUInt8(FIELD_CHEAT_USED) != 0;
-
-            // SAVEGAMENAME
-            saveData.Name = root.GetString(FIELD_SAVE_NAME);
-            if (string.IsNullOrEmpty(saveData.Name))
+            if (nfo.TimestampFileTime.HasValue && nfo.TimestampFileTime.Value != 0)
             {
-                // Original sets to "Old Save Game" if empty
-                saveData.Name = "Old Save Game";
-            }
-
-            // TIMESTAMP - FileTime (64-bit integer)
-            long fileTime = root.GetInt64(FIELD_TIMESTAMP);
-            if (fileTime != 0)
-            {
-                saveData.SaveTime = DateTime.FromFileTime(fileTime);
+                try
+                {
+                    saveData.SaveTime = DateTime.FromFileTime((long)nfo.TimestampFileTime.Value);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    saveData.SaveTime = DateTime.Now;
+                }
             }
             else
             {
                 saveData.SaveTime = DateTime.Now;
             }
 
-            // PCNAME
-            saveData.PlayerName = root.GetString(FIELD_PLAYER_NAME);
-
-            // SAVENUMBER
-            saveData.SaveNumber = root.GetInt32(FIELD_SAVE_NUMBER);
-
-            // GAMEPLAYHINT
-            saveData.GameplayHint = root.GetUInt8(FIELD_GAMEPLAY_HINT) != 0;
-
-            // STORYHINT0-9
-            if (saveData.StoryHints == null)
-            {
-                saveData.StoryHints = new List<bool>();
-            }
+            if (saveData.StoryHints == null) saveData.StoryHints = new List<bool>();
+            saveData.StoryHints.Clear();
             for (int i = 0; i < 10; i++)
             {
-                string hintField = FIELD_STORY_HINT + i.ToString();
-                bool hintValue = root.GetUInt8(hintField) != 0;
-                if (i < saveData.StoryHints.Count)
-                {
-                    saveData.StoryHints[i] = hintValue;
-                }
-                else
-                {
-                    saveData.StoryHints.Add(hintValue);
-                }
+                saveData.StoryHints.Add(nfo.StoryHints[i]);
             }
 
-            // LIVECONTENT - Bitmask
-            byte liveContent = root.GetUInt8(FIELD_LIVE_CONTENT);
-            if (saveData.LiveContent == null)
-            {
-                saveData.LiveContent = new List<bool>();
-            }
+            if (saveData.LiveContent == null) saveData.LiveContent = new List<bool>();
+            saveData.LiveContent.Clear();
+            byte liveContent = nfo.LiveContentBitmask;
             for (int i = 0; i < 32; i++)
             {
                 bool enabled = (liveContent & (1 << (i & 0x1F))) != 0;
-                if (i < saveData.LiveContent.Count)
-                {
-                    saveData.LiveContent[i] = enabled;
-                }
-                else
-                {
-                    saveData.LiveContent.Add(enabled);
-                }
+                saveData.LiveContent.Add(enabled);
             }
 
             return saveData;

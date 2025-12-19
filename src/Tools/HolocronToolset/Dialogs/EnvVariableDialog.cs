@@ -116,7 +116,8 @@ namespace HolocronToolset.Dialogs
             {
                 PopulateEnvVarNames();
                 _nameEdit.SelectionChanged += (s, e) => UpdateDescriptionAndCompleter();
-                _nameEdit.TextChanged += (s, e) => UpdateDescriptionAndCompleter();
+                // Note: ComboBox doesn't have TextChanged in Avalonia - use SelectionChanged or handle TextBox inside if needed
+                // For editable ComboBox, SelectionChanged should handle most cases
             }
             if (_browseDirButton != null)
             {

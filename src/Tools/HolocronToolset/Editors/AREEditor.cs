@@ -311,6 +311,7 @@ namespace HolocronToolset.Editors
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateButton => _tagGenerateButton;
         public ComboBox CameraStyleSelect => _cameraStyleSelect;
+        public ComboBox OnEnterSelect => _onEnterSelect;
         public TextBox EnvmapEdit => _envmapEdit;
         public CheckBox DisableTransitCheck => _disableTransitCheck;
         public CheckBox UnescapableCheck => _unescapableCheck;
