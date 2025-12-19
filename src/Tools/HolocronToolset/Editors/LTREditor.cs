@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -7,6 +8,7 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
@@ -20,6 +22,11 @@ namespace HolocronToolset.Editors
     {
         private LTR _ltr;
         private bool _autoResizeEnabled;
+
+        // Data collections for tables
+        private ObservableCollection<List<string>> _singlesData;
+        private ObservableCollection<List<string>> _doublesData;
+        private ObservableCollection<List<string>> _triplesData;
 
         // UI controls
         private DataGrid _tableSingles;
@@ -65,7 +72,11 @@ namespace HolocronToolset.Editors
 
             _ltr = new LTR();
             _autoResizeEnabled = true;
+            _singlesData = new ObservableCollection<List<string>>();
+            _doublesData = new ObservableCollection<List<string>>();
+            _triplesData = new ObservableCollection<List<string>>();
             PopulateComboBoxes();
+            SetupTableSorting();
             New();
         }
 
@@ -103,12 +114,14 @@ namespace HolocronToolset.Editors
             {
                 AutoGenerateColumns = false,
                 CanUserReorderColumns = false,
-                CanUserResizeColumns = true
+                CanUserResizeColumns = true,
+                SelectionMode = DataGridSelectionMode.Extended
             };
             _tableSingles.Columns.Add(new DataGridTextColumn { Header = "Char", Binding = new Binding("[0]") });
             _tableSingles.Columns.Add(new DataGridTextColumn { Header = "Start", Binding = new Binding("[1]") });
             _tableSingles.Columns.Add(new DataGridTextColumn { Header = "Middle", Binding = new Binding("[2]") });
             _tableSingles.Columns.Add(new DataGridTextColumn { Header = "End", Binding = new Binding("[3]") });
+            _tableSingles.ItemsSource = _singlesData;
             singlesTab.Content = _tableSingles;
 
             // Doubles table
@@ -116,13 +129,15 @@ namespace HolocronToolset.Editors
             {
                 AutoGenerateColumns = false,
                 CanUserReorderColumns = false,
-                CanUserResizeColumns = true
+                CanUserResizeColumns = true,
+                SelectionMode = DataGridSelectionMode.Extended
             };
             _tableDoubles.Columns.Add(new DataGridTextColumn { Header = "Prev", Binding = new Binding("[0]") });
             _tableDoubles.Columns.Add(new DataGridTextColumn { Header = "Char", Binding = new Binding("[1]") });
             _tableDoubles.Columns.Add(new DataGridTextColumn { Header = "Start", Binding = new Binding("[2]") });
             _tableDoubles.Columns.Add(new DataGridTextColumn { Header = "Middle", Binding = new Binding("[3]") });
             _tableDoubles.Columns.Add(new DataGridTextColumn { Header = "End", Binding = new Binding("[4]") });
+            _tableDoubles.ItemsSource = _doublesData;
             doublesTab.Content = _tableDoubles;
 
             // Triples table
@@ -130,7 +145,8 @@ namespace HolocronToolset.Editors
             {
                 AutoGenerateColumns = false,
                 CanUserReorderColumns = false,
-                CanUserResizeColumns = true
+                CanUserResizeColumns = true,
+                SelectionMode = DataGridSelectionMode.Extended
             };
             _tableTriples.Columns.Add(new DataGridTextColumn { Header = "Prev2", Binding = new Binding("[0]") });
             _tableTriples.Columns.Add(new DataGridTextColumn { Header = "Prev1", Binding = new Binding("[1]") });
@@ -138,6 +154,7 @@ namespace HolocronToolset.Editors
             _tableTriples.Columns.Add(new DataGridTextColumn { Header = "Start", Binding = new Binding("[3]") });
             _tableTriples.Columns.Add(new DataGridTextColumn { Header = "Middle", Binding = new Binding("[4]") });
             _tableTriples.Columns.Add(new DataGridTextColumn { Header = "End", Binding = new Binding("[5]") });
+            _tableTriples.ItemsSource = _triplesData;
             triplesTab.Content = _tableTriples;
 
             tabControl.ItemsSource = new[] { singlesTab, doublesTab, triplesTab };
@@ -183,6 +200,20 @@ namespace HolocronToolset.Editors
             _tableSingles = EditorHelpers.FindControlSafe<DataGrid>(this, "TableSingles");
             _tableDoubles = EditorHelpers.FindControlSafe<DataGrid>(this, "TableDoubles");
             _tableTriples = EditorHelpers.FindControlSafe<DataGrid>(this, "TableTriples");
+            
+            // Initialize data collections if tables exist
+            if (_tableSingles != null && _tableSingles.ItemsSource == null)
+            {
+                _tableSingles.ItemsSource = _singlesData;
+            }
+            if (_tableDoubles != null && _tableDoubles.ItemsSource == null)
+            {
+                _tableDoubles.ItemsSource = _doublesData;
+            }
+            if (_tableTriples != null && _tableTriples.ItemsSource == null)
+            {
+                _tableTriples.ItemsSource = _triplesData;
+            }
             _comboBoxSingleChar = EditorHelpers.FindControlSafe<ComboBox>(this, "ComboBoxSingleChar");
             _comboBoxDoubleChar = EditorHelpers.FindControlSafe<ComboBox>(this, "ComboBoxDoubleChar");
             _comboBoxDoublePrevChar = EditorHelpers.FindControlSafe<ComboBox>(this, "ComboBoxDoublePrevChar");
@@ -255,6 +286,77 @@ namespace HolocronToolset.Editors
             {
                 _buttonRemoveTriple.Click += (s, e) => RemoveTripleRow();
             }
+            
+            // Setup header context menus for tables
+            SetupHeaderContextMenus();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:37-39
+        // Original: self.ui.tableSingles.setSortingEnabled(True)
+        private void SetupTableSorting()
+        {
+            if (_tableSingles != null)
+            {
+                _tableSingles.CanUserSortColumns = true;
+            }
+            if (_tableDoubles != null)
+            {
+                _tableDoubles.CanUserSortColumns = true;
+            }
+            if (_tableTriples != null)
+            {
+                _tableTriples.CanUserSortColumns = true;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:67-78
+        // Original: hor_header.customContextMenuRequested.connect(self.show_header_context_menu)
+        private void SetupHeaderContextMenus()
+        {
+            // Setup context menu for each table
+            SetupTableContextMenu(_tableSingles);
+            SetupTableContextMenu(_tableDoubles);
+            SetupTableContextMenu(_tableTriples);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:124-148
+        // Original: def show_header_context_menu(self, position: QPoint):
+        private void SetupTableContextMenu(DataGrid table)
+        {
+            if (table == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Auto-fit Columns" menu item (checkable)
+            // Note: Avalonia MenuItem doesn't have IsChecked property like Qt QAction
+            // The functionality still works, but we can't show the checked state in the menu
+            var autoFitItem = new MenuItem
+            {
+                Header = "Auto-fit Columns"
+            };
+            autoFitItem.Click += (sender, e) =>
+            {
+                ToggleAutoFitColumns(!_autoResizeEnabled);
+            };
+            menuItems.Add(autoFitItem);
+
+            // "Toggle Alternate Row Colors" menu item
+            var alternateRowColorsItem = new MenuItem
+            {
+                Header = "Toggle Alternate Row Colors"
+            };
+            alternateRowColorsItem.Click += (sender, e) =>
+            {
+                ToggleAlternateRowColors();
+            };
+            menuItems.Add(alternateRowColorsItem);
+
+            contextMenu.ItemsSource = menuItems;
+            table.ContextMenu = contextMenu;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:80-88
@@ -295,15 +397,17 @@ namespace HolocronToolset.Editors
         private void UpdateUIFromLTR()
         {
             string charSet = LTR.CharacterSet;
-            var singlesData = new List<List<string>>();
-            var doublesData = new List<List<string>>();
-            var triplesData = new List<List<string>>();
+            
+            // Clear existing data
+            _singlesData.Clear();
+            _doublesData.Clear();
+            _triplesData.Clear();
 
             // Singles
             foreach (char c in charSet)
             {
                 string charStr = c.ToString();
-                singlesData.Add(new List<string>
+                _singlesData.Add(new List<string>
                 {
                     charStr,
                     _ltr.GetSinglesStart(charStr).ToString("F4"),
@@ -319,7 +423,7 @@ namespace HolocronToolset.Editors
                 {
                     string prevStr = prevChar.ToString();
                     string charStr = c.ToString();
-                    doublesData.Add(new List<string>
+                    _doublesData.Add(new List<string>
                     {
                         prevStr,
                         charStr,
@@ -340,7 +444,7 @@ namespace HolocronToolset.Editors
                         string prev2Str = prev2Char.ToString();
                         string prev1Str = prev1Char.ToString();
                         string charStr = c.ToString();
-                        triplesData.Add(new List<string>
+                        _triplesData.Add(new List<string>
                         {
                             prev2Str,
                             prev1Str,
@@ -352,18 +456,11 @@ namespace HolocronToolset.Editors
                     }
                 }
             }
-
-            if (_tableSingles != null)
+            
+            // Auto-fit columns if enabled
+            if (_autoResizeEnabled)
             {
-                _tableSingles.ItemsSource = singlesData;
-            }
-            if (_tableDoubles != null)
-            {
-                _tableDoubles.ItemsSource = doublesData;
-            }
-            if (_tableTriples != null)
-            {
-                _tableTriples.ItemsSource = triplesData;
+                AutoFitColumns();
             }
         }
 
@@ -433,46 +530,151 @@ namespace HolocronToolset.Editors
         // Original: def addSingleRow(self):
         private void AddSingleRow()
         {
-            // Adding rows is handled by UpdateUIFromLTR - rows are generated from LTR data
-            UpdateUIFromLTR();
+            // In Python, this adds a row to the table widget
+            // Since our table is bound to LTR data, we'll add an empty row to the collection
+            if (_singlesData != null)
+            {
+                _singlesData.Add(new List<string> { "", "0.0000", "0.0000", "0.0000" });
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:241-246
         // Original: def removeSingleRow(self):
         private void RemoveSingleRow()
         {
-            // Removing rows is not applicable - rows are generated from LTR data
-            // TODO: STUB - This would require modifying the LTR structure itself
+            if (_tableSingles?.SelectedItems == null || _singlesData == null)
+            {
+                return;
+            }
+            
+            // Get selected items and remove them in reverse order to maintain indices
+            var selectedItems = _tableSingles.SelectedItems.Cast<List<string>>().ToList();
+            foreach (var item in selectedItems)
+            {
+                _singlesData.Remove(item);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:248-250
         // Original: def addDoubleRow(self):
         private void AddDoubleRow()
         {
-            // Adding rows is handled by UpdateUIFromLTR
-            UpdateUIFromLTR();
+            // In Python, this adds a row to the table widget
+            if (_doublesData != null)
+            {
+                _doublesData.Add(new List<string> { "", "", "0.0000", "0.0000", "0.0000" });
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:252-257
         // Original: def removeDoubleRow(self):
         private void RemoveDoubleRow()
         {
-            // Removing rows is not applicable
+            if (_tableDoubles?.SelectedItems == null || _doublesData == null)
+            {
+                return;
+            }
+            
+            // Get selected items and remove them in reverse order to maintain indices
+            var selectedItems = _tableDoubles.SelectedItems.Cast<List<string>>().ToList();
+            foreach (var item in selectedItems)
+            {
+                _doublesData.Remove(item);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:259-261
         // Original: def addTripleRow(self):
         private void AddTripleRow()
         {
-            // Adding rows is handled by UpdateUIFromLTR
-            UpdateUIFromLTR();
+            // In Python, this adds a row to the table widget
+            if (_triplesData != null)
+            {
+                _triplesData.Add(new List<string> { "", "", "", "0.0000", "0.0000", "0.0000" });
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:263-268
         // Original: def removeTripleRow(self):
         private void RemoveTripleRow()
         {
-            // Removing rows is not applicable
+            if (_tableTriples?.SelectedItems == null || _triplesData == null)
+            {
+                return;
+            }
+            
+            // Get selected items and remove them in reverse order to maintain indices
+            var selectedItems = _tableTriples.SelectedItems.Cast<List<string>>().ToList();
+            foreach (var item in selectedItems)
+            {
+                _triplesData.Remove(item);
+            }
+        }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:150-156
+        // Original: def toggle_alternate_row_colors(self):
+        public void ToggleAlternateRowColors()
+        {
+            foreach (var table in new[] { _tableSingles, _tableDoubles, _tableTriples })
+            {
+                if (table != null)
+                {
+                    table.AlternatingRowBackground = table.AlternatingRowBackground == null 
+                        ? new SolidColorBrush(Colors.LightGray) 
+                        : null;
+                }
+            }
+        }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:157-163
+        // Original: def reset_column_widths(self):
+        private void ResetColumnWidths()
+        {
+            foreach (var table in new[] { _tableSingles, _tableDoubles, _tableTriples })
+            {
+                if (table != null)
+                {
+                    foreach (var column in table.Columns)
+                    {
+                        column.Width = DataGridLength.Auto;
+                    }
+                }
+            }
+        }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:164-186
+        // Original: def auto_fit_columns(self, table: QTableWidget):
+        private void AutoFitColumns(DataGrid table = null)
+        {
+            var tables = table != null ? new[] { table } : new[] { _tableSingles, _tableDoubles, _tableTriples };
+            
+            foreach (var tbl in tables)
+            {
+                if (tbl == null) continue;
+                
+                // Resize columns to fit content
+                // Note: Avalonia DataGrid doesn't have SizeToCells, so we use Auto which sizes to content
+                foreach (var column in tbl.Columns)
+                {
+                    column.Width = DataGridLength.Auto;
+                }
+            }
+        }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:187-199
+        // Original: def toggle_auto_fit_columns(self, state: bool | None = None):
+        public void ToggleAutoFitColumns(bool? state = null)
+        {
+            _autoResizeEnabled = state.HasValue ? state.Value : !_autoResizeEnabled;
+            
+            if (_autoResizeEnabled)
+            {
+                AutoFitColumns();
+            }
+            else
+            {
+                ResetColumnWidths();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:270-289
@@ -490,6 +692,7 @@ namespace HolocronToolset.Editors
             {
                 _ltr = LTRAuto.ReadLtr(data, 0, null);
                 UpdateUIFromLTR();
+                ToggleAutoFitColumns(true);
             }
             catch (Exception ex)
             {
