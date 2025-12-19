@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Andastra.Parsing;
@@ -13,6 +14,16 @@ namespace Andastra.Parsing.Resource.Generics
     // Original: construct_git and dismantle_git functions
     public static class GITHelpers
     {
+        // Helper method to create a default triangle geometry at a position
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:1258-1259, 1333-1334
+        // Original: encounter.geometry.create_triangle(origin=encounter.position)
+        private static void CreateDefaultTriangle(List<Vector3> geometry, Vector3 origin)
+        {
+            // Create a simple triangle: origin, origin + (3, 0, 0), origin + (3, 3, 0)
+            geometry.Add(new Vector3(origin.X, origin.Y, origin.Z));
+            geometry.Add(new Vector3(origin.X + 3.0f, origin.Y, origin.Z));
+            geometry.Add(new Vector3(origin.X + 3.0f, origin.Y + 3.0f, origin.Z));
+        }
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:1184-1365
         // Original: def construct_git(gff: GFF) -> GIT:
         public static GIT ConstructGit(GFF gff)
@@ -86,6 +97,57 @@ namespace Andastra.Parsing.Resource.Generics
                 git.Doors.Add(door);
             }
 
+            // Extract encounter list
+            var encounterList = root.Acquire<GFFList>("Encounter List", new GFFList());
+            foreach (var encounterStruct in encounterList)
+            {
+                float x = encounterStruct.Acquire<float>("XPosition", 0.0f);
+                float y = encounterStruct.Acquire<float>("YPosition", 0.0f);
+                float z = encounterStruct.Acquire<float>("ZPosition", 0.0f);
+                var encounter = new GITEncounter();
+                encounter.Position = new Vector3(x, y, z);
+                encounter.ResRef = encounterStruct.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
+                
+                if (encounterStruct.Exists("Geometry"))
+                {
+                    var geometryList = encounterStruct.Acquire<GFFList>("Geometry", new GFFList());
+                    if (geometryList != null && geometryList.Count > 0)
+                    {
+                        foreach (var geometryStruct in geometryList)
+                        {
+                            float gx = geometryStruct.Acquire<float>("X", 0.0f);
+                            float gy = geometryStruct.Acquire<float>("Y", 0.0f);
+                            float gz = geometryStruct.Acquire<float>("Z", 0.0f);
+                            encounter.Geometry.Add(new Vector3(gx, gy, gz));
+                        }
+                    }
+                    else
+                    {
+                        Logger.RobustLogger.Instance.Warning("Encounter geometry list is empty! Creating a default triangle at its position.");
+                        CreateDefaultTriangle(encounter.Geometry, encounter.Position);
+                    }
+                }
+                else
+                {
+                    Logger.RobustLogger.Instance.Warning("Encounter geometry list missing! Creating a default triangle at its position.");
+                    CreateDefaultTriangle(encounter.Geometry, encounter.Position);
+                }
+
+                // Extract spawn points
+                var spawnList = encounterStruct.Acquire<GFFList>("SpawnPointList", new GFFList());
+                foreach (var spawnStruct in spawnList)
+                {
+                    var spawn = new GITEncounterSpawnPoint();
+                    spawn.X = spawnStruct.Acquire<float>("X", 0.0f);
+                    spawn.Y = spawnStruct.Acquire<float>("Y", 0.0f);
+                    spawn.Z = spawnStruct.Acquire<float>("Z", 0.0f);
+                    spawn.Orientation = spawnStruct.Acquire<float>("Orientation", 0.0f);
+                    encounter.SpawnPoints.Add(spawn);
+                }
+                
+                git.Encounters.Add(encounter);
+            }
+
             // Extract placeable list
             var placeableList = root.Acquire<GFFList>("Placeable List", new GFFList());
             foreach (var placeableStruct in placeableList)
@@ -155,13 +217,26 @@ namespace Andastra.Parsing.Resource.Generics
                 if (triggerStruct.Exists("Geometry"))
                 {
                     var geometryList = triggerStruct.Acquire<GFFList>("Geometry", new GFFList());
-                    foreach (var geometryStruct in geometryList)
+                    if (geometryList != null && geometryList.Count > 0)
                     {
-                        float px = geometryStruct.Acquire<float>("PointX", 0.0f);
-                        float py = geometryStruct.Acquire<float>("PointY", 0.0f);
-                        float pz = geometryStruct.Acquire<float>("PointZ", 0.0f);
-                        trigger.Geometry.Add(new Vector3(px, py, pz));
+                        foreach (var geometryStruct in geometryList)
+                        {
+                            float px = geometryStruct.Acquire<float>("PointX", 0.0f);
+                            float py = geometryStruct.Acquire<float>("PointY", 0.0f);
+                            float pz = geometryStruct.Acquire<float>("PointZ", 0.0f);
+                            trigger.Geometry.Add(new Vector3(px, py, pz));
+                        }
                     }
+                    else
+                    {
+                        Logger.RobustLogger.Instance.Warning("Trigger geometry list is empty! Creating a default triangle at its position.");
+                        CreateDefaultTriangle(trigger.Geometry, trigger.Position);
+                    }
+                }
+                else
+                {
+                    Logger.RobustLogger.Instance.Warning("Trigger geometry list missing! Creating a default triangle at its position.");
+                    CreateDefaultTriangle(trigger.Geometry, trigger.Position);
                 }
                 git.Triggers.Add(trigger);
             }
@@ -283,6 +358,50 @@ namespace Andastra.Parsing.Resource.Generics
                 }
             }
 
+            // Write encounter list
+            var encounterList = new GFFList();
+            root.SetList("Encounter List", encounterList);
+            foreach (var encounter in git.Encounters)
+            {
+                var encounterStruct = encounterList.Add(GITEncounter.GffStructId);
+                if (encounter.ResRef != null && !string.IsNullOrEmpty(encounter.ResRef.ToString()))
+                {
+                    encounterStruct.SetResRef("TemplateResRef", encounter.ResRef);
+                }
+                encounterStruct.SetSingle("XPosition", encounter.Position.X);
+                encounterStruct.SetSingle("YPosition", encounter.Position.Y);
+                encounterStruct.SetSingle("ZPosition", encounter.Position.Z);
+
+                if (encounter.Geometry == null || encounter.Geometry.Count == 0)
+                {
+                    Logger.RobustLogger.Instance.Warning($"Missing encounter geometry for '{encounter.ResRef}', creating a default triangle at its position...");
+                    var tempGeometry = new List<Vector3>();
+                    CreateDefaultTriangle(tempGeometry, encounter.Position);
+                    encounter.Geometry = tempGeometry;
+                }
+
+                var geometryList = new GFFList();
+                encounterStruct.SetList("Geometry", geometryList);
+                foreach (var point in encounter.Geometry)
+                {
+                    var geometryStruct = geometryList.Add(GITEncounter.GffGeometryStructId);
+                    geometryStruct.SetSingle("X", point.X);
+                    geometryStruct.SetSingle("Y", point.Y);
+                    geometryStruct.SetSingle("Z", point.Z);
+                }
+
+                var spawnList = new GFFList();
+                encounterStruct.SetList("SpawnPointList", spawnList);
+                foreach (var spawn in encounter.SpawnPoints)
+                {
+                    var spawnStruct = spawnList.Add(GITEncounter.GffSpawnStructId);
+                    spawnStruct.SetSingle("Orientation", spawn.Orientation);
+                    spawnStruct.SetSingle("X", spawn.X);
+                    spawnStruct.SetSingle("Y", spawn.Y);
+                    spawnStruct.SetSingle("Z", spawn.Z);
+                }
+            }
+
             // Write placeable list
             var placeableList = new GFFList();
             root.SetList("Placeable List", placeableList);
@@ -362,17 +481,22 @@ namespace Andastra.Parsing.Resource.Generics
                 triggerStruct.SetResRef("LinkedToModule", trigger.LinkedToModule);
                 triggerStruct.SetLocString("TransitionDestin", trigger.TransitionDestination);
 
-                if (trigger.Geometry != null && trigger.Geometry.Count > 0)
+                if (trigger.Geometry == null || trigger.Geometry.Count == 0)
                 {
-                    var geometryList = new GFFList();
-                    triggerStruct.SetList("Geometry", geometryList);
-                    foreach (var point in trigger.Geometry)
-                    {
-                        var geometryStruct = geometryList.Add(GITTrigger.GffGeometryStructId);
-                        geometryStruct.SetSingle("PointX", point.X);
-                        geometryStruct.SetSingle("PointY", point.Y);
-                        geometryStruct.SetSingle("PointZ", point.Z);
-                    }
+                    Logger.RobustLogger.Instance.Warning($"Missing trigger geometry for '{trigger.ResRef}', creating a default triangle at its position...");
+                    var tempGeometry = new List<Vector3>();
+                    CreateDefaultTriangle(tempGeometry, trigger.Position);
+                    trigger.Geometry = tempGeometry;
+                }
+
+                var geometryList = new GFFList();
+                triggerStruct.SetList("Geometry", geometryList);
+                foreach (var point in trigger.Geometry)
+                {
+                    var geometryStruct = geometryList.Add(GITTrigger.GffGeometryStructId);
+                    geometryStruct.SetSingle("PointX", point.X);
+                    geometryStruct.SetSingle("PointY", point.Y);
+                    geometryStruct.SetSingle("PointZ", point.Z);
                 }
             }
 
@@ -395,6 +519,18 @@ namespace Andastra.Parsing.Resource.Generics
                 waypointStruct.SetUInt8("MapNoteEnabled", waypoint.MapNoteEnabled ? (byte)1 : (byte)0);
                 waypointStruct.SetUInt8("HasMapNote", waypoint.HasMapNote ? (byte)1 : (byte)0);
                 waypointStruct.SetLocString("MapNote", waypoint.MapNote ?? LocalizedString.FromInvalid());
+
+                if (useDeprecated)
+                {
+                    waypointStruct.SetUInt8("Appearance", 1);
+                    waypointStruct.SetLocString("Description", LocalizedString.FromInvalid());
+                    waypointStruct.SetString("LinkedTo", "");
+                }
+            }
+
+            if (useDeprecated)
+            {
+                root.SetList("List", new GFFList());
             }
 
             return gff;

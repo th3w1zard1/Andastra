@@ -9,13 +9,13 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.GFF.Generics.DLG;
+using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Formats.Capsule;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Utils;
-using MessageBox.Avalonia;
-using MessageBox.Avalonia.Enums;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -68,6 +68,7 @@ namespace HolocronToolset.Editors
 
         // UI Controls - Scripts
         private Dictionary<string, TextBox> _scriptFields;
+        private List<string> _relevantScriptResnames;
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
@@ -83,9 +84,14 @@ namespace HolocronToolset.Editors
             _installation = installation;
             _utp = new UTP();
             _scriptFields = new Dictionary<string, TextBox>();
+            _relevantScriptResnames = new List<string>();
 
             InitializeComponent();
             SetupUI();
+            if (installation != null)
+            {
+                SetupInstallation(installation);
+            }
             New();
         }
 
@@ -295,6 +301,183 @@ namespace HolocronToolset.Editors
             // For now, programmatic UI is set up in SetupProgrammaticUI
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:110-166
+        // Original: def _setup_installation(self, installation):
+        private void SetupInstallation(HTInstallation installation)
+        {
+            _installation = installation;
+
+            // Matching PyKotor implementation: Load required 2da files if they have not been loaded already
+            List<string> required = new List<string> { HTInstallation.TwoDAPlaceables, HTInstallation.TwoDAFactions };
+            installation.HtBatchCache2DA(required);
+
+            // Matching PyKotor implementation: appearances: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_PLACEABLES)
+            TwoDA appearances = installation.HtGetCache2DA(HTInstallation.TwoDAPlaceables);
+            if (_appearanceSelect != null && appearances != null)
+            {
+                _appearanceSelect.Items.Clear();
+                List<string> appearanceLabels = appearances.GetColumn("label");
+                foreach (string label in appearanceLabels)
+                {
+                    _appearanceSelect.Items.Add(label);
+                }
+            }
+
+            // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
+            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
+            if (_factionSelect != null && factions != null)
+            {
+                _factionSelect.Items.Clear();
+                List<string> factionLabels = factions.GetColumn("label");
+                foreach (string label in factionLabels)
+                {
+                    _factionSelect.Items.Add(label);
+                }
+            }
+
+            // Matching PyKotor implementation: self.ui.notBlastableCheckbox.setVisible(installation.tsl)
+            if (_notBlastableCheckbox != null)
+            {
+                _notBlastableCheckbox.IsVisible = installation.Tsl;
+            }
+            if (_difficultySpin != null)
+            {
+                _difficultySpin.IsVisible = installation.Tsl;
+            }
+            if (_difficultyModSpin != null)
+            {
+                _difficultyModSpin.IsVisible = installation.Tsl;
+            }
+
+            // Matching PyKotor implementation: self._installation.setup_file_context_menu(...)
+            SetupFileContextMenus();
+
+            // Matching PyKotor implementation: self.relevant_script_resnames = sorted(...)
+            if (installation != null && !string.IsNullOrEmpty(base._filepath))
+            {
+                HashSet<FileResource> scriptResources = installation.GetRelevantResources(ResourceType.NCS, base._filepath);
+                _relevantScriptResnames = scriptResources
+                    .Select(r => r.ResName.ToLowerInvariant())
+                    .Distinct()
+                    .OrderBy(r => r)
+                    .ToList();
+            }
+            else
+            {
+                _relevantScriptResnames = new List<string>();
+            }
+        }
+
+        // Matching PyKotor implementation: self._installation.setup_file_context_menu(...)
+        private void SetupFileContextMenus()
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Setup context menus for script TextBoxes (NSS/NCS files)
+            foreach (var kvp in _scriptFields)
+            {
+                SetupScriptTextBoxContextMenu(kvp.Value, kvp.Key + " Script");
+            }
+
+            // Setup context menu for conversation field (DLG files)
+            if (_conversationEdit != null)
+            {
+                SetupConversationTextBoxContextMenu(_conversationEdit);
+            }
+        }
+
+        // Create context menu for script TextBox controls
+        private void SetupScriptTextBoxContextMenu(TextBox textBox, string scriptTypeName)
+        {
+            if (textBox == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open in Editor" menu item
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in Editor",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(textBox, scriptTypeName);
+            menuItems.Add(openInEditorItem);
+
+            // Enable/disable based on whether script name is set
+            textBox.TextChanged += (sender, e) =>
+            {
+                string text = textBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            };
+
+            contextMenu.Items.AddRange(menuItems);
+            textBox.ContextMenu = contextMenu;
+        }
+
+        // Create context menu for conversation TextBox control
+        private void SetupConversationTextBoxContextMenu(TextBox textBox)
+        {
+            if (textBox == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open in Editor" menu item
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in Editor",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => EditConversation();
+            menuItems.Add(openInEditorItem);
+
+            // Enable/disable based on whether conversation name is set
+            textBox.TextChanged += (sender, e) =>
+            {
+                string text = textBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            };
+
+            contextMenu.Items.AddRange(menuItems);
+            textBox.ContextMenu = contextMenu;
+        }
+
+        // Open script in editor
+        private void OpenScriptInEditor(TextBox textBox, string scriptTypeName)
+        {
+            if (_installation == null || textBox == null)
+            {
+                return;
+            }
+
+            string resname = textBox.Text?.Trim() ?? "";
+            if (string.IsNullOrEmpty(resname))
+            {
+                return;
+            }
+
+            // Try NCS first, then NSS
+            var search = _installation.Resource(resname, ResourceType.NCS);
+            if (search == null)
+            {
+                search = _installation.Resource(resname, ResourceType.NSS);
+            }
+
+            if (search != null)
+            {
+                WindowUtils.OpenResourceEditor(search.FilePath, search.ResName, search.ResType, search.GetData(), _installation, this);
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:168-268
         // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -366,7 +549,16 @@ namespace HolocronToolset.Editors
             if (_difficultySpin != null) _difficultySpin.Value = utp.UnlockDiff;
             if (_difficultyModSpin != null) _difficultyModSpin.Value = utp.UnlockDiffMod;
 
-            // Scripts
+            // Scripts - populate with relevant resources first, then set values
+            // Matching PyKotor implementation: self.ui.onClosedEdit.populate_combo_box(self.relevant_script_resnames)
+            if (_installation != null && !string.IsNullOrEmpty(base._filepath))
+            {
+                // Populate script fields with relevant resources (for autocomplete-like behavior)
+                // Note: In Python, these are ComboBoxes with populate_combo_box, but in C# we use TextBox
+                // So we'll just set the text value - autocomplete would require a different control
+            }
+
+            // Set script values from UTP
             if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
                 _scriptFields["OnClosed"].Text = utp.OnClosed.ToString();
             if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
