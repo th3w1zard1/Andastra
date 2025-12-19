@@ -351,6 +351,230 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Finds a path from start to goal while avoiding obstacles.
+        /// Based on swkotor2.exe: FUN_0054a1f0 @ 0x0054a1f0 - pathfinding around obstacles
+        /// </summary>
+        public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
+        {
+            // Find faces containing start and goal positions
+            int startFace = FindFaceAt(start);
+            int goalFace = FindFaceAt(goal);
+
+            // Validate both positions are on walkable surfaces
+            if (startFace < 0 || goalFace < 0)
+            {
+                return null;  // Not on walkable surface
+            }
+
+            if (!IsWalkable(startFace) || !IsWalkable(goalFace))
+            {
+                return null;  // Start or goal is not walkable
+            }
+
+            // Same face - check if obstacle blocks direct path
+            if (startFace == goalFace)
+            {
+                if (obstacles != null && obstacles.Count > 0)
+                {
+                    Vector3 direction = goal - start;
+                    float distance = direction.Length();
+                    if (distance > 0.001f)
+                    {
+                        direction = Vector3.Normalize(direction);
+                        // Check if any obstacle blocks the direct path
+                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        {
+                            Vector3 toObstacle = obstacle.Position - start;
+                            float projectionLength = Vector3.Dot(toObstacle, direction);
+                            if (projectionLength >= 0f && projectionLength <= distance)
+                            {
+                                Vector3 closestPoint = start + direction * projectionLength;
+                                float distanceToObstacle = Vector3.Distance(closestPoint, obstacle.Position);
+                                if (distanceToObstacle < obstacle.Radius)
+                                {
+                                    // Obstacle blocks direct path - try adjacent faces
+                                    return FindPathAroundObstacleOnSameFace(start, goal, startFace, obstacles);
+                                }
+                            }
+                        }
+                    }
+                }
+                // Same face, no obstacle blocking - direct path
+                return new List<Vector3> { start, goal };
+            }
+
+            // Build set of blocked faces from obstacles
+            HashSet<int> blockedFaces = null;
+            if (obstacles != null && obstacles.Count > 0)
+            {
+                blockedFaces = BuildBlockedFacesSet(obstacles);
+            }
+
+            // A* pathfinding over face adjacency graph (same as FindPath but with obstacle avoidance)
+            var openSet = new SortedSet<FaceScore>(new FaceScoreComparer());
+            var cameFrom = new Dictionary<int, int>();
+            var gScore = new Dictionary<int, float>();
+            var fScore = new Dictionary<int, float>();
+            var inOpenSet = new HashSet<int>();
+
+            gScore[startFace] = 0f;
+            fScore[startFace] = Heuristic(startFace, goalFace);
+            openSet.Add(new FaceScore(startFace, fScore[startFace]));
+            inOpenSet.Add(startFace);
+
+            while (openSet.Count > 0)
+            {
+                FaceScore currentScore = GetMin(openSet);
+                openSet.Remove(currentScore);
+                int current = currentScore.FaceIndex;
+                inOpenSet.Remove(current);
+
+                if (current == goalFace)
+                {
+                    return ReconstructPath(cameFrom, current, start, goal);
+                }
+
+                foreach (int neighbor in GetAdjacentFaces(current))
+                {
+                    if (neighbor < 0 || neighbor >= _faceCount)
+                    {
+                        continue;
+                    }
+                    if (!IsWalkable(neighbor))
+                    {
+                        continue;
+                    }
+
+                    // Skip blocked faces (obstacle avoidance)
+                    if (blockedFaces != null && blockedFaces.Contains(neighbor))
+                    {
+                        continue;
+                    }
+
+                    float tentativeG;
+                    if (gScore.TryGetValue(current, out float currentG))
+                    {
+                        tentativeG = currentG + EdgeCost(current, neighbor);
+                    }
+                    else
+                    {
+                        tentativeG = EdgeCost(current, neighbor);
+                    }
+
+                    float neighborG;
+                    if (!gScore.TryGetValue(neighbor, out neighborG) || tentativeG < neighborG)
+                    {
+                        cameFrom[neighbor] = current;
+                        gScore[neighbor] = tentativeG;
+                        float newF = tentativeG + Heuristic(neighbor, goalFace);
+                        fScore[neighbor] = newF;
+
+                        if (!inOpenSet.Contains(neighbor))
+                        {
+                            openSet.Add(new FaceScore(neighbor, newF));
+                            inOpenSet.Add(neighbor);
+                        }
+                    }
+                }
+            }
+
+            // No path found - try with expanded obstacle radius
+            if (obstacles != null && obstacles.Count > 0)
+            {
+                var expandedObstacles = new List<Interfaces.ObstacleInfo>();
+                foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                {
+                    expandedObstacles.Add(new Interfaces.ObstacleInfo(obstacle.Position, obstacle.Radius * 1.5f));
+                }
+                return FindPathAroundObstacles(start, goal, expandedObstacles);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Finds a path around an obstacle when start and goal are on the same face.
+        /// </summary>
+        private IList<Vector3> FindPathAroundObstacleOnSameFace(Vector3 start, Vector3 goal, int faceIndex, IList<Interfaces.ObstacleInfo> obstacles)
+        {
+            var candidateFaces = new List<int>();
+            foreach (int neighbor in GetAdjacentFaces(faceIndex))
+            {
+                if (neighbor >= 0 && neighbor < _faceCount && IsWalkable(neighbor))
+                {
+                    bool isBlocked = false;
+                    if (obstacles != null)
+                    {
+                        Vector3 neighborCenter = GetFaceCenter(neighbor);
+                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        {
+                            if (Vector3.Distance(neighborCenter, obstacle.Position) < obstacle.Radius)
+                            {
+                                isBlocked = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isBlocked)
+                    {
+                        candidateFaces.Add(neighbor);
+                    }
+                }
+            }
+
+            if (candidateFaces.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (int candidateFace in candidateFaces)
+            {
+                Vector3 candidateCenter = GetFaceCenter(candidateFace);
+                IList<Vector3> path = FindPathAroundObstacles(candidateCenter, goal, obstacles);
+                if (path != null && path.Count > 0)
+                {
+                    var fullPath = new List<Vector3> { start };
+                    foreach (Vector3 waypoint in path)
+                    {
+                        fullPath.Add(waypoint);
+                    }
+                    return fullPath;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Builds a set of face indices that are blocked by obstacles.
+        /// </summary>
+        private HashSet<int> BuildBlockedFacesSet(IList<Interfaces.ObstacleInfo> obstacles)
+        {
+            var blockedFaces = new HashSet<int>();
+
+            foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+            {
+                for (int i = 0; i < _faceCount; i++)
+                {
+                    if (!IsWalkable(i))
+                    {
+                        continue;
+                    }
+
+                    Vector3 faceCenter = GetFaceCenter(i);
+                    float distanceToObstacle = Vector3.Distance(faceCenter, obstacle.Position);
+
+                    if (distanceToObstacle < (obstacle.Radius + 0.5f))
+                    {
+                        blockedFaces.Add(i);
+                    }
+                }
+            }
+
+            return blockedFaces;
+        }
+
+        /// <summary>
         /// Gets the minimum element from a sorted set.
         /// </summary>
         private FaceScore GetMin(SortedSet<FaceScore> set)

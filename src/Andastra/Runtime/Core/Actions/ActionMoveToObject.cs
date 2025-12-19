@@ -211,8 +211,81 @@ namespace Andastra.Runtime.Core.Actions
 
                 // Try to navigate around the blocking creature
                 // Based on swkotor2.exe: FUN_0054be70 calls FUN_0054a1f0 for pathfinding around obstacles
-                // TODO: SIMPLIFIED - For now, we'll just stop movement and let the action fail
-                // TODO: Implement pathfinding around obstacles (FUN_0054a1f0)
+                // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
+                // Original implementation: FUN_0054a1f0 @ 0x0054a1f0 finds alternative path around blocking creature
+                // For ActionMoveToObject, we use direct movement but still try to avoid obstacles when blocked
+                IArea currentArea = actor.World.CurrentArea;
+                if (currentArea != null && currentArea.NavigationMesh != null)
+                {
+                    // Get blocking creature's position and bounding box
+                    IEntity blockingCreature = actor.World.GetEntity(blockingCreatureId);
+                    if (blockingCreature != null)
+                    {
+                        ITransformComponent blockingTransform = blockingCreature.GetComponent<ITransformComponent>();
+                        if (blockingTransform != null)
+                        {
+                            Vector3 obstaclePosition = blockingTransform.Position;
+                            
+                            // Get creature bounding box to determine avoidance radius
+                            CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
+                            // Use the larger of width/depth as avoidance radius, with safety margin
+                            float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
+                            
+                            // Create obstacle info
+                            var obstacles = new List<Interfaces.ObstacleInfo>
+                            {
+                                new Interfaces.ObstacleInfo(obstaclePosition, avoidanceRadius)
+                            };
+                            
+                            // Try to find path around obstacle from current position to target
+                            IList<Vector3> newPath = currentArea.NavigationMesh.FindPathAroundObstacles(
+                                transform.Position,
+                                targetTransform.Position,
+                                obstacles);
+                            
+                            if (newPath != null && newPath.Count > 0)
+                            {
+                                // Found alternative path around obstacle - use it for direct movement
+                                // For ActionMoveToObject, we'll adjust direction to follow the first waypoint
+                                Vector3 firstWaypoint = newPath[0];
+                                Vector3 adjustedDirection = firstWaypoint - transform.Position;
+                                adjustedDirection.Y = 0; // Ignore vertical
+                                if (adjustedDirection.LengthSquared() > 0.001f)
+                                {
+                                    adjustedDirection = Vector3.Normalize(adjustedDirection);
+                                    // Use adjusted direction for movement this frame
+                                    Vector3 adjustedNewPosition = currentPosition + adjustedDirection * moveDistance;
+                                    
+                                    // Project to walkmesh
+                                    Vector3 projectedPos;
+                                    float height;
+                                    if (currentArea.NavigationMesh.ProjectToSurface(adjustedNewPosition, out projectedPos, out height))
+                                    {
+                                        adjustedNewPosition = projectedPos;
+                                    }
+                                    
+                                    // Check if adjusted path is clear
+                                    uint adjustedBlockingId;
+                                    Vector3 adjustedNormal;
+                                    bool adjustedHasCollision = _collisionDetector.CheckCreatureCollision(
+                                        actor, currentPosition, adjustedNewPosition, out adjustedBlockingId, out adjustedNormal, _targetObjectId);
+                                    
+                                    if (!adjustedHasCollision)
+                                    {
+                                        // Adjusted path is clear - use it
+                                        transform.Position = adjustedNewPosition;
+                                        transform.Facing = (float)Math.Atan2(adjustedDirection.Y, adjustedDirection.X);
+                                        ClearBumpCounter(actor);
+                                        return ActionStatus.InProgress;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Could not find path around obstacle - action fails
+                // Based on swkotor2.exe: If FUN_0054a1f0 returns null, movement is aborted
                 return ActionStatus.Failed;
             }
 

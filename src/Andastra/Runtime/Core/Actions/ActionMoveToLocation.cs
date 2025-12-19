@@ -227,8 +227,62 @@ namespace Andastra.Runtime.Core.Actions
 
                 // Try to navigate around the blocking creature
                 // Based on swkotor2.exe: FUN_0054be70 calls FUN_0054a1f0 for pathfinding around obstacles
-                // TODO: SIMPLIFIED - For now, we'll just stop movement and let the action fail
-                // TODO: Implement pathfinding around obstacles (FUN_0054a1f0)
+                // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
+                // Original implementation: FUN_0054a1f0 @ 0x0054a1f0 finds alternative path around blocking creature
+                // Function signature: `undefined4 FUN_0054a1f0(void *this, float *param_1, float *param_2, float *param_3, float *param_4)`
+                // param_1: Current position (float[3])
+                // param_2: Destination position (float[3])
+                // param_3: Obstacle position (float[3]) - position of blocking creature
+                // param_4: Obstacle radius (float) - radius to avoid around obstacle
+                // Returns: New path waypoints array, or null if no path found
+                // Implementation: Marks faces within obstacle radius as temporarily blocked, then runs A* pathfinding
+                // If pathfinding fails, attempts to find alternative routes by expanding obstacle avoidance radius
+                IArea currentArea = actor.World.CurrentArea;
+                if (currentArea != null && currentArea.NavigationMesh != null)
+                {
+                    // Get blocking creature's position and bounding box
+                    IEntity blockingCreature = actor.World.GetEntity(blockingCreatureId);
+                    if (blockingCreature != null)
+                    {
+                        ITransformComponent blockingTransform = blockingCreature.GetComponent<ITransformComponent>();
+                        if (blockingTransform != null)
+                        {
+                            Vector3 obstaclePosition = blockingTransform.Position;
+                            
+                            // Get creature bounding box to determine avoidance radius
+                            // Use collision detector to get proper bounding box
+                            CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
+                            // Use the larger of width/depth as avoidance radius, with safety margin
+                            float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
+                            
+                            // Create obstacle info
+                            var obstacles = new List<Interfaces.ObstacleInfo>
+                            {
+                                new Interfaces.ObstacleInfo(obstaclePosition, avoidanceRadius)
+                            };
+                            
+                            // Try to find path around obstacle from current position to destination
+                            IList<Vector3> newPath = currentArea.NavigationMesh.FindPathAroundObstacles(
+                                transform.Position,
+                                _destination,
+                                obstacles);
+                            
+                            if (newPath != null && newPath.Count > 0)
+                            {
+                                // Found alternative path around obstacle - use it
+                                _path = newPath;
+                                _pathIndex = 0;
+                                // Reset bump counter since we found a way around
+                                ClearBumpCounter(actor);
+                                return ActionStatus.InProgress;
+                            }
+                        }
+                    }
+                }
+                
+                // Could not find path around obstacle - action fails
+                // Based on swkotor2.exe: If FUN_0054a1f0 returns null, movement is aborted
+                // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
                 return ActionStatus.Failed;
             }
 

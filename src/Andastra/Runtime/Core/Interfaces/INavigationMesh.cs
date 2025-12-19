@@ -4,6 +4,21 @@ using System.Numerics;
 namespace Andastra.Runtime.Core.Interfaces
 {
     /// <summary>
+    /// Information about an obstacle to avoid during pathfinding.
+    /// </summary>
+    public struct ObstacleInfo
+    {
+        public Vector3 Position;
+        public float Radius;
+
+        public ObstacleInfo(Vector3 position, float radius)
+        {
+            Position = position;
+            Radius = radius;
+        }
+    }
+
+    /// <summary>
     /// Navigation mesh for pathfinding and collision.
     /// </summary>
     /// <remarks>
@@ -70,6 +85,16 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Projects a point onto the walkmesh surface.
         /// </summary>
         bool ProjectToSurface(Vector3 point, out Vector3 result, out float height);
+
+        /// <summary>
+        /// Finds a path from start to goal while avoiding obstacles.
+        /// Based on swkotor2.exe: FUN_0054a1f0 @ 0x0054a1f0 - pathfinding around obstacles
+        /// </summary>
+        /// <param name="start">Start position.</param>
+        /// <param name="goal">Goal position.</param>
+        /// <param name="obstacles">List of obstacle positions to avoid (with optional radii).</param>
+        /// <returns>Path waypoints, or null if no path found.</returns>
+        IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles);
     }
 }
 

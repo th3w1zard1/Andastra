@@ -158,6 +158,16 @@ namespace Andastra.Runtime.Core.Collision
         protected abstract CreatureBoundingBox GetCreatureBoundingBox(IEntity entity);
 
         /// <summary>
+        /// Gets the bounding box for a creature entity (public accessor).
+        /// </summary>
+        /// <param name="entity">The creature entity.</param>
+        /// <returns>The creature's bounding box.</returns>
+        public CreatureBoundingBox GetCreatureBoundingBoxPublic(IEntity entity)
+        {
+            return GetCreatureBoundingBox(entity);
+        }
+
+        /// <summary>
         /// Checks for creature collisions along a movement path.
         /// </summary>
         /// <param name="actor">The entity moving.</param>
