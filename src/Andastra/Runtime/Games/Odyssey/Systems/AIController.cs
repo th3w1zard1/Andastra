@@ -1,36 +1,35 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Actions;
-using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Engines.Odyssey.Systems
 {
     /// <summary>
-    /// AI controller system for NPCs.
+    /// AI controller system for NPCs in Odyssey engine (KOTOR, KOTOR 2, Jade Empire).
     /// Handles perception, combat behavior, and action queue management for non-player creatures.
     /// </summary>
     /// <remarks>
-    /// AI Controller System:
-    /// - Based on swkotor2.exe AI system
-    /// - Located via string references: "OnHeartbeat" @ 0x007c1f60, "OnPerception" @ 0x007c1f64
-    /// - "OnCombatRoundEnd" @ 0x007c1f68, "OnDamaged" @ 0x007c1f6c, "OnDeath" @ 0x007c1f70
-    /// - AI state: "PT_AISTATE" @ 0x007c1768 (party AI state in PARTYTABLE), "AISTATE" @ 0x007c81f8, "AIState" @ 0x007c4090
-    /// - AI scripts: "aiscripts" @ 0x007c4fd0 (AI script directory/resource)
+    /// Odyssey AI Controller System:
+    /// - Based on swkotor.exe/swkotor2.exe AI system
+    /// - Located via string references: "OnHeartbeat" @ 0x007c1f60 (swkotor2.exe), "OnPerception" @ 0x007c1f64 (swkotor2.exe)
+    /// - "OnCombatRoundEnd" @ 0x007c1f68 (swkotor2.exe), "OnDamaged" @ 0x007c1f6c (swkotor2.exe), "OnDeath" @ 0x007c1f70 (swkotor2.exe)
+    /// - AI state: "PT_AISTATE" @ 0x007c1768 (party AI state in PARTYTABLE, swkotor2.exe), "AISTATE" @ 0x007c81f8 (swkotor2.exe), "AIState" @ 0x007c4090 (swkotor2.exe)
+    /// - AI scripts: "aiscripts" @ 0x007c4fd0 (AI script directory/resource, swkotor2.exe)
     /// - Pathfinding errors:
-    ///   - "?The Path find has Failed... Why?" @ 0x007c055f
-    ///   - "Bailed the desired position is unsafe." @ 0x007c0584
-    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
-    ///   - "    failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
-    /// - Script hooks: "k_def_pathfail01" @ 0x007c52fc (pathfinding failure script example)
-    /// - Debug: "    AI Level: " @ 0x007cb174 (AI level debug display)
-    /// - Original implementation: FUN_004eb750 @ 0x004eb750 (creature AI update loop)
-    /// - FUN_005226d0 @ 0x005226d0 (process heartbeat scripts), FUN_004dfbb0 @ 0x004dfbb0 (perception checks)
+    ///   - "?The Path find has Failed... Why?" @ 0x007c055f (swkotor2.exe)
+    ///   - "Bailed the desired position is unsafe." @ 0x007c0584 (swkotor2.exe)
+    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510 (swkotor2.exe)
+    ///   - "    failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8 (swkotor2.exe)
+    /// - Script hooks: "k_def_pathfail01" @ 0x007c52fc (pathfinding failure script example, swkotor2.exe)
+    /// - Debug: "    AI Level: " @ 0x007cb174 (AI level debug display, swkotor2.exe)
+    /// - Original implementation: FUN_004eb750 @ 0x004eb750 (creature AI update loop, swkotor2.exe)
+    /// - FUN_005226d0 @ 0x005226d0 (process heartbeat scripts, swkotor2.exe), FUN_004dfbb0 @ 0x004dfbb0 (perception checks, swkotor2.exe)
     /// - AI operates through action queue population based on perception and scripts
     /// - Heartbeat scripts: Fire every 6 seconds (HeartbeatInterval), can queue actions, check conditions
     /// - Perception system: Detects enemies via sight/hearing, fires OnPerception events
@@ -41,197 +40,21 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// - Party AI: Party members use AI controller when not player-controlled (PT_AISTATE from PARTYTABLE)
     /// - Based on KOTOR AI behavior from vendor/PyKotor/wiki/ and plan documentation
     /// </remarks>
-    public class AIController
+    public class AIController : BaseAIControllerSystem
     {
-        private readonly IWorld _world;
         private readonly Action<IEntity, ScriptEvent, IEntity> _fireScriptEvent;
-        private readonly Dictionary<IEntity, float> _heartbeatTimers;
-        private const float HeartbeatInterval = 6.0f; // 6 seconds between heartbeats
-        private const float PerceptionUpdateInterval = 0.5f; // Check perception every 0.5 seconds
-        private readonly Dictionary<IEntity, float> _perceptionTimers;
 
         public AIController([NotNull] IWorld world, Action<IEntity, ScriptEvent, IEntity> fireScriptEvent)
+            : base(world)
         {
-            _world = world ?? throw new ArgumentNullException("world");
-            _fireScriptEvent = fireScriptEvent ?? throw new ArgumentNullException("fireScriptEvent");
-            _heartbeatTimers = new Dictionary<IEntity, float>();
-            _perceptionTimers = new Dictionary<IEntity, float>();
+            _fireScriptEvent = fireScriptEvent ?? throw new ArgumentNullException(nameof(fireScriptEvent));
         }
 
         /// <summary>
-        /// Updates AI for all NPCs in the world.
+        /// Fires heartbeat script for a creature (Odyssey-specific: uses ScriptEvent system).
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (process heartbeat scripts)
         /// </summary>
-        public void Update(float deltaTime)
-        {
-            if (_world.CurrentArea == null)
-            {
-                return;
-            }
-
-            // Get all creatures in the current area
-            var creatures = _world.GetEntitiesInRadius(
-                Vector3.Zero, 
-                float.MaxValue, 
-                ObjectType.Creature);
-
-            foreach (var entity in creatures)
-            {
-                UpdateCreatureAI(entity, deltaTime);
-            }
-        }
-
-        private void UpdateCreatureAI(IEntity creature, float deltaTime)
-        {
-            // Skip if creature is invalid or is player-controlled
-            if (creature == null || !creature.IsValid)
-            {
-                return;
-            }
-
-            // Check if this is a player character (skip AI)
-            // In KOTOR, player characters are controlled by player input
-            // We can check this via a component or tag
-            if (IsPlayerControlled(creature))
-            {
-                return;
-            }
-
-            // Check if creature is in conversation (skip AI during dialogue)
-            if (IsInConversation(creature))
-            {
-                return;
-            }
-
-            // Process action queue first
-            IActionQueueComponent actionQueue = creature.GetComponent<IActionQueueComponent>();
-            if (actionQueue != null && actionQueue.CurrentAction != null)
-            {
-                // Action queue is processing, let it continue
-                return;
-            }
-
-            // Update heartbeat timer
-            UpdateHeartbeat(creature, deltaTime);
-
-            // Update perception
-            UpdatePerception(creature, deltaTime);
-
-            // Default combat behavior
-            if (IsInCombat(creature))
-            {
-                HandleCombatAI(creature);
-            }
-            else
-            {
-                // Idle behavior (could be random walk, patrol, etc.)
-                // TODO: SIMPLIFIED - For now, creatures just stand still when not in combat
-            }
-        }
-
-        private bool IsPlayerControlled(IEntity creature)
-        {
-            // Check if creature has a tag indicating it's the player
-            // In KOTOR, player characters typically have specific tags
-            string tag = creature.Tag ?? string.Empty;
-            return tag.Equals("Player", StringComparison.OrdinalIgnoreCase) ||
-                   tag.Equals("PC", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool IsInConversation(IEntity creature)
-        {
-            // Check if creature is currently in a dialogue conversation
-            // This would be tracked by the dialogue system
-            // TODO: SIMPLIFIED - For now, return false (dialogue system would set a flag)
-            return false;
-        }
-
-        private bool IsInCombat(IEntity creature)
-        {
-            // Check if creature is in combat
-            // This could be determined by:
-            // 1. Combat system tracking active combatants
-            // 2. Creature has enemies in perception list
-            // 3. Creature's HP is below max (recently damaged)
-
-            IStatsComponent stats = creature.GetComponent<IStatsComponent>();
-            if (stats != null && stats.CurrentHP < stats.MaxHP)
-            {
-                // Recently damaged, likely in combat
-                return true;
-            }
-
-            // Check perception for hostile creatures
-            IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
-            if (perception != null)
-            {
-                // Get faction component to check hostility
-                IFactionComponent faction = creature.GetComponent<IFactionComponent>();
-                if (faction != null)
-                {
-                    // Check all seen objects for hostile creatures
-                    foreach (IEntity seenEntity in perception.GetSeenObjects())
-                    {
-                        if (seenEntity == null || !seenEntity.IsValid)
-                        {
-                            continue;
-                        }
-
-                        // Check if this entity is hostile
-                        if (faction.IsHostile(seenEntity))
-                        {
-                            // Verify the hostile entity is alive
-                            IStatsComponent seenStats = seenEntity.GetComponent<IStatsComponent>();
-                            if (seenStats != null && seenStats.CurrentHP > 0)
-                            {
-                                // Found a hostile, alive creature that we can see
-                                return true;
-                            }
-                        }
-                    }
-
-                    // Check all heard objects for hostile creatures
-                    foreach (IEntity heardEntity in perception.GetHeardObjects())
-                    {
-                        if (heardEntity == null || !heardEntity.IsValid)
-                        {
-                            continue;
-                        }
-
-                        // Check if this entity is hostile
-                        if (faction.IsHostile(heardEntity))
-                        {
-                            // Verify the hostile entity is alive
-                            IStatsComponent heardStats = heardEntity.GetComponent<IStatsComponent>();
-                            if (heardStats != null && heardStats.CurrentHP > 0)
-                            {
-                                // Found a hostile, alive creature that we can hear
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private void UpdateHeartbeat(IEntity creature, float deltaTime)
-        {
-            if (!_heartbeatTimers.ContainsKey(creature))
-            {
-                _heartbeatTimers[creature] = 0f;
-            }
-
-            _heartbeatTimers[creature] += deltaTime;
-
-            if (_heartbeatTimers[creature] >= HeartbeatInterval)
-            {
-                _heartbeatTimers[creature] = 0f;
-                FireHeartbeatScript(creature);
-            }
-        }
-
-        private void FireHeartbeatScript(IEntity creature)
+        protected override void FireHeartbeatScript(IEntity creature)
         {
             IScriptHooksComponent scriptHooks = creature.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
@@ -244,23 +67,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
         }
 
-        private void UpdatePerception(IEntity creature, float deltaTime)
-        {
-            if (!_perceptionTimers.ContainsKey(creature))
-            {
-                _perceptionTimers[creature] = 0f;
-            }
-
-            _perceptionTimers[creature] += deltaTime;
-
-            if (_perceptionTimers[creature] >= PerceptionUpdateInterval)
-            {
-                _perceptionTimers[creature] = 0f;
-                CheckPerception(creature);
-            }
-        }
-
-        private void CheckPerception(IEntity creature)
+        /// <summary>
+        /// Checks perception for a creature (Odyssey-specific: uses walkmesh line-of-sight).
+        /// Based on swkotor2.exe: FUN_004dfbb0 @ 0x004dfbb0 (perception checks)
+        /// </summary>
+        protected override void CheckPerception(IEntity creature)
         {
             IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
             if (perception == null)
@@ -303,6 +114,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
         }
 
+        /// <summary>
+        /// Checks if subject can see target (Odyssey-specific: uses walkmesh line-of-sight).
+        /// Based on swkotor2.exe perception system with walkmesh raycast.
+        /// </summary>
         private bool CanSee(IEntity subject, IEntity target, float range)
         {
             ITransformComponent subjectTransform = subject.GetComponent<ITransformComponent>();
@@ -330,7 +145,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     // Check line-of-sight from subject eye position to target eye position
                     Vector3 subjectEye = subjectTransform.Position + Vector3.UnitY * 1.5f; // Approximate eye height
                     Vector3 targetEye = targetTransform.Position + Vector3.UnitY * 1.5f;
-                    
+
                     // Test if line-of-sight is blocked by walkmesh
                     if (!navMesh.TestLineOfSight(subjectEye, targetEye))
                     {
@@ -338,10 +153,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     }
                 }
             }
-            
+
             return true;
         }
 
+        /// <summary>
+        /// Checks if subject can hear target (Odyssey-specific: distance-based hearing).
+        /// Based on swkotor2.exe perception system.
+        /// </summary>
         private bool CanHear(IEntity subject, IEntity target, float range)
         {
             ITransformComponent subjectTransform = subject.GetComponent<ITransformComponent>();
@@ -355,7 +174,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             return distance <= range;
         }
 
-        private void HandleCombatAI(IEntity creature)
+        /// <summary>
+        /// Handles combat AI for a creature (Odyssey-specific: attack nearest enemy).
+        /// Based on swkotor2.exe: Default combat AI engages nearest enemy.
+        /// </summary>
+        protected override void HandleCombatAI(IEntity creature)
         {
             // Find nearest enemy
             IEntity nearestEnemy = FindNearestEnemy(creature);
@@ -435,15 +258,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         }
 
         /// <summary>
-        /// Cleans up AI state for a destroyed entity.
+        /// Handles idle AI for a creature (Odyssey-specific: no idle behavior yet).
+        /// TODO: SIMPLIFIED - For now, creatures just stand still when not in combat
         /// </summary>
-        public void OnEntityDestroyed(IEntity entity)
+        protected override void HandleIdleAI(IEntity creature)
         {
-            if (entity != null)
-            {
-                _heartbeatTimers.Remove(entity);
-                _perceptionTimers.Remove(entity);
-            }
+            // Idle behavior (could be random walk, patrol, etc.)
+            // TODO: SIMPLIFIED - For now, creatures just stand still when not in combat
         }
     }
 }
