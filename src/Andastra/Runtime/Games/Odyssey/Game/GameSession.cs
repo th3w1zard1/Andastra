@@ -209,6 +209,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 throw;
             }
 
+            // Initialize game data provider for world
+            // Based on swkotor2.exe: GameDataManager provides access to 2DA tables (appearance.2da, etc.)
+            // Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
+            // Original implementation: GameDataManager loads and caches 2DA tables from installation
+            var gameDataManager = new Data.GameDataManager(_installation);
+            var gameDataProvider = new Data.OdysseyGameDataProvider(gameDataManager);
+            _world.GameDataProvider = gameDataProvider;
+
             // Initialize game systems
             _factionManager = new FactionManager(_world);
             _perceptionManager = new PerceptionManager(_world, _world.EffectSystem);

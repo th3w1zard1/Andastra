@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Animation;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Templates;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Core.Interfaces
 {
@@ -130,6 +131,16 @@ namespace Andastra.Runtime.Core.Interfaces
         /// The animation system for updating entity animations.
         /// </summary>
         Animation.AnimationSystem AnimationSystem { get; }
+
+        /// <summary>
+        /// The game data provider for accessing engine-agnostic game data tables.
+        /// </summary>
+        /// <remarks>
+        /// Provides access to game data tables (2DA files) for looking up creature properties,
+        /// appearance data, and other game configuration data.
+        /// Engine-specific implementations handle the actual table loading and lookup.
+        /// </remarks>
+        IGameDataProvider GameDataProvider { get; }
 
         /// <summary>
         /// Registers an entity with the world.

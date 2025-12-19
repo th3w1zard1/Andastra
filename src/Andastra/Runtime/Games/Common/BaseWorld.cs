@@ -116,6 +116,16 @@ namespace Andastra.Runtime.Games.Common
         public abstract Andastra.Runtime.Core.Animation.AnimationSystem AnimationSystem { get; }
 
         /// <summary>
+        /// The game data provider for accessing engine-agnostic game data tables.
+        /// </summary>
+        /// <remarks>
+        /// Provides access to game data tables (2DA files) for looking up creature properties,
+        /// appearance data, and other game configuration data.
+        /// Engine-specific implementations handle the actual table loading and lookup.
+        /// </remarks>
+        public abstract IGameDataProvider GameDataProvider { get; }
+
+        /// <summary>
         /// Gets an entity by its unique ObjectId.
         /// </summary>
         /// <remarks>
