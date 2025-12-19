@@ -3017,8 +3017,13 @@ void __thiscall nwnnsscomp_init_parsing_context_data(void* context, int* globalD
 // - nwnnsscomp_prepare_instruction (0x00405396) - 63 bytes - Instruction preparation
 // - nwnnsscomp_expand_bytecode_buffer (0x00405409) - 139 bytes - Buffer expansion
 //
-// TOTAL: ~6500+ bytes of assembly fully documented with every instruction
-// TOTAL: 2800+ lines of C++ code with complete assembly annotations
+// Helper Functions (COMPLETED):
+// - nwnnsscomp_allocate_buffer (0x00404398) - 65 bytes - Buffer structure initialization
+// - nwnnsscomp_finalize_symbol_table (0x00405024) - 32 bytes - Symbol table cleanup
+// - nwnnsscomp_init_parsing_context_data (0x004047a4) - 95 bytes - Context data copying
+//
+// TOTAL: ~6700+ bytes of assembly fully documented with every instruction
+// TOTAL: 3000+ lines of C++ code with complete assembly annotations
 //
 // REMAINING FUNCTIONS (Less critical, can be expanded as needed):
 //
