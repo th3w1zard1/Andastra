@@ -364,6 +364,234 @@ namespace HolocronToolset.Tests.Formats
             link2Struct.Exists("LinkComment").Should().BeTrue("Non-empty LinkComment should be written");
             link2Struct.Acquire("LinkComment", string.Empty).Should().Be("This is a comment");
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:858-1014
+        // Test DLG serialization/deserialization using ToDict/FromDict methods
+        [Fact]
+        public void TestDlgEntrySerializationBasic()
+        {
+            var entry = new DLGEntry();
+            entry.Comment = "Test Comment";
+            entry.CameraAngle = 45;
+
+            var serialized = entry.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be(entry.Comment);
+            deserialized.CameraAngle.Should().Be(entry.CameraAngle);
+        }
+
+        [Fact]
+        public void TestDlgEntrySerializationWithLinks()
+        {
+            var entry = new DLGEntry();
+            entry.Comment = "Entry with links";
+            var reply = new DLGReply();
+            var link = new DLGLink(reply, 1);
+            entry.Links.Add(link);
+
+            var serialized = entry.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be(entry.Comment);
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].ListIndex.Should().Be(1);
+        }
+
+        [Fact]
+        public void TestDlgEntrySerializationAllAttributes()
+        {
+            var entry = new DLGEntry();
+            entry.Comment = "All attributes";
+            entry.CameraAngle = 30;
+            entry.Listener = "Listener";
+            entry.Quest = "Quest";
+            entry.Script1 = new ResRef("script1");
+
+            var serialized = entry.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be(entry.Comment);
+            deserialized.CameraAngle.Should().Be(entry.CameraAngle);
+            deserialized.Listener.Should().Be(entry.Listener);
+            deserialized.Quest.Should().Be(entry.Quest);
+            deserialized.Script1.Should().Be(entry.Script1);
+        }
+
+        [Fact]
+        public void TestDlgEntrySerializationWithMultilanguageText()
+        {
+            var entry = new DLGEntry();
+            entry.Comment = "Localized";
+            entry.Text.SetData(Language.English, Gender.Male, "Hello");
+            entry.Text.SetData(Language.French, Gender.Female, "Bonjour");
+            entry.Text.SetData(Language.German, Gender.Male, "Guten Tag");
+
+            var serialized = entry.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be("Localized");
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("Hello");
+            deserialized.Text.GetString(Language.French, Gender.Female).Should().Be("Bonjour");
+            deserialized.Text.GetString(Language.German, Gender.Male).Should().Be("Guten Tag");
+        }
+
+        [Fact]
+        public void TestDlgEntryWithNestedReplies()
+        {
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R223") };
+            var reply3 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+
+            entry1.Links.Add(new DLGLink(reply1));
+            reply1.Links.Add(new DLGLink(entry2));
+            reply1.Links.Add(new DLGLink(reply2));
+            reply2.Links.Add(new DLGLink(entry1));
+            entry2.Links.Add(new DLGLink(reply3));
+
+            var serialized = entry1.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be(entry1.Comment);
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Links[0].Node.Links.Count.Should().Be(2);
+            deserialized.Links[0].Node.Links[0].Node.Comment.Should().Be("E221");
+            deserialized.Links[0].Node.Links[1].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserialized.Links[0].Node.Links[1].Node.Links[0].Node.Comment.Should().Be("E248");
+        }
+
+        [Fact]
+        public void TestDlgEntryWithCircularReference()
+        {
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+
+            entry1.Links.Add(new DLGLink(reply1));
+            reply1.Links.Add(new DLGLink(entry2));
+            entry2.Links.Add(new DLGLink(reply2));
+            reply2.Links.Add(new DLGLink(entry1)); // Circular reference
+
+            var serialized = entry1.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be(entry1.Comment);
+            deserialized.Links.Count.Should().Be(1);
+            var deserializedReply1 = deserialized.Links[0].Node as DLGReply;
+            deserializedReply1.Should().NotBeNull();
+            deserializedReply1.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserializedReply1.Links.Count.Should().Be(1);
+            var deserializedEntry2 = deserializedReply1.Links[0].Node as DLGEntry;
+            deserializedEntry2.Should().NotBeNull();
+            deserializedEntry2.Comment.Should().Be("E221");
+            deserializedEntry2.Links.Count.Should().Be(1);
+            var deserializedReply2 = deserializedEntry2.Links[0].Node as DLGReply;
+            deserializedReply2.Should().NotBeNull();
+            deserializedReply2.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
+            deserializedReply2.Links.Count.Should().Be(1);
+            var deserializedEntry1Circular = deserializedReply2.Links[0].Node as DLGEntry;
+            deserializedEntry1Circular.Should().NotBeNull();
+            deserializedEntry1Circular.Comment.Should().Be("E248");
+        }
+
+        [Fact]
+        public void TestDlgReplySerializationBasic()
+        {
+            var reply = new DLGReply();
+            reply.Text = LocalizedString.FromEnglish("Hello");
+            reply.Unskippable = true;
+
+            var serialized = reply.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGReply;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("Hello");
+            deserialized.Unskippable.Should().Be(reply.Unskippable);
+        }
+
+        [Fact]
+        public void TestDlgReplySerializationWithLinks()
+        {
+            var reply = new DLGReply();
+            reply.Text = LocalizedString.FromEnglish("Reply with links");
+            var entry = new DLGEntry();
+            var link = new DLGLink(entry, 2);
+            reply.Links.Add(link);
+
+            var serialized = reply.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGReply;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("Reply with links");
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].ListIndex.Should().Be(2);
+        }
+
+        [Fact]
+        public void TestDlgLinkSerialization()
+        {
+            var entry = new DLGEntry { Comment = "Test Entry" };
+            var link = new DLGLink(entry, 0);
+            link.Active1 = new ResRef("test_script");
+            link.Comment = "Link comment";
+
+            var serialized = link.ToDict();
+            var deserialized = DLGLink.FromDict(serialized);
+
+            deserialized.ListIndex.Should().Be(link.ListIndex);
+            deserialized.Active1.Should().Be(link.Active1);
+            deserialized.Comment.Should().Be(link.Comment);
+            deserialized.Node.Should().NotBeNull();
+            (deserialized.Node as DLGEntry).Comment.Should().Be("Test Entry");
+        }
+
+        [Fact]
+        public void TestDlgAnimationSerialization()
+        {
+            var anim = new DLGAnimation();
+            anim.AnimationId = 123;
+            anim.Participant = "test_participant";
+
+            var serialized = anim.ToDict();
+            var deserialized = DLGAnimation.FromDict(serialized);
+
+            deserialized.AnimationId.Should().Be(anim.AnimationId);
+            deserialized.Participant.Should().Be(anim.Participant);
+        }
+
+        [Fact]
+        public void TestDlgStuntSerialization()
+        {
+            var stunt = new DLGStunt();
+            stunt.Participant = "test_participant";
+            stunt.StuntModel = new ResRef("test_model");
+
+            var serialized = stunt.ToDict();
+            var deserialized = DLGStunt.FromDict(serialized);
+
+            deserialized.Participant.Should().Be(stunt.Participant);
+            deserialized.StuntModel.Should().Be(stunt.StuntModel);
+        }
     }
 }
 
