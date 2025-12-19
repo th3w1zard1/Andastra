@@ -120,11 +120,7 @@ namespace Andastra.Runtime.Stride.Audio
 
                 // Parse WAV file to get audio format information
                 // Based on Andastra.Parsing.Formats.WAV for WAV file parsing
-                WavFile wavFile;
-                using (var stream = new MemoryStream(wavData))
-                {
-                    wavFile = WavFile.Read(stream);
-                }
+                WAV wavFile = WAVAuto.ReadWav(wavData);
 
                 // Create SoundInstance directly from WAV data using DynamicSoundSource
                 // Based on Stride API: SoundInstance constructor with DynamicSoundSource
@@ -197,14 +193,14 @@ namespace Andastra.Runtime.Stride.Audio
         /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
         /// This implementation uses a two-phase initialization to work around this limitation.
         /// </remarks>
-        private SoundInstance CreateSoundInstanceFromWavData(WavFile wavFile, byte[] wavData, bool useSpatialAudio)
+        private SoundInstance CreateSoundInstanceFromWavData(WAV wavFile, byte[] wavData, bool useSpatialAudio)
         {
             try
             {
                 // Extract PCM data from WAV file
                 // WAV format: Header + PCM data
                 // Based on Andastra.Parsing.Formats.WAV structure
-                byte[] pcmData = wavFile.GetPcmData();
+                byte[] pcmData = wavFile.Data;
                 if (pcmData == null || pcmData.Length == 0)
                 {
                     Console.WriteLine("[StrideVoicePlayer] No PCM data in WAV file");

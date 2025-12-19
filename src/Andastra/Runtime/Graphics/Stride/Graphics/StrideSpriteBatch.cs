@@ -1,6 +1,7 @@
 using Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
+using System.Numerics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -24,7 +25,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _graphicsDevice = spriteBatch.GraphicsDevice;
         }
 
-        public void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null)
+        public void Begin(Andastra.Runtime.Graphics.SpriteSortMode sortMode = Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Andastra.Runtime.Graphics.BlendState blendState = null)
         {
             if (_isBegun)
             {
@@ -49,15 +50,15 @@ namespace Andastra.Runtime.Stride.Graphics
             _isBegun = false;
         }
 
-        public void Draw(ITexture2D texture, Vector2 position, Color color)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
             var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            _spriteBatch.Draw(strideTexture, new Vector2(position.X, position.Y), strideColor);
+            _spriteBatch.Draw(strideTexture, new Stride.Core.Mathematics.Vector2(position.X, position.Y), strideColor);
         }
 
-        public void Draw(ITexture2D texture, Rectangle destinationRectangle, Color color)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -66,7 +67,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -77,10 +78,10 @@ namespace Andastra.Runtime.Stride.Graphics
                 var rect = sourceRectangle.Value;
                 strideRect = new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
             }
-            _spriteBatch.Draw(strideTexture, new Vector2(position.X, position.Y), strideRect, strideColor);
+            _spriteBatch.Draw(strideTexture, new Stride.Core.Mathematics.Vector2(position.X, position.Y), strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, float layerDepth)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Andastra.Runtime.Graphics.SpriteEffects effects, float layerDepth)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -92,17 +93,17 @@ namespace Andastra.Runtime.Stride.Graphics
                 var rect = sourceRectangle.Value;
                 strideSrcRect = new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
             }
-            var strideOrigin = new Vector2(origin.X, origin.Y);
+            var strideOrigin = new Stride.Core.Mathematics.Vector2(origin.X, origin.Y);
             var strideEffects = ConvertSpriteEffects(effects);
             _spriteBatch.Draw(strideTexture, strideDestRect, strideSrcRect, strideColor, rotation, strideOrigin, strideEffects, layerDepth);
         }
 
-        public void DrawString(IFont font, string text, Vector2 position, Color color)
+        public void DrawString(IFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var strideFont = GetStrideFont(font);
             var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            _spriteBatch.DrawString(strideFont, text, new Vector2(position.X, position.Y), strideColor);
+            _spriteBatch.DrawString(strideFont, text, new Stride.Core.Mathematics.Vector2(position.X, position.Y), strideColor);
         }
 
         private void EnsureBegun()
@@ -113,7 +114,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        private Texture2D GetStrideTexture(ITexture2D texture)
+        private Stride.Graphics.Texture2D GetStrideTexture(ITexture2D texture)
         {
             if (texture is StrideTexture2D strideTexture)
             {
@@ -131,13 +132,13 @@ namespace Andastra.Runtime.Stride.Graphics
             throw new System.ArgumentException("Font must be a StrideFont", nameof(font));
         }
 
-        private SpriteSortMode ConvertSortMode(SpriteSortMode sortMode)
+        private Stride.Graphics.SpriteSortMode ConvertSortMode(Andastra.Runtime.Graphics.SpriteSortMode sortMode)
         {
             // Stride uses the same enum values, so we can cast directly
             return (Stride.Graphics.SpriteSortMode)sortMode;
         }
 
-        private BlendStateDescription ConvertBlendState(BlendState blendState)
+        private BlendStateDescription ConvertBlendState(Andastra.Runtime.Graphics.BlendState blendState)
         {
             if (blendState == null)
             {
@@ -157,14 +158,14 @@ namespace Andastra.Runtime.Stride.Graphics
             return BlendStateDescription.Default();
         }
 
-        private SpriteEffects ConvertSpriteEffects(SpriteEffects effects)
+        private Stride.Graphics.SpriteEffects ConvertSpriteEffects(Andastra.Runtime.Graphics.SpriteEffects effects)
         {
             Stride.Graphics.SpriteEffects result = Stride.Graphics.SpriteEffects.None;
-            if ((effects & SpriteEffects.FlipHorizontally) != 0)
+            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
             {
                 result |= Stride.Graphics.SpriteEffects.FlipHorizontally;
             }
-            if ((effects & SpriteEffects.FlipVertically) != 0)
+            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipVertically) != 0)
             {
                 result |= Stride.Graphics.SpriteEffects.FlipVertically;
             }

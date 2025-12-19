@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _description = description ?? RasterizerStateDescription.Default;
         }
 
-        public CullMode CullMode
+        public Andastra.Runtime.Graphics.CullMode CullMode
         {
             get { return ConvertCullMode(_description.CullMode); }
             set
@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public FillMode FillMode
+        public Andastra.Runtime.Graphics.FillMode FillMode
         {
             get { return ConvertFillMode(_description.FillMode); }
             set
@@ -100,59 +100,59 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal RasterizerStateDescription Description => _description;
 
-        private static CullFaceMode ConvertCullMode(CullMode mode)
+        private static Stride.Graphics.CullFaceMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
         {
             switch (mode)
             {
-                case CullMode.None:
-                    return CullFaceMode.None;
-                case CullMode.CullClockwiseFace:
-                    return CullFaceMode.Front;
-                case CullMode.CullCounterClockwiseFace:
-                    return CullFaceMode.Back;
+                case Andastra.Runtime.Graphics.CullMode.None:
+                    return Stride.Graphics.CullFaceMode.None;
+                case Andastra.Runtime.Graphics.CullMode.CullClockwiseFace:
+                    return Stride.Graphics.CullFaceMode.Front;
+                case Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace:
+                    return Stride.Graphics.CullFaceMode.Back;
                 default:
-                    return CullFaceMode.Back;
+                    return Stride.Graphics.CullFaceMode.Back;
             }
         }
 
-        private static CullMode ConvertCullMode(CullFaceMode mode)
+        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(Stride.Graphics.CullFaceMode mode)
         {
             switch (mode)
             {
-                case CullFaceMode.None:
-                    return CullMode.None;
-                case CullFaceMode.Front:
-                    return CullMode.CullClockwiseFace;
-                case CullFaceMode.Back:
-                    return CullMode.CullCounterClockwiseFace;
+                case Stride.Graphics.CullFaceMode.None:
+                    return Andastra.Runtime.Graphics.CullMode.None;
+                case Stride.Graphics.CullFaceMode.Front:
+                    return Andastra.Runtime.Graphics.CullMode.CullClockwiseFace;
+                case Stride.Graphics.CullFaceMode.Back:
+                    return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
-                    return CullMode.CullCounterClockwiseFace;
+                    return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
             }
         }
 
-        private static Stride.Graphics.FillMode ConvertFillMode(FillMode mode)
+        private static Stride.Graphics.FillMode ConvertFillMode(Andastra.Runtime.Graphics.FillMode mode)
         {
             switch (mode)
             {
-                case FillMode.Solid:
+                case Andastra.Runtime.Graphics.FillMode.Solid:
                     return Stride.Graphics.FillMode.Solid;
-                case FillMode.WireFrame:
+                case Andastra.Runtime.Graphics.FillMode.WireFrame:
                     return Stride.Graphics.FillMode.Wireframe;
                 default:
                     return Stride.Graphics.FillMode.Solid;
             }
         }
 
-        private static FillMode ConvertFillMode(Stride.Graphics.FillMode mode)
+        private static Andastra.Runtime.Graphics.FillMode ConvertFillMode(Stride.Graphics.FillMode mode)
         {
             switch (mode)
             {
                 case Stride.Graphics.FillMode.Solid:
-                    return FillMode.Solid;
+                    return Andastra.Runtime.Graphics.FillMode.Solid;
                 case Stride.Graphics.FillMode.Wireframe:
-                    return FillMode.WireFrame;
+                    return Andastra.Runtime.Graphics.FillMode.WireFrame;
                 default:
-                    return FillMode.Solid;
+                    return Andastra.Runtime.Graphics.FillMode.Solid;
             }
         }
     }
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public CompareFunction DepthBufferFunction
+        public Andastra.Runtime.Graphics.CompareFunction DepthBufferFunction
         {
             get { return ConvertCompareFunction(_description.DepthBufferFunction); }
             set
@@ -224,7 +224,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public StencilOperation StencilFail
+        public Andastra.Runtime.Graphics.StencilOperation StencilFail
         {
             get { return ConvertStencilOperation(_description.FrontFace.StencilFail); }
             set
@@ -237,7 +237,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public StencilOperation StencilDepthFail
+        public Andastra.Runtime.Graphics.StencilOperation StencilDepthFail
         {
             get { return ConvertStencilOperation(_description.FrontFace.StencilDepthFail); }
             set
@@ -250,7 +250,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public StencilOperation StencilPass
+        public Andastra.Runtime.Graphics.StencilOperation StencilPass
         {
             get { return ConvertStencilOperation(_description.FrontFace.StencilPass); }
             set
@@ -263,7 +263,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public CompareFunction StencilFunction
+        public Andastra.Runtime.Graphics.CompareFunction StencilFunction
         {
             get { return ConvertCompareFunction(_description.FrontFace.StencilFunction); }
             set
@@ -316,24 +316,24 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal DepthStencilStateDescription Description => _description;
 
-        private static Stride.Graphics.CompareFunction ConvertCompareFunction(CompareFunction func)
+        private static Stride.Graphics.CompareFunction ConvertCompareFunction(Andastra.Runtime.Graphics.CompareFunction func)
         {
             return (Stride.Graphics.CompareFunction)(int)func;
         }
 
-        private static CompareFunction ConvertCompareFunction(Stride.Graphics.CompareFunction func)
+        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(Stride.Graphics.CompareFunction func)
         {
-            return (CompareFunction)(int)func;
+            return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
         }
 
-        private static Stride.Graphics.StencilOperation ConvertStencilOperation(StencilOperation op)
+        private static Stride.Graphics.StencilOperation ConvertStencilOperation(Andastra.Runtime.Graphics.StencilOperation op)
         {
             return (Stride.Graphics.StencilOperation)(int)op;
         }
 
-        private static StencilOperation ConvertStencilOperation(Stride.Graphics.StencilOperation op)
+        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(Stride.Graphics.StencilOperation op)
         {
-            return (StencilOperation)(int)op;
+            return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
         }
     }
 
@@ -349,7 +349,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _description = description ?? BlendStateDescription.Default;
         }
 
-        public BlendFunction AlphaBlendFunction
+        public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction
         {
             get { return ConvertBlendFunction(_description.AlphaSourceBlend); }
             set
@@ -360,7 +360,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Blend AlphaDestinationBlend
+        public Andastra.Runtime.Graphics.Blend AlphaDestinationBlend
         {
             get { return ConvertBlend(_description.AlphaDestinationBlend); }
             set
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Blend AlphaSourceBlend
+        public Andastra.Runtime.Graphics.Blend AlphaSourceBlend
         {
             get { return ConvertBlend(_description.AlphaSourceBlend); }
             set
@@ -382,7 +382,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public BlendFunction ColorBlendFunction
+        public Andastra.Runtime.Graphics.BlendFunction ColorBlendFunction
         {
             get { return ConvertBlendFunction(_description.ColorSourceBlend); }
             set
@@ -393,7 +393,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Blend ColorDestinationBlend
+        public Andastra.Runtime.Graphics.Blend ColorDestinationBlend
         {
             get { return ConvertBlend(_description.ColorDestinationBlend); }
             set
@@ -404,7 +404,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Blend ColorSourceBlend
+        public Andastra.Runtime.Graphics.Blend ColorSourceBlend
         {
             get { return ConvertBlend(_description.ColorSourceBlend); }
             set
@@ -415,7 +415,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public ColorWriteChannels ColorWriteChannels
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels
         {
             get { return ConvertColorWriteChannels(_description.RenderTargets[0].ColorWriteChannels); }
             set
@@ -428,9 +428,9 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public ColorWriteChannels ColorWriteChannels1
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
         {
-            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 1 ? _description.RenderTargets[1].ColorWriteChannels : ColorWriteChannels.None); }
+            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 1 ? _description.RenderTargets[1].ColorWriteChannels : Stride.Graphics.ColorWriteChannels.None); }
             set
             {
                 if (_description.RenderTargets.Length > 1)
@@ -444,9 +444,9 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public ColorWriteChannels ColorWriteChannels2
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
         {
-            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 2 ? _description.RenderTargets[2].ColorWriteChannels : ColorWriteChannels.None); }
+            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 2 ? _description.RenderTargets[2].ColorWriteChannels : Stride.Graphics.ColorWriteChannels.None); }
             set
             {
                 if (_description.RenderTargets.Length > 2)
@@ -460,9 +460,9 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public ColorWriteChannels ColorWriteChannels3
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
         {
-            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 3 ? _description.RenderTargets[3].ColorWriteChannels : ColorWriteChannels.None); }
+            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 3 ? _description.RenderTargets[3].ColorWriteChannels : Stride.Graphics.ColorWriteChannels.None); }
             set
             {
                 if (_description.RenderTargets.Length > 3)
@@ -489,7 +489,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Color BlendFactor
+        public Andastra.Runtime.Graphics.Color BlendFactor
         {
             get { return ConvertColor(_description.BlendFactor); }
             set
@@ -518,46 +518,46 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal BlendStateDescription Description => _description;
 
-        private static BlendFunction ConvertBlendFunction(Blend blend)
+        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(Andastra.Runtime.Graphics.Blend blend)
         {
             // TODO: SIMPLIFIED - This is a simplified conversion - Stride uses Blend enum for both source and function
-            return BlendFunction.Add; // Default
+            return Andastra.Runtime.Graphics.BlendFunction.Add; // Default
         }
 
-        private static Stride.Graphics.Blend ConvertBlendFunction(BlendFunction func)
+        private static Stride.Graphics.Blend ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
         {
             // TODO: SIMPLIFIED - This is a simplified conversion
             return Stride.Graphics.Blend.One; // Default
         }
 
-        private static Stride.Graphics.Blend ConvertBlend(Blend blend)
+        private static Stride.Graphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
         {
             return (Stride.Graphics.Blend)(int)blend;
         }
 
-        private static Blend ConvertBlend(Stride.Graphics.Blend blend)
+        private static Andastra.Runtime.Graphics.Blend ConvertBlend(Stride.Graphics.Blend blend)
         {
-            return (Blend)(int)blend;
+            return (Andastra.Runtime.Graphics.Blend)(int)blend;
         }
 
-        private static Stride.Graphics.ColorWriteChannels ConvertColorWriteChannels(ColorWriteChannels channels)
+        private static Stride.Graphics.ColorWriteChannels ConvertColorWriteChannels(Andastra.Runtime.Graphics.ColorWriteChannels channels)
         {
             return (Stride.Graphics.ColorWriteChannels)(int)channels;
         }
 
-        private static ColorWriteChannels ConvertColorWriteChannels(Stride.Graphics.ColorWriteChannels channels)
+        private static Andastra.Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(Stride.Graphics.ColorWriteChannels channels)
         {
-            return (ColorWriteChannels)(int)channels;
+            return (Andastra.Runtime.Graphics.ColorWriteChannels)(int)channels;
         }
 
-        private static Stride.Core.Mathematics.Color4 ConvertColor(Color color)
+        private static Stride.Core.Mathematics.Color4 ConvertColor(Andastra.Runtime.Graphics.Color color)
         {
             return new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
         }
 
-        private static Color ConvertColor(Stride.Core.Mathematics.Color4 color)
+        private static Andastra.Runtime.Graphics.Color ConvertColor(Stride.Core.Mathematics.Color4 color)
         {
-            return new Color((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
+            return new Andastra.Runtime.Graphics.Color((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
         }
     }
 
@@ -573,7 +573,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _description = description ?? SamplerStateDescription.Default;
         }
 
-        public TextureAddressMode AddressU
+        public Andastra.Runtime.Graphics.TextureAddressMode AddressU
         {
             get { return ConvertTextureAddressMode(_description.AddressU); }
             set
@@ -584,7 +584,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public TextureAddressMode AddressV
+        public Andastra.Runtime.Graphics.TextureAddressMode AddressV
         {
             get { return ConvertTextureAddressMode(_description.AddressV); }
             set
@@ -595,7 +595,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public TextureAddressMode AddressW
+        public Andastra.Runtime.Graphics.TextureAddressMode AddressW
         {
             get { return ConvertTextureAddressMode(_description.AddressW); }
             set
@@ -606,7 +606,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public TextureFilter Filter
+        public Andastra.Runtime.Graphics.TextureFilter Filter
         {
             get { return ConvertTextureFilter(_description.Filter); }
             set
@@ -657,24 +657,24 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal SamplerStateDescription Description => _description;
 
-        private static Stride.Graphics.TextureAddressMode ConvertTextureAddressMode(TextureAddressMode mode)
+        private static Stride.Graphics.TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
         {
             return (Stride.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static TextureAddressMode ConvertTextureAddressMode(Stride.Graphics.TextureAddressMode mode)
+        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(Stride.Graphics.TextureAddressMode mode)
         {
-            return (TextureAddressMode)(int)mode;
+            return (Andastra.Runtime.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static Stride.Graphics.TextureFilter ConvertTextureFilter(TextureFilter filter)
+        private static Stride.Graphics.TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
         {
             return (Stride.Graphics.TextureFilter)(int)filter;
         }
 
-        private static TextureFilter ConvertTextureFilter(Stride.Graphics.TextureFilter filter)
+        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(Stride.Graphics.TextureFilter filter)
         {
-            return (TextureFilter)(int)filter;
+            return (Andastra.Runtime.Graphics.TextureFilter)(int)filter;
         }
     }
 }

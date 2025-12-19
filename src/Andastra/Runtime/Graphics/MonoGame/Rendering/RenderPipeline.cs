@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Performance;
-using Andastra.Runtime.MonoGame.Debug;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -59,7 +58,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _rtManager = new RenderTargetManager(graphicsDevice);
             _memoryBudget = new GPUMemoryBudget();
             _telemetry = new Telemetry();
-            _statistics = new Debug.RenderStatistics();
+            _statistics = new RenderStatistics();
         }
 
         /// <summary>

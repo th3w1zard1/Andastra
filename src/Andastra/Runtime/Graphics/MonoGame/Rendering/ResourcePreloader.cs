@@ -215,22 +215,22 @@ namespace Andastra.Runtime.MonoGame.Rendering
             });
         }
 
-        private Andastra.Parsing.Resources.ResourceType ConvertResourceType(ResourceType type)
+        private Andastra.Parsing.Resource.ResourceType ConvertResourceType(ResourceType type)
         {
             switch (type)
             {
                 case ResourceType.Texture:
-                    return Andastra.Parsing.Resources.ResourceType.TPC;
+                    return Andastra.Parsing.Resource.ResourceType.TPC;
                 case ResourceType.Model:
-                    return Andastra.Parsing.Resources.ResourceType.MDL;
+                    return Andastra.Parsing.Resource.ResourceType.MDL;
                 case ResourceType.Animation:
-                    return Andastra.Parsing.Resources.ResourceType.MDL;
+                    return Andastra.Parsing.Resource.ResourceType.MDL;
                 case ResourceType.Sound:
-                    return Andastra.Parsing.Resources.ResourceType.WAV;
+                    return Andastra.Parsing.Resource.ResourceType.WAV;
                 case ResourceType.Script:
-                    return Andastra.Parsing.Resources.ResourceType.NCS;
+                    return Andastra.Parsing.Resource.ResourceType.NCS;
                 default:
-                    return Andastra.Parsing.Resources.ResourceType.INVALID;
+                    return Andastra.Parsing.Resource.ResourceType.INVALID;
             }
         }
     }

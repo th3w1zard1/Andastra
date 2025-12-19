@@ -22,7 +22,6 @@ namespace HolocronToolset.Editors
     public class UTIEditor : Editor
     {
         private UTI _uti;
-        private HTInstallation _installation;
 
         // UI Controls - Basic
         private TextBox _nameEdit;

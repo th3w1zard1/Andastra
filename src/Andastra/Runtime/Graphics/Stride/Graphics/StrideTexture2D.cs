@@ -9,11 +9,11 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideTexture2D : ITexture2D
     {
-        private readonly Texture2D _texture;
+        private readonly Stride.Graphics.Texture2D _texture;
 
-        internal Texture2D Texture => _texture;
+        internal Stride.Graphics.Texture2D Texture => _texture;
 
-        public StrideTexture2D(Texture2D texture)
+        public StrideTexture2D(Stride.Graphics.Texture2D texture)
         {
             _texture = texture ?? throw new ArgumentNullException(nameof(texture));
         }

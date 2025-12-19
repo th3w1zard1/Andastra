@@ -3,6 +3,7 @@ using Stride.Engine;
 using Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Enums;
 
 namespace Andastra.Runtime.Stride.Graphics
 {

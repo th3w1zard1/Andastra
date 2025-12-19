@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _loadedMeshes = new Dictionary<string, StrideRoomMeshData>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public IRoomMeshData LoadRoomMesh(string modelResRef, MDLData.MDL mdl)
+        public IRoomMeshData LoadRoomMesh(string modelResRef, MDL mdl)
         {
             if (string.IsNullOrEmpty(modelResRef))
             {
@@ -48,7 +48,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
             // Extract geometry from MDL
             var meshData = new StrideRoomMeshData();
-            var vertices = new List<VertexPositionColor>();
+            var vertices = new List<Andastra.Runtime.Graphics.VertexPositionColor>();
             var indices = new List<int>();
 
             // Extract basic geometry from the first trimesh node
@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Stride.Graphics
             Clear();
         }
 
-        private void ExtractBasicGeometry(MDLData.MDL mdl, List<VertexPositionColor> vertices, List<int> indices)
+        private void ExtractBasicGeometry(MDL mdl, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -114,7 +114,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        private void ExtractNodeGeometry(MDLNode node, Matrix4x4 parentTransform, List<VertexPositionColor> vertices, List<int> indices)
+        private void ExtractNodeGeometry(MDLNode node, Matrix4x4 parentTransform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             if (node == null)
             {
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        private void ExtractMeshGeometry(MDLMesh mesh, Matrix4x4 transform, List<VertexPositionColor> vertices, List<int> indices)
+        private void ExtractMeshGeometry(MDLMesh mesh, Matrix4x4 transform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             if (mesh == null || mesh.Vertices == null || mesh.Faces == null)
             {
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 var transformedVec = System.Numerics.Vector4.Transform(vertexVec, transform);
                 var transformedPos = new Vector3(transformedVec.X, transformedVec.Y, transformedVec.Z);
                 
-                vertices.Add(new VertexPositionColor(transformedPos, meshColor));
+                vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(transformedPos, meshColor));
             }
 
             // Add faces as indices
@@ -182,20 +182,20 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        private void CreatePlaceholderBox(List<VertexPositionColor> vertices, List<int> indices)
+        private void CreatePlaceholderBox(List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             float size = 5f;
-            Color color = Color.Gray;
+            Andastra.Runtime.Graphics.Color color = Andastra.Runtime.Graphics.Color.Gray;
 
             // 8 vertices of a box
-            vertices.Add(new VertexPositionColor(new Vector3(-size, -size, -size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(size, -size, -size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(size, size, -size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(-size, size, -size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(-size, -size, size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(size, -size, size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(size, size, size), color));
-            vertices.Add(new VertexPositionColor(new Vector3(-size, size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, size), color));
 
             // 12 triangles (2 per face, 6 faces)
             // Front face

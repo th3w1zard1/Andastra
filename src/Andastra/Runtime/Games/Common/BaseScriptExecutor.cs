@@ -134,15 +134,10 @@ namespace Andastra.Runtime.Games.Common
         /// </remarks>
         protected virtual IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer)
         {
-            return new ExecutionContext
-            {
-                Caller = caller,
-                Triggerer = triggerer,
-                World = _world,
-                Globals = _globals,
-                EngineApi = _engineApi,
-                ResourceProvider = null // Set by engine-specific implementation
-            };
+            var context = new ExecutionContext(caller, _world, _engineApi, _globals);
+            context.SetTriggerer(triggerer);
+            context.ResourceProvider = null; // Set by engine-specific implementation
+            return context;
         }
 
         /// <summary>
@@ -198,24 +193,8 @@ namespace Andastra.Runtime.Games.Common
         /// </remarks>
         protected virtual string GetScriptHookForEvent(Core.Interfaces.Components.IScriptHooksComponent scriptHooks, int eventType)
         {
-            switch (eventType)
-            {
-                case 0: return scriptHooks.OnHeartbeat ?? string.Empty;
-                case 1: return scriptHooks.OnPerception ?? string.Empty;
-                case 2: return scriptHooks.OnSpellCastAt ?? string.Empty;
-                case 3: return scriptHooks.OnAttacked ?? string.Empty;
-                case 4: return scriptHooks.OnDamaged ?? string.Empty;
-                case 5: return scriptHooks.OnDisturbed ?? string.Empty;
-                case 6: return scriptHooks.OnEndRound ?? string.Empty;
-                case 7: return scriptHooks.OnDialogue ?? string.Empty;
-                case 8: return scriptHooks.OnSpawn ?? string.Empty;
-                case 9: return scriptHooks.OnRested ?? string.Empty;
-                case 10: return scriptHooks.OnDeath ?? string.Empty;
-                case 11: return scriptHooks.OnUserDefined ?? string.Empty;
-                case 12: return scriptHooks.OnBlocked ?? string.Empty;
-                case 13: return scriptHooks.OnEndDialogue ?? string.Empty;
-                default: return string.Empty;
-            }
+            var scriptEvent = (Core.Enums.ScriptEvent)eventType;
+            return scriptHooks.GetScript(scriptEvent) ?? string.Empty;
         }
 
         /// <summary>

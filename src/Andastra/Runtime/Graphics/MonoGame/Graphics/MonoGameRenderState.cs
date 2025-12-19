@@ -239,68 +239,68 @@ namespace Andastra.Runtime.MonoGame.Graphics
     /// </summary>
     public class MonoGameBlendState : IBlendState
     {
-        private readonly BlendState _state;
+        private readonly Microsoft.Xna.Framework.Graphics.BlendState _state;
 
-        public MonoGameBlendState(BlendState state = null)
+        public MonoGameBlendState(Microsoft.Xna.Framework.Graphics.BlendState state = null)
         {
             _state = state ?? new BlendState();
         }
 
-        public BlendFunction AlphaBlendFunction
+        public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction
         {
             get { return ConvertBlendFunction(_state.AlphaBlendFunction); }
             set { _state.AlphaBlendFunction = ConvertBlendFunction(value); }
         }
 
-        public Blend AlphaDestinationBlend
+        public Andastra.Runtime.Graphics.Blend AlphaDestinationBlend
         {
             get { return ConvertBlend(_state.AlphaDestinationBlend); }
             set { _state.AlphaDestinationBlend = ConvertBlend(value); }
         }
 
-        public Blend AlphaSourceBlend
+        public Andastra.Runtime.Graphics.Blend AlphaSourceBlend
         {
             get { return ConvertBlend(_state.AlphaSourceBlend); }
             set { _state.AlphaSourceBlend = ConvertBlend(value); }
         }
 
-        public BlendFunction ColorBlendFunction
+        public Andastra.Runtime.Graphics.BlendFunction ColorBlendFunction
         {
             get { return ConvertBlendFunction(_state.ColorBlendFunction); }
             set { _state.ColorBlendFunction = ConvertBlendFunction(value); }
         }
 
-        public Blend ColorDestinationBlend
+        public Andastra.Runtime.Graphics.Blend ColorDestinationBlend
         {
             get { return ConvertBlend(_state.ColorDestinationBlend); }
             set { _state.ColorDestinationBlend = ConvertBlend(value); }
         }
 
-        public Blend ColorSourceBlend
+        public Andastra.Runtime.Graphics.Blend ColorSourceBlend
         {
             get { return ConvertBlend(_state.ColorSourceBlend); }
             set { _state.ColorSourceBlend = ConvertBlend(value); }
         }
 
-        public ColorWriteChannels ColorWriteChannels
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels); }
             set { _state.ColorWriteChannels = ConvertColorWriteChannels(value); }
         }
 
-        public ColorWriteChannels ColorWriteChannels1
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels1); }
             set { _state.ColorWriteChannels1 = ConvertColorWriteChannels(value); }
         }
 
-        public ColorWriteChannels ColorWriteChannels2
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels2); }
             set { _state.ColorWriteChannels2 = ConvertColorWriteChannels(value); }
         }
 
-        public ColorWriteChannels ColorWriteChannels3
+        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels3); }
             set { _state.ColorWriteChannels3 = ConvertColorWriteChannels(value); }
@@ -347,36 +347,36 @@ namespace Andastra.Runtime.MonoGame.Graphics
             // BlendState is managed by MonoGame, don't dispose
         }
 
-        internal BlendState State => _state;
+        internal Microsoft.Xna.Framework.Graphics.BlendState State => _state;
 
-        private static Microsoft.Xna.Framework.Graphics.BlendFunction ConvertBlendFunction(BlendFunction func)
+        private static Microsoft.Xna.Framework.Graphics.BlendFunction ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
         {
             return (Microsoft.Xna.Framework.Graphics.BlendFunction)(int)func;
         }
 
-        private static BlendFunction ConvertBlendFunction(Microsoft.Xna.Framework.Graphics.BlendFunction func)
+        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(Microsoft.Xna.Framework.Graphics.BlendFunction func)
         {
-            return (BlendFunction)(int)func;
+            return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.Blend ConvertBlend(Blend blend)
+        private static Microsoft.Xna.Framework.Graphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
         {
             return (Microsoft.Xna.Framework.Graphics.Blend)(int)blend;
         }
 
-        private static Blend ConvertBlend(Microsoft.Xna.Framework.Graphics.Blend blend)
+        private static Andastra.Runtime.Graphics.Blend ConvertBlend(Microsoft.Xna.Framework.Graphics.Blend blend)
         {
-            return (Blend)(int)blend;
+            return (Andastra.Runtime.Graphics.Blend)(int)blend;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.ColorWriteChannels ConvertColorWriteChannels(ColorWriteChannels channels)
+        private static Microsoft.Xna.Framework.Graphics.ColorWriteChannels ConvertColorWriteChannels(Andastra.Runtime.Graphics.ColorWriteChannels channels)
         {
             return (Microsoft.Xna.Framework.Graphics.ColorWriteChannels)(int)channels;
         }
 
-        private static ColorWriteChannels ConvertColorWriteChannels(Microsoft.Xna.Framework.Graphics.ColorWriteChannels channels)
+        private static Andastra.Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(Microsoft.Xna.Framework.Graphics.ColorWriteChannels channels)
         {
-            return (ColorWriteChannels)(int)channels;
+            return (Andastra.Runtime.Graphics.ColorWriteChannels)(int)channels;
         }
 
         private static Microsoft.Xna.Framework.Color ConvertColor(Color color)
@@ -402,25 +402,25 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _state = state ?? new SamplerState();
         }
 
-        public TextureAddressMode AddressU
+        public Andastra.Runtime.Graphics.TextureAddressMode AddressU
         {
             get { return ConvertTextureAddressMode(_state.AddressU); }
             set { _state.AddressU = ConvertTextureAddressMode(value); }
         }
 
-        public TextureAddressMode AddressV
+        public Andastra.Runtime.Graphics.TextureAddressMode AddressV
         {
             get { return ConvertTextureAddressMode(_state.AddressV); }
             set { _state.AddressV = ConvertTextureAddressMode(value); }
         }
 
-        public TextureAddressMode AddressW
+        public Andastra.Runtime.Graphics.TextureAddressMode AddressW
         {
             get { return ConvertTextureAddressMode(_state.AddressW); }
             set { _state.AddressW = ConvertTextureAddressMode(value); }
         }
 
-        public TextureFilter Filter
+        public Andastra.Runtime.Graphics.TextureFilter Filter
         {
             get { return ConvertTextureFilter(_state.Filter); }
             set { _state.Filter = ConvertTextureFilter(value); }
@@ -451,24 +451,24 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         internal SamplerState State => _state;
 
-        private static Microsoft.Xna.Framework.Graphics.TextureAddressMode ConvertTextureAddressMode(TextureAddressMode mode)
+        private static Microsoft.Xna.Framework.Graphics.TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
         {
             return (Microsoft.Xna.Framework.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static TextureAddressMode ConvertTextureAddressMode(Microsoft.Xna.Framework.Graphics.TextureAddressMode mode)
+        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(Microsoft.Xna.Framework.Graphics.TextureAddressMode mode)
         {
-            return (TextureAddressMode)(int)mode;
+            return (Andastra.Runtime.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.TextureFilter ConvertTextureFilter(TextureFilter filter)
+        private static Microsoft.Xna.Framework.Graphics.TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
         {
             return (Microsoft.Xna.Framework.Graphics.TextureFilter)(int)filter;
         }
 
-        private static TextureFilter ConvertTextureFilter(Microsoft.Xna.Framework.Graphics.TextureFilter filter)
+        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(Microsoft.Xna.Framework.Graphics.TextureFilter filter)
         {
-            return (TextureFilter)(int)filter;
+            return (Andastra.Runtime.Graphics.TextureFilter)(int)filter;
         }
     }
 }

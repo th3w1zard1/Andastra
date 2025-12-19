@@ -19,7 +19,6 @@ namespace HolocronToolset.Editors
     public class MDLEditor : Editor
     {
         private MDL _mdl;
-        private HTInstallation _installation;
         private ModelRenderer _modelRenderer;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:26-42

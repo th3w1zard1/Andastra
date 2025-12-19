@@ -15,7 +15,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
     public class MonoGameEntityModelRenderer : IEntityModelRenderer
     {
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly Odyssey.MonoGame.Rendering.EntityModelRenderer _renderer;
+        private readonly Andastra.Runtime.MonoGame.Rendering.EntityModelRenderer _renderer;
 
         public MonoGameEntityModelRenderer(
             [NotNull] GraphicsDevice device,

@@ -20,7 +20,6 @@ namespace HolocronToolset.Editors
     public class UTCEditor : Editor
     {
         private UTC _utc;
-        private HTInstallation _installation;
         private UTCEditorSettings _settings;
         private static GlobalSettings _globalSettings;
 

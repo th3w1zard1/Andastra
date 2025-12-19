@@ -7,6 +7,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Data;
+using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;

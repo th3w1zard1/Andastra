@@ -8,6 +8,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Tools;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Game.Core;
+using Andastra.Runtime.Graphics.Common.Enums;
 
 namespace Andastra.Game.GUI
 {
@@ -26,11 +27,15 @@ namespace Andastra.Game.GUI
     public class GameLauncher : Dialog
     {
         private DropDown _gameComboBox;
+        private DropDown _graphicsBackendComboBox;
         private TextBox _pathTextBox;
         private Button _browseButton;
+        private Button _settingsButton;
         private Button _startButton;
         private Label _gameLabel;
+        private Label _graphicsBackendLabel;
         private Label _pathLabel;
+        private GraphicsSettingsData _graphicsSettings;
 
         /// <summary>
         /// Gets the selected game.
@@ -38,9 +43,19 @@ namespace Andastra.Game.GUI
         public Game SelectedGame { get; private set; }
 
         /// <summary>
+        /// Gets the selected graphics backend.
+        /// </summary>
+        public GraphicsBackendType SelectedGraphicsBackend { get; private set; }
+
+        /// <summary>
         /// Gets the selected installation path.
         /// </summary>
         public string SelectedPath { get; private set; }
+
+        /// <summary>
+        /// Gets the graphics settings.
+        /// </summary>
+        public GraphicsSettingsData GraphicsSettings => _graphicsSettings;
 
         /// <summary>
         /// Gets whether the user clicked Start.
@@ -58,11 +73,16 @@ namespace Andastra.Game.GUI
             WindowStyle = WindowStyle.Default;
 
             SelectedGame = Game.K1; // Default
+            SelectedGraphicsBackend = GraphicsBackendType.MonoGame; // Default
+            _graphicsSettings = new GraphicsSettingsData();
 
             InitializeComponent();
             PopulateGameComboBox();
+            PopulateGraphicsBackendComboBox();
             _gameComboBox.SelectedIndex = 0;
+            _graphicsBackendComboBox.SelectedIndex = 0;
             _gameComboBox.SelectedIndexChanged += GameComboBox_SelectedIndexChanged;
+            _graphicsBackendComboBox.SelectedIndexChanged += GraphicsBackendComboBox_SelectedIndexChanged;
             UpdatePathComboBox();
         }
 
@@ -89,6 +109,36 @@ namespace Andastra.Game.GUI
             layout.Rows.Add(new TableRow(
                 new TableCell(_gameLabel, true),
                 new TableCell(_gameComboBox, true)
+            ));
+
+            // Graphics backend selection row
+            _graphicsBackendLabel = new Label
+            {
+                Text = "Graphics Backend:",
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            _graphicsBackendComboBox = new DropDown
+            {
+                Width = 400
+            };
+
+            var settingsButtonLayout = new TableLayout { Spacing = new Size(5, 0) };
+            _settingsButton = new Button
+            {
+                Text = "Settings...",
+                Width = 100
+            };
+            _settingsButton.Click += SettingsButton_Click;
+
+            settingsButtonLayout.Rows.Add(new TableRow(
+                new TableCell(_graphicsBackendComboBox, true),
+                new TableCell(_settingsButton, false)
+            ));
+
+            layout.Rows.Add(new TableRow(
+                new TableCell(_graphicsBackendLabel, true),
+                new TableCell(settingsButtonLayout, true)
             ));
 
             // Path selection row
@@ -173,6 +223,43 @@ namespace Andastra.Game.GUI
             _gameComboBox.Items.Add(new GameItem(Game.ME, "Mass Effect"));
             _gameComboBox.Items.Add(new GameItem(Game.ME2, "Mass Effect 2"));
             _gameComboBox.Items.Add(new GameItem(Game.ME3, "Mass Effect 3"));
+        }
+
+        private void PopulateGraphicsBackendComboBox()
+        {
+            _graphicsBackendComboBox.Items.Clear();
+            _graphicsBackendComboBox.Items.Add(new GraphicsBackendItem(GraphicsBackendType.MonoGame, "MonoGame"));
+            _graphicsBackendComboBox.Items.Add(new GraphicsBackendItem(GraphicsBackendType.Stride, "Stride"));
+        }
+
+        private void GraphicsBackendComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_graphicsBackendComboBox.SelectedValue is GraphicsBackendItem backendItem)
+            {
+                SelectedGraphicsBackend = backendItem.BackendType;
+            }
+        }
+
+        private void SettingsButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var settingsDialog = new GraphicsSettingsDialog(SelectedGraphicsBackend, _graphicsSettings))
+                {
+                    if (settingsDialog.ShowModal(this) == DialogResult.Ok)
+                    {
+                        _graphicsSettings = settingsDialog.Settings;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    this,
+                    $"Error opening graphics settings:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                    "Settings Error",
+                    MessageBoxType.Error);
+            }
         }
 
         private void GameComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -383,6 +470,26 @@ namespace Andastra.Game.GUI
             public GameItem(Game game, string displayName)
             {
                 Game = game;
+                DisplayName = displayName;
+            }
+
+            public override string ToString()
+            {
+                return DisplayName;
+            }
+        }
+
+        /// <summary>
+        /// Helper class for graphics backend combobox items.
+        /// </summary>
+        private class GraphicsBackendItem
+        {
+            public GraphicsBackendType BackendType { get; }
+            public string DisplayName { get; }
+
+            public GraphicsBackendItem(GraphicsBackendType backendType, string displayName)
+            {
+                BackendType = backendType;
                 DisplayName = displayName;
             }
 

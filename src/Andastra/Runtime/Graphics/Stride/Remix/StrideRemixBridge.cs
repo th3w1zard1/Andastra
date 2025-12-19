@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Stride.Graphics;
+using Stride.Engine;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Remix;
 
@@ -218,7 +219,7 @@ namespace Andastra.Runtime.Stride.Remix
         /// <summary>
         /// Submits Stride light for Remix path tracing.
         /// </summary>
-        public void SubmitStrideLight(global::Stride.Rendering.Lights.LightComponent light)
+        public void SubmitStrideLight(Stride.Engine.LightComponent light)
         {
             if (!IsActive || light == null) return;
 

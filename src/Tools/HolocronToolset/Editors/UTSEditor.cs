@@ -20,7 +20,6 @@ namespace HolocronToolset.Editors
     public class UTSEditor : Editor
     {
         private UTS _uts;
-        private HTInstallation _installation;
 
         // UI Controls - Basic
         private TextBox _nameEdit;

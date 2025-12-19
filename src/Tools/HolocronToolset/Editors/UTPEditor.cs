@@ -28,7 +28,6 @@ namespace HolocronToolset.Editors
     public class UTPEditor : Editor
     {
         private UTP _utp;
-        private HTInstallation _installation;
 
         // UI Controls - Basic
         private TextBox _nameEdit;

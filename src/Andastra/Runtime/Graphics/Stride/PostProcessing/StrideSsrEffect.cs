@@ -1,5 +1,6 @@
 using System;
 using Stride.Graphics;
+using Stride.Rendering;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;

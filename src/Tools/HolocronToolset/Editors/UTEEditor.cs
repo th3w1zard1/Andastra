@@ -37,7 +37,6 @@ namespace HolocronToolset.Editors
         }
 
         private UTE _ute;
-        private HTInstallation _installation;
         private List<string> _relevantCreatureResnames;
         private List<string> _relevantScriptResnames;
         private ObservableCollection<CreatureRow> _creatureRows;

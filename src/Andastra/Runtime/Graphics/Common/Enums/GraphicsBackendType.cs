@@ -70,7 +70,19 @@ namespace Andastra.Runtime.Graphics.Common.Enums
         /// <summary>
         /// Metal - macOS and iOS native API.
         /// </summary>
-        Metal = 1 << 6
+        Metal = 1 << 6,
+
+        /// <summary>
+        /// MonoGame - Cross-platform 2D/3D game framework.
+        /// Uses OpenGL, DirectX, or Metal depending on platform.
+        /// </summary>
+        MonoGame = 1 << 9,
+
+        /// <summary>
+        /// Stride (formerly Xenko) - Modern 3D game engine.
+        /// Uses DirectX 11/12, Vulkan, or OpenGL depending on platform.
+        /// </summary>
+        Stride = 1 << 10
     }
 
     /// <summary>

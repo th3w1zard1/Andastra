@@ -9,13 +9,13 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideVertexBuffer : IVertexBuffer
     {
-        private readonly Buffer _buffer;
+        private readonly Stride.Graphics.Buffer _buffer;
         private readonly int _vertexCount;
         private readonly int _vertexStride;
 
-        internal Buffer Buffer => _buffer;
+        internal Stride.Graphics.Buffer Buffer => _buffer;
 
-        public StrideVertexBuffer(Buffer buffer, int vertexCount, int vertexStride)
+        public StrideVertexBuffer(Stride.Graphics.Buffer buffer, int vertexCount, int vertexStride)
         {
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _vertexCount = vertexCount;

@@ -88,7 +88,7 @@ namespace HolocronToolset.Widgets
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:63-72
         // Original: def setValue(self, value: int):
-        public new void SetValue(long value)
+        public void SetValue(long value)
         {
             value = Math.Max(_min, Math.Min(_max, value));
             Value = value;
@@ -105,7 +105,5 @@ namespace HolocronToolset.Widgets
             }
             return 0;
         }
-
-        public event Action<long> ValueChanged;
     }
 }

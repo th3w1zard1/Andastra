@@ -149,8 +149,7 @@ namespace Andastra.Runtime.Games.Common
         /// </remarks>
         public virtual void Update(float deltaTime)
         {
-            // Update current module
-            _currentModule?.Update(deltaTime);
+            // Update current module - modules don't have Update method, handled by world
 
             // Process any pending module operations
             ProcessPendingOperations();
@@ -168,7 +167,7 @@ namespace Andastra.Runtime.Games.Common
         {
             return new ModuleSaveData
             {
-                CurrentModuleName = _currentModule?.Name,
+                CurrentModuleName = _currentModule?.ResRef,
                 LoadedModuleNames = new List<string>(_loadedModules.Keys)
             };
         }
@@ -352,7 +351,7 @@ namespace Andastra.Runtime.Games.Common
             return new ModuleStats
             {
                 LoadedModuleCount = _loadedModules.Count,
-                CurrentModuleName = _currentModule?.Name
+                CurrentModuleName = _currentModule?.ResRef
             };
         }
     }

@@ -20,7 +20,6 @@ namespace HolocronToolset.Editors
     public class UTDEditor : Editor
     {
         private UTD _utd;
-        private HTInstallation _installation;
 
         // UI Controls - Basic
         private LocalizedStringEdit _nameEdit;

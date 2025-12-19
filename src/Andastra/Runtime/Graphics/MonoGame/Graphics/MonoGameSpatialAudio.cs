@@ -31,7 +31,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             set { _spatialAudio.SpeedOfSound = value; }
         }
 
-        public void SetListener(Vector3 position, Vector3 forward, Vector3 up, Vector3 velocity)
+        public void SetListener(System.Numerics.Vector3 position, System.Numerics.Vector3 forward, System.Numerics.Vector3 up, System.Numerics.Vector3 velocity)
         {
             _spatialAudio.SetListener(
                 ConvertVector3(position),
@@ -41,7 +41,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             );
         }
 
-        public uint CreateEmitter(Vector3 position, Vector3 velocity, float volume, float minDistance, float maxDistance)
+        public uint CreateEmitter(System.Numerics.Vector3 position, System.Numerics.Vector3 velocity, float volume, float minDistance, float maxDistance)
         {
             return _spatialAudio.CreateEmitter(
                 ConvertVector3(position),
@@ -52,7 +52,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             );
         }
 
-        public void UpdateEmitter(uint emitterId, Vector3 position, Vector3 velocity, float volume, float minDistance, float maxDistance)
+        public void UpdateEmitter(uint emitterId, System.Numerics.Vector3 position, System.Numerics.Vector3 velocity, float volume, float minDistance, float maxDistance)
         {
             _spatialAudio.UpdateEmitter(
                 emitterId,
@@ -64,10 +64,10 @@ namespace Andastra.Runtime.MonoGame.Graphics
             );
         }
 
-        public Audio3DParameters Calculate3DParameters(uint emitterId)
+        public Andastra.Runtime.Graphics.Audio3DParameters Calculate3DParameters(uint emitterId)
         {
             var parameters = _spatialAudio.Calculate3DParameters(emitterId);
-            return new Audio3DParameters
+            return new Andastra.Runtime.Graphics.Audio3DParameters
             {
                 Volume = parameters.Volume,
                 Pan = parameters.Pan,
@@ -81,7 +81,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _spatialAudio.RemoveEmitter(emitterId);
         }
 
-        private static Microsoft.Xna.Framework.Vector3 ConvertVector3(Vector3 vector)
+        private static Microsoft.Xna.Framework.Vector3 ConvertVector3(System.Numerics.Vector3 vector)
         {
             return new Microsoft.Xna.Framework.Vector3(vector.X, vector.Y, vector.Z);
         }

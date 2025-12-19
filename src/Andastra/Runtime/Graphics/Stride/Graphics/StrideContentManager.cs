@@ -1,7 +1,6 @@
 using System;
 using Stride.Engine;
 using Stride.Graphics;
-using StrideContent = Stride.Content;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -11,11 +10,11 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideContentManager : IContentManager
     {
-        private readonly StrideContent.ContentManager _contentManager;
+        private readonly ContentManager _contentManager;
 
-        internal StrideContent.ContentManager ContentManager => _contentManager;
+        internal ContentManager ContentManager => _contentManager;
 
-        public StrideContentManager(StrideContent.ContentManager contentManager)
+        public StrideContentManager(ContentManager contentManager)
         {
             _contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
         }

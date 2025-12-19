@@ -13,7 +13,6 @@ namespace HolocronToolset.Editors
     // Original: class NSSEditor(Editor):
     public class NSSEditor : Editor
     {
-        private HTInstallation _installation;
         private CodeEditor _codeEdit;
         private TerminalWidget _terminalWidget;
         private bool _isDecompiled;

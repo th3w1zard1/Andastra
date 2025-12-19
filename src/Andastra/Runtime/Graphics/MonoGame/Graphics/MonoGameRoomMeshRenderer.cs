@@ -28,7 +28,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _loadedMeshes = new Dictionary<string, MonoGameRoomMeshData>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public IRoomMeshData LoadRoomMesh(string modelResRef, MDLData.MDL mdl)
+        public IRoomMeshData LoadRoomMesh(string modelResRef, MDL mdl)
         {
             if (string.IsNullOrEmpty(modelResRef))
             {
@@ -96,7 +96,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             Clear();
         }
 
-        private void ExtractBasicGeometry(MDLData.MDL mdl, List<VertexPositionColor> vertices, List<int> indices)
+        private void ExtractBasicGeometry(MDL mdl, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -114,7 +114,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<VertexPositionColor> vertices, List<int> indices)
+        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             if (node == null)
             {
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        private void ExtractMeshGeometry(MDLMesh mesh, Matrix transform, List<VertexPositionColor> vertices, List<int> indices)
+        private void ExtractMeshGeometry(MDLMesh mesh, Matrix transform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             if (mesh == null || mesh.Vertices == null || mesh.Faces == null)
             {
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
                     new Microsoft.Xna.Framework.Vector3(vertex.X, vertex.Y, vertex.Z),
                     transform
                 );
-                vertices.Add(new VertexPositionColor(
+                vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(
                     new System.Numerics.Vector3(transformedPos.X, transformedPos.Y, transformedPos.Z),
                     meshColor
                 ));
@@ -185,20 +185,20 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        private void CreatePlaceholderBox(List<VertexPositionColor> vertices, List<int> indices)
+        private void CreatePlaceholderBox(List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
         {
             float size = 5f;
             Color color = Color.Gray;
 
             // 8 vertices of a box
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(-size, -size, -size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(size, -size, -size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(size, size, -size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(-size, size, -size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(-size, -size, size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(size, -size, size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(size, size, size), color));
-            vertices.Add(new VertexPositionColor(new System.Numerics.Vector3(-size, size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, -size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, size), color));
+            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, size), color));
 
             // 12 triangles (2 per face, 6 faces)
             // Front face

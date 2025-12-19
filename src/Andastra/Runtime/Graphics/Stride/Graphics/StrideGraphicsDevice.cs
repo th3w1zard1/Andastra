@@ -17,12 +17,12 @@ namespace Andastra.Runtime.Stride.Graphics
             _device = device ?? throw new ArgumentNullException(nameof(device));
         }
 
-        public Odyssey.Graphics.Viewport Viewport
+        public Andastra.Runtime.Graphics.Viewport Viewport
         {
             get
             {
                 var vp = _device.Viewport;
-                return new Odyssey.Graphics.Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
+                return new Andastra.Runtime.Graphics.Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public void Clear(Odyssey.Graphics.Color color)
+        public void Clear(Andastra.Runtime.Graphics.Color color)
         {
             var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             _device.Clear(strideColor);
@@ -179,7 +179,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public void DrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
+        public void DrawIndexedPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
         {
             _device.DrawIndexed(
                 ConvertPrimitiveType(primitiveType),
@@ -189,7 +189,7 @@ namespace Andastra.Runtime.Stride.Graphics
             );
         }
 
-        public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
+        public void DrawPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
             _device.Draw(
                 ConvertPrimitiveType(primitiveType),
@@ -292,19 +292,19 @@ namespace Andastra.Runtime.Stride.Graphics
             // GraphicsDevice is managed by Game, don't dispose it
         }
 
-        private static Stride.Graphics.PrimitiveType ConvertPrimitiveType(PrimitiveType type)
+        private static Stride.Graphics.PrimitiveType ConvertPrimitiveType(Andastra.Runtime.Graphics.PrimitiveType type)
         {
             switch (type)
             {
-                case PrimitiveType.TriangleList:
+                case Andastra.Runtime.Graphics.PrimitiveType.TriangleList:
                     return Stride.Graphics.PrimitiveType.TriangleList;
-                case PrimitiveType.TriangleStrip:
+                case Andastra.Runtime.Graphics.PrimitiveType.TriangleStrip:
                     return Stride.Graphics.PrimitiveType.TriangleStrip;
-                case PrimitiveType.LineList:
+                case Andastra.Runtime.Graphics.PrimitiveType.LineList:
                     return Stride.Graphics.PrimitiveType.LineList;
-                case PrimitiveType.LineStrip:
+                case Andastra.Runtime.Graphics.PrimitiveType.LineStrip:
                     return Stride.Graphics.PrimitiveType.LineStrip;
-                case PrimitiveType.PointList:
+                case Andastra.Runtime.Graphics.PrimitiveType.PointList:
                     return Stride.Graphics.PrimitiveType.PointList;
                 default:
                     return Stride.Graphics.PrimitiveType.TriangleList;

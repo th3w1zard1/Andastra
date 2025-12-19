@@ -2,6 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Enums;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {
