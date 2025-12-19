@@ -949,33 +949,27 @@ namespace HolocronToolset.Editors
 
             // Find all links that reference this link's node
             // Matching PyKotor: references = [this_item.ref_to_link for link in self.model.link_to_items for this_item in self.model.link_to_items[link] if this_item.link is not None and item.link in this_item.link.node.links]
+            // This finds all items whose link's node contains the target link in its links list
             var references = new List<WeakReference<DLGLink>>();
             
             // Iterate through all links in the model
             foreach (var kvp in _model.LinkToItems)
             {
                 DLGLink link = kvp.Key;
-                if (link == null)
+                if (link == null || link.Node == null)
                 {
                     continue;
                 }
 
                 // Check if this link's node contains the target link in its links list
-                if (link.Node != null && link.Node.Links != null)
+                if (link.Node.Links != null && link.Node.Links.Contains(itemLink))
                 {
-                    foreach (DLGLink nodeLink in link.Node.Links)
+                    // Found a reference - add all items that reference this link
+                    foreach (DLGStandardItem thisItem in kvp.Value)
                     {
-                        if (nodeLink == itemLink)
+                        if (thisItem.Link != null)
                         {
-                            // Found a reference - add all items that reference this link
-                            foreach (DLGStandardItem thisItem in kvp.Value)
-                            {
-                                if (thisItem.Link != null)
-                                {
-                                    references.Add(new WeakReference<DLGLink>(thisItem.Link));
-                                }
-                            }
-                            break;
+                            references.Add(new WeakReference<DLGLink>(thisItem.Link));
                         }
                     }
                 }
