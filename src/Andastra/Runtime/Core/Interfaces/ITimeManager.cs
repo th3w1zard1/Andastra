@@ -5,10 +5,13 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Time Manager Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe time management system
-    /// - Fixed timestep: Typically 1/60 second (60 Hz) for deterministic physics and gameplay
+    /// - Common time management interface shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
+    /// - Implementations: BaseTimeManager (Runtime.Games.Common) provides base functionality
+    ///   - OdysseyTimeManager (Runtime.Games.Odyssey) for swkotor.exe, swkotor2.exe
+    ///   - AuroraTimeManager (Runtime.Games.Aurora) for nwmain.exe, nwn2main.exe
+    ///   - EclipseTimeManager (Runtime.Games.Eclipse) for daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
+    ///   - InfinityTimeManager (Runtime.Games.Infinity) for Infinity Engine executables
+    /// - Fixed timestep: Typically 1/60 second (60 Hz) for deterministic physics and gameplay (common across all engines)
     /// - SimulationTime: Accumulated fixed timestep time (advances only during simulation ticks)
     /// - RealTime: Total elapsed real-world time (continuous)
     /// - TimeScale: Multiplier for time flow (1.0 = normal, 0.0 = paused, >1.0 = faster)
@@ -19,7 +22,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Update: Updates accumulator with real frame time (drives fixed timestep ticks)
     /// - HasPendingTicks: Returns true if accumulator has enough time for additional ticks
     /// - Fixed timestep prevents timing-dependent bugs and ensures deterministic gameplay
-    /// - Time tracking: TIMEPLAYED @ 0x007be1c4 (time played field in save GFF), frameStart @ 0x007ba698, frameEnd @ 0x007ba668 (frame timing)
+    /// - Game time tracking: Hours, minutes, seconds, milliseconds (all engines track game time)
+    /// - Engine-specific details (function addresses, memory offsets, save game formats) are in engine-specific implementations
     /// </remarks>
     public interface ITimeManager
     {

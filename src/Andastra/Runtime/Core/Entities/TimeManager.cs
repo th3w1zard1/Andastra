@@ -1,13 +1,21 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Odyssey;
 
 namespace Andastra.Runtime.Core.Entities
 {
     /// <summary>
-    /// Manages simulation and render time for deterministic gameplay.
+    /// Legacy time manager implementation. Use engine-specific implementations instead.
     /// </summary>
     /// <remarks>
-    /// Time Manager:
+    /// Time Manager (Legacy):
+    /// - DEPRECATED: This class is maintained for backward compatibility only.
+    /// - New code should use engine-specific implementations:
+    ///   - OdysseyTimeManager (Runtime.Games.Odyssey) for KOTOR 1/2
+    ///   - AuroraTimeManager (Runtime.Games.Aurora) for NWN/NWN2
+    ///   - EclipseTimeManager (Runtime.Games.Eclipse) for Dragon Age/Mass Effect
+    ///   - InfinityTimeManager (Runtime.Games.Infinity) for Infinity Engine games
+    /// - This class currently wraps OdysseyTimeManager for backward compatibility.
     /// - Based on swkotor2.exe time management system
     /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88 (pause time constant), "TIME_PAUSEDAY" @ 0x007bdf98 (pause day constant), "TIME_MILLISECOND" @ 0x007bdfa8 (millisecond constant)
     /// - Time unit constants: "TIME_SECOND" @ 0x007bdfbc (second constant), "TIME_MINUTE" @ 0x007bdfc8 (minute constant), "TIME_HOUR" @ 0x007bdfd4 (hour constant)
@@ -47,126 +55,94 @@ namespace Andastra.Runtime.Core.Entities
     /// - Frame timing: frameStart and frameEnd mark frame boundaries for timing measurement
     /// - Timer system: Various timers track durations for effects, animations, combat rounds, spawn delays, etc.
     /// </remarks>
+    /// <summary>
+    /// Legacy time manager. Wraps OdysseyTimeManager for backward compatibility.
+    /// </summary>
+    [System.Obsolete("Use engine-specific time manager implementations (OdysseyTimeManager, AuroraTimeManager, etc.) instead.")]
     public class TimeManager : ITimeManager
     {
-        private const float DefaultFixedTimestep = 1f / 60f;
-        private const float MaxFrameTime = 0.25f;
-
-        private float _accumulator;
-        private float _simulationTime;
-        private float _realTime;
-        private float _deltaTime;
-
-        // Game time tracking (hours, minutes, seconds, milliseconds)
-        // Based on swkotor2.exe: Game time tracking system
-        // Located via string references: "GameTime" @ 0x007c1a78, "TIMEPLAYED" @ 0x007be1c4
-        // Original implementation: Game time advances with simulation time, stored in module IFO
-        private int _gameTimeHour;
-        private int _gameTimeMinute;
-        private int _gameTimeSecond;
-        private int _gameTimeMillisecond;
-        private float _gameTimeAccumulator; // Accumulator for game time milliseconds
+        private readonly OdysseyTimeManager _odysseyTimeManager;
 
         public TimeManager()
         {
-            FixedTimestep = DefaultFixedTimestep;
-            TimeScale = 1.0f;
-            IsPaused = false;
-
-            // Initialize game time to midnight
-            _gameTimeHour = 0;
-            _gameTimeMinute = 0;
-            _gameTimeSecond = 0;
-            _gameTimeMillisecond = 0;
-            _gameTimeAccumulator = 0.0f;
+            _odysseyTimeManager = new OdysseyTimeManager();
         }
 
-        public float FixedTimestep { get; }
-        public float SimulationTime { get { return _simulationTime; } }
-        public float RealTime { get { return _realTime; } }
-        public float TimeScale { get; set; }
-        public bool IsPaused { get; set; }
-        public float DeltaTime { get { return _deltaTime; } }
-        public float InterpolationAlpha { get { return _accumulator / FixedTimestep; } }
+        public float FixedTimestep
+        {
+            get { return _odysseyTimeManager.FixedTimestep; }
+        }
 
-        public int GameTimeHour { get { return _gameTimeHour; } }
-        public int GameTimeMinute { get { return _gameTimeMinute; } }
-        public int GameTimeSecond { get { return _gameTimeSecond; } }
-        public int GameTimeMillisecond { get { return _gameTimeMillisecond; } }
+        public float SimulationTime
+        {
+            get { return _odysseyTimeManager.SimulationTime; }
+        }
+
+        public float RealTime
+        {
+            get { return _odysseyTimeManager.RealTime; }
+        }
+
+        public float TimeScale
+        {
+            get { return _odysseyTimeManager.TimeScale; }
+            set { _odysseyTimeManager.TimeScale = value; }
+        }
+
+        public bool IsPaused
+        {
+            get { return _odysseyTimeManager.IsPaused; }
+            set { _odysseyTimeManager.IsPaused = value; }
+        }
+
+        public float DeltaTime
+        {
+            get { return _odysseyTimeManager.DeltaTime; }
+        }
+
+        public float InterpolationAlpha
+        {
+            get { return _odysseyTimeManager.InterpolationAlpha; }
+        }
+
+        public int GameTimeHour
+        {
+            get { return _odysseyTimeManager.GameTimeHour; }
+        }
+
+        public int GameTimeMinute
+        {
+            get { return _odysseyTimeManager.GameTimeMinute; }
+        }
+
+        public int GameTimeSecond
+        {
+            get { return _odysseyTimeManager.GameTimeSecond; }
+        }
+
+        public int GameTimeMillisecond
+        {
+            get { return _odysseyTimeManager.GameTimeMillisecond; }
+        }
 
         public void SetGameTime(int hour, int minute, int second, int millisecond)
         {
-            // Based on swkotor2.exe: SetGameTime implementation
-            // Located via string references: "GameTime" @ 0x007c1a78
-            // Original implementation: Sets game time to specified values, stored in module IFO
-            _gameTimeHour = Math.Max(0, Math.Min(23, hour));
-            _gameTimeMinute = Math.Max(0, Math.Min(59, minute));
-            _gameTimeSecond = Math.Max(0, Math.Min(59, second));
-            _gameTimeMillisecond = Math.Max(0, Math.Min(999, millisecond));
-            _gameTimeAccumulator = 0.0f;
+            _odysseyTimeManager.SetGameTime(hour, minute, second, millisecond);
         }
 
         public void Update(float realDeltaTime)
         {
-            _realTime += realDeltaTime;
-            _deltaTime = Math.Min(realDeltaTime, MaxFrameTime);
-
-            if (!IsPaused)
-            {
-                _accumulator += _deltaTime * TimeScale;
-            }
+            _odysseyTimeManager.Update(realDeltaTime);
         }
 
         public bool HasPendingTicks()
         {
-            return _accumulator >= FixedTimestep;
+            return _odysseyTimeManager.HasPendingTicks();
         }
 
         public void Tick()
         {
-            // Based on swkotor2.exe: Fixed timestep tick implementation
-            // Located via string references: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668
-            // Original implementation: 60 Hz fixed timestep (1/60s = 0.01667s per tick)
-            // Fixed timestep ensures consistent simulation regardless of frame rate
-            // Game logic (physics, combat, scripts) runs at fixed rate, rendering at variable rate
-            if (_accumulator >= FixedTimestep)
-            {
-                _simulationTime += FixedTimestep;
-                _accumulator -= FixedTimestep;
-
-                // Update game time (advance milliseconds)
-                // Based on swkotor2.exe: Game time advances with simulation time
-                // Game time advances at 1:1 with simulation time (1 second of simulation = 1 second of game time)
-                _gameTimeAccumulator += FixedTimestep * 1000.0f; // Convert to milliseconds
-                while (_gameTimeAccumulator >= 1.0f)
-                {
-                    _gameTimeMillisecond += (int)_gameTimeAccumulator;
-                    _gameTimeAccumulator -= (int)_gameTimeAccumulator;
-
-                    if (_gameTimeMillisecond >= 1000)
-                    {
-                        _gameTimeMillisecond -= 1000;
-                        _gameTimeSecond++;
-
-                        if (_gameTimeSecond >= 60)
-                        {
-                            _gameTimeSecond -= 60;
-                            _gameTimeMinute++;
-
-                            if (_gameTimeMinute >= 60)
-                            {
-                                _gameTimeMinute -= 60;
-                                _gameTimeHour++;
-
-                                if (_gameTimeHour >= 24)
-                                {
-                                    _gameTimeHour -= 24;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            _odysseyTimeManager.Tick();
         }
 
         /// <summary>
@@ -174,10 +150,7 @@ namespace Andastra.Runtime.Core.Entities
         /// </summary>
         public void Reset()
         {
-            _accumulator = 0;
-            _simulationTime = 0;
-            _realTime = 0;
-            _deltaTime = 0;
+            _odysseyTimeManager.Reset();
         }
     }
 }
