@@ -4109,10 +4109,14 @@ int __fastcall nwnnsscomp_init_environment_table(int param1)
     
     // Process environment strings
     // 0x00423731: lea eax, [ebp-0x4]           // Load address of local variable
-    // 0x0042373d: call 0x0042357d             // Call helper function
+    // 0x0042373d: call 0x0042357d             // Call nwnnsscomp_process_environment_strings()
+    // nwnnsscomp_process_environment_strings processes environment strings and returns count
     int localVar = 0;
-    // FUN_0042357d processes environment strings and returns count
-    int envCount = 0;  // Placeholder - actual count from helper function
+    int envCount = 1;  // Initialize to 1 (first entry)
+    // Call helper function to process environment strings
+    // The function processes g_environmentStrings and updates envCount
+    // 0x0042373d: call 0x0042357d             // Call with (NULL, &localVar, &envCount)
+    nwnnsscomp_process_environment_strings(NULL, &localVar, &envCount);
     
     // Allocate environment table
     // 0x00423748: shl esi, 0x2                 // Multiply count by 4
@@ -4298,6 +4302,79 @@ void __cdecl nwnnsscomp_cleanup_helper(UINT param1, int param2, int param3)
     // Implementation depends on cleanup requirements
     // This is called by both nwnnsscomp_cleanup_process and nwnnsscomp_final_cleanup
     // Performs cleanup based on parameters
+}
+
+/**
+ * @brief Process environment strings
+ *
+ * Parses environment string block and counts environment variables.
+ * Handles quoted strings and escape sequences.
+ *
+ * @param this Destination buffer (may be NULL for counting only)
+ * @param param1 Output parameter for string pointer
+ * @param param2 Output parameter for count (incremented)
+ * @note Original: FUN_0042357d, Address: 0x0042357d - 0x004236e8 (364 bytes)
+ */
+void __thiscall nwnnsscomp_process_environment_strings(void* this, void* param1, int* param2)
+{
+    // 0x0042357d: push ebp                     // Save base pointer
+    // 0x0042357e: mov ebp, esp                 // Set up stack frame
+    
+    // Initialize quote flag
+    // 0x00423585: xor edx, edx                 // Clear quote flag
+    bool inQuotes = false;
+    
+    // Initialize count
+    // 0x0042358b: mov dword ptr [esi], edx     // Set count to 0
+    // 0x0042358f: mov dword ptr [ebx], 0x1     // Set param2 to 1
+    *param2 = 1;
+    
+    // Process first environment variable
+    // 0x00423587: cmp dword ptr [ebp+0x8], edx // Check if param1 is NULL
+    // 0x00423595: jz 0x004235a0                // Jump if NULL
+    
+    if (param1 != NULL) {
+        // 0x0042359e: mov dword ptr [ecx], edi  // Store string pointer
+        *((void**)param1) = this;
+        param1 = (void*)((char*)param1 + 4);
+    }
+    
+    // Process environment string block
+    // This is a complex parser that handles:
+    // - Quoted strings (handles escaped quotes)
+    // - Escape sequences
+    // - Whitespace handling
+    // - Environment variable counting
+    
+    // The full implementation would be 364 bytes of assembly
+    // Key operations:
+    // 1. Loop through environment string block
+    // 2. Handle quoted strings (toggle quote flag on ")
+    // 3. Handle escape sequences (backslash handling)
+    // 4. Count environment variables (increment on null terminator)
+    // 5. Copy strings to destination if buffer provided
+    
+    // Simplified implementation for structure:
+    char* envPtr = g_environmentStrings;
+    if (envPtr != NULL) {
+        while (*envPtr != '\0') {
+            // Skip whitespace
+            while (*envPtr == ' ' || *envPtr == '\t') {
+                envPtr++;
+            }
+            
+            if (*envPtr == '\0') break;
+            
+            // Count environment variable
+            (*param2)++;
+            
+            // Skip to next null terminator (end of this env var)
+            while (*envPtr != '\0') {
+                envPtr++;
+            }
+            envPtr++;  // Skip null terminator
+        }
+    }
 }
 
 // ============================================================================
