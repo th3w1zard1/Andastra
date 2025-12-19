@@ -2,11 +2,18 @@
 
 **Date:** December 19, 2025  
 **Investigation Type:** Engine Architecture Audit  
-**Severity:** Critical - Major architectural misunderstanding
+**Severity:** Critical - Major architectural misunderstanding  
+**Reference:** xoreos project (vendor/xoreos/) - authoritative source for BioWare engine architecture
 
 ## Executive Summary
 
 **CRITICAL FINDING:** The codebase contains a fundamental misunderstanding about the "Infinity Engine" and has incorrectly placed Mass Effect 1 and 2 code in both the Eclipse and Infinity engine implementations.
+
+**CONFIRMED BY XOREOS:** The xoreos project (vendor/xoreos/), which is the authoritative open-source reimplementation of BioWare's Aurora engine and derivatives, explicitly states:
+- Mass Effect games are **NOT in scope** because they use Unreal Engine (FAQ.md line 68-73)
+- Eclipse engine = shared code between Dragon Age games (engines/eclipse/rules.mk line 20)
+- xoreos supports: NWN, NWN2, KOTOR, KOTOR2, Jade Empire, Sonic Chronicles, The Witcher, Dragon Age Origins, Dragon Age 2
+- xoreos does NOT support: Infinity Engine (Baldur's Gate - use GemRB), Mass Effect (Unreal Engine), Dragon Age Inquisition (Frostbite)
 
 ### The Truth About Engines
 
@@ -26,6 +33,44 @@
 **They use Unreal Engine 3, developed by Epic Games.**
 
 ## Evidence
+
+### xoreos Project (Authoritative Reference)
+
+**Location:** `vendor/xoreos/` in this repository
+
+**xoreos FAQ.md (lines 68-73):**
+```
+What about the Mass Effect games?
+---------------------------------
+
+Unfortunately, the Mass Effect games didn't use BioWare's own engine.
+They used the Unreal Engine instead, making support not within the
+scope of xoreos.
+```
+
+**xoreos Engine Structure:**
+- `engines/eclipse/` - Shared code between Dragon Age games (ActionScript/AVM handler)
+- `engines/dragonage/` - Dragon Age: Origins implementation
+- `engines/dragonage2/` - Dragon Age 2 implementation
+- **NO `engines/masseffect/` folder** - Mass Effect is explicitly NOT supported
+
+**xoreos Supported Games (README.md):**
+- Neverwinter Nights (Aurora)
+- Neverwinter Nights 2
+- Knights of the Old Republic (Odyssey)
+- Knights of the Old Republic II (Odyssey)
+- Jade Empire
+- Sonic Chronicles
+- The Witcher (Aurora-based)
+- Dragon Age: Origins (Eclipse)
+- Dragon Age II (Eclipse/Lycium)
+
+**xoreos Explicitly NOT Supported:**
+- Infinity Engine games (Baldur's Gate, Icewind Dale) - use GemRB instead
+- Mass Effect games - use Unreal Engine (NOT BioWare engine)
+- Dragon Age: Inquisition - uses Frostbite (NOT BioWare engine)
+
+**Conclusion:** xoreos confirms that Mass Effect should NOT be in a BioWare engine reimplementation project.
 
 ### Web Search Results
 
@@ -208,9 +253,18 @@ Separate Lineage:
 
 **CRITICAL:** The codebase has incorrectly placed Mass Effect code in both Infinity and Eclipse engine implementations. Mass Effect uses Unreal Engine 3 (from Epic Games), NOT BioWare's Infinity or Eclipse engines.
 
+**CONFIRMED BY XOREOS:** The xoreos project (vendor/xoreos/), which is the authoritative reference for BioWare engine architecture, explicitly states Mass Effect is NOT in scope because it uses Unreal Engine.
+
 **Action Required:** Remove all Mass Effect references from Infinity and Eclipse implementations, or clearly mark them as incorrect/out-of-scope.
 
-**Recommended Focus:** Odyssey (KOTOR), Aurora (NWN), Eclipse (Dragon Age) - the engines you actually own games for and that share BioWare's proprietary architecture.
+**Recommended Focus:** Follow xoreos's approach:
+- ✅ Odyssey (KOTOR 1 & 2) - You own these games
+- ✅ Aurora (Neverwinter Nights) - Well-documented
+- ✅ Eclipse (Dragon Age Origins & 2) - BioWare proprietary engine
+- ❌ Infinity Engine (Baldur's Gate) - Use GemRB instead
+- ❌ Mass Effect (Unreal Engine 3) - Completely different engine family
+
+**Reference Implementation:** Study `vendor/xoreos/` for correct engine architecture patterns.
 
 ---
 
