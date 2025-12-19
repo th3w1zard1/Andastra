@@ -80,6 +80,7 @@ namespace HolocronToolset.Editors
         {
             InitializeComponent();
             SetupUI();
+            AddHelpAction(); // Auto-detects "GFF-IFO.md" for IFO
             New();
         }
 
@@ -385,7 +386,7 @@ namespace HolocronToolset.Editors
         // Original: def update_ui_from_ifo(self):
         private void UpdateUIFromIFO()
         {
-            if (_ifo == null || _installation == null)
+            if (_ifo == null)
             {
                 return;
             }
@@ -393,17 +394,33 @@ namespace HolocronToolset.Editors
             // Basic Info
             if (_nameEdit != null)
             {
-                // Get localized string from installation
-                string nameText = _installation.String(_ifo.ModName) ?? "";
-                _nameEdit.Text = nameText;
+                // Get localized string from installation if available
+                if (_installation != null)
+                {
+                    string nameText = _installation.String(_ifo.ModName) ?? "";
+                    _nameEdit.Text = nameText;
+                }
+                else
+                {
+                    // Fallback to string representation if no installation
+                    _nameEdit.Text = _ifo.ModName?.ToString() ?? "";
+                }
             }
-            if (_tagEdit != null) _tagEdit.Text = _ifo.Tag;
-            if (_voIdEdit != null) _voIdEdit.Text = _ifo.VoId;
-            if (_hakEdit != null) _hakEdit.Text = _ifo.Hak;
+            if (_tagEdit != null) _tagEdit.Text = _ifo.Tag ?? "";
+            if (_voIdEdit != null) _voIdEdit.Text = _ifo.VoId ?? "";
+            if (_hakEdit != null) _hakEdit.Text = _ifo.Hak ?? "";
             if (_descEdit != null)
             {
-                string descText = _installation.String(_ifo.Description) ?? "";
-                _descEdit.Text = descText;
+                if (_installation != null)
+                {
+                    string descText = _installation.String(_ifo.Description) ?? "";
+                    _descEdit.Text = descText;
+                }
+                else
+                {
+                    // Fallback to string representation if no installation
+                    _descEdit.Text = _ifo.Description?.ToString() ?? "";
+                }
             }
 
             // Entry Point
