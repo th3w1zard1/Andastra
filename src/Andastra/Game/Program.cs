@@ -1,4 +1,6 @@
 using System;
+using System.Windows.Forms;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics;
 
@@ -26,17 +28,68 @@ namespace Andastra.Runtime.Game
     /// </remarks>
     public static class Program
     {
-        [STAThread]
-        public static int Main(string[] args)
+    [STAThread]
+    public static int Main(string[] args)
+    {
+        try
         {
-            try
+            // Check for --no-launcher flag to skip launcher UI
+            bool skipLauncher = false;
+            for (int i = 0; i < args.Length; i++)
             {
-                Console.WriteLine("Odyssey Engine - KOTOR Recreation");
-                Console.WriteLine("==================================");
-                Console.WriteLine();
+                if (args[i] == "--no-launcher" || args[i] == "-n")
+                {
+                    skipLauncher = true;
+                    break;
+                }
+            }
 
-                // Parse command line arguments
-                var settings = GameSettingsExtensions.FromCommandLine(args);
+            GameSettings settings = null;
+            string gamePath = null;
+            Game selectedGame = Game.K1;
+
+            if (!skipLauncher)
+            {
+                // Show launcher UI
+                using (var launcher = new GUI.GameLauncher())
+                {
+                    if (launcher.ShowDialog() != DialogResult.OK || !launcher.StartClicked)
+                    {
+                        return 0; // User cancelled
+                    }
+
+                    selectedGame = launcher.SelectedGame;
+                    gamePath = launcher.SelectedPath;
+                }
+
+                // Convert Game enum to KotorGame for settings
+                KotorGame kotorGame = KotorGame.K1;
+                if (selectedGame == Game.K2)
+                {
+                    kotorGame = KotorGame.K2;
+                }
+                else if (selectedGame != Game.K1)
+                {
+                    // For non-KOTOR games, we'll need to handle differently
+                    // For now, show error
+                    MessageBox.Show(
+                        $"Game {selectedGame} is not yet fully supported. Only KotOR 1 and KotOR 2 are currently supported.",
+                        "Unsupported Game",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return 1;
+                }
+
+                settings = new GameSettings
+                {
+                    Game = kotorGame,
+                    GamePath = gamePath
+                };
+            }
+            else
+            {
+                // Parse command line arguments (legacy mode)
+                settings = GameSettingsExtensions.FromCommandLine(args);
 
                 // Detect KOTOR installation if not specified
                 if (string.IsNullOrEmpty(settings.GamePath))
@@ -49,32 +102,29 @@ namespace Andastra.Runtime.Game
                         return 1;
                     }
                 }
+            }
 
-                Console.WriteLine("Game: " + settings.Game);
-                Console.WriteLine("Path: " + settings.GamePath);
-                Console.WriteLine();
-
-                // Determine graphics backend (default to MonoGame, can be overridden via command line)
-                GraphicsBackendType backendType = GraphicsBackendType.MonoGame;
-                for (int i = 0; i < args.Length; i++)
+            // Determine graphics backend (default to MonoGame, can be overridden via command line)
+            GraphicsBackendType backendType = GraphicsBackendType.MonoGame;
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--backend" && i + 1 < args.Length)
                 {
-                    if (args[i] == "--backend" && i + 1 < args.Length)
+                    if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
-                        {
-                            backendType = GraphicsBackendType.Stride;
-                        }
-                        else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
-                        {
-                            backendType = GraphicsBackendType.MonoGame;
-                        }
-                        break;
+                        backendType = GraphicsBackendType.Stride;
                     }
+                    else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
+                    {
+                        backendType = GraphicsBackendType.MonoGame;
+                    }
+                    break;
                 }
+            }
 
-                Console.WriteLine("Graphics Backend: " + backendType);
-                Console.WriteLine();
-
+            // Launch the game
+            try
+            {
                 // Create graphics backend
                 IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
 
@@ -88,11 +138,34 @@ namespace Andastra.Runtime.Game
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("FATAL ERROR: " + ex.Message);
-                Console.Error.WriteLine(ex.StackTrace);
+                // Show error dialog
+                string errorMessage = $"Failed to start the game:\n\n{ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $"\n\nInner Exception: {ex.InnerException.Message}";
+                }
+                errorMessage += $"\n\nStack Trace:\n{ex.StackTrace}";
+
+                MessageBox.Show(
+                    errorMessage,
+                    "Game Launch Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
                 return 1;
             }
         }
+        catch (Exception ex)
+        {
+            // Fatal error in launcher itself
+            MessageBox.Show(
+                $"Fatal error in launcher:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                "Launcher Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+            return 1;
+        }
+    }
     }
 }
 
