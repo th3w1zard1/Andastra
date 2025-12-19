@@ -609,7 +609,7 @@ namespace HolocronToolset.Editors
             
             if (_questEntrySpin != null && node != null)
             {
-                node.QuestEntry = _questEntrySpin.Value.HasValue ? _questEntrySpin.Value.Value : 0;
+                node.QuestEntry = _questEntrySpin.Value.HasValue ? (int)_questEntrySpin.Value.Value : 0;
             }
             
             // Update script1 param1
@@ -674,7 +674,7 @@ namespace HolocronToolset.Editors
 
             var node = item.Link.Node;
             string nodeType = node is DLGEntry ? "Entry" : "Reply";
-            string text = node.Text?.GetString(0) ?? "";
+            string text = node.Text?.GetString(0, Gender.Male) ?? "";
             if (string.IsNullOrEmpty(text))
             {
                 text = "<empty>";
@@ -902,25 +902,23 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: handle Shift+Up/Down combinations
-            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            // Note: Shift check is done in caller (OnKeyDown), this method is only called when Shift is held
+            if (key == Key.Up)
             {
-                if (key == Key.Up)
+                // Matching PyKotor implementation: shift_item(selected_item, -1, no_selection_update=True)
+                if (_model.SelectedIndex > 0)
                 {
-                    // Matching PyKotor implementation: shift_item(selected_item, -1, no_selection_update=True)
-                    if (_model.SelectedIndex > 0)
-                    {
-                        _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex - 1);
-                        _model.SelectedIndex = _model.SelectedIndex - 1;
-                    }
+                    _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex - 1);
+                    _model.SelectedIndex = _model.SelectedIndex - 1;
                 }
-                else if (key == Key.Down)
+            }
+            else if (key == Key.Down)
+            {
+                // Matching PyKotor implementation: shift_item(selected_item, 1, no_selection_update=True)
+                if (_model.SelectedIndex < _model.RowCount - 1)
                 {
-                    // Matching PyKotor implementation: shift_item(selected_item, 1, no_selection_update=True)
-                    if (_model.SelectedIndex < _model.RowCount - 1)
-                    {
-                        _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex + 1);
-                        _model.SelectedIndex = _model.SelectedIndex + 1;
-                    }
+                    _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex + 1);
+                    _model.SelectedIndex = _model.SelectedIndex + 1;
                 }
             }
         }

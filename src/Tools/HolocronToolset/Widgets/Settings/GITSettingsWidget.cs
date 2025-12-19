@@ -244,9 +244,9 @@ namespace HolocronToolset.Widgets.Settings
         // Original: def resetColours(self):
         private void ResetColours()
         {
-            if (_settings != null)
+            if (_settings != null && _settings is GITSettings gitSettings)
             {
-                _settings.ResetMaterialColors();
+                gitSettings.ResetMaterialColors();
                 SetupColourValues();
             }
         }
