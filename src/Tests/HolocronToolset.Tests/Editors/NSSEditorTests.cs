@@ -624,14 +624,115 @@ void helper() {
             throw new NotImplementedException("TestNssEditorConstantsListPopulated: Constants list populated test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_insert_function (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:642-665)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:642-665
         // Original: def test_nss_editor_insert_function(qtbot, installation: HTInstallation): Test insert function
         [Fact]
         public void TestNssEditorInsertFunction()
         {
-            // TODO: STUB - Implement insert function test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:642-665
-            throw new NotImplementedException("TestNssEditorInsertFunction: Insert function test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Update game-specific data to populate function list
+            editor.UpdateGameSpecificData();
+
+            // Find a function (GetFirstPC is a common function in both K1 and TSL)
+            Avalonia.Controls.ListBoxItem functionItem = null;
+            var functionList = editor.FunctionList;
+            if (functionList != null && functionList.Items != null)
+            {
+                foreach (var item in functionList.Items)
+                {
+                    var listBoxItem = item as Avalonia.Controls.ListBoxItem;
+                    if (listBoxItem != null && listBoxItem.Content != null)
+                    {
+                        string itemText = listBoxItem.Content.ToString();
+                        if (itemText != null && itemText.Contains("GetFirstPC"))
+                        {
+                            functionItem = listBoxItem;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (functionItem != null)
+            {
+                // Set the selected item
+                functionList.SelectedItem = functionItem;
+                
+                // Insert the function
+                editor.InsertSelectedFunction();
+
+                // Function should be inserted in code
+                var codeEditor = typeof(NSSEditor).GetField("_codeEdit",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (codeEditor != null)
+                {
+                    var editorInstance = codeEditor.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+                    if (editorInstance != null)
+                    {
+                        string codeText = editorInstance.ToPlainText();
+                        codeText.Should().Contain("GetFirstPC", "Function should be inserted in code");
+                    }
+                }
+            }
+            else
+            {
+                // If GetFirstPC not found, test with any available function
+                if (functionList != null && functionList.Items != null && functionList.Items.Count > 0)
+                {
+                    var firstItem = functionList.Items[0] as Avalonia.Controls.ListBoxItem;
+                    if (firstItem != null)
+                    {
+                        functionList.SelectedItem = firstItem;
+                        string functionName = firstItem.Content?.ToString();
+                        
+                        if (!string.IsNullOrEmpty(functionName))
+                        {
+                            editor.InsertSelectedFunction();
+
+                            var codeEditor = typeof(NSSEditor).GetField("_codeEdit",
+                                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                            if (codeEditor != null)
+                            {
+                                var editorInstance = codeEditor.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+                                if (editorInstance != null)
+                                {
+                                    string codeText = editorInstance.ToPlainText();
+                                    codeText.Should().Contain(functionName, "Function should be inserted in code");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_insert_constant (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:667-695)

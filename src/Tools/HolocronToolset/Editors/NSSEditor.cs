@@ -5,6 +5,7 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Common.Script;
 using HolocronToolset.Common;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
@@ -24,6 +25,10 @@ namespace HolocronToolset.Editors
         private NoScrollEventFilter _noScrollFilter;
         private FindReplaceWidget _findReplaceWidget;
         private TreeView _bookmarkTree;
+        private ListBox _functionList;
+        private BreadcrumbsWidget _breadcrumbs;
+        private bool _isTsl;
+        private List<ScriptFunction> _functions;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -35,6 +40,8 @@ namespace HolocronToolset.Editors
         {
             _installation = installation;
             _isDecompiled = false;
+            _isTsl = installation?.Tsl ?? false;
+            _functions = new List<ScriptFunction>();
 
             InitializeComponent();
             SetupUI();
@@ -42,6 +49,8 @@ namespace HolocronToolset.Editors
             SetupSignals();
             SetupFindReplaceWidget();
             SetupBookmarks();
+            SetupFunctionList();
+            SetupBreadcrumbs();
             AddHelpAction();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:145-148
@@ -566,6 +575,233 @@ namespace HolocronToolset.Editors
 
         // Public property to access bookmark tree for testing
         public TreeView BookmarkTree => _bookmarkTree;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:905-950
+        // Original: def _update_game_specific_data(self):
+        /// <summary>
+        /// Updates constants and functions based on the selected game (K1 or TSL).
+        /// Populates the function list with functions from ScriptDefs.
+        /// </summary>
+        public void UpdateGameSpecificData()
+        {
+            // Update functions based on the selected game
+            _functions.Clear();
+            if (_isTsl)
+            {
+                _functions.AddRange(ScriptDefs.TSL_FUNCTIONS);
+            }
+            else
+            {
+                _functions.AddRange(ScriptDefs.KOTOR_FUNCTIONS);
+            }
+
+            // Sort functions by name (matching Python implementation)
+            _functions = _functions.OrderBy(f => f.Name).ToList();
+
+            // Clear and repopulate the function list
+            if (_functionList != null)
+            {
+                _functionList.Items.Clear();
+
+                foreach (var function in _functions)
+                {
+                    var item = new ListBoxItem
+                    {
+                        Content = function.Name,
+                        Tag = function
+                    };
+                    _functionList.Items.Add(item);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2356-2361
+        // Original: def insert_selected_function(self):
+        /// <summary>
+        /// Inserts the selected function from the function list into the code editor at the cursor position.
+        /// Inserts the function name followed by parentheses, with cursor positioned inside the parentheses.
+        /// </summary>
+        public void InsertSelectedFunction()
+        {
+            if (_functionList == null || _codeEdit == null)
+            {
+                return;
+            }
+
+            var selectedItem = _functionList.SelectedItem as ListBoxItem;
+            if (selectedItem == null)
+            {
+                return;
+            }
+
+            var function = selectedItem.Tag as ScriptFunction;
+            if (function == null)
+            {
+                return;
+            }
+
+            // Insert function name with parentheses: "FunctionName()"
+            string insert = $"{function.Name}()";
+            
+            // Insert text at cursor position
+            InsertTextAtCursor(insert, insert.IndexOf("(") + 1);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:774-785
+        // Original: def insert_text_at_cursor(self, insert: str, offset: int | None = None):
+        /// <summary>
+        /// Inserts text at the current cursor position in the code editor.
+        /// </summary>
+        /// <param name="insert">The text to insert</param>
+        /// <param name="offset">Optional offset to position cursor after insertion. If null, cursor is placed at end of inserted text.</param>
+        private void InsertTextAtCursor(string insert, int? offset = null)
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(insert))
+            {
+                return;
+            }
+
+            int cursorPosition = _codeEdit.SelectionStart;
+            string text = _codeEdit.Text ?? "";
+
+            // If there's a selection, remove it first
+            if (_codeEdit.SelectionStart != _codeEdit.SelectionEnd)
+            {
+                int selectionStart = Math.Min(_codeEdit.SelectionStart, _codeEdit.SelectionEnd);
+                int selectionEnd = Math.Max(_codeEdit.SelectionStart, _codeEdit.SelectionEnd);
+                text = text.Substring(0, selectionStart) + text.Substring(selectionEnd);
+                cursorPosition = selectionStart;
+            }
+
+            // Insert the text
+            text = text.Substring(0, cursorPosition) + insert + text.Substring(cursorPosition);
+            _codeEdit.Text = text;
+
+            // Set cursor position (default to end of inserted text if offset not specified)
+            int newPosition = cursorPosition + (offset ?? insert.Length);
+            _codeEdit.SelectionStart = newPosition;
+            _codeEdit.SelectionEnd = newPosition;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:227-232
+        // Original: def _setup_bookmarks(self):
+        private void SetupFunctionList()
+        {
+            _functionList = new ListBox();
+            
+            // Update game-specific data when function list is set up
+            UpdateGameSpecificData();
+        }
+
+        // Public property to access function list for testing
+        public ListBox FunctionList => _functionList;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2613-2661
+        // Original: def _setup_breadcrumbs(self):
+        /// <summary>
+        /// Set up breadcrumbs navigation widget above the code editor.
+        /// </summary>
+        private void SetupBreadcrumbs()
+        {
+            // Create breadcrumbs widget
+            _breadcrumbs = new BreadcrumbsWidget();
+            _breadcrumbs.ItemClicked += OnBreadcrumbClicked;
+
+            // Initially clear breadcrumbs
+            _breadcrumbs.Clear();
+        }
+
+        // Public property to access breadcrumbs for testing
+        public BreadcrumbsWidget Breadcrumbs => _breadcrumbs;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2672-2684
+        // Original: def _on_breadcrumb_clicked(self, segment: str):
+        /// <summary>
+        /// Handle breadcrumb segment click - navigate to that context.
+        /// </summary>
+        /// <param name="segment">The breadcrumb segment that was clicked (e.g., "Function: main", "Struct: MyStruct", "Variable: x")</param>
+        private void OnBreadcrumbClicked(string segment)
+        {
+            // If clicking on filename, do nothing (already there)
+            // If clicking on function/struct, navigate to it
+            if (segment != null && segment.StartsWith("Function: "))
+            {
+                string funcName = segment.Substring("Function: ".Length);
+                NavigateToSymbol(funcName);
+            }
+            else if (segment != null && segment.StartsWith("Struct: "))
+            {
+                string structName = segment.Substring("Struct: ".Length);
+                NavigateToSymbol(structName);
+            }
+            else if (segment != null && segment.StartsWith("Variable: "))
+            {
+                string varName = segment.Substring("Variable: ".Length);
+                NavigateToSymbol(varName);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2686-2705
+        // Original: def _navigate_to_symbol(self, symbol_name: str):
+        /// <summary>
+        /// Navigate to a symbol (function, struct, variable) by name.
+        /// Searches through the code editor text to find the symbol definition and moves the cursor to it.
+        /// </summary>
+        /// <param name="symbolName">The name of the symbol to navigate to</param>
+        private void NavigateToSymbol(string symbolName)
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(symbolName))
+            {
+                return;
+            }
+
+            string text = _codeEdit.ToPlainText();
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            string[] lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                int lineNumber = i + 1; // 1-indexed
+
+                // Look for function definition
+                // Check for: void symbolName(, int symbolName(, float symbolName(, etc.
+                if (line.Contains($"void {symbolName}(") || 
+                    line.Contains($"int {symbolName}(") || 
+                    line.Contains($"float {symbolName}(") ||
+                    line.Contains($"string {symbolName}(") ||
+                    line.Contains($"object {symbolName}("))
+                {
+                    GotoLine(lineNumber);
+                    return;
+                }
+
+                // Look for struct definition
+                if (line.Contains($"struct {symbolName}"))
+                {
+                    GotoLine(lineNumber);
+                    return;
+                }
+
+                // Look for variable declaration
+                // More specific check: symbol name must be followed by = or ; and line must contain a type keyword
+                if (line.Contains(symbolName) && (line.Contains("=") || line.Contains(";")))
+                {
+                    // Check if line contains a type keyword (more specific check)
+                    if (line.Contains("int ") || line.Contains("float ") || 
+                        line.Contains("string ") || line.Contains("object ") || 
+                        line.Contains("void "))
+                    {
+                        GotoLine(lineNumber);
+                        return;
+                    }
+                }
+            }
+        }
 
         // Helper class to store bookmark data
         private class BookmarkData
