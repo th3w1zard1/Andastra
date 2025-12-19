@@ -87,6 +87,26 @@ namespace Andastra.Runtime.Graphics
         {
             return Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(position);
         }
+
+        /// <summary>
+        /// Creates a rotation matrix around the Y axis.
+        /// </summary>
+        /// <param name="radians">Rotation angle in radians.</param>
+        /// <returns>Rotation matrix.</returns>
+        public static Matrix4x4 CreateRotationY(float radians)
+        {
+            return Matrix4x4.CreateRotationY(radians);
+        }
+
+        /// <summary>
+        /// Converts degrees to radians.
+        /// </summary>
+        /// <param name="degrees">Angle in degrees.</param>
+        /// <returns>Angle in radians.</returns>
+        public static float ToRadians(float degrees)
+        {
+            return (float)(degrees * Math.PI / 180.0);
+        }
     }
 }
 

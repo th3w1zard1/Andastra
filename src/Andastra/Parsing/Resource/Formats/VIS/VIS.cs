@@ -158,6 +158,31 @@ namespace Andastra.Parsing.Formats.VIS
             }
         }
 
+        /// <summary>
+        /// Gets the set of rooms visible from the specified observer room.
+        /// </summary>
+        /// <param name="observerRoom">The room to check visibility from.</param>
+        /// <returns>Set of room names that are visible from the observer room, or null if observer room doesn't exist.</returns>
+        /// <remarks>
+        /// Based on VIS file format: Returns the visibility set for a given room.
+        /// Used for VIS culling during area rendering.
+        /// </remarks>
+        public HashSet<string> GetVisibleRooms(string observerRoom)
+        {
+            if (string.IsNullOrEmpty(observerRoom))
+            {
+                return null;
+            }
+
+            string lowerObserver = observerRoom.ToLowerInvariant();
+            if (!_visibility.ContainsKey(lowerObserver))
+            {
+                return null;
+            }
+
+            return new HashSet<string>(_visibility[lowerObserver]);
+        }
+
         // Internal access for reader/writer
         internal Dictionary<string, HashSet<string>> Visibility => _visibility;
 
