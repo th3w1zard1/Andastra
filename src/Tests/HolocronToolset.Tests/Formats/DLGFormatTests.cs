@@ -393,6 +393,13 @@ namespace HolocronToolset.Tests.Formats
             entry.Links.Add(link);
 
             var serialized = entry.ToDict();
+            
+            // Debug: Verify links are in serialized data
+            serialized.Should().ContainKey("data");
+            var data = serialized["data"] as System.Collections.Generic.Dictionary<string, object>;
+            data.Should().NotBeNull();
+            data.Should().ContainKey("links");
+            
             var deserializedNode = DLGNode.FromDict(serialized);
             var deserialized = deserializedNode as DLGEntry;
             deserialized.Should().NotBeNull();
