@@ -1,9 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Templates;
+using Andastra.Runtime.Core.Combat;
+using Andastra.Runtime.Core.Perception;
+using Andastra.Runtime.Core.Triggers;
+using Andastra.Runtime.Core.AI;
+using Andastra.Runtime.Core.Animation;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -49,6 +56,56 @@ namespace Andastra.Runtime.Games.Common
         /// The event bus for this world.
         /// </summary>
         public IEventBus EventBus => _eventBus;
+
+        /// <summary>
+        /// The current area.
+        /// </summary>
+        public abstract IArea CurrentArea { get; set; }
+
+        /// <summary>
+        /// The current module.
+        /// </summary>
+        public abstract IModule CurrentModule { get; set; }
+
+        /// <summary>
+        /// The simulation time manager.
+        /// </summary>
+        public abstract ITimeManager TimeManager { get; }
+
+        /// <summary>
+        /// The delay scheduler for delayed actions (DelayCommand).
+        /// </summary>
+        public abstract IDelayScheduler DelayScheduler { get; }
+
+        /// <summary>
+        /// The effect system for managing entity effects.
+        /// </summary>
+        public abstract Andastra.Runtime.Core.Combat.EffectSystem EffectSystem { get; }
+
+        /// <summary>
+        /// The perception system for sight/hearing checks.
+        /// </summary>
+        public abstract Andastra.Runtime.Core.Perception.PerceptionSystem PerceptionSystem { get; }
+
+        /// <summary>
+        /// The combat system for combat resolution.
+        /// </summary>
+        public abstract Andastra.Runtime.Core.Combat.CombatSystem CombatSystem { get; }
+
+        /// <summary>
+        /// The trigger system for trigger volume events.
+        /// </summary>
+        public abstract Andastra.Runtime.Core.Triggers.TriggerSystem TriggerSystem { get; }
+
+        /// <summary>
+        /// The AI controller for NPC behavior.
+        /// </summary>
+        public abstract Andastra.Runtime.Core.AI.AIController AIController { get; }
+
+        /// <summary>
+        /// The animation system for updating entity animations.
+        /// </summary>
+        public abstract Andastra.Runtime.Core.Animation.AnimationSystem AnimationSystem { get; }
 
         /// <summary>
         /// Gets an entity by its unique ObjectId.
@@ -107,6 +164,14 @@ namespace Andastra.Runtime.Games.Common
         }
 
         /// <summary>
+        /// Gets all entities of a specific type (IWorld interface method).
+        /// </summary>
+        public virtual IEnumerable<IEntity> GetEntitiesOfType(ObjectType type)
+        {
+            return GetEntities(type);
+        }
+
+        /// <summary>
         /// Gets entities within a radius of a point.
         /// </summary>
         /// <remarks>
@@ -114,7 +179,7 @@ namespace Andastra.Runtime.Games.Common
         /// Engine-specific implementations may use different spatial partitioning.
         /// Common interface across all engines.
         /// </remarks>
-        public abstract IEnumerable<IEntity> GetEntitiesInRadius(Vector3 center, float radius, ObjectType objectType = ObjectType.All);
+        public abstract IEnumerable<IEntity> GetEntitiesInRadius(Vector3 center, float radius, ObjectType typeMask = ObjectType.All);
 
         /// <summary>
         /// Gets all entities in the world.
@@ -133,6 +198,37 @@ namespace Andastra.Runtime.Games.Common
         }
 
         /// <summary>
+        /// Creates a new entity from a template.
+        /// </summary>
+        public abstract IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing);
+
+        /// <summary>
+        /// Creates a new entity of the specified type.
+        /// </summary>
+        public abstract IEntity CreateEntity(ObjectType objectType, Vector3 position, float facing);
+
+        /// <summary>
+        /// Destroys an entity by object ID.
+        /// </summary>
+        public abstract void DestroyEntity(uint objectId);
+
+        /// <summary>
+        /// Registers an entity with the world.
+        /// </summary>
+        public virtual void RegisterEntity(IEntity entity)
+        {
+            AddEntity(entity);
+        }
+
+        /// <summary>
+        /// Unregisters an entity from the world.
+        /// </summary>
+        public virtual void UnregisterEntity(IEntity entity)
+        {
+            RemoveEntity(entity);
+        }
+
+        /// <summary>
         /// Adds an entity to the world.
         /// </summary>
         /// <remarks>
@@ -140,7 +236,7 @@ namespace Andastra.Runtime.Games.Common
         /// Sets entity's world reference.
         /// Common across all engines.
         /// </remarks>
-        public virtual void AddEntity(IEntity entity)
+        protected virtual void AddEntity(IEntity entity)
         {
             if (entity == null || !entity.IsValid)
                 return;
@@ -181,7 +277,7 @@ namespace Andastra.Runtime.Games.Common
         /// Clears entity's world reference.
         /// Common across all engines.
         /// </remarks>
-        public virtual void RemoveEntity(IEntity entity)
+        protected virtual void RemoveEntity(IEntity entity)
         {
             if (entity == null)
                 return;

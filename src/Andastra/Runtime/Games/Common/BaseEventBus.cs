@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Games.Common
@@ -50,7 +51,7 @@ namespace Andastra.Runtime.Games.Common
         /// Type-safe event handling prevents runtime errors.
         /// Handlers are stored and called when events are fired.
         /// </remarks>
-        public virtual void Subscribe<T>(Action<T> handler) where T : class
+        public virtual void Subscribe<T>(Action<T> handler) where T : IGameEvent
         {
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
@@ -74,7 +75,7 @@ namespace Andastra.Runtime.Games.Common
         /// Removes specific handler from event subscriptions.
         /// Important for cleanup to prevent memory leaks.
         /// </remarks>
-        public virtual void Unsubscribe<T>(Action<T> handler) where T : class
+        public virtual void Unsubscribe<T>(Action<T> handler) where T : IGameEvent
         {
             if (handler == null)
                 return;
@@ -252,6 +253,58 @@ namespace Andastra.Runtime.Games.Common
 
             return stats;
         }
+
+        /// <summary>
+        /// Publishes an event to all subscribers.
+        /// </summary>
+        /// <typeparam name="T">The event type.</typeparam>
+        /// <param name="gameEvent">The game event to publish.</param>
+        /// <remarks>
+        /// Immediate event publishing for time-critical events.
+        /// Calls all subscribed handlers synchronously.
+        /// </remarks>
+        public virtual void Publish<T>(T gameEvent) where T : IGameEvent
+        {
+            Fire(gameEvent);
+        }
+
+        /// <summary>
+        /// Queues an event for deferred dispatch at frame boundary.
+        /// </summary>
+        /// <typeparam name="T">The event type.</typeparam>
+        /// <param name="gameEvent">The game event to queue.</param>
+        /// <remarks>
+        /// Queues events for processing in the next frame or update cycle.
+        /// Prevents recursion and ensures proper execution order.
+        /// </remarks>
+        public virtual void QueueEvent<T>(T gameEvent) where T : IGameEvent
+        {
+            Queue(gameEvent);
+        }
+
+        /// <summary>
+        /// Dispatches all queued events.
+        /// </summary>
+        /// <remarks>
+        /// Called during the update cycle to process queued events.
+        /// Clears the queue after processing.
+        /// </remarks>
+        public virtual void DispatchQueuedEvents()
+        {
+            ProcessQueuedEvents();
+        }
+
+        /// <summary>
+        /// Fires a script event on an entity.
+        /// </summary>
+        /// <param name="entity">The entity to fire the event on.</param>
+        /// <param name="eventType">The script event type.</param>
+        /// <param name="triggerer">The triggering entity (optional).</param>
+        /// <remarks>
+        /// Fires script events that trigger script hooks on entities.
+        /// Engine-specific subclasses should implement script execution.
+        /// </remarks>
+        public abstract void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer = null);
     }
 
     /// <summary>

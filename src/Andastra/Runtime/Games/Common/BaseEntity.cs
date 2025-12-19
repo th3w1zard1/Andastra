@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Games.Common
     public abstract class BaseEntity : IEntity
     {
         private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
-        private readonly Dictionary<Type, IComponent> _components = new Dictionary<Type, IComponent>();
+        private readonly Dictionary<System.Type, IComponent> _components = new Dictionary<System.Type, IComponent>();
 
         /// <summary>
         /// Unique object ID for this entity.
