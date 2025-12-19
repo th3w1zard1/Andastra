@@ -321,7 +321,7 @@ namespace HolocronToolset.Dialogs
         public bool ShowDialog()
         {
             // Show dialog and return result
-            // This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
+            // TODO: SIMPLIFIED - This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
             // For now, we'll track if OK was clicked
             bool result = false;
             if (_okButton != null)

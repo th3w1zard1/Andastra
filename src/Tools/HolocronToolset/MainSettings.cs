@@ -13,7 +13,7 @@ namespace HolocronToolset.NET
         public static void SetupPreInitSettings()
         {
             // Some application settings must be set before the app starts.
-            // For now, this is a simplified version - full implementation will come with ApplicationSettings widget
+            // TODO: SIMPLIFIED - For now, this is a simplified version - full implementation will come with ApplicationSettings widget
             var settings = new Settings("Application");
 
             // Set environment variables from settings if needed

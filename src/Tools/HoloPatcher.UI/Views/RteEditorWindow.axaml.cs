@@ -287,7 +287,7 @@ namespace HoloPatcher.UI.Views
             else
             {
                 // Fallback: work directly with inlines if property not available
-                // This is a workaround for API differences
+                // TODO: HACK - This is a workaround for API differences
                 MarkDirty();
             }
         }
