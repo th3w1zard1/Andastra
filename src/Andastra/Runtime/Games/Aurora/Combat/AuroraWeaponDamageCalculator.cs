@@ -269,16 +269,15 @@ namespace Andastra.Runtime.Games.Aurora.Combat
                 if (minCreatureSize.HasValue)
                 {
                     // Get creature size from attacker's appearance/stats
-                    // Based on nwmain.exe: Creature size is stored in appearance data
-                    // For now, we'll use a simplified check - full implementation would get size from appearance.2da
-                    // Default: Assume medium creatures (size 3) can use finesse for medium weapons
-                    // This matches nwmain.exe behavior where medium creatures can finesse medium weapons
-                    int creatureSize = 3; // Default to medium size
-                    
-                    // TODO: Get actual creature size from appearance.2da via attacker's appearance type
-                    // For now, use default medium size which allows most weapons to be finesse-eligible
+                    // Based on nwmain.exe: CNWSCreatureStats::GetWeaponFinesse @ 0x14040b680
+                    // - Accesses creature size at offset 0x718 in CNWSCreature (via this + 0x30 pointer)
+                    // - Creature size is stored in CNWSCreature structure, derived from appearance.2da sizecategory column
+                    // - ExecuteCommandGetCreatureSize @ 0x1405213f0 shows: iVar3 = *(int *)(pCVar2 + 0x718);
+                    // - Original implementation: Size is cached in creature object, originally loaded from appearance.2da
+                    int creatureSize = GetCreatureSize(attacker);
                     
                     // If creature size is <= minimum required size, weapon is finesse-eligible
+                    // Based on nwmain.exe: Comparison is creatureSize <= minCreatureSize (line 21 of GetWeaponFinesse)
                     if (creatureSize <= minCreatureSize.Value)
                     {
                         return true;
@@ -294,6 +293,67 @@ namespace Andastra.Runtime.Games.Aurora.Combat
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the creature size from appearance.2da (Aurora-specific).
+        /// </summary>
+        /// <param name="creature">The creature entity.</param>
+        /// <returns>The creature size category (default 3 for medium if lookup fails).</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSCreatureStats::GetWeaponFinesse @ 0x14040b680
+        /// - Accesses creature size at offset 0x718 in CNWSCreature (via this + 0x30 pointer)
+        /// - ExecuteCommandGetCreatureSize @ 0x1405213f0 shows: iVar3 = *(int *)(pCVar2 + 0x718);
+        /// - Original implementation: Size is cached in creature object, originally loaded from appearance.2da
+        /// - Appearance.2da column: "sizecategory" (integer, 0=Small, 1=Medium, 2=Large, 3=Huge, 4=Gargantuan)
+        /// - Default size: 3 (Medium) - matches nwmain.exe behavior where medium creatures can finesse medium weapons
+        /// - Cross-engine: Similar pattern in Odyssey (appearance.2da sizecategory), Eclipse (appearance.2da sizecategory)
+        /// </remarks>
+        private int GetCreatureSize(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return 3; // Default to medium size
+            }
+
+            // Get creature component to access appearance type
+            var creatureComp = creature.GetComponent<AuroraCreatureComponent>();
+            if (creatureComp == null)
+            {
+                return 3; // Default to medium size
+            }
+
+            // Get appearance type from creature component
+            int appearanceType = creatureComp.AppearanceType;
+            if (appearanceType < 0)
+            {
+                return 3; // Default to medium size
+            }
+
+            // Look up appearance.2da to get size category
+            try
+            {
+                var appearanceRow = _tableManager.GetRow("appearance", appearanceType);
+                if (appearanceRow != null)
+                {
+                    // Get sizecategory column from appearance.2da
+                    // Based on nwmain.exe: Size category is stored in appearance.2da "sizecategory" column
+                    // Size categories: 0=Small, 1=Medium, 2=Large, 3=Huge, 4=Gargantuan
+                    int? sizeCategory = appearanceRow.GetInteger("sizecategory", null);
+                    if (sizeCategory.HasValue)
+                    {
+                        return sizeCategory.Value;
+                    }
+                }
+            }
+            catch
+            {
+                // Error accessing table, fall through to default
+            }
+
+            // Default to medium size (3) if lookup fails
+            // This matches nwmain.exe behavior where medium creatures can finesse medium weapons
+            return 3;
         }
 
         /// <summary>
