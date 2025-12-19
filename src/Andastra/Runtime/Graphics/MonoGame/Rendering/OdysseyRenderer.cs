@@ -3,6 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Backends;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.MonoGame.Raytracing;
 using Andastra.Runtime.MonoGame.Remix;
 
 namespace Andastra.Runtime.MonoGame.Rendering
@@ -146,8 +147,45 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Initialize raytracing system if supported and requested
             if (_backend.IsRaytracingEnabled && settings.Raytracing != RaytracingLevel.Disabled)
             {
-                // TODO: Initialize raytracing system when IRaytracingSystem implementation is available
-                Console.WriteLine("[OdysseyRenderer] Raytracing requested but system not yet implemented");
+                try
+                {
+                    // Create raytracing system instance
+                    _raytracing = new NativeRaytracingSystem(_backend);
+                    
+                    // Create raytracing settings from render settings
+                    RaytracingSettings rtSettings = new RaytracingSettings
+                    {
+                        Level = settings.Raytracing,
+                        MaxInstances = 1024, // Default maximum TLAS instances
+                        AsyncBuilds = settings.AsyncCompute,
+                        RemixCompatibility = settings.RemixCompatibility,
+                        RemixRuntimePath = settings.RemixRuntimePath,
+                        RayBudget = settings.RaytracingSamplesPerPixel * settings.Width * settings.Height,
+                        EnableDenoiser = settings.RaytracingDenoiser,
+                        Denoiser = settings.RaytracingDenoiser ? DenoiserType.Temporal : DenoiserType.None
+                    };
+                    
+                    // Initialize the raytracing system
+                    if (_raytracing.Initialize(rtSettings))
+                    {
+                        Console.WriteLine("[OdysseyRenderer] Raytracing system initialized successfully");
+                        Console.WriteLine("[OdysseyRenderer] Raytracing level: " + settings.Raytracing);
+                        Console.WriteLine("[OdysseyRenderer] Denoiser: " + (settings.RaytracingDenoiser ? "Enabled" : "Disabled"));
+                    }
+                    else
+                    {
+                        Console.WriteLine("[OdysseyRenderer] WARNING: Raytracing system initialization failed");
+                        Console.WriteLine("[OdysseyRenderer] Raytracing may not be fully functional (IDevice may be required)");
+                        // Keep the system instance for potential future initialization
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[OdysseyRenderer] ERROR: Exception during raytracing system initialization: " + ex.Message);
+                    Console.WriteLine("[OdysseyRenderer] Stack trace: " + ex.StackTrace);
+                    _raytracing?.Dispose();
+                    _raytracing = null;
+                }
             }
             else if (settings.Raytracing != RaytracingLevel.Disabled)
             {
