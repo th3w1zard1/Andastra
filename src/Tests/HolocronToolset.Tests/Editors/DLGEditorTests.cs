@@ -702,10 +702,11 @@ namespace HolocronToolset.Tests.Editors
             // Create multiple starter links to test reordering
             // We'll create at least 3 items to properly test up/down movement
             // TODO: DLGLink requires DLGNode parameter - need to create nodes first
-            var node1 = new DLGNode();
-            var node2 = new DLGNode();
-            var node3 = new DLGNode();
-            var node4 = new DLGNode();
+            // Use DLGEntry as concrete implementation of DLGNode
+            var node1 = new DLGEntry();
+            var node2 = new DLGEntry();
+            var node3 = new DLGEntry();
+            var node4 = new DLGEntry();
             var link1 = new DLGLink(node1);
             var link2 = new DLGLink(node2);
             var link3 = new DLGLink(node3);
@@ -881,7 +882,7 @@ namespace HolocronToolset.Tests.Editors
             editor.CoreDlg.Starters.Count.Should().Be(0, "CoreDlg should start empty");
 
             // Test 1: Add starter and verify undo
-            var node1 = new DLGNode();
+            var node1 = new DLGEntry();
             var link1 = new DLGLink(node1);
             // TODO: AddStarter method not yet implemented
             // editor.AddStarter(link1);
@@ -918,8 +919,8 @@ namespace HolocronToolset.Tests.Editors
             // editor.CanRedo.Should().BeFalse("Redo should not be available after redo");
 
             // Test 3: Multiple operations and undo/redo chain
-            var node2 = new DLGNode();
-            var node3 = new DLGNode();
+            var node2 = new DLGEntry();
+            var node3 = new DLGEntry();
             var link2 = new DLGLink(node2);
             var link3 = new DLGLink(node3);
             // TODO: AddStarter method not yet implemented
@@ -976,7 +977,7 @@ namespace HolocronToolset.Tests.Editors
             // editor.CanRedo.Should().BeTrue("Redo should be available");
 
             // Add new link (this should clear redo stack)
-            var node4 = new DLGNode();
+            var node4 = new DLGEntry();
             var link4 = new DLGLink(node4);
             // editor.AddStarter(link4);
 
