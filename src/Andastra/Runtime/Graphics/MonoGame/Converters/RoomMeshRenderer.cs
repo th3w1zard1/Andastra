@@ -122,10 +122,37 @@ namespace Andastra.Runtime.MonoGame.Converters
             }
 
             // Build node transform
-            Matrix nodeTransform = Matrix.Identity;
-            nodeTransform *= Matrix.CreateTranslation(node.Position.X, node.Position.Y, node.Position.Z);
-            nodeTransform *= Matrix.CreateScale(node.ScaleX, node.ScaleY, node.ScaleZ);
-            // TODO: SIMPLIFIED - Note: Orientation is a quaternion, but for quick demo we'll skip rotation
+            // Create rotation from quaternion (X, Y, Z, W stored in node.Orientation)
+            Quaternion rotation = new Quaternion(
+                node.Orientation.X,
+                node.Orientation.Y,
+                node.Orientation.Z,
+                node.Orientation.W
+            );
+
+            // Create translation
+            Vector3 translation = new Vector3(
+                node.Position.X,
+                node.Position.Y,
+                node.Position.Z
+            );
+
+            // Create scale
+            Vector3 scale = new Vector3(
+                node.ScaleX,
+                node.ScaleY,
+                node.ScaleZ
+            );
+
+            // Build transform: Translation * Rotation * Scale
+            // Note: In matrix multiplication, A * B * C applies C first, then B, then A
+            // For transform order (Scale, then Rotation, then Translation), we need: Translation * Rotation * Scale
+            // Reference: vendor/PyKotor/wiki/MDL-File-Format.md - Node Transform Order
+            // Reference: MdlToMonoGameModelConverter.CreateNodeTransform for consistent implementation
+            Matrix rotationMatrix = Matrix.CreateFromQuaternion(rotation);
+            Matrix scaleMatrix = Matrix.CreateScale(scale);
+            Matrix translationMatrix = Matrix.CreateTranslation(translation);
+            Matrix nodeTransform = translationMatrix * rotationMatrix * scaleMatrix;
             Matrix finalTransform = nodeTransform * parentTransform;
 
             // Extract mesh geometry if present

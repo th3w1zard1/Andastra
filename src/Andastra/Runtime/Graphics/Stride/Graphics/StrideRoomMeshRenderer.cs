@@ -122,10 +122,38 @@ namespace Andastra.Runtime.Stride.Graphics
             }
 
             // Build node transform
-            var nodeTransform = Matrix4x4.Identity;
-            nodeTransform = Matrix4x4.Multiply(nodeTransform, Matrix4x4.CreateTranslation(node.Position.X, node.Position.Y, node.Position.Z));
-            nodeTransform = Matrix4x4.Multiply(nodeTransform, Matrix4x4.CreateScale(node.ScaleX, node.ScaleY, node.ScaleZ));
-            var finalTransform = Matrix4x4.Multiply(nodeTransform, parentTransform);
+            // Create rotation from quaternion (X, Y, Z, W stored in node.Orientation)
+            System.Numerics.Quaternion rotation = new System.Numerics.Quaternion(
+                node.Orientation.X,
+                node.Orientation.Y,
+                node.Orientation.Z,
+                node.Orientation.W
+            );
+
+            // Create translation
+            Vector3 translation = new Vector3(
+                node.Position.X,
+                node.Position.Y,
+                node.Position.Z
+            );
+
+            // Create scale
+            Vector3 scale = new Vector3(
+                node.ScaleX,
+                node.ScaleY,
+                node.ScaleZ
+            );
+
+            // Build transform: Translation * Rotation * Scale
+            // Note: In matrix multiplication, A * B * C applies C first, then B, then A
+            // For transform order (Scale, then Rotation, then Translation), we need: Translation * Rotation * Scale
+            // Reference: vendor/PyKotor/wiki/MDL-File-Format.md - Node Transform Order
+            // Reference: MdlToMonoGameModelConverter.CreateNodeTransform for consistent implementation
+            Matrix4x4 rotationMatrix = Matrix4x4.CreateFromQuaternion(rotation);
+            Matrix4x4 scaleMatrix = Matrix4x4.CreateScale(scale);
+            Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(translation);
+            Matrix4x4 nodeTransform = Matrix4x4.Multiply(Matrix4x4.Multiply(translationMatrix, rotationMatrix), scaleMatrix);
+            Matrix4x4 finalTransform = Matrix4x4.Multiply(nodeTransform, parentTransform);
 
             // Extract mesh geometry if present
             if (node.Mesh != null)
@@ -160,7 +188,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 var vertexVec = new Vector4(vertex.X, vertex.Y, vertex.Z, 1.0f);
                 var transformedVec = System.Numerics.Vector4.Transform(vertexVec, transform);
                 var transformedPos = new Vector3(transformedVec.X, transformedVec.Y, transformedVec.Z);
-                
+
                 vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(transformedPos, meshColor));
             }
 
