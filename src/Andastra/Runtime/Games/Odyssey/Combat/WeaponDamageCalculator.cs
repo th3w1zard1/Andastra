@@ -2,6 +2,7 @@ using System;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
 
 namespace Andastra.Runtime.Engines.Odyssey.Combat
@@ -23,7 +24,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     ///   - Eclipse: EclipseWeaponDamageCalculator : DamageCalculator (Runtime.Games.Eclipse) - Eclipse-specific damage system
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save item data), FUN_0050c510 @ 0x0050c510 (load item data)
     /// - Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
-    /// - Ability modifier: STR for melee, DEX for ranged (or STR if weapon has finesse property)
+    /// - Ability modifier: STR for melee (default), DEX for ranged, DEX for finesse melee/lightsabers (if feat)
+    /// - Finesse feats: FEAT_FINESSE_LIGHTSABERS (193) for lightsabers, FEAT_FINESSE_MELEE_WEAPONS (194) for melee
     /// - Offhand attacks: Get half ability modifier (abilityMod / 2)
     /// - Critical hits: Multiply damage by critmult from baseitems.2da (crithitmult column)
     /// - Based on baseitems.2da columns: numdice/damagedice (dice count), dietoroll/damagedie (die size), damagebonus, crithitmult, critthreat
@@ -136,11 +138,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             IStatsComponent stats = attacker.GetComponent<IStatsComponent>();
             if (stats != null)
             {
-                // Check if ranged weapon
-                bool isRanged = baseItem.RangedWeapon;
+                // Determine which ability score to use for damage
+                // Based on swkotor2.exe: Ability modifier selection for weapon damage
+                // - Ranged weapons: Always use DEX
+                // - Melee weapons: Use STR by default, DEX if finesse feat applies
+                // - Finesse feats: FEAT_FINESSE_LIGHTSABERS (193) for lightsabers, FEAT_FINESSE_MELEE_WEAPONS (194) for melee weapons
+                // Located via string references: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
+                // Original implementation: FUN_005226d0 @ 0x005226d0 checks finesse feats for ability modifier selection
+                Ability attackAbility = DetermineDamageAbility(attacker, baseItem, baseItemId);
 
-                // TODO: SIMPLIFIED - Use DEX for ranged, STR for melee (simplified - would check for finesse)
-                Ability attackAbility = isRanged ? Ability.Dexterity : Ability.Strength;
                 int abilityMod = stats.GetAbilityModifier(attackAbility);
 
                 // Offhand attacks get half ability modifier
@@ -173,6 +179,149 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             }
 
             return Math.Max(1, totalDamage); // Minimum 1 damage
+        }
+
+        /// <summary>
+        /// Determines which ability score to use for weapon damage calculation.
+        /// </summary>
+        /// <param name="attacker">The attacking entity.</param>
+        /// <param name="baseItem">The base item data for the weapon.</param>
+        /// <param name="baseItemId">The base item ID.</param>
+        /// <returns>The ability score to use (DEX for ranged/finesse, STR otherwise).</returns>
+        /// <remarks>
+        /// Ability Score Selection for Weapon Damage:
+        /// - Based on swkotor2.exe: Ability modifier selection for weapon damage
+        /// - Located via string references: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
+        /// - " + %d (Dex Modifier)" @ 0x007c3a84, " + %d (Dex Mod)" @ 0x007c3e54
+        /// - Original implementation: FUN_005226d0 @ 0x005226d0 checks finesse feats for ability modifier selection
+        /// - Ranged weapons: Always use DEX modifier
+        /// - Melee weapons: Use STR by default, DEX if appropriate finesse feat is present
+        /// - Finesse feats:
+        ///   - FEAT_FINESSE_LIGHTSABERS (193): Allows DEX for lightsabers
+        ///   - FEAT_FINESSE_MELEE_WEAPONS (194): Allows DEX for melee weapons
+        /// - Lightsaber detection: Check baseitems.2da itemclass = 15 or weapontype = 4
+        /// - Cross-engine: Similar logic in swkotor.exe (K1), nwmain.exe (Aurora uses different feat system)
+        /// </remarks>
+        private Ability DetermineDamageAbility(IEntity attacker, BaseItemData baseItem, int baseItemId)
+        {
+            if (attacker == null || baseItem == null)
+            {
+                return Ability.Strength; // Default fallback
+            }
+
+            // Ranged weapons always use DEX
+            if (baseItem.RangedWeapon)
+            {
+                return Ability.Dexterity;
+            }
+
+            // For melee weapons, check if finesse applies
+            // First, determine if this is a lightsaber
+            bool isLightsaber = IsLightsaber(baseItemId);
+
+            // Check if attacker has appropriate finesse feat
+            if (isLightsaber)
+            {
+                // Lightsabers: Check for FEAT_FINESSE_LIGHTSABERS (193)
+                if (HasFeat(attacker, 193)) // FEAT_FINESSE_LIGHTSABERS
+                {
+                    return Ability.Dexterity;
+                }
+            }
+            else
+            {
+                // Melee weapons: Check for FEAT_FINESSE_MELEE_WEAPONS (194)
+                if (HasFeat(attacker, 194)) // FEAT_FINESSE_MELEE_WEAPONS
+                {
+                    return Ability.Dexterity;
+                }
+            }
+
+            // Default: Use STR for melee weapons without finesse
+            return Ability.Strength;
+        }
+
+        /// <summary>
+        /// Checks if a base item is a lightsaber.
+        /// </summary>
+        /// <param name="baseItemId">The base item ID to check.</param>
+        /// <returns>True if the item is a lightsaber, false otherwise.</returns>
+        /// <remarks>
+        /// Lightsaber Detection:
+        /// - Based on swkotor2.exe: Lightsaber item type detection
+        /// - Located via string references: Lightsaber detection in baseitems.2da lookup
+        /// - Original implementation: Checks baseitems.2da "itemclass" or "weapontype" column
+        /// - Lightsabers have specific item class values (typically itemclass = 15 for lightsabers)
+        /// - Alternative: Check "weapontype" column for lightsaber weapon type (weapontype = 4)
+        /// - Cross-engine: Similar detection in swkotor.exe (K1), different in nwmain.exe (Aurora)
+        /// </remarks>
+        private bool IsLightsaber(int baseItemId)
+        {
+            if (baseItemId <= 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow != null)
+                {
+                    // Check itemclass column (lightsabers typically have itemclass = 15)
+                    // ItemClass 15 = Lightsaber in baseitems.2da
+                    int? itemClass = twoDARow.GetInteger("itemclass", null);
+                    if (itemClass.HasValue && itemClass.Value == 15)
+                    {
+                        return true;
+                    }
+
+                    // Alternative: Check weapontype column if available
+                    // For KOTOR/TSL, lightsabers are weapontype 4
+                    int? weaponType = twoDARow.GetInteger("weapontype", null);
+                    if (weaponType.HasValue && weaponType.Value == 4)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                // Error accessing 2DA table, fall through to return false
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if a creature has a specific feat.
+        /// </summary>
+        /// <param name="creature">The creature entity to check.</param>
+        /// <param name="featId">The feat ID to check for.</param>
+        /// <returns>True if the creature has the feat, false otherwise.</returns>
+        /// <remarks>
+        /// Feat Checking:
+        /// - Based on swkotor2.exe: Feat checking system
+        /// - Located via string references: Feat list in creature component (UTC GFF)
+        /// - Original implementation: FUN_005226d0 @ 0x005226d0 checks feat list for creature
+        /// - Feats stored in CreatureComponent.FeatList
+        /// - Cross-engine: Similar in swkotor.exe (K1), different feat system in nwmain.exe (Aurora)
+        /// </remarks>
+        private bool HasFeat(IEntity creature, int featId)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            // Get CreatureComponent to access feat list
+            // Note: Using runtime component type directly for Odyssey-specific implementation
+            var creatureComp = creature.GetComponent<Andastra.Runtime.Engines.Odyssey.Components.CreatureComponent>();
+            if (creatureComp == null || creatureComp.FeatList == null)
+            {
+                return false;
+            }
+
+            return creatureComp.FeatList.Contains(featId);
         }
 
         /// <summary>
