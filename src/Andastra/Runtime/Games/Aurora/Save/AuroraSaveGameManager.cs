@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing;
@@ -10,6 +11,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Games.Common.Save;
 using Andastra.Runtime.Core.Entities;
@@ -102,36 +104,30 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 // Save game.git - Game Instance Template (GFF)
                 // Based on nwmain.exe: SaveGIT @ 0x140365db0
                 // GIT files contain area instance data (creatures, doors, placeables, triggers, waypoints, etc.)
-                if (saveData.AreaStates != null && saveData.AreaStates.Count > 0)
+                // Convert AreaState to GIT format for current area
+                string currentAreaResRef = saveData.CurrentAreaName ?? saveData.CurrentModule ?? "";
+                AreaState currentAreaState = null;
+                if (saveData.AreaStates != null && !string.IsNullOrEmpty(currentAreaResRef))
                 {
-                    // For now, we'll create a basic GIT structure
-                    // TODO: Full GIT implementation requires converting AreaState to GIT format
-                    // This is a placeholder that creates a valid GIT file structure
-                    var git = new GIT();
-                    
-                    // Set area properties from first area state (if available)
-                    var firstArea = saveData.AreaStates.Values.FirstOrDefault();
-                    if (firstArea != null)
-                    {
-                        // Area properties would be set here based on AreaState
-                        // For now, we use defaults
-                    }
-                    
-                    // Write game.git GFF file
-                    string gameGitPath = Path.Combine(saveDir, "game.git");
-                    GFF gitGff = GITHelpers.DismantleGit(git, Game.K1); // K1 format is closer to Aurora
-                    gitGff.Content = GFFContent.GIT;
-                    GFFAuto.WriteGff(gitGff, gameGitPath);
+                    saveData.AreaStates.TryGetValue(currentAreaResRef, out currentAreaState);
                 }
-                else
+                
+                // If no current area state, try to get first area state
+                if (currentAreaState == null && saveData.AreaStates != null && saveData.AreaStates.Count > 0)
                 {
-                    // Create empty GIT file if no area states
-                    var emptyGit = new GIT();
-                    string gameGitPath = Path.Combine(saveDir, "game.git");
-                    GFF gitGff = GITHelpers.DismantleGit(emptyGit, Game.K1);
-                    gitGff.Content = GFFContent.GIT;
-                    GFFAuto.WriteGff(gitGff, gameGitPath);
+                    currentAreaState = saveData.AreaStates.Values.FirstOrDefault();
                 }
+                
+                GIT git = currentAreaState != null 
+                    ? ConvertAreaStateToGIT(currentAreaState) 
+                    : new GIT();
+                
+                // Write game.git GFF file
+                // Use Game.NWN for Aurora engine (Neverwinter Nights)
+                string gameGitPath = Path.Combine(saveDir, "game.git");
+                GFF gitGff = GITHelpers.DismantleGit(git, Game.NWN);
+                gitGff.Content = GFFContent.GIT;
+                GFFAuto.WriteGff(gitGff, gameGitPath);
 
                 // Save module_uuid.txt - Module UUID
                 // Based on nwmain.exe: Format string "%s%s%06d - %s%smodule_uuid.txt" @ 0x140dfd570
@@ -149,9 +145,12 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 string nwsyncadPath = Path.Combine(saveDir, "nwsyncad.txt");
                 File.WriteAllText(nwsyncadPath, ""); // Empty for single-player saves
 
-                // TODO: Save game state (GAM format or custom GFF)
-                // Aurora may use a GAM file for game state (party, globals, etc.)
-                // This would require converting SaveGameData to GAM format
+                // Save game.gam - Game state (GAM format)
+                // Based on nwmain.exe: GAM files store party, globals, game time, etc.
+                // Convert SaveGameData to GAM format
+                GAM gam = ConvertSaveGameDataToGAM(saveData);
+                string gameGamPath = Path.Combine(saveDir, "game.gam");
+                GAMAuto.WriteGam(gam, gameGamPath, Game.NWN);
 
                 return await Task.FromResult(true);
             }
@@ -242,19 +241,15 @@ namespace Andastra.Runtime.Games.Aurora.Save
                         GFF gitGff = GFFAuto.ReadGff(gameGitPath);
                         GIT git = GITHelpers.ConstructGit(gitGff);
                         
-                        // Convert GIT to AreaState (simplified - full conversion would require more work)
-                        // For now, we create a basic area state
-                        if (!string.IsNullOrEmpty(saveData.CurrentModule))
+                        // Convert GIT to AreaState
+                        string areaResRef = saveData.CurrentModule ?? "default_area";
+                        AreaState areaState = ConvertGITToAreaState(git, areaResRef);
+                        
+                        if (saveData.AreaStates == null)
                         {
-                            var areaState = new AreaState
-                            {
-                                AreaResRef = saveData.CurrentModule
-                            };
-                            saveData.AreaStates = new Dictionary<string, AreaState>
-                            {
-                                { saveData.CurrentModule, areaState }
-                            };
+                            saveData.AreaStates = new Dictionary<string, AreaState>();
                         }
+                        saveData.AreaStates[areaResRef] = areaState;
                     }
                     catch (Exception ex)
                     {
@@ -262,11 +257,24 @@ namespace Andastra.Runtime.Games.Aurora.Save
                     }
                 }
 
+                // Load game.gam - Game state (GAM format)
+                // Based on nwmain.exe: GAM files store party, globals, game time, etc.
+                string gameGamPath = Path.Combine(saveDir, "game.gam");
+                if (File.Exists(gameGamPath))
+                {
+                    try
+                    {
+                        GAM gam = GAMAuto.ReadGam(gameGamPath);
+                        ConvertGAMToSaveGameData(gam, saveData);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[AuroraSaveGameManager] Error loading game.gam: {ex.Message}");
+                    }
+                }
+
                 // Set save time from directory modification time
                 saveData.SaveTime = Directory.GetLastWriteTime(saveDir);
-
-                // TODO: Load game state from GAM file or other GFF files
-                // TODO: Load global variables, party state, etc.
 
                 return await Task.FromResult(saveData);
             }
@@ -334,12 +342,602 @@ namespace Andastra.Runtime.Games.Aurora.Save
                     }
                 }
 
-                // TODO: Load additional metadata from game.git or GAM files
-                // TODO: Extract player name, play time, etc. from save files
+                // Try to load additional metadata from game.gam
+                string gameGamPath = Path.Combine(saveDir, "game.gam");
+                if (File.Exists(gameGamPath))
+                {
+                    try
+                    {
+                        GAM gam = GAMAuto.ReadGam(gameGamPath);
+                        if (!string.IsNullOrEmpty(gam.ModuleName))
+                        {
+                            info.ModuleName = gam.ModuleName;
+                        }
+                        if (gam.TimePlayed > 0)
+                        {
+                            info.PlayTime = TimeSpan.FromSeconds(gam.TimePlayed);
+                        }
+                        if (!gam.PlayerCharacter.IsBlank())
+                        {
+                            info.PlayerName = gam.PlayerCharacter.ToString();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore errors reading game.gam
+                    }
+                }
 
                 yield return info;
             }
         }
+
+        #region AreaState <-> GIT Conversion
+
+        /// <summary>
+        /// Converts AreaState to GIT format.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: SaveGIT @ 0x140365db0
+        /// Converts entity states from AreaState to GIT instance lists
+        /// </remarks>
+        private GIT ConvertAreaStateToGIT(AreaState areaState)
+        {
+            var git = new GIT();
+
+            // Convert creature states to GITCreature instances
+            if (areaState.CreatureStates != null)
+            {
+                foreach (EntityState entityState in areaState.CreatureStates)
+                {
+                    // Skip destroyed entities (they're tracked in DestroyedEntityIds)
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitCreature = new GITCreature
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Bearing = entityState.Facing
+                    };
+                    git.Creatures.Add(gitCreature);
+                }
+            }
+
+            // Convert door states to GITDoor instances
+            if (areaState.DoorStates != null)
+            {
+                foreach (EntityState entityState in areaState.DoorStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitDoor = new GITDoor
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Bearing = entityState.Facing,
+                        Tag = entityState.Tag ?? ""
+                    };
+                    git.Doors.Add(gitDoor);
+                }
+            }
+
+            // Convert placeable states to GITPlaceable instances
+            if (areaState.PlaceableStates != null)
+            {
+                foreach (EntityState entityState in areaState.PlaceableStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitPlaceable = new GITPlaceable
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Bearing = entityState.Facing,
+                        Tag = entityState.Tag ?? ""
+                    };
+                    git.Placeables.Add(gitPlaceable);
+                }
+            }
+
+            // Convert trigger states to GITTrigger instances
+            if (areaState.TriggerStates != null)
+            {
+                foreach (EntityState entityState in areaState.TriggerStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitTrigger = new GITTrigger
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Tag = entityState.Tag ?? ""
+                    };
+                    git.Triggers.Add(gitTrigger);
+                }
+            }
+
+            // Convert waypoint states to GITWaypoint instances
+            if (areaState.WaypointStates != null)
+            {
+                foreach (EntityState entityState in areaState.WaypointStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitWaypoint = new GITWaypoint
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Bearing = entityState.Facing,
+                        Tag = entityState.Tag ?? ""
+                    };
+                    git.Waypoints.Add(gitWaypoint);
+                }
+            }
+
+            // Convert store states to GITStore instances
+            if (areaState.StoreStates != null)
+            {
+                foreach (EntityState entityState in areaState.StoreStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitStore = new GITStore
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Bearing = entityState.Facing
+                    };
+                    git.Stores.Add(gitStore);
+                }
+            }
+
+            // Convert sound states to GITSound instances
+            if (areaState.SoundStates != null)
+            {
+                foreach (EntityState entityState in areaState.SoundStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitSound = new GITSound
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position,
+                        Tag = entityState.Tag ?? ""
+                    };
+                    git.Sounds.Add(gitSound);
+                }
+            }
+
+            // Convert encounter states to GITEncounter instances
+            if (areaState.EncounterStates != null)
+            {
+                foreach (EntityState entityState in areaState.EncounterStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitEncounter = new GITEncounter
+                    {
+                        ResRef = ResRef.FromString(entityState.TemplateResRef ?? ""),
+                        Position = entityState.Position
+                    };
+                    git.Encounters.Add(gitEncounter);
+                }
+            }
+
+            // Convert camera states to GITCamera instances
+            if (areaState.CameraStates != null)
+            {
+                int cameraId = 1;
+                foreach (EntityState entityState in areaState.CameraStates)
+                {
+                    if (entityState.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    var gitCamera = new GITCamera
+                    {
+                        CameraId = cameraId++,
+                        Position = entityState.Position,
+                        Fov = 45.0f // Default FOV
+                    };
+                    git.Cameras.Add(gitCamera);
+                }
+            }
+
+            // Add spawned entities (not in original GIT, dynamically created)
+            if (areaState.SpawnedEntities != null)
+            {
+                foreach (SpawnedEntityState spawnedEntity in areaState.SpawnedEntities)
+                {
+                    if (spawnedEntity.IsDestroyed)
+                    {
+                        continue;
+                    }
+
+                    // Determine type based on ObjectType
+                    ResRef resRef = ResRef.FromString(spawnedEntity.BlueprintResRef ?? spawnedEntity.TemplateResRef ?? "");
+                    
+                    if ((spawnedEntity.ObjectType & ObjectType.Creature) != 0)
+                    {
+                        var gitCreature = new GITCreature
+                        {
+                            ResRef = resRef,
+                            Position = spawnedEntity.Position,
+                            Bearing = spawnedEntity.Facing
+                        };
+                        git.Creatures.Add(gitCreature);
+                    }
+                    else if ((spawnedEntity.ObjectType & ObjectType.Door) != 0)
+                    {
+                        var gitDoor = new GITDoor
+                        {
+                            ResRef = resRef,
+                            Position = spawnedEntity.Position,
+                            Bearing = spawnedEntity.Facing,
+                            Tag = spawnedEntity.Tag ?? ""
+                        };
+                        git.Doors.Add(gitDoor);
+                    }
+                    else if ((spawnedEntity.ObjectType & ObjectType.Placeable) != 0)
+                    {
+                        var gitPlaceable = new GITPlaceable
+                        {
+                            ResRef = resRef,
+                            Position = spawnedEntity.Position,
+                            Bearing = spawnedEntity.Facing,
+                            Tag = spawnedEntity.Tag ?? ""
+                        };
+                        git.Placeables.Add(gitPlaceable);
+                    }
+                    // Add other types as needed
+                }
+            }
+
+            return git;
+        }
+
+        /// <summary>
+        /// Converts GIT format to AreaState.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: LoadGIT @ CNWSArea::LoadGIT
+        /// Converts GIT instance lists back to AreaState entity lists
+        /// </remarks>
+        private AreaState ConvertGITToAreaState(GIT git, string areaResRef)
+        {
+            var areaState = new AreaState
+            {
+                AreaResRef = areaResRef,
+                Visited = true
+            };
+
+            // Convert GITCreature instances to creature states
+            foreach (GITCreature gitCreature in git.Creatures)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitCreature.ResRef.ToString(),
+                    Position = gitCreature.Position,
+                    Facing = gitCreature.Bearing,
+                    ObjectType = ObjectType.Creature
+                };
+                areaState.CreatureStates.Add(entityState);
+            }
+
+            // Convert GITDoor instances to door states
+            foreach (GITDoor gitDoor in git.Doors)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitDoor.ResRef.ToString(),
+                    Position = gitDoor.Position,
+                    Facing = gitDoor.Bearing,
+                    Tag = gitDoor.Tag,
+                    ObjectType = ObjectType.Door
+                };
+                areaState.DoorStates.Add(entityState);
+            }
+
+            // Convert GITPlaceable instances to placeable states
+            foreach (GITPlaceable gitPlaceable in git.Placeables)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitPlaceable.ResRef.ToString(),
+                    Position = gitPlaceable.Position,
+                    Facing = gitPlaceable.Bearing,
+                    Tag = gitPlaceable.Tag,
+                    ObjectType = ObjectType.Placeable
+                };
+                areaState.PlaceableStates.Add(entityState);
+            }
+
+            // Convert GITTrigger instances to trigger states
+            foreach (GITTrigger gitTrigger in git.Triggers)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitTrigger.ResRef.ToString(),
+                    Position = gitTrigger.Position,
+                    Tag = gitTrigger.Tag,
+                    ObjectType = ObjectType.Trigger
+                };
+                areaState.TriggerStates.Add(entityState);
+            }
+
+            // Convert GITWaypoint instances to waypoint states
+            foreach (GITWaypoint gitWaypoint in git.Waypoints)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitWaypoint.ResRef.ToString(),
+                    Position = gitWaypoint.Position,
+                    Facing = gitWaypoint.Bearing,
+                    Tag = gitWaypoint.Tag,
+                    ObjectType = ObjectType.Waypoint
+                };
+                areaState.WaypointStates.Add(entityState);
+            }
+
+            // Convert GITStore instances to store states
+            foreach (GITStore gitStore in git.Stores)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitStore.ResRef.ToString(),
+                    Position = gitStore.Position,
+                    Facing = gitStore.Bearing,
+                    ObjectType = ObjectType.Store
+                };
+                areaState.StoreStates.Add(entityState);
+            }
+
+            // Convert GITSound instances to sound states
+            foreach (GITSound gitSound in git.Sounds)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitSound.ResRef.ToString(),
+                    Position = gitSound.Position,
+                    Tag = gitSound.Tag,
+                    ObjectType = ObjectType.Sound
+                };
+                areaState.SoundStates.Add(entityState);
+            }
+
+            // Convert GITEncounter instances to encounter states
+            foreach (GITEncounter gitEncounter in git.Encounters)
+            {
+                var entityState = new EntityState
+                {
+                    TemplateResRef = gitEncounter.ResRef.ToString(),
+                    Position = gitEncounter.Position,
+                    ObjectType = ObjectType.Encounter
+                };
+                areaState.EncounterStates.Add(entityState);
+            }
+
+            // Convert GITCamera instances to camera states
+            foreach (GITCamera gitCamera in git.Cameras)
+            {
+                var entityState = new EntityState
+                {
+                    Position = gitCamera.Position,
+                    ObjectType = ObjectType.Invalid // Cameras don't have a standard ObjectType
+                };
+                areaState.CameraStates.Add(entityState);
+            }
+
+            return areaState;
+        }
+
+        #endregion
+
+        #region SaveGameData <-> GAM Conversion
+
+        /// <summary>
+        /// Converts SaveGameData to GAM format.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: GAM files store game state (party, globals, game time, etc.)
+        /// </remarks>
+        private GAM ConvertSaveGameDataToGAM(SaveGameData saveData)
+        {
+            var gam = new GAM();
+
+            // Set game time from GameTime
+            if (saveData.GameTime != null)
+            {
+                gam.GameTimeHour = saveData.GameTime.Hour;
+                gam.GameTimeMinute = saveData.GameTime.Minute;
+                gam.GameTimeSecond = saveData.GameTime.Second;
+                gam.GameTimeMillisecond = 0; // GameTime doesn't have milliseconds
+            }
+
+            // Set time played
+            gam.TimePlayed = (int)saveData.PlayTime.TotalSeconds;
+
+            // Set module name
+            gam.ModuleName = saveData.CurrentModule ?? "";
+
+            // Set current area
+            if (!string.IsNullOrEmpty(saveData.CurrentAreaName))
+            {
+                gam.CurrentArea = ResRef.FromString(saveData.CurrentAreaName);
+            }
+
+            // Set player character
+            if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
+            {
+                // Player character ResRef would need to be stored in PartyState
+                // For now, use PlayerName if available
+                if (!string.IsNullOrEmpty(saveData.PlayerName))
+                {
+                    gam.PlayerCharacter = ResRef.FromString(saveData.PlayerName);
+                }
+            }
+
+            // Convert party members
+            if (saveData.PartyState != null && saveData.PartyState.AvailableMembers != null)
+            {
+                foreach (var kvp in saveData.PartyState.AvailableMembers)
+                {
+                    if (!string.IsNullOrEmpty(kvp.Key))
+                    {
+                        gam.PartyMembers.Add(ResRef.FromString(kvp.Key));
+                    }
+                }
+            }
+
+            // Convert global variables
+            if (saveData.GlobalVariables != null)
+            {
+                // Boolean globals
+                if (saveData.GlobalVariables.Booleans != null)
+                {
+                    foreach (var kvp in saveData.GlobalVariables.Booleans)
+                    {
+                        gam.GlobalBooleans[kvp.Key] = kvp.Value;
+                    }
+                }
+
+                // Numeric globals
+                if (saveData.GlobalVariables.Numbers != null)
+                {
+                    foreach (var kvp in saveData.GlobalVariables.Numbers)
+                    {
+                        gam.GlobalNumbers[kvp.Key] = kvp.Value;
+                    }
+                }
+
+                // String globals
+                if (saveData.GlobalVariables.Strings != null)
+                {
+                    foreach (var kvp in saveData.GlobalVariables.Strings)
+                    {
+                        gam.GlobalStrings[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            return gam;
+        }
+
+        /// <summary>
+        /// Converts GAM format to SaveGameData.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: GAM files store game state (party, globals, game time, etc.)
+        /// </remarks>
+        private void ConvertGAMToSaveGameData(GAM gam, SaveGameData saveData)
+        {
+            // Set game time
+            if (saveData.GameTime == null)
+            {
+                saveData.GameTime = new GameTime();
+            }
+            saveData.GameTime.Hour = gam.GameTimeHour;
+            saveData.GameTime.Minute = gam.GameTimeMinute;
+            saveData.GameTime.Second = gam.GameTimeSecond;
+
+            // Set time played
+            saveData.PlayTime = TimeSpan.FromSeconds(gam.TimePlayed);
+
+            // Set module name
+            if (!string.IsNullOrEmpty(gam.ModuleName))
+            {
+                saveData.CurrentModule = gam.ModuleName;
+            }
+
+            // Set current area
+            if (!gam.CurrentArea.IsBlank())
+            {
+                saveData.CurrentAreaName = gam.CurrentArea.ToString();
+            }
+
+            // Set player character
+            if (!gam.PlayerCharacter.IsBlank())
+            {
+                saveData.PlayerName = gam.PlayerCharacter.ToString();
+            }
+
+            // Convert party members
+            if (saveData.PartyState == null)
+            {
+                saveData.PartyState = new PartyState();
+            }
+            if (saveData.PartyState.AvailableMembers == null)
+            {
+                saveData.PartyState.AvailableMembers = new Dictionary<string, PartyMemberState>();
+            }
+            foreach (ResRef memberResRef in gam.PartyMembers)
+            {
+                if (!memberResRef.IsBlank())
+                {
+                    string memberKey = memberResRef.ToString();
+                    if (!saveData.PartyState.AvailableMembers.ContainsKey(memberKey))
+                    {
+                        saveData.PartyState.AvailableMembers[memberKey] = new PartyMemberState
+                        {
+                            TemplateResRef = memberKey,
+                            IsAvailable = true,
+                            IsSelectable = true
+                        };
+                    }
+                }
+            }
+
+            // Convert global variables
+            if (saveData.GlobalVariables == null)
+            {
+                saveData.GlobalVariables = new GlobalVariableState();
+            }
+
+            // Boolean globals
+            foreach (var kvp in gam.GlobalBooleans)
+            {
+                saveData.GlobalVariables.Booleans[kvp.Key] = kvp.Value;
+            }
+
+            // Numeric globals
+            foreach (var kvp in gam.GlobalNumbers)
+            {
+                saveData.GlobalVariables.Numbers[kvp.Key] = kvp.Value;
+            }
+
+            // String globals
+            foreach (var kvp in gam.GlobalStrings)
+            {
+                saveData.GlobalVariables.Strings[kvp.Key] = kvp.Value;
+            }
+        }
+
+        #endregion
     }
 }
 
