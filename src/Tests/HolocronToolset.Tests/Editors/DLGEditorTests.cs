@@ -1,4 +1,5 @@
 using System;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using FluentAssertions;
@@ -375,7 +376,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Add a starter entry with script parameters
             // DLG structure: Root -> EntryList (list of entries) -> Entry (structure with Script1, Script2, Script3, and their params)
-            if (!testGff.Root.Contains("EntryList"))
+            if (!testGff.Root.Exists("EntryList"))
             {
                 testGff.Root.SetList("EntryList", new GFFList());
             }
@@ -410,7 +411,13 @@ namespace HolocronToolset.Tests.Editors
             testEntry.SetString("Text", "Test Entry");
 
             // Add entry to the list
-            entryList.Add(testEntry);
+            // Note: GFFList.Add() returns a new GFFStruct, so we need to copy fields from testEntry
+            var addedEntry = entryList.Add();
+            // Copy all fields from testEntry to addedEntry
+            foreach (var (label, fieldType, value) in testEntry)
+            {
+                addedEntry.SetField(label, fieldType, value);
+            }
 
             // Convert GFF back to bytes and load into editor
             byte[] testData = testGff.ToBytes();
@@ -430,7 +437,7 @@ namespace HolocronToolset.Tests.Editors
             savedGff.Root.Should().NotBeNull("Saved GFF root should not be null");
 
             // Verify EntryList exists in saved GFF
-            if (savedGff.Root.Contains("EntryList"))
+            if (savedGff.Root.Exists("EntryList"))
             {
                 var savedEntryList = savedGff.Root.GetList("EntryList");
                 savedEntryList.Should().NotBeNull("Saved EntryList should not be null");
@@ -441,38 +448,38 @@ namespace HolocronToolset.Tests.Editors
                     savedEntry.Should().NotBeNull("Saved entry should not be null");
 
                     // Verify Script1 and its parameters
-                    if (savedEntry.Contains("Script1"))
+                    if (savedEntry.Exists("Script1"))
                     {
                         var script1 = savedEntry.GetResRef("Script1");
                         script1.Should().NotBeNull("Script1 should not be null");
                         script1.ToString().Should().Be("test_script1", "Script1 should match original value");
 
                         // Verify Script1 parameters (Script1Param1 through Script1Param5)
-                        if (savedEntry.Contains("Script1Param1"))
+                        if (savedEntry.Exists("Script1Param1"))
                         {
                             var param1 = savedEntry.GetString("Script1Param1");
                             param1.Should().Be("script1_param1_value", "Script1Param1 should persist through save/load");
                         }
 
-                        if (savedEntry.Contains("Script1Param2"))
+                        if (savedEntry.Exists("Script1Param2"))
                         {
                             var param2 = savedEntry.GetString("Script1Param2");
                             param2.Should().Be("script1_param2_value", "Script1Param2 should persist through save/load");
                         }
 
-                        if (savedEntry.Contains("Script1Param3"))
+                        if (savedEntry.Exists("Script1Param3"))
                         {
                             var param3 = savedEntry.GetString("Script1Param3");
                             param3.Should().Be("script1_param3_value", "Script1Param3 should persist through save/load");
                         }
 
-                        if (savedEntry.Contains("Script1Param4"))
+                        if (savedEntry.Exists("Script1Param4"))
                         {
                             var param4 = savedEntry.GetString("Script1Param4");
                             param4.Should().Be("script1_param4_value", "Script1Param4 should persist through save/load");
                         }
 
-                        if (savedEntry.Contains("Script1Param5"))
+                        if (savedEntry.Exists("Script1Param5"))
                         {
                             var param5 = savedEntry.GetString("Script1Param5");
                             param5.Should().Be("script1_param5_value", "Script1Param5 should persist through save/load");
@@ -480,19 +487,19 @@ namespace HolocronToolset.Tests.Editors
                     }
 
                     // Verify Script2 and its parameters (Script2Param1, Script2Param2)
-                    if (savedEntry.Contains("Script2"))
+                    if (savedEntry.Exists("Script2"))
                     {
                         var script2 = savedEntry.GetResRef("Script2");
                         script2.Should().NotBeNull("Script2 should not be null");
                         script2.ToString().Should().Be("test_script2", "Script2 should match original value");
 
-                        if (savedEntry.Contains("Script2Param1"))
+                        if (savedEntry.Exists("Script2Param1"))
                         {
                             var param1 = savedEntry.GetString("Script2Param1");
                             param1.Should().Be("script2_param1_value", "Script2Param1 should persist through save/load");
                         }
 
-                        if (savedEntry.Contains("Script2Param2"))
+                        if (savedEntry.Exists("Script2Param2"))
                         {
                             var param2 = savedEntry.GetString("Script2Param2");
                             param2.Should().Be("script2_param2_value", "Script2Param2 should persist through save/load");
@@ -500,13 +507,13 @@ namespace HolocronToolset.Tests.Editors
                     }
 
                     // Verify Script3 and its parameters (Script3Param1)
-                    if (savedEntry.Contains("Script3"))
+                    if (savedEntry.Exists("Script3"))
                     {
                         var script3 = savedEntry.GetResRef("Script3");
                         script3.Should().NotBeNull("Script3 should not be null");
                         script3.ToString().Should().Be("test_script3", "Script3 should match original value");
 
-                        if (savedEntry.Contains("Script3Param1"))
+                        if (savedEntry.Exists("Script3Param1"))
                         {
                             var param1 = savedEntry.GetString("Script3Param1");
                             param1.Should().Be("script3_param1_value", "Script3Param1 should persist through save/load");
@@ -525,7 +532,7 @@ namespace HolocronToolset.Tests.Editors
             var secondSavedGff = GFF.FromBytes(secondSavedData);
 
             // Verify second roundtrip preserves script parameters
-            if (secondSavedGff.Root.Contains("EntryList"))
+            if (secondSavedGff.Root.Exists("EntryList"))
             {
                 var secondEntryList = secondSavedGff.Root.GetList("EntryList");
                 if (secondEntryList != null && secondEntryList.Count > 0)
@@ -572,7 +579,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Compare script parameters in original and saved GFF
                 // This verifies that existing script parameters in real files are preserved
-                if (realDlgGff.Root.Contains("EntryList") && realSavedGff.Root.Contains("EntryList"))
+                if (realDlgGff.Root.Exists("EntryList") && realSavedGff.Root.Exists("EntryList"))
                 {
                     var originalEntryList = realDlgGff.Root.GetList("EntryList");
                     var savedEntryList = realSavedGff.Root.GetList("EntryList");
