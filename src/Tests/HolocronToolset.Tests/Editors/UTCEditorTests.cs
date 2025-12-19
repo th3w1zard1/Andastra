@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
@@ -10,6 +11,7 @@ using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
 using Andastra.Parsing.Common;
+using Avalonia.Controls;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Tests.Editors
@@ -296,14 +298,122 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateLastnameLocstring: Lastname LocalizedString manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_tag (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:75-97)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:75-97
         // Original: def test_utc_editor_manipulate_tag(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating tag field.
         [Fact]
         public void TestUtcEditorManipulateTag()
         {
-            // TODO: STUB - Implement tag field manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:75-97
-            throw new NotImplementedException("TestUtcEditorManipulateTag: Tag field manipulation test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            var editor = new UTCEditor(null, installation);
+
+            // Test 1: Set tag to empty string
+            editor.New();
+            var tagEdit = GetTagEdit(editor);
+            tagEdit.Should().NotBeNull("Tag edit box should exist");
+
+            tagEdit.Text = "";
+            var (data1, _) = editor.Build();
+            data1.Should().NotBeNull();
+            var gff1 = GFF.FromBytes(data1);
+            var utc1 = UTCHelpers.ConstructUtc(gff1);
+            utc1.Tag.Should().Be("", "Tag should be empty string");
+
+            // Test 2: Set tag to a simple value
+            tagEdit.Text = "test_creature";
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull();
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            utc2.Tag.Should().Be("test_creature", "Tag should be 'test_creature'");
+
+            // Test 3: Set tag to a longer value
+            tagEdit.Text = "my_custom_creature_tag_123";
+            var (data3, _) = editor.Build();
+            data3.Should().NotBeNull();
+            var gff3 = GFF.FromBytes(data3);
+            var utc3 = UTCHelpers.ConstructUtc(gff3);
+            utc3.Tag.Should().Be("my_custom_creature_tag_123", "Tag should be 'my_custom_creature_tag_123'");
+
+            // Test 4: Set tag with numbers
+            tagEdit.Text = "creature_001";
+            var (data4, _) = editor.Build();
+            data4.Should().NotBeNull();
+            var gff4 = GFF.FromBytes(data4);
+            var utc4 = UTCHelpers.ConstructUtc(gff4);
+            utc4.Tag.Should().Be("creature_001", "Tag should be 'creature_001'");
+
+            // Test 5: Verify value persists through load/save cycle
+            tagEdit.Text = "persistent_tag";
+            var (data5, _) = editor.Build();
+            data5.Should().NotBeNull();
+            
+            // Load the data back
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
+            var tagEditReloaded = GetTagEdit(editor);
+            tagEditReloaded.Should().NotBeNull();
+            tagEditReloaded.Text.Should().Be("persistent_tag", "Tag should persist through load/save cycle");
+
+            // Test 6: Verify value is correctly read from loaded UTC
+            var (data6, _) = editor.Build();
+            data6.Should().NotBeNull();
+            var gff6 = GFF.FromBytes(data6);
+            var utc6 = UTCHelpers.ConstructUtc(gff6);
+            utc6.Tag.Should().Be("persistent_tag", "Tag should be correctly read from loaded UTC");
+
+            // Test 7: Test edge case - very long tag
+            tagEdit.Text = new string('a', 32);
+            var (data7, _) = editor.Build();
+            data7.Should().NotBeNull();
+            var gff7 = GFF.FromBytes(data7);
+            var utc7 = UTCHelpers.ConstructUtc(gff7);
+            utc7.Tag.Should().Be(new string('a', 32), "Tag should handle very long values");
+
+            // Test 8: Test edge case - tag with special characters (underscores and numbers are typical)
+            tagEdit.Text = "creature_tag_123";
+            var (data8, _) = editor.Build();
+            data8.Should().NotBeNull();
+            var gff8 = GFF.FromBytes(data8);
+            var utc8 = UTCHelpers.ConstructUtc(gff8);
+            utc8.Tag.Should().Be("creature_tag_123", "Tag should handle special characters");
+        }
+
+        /// <summary>
+        /// Helper method to get the tag edit box from the editor using reflection.
+        /// </summary>
+        private static TextBox GetTagEdit(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_tagEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_tagEdit field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as TextBox;
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_tag_generate_button (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:99-119)
@@ -511,9 +621,117 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestUtcEditorManipulateChallengeRatingSpin()
         {
-            // TODO: STUB - Implement challenge rating spin box manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:595-615
-            throw new NotImplementedException("TestUtcEditorManipulateChallengeRatingSpin: Challenge rating spin box manipulation test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            var editor = new UTCEditor(null, installation);
+
+            // Test 1: Set challenge rating to 0
+            editor.New();
+            var challengeRatingSpin = GetChallengeRatingSpin(editor);
+            challengeRatingSpin.Should().NotBeNull("Challenge rating spin box should exist");
+
+            challengeRatingSpin.Value = 0;
+            var (data1, _) = editor.Build();
+            data1.Should().NotBeNull();
+            var gff1 = GFF.FromBytes(data1);
+            var utc1 = UTCHelpers.ConstructUtc(gff1);
+            Math.Abs(utc1.ChallengeRating - 0.0f).Should().BeLessThan(0.001f, "Challenge rating should be 0");
+
+            // Test 2: Set challenge rating to a positive integer value
+            challengeRatingSpin.Value = 5;
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull();
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            Math.Abs(utc2.ChallengeRating - 5.0f).Should().BeLessThan(0.001f, "Challenge rating should be 5");
+
+            // Test 3: Set challenge rating to a decimal value
+            challengeRatingSpin.Value = 12.5m;
+            var (data3, _) = editor.Build();
+            data3.Should().NotBeNull();
+            var gff3 = GFF.FromBytes(data3);
+            var utc3 = UTCHelpers.ConstructUtc(gff3);
+            Math.Abs(utc3.ChallengeRating - 12.5f).Should().BeLessThan(0.001f, "Challenge rating should be 12.5");
+
+            // Test 4: Set challenge rating to a larger value
+            challengeRatingSpin.Value = 25.75m;
+            var (data4, _) = editor.Build();
+            data4.Should().NotBeNull();
+            var gff4 = GFF.FromBytes(data4);
+            var utc4 = UTCHelpers.ConstructUtc(gff4);
+            Math.Abs(utc4.ChallengeRating - 25.75f).Should().BeLessThan(0.001f, "Challenge rating should be 25.75");
+
+            // Test 5: Verify value persists through load/save cycle
+            challengeRatingSpin.Value = 15.25m;
+            var (data5, _) = editor.Build();
+            data5.Should().NotBeNull();
+            
+            // Load the data back
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
+            var challengeRatingSpinReloaded = GetChallengeRatingSpin(editor);
+            challengeRatingSpinReloaded.Should().NotBeNull();
+            Math.Abs((float)(challengeRatingSpinReloaded.Value ?? 0) - 15.25f).Should().BeLessThan(0.001f, "Challenge rating should persist through load/save cycle");
+
+            // Test 6: Verify value is correctly read from loaded UTC
+            var (data6, _) = editor.Build();
+            data6.Should().NotBeNull();
+            var gff6 = GFF.FromBytes(data6);
+            var utc6 = UTCHelpers.ConstructUtc(gff6);
+            Math.Abs(utc6.ChallengeRating - 15.25f).Should().BeLessThan(0.001f, "Challenge rating should be correctly read from loaded UTC");
+
+            // Test 7: Test edge case - very small decimal value
+            challengeRatingSpin.Value = 0.1m;
+            var (data7, _) = editor.Build();
+            data7.Should().NotBeNull();
+            var gff7 = GFF.FromBytes(data7);
+            var utc7 = UTCHelpers.ConstructUtc(gff7);
+            Math.Abs(utc7.ChallengeRating - 0.1f).Should().BeLessThan(0.001f, "Challenge rating should handle very small decimal values");
+
+            // Test 8: Test edge case - large value
+            challengeRatingSpin.Value = 100.0m;
+            var (data8, _) = editor.Build();
+            data8.Should().NotBeNull();
+            var gff8 = GFF.FromBytes(data8);
+            var utc8 = UTCHelpers.ConstructUtc(gff8);
+            Math.Abs(utc8.ChallengeRating - 100.0f).Should().BeLessThan(0.001f, "Challenge rating should handle large values");
+        }
+
+        /// <summary>
+        /// Helper method to get the challenge rating spin box from the editor using reflection.
+        /// </summary>
+        private static NumericUpDown GetChallengeRatingSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_challengeRatingSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_challengeRatingSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_blindspot_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:617-641)
