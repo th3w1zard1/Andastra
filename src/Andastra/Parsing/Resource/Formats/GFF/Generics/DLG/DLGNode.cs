@@ -275,10 +275,17 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             data["vo_resref"] = new Dictionary<string, object> { { "value", VoResRef?.ToString() ?? "" }, { "py_type", "ResRef" } };
 
             // Serialize links
+            // Matching PyKotor implementation: always serialize links, even if empty
             List<Dictionary<string, object>> linksList = new List<Dictionary<string, object>>();
-            foreach (DLGLink link in Links)
+            if (Links != null)
             {
-                linksList.Add(link.ToDict(nodeMap));
+                foreach (DLGLink link in Links)
+                {
+                    if (link != null)
+                    {
+                        linksList.Add(link.ToDict(nodeMap));
+                    }
+                }
             }
             data["links"] = new Dictionary<string, object>
             {
@@ -559,34 +566,51 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             nodeMap[nodeKeyStr] = node;
 
             // Process links after all other fields are set and node is in node_map
-            foreach (KeyValuePair<string, object> kvp in nodeData)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/nodes.py:467-483
+            // Check for links directly in nodeData to ensure we process them
+            if (nodeData.ContainsKey("links"))
             {
-                string key = kvp.Key;
-                object value = kvp.Value;
-
-                if (!(value is Dictionary<string, object> valueDict))
+                object linksValue = nodeData["links"];
+                if (linksValue is Dictionary<string, object> linksValueDict)
                 {
-                    continue;
-                }
+                    string pyType = linksValueDict.ContainsKey("py_type") ? linksValueDict["py_type"].ToString() : null;
+                    object actualValue = linksValueDict.ContainsKey("value") ? linksValueDict["value"] : null;
 
-                string pyType = valueDict.ContainsKey("py_type") ? valueDict["py_type"].ToString() : null;
-                object actualValue = valueDict.ContainsKey("value") ? valueDict["value"] : null;
-
-                if (pyType == "list" && key == "links")
-                {
-                    if (actualValue is List<object> linksList)
+                    if (pyType == "list")
                     {
+                        // Matching PyKotor implementation: always deserialize links, even if empty
                         List<DLGLink> links = new List<DLGLink>();
-                        foreach (object linkObj in linksList)
+                        if (actualValue is List<object> linksList)
                         {
-                            if (linkObj is Dictionary<string, object> linkDict)
+                            foreach (object linkObj in linksList)
                             {
-                                links.Add(DLGLink.FromDict(linkDict, nodeMap));
+                                if (linkObj is Dictionary<string, object> linkDict)
+                                {
+                                    try
+                                    {
+                                        DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                        if (deserializedLink != null)
+                                        {
+                                            links.Add(deserializedLink);
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // Skip invalid links but continue processing
+                                        // This matches PyKotor behavior of continuing on errors
+                                    }
+                                }
                             }
                         }
+                        // Always set Links, even if empty, to match Python behavior
                         node.Links = links;
                     }
                 }
+            }
+            else
+            {
+                // If links key is missing, initialize empty list to match Python behavior
+                node.Links = new List<DLGLink>();
             }
 
             return node;
