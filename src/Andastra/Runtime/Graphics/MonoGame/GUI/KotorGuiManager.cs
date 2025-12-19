@@ -10,7 +10,8 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
-using Andastra.Runtime.MonoGame.Fonts;
+using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Games.Odyssey.Fonts;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.GUI
@@ -56,23 +57,23 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// 
     /// Note: Original engine used DirectX GUI rendering, this is a modern MonoGame adaptation
     /// </remarks>
-    public class KotorGuiManager
+    public class KotorGuiManager : BaseGuiManager
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Installation _installation;
         private readonly SpriteBatch _spriteBatch;
         private readonly Dictionary<string, LoadedGui> _loadedGuis;
         private readonly Dictionary<string, Texture2D> _textureCache;
-        private readonly Dictionary<string, BitmapFont> _fontCache;
+        private readonly Dictionary<string, OdysseyBitmapFont> _fontCache;
         private LoadedGui _currentGui;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         private string _highlightedButtonTag;
 
         /// <summary>
-        /// Event fired when a GUI button is clicked.
+        /// Gets the graphics device.
         /// </summary>
-        public event EventHandler<GuiButtonClickedEventArgs> OnButtonClicked;
+        protected override IGraphicsDevice GraphicsDevice => new MonoGameGraphicsDevice(_graphicsDevice);
 
         /// <summary>
         /// Initializes a new instance of the KOTOR GUI manager.
@@ -115,7 +116,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// - Sets up button click handlers and control references
         /// - Original engine uses DirectX sprite rendering, this uses MonoGame SpriteBatch
         /// </remarks>
-        public bool LoadGui(string guiName, int width, int height)
+        public override bool LoadGui(string guiName, int width, int height)
         {
             if (string.IsNullOrEmpty(guiName))
             {
@@ -185,7 +186,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Unloads a GUI from memory.
         /// </summary>
         /// <param name="guiName">Name of the GUI to unload.</param>
-        public void UnloadGui(string guiName)
+        public override void UnloadGui(string guiName)
         {
             if (string.IsNullOrEmpty(guiName))
             {
@@ -210,7 +211,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// </summary>
         /// <param name="guiName">Name of the GUI to set as current.</param>
         /// <returns>True if GUI was found and set, false otherwise.</returns>
-        public bool SetCurrentGui(string guiName)
+        public override bool SetCurrentGui(string guiName)
         {
             if (string.IsNullOrEmpty(guiName))
             {
@@ -266,7 +267,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Updates GUI input handling (mouse/keyboard).
         /// </summary>
         /// <param name="gameTime">Current game time.</param>
-        public void Update(GameTime gameTime)
+        public override void Update(object gameTime)
         {
             if (_currentGui == null)
             {
@@ -294,7 +295,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Renders the current GUI.
         /// </summary>
         /// <param name="gameTime">Current game time.</param>
-        public void Draw(GameTime gameTime)
+        public override void Draw(object gameTime)
         {
             if (_currentGui == null || _currentGui.Gui == null)
             {
@@ -449,11 +450,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
                 {
                     // Button clicked - fire event
-                    OnButtonClicked?.Invoke(this, new GuiButtonClickedEventArgs
-                    {
-                        ButtonTag = button.Tag,
-                        ButtonId = button.Id ?? -1
-                    });
+                    FireButtonClicked(button.Tag, button.Id ?? -1);
 
                     Console.WriteLine($"[KotorGuiManager] Button clicked: {button.Tag} (ID: {button.Id})");
                     break; // Only handle first button hit
@@ -636,7 +633,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     button.GuiText.Color.A);
 
                 // Load font from button.GuiText.Font ResRef
-                BitmapFont font = LoadFont(button.GuiText.Font.ToString());
+                BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
                 if (font != null)
                 {
                     // Measure text size
@@ -678,7 +675,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     label.GuiText.Color.A);
 
                 // Load font from label.GuiText.Font ResRef
-                BitmapFont font = LoadFont(label.GuiText.Font.ToString());
+                BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
                 if (font != null)
                 {
                     // Measure text size
@@ -869,7 +866,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <param name="fontResRef">The font resource reference.</param>
         /// <returns>The loaded font, or null if loading failed.</returns>
         [CanBeNull]
-        private BitmapFont LoadFont(string fontResRef)
+        protected override BaseBitmapFont LoadFont(string fontResRef)
         {
             if (string.IsNullOrEmpty(fontResRef) || fontResRef == "****" || fontResRef.Trim().Length == 0)
             {
@@ -879,13 +876,13 @@ namespace Andastra.Runtime.MonoGame.GUI
             string key = fontResRef.ToLowerInvariant();
 
             // Check cache
-            if (_fontCache.TryGetValue(key, out BitmapFont cached))
+            if (_fontCache.TryGetValue(key, out OdysseyBitmapFont cached))
             {
                 return cached;
             }
 
             // Load font
-            BitmapFont font = BitmapFont.Load(fontResRef, _installation, _graphicsDevice);
+            OdysseyBitmapFont font = OdysseyBitmapFont.Load(fontResRef, _installation, _graphicsDevice);
             if (font != null)
             {
                 _fontCache[key] = font;
@@ -894,53 +891,6 @@ namespace Andastra.Runtime.MonoGame.GUI
             return font;
         }
 
-        /// <summary>
-        /// Calculates text position based on alignment flags.
-        /// </summary>
-        /// <param name="alignment">The alignment flags (1=top-left, 2=top-center, 3=top-right, 17=center-left, 18=center, 19=center-right, 33=bottom-left, 34=bottom-center, 35=bottom-right).</param>
-        /// <param name="controlPosition">The control position.</param>
-        /// <param name="controlSize">The control size.</param>
-        /// <param name="textSize">The text size.</param>
-        /// <returns>The calculated text position.</returns>
-        private Vector2 CalculateTextPosition(int alignment, Vector2 controlPosition, Vector2 controlSize, Vector2 textSize)
-        {
-            float x = controlPosition.X;
-            float y = controlPosition.Y;
-
-            // Horizontal alignment
-            // 1, 17, 33 = left
-            // 2, 18, 34 = center
-            // 3, 19, 35 = right
-            if (alignment == 2 || alignment == 18 || alignment == 34)
-            {
-                // Center horizontally
-                x = controlPosition.X + (controlSize.X - textSize.X) / 2.0f;
-            }
-            else if (alignment == 3 || alignment == 19 || alignment == 35)
-            {
-                // Right align
-                x = controlPosition.X + controlSize.X - textSize.X;
-            }
-            // else: left align (default)
-
-            // Vertical alignment
-            // 1, 2, 3 = top
-            // 17, 18, 19 = center
-            // 33, 34, 35 = bottom
-            if (alignment >= 17 && alignment <= 19)
-            {
-                // Center vertically
-                y = controlPosition.Y + (controlSize.Y - textSize.Y) / 2.0f;
-            }
-            else if (alignment >= 33 && alignment <= 35)
-            {
-                // Bottom align
-                y = controlPosition.Y + controlSize.Y - textSize.Y;
-            }
-            // else: top align (default)
-
-            return new Vector2(x, y);
-        }
 
         /// <summary>
         /// Renders text using a bitmap font.
@@ -949,9 +899,15 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <param name="text">The text to render.</param>
         /// <param name="position">The position to render at.</param>
         /// <param name="color">The text color.</param>
-        private void RenderBitmapText([NotNull] BitmapFont font, string text, Vector2 position, Color color)
+        private void RenderBitmapText([NotNull] BaseBitmapFont font, string text, Vector2 position, Color color)
         {
             if (font == null || string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            // Cast to OdysseyBitmapFont for MonoGame-specific rendering
+            if (!(font is OdysseyBitmapFont odysseyFont))
             {
                 return;
             }
@@ -971,15 +927,15 @@ namespace Andastra.Runtime.MonoGame.GUI
                 }
 
                 int charCode = (int)c;
-                BitmapFont.CharacterGlyph? glyph = font.GetCharacter(charCode);
+                BaseBitmapFont.CharacterGlyph? glyph = font.GetCharacter(charCode);
                 if (glyph.HasValue)
                 {
                     var g = glyph.Value;
                     // Render character glyph
                     _spriteBatch.Draw(
-                        font.Texture,
+                        odysseyFont.MonoGameTexture,
                         new Rectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
-                        g.SourceRect,
+                        new Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight),
                         color);
 
                     currentX += g.Width + font.SpacingR;
@@ -1046,7 +1002,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Disposes resources.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             if (_spriteBatch != null)
             {
