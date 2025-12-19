@@ -30,13 +30,13 @@ namespace Andastra.Runtime.Core.Navigation
     /// </remarks>
     public class NavigationMesh : INavigationMesh
     {
-        private readonly Vector3[] _vertices;
-        private readonly int[] _faceIndices;        // 3 vertex indices per face
-        private readonly int[] _adjacency;          // 3 adjacency entries per face (-1 = no neighbor)
-        private readonly int[] _surfaceMaterials;   // Material per face
-        private readonly AabbNode _aabbRoot;
-        private readonly int _faceCount;
-        private readonly int _walkableFaceCount;
+        private Vector3[] _vertices;
+        private int[] _faceIndices;        // 3 vertex indices per face
+        private int[] _adjacency;          // 3 adjacency entries per face (-1 = no neighbor)
+        private int[] _surfaceMaterials;   // Material per face
+        private AabbNode _aabbRoot;
+        private int _faceCount;
+        private int _walkableFaceCount;
 
         // Surface material walkability lookup
         private static readonly HashSet<int> WalkableMaterials = new HashSet<int>
@@ -126,8 +126,7 @@ namespace Andastra.Runtime.Core.Navigation
         public IReadOnlyList<int> SurfaceMaterials { get { return _surfaceMaterials; } }
 
         /// <summary>
-        /// TODO: PLACEHOLDER - Creates an empty navigation mesh (for placeholder use).
-        /// TODO: PLACEHOLDER - Should be replaced with proper navigation mesh construction
+        /// Creates an empty navigation mesh that can be built incrementally using BuildFromTriangles.
         /// </summary>
         public NavigationMesh()
         {
@@ -142,11 +141,371 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Builds the navigation mesh from a list of triangles.
+        /// Computes adjacency automatically, builds AABB tree for spatial queries, and sets default walkable materials.
         /// </summary>
+        /// <param name="vertices">List of vertex positions</param>
+        /// <param name="indices">Triangle indices (must be multiple of 3)</param>
         public void BuildFromTriangles(List<Vector3> vertices, List<int> indices)
         {
-            // TODO: PLACEHOLDER - This mutates the mesh which should ideally be immutable
-            // TODO: PLACEHOLDER - For placeholder use only
+            if (vertices == null)
+            {
+                throw new ArgumentNullException("vertices");
+            }
+            if (indices == null)
+            {
+                throw new ArgumentNullException("indices");
+            }
+
+            // Validate indices count is multiple of 3
+            if (indices.Count % 3 != 0)
+            {
+                throw new ArgumentException("Indices count must be a multiple of 3 (triangles)", "indices");
+            }
+
+            int faceCount = indices.Count / 3;
+            if (faceCount == 0)
+            {
+                // Empty mesh
+                _vertices = new Vector3[0];
+                _faceIndices = new int[0];
+                _adjacency = new int[0];
+                _surfaceMaterials = new int[0];
+                _aabbRoot = null;
+                _faceCount = 0;
+                _walkableFaceCount = 0;
+                return;
+            }
+
+            // Validate all indices are within vertex range
+            for (int i = 0; i < indices.Count; i++)
+            {
+                if (indices[i] < 0 || indices[i] >= vertices.Count)
+                {
+                    throw new ArgumentException(string.Format("Index {0} is out of range (vertex count: {1})", indices[i], vertices.Count), "indices");
+                }
+            }
+
+            // Convert lists to arrays
+            _vertices = vertices.ToArray();
+            _faceIndices = indices.ToArray();
+            _faceCount = faceCount;
+
+            // Compute adjacency from triangle edges
+            _adjacency = ComputeAdjacencyFromTriangles(_vertices, _faceIndices, faceCount);
+
+            // Set default surface materials (default to walkable material - Stone = 4)
+            _surfaceMaterials = new int[faceCount];
+            for (int i = 0; i < faceCount; i++)
+            {
+                _surfaceMaterials[i] = 4; // Stone - walkable material
+            }
+
+            // Build AABB tree for spatial acceleration
+            _aabbRoot = BuildAabbTreeFromFaces(_vertices, _faceIndices, _surfaceMaterials, faceCount);
+
+            // Count walkable faces
+            int walkable = 0;
+            for (int i = 0; i < _faceCount; i++)
+            {
+                if (IsWalkable(i))
+                {
+                    walkable++;
+                }
+            }
+            _walkableFaceCount = walkable;
+        }
+
+        /// <summary>
+        /// Computes adjacency information from triangle edges.
+        /// Adjacency encoding: faceIndex * 3 + edgeIndex, -1 = no neighbor
+        /// </summary>
+        private static int[] ComputeAdjacencyFromTriangles(Vector3[] vertices, int[] faceIndices, int faceCount)
+        {
+            int[] adjacency = new int[faceCount * 3];
+
+            // Initialize all adjacencies to -1 (no neighbor)
+            for (int i = 0; i < adjacency.Length; i++)
+            {
+                adjacency[i] = -1;
+            }
+
+            // Build edge-to-face mapping for adjacency detection
+            var edgeToFace = new Dictionary<EdgeKey, EdgeInfo>();
+
+            for (int face = 0; face < faceCount; face++)
+            {
+                int baseIdx = face * 3;
+                int v0 = faceIndices[baseIdx];
+                int v1 = faceIndices[baseIdx + 1];
+                int v2 = faceIndices[baseIdx + 2];
+
+                // Edge 0: v0 -> v1
+                ProcessEdgeForAdjacency(edgeToFace, adjacency, v0, v1, face, 0);
+                // Edge 1: v1 -> v2
+                ProcessEdgeForAdjacency(edgeToFace, adjacency, v1, v2, face, 1);
+                // Edge 2: v2 -> v0
+                ProcessEdgeForAdjacency(edgeToFace, adjacency, v2, v0, face, 2);
+            }
+
+            return adjacency;
+        }
+
+        /// <summary>
+        /// Processes an edge to find and link adjacent faces.
+        /// </summary>
+        private static void ProcessEdgeForAdjacency(
+            Dictionary<EdgeKey, EdgeInfo> edgeToFace,
+            int[] adjacency,
+            int v0, int v1,
+            int face, int edge)
+        {
+            var key = new EdgeKey(v0, v1);
+
+            EdgeInfo existing;
+            if (edgeToFace.TryGetValue(key, out existing))
+            {
+                // Found adjacent face - link them bidirectionally
+                int otherFace = existing.FaceIndex;
+                int otherEdge = existing.EdgeIndex;
+
+                // Current face's adjacency for this edge = other_face * 3 + other_edge
+                adjacency[face * 3 + edge] = otherFace * 3 + otherEdge;
+                // Other face's adjacency for that edge = this_face * 3 + this_edge
+                adjacency[otherFace * 3 + otherEdge] = face * 3 + edge;
+            }
+            else
+            {
+                // First time seeing this edge - record it
+                edgeToFace[key] = new EdgeInfo(face, edge);
+            }
+        }
+
+        /// <summary>
+        /// Edge key for adjacency mapping (order-independent).
+        /// </summary>
+        private struct EdgeKey : IEquatable<EdgeKey>
+        {
+            public readonly int MinVertex;
+            public readonly int MaxVertex;
+
+            public EdgeKey(int v0, int v1)
+            {
+                if (v0 < v1)
+                {
+                    MinVertex = v0;
+                    MaxVertex = v1;
+                }
+                else
+                {
+                    MinVertex = v1;
+                    MaxVertex = v0;
+                }
+            }
+
+            public bool Equals(EdgeKey other)
+            {
+                return MinVertex == other.MinVertex && MaxVertex == other.MaxVertex;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is EdgeKey && Equals((EdgeKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return (MinVertex * 397) ^ MaxVertex;
+            }
+        }
+
+        /// <summary>
+        /// Edge information for adjacency computation.
+        /// </summary>
+        private struct EdgeInfo
+        {
+            public int FaceIndex;
+            public int EdgeIndex;
+
+            public EdgeInfo(int faceIndex, int edgeIndex)
+            {
+                FaceIndex = faceIndex;
+                EdgeIndex = edgeIndex;
+            }
+        }
+
+        /// <summary>
+        /// Builds an AABB tree from face data for spatial acceleration.
+        /// Uses recursive top-down construction with longest-axis splitting.
+        /// </summary>
+        private static AabbNode BuildAabbTreeFromFaces(Vector3[] vertices, int[] faceIndices, int[] surfaceMaterials, int faceCount)
+        {
+            if (faceCount == 0)
+            {
+                return null;
+            }
+
+            // Create list of face indices for tree building
+            var faceList = new List<int>();
+            for (int i = 0; i < faceCount; i++)
+            {
+                faceList.Add(i);
+            }
+
+            return BuildAabbTreeRecursive(vertices, faceIndices, surfaceMaterials, faceList, 0);
+        }
+
+        /// <summary>
+        /// Recursively builds the AABB tree using top-down construction.
+        /// </summary>
+        private static AabbNode BuildAabbTreeRecursive(
+            Vector3[] vertices,
+            int[] faceIndices,
+            int[] surfaceMaterials,
+            List<int> faceList,
+            int depth)
+        {
+            const int MaxDepth = 32;
+            const int MinFacesPerLeaf = 1;
+
+            if (faceList.Count == 0)
+            {
+                return null;
+            }
+
+            // Calculate bounding box for all faces in this node
+            Vector3 bbMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 bbMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+            foreach (int faceIdx in faceList)
+            {
+                int baseIdx = faceIdx * 3;
+                for (int j = 0; j < 3; j++)
+                {
+                    Vector3 v = vertices[faceIndices[baseIdx + j]];
+                    bbMin = Vector3.Min(bbMin, v);
+                    bbMax = Vector3.Max(bbMax, v);
+                }
+            }
+
+            var node = new AabbNode
+            {
+                BoundsMin = bbMin,
+                BoundsMax = bbMax
+            };
+
+            // Leaf node if only one face or max depth reached
+            if (faceList.Count <= MinFacesPerLeaf || depth >= MaxDepth)
+            {
+                node.FaceIndex = faceList[0];
+                return node;
+            }
+
+            // Find split axis (longest dimension)
+            Vector3 size = bbMax - bbMin;
+            int splitAxis = 0;
+            if (size.Y > size.X)
+            {
+                splitAxis = 1;
+            }
+            if (size.Z > (splitAxis == 0 ? size.X : size.Y))
+            {
+                splitAxis = 2;
+            }
+
+            // Split point is center of bounding box along split axis
+            float splitValue = GetAxisValue(bbMin, splitAxis) + (GetAxisValue(bbMax, splitAxis) - GetAxisValue(bbMin, splitAxis)) * 0.5f;
+
+            // Partition faces based on their center position
+            var leftFaces = new List<int>();
+            var rightFaces = new List<int>();
+
+            foreach (int faceIdx in faceList)
+            {
+                // Get face center
+                int baseIdx = faceIdx * 3;
+                Vector3 v1 = vertices[faceIndices[baseIdx]];
+                Vector3 v2 = vertices[faceIndices[baseIdx + 1]];
+                Vector3 v3 = vertices[faceIndices[baseIdx + 2]];
+                Vector3 center = (v1 + v2 + v3) / 3f;
+
+                if (GetAxisValue(center, splitAxis) < splitValue)
+                {
+                    leftFaces.Add(faceIdx);
+                }
+                else
+                {
+                    rightFaces.Add(faceIdx);
+                }
+            }
+
+            // Handle degenerate case where all faces end up on one side
+            if (leftFaces.Count == 0 || rightFaces.Count == 0)
+            {
+                // Try another axis
+                int nextAxis = (splitAxis + 1) % 3;
+                float nextSplitValue = GetAxisValue(bbMin, nextAxis) + (GetAxisValue(bbMax, nextAxis) - GetAxisValue(bbMin, nextAxis)) * 0.5f;
+
+                leftFaces.Clear();
+                rightFaces.Clear();
+
+                foreach (int faceIdx in faceList)
+                {
+                    int baseIdx = faceIdx * 3;
+                    Vector3 v1 = vertices[faceIndices[baseIdx]];
+                    Vector3 v2 = vertices[faceIndices[baseIdx + 1]];
+                    Vector3 v3 = vertices[faceIndices[baseIdx + 2]];
+                    Vector3 center = (v1 + v2 + v3) / 3f;
+
+                    if (GetAxisValue(center, nextAxis) < nextSplitValue)
+                    {
+                        leftFaces.Add(faceIdx);
+                    }
+                    else
+                    {
+                        rightFaces.Add(faceIdx);
+                    }
+                }
+
+                // Still degenerate - split in half by index
+                if (leftFaces.Count == 0 || rightFaces.Count == 0)
+                {
+                    leftFaces.Clear();
+                    rightFaces.Clear();
+                    int mid = faceList.Count / 2;
+                    for (int i = 0; i < faceList.Count; i++)
+                    {
+                        if (i < mid)
+                        {
+                            leftFaces.Add(faceList[i]);
+                        }
+                        else
+                        {
+                            rightFaces.Add(faceList[i]);
+                        }
+                    }
+                }
+            }
+
+            // Internal node - recursively build children
+            node.FaceIndex = -1;
+            node.Left = BuildAabbTreeRecursive(vertices, faceIndices, surfaceMaterials, leftFaces, depth + 1);
+            node.Right = BuildAabbTreeRecursive(vertices, faceIndices, surfaceMaterials, rightFaces, depth + 1);
+
+            return node;
+        }
+
+        /// <summary>
+        /// Gets the value of a vector along a specific axis (0=X, 1=Y, 2=Z).
+        /// </summary>
+        private static float GetAxisValue(Vector3 v, int axis)
+        {
+            switch (axis)
+            {
+                case 0: return v.X;
+                case 1: return v.Y;
+                case 2: return v.Z;
+                default: return v.X;
+            }
         }
 
         /// <summary>
