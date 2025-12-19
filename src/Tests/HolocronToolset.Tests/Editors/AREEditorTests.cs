@@ -1995,14 +1995,89 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorGffRoundtripComparison: GFF roundtrip comparison test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_gff_roundtrip_with_modifications (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1499-1527)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1499-1527
         // Original: def test_are_editor_gff_roundtrip_with_modifications(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test GFF roundtrip with modifications still produces valid GFF.
         [Fact]
         public void TestAreEditorGffRoundtripWithModifications()
         {
-            // TODO: STUB - Implement GFF roundtrip with modifications test (validates GFF structure after modifications)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1499-1527
-            throw new NotImplementedException("TestAreEditorGffRoundtripWithModifications: GFF roundtrip with modifications test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available (matching Python pytest.skip behavior)
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: editor.ui.tagEdit.setText("modified_gff_test")
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = "modified_gff_test";
+            }
+
+            // Matching Python: editor.ui.alphaTestSpin.setValue(150)
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value = 150;
+            }
+
+            // Matching Python: editor.ui.fogEnabledCheck.setChecked(True)
+            if (editor.FogEnabledCheck != null)
+            {
+                editor.FogEnabledCheck.IsChecked = true;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: new_gff = read_gff(data)
+            // Verify it's valid GFF
+            GFF newGff = Andastra.Parsing.Formats.GFF.GFF.FromBytes(data);
+            newGff.Should().NotBeNull();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.tag == "modified_gff_test"
+            modifiedAre.Tag.Should().Be("modified_gff_test");
+
+            // Matching Python: assert modified_are.alpha_test == 150
+            modifiedAre.AlphaTest.Should().Be(150);
+
+            // Matching Python: assert modified_are.fog_enabled
+            modifiedAre.FogEnabled.Should().BeTrue();
         }
 
         // TODO: STUB - Implement test_are_editor_new_file_all_defaults (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1562-1578)
