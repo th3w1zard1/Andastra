@@ -2,20 +2,22 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Andastra.Runtime.MonoGame.Spatial;
 
 namespace Andastra.Runtime.MonoGame.Lighting
 {
     /// <summary>
     /// Light probe system for global illumination approximation.
-    /// 
+    ///
     /// Light probes capture ambient lighting at specific points in the scene,
     /// providing realistic indirect lighting without full global illumination.
-    /// 
+    ///
     /// Features:
     /// - Spherical harmonics (SH) encoding
     /// - Probe placement and baking
     /// - Runtime interpolation
     /// - Dynamic probe updates
+    /// - Octree-based spatial acceleration for efficient probe queries
     /// </summary>
     public class LightProbeSystem
     {
@@ -40,9 +42,24 @@ namespace Andastra.Runtime.MonoGame.Lighting
             public float Radius;
         }
 
+        /// <summary>
+        /// Wrapper class for LightProbe to enable octree storage (octree requires class types).
+        /// </summary>
+        private class LightProbeWrapper
+        {
+            public LightProbe Probe;
+
+            public LightProbeWrapper(LightProbe probe)
+            {
+                Probe = probe;
+            }
+        }
+
         private readonly List<LightProbe> _probes;
-        // TODO: Octree implementation needed
-        // private readonly Octree<LightProbe> _probeOctree;
+        private readonly Octree<LightProbeWrapper> _probeOctree;
+        private readonly Dictionary<LightProbe, LightProbeWrapper> _probeToWrapper;
+        private readonly float _defaultSearchRadius;
+        private readonly BoundingBox _worldBounds;
 
         /// <summary>
         /// Gets the number of light probes.
@@ -53,58 +70,150 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Initializes a new light probe system.
+        /// Gets or sets the default search radius for probe queries.
         /// </summary>
-        public LightProbeSystem()
+        public float DefaultSearchRadius
         {
-            _probes = new List<LightProbe>();
-            // TODO: Create octree for probe lookup when Octree<T> is implemented
-            // BoundingBox worldBounds = new BoundingBox(
-            //     new Vector3(-1000, -1000, -1000),
-            //     new Vector3(1000, 1000, 1000)
-            // );
-            // _probeOctree = new Spatial.Octree<LightProbe>(
-            //     worldBounds,
-            //     8,
-            //     4,
-            //     probe => GetProbeBounds(probe)
-            // );
+            get { return _defaultSearchRadius; }
         }
 
         /// <summary>
-        /// Adds a light probe.
+        /// Initializes a new light probe system with default world bounds.
         /// </summary>
+        public LightProbeSystem()
+            : this(new BoundingBox(new Vector3(-1000, -1000, -1000), new Vector3(1000, 1000, 1000)), 10.0f)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new light probe system with specified world bounds and search radius.
+        /// </summary>
+        /// <param name="worldBounds">Bounding box defining the world space for the octree.</param>
+        /// <param name="defaultSearchRadius">Default search radius for probe queries.</param>
+        public LightProbeSystem(BoundingBox worldBounds, float defaultSearchRadius)
+        {
+            if (defaultSearchRadius <= 0.0f)
+            {
+                throw new ArgumentException("Default search radius must be positive.", nameof(defaultSearchRadius));
+            }
+
+            _probes = new List<LightProbe>();
+            _probeToWrapper = new Dictionary<LightProbe, LightProbeWrapper>();
+            _worldBounds = worldBounds;
+            _defaultSearchRadius = defaultSearchRadius;
+
+            // Initialize octree with reasonable defaults:
+            // - Max depth of 8 levels (allows fine-grained spatial partitioning)
+            // - Max 4 objects per node before splitting (balances memory vs query performance)
+            _probeOctree = new Octree<LightProbeWrapper>(
+                worldBounds,
+                8,
+                4,
+                wrapper => GetProbeBounds(wrapper.Probe)
+            );
+        }
+
+        /// <summary>
+        /// Adds a light probe to the system.
+        /// </summary>
+        /// <param name="probe">The light probe to add.</param>
         public void AddProbe(LightProbe probe)
         {
             _probes.Add(probe);
-            // TODO: _probeOctree.Insert(probe);
+            LightProbeWrapper wrapper = new LightProbeWrapper(probe);
+            _probeToWrapper[probe] = wrapper;
+            _probeOctree.Insert(wrapper);
         }
 
         /// <summary>
-        /// Samples light probes at a position.
+        /// Removes a light probe from the system.
         /// </summary>
-        public Vector3 SampleAmbientLight(Vector3 position)
+        /// <param name="probe">The light probe to remove.</param>
+        /// <returns>True if the probe was found and removed, false otherwise.</returns>
+        public bool RemoveProbe(LightProbe probe)
         {
-            // Find nearby probes
-            List<LightProbe> nearbyProbes = new List<LightProbe>();
-            // TODO: Use octree when implemented
-            // BoundingBox searchBounds = new BoundingBox(
-            //     position - new Vector3(10, 10, 10),
-            //     position + new Vector3(10, 10, 10)
-            // );
-            // _probeOctree.Query(searchBounds, nearbyProbes);
-            
-            // For now, use simple distance-based search
-            foreach (var probe in _probes)
+            if (!_probeToWrapper.TryGetValue(probe, out LightProbeWrapper wrapper))
             {
-                float distance = Vector3.Distance(probe.Position, position);
-                if (distance <= 10.0f)
-                {
-                    nearbyProbes.Add(probe);
-                }
+                return false;
             }
 
-            if (nearbyProbes.Count == 0)
+            // Note: Octree doesn't have a Remove method, so we need to rebuild it
+            // This is acceptable for light probes as they are typically added during initialization
+            // and rarely removed at runtime. For frequent removals, consider implementing Remove in Octree.
+            _probes.Remove(probe);
+            _probeToWrapper.Remove(probe);
+
+            // Rebuild octree without the removed probe
+            _probeOctree.Clear();
+            foreach (LightProbe remainingProbe in _probes)
+            {
+                LightProbeWrapper remainingWrapper = new LightProbeWrapper(remainingProbe);
+                _probeToWrapper[remainingProbe] = remainingWrapper;
+                _probeOctree.Insert(remainingWrapper);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Updates an existing light probe in the system.
+        /// </summary>
+        /// <param name="oldProbe">The existing probe to update.</param>
+        /// <param name="newProbe">The updated probe data.</param>
+        /// <returns>True if the probe was found and updated, false otherwise.</returns>
+        public bool UpdateProbe(LightProbe oldProbe, LightProbe newProbe)
+        {
+            if (!RemoveProbe(oldProbe))
+            {
+                return false;
+            }
+
+            AddProbe(newProbe);
+            return true;
+        }
+
+        /// <summary>
+        /// Clears all light probes from the system.
+        /// </summary>
+        public void Clear()
+        {
+            _probes.Clear();
+            _probeToWrapper.Clear();
+            _probeOctree.Clear();
+        }
+
+        /// <summary>
+        /// Samples light probes at a position using the default search radius.
+        /// </summary>
+        /// <param name="position">World space position to sample at.</param>
+        /// <returns>Interpolated ambient light color at the position.</returns>
+        public Vector3 SampleAmbientLight(Vector3 position)
+        {
+            return SampleAmbientLight(position, _defaultSearchRadius);
+        }
+
+        /// <summary>
+        /// Samples light probes at a position using a specified search radius.
+        /// </summary>
+        /// <param name="position">World space position to sample at.</param>
+        /// <param name="searchRadius">Search radius for finding nearby probes.</param>
+        /// <returns>Interpolated ambient light color at the position.</returns>
+        public Vector3 SampleAmbientLight(Vector3 position, float searchRadius)
+        {
+            if (searchRadius <= 0.0f)
+            {
+                throw new ArgumentException("Search radius must be positive.", nameof(searchRadius));
+            }
+
+            // Find nearby probes using octree spatial query
+            List<LightProbeWrapper> nearbyWrappers = new List<LightProbeWrapper>();
+            BoundingBox searchBounds = new BoundingBox(
+                position - new Vector3(searchRadius),
+                position + new Vector3(searchRadius)
+            );
+            _probeOctree.Query(searchBounds, nearbyWrappers);
+
+            if (nearbyWrappers.Count == 0)
             {
                 return Vector3.Zero;
             }
@@ -113,13 +222,72 @@ namespace Andastra.Runtime.MonoGame.Lighting
             Vector3 ambientLight = Vector3.Zero;
             float totalWeight = 0.0f;
 
-            foreach (LightProbe probe in nearbyProbes)
+            foreach (LightProbeWrapper wrapper in nearbyWrappers)
             {
+                LightProbe probe = wrapper.Probe;
                 float distance = Vector3.Distance(position, probe.Position);
+
+                // Only consider probes within their influence radius
                 if (distance < probe.Radius)
                 {
+                    // Use inverse distance weighting with small epsilon to avoid division by zero
                     float weight = 1.0f / (distance + 0.001f);
-                    Vector3 probeLight = EvaluateSH(probe.SHCoefficients, Vector3.Up); // Simplified
+                    Vector3 probeLight = EvaluateSH(probe.SHCoefficients, Vector3.Up); // Simplified - uses up direction
+                    ambientLight += probeLight * weight;
+                    totalWeight += weight;
+                }
+            }
+
+            if (totalWeight > 0.0f)
+            {
+                ambientLight /= totalWeight;
+            }
+
+            return ambientLight;
+        }
+
+        /// <summary>
+        /// Samples light probes at a position with a specific direction for spherical harmonics evaluation.
+        /// </summary>
+        /// <param name="position">World space position to sample at.</param>
+        /// <param name="direction">Direction vector for spherical harmonics evaluation (should be normalized).</param>
+        /// <param name="searchRadius">Search radius for finding nearby probes.</param>
+        /// <returns>Interpolated ambient light color at the position in the specified direction.</returns>
+        public Vector3 SampleAmbientLight(Vector3 position, Vector3 direction, float searchRadius)
+        {
+            if (searchRadius <= 0.0f)
+            {
+                throw new ArgumentException("Search radius must be positive.", nameof(searchRadius));
+            }
+
+            // Find nearby probes using octree spatial query
+            List<LightProbeWrapper> nearbyWrappers = new List<LightProbeWrapper>();
+            BoundingBox searchBounds = new BoundingBox(
+                position - new Vector3(searchRadius),
+                position + new Vector3(searchRadius)
+            );
+            _probeOctree.Query(searchBounds, nearbyWrappers);
+
+            if (nearbyWrappers.Count == 0)
+            {
+                return Vector3.Zero;
+            }
+
+            // Interpolate between probes using inverse distance weighting
+            Vector3 ambientLight = Vector3.Zero;
+            float totalWeight = 0.0f;
+
+            foreach (LightProbeWrapper wrapper in nearbyWrappers)
+            {
+                LightProbe probe = wrapper.Probe;
+                float distance = Vector3.Distance(position, probe.Position);
+
+                // Only consider probes within their influence radius
+                if (distance < probe.Radius)
+                {
+                    // Use inverse distance weighting with small epsilon to avoid division by zero
+                    float weight = 1.0f / (distance + 0.001f);
+                    Vector3 probeLight = EvaluateSH(probe.SHCoefficients, direction);
                     ambientLight += probeLight * weight;
                     totalWeight += weight;
                 }
@@ -177,13 +345,48 @@ namespace Andastra.Runtime.MonoGame.Lighting
             return result;
         }
 
-        private Spatial.BoundingBox GetProbeBounds(LightProbe probe)
+        /// <summary>
+        /// Gets the bounding box for a light probe based on its position and radius.
+        /// </summary>
+        /// <param name="probe">The light probe.</param>
+        /// <returns>Bounding box encompassing the probe's influence area.</returns>
+        private BoundingBox GetProbeBounds(LightProbe probe)
         {
             float radius = probe.Radius;
-            return new Spatial.BoundingBox(
+            return new BoundingBox(
                 probe.Position - new Vector3(radius),
                 probe.Position + new Vector3(radius)
             );
+        }
+
+        /// <summary>
+        /// Queries all light probes within a bounding box.
+        /// </summary>
+        /// <param name="bounds">Bounding box to query.</param>
+        /// <param name="results">List to populate with probes within the bounds.</param>
+        public void QueryProbes(BoundingBox bounds, List<LightProbe> results)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            List<LightProbeWrapper> wrappers = new List<LightProbeWrapper>();
+            _probeOctree.Query(bounds, wrappers);
+
+            foreach (LightProbeWrapper wrapper in wrappers)
+            {
+                results.Add(wrapper.Probe);
+            }
+        }
+
+        /// <summary>
+        /// Gets all light probes in the system.
+        /// </summary>
+        /// <returns>Read-only list of all light probes.</returns>
+        public IReadOnlyList<LightProbe> GetAllProbes()
+        {
+            return _probes.AsReadOnly();
         }
     }
 }
