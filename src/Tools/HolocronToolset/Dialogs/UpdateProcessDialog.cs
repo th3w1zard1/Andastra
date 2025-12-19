@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Dialogs;
-using HolocronToolset.Update;
 
 namespace HolocronToolset.Dialogs
 {
@@ -37,23 +36,10 @@ namespace HolocronToolset.Dialogs
             // Get the current main window for progress dialog positioning
             Window ownerWindow = GetMainWindow();
 
-            // Create and run the update process
-            AppUpdate updater = new AppUpdate(release, downloadUrl, ownerWindow);
-            try
-            {
-                await updater.RunAsync();
-            }
-            catch (OperationCanceledException)
-            {
-                // Update was cancelled - user requested cancellation
-                throw;
-            }
-            catch (Exception ex)
-            {
-                // Log error and rethrow
-                System.Console.WriteLine($"Update process failed: {ex}");
-                throw;
-            }
+            // TODO: Implement update process
+            // Update functionality is not yet implemented
+            // AppUpdate class needs to be created in HolocronToolset.Update namespace
+            throw new NotImplementedException("Update process is not yet implemented. AppUpdate class needs to be created.");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_process.py:143-177

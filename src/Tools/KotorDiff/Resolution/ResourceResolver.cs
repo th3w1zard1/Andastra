@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
+using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;

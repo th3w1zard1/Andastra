@@ -191,7 +191,7 @@ namespace HolocronToolset.Windows
             if (_indoorMap.Rooms.Contains(_room))
             {
                 _indoorMap.Rooms.Remove(_room);
-                // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+                _indoorMap.RebuildRoomConnections();
             }
         }
 
@@ -201,7 +201,7 @@ namespace HolocronToolset.Windows
             if (!_indoorMap.Rooms.Contains(_room))
             {
                 _indoorMap.Rooms.Add(_room);
-                // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+                _indoorMap.RebuildRoomConnections();
             }
         }
     }
@@ -247,7 +247,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Insert(pair.idx, pair.room);
                 }
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
 
         // Matching Python: def redo(self)
@@ -261,7 +261,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Remove(room);
                 }
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
     }
 
@@ -321,7 +321,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Remove(room);
                 }
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
 
         // Matching Python: def redo(self)
@@ -335,7 +335,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Add(room);
                 }
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
     }
 
@@ -370,7 +370,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Position = _oldPositions[i];
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
 
         // Matching Python: def redo(self)
@@ -381,7 +381,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Position = _newPositions[i];
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
     }
 
@@ -416,7 +416,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Rotation = _oldRotations[i];
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
 
         // Matching Python: def redo(self)
@@ -427,7 +427,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Rotation = _newRotations[i];
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
     }
 
@@ -473,7 +473,7 @@ namespace HolocronToolset.Windows
                 _rooms[i].FlipX = _oldFlipX[i];
                 _rooms[i].FlipY = _oldFlipY[i];
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
 
         // Matching Python: def redo(self)
@@ -491,7 +491,7 @@ namespace HolocronToolset.Windows
                     room.FlipY = !room.FlipY;
                 }
             }
-            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
+            _indoorMap.RebuildRoomConnections();
         }
     }
 

@@ -33,3 +33,6 @@ vendor/NCSDecomp/tools/nwnnsscomp_incompatible_v1.exe
 vendor/NCSDecomp/tools/nwnnsscomp_kscript.exe
 vendor/NCSDecomp/tools/nwnnsscomp_ktool.exe
 *.exe
+vendor/Kotor.NET/
+vendor/HoloLSP/
+vendor/NCSDecomp/

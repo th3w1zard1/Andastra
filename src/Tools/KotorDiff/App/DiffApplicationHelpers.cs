@@ -10,6 +10,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Tools;
+using Andastra.Utility;
 using KotorDiff.Diff;
 using Andastra.Parsing.TSLPatcher;
 using Tuple = System.Tuple;

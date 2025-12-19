@@ -147,12 +147,73 @@ namespace HolocronToolset.Widgets
         // Original: def set_mouse_and_key_binds(self, bind: Bind):
         public void SetMouseAndKeyBinds(Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> bind)
         {
-            // TODO: Implement when Bind type is available
-            // For now, just update keybind
-            if (bind != null && bind.Item1 != null)
+            if (bind != null)
             {
-                _keybind = bind.Item1;
+                if (bind.Item1 != null)
+                {
+                    _keybind = new HashSet<Key>(bind.Item1);
+                }
+                else
+                {
+                    _keybind.Clear();
+                }
+
+                if (bind.Item2 != null)
+                {
+                    _mouseButtons = new HashSet<PointerUpdateKind>(bind.Item2);
+                    UpdateMouseComboFromBinds();
+                }
+                else
+                {
+                    _mouseButtons.Clear();
+                    if (_mouseCombo != null)
+                    {
+                        _mouseCombo.SelectedIndex = 4; // "None"
+                    }
+                }
+
                 UpdateKeybindText();
+            }
+        }
+
+        // Helper method to update mouse combo box selection based on stored mouse buttons
+        private void UpdateMouseComboFromBinds()
+        {
+            if (_mouseCombo == null)
+            {
+                return;
+            }
+
+            if (_mouseButtons.Count == 0)
+            {
+                _mouseCombo.SelectedIndex = 4; // "None"
+                return;
+            }
+
+            // Check for specific button combinations
+            bool hasLeft = _mouseButtons.Contains(PointerUpdateKind.LeftButtonPressed);
+            bool hasMiddle = _mouseButtons.Contains(PointerUpdateKind.MiddleButtonPressed);
+            bool hasRight = _mouseButtons.Contains(PointerUpdateKind.RightButtonPressed);
+
+            if (hasLeft && !hasMiddle && !hasRight)
+            {
+                _mouseCombo.SelectedIndex = 0; // "Left"
+            }
+            else if (hasMiddle && !hasLeft && !hasRight)
+            {
+                _mouseCombo.SelectedIndex = 1; // "Middle"
+            }
+            else if (hasRight && !hasLeft && !hasMiddle)
+            {
+                _mouseCombo.SelectedIndex = 2; // "Right"
+            }
+            else if (hasLeft || hasMiddle || hasRight)
+            {
+                _mouseCombo.SelectedIndex = 3; // "Any"
+            }
+            else
+            {
+                _mouseCombo.SelectedIndex = 4; // "None"
             }
         }
 
@@ -160,8 +221,42 @@ namespace HolocronToolset.Widgets
         // Original: def get_mouse_and_key_binds(self) -> Bind:
         public Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> GetMouseAndKeyBinds()
         {
-            // TODO: Extract mouse bind from combo box when available
-            return Tuple.Create(_keybind, new HashSet<PointerUpdateKind>());
+            // Extract mouse button selection from combo box
+            HashSet<PointerUpdateKind> mouseBinds = new HashSet<PointerUpdateKind>();
+            
+            if (_mouseCombo != null)
+            {
+                int selectedIndex = _mouseCombo.SelectedIndex;
+                string selectedText = _mouseCombo.SelectedItem?.ToString() ?? "";
+
+                // Map combo box selection to PointerUpdateKind values
+                switch (selectedIndex)
+                {
+                    case 0: // "Left"
+                        mouseBinds.Add(PointerUpdateKind.LeftButtonPressed);
+                        break;
+                    case 1: // "Middle"
+                        mouseBinds.Add(PointerUpdateKind.MiddleButtonPressed);
+                        break;
+                    case 2: // "Right"
+                        mouseBinds.Add(PointerUpdateKind.RightButtonPressed);
+                        break;
+                    case 3: // "Any"
+                        mouseBinds.Add(PointerUpdateKind.LeftButtonPressed);
+                        mouseBinds.Add(PointerUpdateKind.MiddleButtonPressed);
+                        mouseBinds.Add(PointerUpdateKind.RightButtonPressed);
+                        break;
+                    case 4: // "None"
+                    default:
+                        // Empty set for "None"
+                        break;
+                }
+            }
+
+            // Update internal state to match combo box
+            _mouseButtons = mouseBinds;
+
+            return Tuple.Create(new HashSet<Key>(_keybind), mouseBinds);
         }
     }
 }

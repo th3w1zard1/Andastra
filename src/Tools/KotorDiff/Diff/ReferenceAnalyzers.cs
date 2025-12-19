@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Diff;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
