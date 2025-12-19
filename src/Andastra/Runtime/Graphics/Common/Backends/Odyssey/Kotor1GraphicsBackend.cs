@@ -1566,116 +1566,92 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private IntPtr CreateKotor1SecondaryWindow()
         {
             // Matching swkotor.exe: FUN_00426560 @ 0x00426560 exactly
-            // This function creates a secondary OpenGL context, not a window
-            // It uses the current DC and creates a context with specific attributes
+            // This function creates a hidden window for secondary OpenGL contexts
+            // The window is used to get a device context for creating secondary contexts
             
-            if (_kotor1PrimaryDC == IntPtr.Zero)
+            // Register window class (matching swkotor.exe pattern)
+            WNDCLASSA wndClass = new WNDCLASSA
             {
-                return IntPtr.Zero;
-            }
-            
-            // Set up pixel format attributes (matching swkotor.exe lines 30-48)
-            int[] attribIList = new int[]
-            {
-                WGL_DRAW_TO_WINDOW_ARB, 8,
-                WGL_SUPPORT_OPENGL_ARB, 8,
-                WGL_DOUBLE_BUFFER_ARB, 8,
-                WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-                WGL_COLOR_BITS_ARB, 8,
-                WGL_DEPTH_BITS_ARB, 8,
-                WGL_STENCIL_BITS_ARB, 8,
-                WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-                0x2010, 0x202d, // Additional attributes
-                0x2071, 0x2015,
-                0x2017, 0x2019,
-                0x201b, 0x2011,
-                0, 0
+                style = 0,
+                lpfnWndProc = DefWindowProcA,
+                cbClsExtra = 0,
+                cbWndExtra = 0,
+                hInstance = IntPtr.Zero,
+                hIcon = IntPtr.Zero,
+                hCursor = IntPtr.Zero,
+                hbrBackground = IntPtr.Zero,
+                lpszMenuName = null,
+                lpszClassName = "KOTOR1SecondaryWindow"
             };
             
-            // Set up pixel format descriptor (matching swkotor.exe lines 34-48)
-            PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
-            {
-                nSize = 0x28,
-                nVersion = 1,
-                dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-                iPixelType = PFD_TYPE_RGBA,
-                cColorBits = 8,
-                cAlphaBits = 8,
-                cDepthBits = 8,
-                cStencilBits = 8,
-                iLayerType = PFD_MAIN_PLANE
-            };
+            RegisterClassA(ref wndClass);
             
-            // Choose pixel format (matching swkotor.exe line 50)
-            int pixelFormat = 0;
-            uint numFormats = 0;
-            if (_kotor1WglChoosePixelFormatArb != null)
+            // Create hidden window (1x1, matching swkotor.exe pattern)
+            IntPtr hWnd = CreateWindowExA(0, "KOTOR1SecondaryWindow", "Secondary Window", 0, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            
+            if (hWnd != IntPtr.Zero)
             {
-                int formats;
-                if (_kotor1WglChoosePixelFormatArb(_kotor1PrimaryDC, attribIList, null, 1, out formats, out numFormats) && numFormats > 0)
+                // Get device context for the window
+                IntPtr hdc = GetDC(hWnd);
+                if (hdc != IntPtr.Zero)
                 {
-                    pixelFormat = formats;
+                    // Set up pixel format attributes (matching swkotor.exe lines 30-48)
+                    int[] attribIList = new int[]
+                    {
+                        WGL_DRAW_TO_WINDOW_ARB, 1,
+                        WGL_SUPPORT_OPENGL_ARB, 1,
+                        WGL_DOUBLE_BUFFER_ARB, 1,
+                        WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+                        WGL_COLOR_BITS_ARB, 8,
+                        WGL_DEPTH_BITS_ARB, 8,
+                        WGL_STENCIL_BITS_ARB, 8,
+                        WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+                        0
+                    };
+                    
+                    // Set up pixel format descriptor (matching swkotor.exe lines 34-48)
+                    PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
+                    {
+                        nSize = 0x28,
+                        nVersion = 1,
+                        dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+                        iPixelType = PFD_TYPE_RGBA,
+                        cColorBits = 8,
+                        cAlphaBits = 8,
+                        cDepthBits = 8,
+                        cStencilBits = 8,
+                        iLayerType = PFD_MAIN_PLANE
+                    };
+                    
+                    // Choose pixel format (matching swkotor.exe line 50)
+                    int pixelFormat = 0;
+                    if (_kotor1WglChoosePixelFormatArb != null)
+                    {
+                        int formats;
+                        uint numFormats;
+                        if (_kotor1WglChoosePixelFormatArb(hdc, attribIList, null, 1, out formats, out numFormats) && numFormats > 0)
+                        {
+                            pixelFormat = formats;
+                        }
+                    }
+                    
+                    if (pixelFormat == 0)
+                    {
+                        // Fallback to standard ChoosePixelFormat
+                        pixelFormat = ChoosePixelFormat(hdc, ref pfd);
+                    }
+                    
+                    if (pixelFormat != 0)
+                    {
+                        SetPixelFormat(hdc, pixelFormat, ref pfd);
+                        ReleaseDC(hWnd, hdc);
+                        return hWnd;
+                    }
+                    
+                    ReleaseDC(hWnd, hdc);
                 }
-            }
-            
-            if (pixelFormat == 0)
-            {
-                // Fallback to standard ChoosePixelFormat
-                pixelFormat = ChoosePixelFormat(_kotor1PrimaryDC, ref pfd);
-                if (pixelFormat != 0)
-                {
-                    SetPixelFormat(_kotor1PrimaryDC, pixelFormat, ref pfd);
-                }
-            }
-            
-            if (pixelFormat == 0)
-            {
-                return IntPtr.Zero;
-            }
-            
-            // Create context attributes (matching swkotor.exe lines 51-55)
-            int[] contextAttribs = new int[]
-            {
-                0x2072, 0x207a, // WGL_CONTEXT_MAJOR_VERSION_ARB, WGL_CONTEXT_MINOR_VERSION_ARB
-                0, 0, // Version numbers (would be set based on OpenGL version)
-                0 // Terminator
-            };
-            
-            // Create context with attributes (matching swkotor.exe lines 51-55)
-            // Note: FUN_00426560 returns a window handle (HWND), not a context
-            // The function creates a window and returns its handle
-            // However, based on the usage pattern, it seems to return a context handle
-            // Let's check the actual return type from the decompilation
-            
-            // Based on FUN_00426560 decompilation, it calls wglCreateContextAttribsARB
-            // and returns the result. However, the function signature shows it returns void,
-            // so the actual return value is stored in a global variable or passed differently.
-            // For now, we'll create a context and return it as IntPtr (matching the usage pattern)
-            
-            if (_kotor1WglCreateContextAttribsArb != null)
-            {
-                // Create context attributes (matching swkotor.exe lines 51-55)
-                int[] contextAttribs = new int[]
-                {
-                    0x2072, // WGL_CONTEXT_MAJOR_VERSION_ARB
-                    0, // Major version
-                    0x207A, // WGL_CONTEXT_MINOR_VERSION_ARB
-                    0, // Minor version
-                    0 // Terminator
-                };
                 
-                IntPtr hglrc = _kotor1WglCreateContextAttribsArb(_kotor1PrimaryDC, IntPtr.Zero, contextAttribs);
-                if (hglrc != IntPtr.Zero)
-                {
-                    return hglrc;
-                }
-            }
-            
-            // Fallback to standard wglCreateContext (matching swkotor.exe fallback pattern)
-            IntPtr hglrcFallback = wglCreateContext(_kotor1PrimaryDC);
-            if (hglrcFallback != IntPtr.Zero)
-            {
-                return hglrcFallback;
+                DestroyWindow(hWnd);
             }
             
             return IntPtr.Zero;
