@@ -12,6 +12,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
 using System.Text.Json;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Editors
 {
@@ -260,14 +262,18 @@ namespace HolocronToolset.Editors
                     }
                     else
                     {
-                        errorOccurred = true;
+                        errorOccurred = HandleExceptionDebugMode("Filepath is not set", new InvalidOperationException("Installation path is not set"));
                     }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Matching PyKotor implementation: self._handle_exc_debug_mode("Decompilation/Download Failed", e)
+                    errorOccurred = HandleExceptionDebugMode("Decompilation/Download Failed", ex);
                 }
                 catch (Exception ex)
                 {
-                    // Matching PyKotor implementation: self._handle_exc_debug_mode("Decompilation/Download Failed", e)
-                    errorOccurred = true;
-                    System.Console.WriteLine($"Decompilation/Download Failed: {ex.Message}");
+                    // Catch any other exceptions and handle them
+                    errorOccurred = HandleExceptionDebugMode("Decompilation/Download Failed", ex);
                 }
 
                 if (errorOccurred)
@@ -294,13 +300,15 @@ namespace HolocronToolset.Editors
                 }
                 catch (Exception ex)
                 {
-                    // Decompilation failed - in full implementation would show error dialog
-                    // TODO: SIMPLIFIED - For now, return empty string
+                    // Decompilation failed - log error and rethrow to match Python ValueError behavior
+                    // Python implementation raises ValueError which is caught and shown in error dialog
                     System.Console.WriteLine($"Decompilation failed: {ex.Message}");
+                    throw new InvalidOperationException($"Decompilation failed: {ex.Message}", ex);
                 }
             }
 
-            // If decompilation fails, raise ValueError (matching Python behavior)
+            // If decompilation fails or returns None, raise ValueError (matching Python behavior)
+            // Python: raise ValueError("Decompilation failed: decompile_ncs returned None")
             throw new InvalidOperationException("Decompilation failed: decompile_ncs returned None");
         }
 
@@ -835,6 +843,44 @@ namespace HolocronToolset.Editors
                     }
                 }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2164-2168
+        // Original: def _handle_exc_debug_mode(self, err_msg: str, e: Exception) -> bool:
+        /// <summary>
+        /// Handles exceptions in debug mode - shows error dialog and optionally rethrows in debug mode.
+        /// </summary>
+        /// <param name="errMsg">Error message to display</param>
+        /// <param name="ex">Exception that occurred</param>
+        /// <returns>True if error occurred (always returns true)</returns>
+        private bool HandleExceptionDebugMode(string errMsg, Exception ex)
+        {
+            // Simplify exception message for display
+            string exceptionMessage = ex?.Message ?? "Unknown error";
+            if (ex?.InnerException != null)
+            {
+                exceptionMessage = $"{exceptionMessage}\n\nInner Exception: {ex.InnerException.Message}";
+            }
+
+            // Show error message box (matching Python QMessageBox.critical)
+            var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                errMsg,
+                exceptionMessage,
+                ButtonEnum.Ok,
+                MsBox.Avalonia.Enums.Icon.Error);
+            
+            // Show dialog asynchronously (non-blocking)
+            errorBox.ShowAsync();
+
+            // In debug mode, rethrow the exception (matching Python behavior)
+#if DEBUG
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                throw ex;
+            }
+#endif
+
+            return true;
         }
 
         // Helper class to store bookmark data
