@@ -7,9 +7,10 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Formats.LYT;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
+// TODO: TEMPORARY - Commented out MDL to fix build errors
+// using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Formats.PCC;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TLK;
@@ -100,6 +101,11 @@ namespace Andastra.Parsing.Resource
                     RIM rim = source is string s5 ? RIMAuto.ReadRim(s5) : RIMAuto.ReadRim(source as byte[]);
                     return RIMAuto.BytesRim(rim);
                 }
+                if (resourceExt == "pcc" || resourceExt == "upk")
+                {
+                    PCC pcc = source is string s6 ? PCCAuto.ReadPcc(s6) : PCCAuto.ReadPcc(source as byte[]);
+                    return PCCAuto.BytesPcc(pcc);
+                }
                 if (resourceType.Extension?.ToUpperInvariant() == "GFF" || GFFContentExtensions.Contains(resourceType.Extension?.ToUpperInvariant() ?? ""))
                 {
                     byte[] dataGff = source is string s6 ? File.ReadAllBytes(s6) : source as byte[];
@@ -109,9 +115,11 @@ namespace Andastra.Parsing.Resource
                 }
                 if (resourceExt == "ncs")
                 {
-                    NCS ncs = source is string s7 ? NCSAuto.ReadNcs(s7) : NCSAuto.ReadNcs(source as byte[]);
+                    NCS ncs = source is string s8 ? NCSAuto.ReadNcs(s8) : NCSAuto.ReadNcs(source as byte[]);
                     return NCSAuto.BytesNcs(ncs);
                 }
+                // TODO: TEMPORARY - Commented out MDL to fix build errors
+                /*
                 if (resourceExt == "mdl")
                 {
                     MDL mdl = MDLAuto.ReadMdl(source);
@@ -121,6 +129,7 @@ namespace Andastra.Parsing.Resource
                         return ms.ToArray();
                     }
                 }
+                */
                 if (resourceExt == "vis")
                 {
                     VIS vis = VISAuto.ReadVis(source);
@@ -138,7 +147,7 @@ namespace Andastra.Parsing.Resource
                 }
                 if (resourceType.Category == "Walkmeshes")
                 {
-                    BWM bwm = source is string s8 ? BWMAuto.ReadBwm(s8) : BWMAuto.ReadBwm(source as byte[]);
+                    BWM bwm = source is string s9 ? BWMAuto.ReadBwm(s9) : BWMAuto.ReadBwm(source as byte[]);
                     return BWMAuto.BytesBwm(bwm);
                 }
             }
@@ -221,6 +230,8 @@ namespace Andastra.Parsing.Resource
             }
             catch { }
 
+            // TODO: TEMPORARY - Commented out MDL to fix build errors
+            /*
             try
             {
                 MDL mdl = MDLAuto.ReadMdl(source);
@@ -231,6 +242,7 @@ namespace Andastra.Parsing.Resource
                 }
             }
             catch { }
+            */
 
             try
             {
@@ -375,6 +387,8 @@ namespace Andastra.Parsing.Resource
             {
                 return LYTAuto.BytesLyt(lyt);
             }
+            // TODO: TEMPORARY - Commented out MDL to fix build errors
+            /*
             if (resource is MDL mdl)
             {
                 using (var ms = new MemoryStream())
@@ -383,6 +397,7 @@ namespace Andastra.Parsing.Resource
                     return ms.ToArray();
                 }
             }
+            */
             if (resource is NCS ncs)
             {
                 return NCSAuto.BytesNcs(ncs);

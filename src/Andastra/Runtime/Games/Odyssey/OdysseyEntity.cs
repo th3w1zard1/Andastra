@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -796,11 +797,513 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         public override void Deserialize(byte[] data)
         {
-            // TODO: Implement entity deserialization
-            // Read ObjectId, Tag, ObjectType
-            // Recreate and deserialize components
-            // Restore custom data dictionary
-            throw new NotImplementedException("Entity deserialization not yet implemented");
+            if (data == null || data.Length == 0)
+            {
+                throw new ArgumentException("Entity deserialization data cannot be null or empty", nameof(data));
+            }
+
+            // Parse GFF from byte array
+            // Based on swkotor2.exe: FUN_005fb0f0 loads entity from GFF
+            GFF gff = GFF.FromBytes(data);
+            if (gff == null || gff.Root == null)
+            {
+                throw new InvalidDataException("Invalid GFF data for entity deserialization");
+            }
+
+            var root = gff.Root;
+
+            // Deserialize basic entity properties
+            if (root.Exists("ObjectId"))
+            {
+                _objectId = root.GetUInt32("ObjectId");
+            }
+            if (root.Exists("Tag"))
+            {
+                _tag = root.GetString("Tag") ?? "";
+            }
+            // ObjectType is read-only, so we verify it matches
+            if (root.Exists("ObjectType"))
+            {
+                int objectTypeValue = root.GetInt32("ObjectType");
+                if (objectTypeValue != (int)_objectType)
+                {
+                    throw new InvalidDataException($"Deserialized ObjectType {objectTypeValue} does not match entity ObjectType {(int)_objectType}");
+                }
+            }
+            if (root.Exists("AreaId"))
+            {
+                _areaId = root.GetUInt32("AreaId");
+            }
+            if (root.Exists("IsValid"))
+            {
+                _isValid = root.GetUInt8("IsValid") != 0;
+            }
+
+            // Deserialize Transform component
+            // Based on swkotor2.exe: Position stored as X, Y, Z in GFF
+            if (root.Exists("X") && root.Exists("Y") && root.Exists("Z"))
+            {
+                var transformComponent = GetComponent<ITransformComponent>();
+                if (transformComponent == null)
+                {
+                    // Transform component should already exist from Initialize(), but ensure it's present
+                    transformComponent = GetComponent<ITransformComponent>();
+                    if (transformComponent == null)
+                    {
+                        // Use reflection or create via factory - for now, assume it exists from Initialize()
+                        throw new InvalidOperationException("Transform component not found and cannot be created automatically");
+                    }
+                }
+
+                float x = root.GetSingle("X");
+                float y = root.GetSingle("Y");
+                float z = root.GetSingle("Z");
+                transformComponent.Position = new System.Numerics.Vector3(x, y, z);
+
+                if (root.Exists("Facing"))
+                {
+                    transformComponent.Facing = root.GetSingle("Facing");
+                }
+
+                if (root.Exists("ScaleX") && root.Exists("ScaleY") && root.Exists("ScaleZ"))
+                {
+                    float scaleX = root.GetSingle("ScaleX");
+                    float scaleY = root.GetSingle("ScaleY");
+                    float scaleZ = root.GetSingle("ScaleZ");
+                    transformComponent.Scale = new System.Numerics.Vector3(scaleX, scaleY, scaleZ);
+                }
+
+                // Parent will be resolved later when all entities are loaded
+                if (root.Exists("ParentObjectId"))
+                {
+                    uint parentObjectId = root.GetUInt32("ParentObjectId");
+                    if (parentObjectId != 0)
+                    {
+                        Type baseEntityTypeForParent = typeof(BaseEntity);
+                        FieldInfo dataFieldForParent = baseEntityTypeForParent.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (dataFieldForParent != null)
+                        {
+                            var data = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
+                            if (data == null)
+                            {
+                                data = new Dictionary<string, object>();
+                                dataFieldForParent.SetValue(this, data);
+                            }
+                            data["_ParentObjectId"] = parentObjectId;
+                        }
+                    }
+                }
+            }
+
+            // Deserialize Stats component
+            if (root.Exists("CurrentHP"))
+            {
+                var statsComponent = GetComponent<IStatsComponent>();
+                if (statsComponent != null)
+                {
+                    statsComponent.CurrentHP = root.GetInt32("CurrentHP");
+                    if (root.Exists("MaxHP"))
+                    {
+                        statsComponent.MaxHP = root.GetInt32("MaxHP");
+                    }
+                    if (root.Exists("CurrentFP"))
+                    {
+                        statsComponent.CurrentFP = root.GetInt32("CurrentFP");
+                    }
+                    if (root.Exists("MaxFP"))
+                    {
+                        statsComponent.MaxFP = root.GetInt32("MaxFP");
+                    }
+
+                    // Deserialize ability scores
+                    if (root.Exists("Abilities"))
+                    {
+                        var abilityStruct = root.GetStruct("Abilities");
+                        if (abilityStruct != null && abilityStruct.Count > 0)
+                        {
+                            if (abilityStruct.Exists("STR"))
+                            {
+                                statsComponent.SetAbility(Ability.Strength, abilityStruct.GetInt32("STR"));
+                            }
+                            if (abilityStruct.Exists("DEX"))
+                            {
+                                statsComponent.SetAbility(Ability.Dexterity, abilityStruct.GetInt32("DEX"));
+                            }
+                            if (abilityStruct.Exists("CON"))
+                            {
+                                statsComponent.SetAbility(Ability.Constitution, abilityStruct.GetInt32("CON"));
+                            }
+                            if (abilityStruct.Exists("INT"))
+                            {
+                                statsComponent.SetAbility(Ability.Intelligence, abilityStruct.GetInt32("INT"));
+                            }
+                            if (abilityStruct.Exists("WIS"))
+                            {
+                                statsComponent.SetAbility(Ability.Wisdom, abilityStruct.GetInt32("WIS"));
+                            }
+                            if (abilityStruct.Exists("CHA"))
+                            {
+                                statsComponent.SetAbility(Ability.Charisma, abilityStruct.GetInt32("CHA"));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Deserialize Door component
+            if (root.Exists("IsOpen") || root.Exists("IsLocked"))
+            {
+                var doorComponent = GetComponent<IDoorComponent>();
+                if (doorComponent == null && _objectType == ObjectType.Door)
+                {
+                    doorComponent = new Components.DoorComponent();
+                    doorComponent.Owner = this;
+                    AddComponent<IDoorComponent>(doorComponent);
+                }
+
+                if (root.Exists("IsOpen"))
+                {
+                    doorComponent.IsOpen = root.GetUInt8("IsOpen") != 0;
+                }
+                if (root.Exists("IsLocked"))
+                {
+                    doorComponent.IsLocked = root.GetUInt8("IsLocked") != 0;
+                }
+                if (root.Exists("LockableByScript"))
+                {
+                    doorComponent.LockableByScript = root.GetUInt8("LockableByScript") != 0;
+                }
+                if (root.Exists("LockDC"))
+                {
+                    doorComponent.LockDC = root.GetInt32("LockDC");
+                }
+                if (root.Exists("IsBashed"))
+                {
+                    doorComponent.IsBashed = root.GetUInt8("IsBashed") != 0;
+                }
+                if (root.Exists("HitPoints"))
+                {
+                    doorComponent.HitPoints = root.GetInt32("HitPoints");
+                }
+                if (root.Exists("MaxHitPoints"))
+                {
+                    doorComponent.MaxHitPoints = root.GetInt32("MaxHitPoints");
+                }
+                if (root.Exists("Hardness"))
+                {
+                    doorComponent.Hardness = root.GetInt32("Hardness");
+                }
+                if (root.Exists("KeyTag"))
+                {
+                    doorComponent.KeyTag = root.GetString("KeyTag");
+                }
+                if (root.Exists("KeyRequired"))
+                {
+                    doorComponent.KeyRequired = root.GetUInt8("KeyRequired") != 0;
+                }
+                if (root.Exists("OpenState"))
+                {
+                    doorComponent.OpenState = root.GetInt32("OpenState");
+                }
+                if (root.Exists("LinkedTo"))
+                {
+                    doorComponent.LinkedTo = root.GetString("LinkedTo");
+                }
+                if (root.Exists("LinkedToModule"))
+                {
+                    doorComponent.LinkedToModule = root.GetString("LinkedToModule");
+                }
+            }
+
+            // Deserialize Placeable component
+            if (root.Exists("IsUseable") || root.Exists("HasInventory"))
+            {
+                var placeableComponent = GetComponent<IPlaceableComponent>();
+                if (placeableComponent == null && _objectType == ObjectType.Placeable)
+                {
+                    placeableComponent = new Components.PlaceableComponent();
+                    placeableComponent.Owner = this;
+                    AddComponent<IPlaceableComponent>(placeableComponent);
+                }
+
+                if (root.Exists("IsUseable"))
+                {
+                    placeableComponent.IsUseable = root.GetUInt8("IsUseable") != 0;
+                }
+                if (root.Exists("HasInventory"))
+                {
+                    placeableComponent.HasInventory = root.GetUInt8("HasInventory") != 0;
+                }
+                if (root.Exists("IsStatic"))
+                {
+                    placeableComponent.IsStatic = root.GetUInt8("IsStatic") != 0;
+                }
+                if (root.Exists("IsOpen"))
+                {
+                    placeableComponent.IsOpen = root.GetUInt8("IsOpen") != 0;
+                }
+                if (root.Exists("IsLocked"))
+                {
+                    placeableComponent.IsLocked = root.GetUInt8("IsLocked") != 0;
+                }
+                if (root.Exists("LockDC"))
+                {
+                    placeableComponent.LockDC = root.GetInt32("LockDC");
+                }
+                if (root.Exists("KeyTag"))
+                {
+                    placeableComponent.KeyTag = root.GetString("KeyTag");
+                }
+                if (root.Exists("HitPoints"))
+                {
+                    placeableComponent.HitPoints = root.GetInt32("HitPoints");
+                }
+                if (root.Exists("MaxHitPoints"))
+                {
+                    placeableComponent.MaxHitPoints = root.GetInt32("MaxHitPoints");
+                }
+                if (root.Exists("Hardness"))
+                {
+                    placeableComponent.Hardness = root.GetInt32("Hardness");
+                }
+                if (root.Exists("AnimationState"))
+                {
+                    placeableComponent.AnimationState = root.GetInt32("AnimationState");
+                }
+            }
+
+            // Deserialize Inventory component
+            if (root.Exists("Inventory"))
+            {
+                var inventoryComponent = GetComponent<IInventoryComponent>();
+                if (inventoryComponent != null)
+                {
+                    var inventoryList = root.GetList("Inventory");
+                    if (inventoryList != null)
+                    {
+                        // Store item references for later resolution when all entities are loaded
+                        var itemReferences = new List<(int slot, uint objectId, string tag, int objectType)>();
+                        for (int i = 0; i < inventoryList.Count; i++)
+                        {
+                            var itemStruct = inventoryList.At(i);
+                            if (itemStruct != null)
+                            {
+                                int slot = itemStruct.GetInt32("Slot");
+                                uint itemObjectId = itemStruct.GetUInt32("ItemObjectId");
+                                string itemTag = itemStruct.GetString("ItemTag") ?? "";
+                                int itemObjectType = itemStruct.GetInt32("ItemObjectType");
+                                itemReferences.Add((slot, itemObjectId, itemTag, itemObjectType));
+                            }
+                        }
+                        // Store item references in custom data for later resolution
+                        Type baseEntityTypeForItems = typeof(BaseEntity);
+                        FieldInfo dataFieldForItems = baseEntityTypeForItems.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (dataFieldForItems != null)
+                        {
+                            var data = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
+                            if (data == null)
+                            {
+                                data = new Dictionary<string, object>();
+                                dataFieldForItems.SetValue(this, data);
+                            }
+                            data["_ItemReferences"] = itemReferences;
+                        }
+                    }
+                }
+            }
+
+            // Deserialize ScriptHooks component
+            if (root.Exists("Scripts"))
+            {
+                var scriptHooksComponent = GetComponent<IScriptHooksComponent>();
+                if (scriptHooksComponent == null)
+                {
+                    scriptHooksComponent = new Common.Components.BaseScriptHooksComponent();
+                    AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+                }
+
+                var scriptsStruct = root.GetStruct("Scripts");
+                if (scriptsStruct != null && scriptsStruct.Count > 0)
+                {
+                    // Read all script fields from GFF
+                    foreach (var (fieldName, fieldType, fieldValue) in scriptsStruct)
+                    {
+                        if (fieldType == GFFFieldType.String || fieldType == GFFFieldType.ResRef)
+                        {
+                            string resRef = fieldValue?.ToString() ?? "";
+                            if (!string.IsNullOrEmpty(resRef))
+                            {
+                                // Try to parse as enum name
+                                if (Enum.TryParse<ScriptEvent>(fieldName, out ScriptEvent eventType))
+                                {
+                                    scriptHooksComponent.SetScript(eventType, resRef);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Deserialize local variables using reflection
+                if (root.Exists("LocalVariables"))
+                {
+                    var localVarsStruct = root.GetStruct("LocalVariables");
+                    if (localVarsStruct != null && localVarsStruct.Count > 0)
+                    {
+                        Type componentType = scriptHooksComponent.GetType();
+                        FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
+                        FieldInfo localFloatsField = componentType.GetField("_localFloats", BindingFlags.NonPublic | BindingFlags.Instance);
+                        FieldInfo localStringsField = componentType.GetField("_localStrings", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        // Deserialize local ints
+                        if (localVarsStruct.Exists("IntList"))
+                        {
+                            var intList = localVarsStruct.GetList("IntList");
+                            if (intList != null && intList.Count > 0 && localIntsField != null)
+                            {
+                                var localInts = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
+                                if (localInts == null)
+                                {
+                                    localInts = new Dictionary<string, int>();
+                                    localIntsField.SetValue(scriptHooksComponent, localInts);
+                                }
+                                localInts.Clear();
+                                for (int i = 0; i < intList.Count; i++)
+                                {
+                                    var varStruct = intList.At(i);
+                                    if (varStruct != null && varStruct.Exists("Name") && varStruct.Exists("Value"))
+                                    {
+                                        string name = varStruct.GetString("Name");
+                                        int value = varStruct.GetInt32("Value");
+                                        localInts[name] = value;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Deserialize local floats
+                        if (localVarsStruct.Exists("FloatList"))
+                        {
+                            var floatList = localVarsStruct.GetList("FloatList");
+                            if (floatList != null && floatList.Count > 0 && localFloatsField != null)
+                            {
+                                var localFloats = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
+                                if (localFloats == null)
+                                {
+                                    localFloats = new Dictionary<string, float>();
+                                    localFloatsField.SetValue(scriptHooksComponent, localFloats);
+                                }
+                                localFloats.Clear();
+                                for (int i = 0; i < floatList.Count; i++)
+                                {
+                                    var varStruct = floatList.At(i);
+                                    if (varStruct != null && varStruct.Exists("Name") && varStruct.Exists("Value"))
+                                    {
+                                        string name = varStruct.GetString("Name");
+                                        float value = varStruct.GetSingle("Value");
+                                        localFloats[name] = value;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Deserialize local strings
+                        if (localVarsStruct.Exists("StringList"))
+                        {
+                            var stringList = localVarsStruct.GetList("StringList");
+                            if (stringList != null && stringList.Count > 0 && localStringsField != null)
+                            {
+                                var localStrings = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
+                                if (localStrings == null)
+                                {
+                                    localStrings = new Dictionary<string, string>();
+                                    localStringsField.SetValue(scriptHooksComponent, localStrings);
+                                }
+                                localStrings.Clear();
+                                for (int i = 0; i < stringList.Count; i++)
+                                {
+                                    var varStruct = stringList.At(i);
+                                    if (varStruct != null && varStruct.Exists("Name") && varStruct.Exists("Value"))
+                                    {
+                                        string name = varStruct.GetString("Name");
+                                        string value = varStruct.GetString("Value") ?? "";
+                                        localStrings[name] = value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Deserialize custom data dictionary
+            if (root.Exists("CustomData"))
+            {
+                var customDataStruct = root.GetStruct("CustomData");
+                if (customDataStruct != null && customDataStruct.Exists("DataList"))
+                {
+                    var dataList = customDataStruct.GetList("DataList");
+                    if (dataList != null && dataList.Count > 0)
+                    {
+                        Type baseEntityType = typeof(BaseEntity);
+                        FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if (dataField != null)
+                        {
+                            var data = dataField.GetValue(this) as Dictionary<string, object>;
+                            if (data == null)
+                            {
+                                data = new Dictionary<string, object>();
+                                dataField.SetValue(this, data);
+                            }
+                            data.Clear();
+
+                            for (int i = 0; i < dataList.Count; i++)
+                            {
+                                var dataStruct = dataList.At(i);
+                                if (dataStruct != null && dataStruct.Exists("Key") && dataStruct.Exists("Type") && dataStruct.Exists("Value"))
+                                {
+                                    string key = dataStruct.GetString("Key");
+                                    string type = dataStruct.GetString("Type");
+                                    object value = null;
+
+                                    switch (type)
+                                    {
+                                        case "null":
+                                            value = null;
+                                            break;
+                                        case "Int32":
+                                        case "int":
+                                            value = dataStruct.GetInt32("Value");
+                                            break;
+                                        case "Single":
+                                        case "float":
+                                            value = dataStruct.GetSingle("Value");
+                                            break;
+                                        case "String":
+                                        case "string":
+                                            value = dataStruct.GetString("Value");
+                                            break;
+                                        case "Boolean":
+                                        case "bool":
+                                            value = dataStruct.GetUInt8("Value") != 0;
+                                            break;
+                                        case "UInt32":
+                                        case "uint":
+                                            value = dataStruct.GetUInt32("Value");
+                                            break;
+                                        default:
+                                            // For other types, try to deserialize as string
+                                            value = dataStruct.GetString("Value");
+                                            break;
+                                    }
+
+                                    data[key] = value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

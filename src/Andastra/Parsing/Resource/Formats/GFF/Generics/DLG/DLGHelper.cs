@@ -673,8 +673,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 {
                     if (dlgLink.Node is DLGReply dlgReply && dlgReplyToCnvReply.ContainsKey(dlgReply))
                     {
-                        Andastra.Parsing.Resource.Generics.CNV.CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
-                        Andastra.Parsing.Resource.Generics.CNV.CNVLink cnvLink = ConvertLink(dlgLink, cnvReply);
+                        CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
+                        CNVLink cnvLink = ConvertLink(dlgLink, cnvReply);
                         cnvEntry.Links.Add(cnvLink);
                     }
                 }
@@ -683,7 +683,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert links in replies
             foreach (DLGReply dlgReply in allDlgReplies)
             {
-                Andastra.Parsing.Resource.Generics.CNV.CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
+                CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
                 foreach (DLGLink dlgLink in dlgReply.Links)
                 {
                     if (dlgLink.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
@@ -838,9 +838,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Helper method to convert DLGLink to CNVLink
-        private static Andastra.Parsing.Resource.Generics.CNV.CNVLink ConvertLink(DLGLink dlgLink, Andastra.Parsing.Resource.Generics.CNV.CNVNode cnvNode)
+        private static CNVLink ConvertLink(DLGLink dlgLink, CNVNode cnvNode)
         {
-            return new Andastra.Parsing.Resource.Generics.CNV.CNVLink(cnvNode, dlgLink.ListIndex)
+            return new CNVLink(cnvNode, dlgLink.ListIndex)
             {
                 Active1 = dlgLink.Active1,
                 Active2 = dlgLink.Active2,
