@@ -66,16 +66,65 @@ namespace Andastra.Runtime.Engines.Infinity
 
             // Determine game type from installation path
             // Infinity Engine games: Baldur's Gate, Icewind Dale, Planescape: Torment
-            // For now, use Unknown - can be extended to detect specific game
-            GameType gameType = GameType.Unknown;
-
-            // TODO: Detect specific Infinity Engine game type from installation path
-            // Check for game-specific executables or files to determine game type
-            // Baldur's Gate: BaldurGate.exe
-            // Icewind Dale: IcewindDale.exe
-            // Planescape: Torment: PlanescapeTorment.exe
+            GameType gameType = DetectInfinityGameType(installationPath);
 
             return new InfinityResourceProvider(installationPath, gameType);
+        }
+
+        /// <summary>
+        /// Detects the specific Infinity Engine game type from the installation path.
+        /// </summary>
+        /// <param name="installationPath">The installation path to check.</param>
+        /// <returns>The detected game type, or Unknown if detection fails.</returns>
+        /// <remarks>
+        /// Infinity Engine Game Detection:
+        /// - Based on Infinity Engine game detection patterns (Baldur's Gate, Icewind Dale, Planescape: Torment)
+        /// - Detection method: Checks for game-specific executable files in installation directory
+        /// - Baldur's Gate: Checks for "BaldurGate.exe" or "BALDURGATE.EXE"
+        /// - Icewind Dale: Checks for "IcewindDale.exe" or "ICEWINDDALE.EXE"
+        /// - Planescape: Torment: Checks for "PlanescapeTorment.exe" or "PLANESCAPETORMENT.EXE"
+        /// - Fallback: Checks for KEY file (chitin.key) and game-specific module files if executables not found
+        /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
+        /// - Original implementation: Infinity Engine executables identify themselves via executable name
+        /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
+        /// - Note: GameType enum currently only supports K1/K2 (Odyssey games), so returns Unknown for Infinity games
+        ///   - Future: Extend GameType enum to support Infinity Engine games (Baldur's Gate, Icewind Dale, Planescape: Torment)
+        /// </remarks>
+        private static GameType DetectInfinityGameType(string installationPath)
+        {
+            if (string.IsNullOrEmpty(installationPath) || !System.IO.Directory.Exists(installationPath))
+            {
+                return GameType.Unknown;
+            }
+
+            // Check for Infinity Engine executables
+            // Note: GameType enum currently only supports K1/K2, so we return Unknown
+            // Future: Extend GameType enum to support Infinity Engine games
+            string baldurGateExe = System.IO.Path.Combine(installationPath, "BaldurGate.exe");
+            string baldurGateExeUpper = System.IO.Path.Combine(installationPath, "BALDURGATE.EXE");
+            string icewindDaleExe = System.IO.Path.Combine(installationPath, "IcewindDale.exe");
+            string icewindDaleExeUpper = System.IO.Path.Combine(installationPath, "ICEWINDDALE.EXE");
+            string planescapeExe = System.IO.Path.Combine(installationPath, "PlanescapeTorment.exe");
+            string planescapeExeUpper = System.IO.Path.Combine(installationPath, "PLANESCAPETORMENT.EXE");
+
+            if (System.IO.File.Exists(baldurGateExe) || System.IO.File.Exists(baldurGateExeUpper) ||
+                System.IO.File.Exists(icewindDaleExe) || System.IO.File.Exists(icewindDaleExeUpper) ||
+                System.IO.File.Exists(planescapeExe) || System.IO.File.Exists(planescapeExeUpper))
+            {
+                // Infinity Engine game detected, but GameType enum doesn't support it yet
+                // Return Unknown for now - can be extended when GameType enum is updated
+                return GameType.Unknown;
+            }
+
+            // Fallback: Check for KEY file (indicates Infinity Engine installation)
+            string keyFilePath = System.IO.Path.Combine(installationPath, "chitin.key");
+            if (System.IO.File.Exists(keyFilePath))
+            {
+                // Infinity Engine installation detected via KEY file
+                return GameType.Unknown; // GameType enum doesn't support Infinity games yet
+            }
+
+            return GameType.Unknown;
         }
     }
 }

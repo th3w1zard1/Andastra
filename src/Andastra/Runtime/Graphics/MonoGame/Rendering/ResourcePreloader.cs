@@ -316,6 +316,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// Resolves model and texture resources from appearance data.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe appearance data structure:
+        /// - appearance.2da contains ModelA, ModelB (model variants), TexA, TexB (texture variants)
+        /// - Model resolution: FUN_005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
+        /// - Appearance data accessed via GameDataManager.GetAppearance() in Odyssey engine
+        /// - Uses reflection to access engine-specific GameDataManager implementations
+        /// </remarks>
         /// <param name="appearanceRow">Appearance row index into appearance.2da.</param>
         /// <param name="resourcePriorities">List to add resource priorities to.</param>
         /// <param name="basePriority">Base priority for resources.</param>

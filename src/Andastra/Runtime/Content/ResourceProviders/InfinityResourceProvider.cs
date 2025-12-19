@@ -25,8 +25,23 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// - Async loading: Provides async resource access for streaming and background loading
     /// - Resource enumeration: Can enumerate resources by type from BIF archives and override directory
     /// - Based on Infinity Engine's CResMan resource management system
-    /// - TODO: Reverse engineer specific function addresses from Infinity Engine executables using Ghidra MCP
-    ///   - Baldur's Gate: BaldurGate.exe resource loading functions
+    /// 
+    /// Cross-Engine Resource Loading Patterns (from Ghidra analysis):
+    /// - Odyssey Engine (swkotor2.exe: FUN_00633270 @ 0x00633270): Sets up resource directories with precedence
+    ///   - OVERRIDE directory: ".\\override" mapped to "OVERRIDE" (highest priority)
+    ///   - MODULES directory: ".\\modules" mapped to "MODULES" (module-specific resources)
+    ///   - CHITIN: Main game archives (chitin.key references BIF files)
+    ///   - Similar pattern expected in Infinity Engine but with BIF/KEY files instead of RIM/ERF/BIF
+    /// - Resource table management: CExoKeyTable handles resource tracking and lookup
+    ///   - swkotor2.exe: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
+    ///   - swkotor2.exe: "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124
+    /// - Infinity Engine: Expected to follow similar precedence pattern but with BIF/KEY file system
+    ///   - KEY files index BIF archives (similar to chitin.key in Odyssey)
+    ///   - BIF files contain compressed game resources
+    ///   - Override directory allows modding (highest priority)
+    /// 
+    /// TODO: Reverse engineer specific function addresses from Infinity Engine executables using Ghidra MCP
+    ///   - Baldur's Gate: BaldurGate.exe resource loading functions (CResMan initialization, BIF loading, KEY parsing)
     ///   - Icewind Dale: IcewindDale.exe resource loading functions
     ///   - Planescape: Torment: PlanescapeTorment.exe resource loading functions
     /// </remarks>
