@@ -1499,6 +1499,25 @@ namespace HolocronToolset.Editors
         private List<DLGStandardItem> _rootItems = new List<DLGStandardItem>();
         private DLGEditor _editor;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:293-294
+        // Original: self.link_to_items: weakref.WeakKeyDictionary[DLGLink, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
+        // Original: self.node_to_items: weakref.WeakKeyDictionary[DLGNode, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
+        // Note: C# doesn't have WeakKeyDictionary, so we use ConditionalWeakTable which provides similar functionality
+        private Dictionary<DLGLink, List<DLGStandardItem>> _linkToItems = new Dictionary<DLGLink, List<DLGStandardItem>>();
+        private Dictionary<DLGNode, List<DLGStandardItem>> _nodeToItems = new Dictionary<DLGNode, List<DLGStandardItem>>();
+
+        /// <summary>
+        /// Gets the dictionary mapping links to their items.
+        /// Matching PyKotor implementation: self.link_to_items
+        /// </summary>
+        public Dictionary<DLGLink, List<DLGStandardItem>> LinkToItems => _linkToItems;
+
+        /// <summary>
+        /// Gets the dictionary mapping nodes to their items.
+        /// Matching PyKotor implementation: self.node_to_items
+        /// </summary>
+        public Dictionary<DLGNode, List<DLGStandardItem>> NodeToItems => _nodeToItems;
+
         public DLGModel()
         {
         }
@@ -1527,6 +1546,8 @@ namespace HolocronToolset.Editors
         {
             _rootItems.Clear();
             _selectedIndex = -1;
+            _linkToItems.Clear();
+            _nodeToItems.Clear();
         }
 
         public void AddStarter(DLGLink link)
@@ -1537,6 +1558,28 @@ namespace HolocronToolset.Editors
             }
             var item = new DLGStandardItem(link);
             _rootItems.Add(item);
+            
+            // Register in dictionaries
+            if (!_linkToItems.ContainsKey(link))
+            {
+                _linkToItems[link] = new List<DLGStandardItem>();
+            }
+            if (!_linkToItems[link].Contains(item))
+            {
+                _linkToItems[link].Add(item);
+            }
+
+            if (link.Node != null)
+            {
+                if (!_nodeToItems.ContainsKey(link.Node))
+                {
+                    _nodeToItems[link.Node] = new List<DLGStandardItem>();
+                }
+                if (!_nodeToItems[link.Node].Contains(item))
+                {
+                    _nodeToItems[link.Node].Add(item);
+                }
+            }
             
             // Also add to CoreDlg.Starters if editor is available
             if (_editor != null && _editor.CoreDlg != null)
@@ -1623,6 +1666,28 @@ namespace HolocronToolset.Editors
 
             var newItem = new DLGStandardItem(link);
             parentItem.AddChild(newItem);
+            
+            // Register in dictionaries
+            if (!_linkToItems.ContainsKey(link))
+            {
+                _linkToItems[link] = new List<DLGStandardItem>();
+            }
+            if (!_linkToItems[link].Contains(newItem))
+            {
+                _linkToItems[link].Add(newItem);
+            }
+
+            if (link.Node != null)
+            {
+                if (!_nodeToItems.ContainsKey(link.Node))
+                {
+                    _nodeToItems[link.Node] = new List<DLGStandardItem>();
+                }
+                if (!_nodeToItems[link.Node].Contains(newItem))
+                {
+                    _nodeToItems[link.Node].Add(newItem);
+                }
+            }
             
             UpdateItemDisplayText(newItem);
             UpdateItemDisplayText(parentItem);
@@ -1852,6 +1917,25 @@ namespace HolocronToolset.Editors
                 return;
             }
 
+            // Register this item in the dictionaries
+            if (!_linkToItems.ContainsKey(link))
+            {
+                _linkToItems[link] = new List<DLGStandardItem>();
+            }
+            if (!_linkToItems[link].Contains(itemToLoad))
+            {
+                _linkToItems[link].Add(itemToLoad);
+            }
+
+            if (!_nodeToItems.ContainsKey(node))
+            {
+                _nodeToItems[node] = new List<DLGStandardItem>();
+            }
+            if (!_nodeToItems[node].Contains(itemToLoad))
+            {
+                _nodeToItems[node].Add(itemToLoad);
+            }
+
             // Recursively load all child links
             foreach (var childLink in node.Links)
             {
@@ -1866,6 +1950,105 @@ namespace HolocronToolset.Editors
                 // Recursively load children of this child
                 LoadDlgItemRec(childItem);
             }
+        }
+
+        /// <summary>
+        /// Shifts an item in the tree by a given amount.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1248-1285
+        /// Original: def shift_item(self, item: DLGStandardItem, amount: int, *, no_selection_update: bool = False):
+        /// </summary>
+        /// <param name="item">The item to shift.</param>
+        /// <param name="amount">The amount to shift (positive = down, negative = up).</param>
+        public void ShiftItem(DLGStandardItem item, int amount)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            var parent = item.Parent;
+            var oldRow = parent == null ? _rootItems.IndexOf(item) : parent.Children.ToList().IndexOf(item);
+            
+            if (oldRow < 0)
+            {
+                return;
+            }
+
+            var newRow = oldRow + amount;
+            var maxRow = parent == null ? _rootItems.Count : parent.Children.Count();
+
+            if (newRow < 0 || newRow >= maxRow)
+            {
+                return;
+            }
+
+            // Move the item
+            if (parent == null)
+            {
+                _rootItems.RemoveAt(oldRow);
+                _rootItems.Insert(newRow, item);
+            }
+            else
+            {
+                // For child items, we need to update the parent's Links list
+                if (parent.Link?.Node != null)
+                {
+                    var links = parent.Link.Node.Links;
+                    if (oldRow < links.Count && newRow < links.Count)
+                    {
+                        var linkToMove = links[oldRow];
+                        links.RemoveAt(oldRow);
+                        links.Insert(newRow, linkToMove);
+                        
+                        // Update list_index for all affected links
+                        for (int i = 0; i < links.Count; i++)
+                        {
+                            links[i].ListIndex = i;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pastes a link as a child of the specified parent item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:900-975
+        /// Original: def paste_item(self, parent_item: DLGStandardItem | Self | None, pasted_link: DLGLink | None = None, *, row: int | None = None, as_new_branches: bool = True):
+        /// </summary>
+        /// <param name="parentItem">The parent item to paste under, or null for root.</param>
+        /// <param name="pastedLink">The link to paste.</param>
+        public void PasteItem(DLGStandardItem parentItem, DLGLink pastedLink)
+        {
+            if (pastedLink == null)
+            {
+                return;
+            }
+
+            // Create a new item for the pasted link
+            var newItem = new DLGStandardItem(pastedLink);
+            
+            if (parentItem == null)
+            {
+                // Add to root
+                _rootItems.Add(newItem);
+                if (_editor?.CoreDlg != null)
+                {
+                    _editor.CoreDlg.Starters.Add(pastedLink);
+                }
+            }
+            else
+            {
+                // Add as child
+                parentItem.AddChild(newItem);
+                if (parentItem.Link?.Node != null)
+                {
+                    pastedLink.ListIndex = parentItem.Link.Node.Links.Count;
+                    parentItem.Link.Node.Links.Add(pastedLink);
+                }
+            }
+
+            // Recursively load the item
+            LoadDlgItemRec(newItem);
         }
 
         /// <summary>
