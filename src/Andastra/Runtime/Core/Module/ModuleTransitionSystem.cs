@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Save;
+using Andastra.Runtime.Core.Video;
+using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Core.Module
 {
@@ -57,13 +60,25 @@ namespace Andastra.Runtime.Core.Module
         private readonly IWorld _world;
         private readonly SaveSystem _saveSystem;
         private readonly IModuleLoader _moduleLoader;
+        private readonly MoviePlayer _moviePlayer;
         private bool _isTransitioning;
 
-        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader)
+        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, IGameResourceProvider resourceProvider = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _saveSystem = saveSystem ?? throw new ArgumentNullException("saveSystem");
             _moduleLoader = moduleLoader ?? throw new ArgumentNullException("moduleLoader");
+            
+            // Create movie player if resource provider is available
+            if (resourceProvider != null)
+            {
+                _moviePlayer = new MoviePlayer(world, resourceProvider);
+            }
+            else
+            {
+                _moviePlayer = null;
+            }
+            
             _isTransitioning = false;
         }
 
@@ -617,32 +632,34 @@ namespace Andastra.Runtime.Core.Module
                 return;
             }
 
-            // TODO: STUB - Implement BIK video playback
-            // Based on swkotor.exe/swkotor2.exe: Bink video playback system
-            // Original implementation: Uses BINKW32.DLL for BIK format video playback
-            // Movies play sequentially, blocking (waits for each movie to finish before playing next)
-            // If movie playback fails, continues with module transition
-            // 
-            // Implementation requirements:
-            // 1. Load BIK file from game resources (movies directory)
-            // 2. Initialize Bink video decoder (BINKW32.DLL)
-            // 3. Play video fullscreen, blocking until completion
-            // 4. Handle playback errors gracefully (continue if movie fails)
-            // 5. Support up to 6 movies played sequentially
-            //
-            // For now, log the movie names that would be played
+            if (_moviePlayer == null)
+            {
+                // Movie player not available (no resource provider), log and continue
+                System.Console.WriteLine("[ModuleTransitionSystem] Movie player not available, skipping movie playback");
+                return;
+            }
+
+            // Play movies sequentially, blocking until each completes
+            // Based on swkotor.exe/swkotor2.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
+            // Original implementation: Movies play sequentially, blocking (waits for each to finish before playing next)
+            // If movie playback fails, continues with module transition (graceful error handling)
+            CancellationToken cancellationToken = CancellationToken.None;
+            
             for (int i = 0; i < movies.Length; i++)
             {
                 if (!string.IsNullOrEmpty(movies[i]))
                 {
-                    System.Console.WriteLine("[ModuleTransitionSystem] Movie playback (STUB): Would play movie '{0}' ({1}/{2})", movies[i], i + 1, movies.Length);
-                    // TODO: PLACEHOLDER - Replace with actual BIK video playback
-                    // await PlayBikMovie(movies[i]);
+                    System.Console.WriteLine("[ModuleTransitionSystem] Playing movie '{0}' ({1}/{2})", movies[i], i + 1, movies.Length);
+                    
+                    // Play movie (blocking until completion)
+                    // If playback fails, log error and continue with next movie
+                    bool success = await _moviePlayer.PlayMovie(movies[i], cancellationToken);
+                    if (!success)
+                    {
+                        System.Console.WriteLine("[ModuleTransitionSystem] Movie playback failed for '{0}', continuing with next movie", movies[i]);
+                    }
                 }
             }
-
-            // Simulate async movie playback delay (remove when actual playback is implemented)
-            await Task.CompletedTask;
         }
     }
 
