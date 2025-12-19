@@ -142,8 +142,6 @@ namespace Andastra.Runtime.Games.Aurora.Combat
             }
 
             // Get base item data to check if ranged
-            // TODO: PLACEHOLDER - This requires Aurora table manager
-            // For now, we'll use a simplified check based on common patterns
             bool isRanged = IsRangedWeapon(baseItemId);
 
             // Ranged weapons always use DEX (nwmain.exe: ranged weapon damage calculation)
