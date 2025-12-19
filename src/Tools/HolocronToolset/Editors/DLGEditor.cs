@@ -1525,6 +1525,43 @@ namespace HolocronToolset.Editors
         {
             return _rootItems;
         }
+
+        /// <summary>
+        /// Recursively loads a dialog item and all its children into the model.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:752-807
+        /// Original: def load_dlg_item_rec(self, item_to_load: DLGStandardItem, copied_link: DLGLink | None = None):
+        /// </summary>
+        /// <param name="itemToLoad">The item to load recursively.</param>
+        public void LoadDlgItemRec(DLGStandardItem itemToLoad)
+        {
+            if (itemToLoad == null || itemToLoad.Link == null)
+            {
+                return;
+            }
+
+            var link = itemToLoad.Link;
+            var node = link.Node;
+            
+            if (node == null)
+            {
+                return;
+            }
+
+            // Recursively load all child links
+            foreach (var childLink in node.Links)
+            {
+                if (childLink == null)
+                {
+                    continue;
+                }
+
+                var childItem = new DLGStandardItem(childLink);
+                itemToLoad.AddChild(childItem);
+                
+                // Recursively load children of this child
+                LoadDlgItemRec(childItem);
+            }
+        }
     }
 }
 
@@ -1717,6 +1754,43 @@ namespace HolocronToolset.Editors
         public IReadOnlyList<DLGStandardItem> GetRootItems()
         {
             return _rootItems;
+        }
+
+        /// <summary>
+        /// Recursively loads a dialog item and all its children into the model.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:752-807
+        /// Original: def load_dlg_item_rec(self, item_to_load: DLGStandardItem, copied_link: DLGLink | None = None):
+        /// </summary>
+        /// <param name="itemToLoad">The item to load recursively.</param>
+        public void LoadDlgItemRec(DLGStandardItem itemToLoad)
+        {
+            if (itemToLoad == null || itemToLoad.Link == null)
+            {
+                return;
+            }
+
+            var link = itemToLoad.Link;
+            var node = link.Node;
+            
+            if (node == null)
+            {
+                return;
+            }
+
+            // Recursively load all child links
+            foreach (var childLink in node.Links)
+            {
+                if (childLink == null)
+                {
+                    continue;
+                }
+
+                var childItem = new DLGStandardItem(childLink);
+                itemToLoad.AddChild(childItem);
+                
+                // Recursively load children of this child
+                LoadDlgItemRec(childItem);
+            }
         }
     }
 }
