@@ -164,9 +164,29 @@ namespace Andastra.Parsing.Resource.Generics
             root.SetUInt32("Grass_Diffuse", (uint)are.GrassDiffuse.ToRgbInteger());
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:639
             // Original: root.set_uint32("Grass_Emissive", are.grass_emissive.rgb_integer()) (KotOR 2 only)
-            if (game == Game.K2)
+            // K2-specific fields should only be written for K2 games (K2, K2_XBOX, K2_IOS, K2_ANDROID)
+            // Aurora (NWN) and Eclipse engines use ARE files but don't have K2-specific fields
+            if (game.IsK2())
             {
                 root.SetUInt32("Grass_Emissive", (uint)are.GrassEmissive.ToRgbInteger());
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:635-652
+                // Original: K2-specific fields (DirtyARGB, ChanceRain/Snow/Lightning, DirtySize/Formula/Func)
+                // Note: These fields are only in K2, not in K1, Aurora, or Eclipse
+                root.SetInt32("DirtyARGBOne", (int)are.DirtyArgb1.ToRgbInteger());
+                root.SetInt32("DirtyARGBTwo", (int)are.DirtyArgb2.ToRgbInteger());
+                root.SetInt32("DirtyARGBThree", (int)are.DirtyArgb3.ToRgbInteger());
+                root.SetInt32("ChanceRain", are.ChanceRain);
+                root.SetInt32("ChanceSnow", are.ChanceSnow);
+                root.SetInt32("ChanceLightning", are.ChanceLightning);
+                root.SetInt32("DirtySizeOne", are.DirtySize1);
+                root.SetInt32("DirtyFormulaOne", are.DirtyFormula1);
+                root.SetInt32("DirtyFuncOne", are.DirtyFunc1);
+                root.SetInt32("DirtySizeTwo", are.DirtySize2);
+                root.SetInt32("DirtyFormulaTwo", are.DirtyFormula2);
+                root.SetInt32("DirtyFuncTwo", are.DirtyFunc2);
+                root.SetInt32("DirtySizeThree", are.DirtySize3);
+                root.SetInt32("DirtyFormulaThre", are.DirtyFormula3);
+                root.SetInt32("DirtyFuncThree", are.DirtyFunc3);
             }
             root.SetUInt8("SunFogOn", are.FogEnabled ? (byte)1 : (byte)0);
             root.SetSingle("SunFogNear", are.FogNear);
