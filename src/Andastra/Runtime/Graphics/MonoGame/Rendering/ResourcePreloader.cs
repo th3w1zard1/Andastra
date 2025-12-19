@@ -148,13 +148,19 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// - Integrates with appearance.2da for creature model/texture resolution
         /// - Handles all entity types (Creatures, Placeables, Doors, etc.)
         /// 
-        /// Based on original engine resource preloading behavior:
-        /// - Original engines preload resources for entities within render distance
-        /// - Resources are prioritized based on proximity and camera direction
-        /// - Model and texture resources are preloaded from entity appearance data
-        /// - Animation resources are preloaded from model files
-        /// - Sound resources are preloaded from entity sound components
-        /// - Script resources are preloaded from entity script hooks
+        /// Based on original engine resource loading behavior (reverse engineered via Ghidra):
+        /// - swkotor2.exe: CSWCCreature::LoadModel() @ 0x007c82fc loads models on-demand when entities are created/rendered
+        /// - swkotor2.exe: Model loading occurs via LoadModel functions (CSWCCreature::LoadModel, CSWCVisualEffect::LoadModel, etc.)
+        /// - nwmain.exe: CExoEncapsulatedFile::ReadResource() @ 0x14018ca10 reads resources from encapsulated files on-demand
+        /// - Original engines load resources synchronously when needed (no explicit preloading system)
+        /// 
+        /// This implementation adds predictive preloading as an optimization:
+        /// - Preloads resources before they're needed based on camera position and direction
+        /// - Reduces frame-time stalls when entities come into view
+        /// - Uses background loading with priority queuing for optimal performance
+        /// - Model and texture resources are preloaded from entity appearance data (appearance.2da)
+        /// - Animation resources are embedded in model files (MDL/MDX), so model preloading covers animations
+        /// - Script resources are preloaded from entity script hooks (OnHeartbeat, OnAttacked, etc.)
         /// </remarks>
         /// <param name="position">Camera position in world space.</param>
         /// <param name="direction">Camera look direction. Will be normalized if non-zero length.</param>
