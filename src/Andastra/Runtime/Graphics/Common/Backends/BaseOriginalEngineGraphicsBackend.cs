@@ -604,9 +604,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// Matches swkotor.exe: FUN_0044dab0 @ 0x0044dab0 exactly.
         /// 
         /// This function implements the exact OpenGL initialization sequence:
-        /// 1. Get device context (GetDC)
-        /// 2. Choose pixel format (ChoosePixelFormat or wglChoosePixelFormatARB)
-        /// 3. Set pixel format (SetPixelFormat)
+        /// 1. Get device context (GetDC) - if hdc is not provided
+        /// 2. Choose pixel format (ChoosePixelFormat or wglChoosePixelFormatARB) - if pixelFormat is 0
+        /// 3. Set pixel format (SetPixelFormat) - if pixelFormat is 0
         /// 4. Create OpenGL context (wglCreateContext)
         /// 5. Make context current (wglMakeCurrent)
         /// </summary>
@@ -618,7 +618,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// - Line 204: pHVar3 = wglCreateContext(hdc)
         /// - Line 207: BVar1 = wglMakeCurrent(hdc,pHVar3)
         /// </remarks>
-        protected virtual bool CreateOpenGLDevice()
+        /// <param name="hdc">Optional device context. If IntPtr.Zero, will get from window handle.</param>
+        /// <param name="pixelFormat">Optional pixel format. If 0, will choose automatically.</param>
+        /// <param name="windowHandle">Window handle for releasing DC if we created it.</param>
+        protected virtual bool CreateOpenGLDevice(IntPtr hdc = default(IntPtr), int pixelFormat = 0, IntPtr windowHandle = default(IntPtr))
         {
             // Platform check: OpenGL on Windows requires WGL
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -627,82 +630,114 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 return false;
             }
 
-            // Get window handle - this should be set by derived class
-            IntPtr windowHandle = GetWindowHandle();
-            if (windowHandle == IntPtr.Zero)
-            {
-                Console.WriteLine("[OriginalEngine] Window handle is not set");
-                return false;
-            }
+            bool createdDC = false;
+            IntPtr actualHdc = hdc;
+            IntPtr actualWindowHandle = windowHandle;
 
-            // Step 1: Get device context (matching swkotor.exe line 117)
-            IntPtr hdc = GetDC(windowHandle);
-            if (hdc == IntPtr.Zero)
+            // Step 1: Get device context if not provided (matching swkotor.exe line 117)
+            if (actualHdc == IntPtr.Zero)
             {
-                Console.WriteLine("[OriginalEngine] Failed to get device context");
-                return false;
+                if (actualWindowHandle == IntPtr.Zero)
+                {
+                    actualWindowHandle = GetWindowHandle();
+                }
+                if (actualWindowHandle == IntPtr.Zero)
+                {
+                    Console.WriteLine("[OriginalEngine] Window handle is not set and HDC not provided");
+                    return false;
+                }
+
+                actualHdc = GetDC(actualWindowHandle);
+                if (actualHdc == IntPtr.Zero)
+                {
+                    Console.WriteLine("[OriginalEngine] Failed to get device context");
+                    return false;
+                }
+                createdDC = true;
             }
 
             try
             {
-                // Step 2: Choose pixel format (matching swkotor.exe lines 125-203)
-                PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
-                {
-                    nSize = 40, // 0x28
-                    nVersion = 1,
-                    dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // 0x25
-                    iPixelType = PFD_TYPE_RGBA,
-                    cColorBits = 32, // 0x20
-                    cAlphaBits = 8,
-                    cDepthBits = 24, // 0x18
-                    cStencilBits = 8,
-                    iLayerType = PFD_MAIN_PLANE
-                };
-
-                int pixelFormat = ChoosePixelFormat(hdc, ref pfd);
+                // Step 2: Choose pixel format if not provided (matching swkotor.exe lines 125-203)
                 if (pixelFormat == 0)
                 {
-                    Console.WriteLine("[OriginalEngine] ChoosePixelFormat failed");
-                    return false;
-                }
+                    PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
+                    {
+                        nSize = 40, // 0x28
+                        nVersion = 1,
+                        dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // 0x25
+                        iPixelType = PFD_TYPE_RGBA,
+                        cColorBits = 32, // 0x20
+                        cAlphaBits = 8,
+                        cDepthBits = 24, // 0x18
+                        cStencilBits = 8,
+                        iLayerType = PFD_MAIN_PLANE
+                    };
 
-                // Step 3: Set pixel format (matching swkotor.exe line 155)
-                if (!SetPixelFormat(hdc, pixelFormat, ref pfd))
-                {
-                    Console.WriteLine("[OriginalEngine] SetPixelFormat failed");
-                    return false;
-                }
+                    pixelFormat = ChoosePixelFormat(actualHdc, ref pfd);
+                    if (pixelFormat == 0)
+                    {
+                        Console.WriteLine("[OriginalEngine] ChoosePixelFormat failed");
+                        if (createdDC && actualWindowHandle != IntPtr.Zero)
+                        {
+                            ReleaseDC(actualWindowHandle, actualHdc);
+                        }
+                        return false;
+                    }
 
-                // Describe pixel format to get actual values (matching swkotor.exe line 157)
-                DescribePixelFormat(hdc, pixelFormat, 40, ref pfd);
+                    // Step 3: Set pixel format (matching swkotor.exe line 155)
+                    if (!SetPixelFormat(actualHdc, pixelFormat, ref pfd))
+                    {
+                        Console.WriteLine("[OriginalEngine] SetPixelFormat failed");
+                        if (createdDC && actualWindowHandle != IntPtr.Zero)
+                        {
+                            ReleaseDC(actualWindowHandle, actualHdc);
+                        }
+                        return false;
+                    }
+
+                    // Describe pixel format to get actual values (matching swkotor.exe line 157)
+                    DescribePixelFormat(actualHdc, pixelFormat, 40, ref pfd);
+                }
 
                 // Step 4: Create OpenGL context (matching swkotor.exe line 204)
-                IntPtr hglrc = wglCreateContext(hdc);
+                IntPtr hglrc = wglCreateContext(actualHdc);
                 if (hglrc == IntPtr.Zero)
                 {
                     Console.WriteLine("[OriginalEngine] wglCreateContext failed");
+                    if (createdDC && actualWindowHandle != IntPtr.Zero)
+                    {
+                        ReleaseDC(actualWindowHandle, actualHdc);
+                    }
                     return false;
                 }
 
                 // Step 5: Make context current (matching swkotor.exe line 207)
-                if (!wglMakeCurrent(hdc, hglrc))
+                if (!wglMakeCurrent(actualHdc, hglrc))
                 {
                     Console.WriteLine("[OriginalEngine] wglMakeCurrent failed");
                     wglDeleteContext(hglrc);
+                    if (createdDC && actualWindowHandle != IntPtr.Zero)
+                    {
+                        ReleaseDC(actualWindowHandle, actualHdc);
+                    }
                     return false;
                 }
 
                 // Store context and device context
                 _glContext = hglrc;
-                _glDevice = hdc;
+                _glDevice = actualHdc;
 
-                Console.WriteLine($"[OriginalEngine] OpenGL context created successfully (HGLRC: 0x{hglrc:X16}, HDC: 0x{hdc:X16})");
+                Console.WriteLine($"[OriginalEngine] OpenGL context created successfully (HGLRC: 0x{hglrc:X16}, HDC: 0x{actualHdc:X16})");
                 return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[OriginalEngine] Exception during OpenGL device creation: {ex.Message}");
-                ReleaseDC(windowHandle, hdc);
+                if (createdDC && actualWindowHandle != IntPtr.Zero)
+                {
+                    ReleaseDC(actualWindowHandle, actualHdc);
+                }
                 return false;
             }
         }
@@ -821,41 +856,182 @@ namespace Andastra.Runtime.Graphics.Common.Backends
 
         /// <summary>
         /// Creates an OpenGL buffer using original engine's method.
+        /// Matches original engine's OpenGL buffer creation pattern.
+        /// 
+        /// This function implements the exact OpenGL buffer creation sequence:
+        /// 1. Generate buffer name (glGenBuffers)
+        /// 2. Bind buffer (glBindBuffer)
+        /// 3. Upload buffer data (glBufferData)
         /// </summary>
         protected virtual ResourceInfo CreateOpenGLBuffer(BufferDescription desc, IntPtr handle)
         {
-            // OpenGL buffer creation would go here
+            if (_glContext == IntPtr.Zero || _glDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[OriginalEngine] OpenGL context not initialized");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Buffer,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName
+                };
+            }
+
+            // Ensure OpenGL context is current
+            if (wglGetCurrentContext() != _glContext)
+            {
+                if (!wglMakeCurrent(_glDevice, _glContext))
+                {
+                    Console.WriteLine("[OriginalEngine] Failed to make OpenGL context current for buffer creation");
+                    return new ResourceInfo
+                    {
+                        Type = ResourceType.Buffer,
+                        Handle = IntPtr.Zero,
+                        NativeHandle = IntPtr.Zero,
+                        DebugName = desc.DebugName
+                    };
+                }
+            }
+
+            // Step 1: Generate buffer name
+            uint bufferId = 0;
+            glGenBuffers(1, ref bufferId);
+            if (bufferId == 0)
+            {
+                Console.WriteLine("[OriginalEngine] glGenBuffers failed");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Buffer,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName
+                };
+            }
+
+            // Step 2: Bind buffer
+            uint target = (desc.Usage & BufferUsage.Vertex) != 0 ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+            glBindBuffer(target, bufferId);
+
+            // Step 3: Upload buffer data (if provided)
+            // Note: For now, we create an empty buffer. Actual data upload should be done separately.
+            glBufferData(target, (IntPtr)desc.SizeInBytes, IntPtr.Zero, GL_STATIC_DRAW);
+
+            // Unbind buffer
+            glBindBuffer(target, 0);
+
+            // Store buffer ID as native handle
+            IntPtr nativeHandle = new IntPtr(bufferId);
+            var originalInfo = new OriginalEngineResourceInfo
+            {
+                Handle = handle,
+                NativeHandle = nativeHandle,
+                ResourceType = OriginalEngineResourceType.OpenGLBuffer,
+                DebugName = desc.DebugName
+            };
+            _originalResources[handle] = originalInfo;
+
+            Console.WriteLine($"[OriginalEngine] OpenGL buffer created: ID={bufferId}, Size={desc.SizeInBytes}");
+
             return new ResourceInfo
             {
                 Type = ResourceType.Buffer,
-                Handle = IntPtr.Zero,
-                NativeHandle = IntPtr.Zero,
-                DebugName = desc.DebugName
+                Handle = handle,
+                NativeHandle = nativeHandle,
+                DebugName = desc.DebugName,
+                SizeInBytes = desc.SizeInBytes
             };
         }
 
+        // OpenGL buffer functions
+        private const uint GL_ARRAY_BUFFER = 0x8892;
+        private const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+        private const uint GL_STATIC_DRAW = 0x88E4;
+
+        [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
+        private static extern void glGenBuffers(int n, ref uint buffers);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBindBuffer")]
+        private static extern void glBindBuffer(uint target, uint buffer);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
+        private static extern void glBufferData(uint target, IntPtr size, IntPtr data, uint usage);
+
         /// <summary>
         /// Destroys an OpenGL resource.
+        /// Matches swkotor.exe: glDeleteTextures cleanup pattern.
         /// </summary>
         protected virtual void DestroyOpenGLResource(OriginalEngineResourceInfo info)
         {
-            // OpenGL resource destruction would go here
+            if (info.NativeHandle == IntPtr.Zero) return;
+
+            // Ensure OpenGL context is current
+            if (_glContext != IntPtr.Zero && _glDevice != IntPtr.Zero)
+            {
+                if (wglGetCurrentContext() != _glContext)
+                {
+                    wglMakeCurrent(_glDevice, _glContext);
+                }
+
+                // Delete texture if it's a texture resource
+                if (info.ResourceType == OriginalEngineResourceType.OpenGLTexture)
+                {
+                    uint textureId = (uint)info.NativeHandle.ToInt32();
+                    glDeleteTextures(1, ref textureId);
+                }
+                // Delete buffer if it's a buffer resource
+                else if (info.ResourceType == OriginalEngineResourceType.OpenGLBuffer)
+                {
+                    uint bufferId = (uint)info.NativeHandle.ToInt32();
+                    glDeleteBuffers(1, ref bufferId);
+                }
+            }
         }
+
+        // OpenGL deletion functions
+        [DllImport("opengl32.dll", EntryPoint = "glDeleteTextures")]
+        private static extern void glDeleteTextures(int n, ref uint textures);
+
+        [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
+        private static extern void glDeleteBuffers(int n, ref uint buffers);
 
         /// <summary>
         /// Releases OpenGL context.
+        /// Matches swkotor.exe: wglDeleteContext cleanup pattern.
         /// </summary>
         protected virtual void ReleaseOpenGLContext()
         {
-            // OpenGL context release would go here
+            if (_glContext != IntPtr.Zero)
+            {
+                // Make sure context is not current before deleting
+                if (wglGetCurrentContext() == _glContext)
+                {
+                    wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
+                }
+
+                // Delete context (matching swkotor.exe line 376: wglDeleteContext)
+                wglDeleteContext(_glContext);
+                _glContext = IntPtr.Zero;
+                Console.WriteLine("[OriginalEngine] OpenGL context released");
+            }
         }
 
         /// <summary>
         /// Releases OpenGL device.
+        /// Matches swkotor.exe: ReleaseDC cleanup pattern.
         /// </summary>
         protected virtual void ReleaseOpenGLDevice()
         {
-            // OpenGL device release would go here
+            if (_glDevice != IntPtr.Zero)
+            {
+                IntPtr windowHandle = GetWindowHandle();
+                if (windowHandle != IntPtr.Zero)
+                {
+                    // Release device context (matching swkotor.exe line 379: ReleaseDC)
+                    ReleaseDC(windowHandle, _glDevice);
+                }
+                _glDevice = IntPtr.Zero;
+                Console.WriteLine("[OriginalEngine] OpenGL device context released");
+            }
         }
 
         #endregion
@@ -1251,31 +1427,170 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Begins an OpenGL scene.
         /// Matches original engine's OpenGL BeginScene implementation.
+        /// OpenGL doesn't have BeginScene/EndScene like DirectX, but we ensure context is current.
         /// </summary>
         protected virtual void BeginSceneOpenGL()
         {
-            // OpenGL BeginScene implementation would go here
+            if (_glContext == IntPtr.Zero || _glDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Ensure OpenGL context is current (matching swkotor.exe: wglMakeCurrent pattern)
+            if (wglGetCurrentContext() != _glContext)
+            {
+                wglMakeCurrent(_glDevice, _glContext);
+            }
+
+            // OpenGL doesn't have BeginScene, but we can clear buffers here if needed
             // Matches nwmain.exe: RenderInterface::BeginScene() @ 0x1400be860
         }
 
         /// <summary>
         /// Ends an OpenGL scene.
         /// Matches original engine's OpenGL EndScene implementation.
+        /// OpenGL doesn't have BeginScene/EndScene like DirectX, this is a no-op.
         /// </summary>
         protected virtual void EndSceneOpenGL()
         {
-            // OpenGL EndScene implementation would go here
+            // OpenGL doesn't have EndScene, this is a no-op
             // Matches nwmain.exe: RenderInterface::EndScene(int) @ 0x1400beac0
         }
 
         /// <summary>
         /// Swaps OpenGL buffers.
         /// Matches original engine's OpenGL SwapBuffers implementation.
+        /// This calls SwapBuffers on the device context.
         /// </summary>
         protected virtual void SwapBuffersOpenGL()
         {
-            // OpenGL SwapBuffers implementation would go here
-            // Matches nwmain.exe: GLRender::SwapBuffers(SDL_Window*) @ 0x1400bb640
+            if (_glDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Swap buffers (matching nwmain.exe: GLRender::SwapBuffers @ 0x1400bb640)
+            // SwapBuffers is a GDI32 function that swaps the front and back buffers
+            SwapBuffers(_glDevice);
+        }
+
+        #endregion
+
+        #region OpenGL P/Invoke Declarations (Windows-only)
+
+        // OpenGL Constants
+        private const uint GL_TEXTURE_2D = 0x0DE1;
+        private const uint GL_RGBA = 0x1908;
+        private const uint GL_RGBA8 = 0x8058;
+        private const uint GL_UNSIGNED_BYTE = 0x1401;
+        private const uint GL_TEXTURE_WRAP_S = 0x2802;
+        private const uint GL_TEXTURE_WRAP_T = 0x2803;
+        private const uint GL_TEXTURE_MIN_FILTER = 0x2801;
+        private const uint GL_TEXTURE_MAG_FILTER = 0x2800;
+        private const uint GL_CLAMP_TO_EDGE = 0x812F;
+        private const uint GL_LINEAR = 0x2601;
+
+        // PIXELFORMATDESCRIPTOR flags
+        private const uint PFD_DRAW_TO_WINDOW = 0x00000004;
+        private const uint PFD_SUPPORT_OPENGL = 0x00000020;
+        private const uint PFD_DOUBLEBUFFER = 0x00000001;
+        private const byte PFD_TYPE_RGBA = 0;
+        private const byte PFD_MAIN_PLANE = 0;
+
+        // OpenGL/WGL Structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct PIXELFORMATDESCRIPTOR
+        {
+            public ushort nSize;
+            public ushort nVersion;
+            public uint dwFlags;
+            public byte iPixelType;
+            public byte cColorBits;
+            public byte cRedBits;
+            public byte cRedShift;
+            public byte cGreenBits;
+            public byte cGreenShift;
+            public byte cBlueBits;
+            public byte cBlueShift;
+            public byte cAlphaBits;
+            public byte cAlphaShift;
+            public byte cAccumBits;
+            public byte cAccumRedBits;
+            public byte cAccumGreenBits;
+            public byte cAccumBlueBits;
+            public byte cAccumAlphaBits;
+            public byte cDepthBits;
+            public byte cStencilBits;
+            public byte cAuxBuffers;
+            public byte iLayerType;
+            public byte bReserved;
+            public uint dwLayerMask;
+            public uint dwVisibleMask;
+            public uint dwDamageMask;
+        }
+
+        // Windows API functions
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("gdi32.dll")]
+        private static extern int ChoosePixelFormat(IntPtr hdc, ref PIXELFORMATDESCRIPTOR ppfd);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool SetPixelFormat(IntPtr hdc, int iPixelFormat, ref PIXELFORMATDESCRIPTOR ppfd);
+
+        [DllImport("gdi32.dll")]
+        private static extern int DescribePixelFormat(IntPtr hdc, int iPixelFormat, uint nBytes, ref PIXELFORMATDESCRIPTOR ppfd);
+
+        // OpenGL/WGL functions
+        [DllImport("opengl32.dll", SetLastError = true)]
+        private static extern IntPtr wglCreateContext(IntPtr hdc);
+
+        [DllImport("opengl32.dll", SetLastError = true)]
+        private static extern bool wglMakeCurrent(IntPtr hdc, IntPtr hglrc);
+
+        [DllImport("opengl32.dll", SetLastError = true)]
+        private static extern bool wglDeleteContext(IntPtr hglrc);
+
+        [DllImport("opengl32.dll", SetLastError = true)]
+        private static extern IntPtr wglGetCurrentContext();
+
+        [DllImport("opengl32.dll", SetLastError = true)]
+        private static extern IntPtr wglGetCurrentDC();
+
+        // OpenGL functions
+        [DllImport("opengl32.dll", EntryPoint = "glGenTextures")]
+        private static extern void glGenTextures(int n, ref uint textures);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
+        private static extern void glBindTexture(uint target, uint texture);
+
+        [DllImport("opengl32.dll", EntryPoint = "glTexImage2D")]
+        private static extern void glTexImage2D(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
+
+        [DllImport("opengl32.dll", EntryPoint = "glTexParameteri")]
+        private static extern void glTexParameteri(uint target, uint pname, int param);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool SwapBuffers(IntPtr hdc);
+
+        /// <summary>
+        /// Converts TextureFormat to OpenGL format.
+        /// </summary>
+        protected virtual uint ConvertTextureFormatToOpenGL(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                case TextureFormat.B8G8R8A8_UNorm:
+                    return GL_RGBA8;
+                default:
+                    return GL_RGBA8;
+            }
         }
 
         #endregion
