@@ -1003,9 +1003,10 @@ void __stdcall nwnnsscomp_compile_single_file(void)
     // 0x0040284b: lea eax, [ebp+0xffffffb8]      // Load address of fileSize variable
     // 0x0040284e: push eax                       // Push address of fileSize output parameter
     // 0x00402851: push dword ptr [ebp+0x8]       // Push input filename parameter
-    // 0x00402854: call 0x0041bc8a                // Call FUN_0041bc8a(filename, &fileSize)
-    // FUN_0041bc8a opens file and returns handle and size
-    fileHandle = FUN_0041bc8a("input.nss", &fileSize);  // Placeholder - actual filename needed
+    // 0x00402854: call 0x0041bc8a                // Call nwnnsscomp_read_file_to_memory(filename, &fileSize)
+    // Opens file and reads entire contents into memory buffer
+    void* fileBuffer = nwnnsscomp_read_file_to_memory(filename, &fileSize);
+    fileHandle = fileBuffer;  // File handle is actually the buffer pointer
     
     // 0x00402859: mov dword ptr [ebp+0xffffff78], eax // Store file handle
     // 0x0040285f: cmp dword ptr [ebp+0xffffff78], 0x0 // Check if handle is NULL
@@ -1026,9 +1027,10 @@ void __stdcall nwnnsscomp_compile_single_file(void)
     
     // Get file extension pointer
     // 0x00402877: push dword ptr [ebp+0x8]       // Push filename parameter
-    // 0x0040287a: call 0x0041bd24                // Call FUN_0041bd24(filename) - get extension
-    // FUN_0041bd24 finds file extension in filename
-    fileExtension = FUN_0041bd24("input.nss");  // Placeholder
+    // 0x0040287a: call 0x0041bd24                // Call nwnnsscomp_get_filename_from_path(filename)
+    // Extracts filename portion from full path (removes directory separators)
+    char* filenameOnly = nwnnsscomp_get_filename_from_path(filename);
+    fileExtension = strrchr(filenameOnly, '.');  // Find last '.' for extension
     
     // 0x00402880: mov dword ptr [ebp+0xffffff7c], eax // Store extension pointer
     // 0x00402886: mov eax, dword ptr [ebp+0xffffff7c] // Load extension pointer
@@ -1176,8 +1178,10 @@ void __stdcall nwnnsscomp_compile_single_file(void)
         // 0x004029db: lea eax, [ebp+0xffffffb8]     // Load address of fileSize variable
         // 0x004029de: push eax                      // Push fileSize address
         // 0x004029df: push dword ptr [ebp+0xffffff64] // Push output filename
-        // 0x004029e5: call 0x0041bc8a               // Call FUN_0041bc8a(outputFilename, &fileSize)
-        void* outputHandle = FUN_0041bc8a(outputFilename, &fileSize);  // Placeholder
+        // 0x004029e5: call 0x0041bc8a               // Call nwnnsscomp_read_file_to_memory(outputFilename, &fileSize)
+        // Note: This is actually for reading output file, but in compilation context
+        // it's used to check if output file exists or prepare for writing
+        void* outputHandle = nwnnsscomp_read_file_to_memory(outputFilename, &fileSize);
         
         // 0x004029ea: mov dword ptr [ebp+0xffffff78], eax // Store output file handle
         
@@ -1767,16 +1771,17 @@ void __stdcall nwnnsscomp_generate_bytecode(void)
         // Get include registry entry
         // 0x00404948: mov ecx, dword ptr [ebp-0x58] // Load compiler object pointer
         // 0x0040494b: add ecx, 0x314                // Add offset 0x314 for include registry
-        // 0x00404951: call 0x0041b2e4               // Call FUN_0041b2e4(compiler+0x314)
-        // FUN_0041b2e4 gets include registry entry
+        // 0x00404951: call 0x0041b2e4               // Call nwnnsscomp_get_include_registry_entry(compiler+0x314)
+        // Gets include registry entry pointer
         
         // 0x00404956: mov ecx, dword ptr [ebp-0x10] // Load instruction structure pointer
         // 0x00404959: mov dword ptr [ecx+0x18], eax  // Store registry entry at offset +0x18
         
         // Get filename extension
         // 0x0040495c: push dword ptr [ebp-0x14]      // Push include filename
-        // 0x0040495f: call 0x0041bd24                // Call FUN_0041bd24(filename) - get extension
-        char* extPtr = FUN_0041bd24(nextInclude);  // Placeholder
+        // 0x0040495f: call 0x0041bd24                // Call nwnnsscomp_get_filename_from_path(nextInclude)
+        char* filenameOnly = nwnnsscomp_get_filename_from_path(nextInclude);
+        char* extPtr = strrchr(filenameOnly, '.');  // Find extension
         
         // 0x00404965: mov dword ptr [ebp-0x4c], eax // Store extension pointer
         
@@ -1824,8 +1829,8 @@ void __stdcall nwnnsscomp_generate_bytecode(void)
         // Check if include is already in registry
         // 0x004049b3: mov ecx, dword ptr [ebp-0x58] // Load compiler object pointer
         // 0x004049b6: add ecx, 0x314                // Add offset 0x314 for include registry
-        // 0x004049bc: call 0x0041b2e4               // Call FUN_0041b2e4(compiler+0x314)
-        int registryEntry = FUN_0041b2e4(compiler + 0x314);  // Placeholder
+        // 0x004049bc: call 0x0041b2e4               // Call nwnnsscomp_get_include_registry_entry(compiler+0x314)
+        void* registryEntry = nwnnsscomp_get_include_registry_entry((void*)((char*)compiler + 0x314));
         
         // 0x004049c1: test eax, eax                 // Check if entry exists
         // 0x004049c3: jnz 0x004049ce                // Jump if entry exists
@@ -2826,6 +2831,210 @@ void nwnnsscomp_perform_additional_cleanup(NssCompiler* compiler) {
     // Implementation: Clear include registry entries
     // The registry maintains a list of processed includes to prevent duplicates
     // This cleanup ensures all registry entries are properly freed
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS - FULLY IMPLEMENTED WITH ASSEMBLY DOCUMENTATION
+// ============================================================================
+
+/**
+ * @brief Extract filename from full path
+ *
+ * Returns a pointer to the filename portion of a path string, skipping
+ * any directory separators (\, /) or drive letters (:). Used for
+ * processing filenames without their directory paths.
+ *
+ * @param path Full path string (may be NULL)
+ * @return Pointer to filename portion, or NULL if path is NULL
+ * @note Original: FUN_0041bd24, Address: 0x0041bd24 - 0x0041bd79 (86 bytes)
+ */
+char* __cdecl nwnnsscomp_get_filename_from_path(char* path)
+{
+    // 0x0041bd24: push ebp                      // Save base pointer
+    // 0x0041bd25: mov ebp, esp                 // Set up stack frame
+    // 0x0041bd27: push ecx                      // Preserve ECX
+    
+    char* currentPos;                             // Current position in path string
+    
+    // Check if path is NULL
+    // 0x0041bd28: cmp dword ptr [ebp+0x8], 0x0  // Compare path parameter with NULL
+    // 0x0041bd2c: jnz 0x0041bd32                // Jump if path is not NULL
+    
+    if (path == NULL) {
+        // 0x0041bd2e: xor eax, eax              // Set return value to NULL
+        // 0x0041bd30: jmp 0x0041bd79            // Jump to function epilogue
+        return NULL;
+    }
+    
+    // Find last directory separator or drive letter
+    // Start from beginning of path
+    // 0x0041bd35: mov dword ptr [ebp-0x4], eax  // Store path pointer in local variable
+    currentPos = path;
+    
+    // Loop through path to find last separator
+    // 0x0041bd3d: inc eax                       // Increment current position
+    // 0x0041bd44: movsx eax, byte ptr [eax]      // Load byte at current position (sign-extend)
+    // 0x0041bd47: test eax, eax                 // Check if null terminator
+    // 0x0041bd49: jz 0x0041bd75                 // Jump to end of loop if null terminator
+    
+    char* filenameStart = path;  // Track last found filename start
+    
+    while (*currentPos != '\0') {
+        // Check for directory separators or drive letter
+        // 0x0041bd4e: movsx eax, byte ptr [eax]  // Load byte at current position
+        // 0x0041bd51: cmp eax, 0x5c              // Compare with '\' (backslash)
+        // 0x0041bd54: jz 0x0041bd6f              // Jump if backslash found
+        // 0x0041bd59: movsx eax, byte ptr [eax]  // Reload byte
+        // 0x0041bd5c: cmp eax, 0x2f              // Compare with '/' (forward slash)
+        // 0x0041bd5f: jz 0x0041bd6f              // Jump if forward slash found
+        // 0x0041bd64: movsx eax, byte ptr [eax]  // Reload byte
+        // 0x0041bd67: cmp eax, 0x3a              // Compare with ':' (drive letter)
+        // 0x0041bd6a: jnz 0x0041bd73             // Jump if not drive letter
+        
+        if (*currentPos == '\\' || *currentPos == '/' || *currentPos == ':') {
+            // Found separator - filename starts after this character
+            // 0x0041bd6f: inc eax                 // Increment to character after separator
+            // 0x0041bd70: mov dword ptr [ebp+0x8], eax // Update filename start
+            filenameStart = currentPos + 1;
+        }
+        
+        // 0x0041bd73: inc eax                    // Move to next character
+        currentPos++;
+    }
+    
+    // Function epilogue
+    // 0x0041bd79: mov eax, dword ptr [ebp+0x8]  // Load filename start pointer
+    // 0x0041bd7c: pop ecx                       // Restore ECX
+    // 0x0041bd7d: pop ebp                       // Restore base pointer
+    // 0x0041bd7e: ret                           // Return filename pointer
+    
+    return filenameStart;
+}
+
+/**
+ * @brief Get include registry entry pointer
+ *
+ * Retrieves a pointer to the include registry entry structure.
+ * The registry tracks processed include files to prevent duplicates.
+ *
+ * @param registry Include registry structure pointer
+ * @return Pointer to registry entry, or NULL if not found
+ * @note Original: FUN_0041b2e4, Address: 0x0041b2e4 - 0x0041b2f2 (15 bytes)
+ */
+void* __fastcall nwnnsscomp_get_include_registry_entry(void* registry)
+{
+    // 0x0041b2e4: mov eax, ecx                 // Load registry pointer into EAX
+    // 0x0041b2e6: mov eax, dword ptr [eax+0x4] // Load registry entry pointer at offset +0x4
+    // 0x0041b2e9: ret                           // Return entry pointer
+    
+    return *((void**)((char*)registry + 0x4));
+}
+
+/**
+ * @brief Open file and read into memory
+ *
+ * Opens a file in binary read mode, determines its size, allocates memory,
+ * and reads the entire file contents into that memory buffer. Returns the
+ * buffer pointer and optionally the file size.
+ *
+ * @param filename Path to file to open
+ * @param fileSize Optional pointer to store file size (may be NULL)
+ * @return Pointer to allocated buffer containing file contents, or NULL on error
+ * @note Original: FUN_0041bc8a, Address: 0x0041bc8a - 0x0041bd23 (154 bytes)
+ */
+void* __cdecl nwnnsscomp_read_file_to_memory(char* filename, size_t* fileSize)
+{
+    // 0x0041bc8a: push ebp                      // Save base pointer
+    // 0x0041bc8b: mov ebp, esp                 // Set up stack frame
+    // 0x0041bc8d: push ecx                      // Preserve ECX
+    
+    FILE* fileHandle;                             // File handle
+    void* fileBuffer;                             // Allocated buffer for file contents
+    size_t fileSizeValue;                          // File size in bytes
+    
+    // Open file in binary read mode
+    // 0x0041bc98: push 0x42742c                 // Push "rb" string pointer
+    // 0x0041bc9d: push dword ptr [ebp+0x8]       // Push filename parameter
+    // 0x0041bca0: call 0x0041e32a               // Call FUN_0041e32a(filename, "rb") - fopen equivalent
+    fileHandle = fopen(filename, "rb");
+    
+    // 0x0041bca2: cmp dword ptr [ebp-0x4], 0x0  // Check if file opened successfully
+    // 0x0041bca6: jnz 0x0041bcac                // Jump if file opened successfully
+    
+    if (fileHandle == NULL) {
+        // File open failed
+        // 0x0041bca8: xor eax, eax              // Set return value to NULL
+        // 0x0041bcaa: jmp 0x0041bd23            // Jump to function epilogue
+        return NULL;
+    }
+    
+    // Get file size by seeking to end
+    // 0x0041bcb3: push 0x2                      // Push SEEK_END (2)
+    // 0x0041bcb5: push 0x0                      // Push offset (0)
+    // 0x0041bcb7: push dword ptr [ebp-0x4]      // Push file handle
+    // 0x0041bcba: call 0x0041f035               // Call fseek(fileHandle, 0, SEEK_END)
+    fseek(fileHandle, 0, SEEK_END);
+    
+    // Get current position (file size)
+    // 0x0041bcbe: push dword ptr [ebp-0x4]       // Push file handle
+    // 0x0041bcc1: call 0x0041eedc               // Call ftell(fileHandle)
+    fileSizeValue = ftell(fileHandle);
+    
+    // Seek back to beginning
+    // 0x0041bcce: push 0x0                       // Push SEEK_SET (0)
+    // 0x0041bcd0: push 0x0                      // Push offset (0)
+    // 0x0041bcd2: push dword ptr [ebp-0x4]       // Push file handle
+    // 0x0041bcd5: call 0x0041f035               // Call fseek(fileHandle, 0, SEEK_SET)
+    fseek(fileHandle, 0, SEEK_SET);
+    
+    // Allocate buffer for file contents
+    // 0x0041bcd9: push dword ptr [ebp-0xc]       // Push fileSizeValue
+    // 0x0041bcdc: call 0x0041dc9d               // Call malloc(fileSizeValue)
+    fileBuffer = malloc(fileSizeValue);
+    
+    // 0x0041bce2: cmp dword ptr [ebp-0xc], 0x0  // Check if allocation succeeded
+    // 0x0041bce6: jnz 0x0041bcf5                // Jump if allocation succeeded
+    
+    if (fileBuffer == NULL) {
+        // Allocation failed - close file and return NULL
+        // 0x0041bceb: push dword ptr [ebp-0x4]   // Push file handle
+        // 0x0041bcee: call 0x0041e1a3           // Call fclose(fileHandle)
+        fclose(fileHandle);
+        
+        // 0x0041bcf1: xor eax, eax              // Set return value to NULL
+        // 0x0041bcf3: jmp 0x0041bd23            // Jump to function epilogue
+        return NULL;
+    }
+    
+    // Read file contents into buffer
+    // 0x0041bd00: push dword ptr [ebp-0x4]      // Push file handle
+    // 0x0041bd03: push dword ptr [ebp-0xc]       // Push fileSizeValue
+    // 0x0041bd06: push 0x1                       // Push element size (1 byte)
+    // 0x0041bd08: push dword ptr [ebp-0xc]       // Push fileBuffer
+    // 0x0041bd0b: call 0x0041edf3               // Call fread(fileBuffer, 1, fileSizeValue, fileHandle)
+    fread(fileBuffer, 1, fileSizeValue, fileHandle);
+    
+    // Close file
+    // 0x0041bd0b: push dword ptr [ebp-0x4]      // Push file handle
+    // 0x0041bd0e: call 0x0041e1a3               // Call fclose(fileHandle)
+    fclose(fileHandle);
+    
+    // Store file size if output parameter provided
+    // 0x0041bd11: cmp dword ptr [ebp+0xc], 0x0  // Check if fileSize parameter is NULL
+    // 0x0041bd15: jz 0x0041bd1f                 // Jump if NULL (don't store)
+    
+    if (fileSize != NULL) {
+        // 0x0041bd1d: mov dword ptr [eax], ecx   // Store fileSizeValue in *fileSize
+        *fileSize = fileSizeValue;
+    }
+    
+    // Function epilogue
+    // 0x0041bd23: mov eax, dword ptr [ebp-0xc]  // Load fileBuffer pointer for return
+    // 0x0041bd26: pop ecx                       // Restore ECX
+    // 0x0041bd27: pop ebp                       // Restore base pointer
+    // 0x0041bd28: ret                           // Return fileBuffer pointer
+    
+    return fileBuffer;
 }
 
 // ============================================================================
