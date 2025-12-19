@@ -10,6 +10,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Runtime.Core.Journal;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 {
@@ -57,6 +58,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         private readonly Func<string, byte[]> _scriptLoader;
         private readonly IVoicePlayer _voicePlayer;
         private readonly ILipSyncController _lipSyncController;
+        [CanBeNull]
+        private readonly JournalSystem _journalSystem;
 
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -114,13 +117,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             Func<string, DLG> dialogueLoader,
             Func<string, byte[]> scriptLoader,
             IVoicePlayer voicePlayer = null,
-            ILipSyncController lipSyncController = null)
+            ILipSyncController lipSyncController = null,
+            [CanBeNull] JournalSystem journalSystem = null)
             : base(vm, world, engineApi, globals)
         {
             _dialogueLoader = dialogueLoader ?? throw new ArgumentNullException("dialogueLoader");
             _scriptLoader = scriptLoader ?? throw new ArgumentNullException("scriptLoader");
             _voicePlayer = voicePlayer;
             _lipSyncController = lipSyncController;
+            _journalSystem = journalSystem;
         }
 
         /// <summary>
@@ -385,6 +390,18 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 
             // Execute Script1 (on-enter)
             ExecuteNodeScript(entry.Script1, entry);
+
+            // Process quest fields if present
+            // Based on swkotor2.exe: FUN_005e61d0 @ 0x005e61d0
+            // Located via string references: "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8
+            // Called from FUN_005e7cb0 @ 0x005e7f85 and FUN_005ec340 @ 0x005ec6a9
+            // Original implementation: Processes quest fields when dialogue entry node is entered
+            // - Checks if quest string is not empty
+            // - Gets current quest entry count
+            // - If quest entry index < current count, updates existing entry
+            // - Otherwise, adds new quest entry
+            // - Updates journal UI and notifies journal system
+            ProcessQuestFields(entry);
 
             // Get display text
             string text = GetNodeText(entry);
@@ -798,6 +815,142 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             // Use base class implementation which provides common execution context creation
             // This ensures consistency across all engines while allowing engine-specific overrides if needed
             return base.CreateExecutionContext(caller, null);
+        }
+
+        /// <summary>
+        /// Processes quest fields from a dialogue entry node.
+        /// </summary>
+        /// <param name="entry">The dialogue entry node</param>
+        /// <remarks>
+        /// Quest Field Processing (swkotor2.exe: FUN_005e61d0 @ 0x005e61d0):
+        /// - Called from FUN_005e7cb0 @ 0x005e7f85 (dialogue entry processing)
+        /// - Called from FUN_005ec340 @ 0x005ec6a9 (dialogue reply processing)
+        /// - Located via string references: "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8
+        /// - Original implementation:
+        ///   1. Checks if quest string is not null/empty
+        ///   2. Gets player object from world
+        ///   3. Gets journal system
+        ///   4. Gets current quest entry count for the quest
+        ///   5. If quest entry index < current count: Updates existing entry
+        ///   6. Otherwise: Adds new quest entry
+        ///   7. Updates journal UI and notifies journal system
+        /// - Quest field offsets in node structure:
+        ///   - Quest string: offset 0x98 (param_1)
+        ///   - QuestEntry: offset 0xa0 (param_2)
+        ///   - Player ID: param_3
+        /// - Cross-engine analysis:
+        ///   - swkotor.exe: Similar quest processing (needs reverse engineering)
+        ///   - nwmain.exe: Journal system uses different format (JRL files)
+        ///   - daorigins.exe: Quest system may differ (needs reverse engineering)
+        /// </remarks>
+        private void ProcessQuestFields(DLGEntry entry)
+        {
+            if (entry == null || _journalSystem == null)
+            {
+                return;
+            }
+
+            // Check if quest field is present
+            string questTag = entry.Quest;
+            if (string.IsNullOrEmpty(questTag))
+            {
+                return;
+            }
+
+            // Get quest entry index (defaults to 0 if not set)
+            int questEntryIndex = entry.QuestEntry ?? 0;
+
+            // Get current quest entry count
+            // Based on swkotor2.exe: FUN_00600c30 - Get quest entry count
+            // Original implementation checks if entry index < current count
+            List<JournalEntry> existingEntries = _journalSystem.GetEntriesForQuest(questTag);
+            int currentEntryCount = existingEntries.Count;
+
+            // Process quest entry
+            // Based on swkotor2.exe: If entry index < current count, update existing entry
+            // Otherwise, add new entry
+            if (questEntryIndex < currentEntryCount)
+            {
+                // Update existing entry
+                // Note: JournalSystem doesn't currently support updating entries
+                // For now, we'll add a new entry (matching behavior when entry index >= count)
+                // TODO: Add UpdateEntry method to JournalSystem for proper entry updates
+                JournalEntry existingEntry = existingEntries[questEntryIndex];
+                if (existingEntry != null)
+                {
+                    // Entry exists - in original engine this would update it
+                    // For now, we'll just ensure the quest state is set
+                    int currentState = _journalSystem.GetQuestState(questTag);
+                    if (currentState == 0)
+                    {
+                        // Quest not started yet - start it
+                        _journalSystem.SetQuestState(questTag, 1);
+                    }
+                }
+            }
+            else
+            {
+                // Add new quest entry
+                // Based on swkotor2.exe: FUN_00600dd0 - Add quest entry
+                // Original implementation:
+                // - Sets quest entry text (from JRL file or dialogue)
+                // - Sets quest entry state
+                // - Adds entry to journal
+                // - Updates journal UI
+                // - Notifies journal system
+
+                // Get quest data to determine entry text
+                QuestData quest = _journalSystem.GetQuest(questTag);
+                string entryText = string.Empty;
+
+                if (quest != null)
+                {
+                    // Get text from quest stage data
+                    QuestStage stage = quest.GetStage(questEntryIndex);
+                    if (stage != null)
+                    {
+                        entryText = stage.Text;
+                    }
+                }
+
+                // If no quest data or stage text, use empty string
+                // Original engine would look up text from JRL file
+                if (string.IsNullOrEmpty(entryText))
+                {
+                    entryText = $"Quest entry {questEntryIndex}"; // Placeholder
+                }
+
+                // Add journal entry
+                // Based on swkotor2.exe: Journal entry addition
+                // Original implementation adds entry and updates quest state
+                _journalSystem.AddEntry(questTag, questEntryIndex, entryText, 0);
+
+                // Update quest state if needed
+                int currentState = _journalSystem.GetQuestState(questTag);
+                if (currentState == 0)
+                {
+                    // Quest not started yet - start it
+                    _journalSystem.SetQuestState(questTag, 1);
+                }
+            }
+
+            // Process plot index and XP percentage if present
+            // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870
+            // Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
+            // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
+            if (entry.PlotIndex >= 0)
+            {
+                // Process plot index
+                // TODO: Implement plot system integration
+                // Original engine updates plot flags based on PlotIndex
+            }
+
+            if (entry.PlotXpPercentage > 0)
+            {
+                // Process plot XP percentage
+                // TODO: Implement plot XP calculation
+                // Original engine awards XP based on PlotXpPercentage
+            }
         }
 
         #endregion

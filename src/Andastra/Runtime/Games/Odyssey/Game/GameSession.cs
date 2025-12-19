@@ -255,7 +255,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 (resRef) => LoadDialogue(resRef),
                 (resRef) => LoadScript(resRef),
                 null, // voicePlayer
-                null  // lipSyncController
+                null, // lipSyncController
+                _journalSystem // journalSystem
             );
 
             // Initialize module transition system
