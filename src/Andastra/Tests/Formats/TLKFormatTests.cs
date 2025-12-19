@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Resource.Formats.TLK;
+using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
@@ -109,7 +109,7 @@ namespace Andastra.Parsing.Tests.Formats
             TLK tlk = new TLKBinaryReader(BinaryTestFile).Load();
 
             // Validate string data table structure
-            tlk.Count.Should().BeGreaterOrEqualTo(0, "String count should be non-negative");
+            tlk.Count.Should().BeGreaterThanOrEqualTo(0, "String count should be non-negative");
 
             // Validate each entry has required fields (matching string_data_entry in TLK.ksy)
             foreach (var entry in tlk.Entries)
@@ -138,7 +138,7 @@ namespace Andastra.Parsing.Tests.Formats
                 // Calculate expected file size: header (20) + entries (count * 40) + text data
                 long expectedMinSize = 20 + (tlk.Count * expectedEntrySize);
                 FileInfo fileInfo = new FileInfo(BinaryTestFile);
-                fileInfo.Length.Should().BeGreaterOrEqualTo(expectedMinSize, 
+                fileInfo.Length.Should().BeGreaterThanOrEqualTo(expectedMinSize, 
                     "File should be at least header + string data table size");
             }
         }
