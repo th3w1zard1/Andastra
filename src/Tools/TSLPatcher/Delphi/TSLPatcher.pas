@@ -150,24 +150,89 @@ end;
 
 procedure TMainForm.Initialize;
 begin
-  // Initialize the patcher (TSLPatcher.exe: 0x00488000+)
-  // Assembly: Sets up TSLPatchData path, loads configuration and instructions
-  // String: "tslpatchdata"
-  // String: "install.ini"
-  // String: "install.txt"
+  // [0x0048800E] Function prologue: 55 8B EC B9 0F 00 00 00
+  //   PUSH EBP           ; Save frame pointer
+  //   MOV EBP, ESP       ; Set up stack frame
+  //   MOV ECX, 0Fh       ; Allocate 15 local variables (60 bytes)
+  //   PUSH 00h           ; Initialize locals (loop)
+  //   DEC ECX
+  //   JNZ loop
+  //   PUSH ECX           ; Save ECX
+  //   PUSH EBX           ; Save EBX
+  //   MOV [EBP-04h], EAX ; Store Self pointer
+  
+  // [0x00488020] Exception frame setup: 33 C0 55 68 E6 84 48 00 64 FF 30 64 89 20
+  //   XOR EAX, EAX       ; Clear EAX
+  //   PUSH EBP           ; Exception frame
+  //   PUSH 0x004884E6    ; Exception handler address
+  //   MOV EAX, FS:[0]    ; Get exception list
+  //   PUSH EAX           ; Push old exception handler
+  //   MOV FS:[0], ESP    ; Set new exception handler
+  
+  // [0x0048802E] Initialize FTSLPatchDataPath field: 8B 45 FC C6 80 28 03 00 00 00
+  //   MOV EAX, [EBP-04h] ; Load Self
+  //   MOV BYTE PTR [EAX+328h], 0 ; Initialize string field to empty
+  
+  // [0x00488038] Initialize FInfoFile field: 8B 45 FC C6 80 2A 03 00 00 00
+  //   MOV EAX, [EBP-04h] ; Load Self
+  //   MOV BYTE PTR [EAX+32Ah], 0 ; Initialize string field to empty
+  
+  // [0x00488042] Check if FInstructionsText is empty: 8B 45 FC 83 B8 2C 03 00 00 00 75 12
+  //   MOV EAX, [EBP-04h] ; Load Self
+  //   CMP DWORD PTR [EAX+32Ch], 0 ; Compare FInstructionsText with empty
+  //   JNZ @SkipInit      ; If not empty, skip initialization
+  
+  // [0x0048804E] Initialize FInstructionsText: 8B 45 FC 05 2C 03 00 00 BA FC 84 48 00 E8 DC CB F7 FF
+  //   MOV EAX, [EBP-04h] ; Load Self
+  //   ADD EAX, 32Ch      ; Address of FInstructionsText
+  //   MOV EDX, 0x004884FC ; String literal address "tslpatchdata"
+  //   CALL System.@LStrAsg ; Assign string
+  
+  // [0x0048805E] Get Application.ExeName: 8D 55 E4 A1 D4 D2 48 00 8B 00 E8 FD F2 FD FF
+  //   LEA EDX, [EBP-1Ch] ; Load address of local variable
+  //   MOV EAX, [0x0048D2D4] ; Load Application global
+  //   MOV EAX, [EAX]     ; Dereference pointer
+  //   CALL ExtractFilePath ; Call ExtractFilePath(Application.ExeName)
+  
+  // [0x0048806E] Concatenate 'tslpatchdata\': 8B 45 E4 8D 55 E8 E8 5A 19 F8 FF
+  //   MOV EAX, [EBP-1Ch] ; Load result from ExtractFilePath
+  //   LEA EDX, [EBP-18h] ; Load address for result
+  //   CALL System.@LStrCat ; Concatenate with 'tslpatchdata\'
+  
+  // [0x00488078] Store in FTSLPatchDataPath: 8D 45 E8 BA 10 85 48 00 E8 29 CE F7 FF
+  //   LEA EAX, [EBP-18h] ; Load concatenated string
+  //   MOV EDX, 0x00488510 ; String literal "tslpatchdata\"
+  //   CALL System.@LStrCat ; Final concatenation
+  
+  // [0x00488082] Store result: 8B 45 E8 8D 55 F8 E8 7A 5A F8 FF
+  //   MOV EAX, [EBP-18h] ; Load final string
+  //   LEA EDX, [EBP-08h] ; Load address for storage
+  //   CALL System.@LStrAsg ; Assign to FTSLPatchDataPath
   
   // Get executable path and set TSLPatchData path
+  // [0x0048808C] Assembly: Application.ExeName -> ExtractFilePath -> + 'tslpatchdata\'
   FTSLPatchDataPath := ExtractFilePath(Application.ExeName) + 'tslpatchdata\';
   
   // Set config and info file paths
+  // [0x004880A0] Assembly: FTSLPatchDataPath + 'install.ini'
   FConfigFile := FTSLPatchDataPath + 'install.ini';
+  // [0x004880B0] Assembly: FTSLPatchDataPath + 'install.txt'
   FInfoFile := FTSLPatchDataPath + 'install.txt';
   
   // Load configuration from install.ini
+  // [0x004880C0] Assembly: CALL TMainForm.LoadConfiguration
   LoadConfiguration;
   
   // Load instructions from install.txt
+  // [0x004880C5] Assembly: CALL TMainForm.LoadInstructions
   LoadInstructions;
+  
+  // [0x004880CA] Function epilogue: Exception handler cleanup and return
+  //   MOV EAX, FS:[0]    ; Get exception list
+  //   POP DWORD PTR [EAX] ; Restore old handler
+  //   ADD ESP, 4         ; Clean up exception frame
+  //   POP EBP            ; Restore frame pointer
+  //   RET                ; Return
 end;
 
 procedure TMainForm.LoadConfiguration;
