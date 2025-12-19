@@ -136,6 +136,17 @@ namespace HolocronToolset.Editors
             linkPanel.Children.Add(_logicSpin);
             panel.Children.Add(linkPanel);
 
+            // Initialize script parameter widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QSpinBox script1Param1Spin
+            _script1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _script1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            var scriptPanel = new StackPanel();
+            scriptPanel.Children.Add(new TextBlock { Text = "Script1 Param1:" });
+            scriptPanel.Children.Add(_script1Param1Spin);
+            panel.Children.Add(scriptPanel);
+
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
             _animsList = new ListBox();
@@ -335,6 +346,10 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
+        
+        // Expose script widgets for testing
+        // Matching PyKotor implementation: editor.ui.script1Param1Spin
+        public NumericUpDown Script1Param1Spin => _script1Param1Spin;
 
         /// <summary>
         /// Handles selection changes in the dialog tree.
@@ -367,6 +382,10 @@ namespace HolocronToolset.Editors
                 if (_questEntrySpin != null)
                 {
                     _questEntrySpin.Value = 0;
+                }
+                if (_script1Param1Spin != null)
+                {
+                    _script1Param1Spin.Value = 0;
                 }
                 _nodeLoadedIntoUi = true;
                 return;
@@ -429,6 +448,14 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 _questEntrySpin.Value = node.QuestEntry ?? 0;
+            }
+            
+            // Load script1 param1
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2410
+            // Original: self.ui.script1Param1Spin.setValue(item.link.node.script1_param1)
+            if (_script1Param1Spin != null && node != null)
+            {
+                _script1Param1Spin.Value = node.Script1Param1;
             }
         }
 
@@ -500,6 +527,14 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 node.QuestEntry = _questEntrySpin.Value.HasValue ? _questEntrySpin.Value.Value : 0;
+            }
+            
+            // Update script1 param1
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2499
+            // Original: item.link.node.script1_param1 = self.ui.script1Param1Spin.value()
+            if (_script1Param1Spin != null && node != null)
+            {
+                node.Script1Param1 = _script1Param1Spin.Value.HasValue ? (int)_script1Param1Spin.Value.Value : 0;
             }
         }
 
