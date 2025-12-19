@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Games.Odyssey
                         }
                         else
                         {
-                            HandleScriptEvent(targetEntity, eventType, eventSubtype);
+                            HandleScriptEvent(targetEntity, eventType, eventSubtype, sourceEntity);
                         }
                     }
                     break;
@@ -639,17 +639,149 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Handles script hook events.
         /// </summary>
+        /// <param name="entity">The entity to execute the script event on.</param>
+        /// <param name="eventType">The event type (typically EVENT_SIGNAL_EVENT = 10).</param>
+        /// <param name="eventSubtype">The script event subtype (ON_HEARTBEAT, ON_PERCEPTION, etc.).</param>
+        /// <param name="sourceEntity">The entity that triggered the event (optional, used as triggerer in script execution).</param>
         /// <remarks>
         /// Based on SIGNAL_EVENT (10) with subtypes for different script hooks.
         /// Executes entity-specific scripts based on event type.
         /// Handles heartbeat, perception, dialogue, etc.
+        ///
+        /// Implementation based on swkotor2.exe: DispatchEvent @ 0x004dcfb0
+        /// - When eventType is 10 (EVENT_SIGNAL_EVENT), eventSubtype maps to CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants
+        /// - Maps eventSubtype to ScriptEvent enum (0=ON_HEARTBEAT, 1=ON_PERCEPTION, 2=ON_SPELL_CAST_AT, 4=ON_DAMAGED, etc.)
+        /// - Gets script ResRef from entity's IScriptHooksComponent for the mapped ScriptEvent
+        /// - Fires script event via world's EventBus, which queues and processes script execution
+        /// - Source entity (from DispatchEvent call) is passed as triggerer to script execution
+        ///
+        /// Event subtype mapping (based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 lines 132-246):
+        /// - 0: ON_HEARTBEAT (CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT @ 0x007bcb90)
+        /// - 1: ON_PERCEPTION (CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION @ 0x007bcb68)
+        /// - 2: ON_SPELL_CAST_AT (CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT @ 0x007bcb3c)
+        /// - 4: ON_DAMAGED (CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14)
+        /// - 5: ON_DISTURBED (CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED @ 0x007bcaec)
+        /// - 7: ON_CONVERSATION (CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4)
+        /// - 8: ON_SPAWN (CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN @ 0x007bca9c)
+        /// - 9: ON_RESTED (CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED @ 0x007bca78)
+        /// - 10: ON_DEATH (CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH @ 0x007bca54)
+        /// - 0xb: ON_USER_DEFINED (CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT @ 0x007bca24)
+        /// - 0xc: ON_ENTER (CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER @ 0x007bc9f8)
+        /// - 0xd: ON_EXIT (CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT @ 0x007bc9cc)
+        /// - 0xe: ON_PLAYER_ENTER (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER @ 0x007bc9a0)
+        /// - 0xf: ON_PLAYER_EXIT (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT @ 0x007bc974)
+        /// - 0x10: ON_MODULE_START (CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START @ 0x007bc948)
+        /// - 0x11: ON_MODULE_LOAD (CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD @ 0x007bc91c)
+        /// - 0x12: ON_ACTIVATE_ITEM (CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007bc8f0)
+        /// - 0x13: ON_ACQUIRE_ITEM (CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x007bc8c4)
+        /// - 0x14: ON_UNACQUIRE_ITEM (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x007bc89c)
+        /// - 0x15: ON_EXHAUSTED (CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED @ 0x007bc868)
+        /// - 0x16: ON_OPEN (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN @ 0x007bc844)
+        /// - 0x17: ON_CLOSE (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE @ 0x007bc820)
+        /// - 0x18: ON_DISARM (CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM @ 0x007bc7fc)
+        /// - 0x19: ON_USED (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED @ 0x007bc7d8)
+        /// - 0x1a: ON_TrapTriggered (CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED @ 0x007bc778)
+        /// - 0x1b: ON_DISTURBED (CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED @ 0x007bc778)
+        /// - 0x1c: ON_LOCK (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED @ 0x007bc754)
+        /// - 0x1d: ON_UNLOCK (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED @ 0x007bc72c)
+        /// - 0x1e: ON_CLICK (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED @ 0x007bc704)
+        /// - 0x1f: ON_BLOCKED (CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED @ 0x007bc6d8)
+        /// - 0x20: ON_PLAYER_DYING (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING @ 0x007bc6ac)
+        /// - 0x21: ON_SPAWN_BUTTON_DOWN (CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED @ 0x007bc678)
+        /// - 0x22: ON_FAIL_TO_OPEN (CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN @ 0x007bc64c)
+        /// - 0x23: ON_PLAYER_REST (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST @ 0x007bc620)
+        /// - 0x24: ON_PLAYER_DEATH (CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE @ 0x007bc5ec)
+        /// - 0x25: ON_PLAYER_LEVEL_UP (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP @ 0x007bc5bc)
+        /// - 0x26: ON_EQUIP_ITEM (CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594)
+        ///
+        /// Script execution flow:
+        /// 1. Map eventSubtype to ScriptEvent enum
+        /// 2. Get world from entity
+        /// 3. Fire script event via world.EventBus.FireScriptEvent(entity, scriptEvent, sourceEntity)
+        /// 4. EventBus queues the event and processes it during frame update
+        /// 5. Script executor executes the script ResRef from entity's IScriptHooksComponent
         /// </remarks>
-        protected override void HandleScriptEvent(IEntity entity, int eventType, int eventSubtype)
+        protected override void HandleScriptEvent(IEntity entity, int eventType, int eventSubtype, IEntity sourceEntity = null)
         {
-            // TODO: Implement script event handling
-            // Execute appropriate script based on eventSubtype
-            // Pass event parameters to script execution
-            // Handle script return values and effects
+            if (entity == null)
+            {
+                return;
+            }
+
+            // Get world from entity
+            IWorld world = entity.World;
+            if (world == null || world.EventBus == null)
+            {
+                return;
+            }
+
+            // Map eventSubtype to ScriptEvent enum
+            // Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 lines 132-246
+            // Maps CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants to ScriptEvent enum values
+            Core.Enums.ScriptEvent scriptEvent = MapEventSubtypeToScriptEvent(eventSubtype);
+
+            // Fire script event via EventBus
+            // EventBus will queue the event and process it during frame update
+            // Script executor will execute the script ResRef from entity's IScriptHooksComponent
+            // Source entity is passed as triggerer to script execution context
+            world.EventBus.FireScriptEvent(entity, scriptEvent, sourceEntity);
+        }
+
+        /// <summary>
+        /// Maps event subtype to ScriptEvent enum.
+        /// </summary>
+        /// <param name="eventSubtype">The event subtype from EVENT_SIGNAL_EVENT.</param>
+        /// <returns>The corresponding ScriptEvent enum value.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 lines 132-246.
+        /// Maps CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants to ScriptEvent enum.
+        /// Returns ScriptEvent.OnUserDefined for unknown subtypes.
+        /// </remarks>
+        private Core.Enums.ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype)
+        {
+            switch (eventSubtype)
+            {
+                case 0: return Core.Enums.ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
+                case 1: return Core.Enums.ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
+                case 2: return Core.Enums.ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
+                case 4: return Core.Enums.ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
+                case 5: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
+                case 7: return Core.Enums.ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
+                case 8: return Core.Enums.ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
+                case 9: return Core.Enums.ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED
+                case 10: return Core.Enums.ScriptEvent.OnDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH
+                case 0xb: return Core.Enums.ScriptEvent.OnUserDefined; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT
+                case 0xc: return Core.Enums.ScriptEvent.OnEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER
+                case 0xd: return Core.Enums.ScriptEvent.OnExit; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT
+                case 0xe: return Core.Enums.ScriptEvent.OnClientEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER
+                case 0xf: return Core.Enums.ScriptEvent.OnClientLeave; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT
+                case 0x10: return Core.Enums.ScriptEvent.OnModuleStart; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START
+                case 0x11: return Core.Enums.ScriptEvent.OnModuleLoad; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD
+                case 0x12: return Core.Enums.ScriptEvent.OnActivateItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM
+                case 0x13: return Core.Enums.ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM
+                case 0x14: return Core.Enums.ScriptEvent.OnUnacquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM
+                case 0x15: return Core.Enums.ScriptEvent.OnExhausted; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED
+                case 0x16: return Core.Enums.ScriptEvent.OnOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN
+                case 0x17: return Core.Enums.ScriptEvent.OnClose; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE
+                case 0x18: return Core.Enums.ScriptEvent.OnDisarm; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM
+                case 0x19: return Core.Enums.ScriptEvent.OnUsed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USED
+                case 0x1a: return Core.Enums.ScriptEvent.OnTrapTriggered; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED
+                case 0x1b: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED (same as 5, but different context)
+                case 0x1c: return Core.Enums.ScriptEvent.OnLock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED
+                case 0x1d: return Core.Enums.ScriptEvent.OnUnlock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED
+                case 0x1e: return Core.Enums.ScriptEvent.OnClick; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED
+                case 0x1f: return Core.Enums.ScriptEvent.OnBlocked; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED
+                case 0x20: return Core.Enums.ScriptEvent.OnPlayerDying; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING
+                case 0x21: return Core.Enums.ScriptEvent.OnSpawnButtonDown; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED
+                case 0x22: return Core.Enums.ScriptEvent.OnFailToOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN
+                case 0x23: return Core.Enums.ScriptEvent.OnPlayerRest; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST
+                case 0x24: return Core.Enums.ScriptEvent.OnPlayerDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE
+                case 0x25: return Core.Enums.ScriptEvent.OnPlayerLevelUp; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP
+                case 0x26: return Core.Enums.ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM (Note: OnEquipItem not in enum, using OnAcquireItem)
+                default:
+                    // Unknown event subtype - use OnUserDefined as fallback
+                    return Core.Enums.ScriptEvent.OnUserDefined;
+            }
         }
 
         /// <summary>

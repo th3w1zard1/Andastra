@@ -91,11 +91,16 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Handles script hook events.
         /// </summary>
+        /// <param name="entity">The entity to execute the script event on.</param>
+        /// <param name="eventType">The event type (typically EVENT_SIGNAL_EVENT = 10).</param>
+        /// <param name="eventSubtype">The script event subtype (ON_HEARTBEAT, ON_PERCEPTION, etc.).</param>
+        /// <param name="sourceEntity">The entity that triggered the event (optional, used as triggerer in script execution).</param>
         /// <remarks>
         /// ON_HEARTBEAT (0), ON_PERCEPTION (1), ON_SPELL_CAST_AT (2), etc.
         /// Executes entity-specific scripts based on event type.
+        /// Source entity is passed as triggerer to script execution context.
         /// </remarks>
-        protected abstract void HandleScriptEvent(IEntity entity, int eventType, int eventSubtype);
+        protected abstract void HandleScriptEvent(IEntity entity, int eventType, int eventSubtype, IEntity sourceEntity = null);
 
         /// <summary>
         /// Queues an event for later processing.
