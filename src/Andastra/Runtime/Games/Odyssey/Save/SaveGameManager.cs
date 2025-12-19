@@ -132,8 +132,9 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 erf.SetData("PARTYTABLE", ResourceType.GFF, partyData);
 
                 // 4. Save per-module state ([module]_s.rim)
-                // TODO: PLACEHOLDER - This would contain area states, entity positions, etc.
-                // TODO: PLACEHOLDER - For now, we'll create a placeholder
+                // Based on swkotor2.exe: Module state saved as ERF archive containing area state GFF files
+                // Original implementation: Each visited area has its state saved (entity positions, door/placeable states, etc.)
+                // CreateModuleStateERF saves all area states to GFF format and packages them in ERF archive
                 string moduleRimName = saveData.CurrentModule + "_s";
                 ERF moduleRim = CreateModuleStateERF(saveData);
                 byte[] moduleRimData = SerializeERF(moduleRim);
