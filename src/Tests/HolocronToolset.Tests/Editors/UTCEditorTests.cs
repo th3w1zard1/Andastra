@@ -1268,7 +1268,7 @@ namespace HolocronToolset.Tests.Editors
             // First, we need to set a class1 so the level spin is meaningful
             var class1Select = GetClass1Select(editor);
             class1Select.Should().NotBeNull("Class1 select should exist");
-            
+
             // Set class1 to a valid index (assuming at least one class exists)
             if (class1Select.Items != null && class1Select.Items.Count > 0)
             {
@@ -1326,13 +1326,13 @@ namespace HolocronToolset.Tests.Editors
             var class2Select = GetClass2Select(editor);
             class1Select.Should().NotBeNull("Class1 select should exist");
             class2Select.Should().NotBeNull("Class2 select should exist");
-            
+
             // Set class1 to a valid index
             if (class1Select.Items != null && class1Select.Items.Count > 0)
             {
                 class1Select.SelectedIndex = 0;
             }
-            
+
             // Set class2 to a valid index (skip the "[Unset]" placeholder if it exists)
             if (class2Select.Items != null && class2Select.Items.Count > 1)
             {
@@ -1450,14 +1450,94 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateAllScriptFields: All script fields manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_comments (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103
         // Original: def test_utc_editor_manipulate_comments(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating comments field.
         [Fact]
         public void TestUtcEditorManipulateComments()
         {
-            // TODO: STUB - Implement comments field manipulation test (empty, single line, multi-line, special chars, very long)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103
-            throw new NotImplementedException("TestUtcEditorManipulateComments: Comments field manipulation test not yet implemented");
+            var editor = CreateEditorWithInstallation();
+            editor.New();
+            var commentsEdit = GetCommentsEdit(editor);
+            commentsEdit.Should().NotBeNull("Comments edit box should exist");
+
+            // Test 1: Set comments to empty string
+            commentsEdit.Text = "";
+            var (data1, _) = editor.Build();
+            data1.Should().NotBeNull();
+            var gff1 = GFF.FromBytes(data1);
+            var utc1 = UTCHelpers.ConstructUtc(gff1);
+            utc1.Comment.Should().Be("", "Comment should be empty string");
+
+            // Test 2: Set comments to a single line
+            commentsEdit.Text = "This is a test comment";
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull();
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            utc2.Comment.Should().Be("This is a test comment", "Comment should be 'This is a test comment'");
+
+            // Test 3: Set comments to multi-line
+            commentsEdit.Text = "Line 1\nLine 2\nLine 3";
+            var (data3, _) = editor.Build();
+            data3.Should().NotBeNull();
+            var gff3 = GFF.FromBytes(data3);
+            var utc3 = UTCHelpers.ConstructUtc(gff3);
+            utc3.Comment.Should().Be("Line 1\nLine 2\nLine 3", "Comment should handle multi-line text");
+
+            // Test 4: Set comments with special characters
+            commentsEdit.Text = "Comment with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?";
+            var (data4, _) = editor.Build();
+            data4.Should().NotBeNull();
+            var gff4 = GFF.FromBytes(data4);
+            var utc4 = UTCHelpers.ConstructUtc(gff4);
+            utc4.Comment.Should().Be("Comment with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?", "Comment should handle special characters");
+
+            // Test 5: Set comments to a very long string
+            string longComment = new string('A', 1000);
+            commentsEdit.Text = longComment;
+            var (data5, _) = editor.Build();
+            data5.Should().NotBeNull();
+            var gff5 = GFF.FromBytes(data5);
+            var utc5 = UTCHelpers.ConstructUtc(gff5);
+            utc5.Comment.Should().Be(longComment, "Comment should handle very long strings");
+
+            // Test 6: Verify value persists through load/save cycle
+            commentsEdit.Text = "Persistent comment";
+            var (data6, _) = editor.Build();
+            data6.Should().NotBeNull();
+            
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data6);
+            var commentsEditReloaded = GetCommentsEdit(editor);
+            commentsEditReloaded.Should().NotBeNull();
+            commentsEditReloaded.Text.Should().Be("Persistent comment", "Comment should persist through load/save cycle");
+
+            // Test 7: Verify value is correctly read from loaded UTC
+            var (data7, _) = editor.Build();
+            data7.Should().NotBeNull();
+            var gff7 = GFF.FromBytes(data7);
+            var utc7 = UTCHelpers.ConstructUtc(gff7);
+            utc7.Comment.Should().Be("Persistent comment", "Comment should be correctly read from loaded UTC");
+
+            // Test 8: Test with tabs and other whitespace
+            commentsEdit.Text = "Comment\twith\ttabs\nand\nnewlines";
+            var (data8, _) = editor.Build();
+            data8.Should().NotBeNull();
+            var gff8 = GFF.FromBytes(data8);
+            var utc8 = UTCHelpers.ConstructUtc(gff8);
+            utc8.Comment.Should().Be("Comment\twith\ttabs\nand\nnewlines", "Comment should handle tabs and newlines");
+        }
+
+        /// <summary>
+        /// Helper method to get the comments edit box from the editor using reflection.
+        /// </summary>
+        private static TextBox GetCommentsEdit(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_commentsEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_commentsEdit field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as TextBox;
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_all_basic_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1105-1140)
