@@ -492,9 +492,159 @@ namespace Andastra.Parsing.Formats.NCS
                         }
                         else
                         {
-                            // For other bytecodes, we need to handle them case by case
-                            // TODO: HACK - For now, use RESERVED as a fallback to avoid crashing
-                            instruction.InsType = NCSInstructionType.RESERVED;
+                            // Comprehensive fallback handling for all bytecodes with invalid qualifiers
+                            // This preserves roundtrip fidelity by selecting the most appropriate fallback
+                            // instruction type based on the bytecode's semantic meaning
+                            switch (byteCode)
+                            {
+                                // Logical operators - use IntInt variant as fallback
+                                case NCSByteCode.LOGORxx:
+                                    instruction.InsType = NCSInstructionType.LOGORII;
+                                    break;
+                                case NCSByteCode.INCORxx:
+                                    instruction.InsType = NCSInstructionType.INCORII;
+                                    break;
+                                case NCSByteCode.EXCORxx:
+                                    instruction.InsType = NCSInstructionType.EXCORII;
+                                    break;
+                                case NCSByteCode.BOOLANDxx:
+                                    instruction.InsType = NCSInstructionType.BOOLANDII;
+                                    break;
+                                
+                                // Shift operators - use IntInt variant as fallback
+                                case NCSByteCode.SHLEFTxx:
+                                    instruction.InsType = NCSInstructionType.SHLEFTII;
+                                    break;
+                                case NCSByteCode.SHRIGHTxx:
+                                    instruction.InsType = NCSInstructionType.SHRIGHTII;
+                                    break;
+                                case NCSByteCode.USHRIGHTxx:
+                                    instruction.InsType = NCSInstructionType.USHRIGHTII;
+                                    break;
+                                
+                                // Arithmetic operators - use IntInt variant as fallback
+                                case NCSByteCode.ADDxx:
+                                    instruction.InsType = NCSInstructionType.ADDII;
+                                    break;
+                                case NCSByteCode.SUBxx:
+                                    instruction.InsType = NCSInstructionType.SUBII;
+                                    break;
+                                case NCSByteCode.MULxx:
+                                    instruction.InsType = NCSInstructionType.MULII;
+                                    break;
+                                case NCSByteCode.DIVxx:
+                                    instruction.InsType = NCSInstructionType.DIVII;
+                                    break;
+                                case NCSByteCode.MODxx:
+                                    instruction.InsType = NCSInstructionType.MODII;
+                                    break;
+                                
+                                // Unary operators - use Int variant as fallback
+                                case NCSByteCode.NEGx:
+                                    instruction.InsType = NCSInstructionType.NEGI;
+                                    break;
+                                case NCSByteCode.COMPx:
+                                    instruction.InsType = NCSInstructionType.COMPI;
+                                    break;
+                                case NCSByteCode.NOTx:
+                                    instruction.InsType = NCSInstructionType.NOTI;
+                                    break;
+                                
+                                // Stack/BP operations with type qualifiers - use Int variant as fallback
+                                case NCSByteCode.DECxSP:
+                                    instruction.InsType = NCSInstructionType.DECxSP;
+                                    break;
+                                case NCSByteCode.INCxSP:
+                                    instruction.InsType = NCSInstructionType.INCxSP;
+                                    break;
+                                case NCSByteCode.DECxBP:
+                                    instruction.InsType = NCSInstructionType.DECxBP;
+                                    break;
+                                case NCSByteCode.INCxBP:
+                                    instruction.InsType = NCSInstructionType.INCxBP;
+                                    break;
+                                
+                                // RSADD operations - use Int variant as fallback
+                                case NCSByteCode.RSADDx:
+                                    instruction.InsType = NCSInstructionType.RSADDI;
+                                    break;
+                                
+                                // Constant operations - use Int variant as fallback
+                                case NCSByteCode.CONSTx:
+                                    instruction.InsType = NCSInstructionType.CONSTI;
+                                    break;
+                                
+                                // Stack copy operations - use expected qualifier (0x01) as fallback
+                                case NCSByteCode.CPDOWNSP:
+                                    instruction.InsType = NCSInstructionType.CPDOWNSP;
+                                    break;
+                                case NCSByteCode.CPTOPSP:
+                                    instruction.InsType = NCSInstructionType.CPTOPSP;
+                                    break;
+                                case NCSByteCode.CPDOWNBP:
+                                    instruction.InsType = NCSInstructionType.CPDOWNBP;
+                                    break;
+                                case NCSByteCode.CPTOPBP:
+                                    instruction.InsType = NCSInstructionType.CPTOPBP;
+                                    break;
+                                
+                                // Control flow operations - use expected qualifier (0x00) as fallback
+                                case NCSByteCode.JMP:
+                                    instruction.InsType = NCSInstructionType.JMP;
+                                    break;
+                                case NCSByteCode.JSR:
+                                    instruction.InsType = NCSInstructionType.JSR;
+                                    break;
+                                case NCSByteCode.JZ:
+                                    instruction.InsType = NCSInstructionType.JZ;
+                                    break;
+                                case NCSByteCode.JNZ:
+                                    instruction.InsType = NCSInstructionType.JNZ;
+                                    break;
+                                case NCSByteCode.RETN:
+                                    instruction.InsType = NCSInstructionType.RETN;
+                                    break;
+                                
+                                // Frame pointer operations - use expected qualifier (0x00) as fallback
+                                case NCSByteCode.SAVEBP:
+                                    instruction.InsType = NCSInstructionType.SAVEBP;
+                                    break;
+                                case NCSByteCode.RESTOREBP:
+                                    instruction.InsType = NCSInstructionType.RESTOREBP;
+                                    break;
+                                
+                                // Destruct operation - use expected qualifier (0x01) as fallback
+                                case NCSByteCode.DESTRUCT:
+                                    instruction.InsType = NCSInstructionType.DESTRUCT;
+                                    break;
+                                
+                                // Store state operation - use expected qualifier (0x10) as fallback
+                                case NCSByteCode.STORE_STATE:
+                                    instruction.InsType = NCSInstructionType.STORE_STATE;
+                                    break;
+                                
+                                // NOP operations - use NOP as fallback
+                                // Note: NOP and NOP2 both have value 0x2D, so we only need one case
+                                case NCSByteCode.NOP:
+                                    instruction.InsType = NCSInstructionType.NOP;
+                                    break;
+                                
+                                // RESERVED bytecode - already handled above, but include for completeness
+                                case NCSByteCode.RESERVED:
+                                    instruction.InsType = NCSInstructionType.RESERVED;
+                                    break;
+                                
+                                // Unknown bytecode - this should not happen as we check Enum.IsDefined above
+                                // but include as final fallback for safety
+                                default:
+                                    Console.WriteLine($"DEBUG NCSBinaryReader: Unknown bytecode 0x{byteCodeValue:X2} with invalid qualifier 0x{qualifier:X2} at offset {instructionOffset}, using RESERVED as final fallback");
+                                    Console.Error.WriteLine($"DEBUG NCSBinaryReader: Unknown bytecode 0x{byteCodeValue:X2} with invalid qualifier 0x{qualifier:X2} at offset {instructionOffset}, using RESERVED as final fallback");
+                                    instruction.InsType = NCSInstructionType.RESERVED;
+                                    break;
+                            }
+                            
+                            Console.WriteLine($"DEBUG NCSBinaryReader: Applied fallback for bytecode 0x{byteCodeValue:X2} with invalid qualifier 0x{qualifier:X2} at offset {instructionOffset}, using instruction type {instruction.InsType}");
+                            Console.Error.WriteLine($"DEBUG NCSBinaryReader: Applied fallback for bytecode 0x{byteCodeValue:X2} with invalid qualifier 0x{qualifier:X2} at offset {instructionOffset}, using instruction type {instruction.InsType}");
                         }
                     }
                 }

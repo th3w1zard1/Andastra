@@ -1,6 +1,8 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
+using Andastra.Parsing;
+using Andastra.Parsing.Installation;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -16,23 +18,37 @@ namespace Andastra.Runtime.Games.Eclipse
     ///
     /// Based on reverse engineering:
     /// - daorigins.exe: Advanced UI system with crafting screens and inventory management
+    ///   - ItemUpgrade system with GUIItemUpgrade class (daorigins.exe: ItemUpgrade @ 0x00aef22c, GUIItemUpgrade @ 0x00b02ca0, COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c)
     /// - DragonAge2.exe: Enhanced UI system with character progression and ability screens
+    ///   - ItemUpgrade system with GUIItemUpgrade class (DragonAge2.exe: ItemUpgrade @ 0x00beb1f0, GUIItemUpgrade @ 0x00beb1d0, UpgradePrereqType @ 0x00c0583c, GetAbilityUpgradedValue @ 0x00c0f20c)
     /// - MassEffect.exe: Modern UI system with cinematic overlays and dialogue system
+    ///   - No item upgrade system (only vehicle upgrades)
     /// - MassEffect2.exe: Advanced UI system with inventory, character, and mission screens
+    ///   - No item upgrade system (only vehicle upgrades)
     ///
-    /// Note: Eclipse engine games may have crafting or modification screens but not upgrade screens
-    /// in the same sense as Odyssey. This implementation provides a placeholder that throws
-    /// NotImplementedException for upgrade screen functionality.
+    /// Note: Dragon Age games (Origins, DA2) have ItemUpgrade systems similar to Odyssey but with different implementation.
+    /// Mass Effect games do not have item upgrade systems.
     /// </remarks>
     public class EclipseUISystem : BaseUISystem
     {
+        private readonly IUpgradeScreen _upgradeScreen;
+
         /// <summary>
         /// Initializes a new instance of the UI system.
         /// </summary>
+        /// <param name="installation">Game installation for accessing game data.</param>
         /// <param name="world">World context for entity access.</param>
-        public EclipseUISystem(IWorld world)
+        public EclipseUISystem(Installation installation, IWorld world)
             : base(world)
         {
+            if (installation == null)
+            {
+                throw new ArgumentNullException("installation");
+            }
+
+            // Create Eclipse upgrade screen
+            // Dragon Age games support item upgrades, Mass Effect games do not
+            _upgradeScreen = new EclipseUpgradeScreen(installation, world);
         }
 
         /// <summary>
@@ -44,37 +60,58 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <param name="disableUpgrade">If true, force straight to item creation and disable upgrading.</param>
         /// <param name="override2DA">Override 2DA file name (empty string for default).</param>
         /// <remarks>
-        /// Eclipse engine games may have crafting or modification screens but not upgrade screens
-        /// in the same sense as Odyssey. This method throws NotImplementedException.
-        /// If upgrade-like functionality is needed, it should be implemented via crafting screens or similar.
+        /// Based on reverse engineering:
+        /// - daorigins.exe: COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c opens ItemUpgrade GUI
+        /// - DragonAge2.exe: GUIItemUpgrade class structure handles upgrade screen display
+        /// - Mass Effect games: No upgrade screen support (method will handle gracefully)
         /// </remarks>
         protected override void ShowUpgradeScreenImpl(uint item, uint character, bool disableItemCreation, bool disableUpgrade, string override2DA)
         {
-            // TODO: STUB - Eclipse engine games do not have upgrade screens in the same sense as Odyssey
-            // If upgrade-like functionality is needed, implement via crafting screens or item modification UI
-            throw new NotImplementedException("Eclipse engine games do not support upgrade screens in the same sense as Odyssey. Use crafting screens or item modification UI instead.");
+            // OBJECT_INVALID = 0x7FFFFFFF (uint.MaxValue)
+            const uint ObjectInvalid = 0x7FFFFFFF;
+
+            // Resolve item entity (base class already validated, but we need the entity for the upgrade screen)
+            IEntity itemEntity = null;
+            if (item != 0 && item != ObjectInvalid)
+            {
+                itemEntity = _world.GetEntity(item);
+            }
+
+            // Resolve character entity
+            IEntity characterEntity = null;
+            if (character != 0 && character != ObjectInvalid)
+            {
+                characterEntity = _world.GetEntity(character);
+            }
+
+            // Configure upgrade screen
+            // Based on daorigins.exe: COMMAND_OPENITEMUPGRADEGUI opens GUIItemUpgrade screen
+            _upgradeScreen.TargetItem = itemEntity;
+            _upgradeScreen.Character = characterEntity;
+            _upgradeScreen.DisableItemCreation = disableItemCreation;
+            _upgradeScreen.DisableUpgrade = disableUpgrade;
+            _upgradeScreen.Override2DA = override2DA;
+
+            // Show upgrade screen
+            // Based on daorigins.exe: COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c
+            // Based on DragonAge2.exe: GUIItemUpgrade class handles screen display
+            _upgradeScreen.Show();
         }
 
         /// <summary>
         /// Gets whether the upgrade screen is currently visible.
         /// </summary>
-        /// <remarks>
-        /// Eclipse engine games do not have upgrade screens, so this always returns false.
-        /// </remarks>
         public override bool IsUpgradeScreenVisible
         {
-            get { return false; }
+            get { return _upgradeScreen.IsVisible; }
         }
 
         /// <summary>
         /// Hides the upgrade screen.
         /// </summary>
-        /// <remarks>
-        /// Eclipse engine games do not have upgrade screens, so this is a no-op.
-        /// </remarks>
         public override void HideUpgradeScreen()
         {
-            // No-op: Eclipse engine games do not have upgrade screens
+            _upgradeScreen.Hide();
         }
     }
 }
