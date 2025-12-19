@@ -280,6 +280,9 @@ var
   TLKPatcher: TTLKPatcher;
   GFFPatcher: TGFFPatcher;
   NSSPatcher: TNSSPatcher;
+  SSFPatcher: TSSFPatcher;
+  ERFPatcher: TERFPatcher;
+  RIMPatcher: TRIMPatcher;
   Modifications: TStringList;
 begin
   // Process all patch operations (TSLPatcher.exe: 0x0047F000+)
@@ -517,6 +520,152 @@ begin
             end;
           end;
           
+          // Process SSF file changes (TSLPatcher.exe: 0x0047E000+)
+          // Assembly: Processes SSF sections from INI, handles soundset StrRef modifications
+          // String: "New/modified Soundset files"
+          LogInfo('New/modified Soundset files');
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if (Pos('SSF', SectionName) > 0) or StartsText('SSF:', SectionName) then
+            begin
+              FileName := IniFile.ReadString(SectionName, 'FileName', '');
+              if FileName = '' then
+                FileName := Copy(SectionName, 5, MaxInt); // Remove "SSF:" prefix
+              
+              FileName := FGamePath + FileName;
+              if FileExists(FileName) then
+              begin
+                if FMakeBackups then
+                  BackupMgr.CreateBackup(FileName);
+                
+                Modifications := TStringList.Create;
+                try
+                  IniFile.ReadSectionValues(SectionName, Modifications);
+                  
+                  // Filter out FileName key
+                  for J := Modifications.Count - 1 downto 0 do
+                  begin
+                    if SameText(Modifications.Names[J], 'FileName') then
+                      Modifications.Delete(J);
+                  end;
+                  
+                  SSFPatcher := TSSFPatcher.Create;
+                  try
+                    LogInfo(Format('Modifying StrRefs in Soundset file "%s"...', [ExtractFileName(FileName)]));
+                    SSFPatcher.PatchFile(FileName, Modifications);
+                  finally
+                    SSFPatcher.Free;
+                  end;
+                finally
+                  Modifications.Free;
+                end;
+              end
+              else
+              begin
+                LogWarning(Format('SSF file "%s" not found, skipping section %s', [FileName, SectionName]));
+              end;
+            end;
+          end;
+          
+          // Process ERF file changes (TSLPatcher.exe: 0x0047E000+)
+          // Assembly: Processes ERF sections from INI, handles archive file add/replace operations
+          LogInfo('ERF file changes');
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if (Pos('ERF', SectionName) > 0) or StartsText('ERF:', SectionName) then
+            begin
+              FileName := IniFile.ReadString(SectionName, 'FileName', '');
+              if FileName = '' then
+                FileName := Copy(SectionName, 5, MaxInt); // Remove "ERF:" prefix
+              
+              FileName := FGamePath + FileName;
+              if FileExists(FileName) then
+              begin
+                if FMakeBackups then
+                  BackupMgr.CreateBackup(FileName);
+                
+                Modifications := TStringList.Create;
+                try
+                  IniFile.ReadSectionValues(SectionName, Modifications);
+                  
+                  // Filter out FileName key
+                  for J := Modifications.Count - 1 downto 0 do
+                  begin
+                    if SameText(Modifications.Names[J], 'FileName') then
+                      Modifications.Delete(J);
+                  end;
+                  
+                  // Process ERF modifications
+                  // Format: Key=FileName|SourcePath
+                  ERFPatcher := TERFPatcher.Create;
+                  try
+                    LogInfo(Format('Saving changes to ERF/RIM file %s...', [ExtractFileName(FileName)]));
+                    ERFPatcher.PatchFile(FileName, Modifications);
+                  finally
+                    ERFPatcher.Free;
+                  end;
+                finally
+                  Modifications.Free;
+                end;
+              end
+              else
+              begin
+                LogWarning(Format('ERF file "%s" not found, skipping section %s', [FileName, SectionName]));
+              end;
+            end;
+          end;
+          
+          // Process RIM file changes (TSLPatcher.exe: 0x0047E000+)
+          // Assembly: Processes RIM sections from INI, handles archive file add/replace operations
+          LogInfo('RIM file changes');
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if (Pos('RIM', SectionName) > 0) or StartsText('RIM:', SectionName) then
+            begin
+              FileName := IniFile.ReadString(SectionName, 'FileName', '');
+              if FileName = '' then
+                FileName := Copy(SectionName, 5, MaxInt); // Remove "RIM:" prefix
+              
+              FileName := FGamePath + FileName;
+              if FileExists(FileName) then
+              begin
+                if FMakeBackups then
+                  BackupMgr.CreateBackup(FileName);
+                
+                Modifications := TStringList.Create;
+                try
+                  IniFile.ReadSectionValues(SectionName, Modifications);
+                  
+                  // Filter out FileName key
+                  for J := Modifications.Count - 1 downto 0 do
+                  begin
+                    if SameText(Modifications.Names[J], 'FileName') then
+                      Modifications.Delete(J);
+                  end;
+                  
+                  // Process RIM modifications
+                  // Format: Key=FileName|SourcePath
+                  RIMPatcher := TRIMPatcher.Create;
+                  try
+                    LogInfo(Format('Saving changes to ERF/RIM file %s...', [ExtractFileName(FileName)]));
+                    RIMPatcher.PatchFile(FileName, Modifications);
+                  finally
+                    RIMPatcher.Free;
+                  end;
+                finally
+                  Modifications.Free;
+                end;
+              end
+              else
+              begin
+                LogWarning(Format('RIM file "%s" not found, skipping section %s', [FileName, SectionName]));
+              end;
+            end;
+          end;
+          
           // Process file installation (TSLPatcher.exe: 0x00483000+)
           // String: "Unpatched files to install"
           // String: "Install location"
@@ -525,6 +674,7 @@ begin
           // String: "Settings"
           // String: ".\\", "Game", "..\\", "backup", "!overridetype", "\\", "replace"
           // String: ".exe", ".tlk", ".key", ".bif", "backup\\", "override"
+          LogInfo('Unpatched files to install');
           for I := 0 to Sections.Count - 1 do
           begin
             SectionName := Sections[I];
@@ -1012,22 +1162,42 @@ end;
 procedure TSSFPatcher.PatchFile(const AFileName: string; const AModifications: TStrings);
 var
   SSFFile: TFileStream;
+  Header: array[0..3] of Char;
+  Version: array[0..3] of Char;
   I: Integer;
   ModParts: TStringList;
-  StrRef: Integer;
+  LabelIndex: Integer;
   NewStrRef: Integer;
-  EntryOffset: Integer;
+  EntryLabel: Integer;
+  EntryStrRef: Integer;
+  Found: Boolean;
 begin
-  // SSF file patching (TSLPatcher.exe: 0x0047E000+)
+  // SSF file patching (TSLPatcher.exe: 0x00477000+)
+  // Assembly: Processes SSF sections, validates header, updates StrRefs by label index
   // String: "New/modified Soundset files"
   // String: "Modifying StrRefs in Soundset file \"%s\"..."
-  // SSF format: Array of 4-byte integers (StrRef values)
+  // String: "Selected file \"%s\" does not exist! Unable to load it."
+  // String: "SSF "
+  // String: "V1.1"
+  // String: "\" is not a valid SSF v1.1 file!"
+  // String: "Unable to change value in SSF file, label \"%s\" is not a valid entry label!"
+  // SSF format: Header ("SSF "), Version ("V1.1"), Array of entries (LabelIndex: DWORD, StrRef: DWORD)
   
   if not FileExists(AFileName) then
-    raise Exception.Create(Format('Error! SSF file "%s" does not exist!', [AFileName]));
+    raise Exception.Create(Format('Selected file "%s" does not exist! Unable to load it.', [AFileName]));
   
   SSFFile := TFileStream.Create(AFileName, fmOpenReadWrite);
   try
+    // Read and validate SSF header (TSLPatcher.exe: 0x00477000+)
+    SSFFile.Read(Header, 4);
+    if Header <> 'SSF ' then
+      raise Exception.Create(Format('"%s" is not a valid SSF v1.1 file!', [AFileName]));
+    
+    SSFFile.Read(Version, 4);
+    if Version <> 'V1.1' then
+      raise Exception.Create(Format('"%s" is not a valid SSF v1.1 file!', [AFileName]));
+    
+    // Process modifications (TSLPatcher.exe: assembly processes modification list)
     ModParts := TStringList.Create;
     try
       ModParts.Delimiter := '|';
@@ -1038,25 +1208,42 @@ begin
         
         if ModParts.Count >= 2 then
         begin
-          StrRef := StrToIntDef(ModParts[0], -1);
+          // Format: LabelIndex|NewStrRef or LabelName|NewStrRef
+          // Try to parse as integer first (label index)
+          LabelIndex := StrToIntDef(ModParts[0], -1);
+          
+          // If not an integer, look up label name (TSLPatcher.exe: assembly has label lookup table)
+          if LabelIndex < 0 then
+          begin
+            // Label name lookup - SSF uses predefined label indices (0-40)
+            // Common labels: "Battlecry 1"=0, "Battlecry 2"=1, ..., "Selected 1"=5, "Attack 1"=8, etc.
+            // For now, require numeric label index
+            raise Exception.Create(Format('Unable to change value in SSF file, label "%s" is not a valid entry label!', [ModParts[0]]));
+          end;
+          
           NewStrRef := StrToIntDef(ModParts[1], 0);
           
-          if StrRef >= 0 then
+          // Find entry with matching label index (TSLPatcher.exe: assembly searches entry array)
+          Found := False;
+          SSFFile.Position := 8; // Skip header and version
+          while SSFFile.Position < SSFFile.Size do
           begin
-            // Find entry with matching StrRef
-            EntryOffset := 0;
-            SSFFile.Position := 0;
-            while SSFFile.Position < SSFFile.Size do
+            SSFFile.Read(EntryLabel, SizeOf(Integer));
+            SSFFile.Read(EntryStrRef, SizeOf(Integer));
+            
+            if EntryLabel = LabelIndex then
             begin
-              SSFFile.Read(EntryOffset, SizeOf(Integer));
-              if EntryOffset = StrRef then
-              begin
-                // Found matching entry, update it
-                SSFFile.Position := SSFFile.Position - SizeOf(Integer);
-                SSFFile.Write(NewStrRef, SizeOf(Integer));
-                Break;
-              end;
+              // Found matching entry, update StrRef (TSLPatcher.exe: assembly writes new value)
+              SSFFile.Position := SSFFile.Position - SizeOf(Integer);
+              SSFFile.Write(NewStrRef, SizeOf(Integer));
+              Found := True;
+              Break;
             end;
+          end;
+          
+          if not Found then
+          begin
+            raise Exception.Create(Format('Unable to change value in SSF file, label "%s" is not a valid entry label!', [ModParts[0]]));
           end;
         end;
       end;
