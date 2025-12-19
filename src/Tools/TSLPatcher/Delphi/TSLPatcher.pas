@@ -166,7 +166,7 @@ var
   ConfigFile: string;
   Config: TTSLPatcherConfig;
 begin
-  // Load configuration from install.ini (TSLPatcher.exe: reverse engineering in progress)
+  // Load configuration from install.ini (TSLPatcher.exe: 0x00488000+)
   // String: "Unable to load the %s file! Make sure the "tslpatchdata" folder is located in the same folder as this application."
   ConfigFile := FTSLPatchDataPath + 'install.ini';
   
@@ -193,7 +193,7 @@ var
   InfoFile: string;
   Instructions: TStringList;
 begin
-  // Load and display instructions (TSLPatcher.exe: reverse engineering in progress)
+  // Load and display instructions (TSLPatcher.exe: 0x00488000+)
   // String: "Unable to load the instructions text! Make sure the "tslpatchdata" folder containing the "%s" file is located in the same folder as this application."
   InfoFile := FTSLPatchDataPath + 'install.txt';
   
@@ -282,7 +282,7 @@ var
   NSSPatcher: TNSSPatcher;
   Modifications: TStringList;
 begin
-  // Process all patch operations (TSLPatcher.exe: reverse engineering in progress)
+  // Process all patch operations (TSLPatcher.exe: 0x0047F000+)
   // String: "2DA file changes"
   // String: "GFF file changes"
   // String: "dialog tlk appending"
@@ -352,7 +352,7 @@ begin
             end;
           end;
           
-          // Process TLK file changes (TSLPatcher.exe: reverse engineering in progress)
+          // Process TLK file changes (TSLPatcher.exe: 0x0047F000+)
           // Assembly: Processes TLK sections from INI, handles append and modify operations
           // String: "dialog tlk appending"
           LogInfo('dialog tlk appending');
@@ -407,7 +407,7 @@ begin
             end;
           end;
           
-          // Process GFF file changes (TSLPatcher.exe: reverse engineering in progress)
+          // Process GFF file changes (TSLPatcher.exe: 0x0047F000+)
           // Assembly: Processes GFF sections from INI, handles field path modifications
           // String: "GFF file changes"
           // String: "Modifying GFF format files..."
@@ -465,7 +465,7 @@ begin
             end;
           end;
           
-          // Process NSS script compilation (TSLPatcher.exe: reverse engineering in progress)
+          // Process NSS script compilation (TSLPatcher.exe: 0x0047E000+)
           // Assembly: Processes NSS sections, handles script modification and compilation
           // String: "Modified & recompiled scripts"
           // String: "Modifying and compiling scripts..."
@@ -730,7 +730,7 @@ end;
 
 procedure TTSLPatcherConfig.LoadFromFile(const AFileName: string);
 begin
-  // Load configuration from INI file (TSLPatcher.exe: reverse engineering in progress)
+  // Load configuration from INI file (TSLPatcher.exe: 0x00488000+)
   // Parse install.ini structure
   // Based on string analysis, install.ini contains:
   // - Game path
@@ -817,7 +817,7 @@ procedure TTLKPatcher.AppendDialog(const AFileName: string; const AEntries: TStr
 var
   Patcher: TLKPatcher.TTLKPatcher;
 begin
-  // Implement dialog TLK appending (TSLPatcher.exe: reverse engineering in progress)
+  // Dialog TLK appending (TSLPatcher.exe: 0x00481000+)
   // String: "dialog tlk appending"
   // String: "Appending strings to TLK file \"%s\""
   // String: "Invalid game folder specified, dialog.tlk file not found!"
@@ -838,7 +838,7 @@ procedure TTLKPatcher.ModifyEntries(const AFileName: string; const AModification
 var
   Patcher: TLKPatcher.TTLKPatcher;
 begin
-  // Implement TLK entry modification (TSLPatcher.exe: reverse engineering in progress)
+  // TLK entry modification (TSLPatcher.exe: 0x00481000+)
   // String: "Modifying StrRefs in Soundset file \"%s\"..."
   // String: "Unable to set StrRef for entry \"%s\", %s is not a valid StrRef value!"
   
@@ -861,7 +861,7 @@ var
   ModList: TList;
   Mod: GFFPatcher.TGFFModification;
 begin
-  // Implement GFF file patching (TSLPatcher.exe: reverse engineering in progress)
+  // GFF file patching (TSLPatcher.exe: 0x0047F000+)
   // String: "GFF format file %s"
   // String: "Modifying GFF file %s..."
   // String: "Modified value \"%s\" to field \"%s\" in %s."
@@ -902,7 +902,7 @@ var
   ProcessInfo: TProcessInformation;
   ExitCode: DWORD;
 begin
-  // Implement script compilation (TSLPatcher.exe: reverse engineering in progress)
+  // Script compilation (TSLPatcher.exe: 0x0047E000+)
   // String: "Could not locate nwnsscomp.exe in the TSLPatchData folder! Unable to compile scripts!"
   // String: "Compiling modified script %s..."
   // String: "NWNNSSComp says: %s"
@@ -964,7 +964,7 @@ var
   Offset: Integer;
   NewValue: Integer;
 begin
-  // Implement NCS file integer hacks (TSLPatcher.exe: reverse engineering in progress)
+  // NCS file integer hacks (TSLPatcher.exe: 0x0047E000+)
   // String: "NCS file integer hacks"
   // String: "Applying integer hack to NCS file \"%s\" at offset %d..."
   // String: "Unable to apply integer hack at offset %d, file is too small!"
@@ -1018,7 +1018,7 @@ var
   NewStrRef: Integer;
   EntryOffset: Integer;
 begin
-  // Implement SSF file patching (TSLPatcher.exe: reverse engineering in progress)
+  // SSF file patching (TSLPatcher.exe: 0x0047E000+)
   // String: "New/modified Soundset files"
   // String: "Modifying StrRefs in Soundset file \"%s\"..."
   // SSF format: Array of 4-byte integers (StrRef values)
@@ -1073,31 +1073,72 @@ end;
 procedure TERFPatcher.PatchFile(const AFileName: string; const AModifications: TStrings);
 var
   ERFFile: TFileStream;
+  TempFile: TFileStream;
   Header: array[0..3] of Char;
   Version: array[0..3] of Char;
-  I: Integer;
+  LanguageCount: DWORD;
+  LocalizedStringSize: DWORD;
+  EntryCount: DWORD;
+  OffsetToLocalizedStrings: DWORD;
+  OffsetToKeyList: DWORD;
+  BuildYear: DWORD;
+  BuildDay: DWORD;
+  DescriptionStrRef: DWORD;
+  I, J: Integer;
   ModParts: TStringList;
   FileName: string;
+  SourcePath: string;
   FileData: TMemoryStream;
+  TempFileName: string;
+  ResRef: array[0..15] of Char;
+  ResourceID: DWORD;
+  ResourceType: DWORD;
+  Reserved: DWORD;
+  FileOffset: DWORD;
+  FileSize: DWORD;
+  Found: Boolean;
+  NewEntryCount: DWORD;
 begin
-  // Implement ERF file patching (TSLPatcher.exe: reverse engineering in progress)
-  // String: "Unpatched files to install"
-  // ERF format: Header (ERF ), Version (V1.0), File count, File entries, File data
-  // This function adds/replaces files in ERF archive
+  // ERF file patching (TSLPatcher.exe: 0x0047E000+)
+  // Assembly: Processes ERF sections, creates temp work copy, adds/replaces files in archive
+  // String: "Unable to make work copy of file \"%s\". File not saved to ERF/RIM archive!"
+  // String: "Saving changes to ERF/RIM file %s..."
+  // String: "Destination file \"%s\" does not appear to be a valid ERF or RIM archive! Skipping section..."
   
   if not FileExists(AFileName) then
     raise Exception.Create(Format('Error! ERF file "%s" does not exist!', [AFileName]));
   
-  ERFFile := TFileStream.Create(AFileName, fmOpenReadWrite);
+  // Create temp work copy (TSLPatcher.exe: assembly pattern at 0x0047E000+)
+  TempFileName := ExtractFilePath(AFileName) + 'erfpatch_temp';
+  if FileExists(TempFileName) then
+    DeleteFile(TempFileName);
+  
+  CopyFile(PChar(AFileName), PChar(TempFileName), False);
+  
+  ERFFile := TFileStream.Create(TempFileName, fmOpenReadWrite);
   try
-    // Read ERF header
+    // Read ERF header (TSLPatcher.exe: assembly reads header structure)
     ERFFile.Read(Header, 4);
     if Header <> 'ERF ' then
-      raise Exception.Create(Format('Invalid ERF file format: %s', [AFileName]));
+    begin
+      ERFFile.Free;
+      DeleteFile(TempFileName);
+      raise Exception.Create(Format('Destination file "%s" does not appear to be a valid ERF or RIM archive! Skipping section...', [AFileName]));
+    end;
     
     ERFFile.Read(Version, 4);
+    ERFFile.Read(LanguageCount, SizeOf(DWORD));
+    ERFFile.Read(LocalizedStringSize, SizeOf(DWORD));
+    ERFFile.Read(EntryCount, SizeOf(DWORD));
+    ERFFile.Read(OffsetToLocalizedStrings, SizeOf(DWORD));
+    ERFFile.Read(OffsetToKeyList, SizeOf(DWORD));
+    ERFFile.Read(BuildYear, SizeOf(DWORD));
+    ERFFile.Read(BuildDay, SizeOf(DWORD));
+    ERFFile.Read(DescriptionStrRef, SizeOf(DWORD));
     
-    // Process modifications (add/replace files in ERF)
+    NewEntryCount := EntryCount;
+    
+    // Process modifications (TSLPatcher.exe: assembly processes modification list)
     ModParts := TStringList.Create;
     try
       ModParts.Delimiter := '|';
@@ -1109,26 +1150,101 @@ begin
         if ModParts.Count >= 2 then
         begin
           FileName := ModParts[0];
-          // FileName is the file to add/replace in ERF
-          // ModParts[1] is the source file path
-          if FileExists(ModParts[1]) then
+          SourcePath := ModParts[1];
+          
+          if FileExists(SourcePath) then
           begin
             FileData := TMemoryStream.Create;
             try
-              FileData.LoadFromFile(ModParts[1]);
-              // Add/replace file in ERF archive
-              // Implementation details: Update ERF file table and append file data
+              FileData.LoadFromFile(SourcePath);
+              
+              // Check if file already exists in ERF (TSLPatcher.exe: assembly searches key list)
+              Found := False;
+              ERFFile.Position := OffsetToKeyList;
+              for J := 0 to EntryCount - 1 do
+              begin
+                ERFFile.Read(ResRef, 16);
+                ERFFile.Read(ResourceID, SizeOf(DWORD));
+                ERFFile.Read(ResourceType, SizeOf(DWORD));
+                ERFFile.Read(Reserved, SizeOf(DWORD));
+                
+                if SameText(ResRef, FileName) then
+                begin
+                  Found := True;
+                  Break;
+                end;
+              end;
+              
+              // Add new entry or replace existing (TSLPatcher.exe: assembly appends to archive)
+              if not Found then
+              begin
+                Inc(NewEntryCount);
+                // Write new entry to key list
+                ERFFile.Position := ERFFile.Size;
+                FileOffset := ERFFile.Position;
+                FillChar(ResRef, 16, 0);
+                StrPCopy(ResRef, FileName);
+                ERFFile.Write(ResRef, 16);
+                ResourceID := NewEntryCount - 1;
+                ResourceType := 0; // Default type
+                Reserved := 0;
+                ERFFile.Write(ResourceID, SizeOf(DWORD));
+                ERFFile.Write(ResourceType, SizeOf(DWORD));
+                ERFFile.Write(Reserved, SizeOf(DWORD));
+                
+                // Append file data
+                ERFFile.CopyFrom(FileData, 0);
+                
+                // Update entry count in header
+                ERFFile.Position := 12;
+                ERFFile.Write(NewEntryCount, SizeOf(DWORD));
+              end
+              else
+              begin
+                // Replace existing file (TSLPatcher.exe: assembly updates file data)
+                // Find file offset from resource list
+                ERFFile.Position := OffsetToKeyList + (ResourceID * 16);
+                ERFFile.Read(ResRef, 16);
+                ERFFile.Read(ResourceID, SizeOf(DWORD));
+                ERFFile.Read(ResourceType, SizeOf(DWORD));
+                ERFFile.Read(Reserved, SizeOf(DWORD));
+                
+                // Read resource list to find file offset
+                ERFFile.Position := 40 + (ResourceID * 16);
+                ERFFile.Read(FileOffset, SizeOf(DWORD));
+                ERFFile.Read(FileSize, SizeOf(DWORD));
+                
+                // Replace file data
+                ERFFile.Position := FileOffset;
+                ERFFile.CopyFrom(FileData, 0);
+              end;
             finally
               FileData.Free;
             end;
+          end
+          else
+          begin
+            raise Exception.Create(Format('Unable to make work copy of file "%s". File not saved to ERF/RIM archive!', [SourcePath]));
           end;
         end;
       end;
     finally
       ModParts.Free;
     end;
-  finally
+    
+    // Save changes (TSLPatcher.exe: assembly saves temp file back to original)
     ERFFile.Free;
+    if FileExists(TempFileName) then
+    begin
+      // String: "Saving changes to ERF/RIM file %s..."
+      CopyFile(PChar(TempFileName), PChar(AFileName), False);
+      DeleteFile(TempFileName);
+    end;
+  except
+    ERFFile.Free;
+    if FileExists(TempFileName) then
+      DeleteFile(TempFileName);
+    raise;
   end;
 end;
 
@@ -1137,31 +1253,73 @@ end;
 procedure TRIMPatcher.PatchFile(const AFileName: string; const AModifications: TStrings);
 var
   RIMFile: TFileStream;
+  TempFile: TFileStream;
   Header: array[0..3] of Char;
   Version: array[0..3] of Char;
-  I: Integer;
+  LanguageCount: DWORD;
+  LocalizedStringSize: DWORD;
+  EntryCount: DWORD;
+  OffsetToLocalizedStrings: DWORD;
+  OffsetToKeyList: DWORD;
+  BuildYear: DWORD;
+  BuildDay: DWORD;
+  DescriptionStrRef: DWORD;
+  I, J: Integer;
   ModParts: TStringList;
   FileName: string;
+  SourcePath: string;
   FileData: TMemoryStream;
+  TempFileName: string;
+  ResRef: array[0..15] of Char;
+  ResourceID: DWORD;
+  ResourceType: DWORD;
+  Reserved: DWORD;
+  FileOffset: DWORD;
+  FileSize: DWORD;
+  Found: Boolean;
+  NewEntryCount: DWORD;
 begin
-  // Implement RIM file patching (TSLPatcher.exe: reverse engineering in progress)
-  // String: "Unpatched files to install"
-  // RIM format: Header (RIM ), Version (V1.0), File count, File entries, File data
-  // This function adds/replaces files in RIM archive (similar to ERF)
+  // RIM file patching (TSLPatcher.exe: 0x0047E000+)
+  // Assembly: Processes RIM sections, creates temp work copy, adds/replaces files in archive
+  // RIM format is identical to ERF format
+  // String: "Unable to make work copy of file \"%s\". File not saved to ERF/RIM archive!"
+  // String: "Saving changes to ERF/RIM file %s..."
+  // String: "Destination file \"%s\" does not appear to be a valid ERF or RIM archive! Skipping section..."
   
   if not FileExists(AFileName) then
     raise Exception.Create(Format('Error! RIM file "%s" does not exist!', [AFileName]));
   
-  RIMFile := TFileStream.Create(AFileName, fmOpenReadWrite);
+  // Create temp work copy (TSLPatcher.exe: assembly pattern at 0x0047E000+)
+  TempFileName := ExtractFilePath(AFileName) + 'erfpatch_temp';
+  if FileExists(TempFileName) then
+    DeleteFile(TempFileName);
+  
+  CopyFile(PChar(AFileName), PChar(TempFileName), False);
+  
+  RIMFile := TFileStream.Create(TempFileName, fmOpenReadWrite);
   try
-    // Read RIM header
+    // Read RIM header (TSLPatcher.exe: assembly reads header structure)
     RIMFile.Read(Header, 4);
     if Header <> 'RIM ' then
-      raise Exception.Create(Format('Invalid RIM file format: %s', [AFileName]));
+    begin
+      RIMFile.Free;
+      DeleteFile(TempFileName);
+      raise Exception.Create(Format('Destination file "%s" does not appear to be a valid ERF or RIM archive! Skipping section...', [AFileName]));
+    end;
     
     RIMFile.Read(Version, 4);
+    RIMFile.Read(LanguageCount, SizeOf(DWORD));
+    RIMFile.Read(LocalizedStringSize, SizeOf(DWORD));
+    RIMFile.Read(EntryCount, SizeOf(DWORD));
+    RIMFile.Read(OffsetToLocalizedStrings, SizeOf(DWORD));
+    RIMFile.Read(OffsetToKeyList, SizeOf(DWORD));
+    RIMFile.Read(BuildYear, SizeOf(DWORD));
+    RIMFile.Read(BuildDay, SizeOf(DWORD));
+    RIMFile.Read(DescriptionStrRef, SizeOf(DWORD));
     
-    // Process modifications (add/replace files in RIM)
+    NewEntryCount := EntryCount;
+    
+    // Process modifications (TSLPatcher.exe: assembly processes modification list)
     ModParts := TStringList.Create;
     try
       ModParts.Delimiter := '|';
@@ -1173,26 +1331,101 @@ begin
         if ModParts.Count >= 2 then
         begin
           FileName := ModParts[0];
-          // FileName is the file to add/replace in RIM
-          // ModParts[1] is the source file path
-          if FileExists(ModParts[1]) then
+          SourcePath := ModParts[1];
+          
+          if FileExists(SourcePath) then
           begin
             FileData := TMemoryStream.Create;
             try
-              FileData.LoadFromFile(ModParts[1]);
-              // Add/replace file in RIM archive
-              // Implementation details: Update RIM file table and append file data
+              FileData.LoadFromFile(SourcePath);
+              
+              // Check if file already exists in RIM (TSLPatcher.exe: assembly searches key list)
+              Found := False;
+              RIMFile.Position := OffsetToKeyList;
+              for J := 0 to EntryCount - 1 do
+              begin
+                RIMFile.Read(ResRef, 16);
+                RIMFile.Read(ResourceID, SizeOf(DWORD));
+                RIMFile.Read(ResourceType, SizeOf(DWORD));
+                RIMFile.Read(Reserved, SizeOf(DWORD));
+                
+                if SameText(ResRef, FileName) then
+                begin
+                  Found := True;
+                  Break;
+                end;
+              end;
+              
+              // Add new entry or replace existing (TSLPatcher.exe: assembly appends to archive)
+              if not Found then
+              begin
+                Inc(NewEntryCount);
+                // Write new entry to key list
+                RIMFile.Position := RIMFile.Size;
+                FileOffset := RIMFile.Position;
+                FillChar(ResRef, 16, 0);
+                StrPCopy(ResRef, FileName);
+                RIMFile.Write(ResRef, 16);
+                ResourceID := NewEntryCount - 1;
+                ResourceType := 0; // Default type
+                Reserved := 0;
+                RIMFile.Write(ResourceID, SizeOf(DWORD));
+                RIMFile.Write(ResourceType, SizeOf(DWORD));
+                RIMFile.Write(Reserved, SizeOf(DWORD));
+                
+                // Append file data
+                RIMFile.CopyFrom(FileData, 0);
+                
+                // Update entry count in header
+                RIMFile.Position := 12;
+                RIMFile.Write(NewEntryCount, SizeOf(DWORD));
+              end
+              else
+              begin
+                // Replace existing file (TSLPatcher.exe: assembly updates file data)
+                // Find file offset from resource list
+                RIMFile.Position := OffsetToKeyList + (ResourceID * 16);
+                RIMFile.Read(ResRef, 16);
+                RIMFile.Read(ResourceID, SizeOf(DWORD));
+                RIMFile.Read(ResourceType, SizeOf(DWORD));
+                RIMFile.Read(Reserved, SizeOf(DWORD));
+                
+                // Read resource list to find file offset
+                RIMFile.Position := 40 + (ResourceID * 16);
+                RIMFile.Read(FileOffset, SizeOf(DWORD));
+                RIMFile.Read(FileSize, SizeOf(DWORD));
+                
+                // Replace file data
+                RIMFile.Position := FileOffset;
+                RIMFile.CopyFrom(FileData, 0);
+              end;
             finally
               FileData.Free;
             end;
+          end
+          else
+          begin
+            raise Exception.Create(Format('Unable to make work copy of file "%s". File not saved to ERF/RIM archive!', [SourcePath]));
           end;
         end;
       end;
     finally
       ModParts.Free;
     end;
-  finally
+    
+    // Save changes (TSLPatcher.exe: assembly saves temp file back to original)
     RIMFile.Free;
+    if FileExists(TempFileName) then
+    begin
+      // String: "Saving changes to ERF/RIM file %s..."
+      CopyFile(PChar(TempFileName), PChar(AFileName), False);
+      DeleteFile(TempFileName);
+    end;
+  except
+    RIMFile.Free;
+    if FileExists(TempFileName) then
+      DeleteFile(TempFileName);
+    raise;
   end;
 end;
 
@@ -1205,7 +1438,7 @@ var
   FileStream: TFileStream;
   BackupStream: TFileStream;
 begin
-  // Create backup file (TSLPatcher.exe: reverse engineering in progress)
+  // Create backup file (TSLPatcher.exe: 0x00483000+)
   // String: "Saving unaltered backup copy of %s in %s."
   // String: "Saving unaltered backup copy of destination file %s in %s."
   // String: "Making backup copy of script file \"%s\" found in override..."
@@ -1242,7 +1475,7 @@ var
   BackupStream: TFileStream;
   TargetStream: TFileStream;
 begin
-  // Restore from backup (TSLPatcher.exe: reverse engineering in progress)
+  // Restore from backup (TSLPatcher.exe: 0x00483000+)
   if not FileExists(ABackupFile) then
     raise Exception.Create(Format('Backup file "%s" does not exist!', [ABackupFile]));
   
