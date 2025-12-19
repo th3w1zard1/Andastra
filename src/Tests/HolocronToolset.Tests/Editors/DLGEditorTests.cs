@@ -2512,5 +2512,61 @@ namespace HolocronToolset.Tests.Editors
             UpdateListIndex(dlg.Starters);
             return dlg;
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:400-411
+        // Original: def test_dlg_editor_new_dlg(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestDlgEditorNewDlg()
+        {
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Model should be reset
+            editor.Model.RowCount.Should().Be(0);
+            editor.CoreDlg.Starters.Should().BeEmpty();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:413-428
+        // Original: def test_dlg_editor_add_root_node(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestDlgEditorAddRootNode()
+        {
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Add root node
+            editor.Model.AddRootNode();
+            editor.Model.RowCount.Should().Be(1);
+
+            var rootItem = editor.Model.Item(0, 0);
+            rootItem.Should().NotBeNull();
+            rootItem.Link.Should().NotBeNull();
+            rootItem.Link.Node.Should().BeOfType<DLGEntry>();
+            editor.CoreDlg.Starters.Should().HaveCount(1);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:431-452
+        // Original: def test_dlg_editor_add_child_node(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestDlgEditorAddChildNode()
+        {
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Add root node
+            editor.Model.AddRootNode();
+            var rootItem = editor.Model.Item(0, 0);
+            rootItem.Should().NotBeNull();
+
+            // Add child (should be Reply since parent is Entry)
+            var childItem = editor.Model.AddChildToItem(rootItem);
+            childItem.Should().NotBeNull();
+            childItem.Link.Should().NotBeNull();
+            childItem.Link.Node.Should().BeOfType<DLGReply>();
+            rootItem.RowCount.Should().Be(1);
+            rootItem.Link.Should().NotBeNull();
+            rootItem.Link.Node.Should().NotBeNull();
+            rootItem.Link.Node.Links.Should().HaveCount(1);
+        }
     }
 }
