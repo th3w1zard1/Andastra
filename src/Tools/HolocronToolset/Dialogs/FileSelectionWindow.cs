@@ -380,7 +380,7 @@ namespace HolocronToolset.Dialogs
                 sizeDouble /= 1024.0;
             }
 
-            return $"{sizeDouble:F{decimalPlaces}} {unit}";
+            return string.Format("{0:F" + decimalPlaces + "} {1}", sizeDouble, unit);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1220-1234

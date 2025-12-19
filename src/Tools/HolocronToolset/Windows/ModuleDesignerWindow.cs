@@ -6,7 +6,7 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Windows;
 using Andastra.Parsing;
-using Andastra.Parsing.Common.Module;
+using Module = Andastra.Parsing.Common.Module.Module;
 
 namespace HolocronToolset.Windows
 {

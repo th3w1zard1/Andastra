@@ -232,20 +232,6 @@ namespace HolocronToolset.Windows
             return _map;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2718-2719
-        // Original: def set_snap_to_grid(self, enabled: bool):
-        public void SetSnapToGrid(bool enabled)
-        {
-            SnapToGrid = enabled;
-        }
-
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2722-2723
-        // Original: def set_snap_to_hooks(self, enabled: bool):
-        public void SetSnapToHooks(bool enabled)
-        {
-            SnapToHooks = enabled;
-        }
-
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2734-2735
         // Original: def set_grid_size(self, size: float):
         public void SetGridSize(float size)
