@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 
 namespace HolocronToolset.Widgets
@@ -15,6 +16,7 @@ namespace HolocronToolset.Widgets
         private bool _isTsl;
         private CancellationTokenSource _cancellationTokenSource;
         private Task _loaderTask;
+        private Installation _installation;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:52-71
         // Original: def __init__(self, installation_path: str, is_tsl: bool, request_queue, result_queue):
@@ -36,7 +38,11 @@ namespace HolocronToolset.Widgets
         {
             try
             {
-                // TODO: Initialize installation when Andastra.Parsing Installation class is available
+                // Initialize installation inside the loader task
+                // (Installation objects can't be shared across threads safely, so we initialize here)
+                // Note: Installation auto-detects K1 vs K2 based on game files
+                // The _isTsl parameter is stored for compatibility but not used - Installation auto-detects
+                _installation = new Installation(_installationPath);
                 System.Console.WriteLine($"TextureLoader started for: {_installationPath}");
 
                 while (!cancellationToken.IsCancellationRequested)
@@ -51,6 +57,7 @@ namespace HolocronToolset.Widgets
             }
             finally
             {
+                _installation = null; // Clear reference on shutdown
                 System.Console.WriteLine("TextureLoader shutting down");
             }
         }
