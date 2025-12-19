@@ -854,12 +854,76 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Finds the face index at a given position.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Aurora tile-based face finding.
+        /// Aurora uses a tile-based navigation system where each tile represents a walkable surface.
+        /// Unlike Odyssey's triangle-based walkmesh, Aurora maps positions to tiles and uses tile coordinates
+        /// as face indices for interface compatibility.
+        /// 
+        /// Algorithm:
+        /// 1. Convert world position to tile coordinates using GetTileCoordinates
+        /// 2. Validate tile is loaded and walkable
+        /// 3. Calculate face index from tile coordinates: faceIndex = tileY * tileWidth + tileX
+        /// 4. Return face index if valid, -1 if position is not on a valid walkable tile
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
+        /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates
+        /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
+        /// - Tile validation: Checks if tile is loaded and has walkable surfaces
+        /// 
+        /// Note: In Aurora, "faces" are conceptual mappings to tiles rather than explicit triangle faces.
+        /// Each tile can be considered a single walkable face for navigation purposes.
+        /// If tiles contain walkmesh data (via GetWalkMesh), this could be extended to support
+        /// multiple faces per tile, but the current implementation uses one face per tile.
+        /// </remarks>
         public int FindFaceAt(Vector3 position)
         {
-            // TODO: Implement Aurora face finding
-            // Find tile containing position
-            // Find face within tile
-            throw new NotImplementedException("Aurora face finding not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return -1;
+            }
+
+            // Convert world position to tile coordinates
+            // Based on nwmain.exe: CNWSArea::GetTile @ 0x14035edc0
+            int tileX, tileY;
+            if (!GetTileCoordinates(position, out tileX, out tileY))
+            {
+                // Position is outside tile grid bounds
+                return -1;
+            }
+
+            // Validate tile is loaded and walkable
+            // Based on nwmain.exe: Tile validation checks
+            if (!IsTileValid(tileX, tileY))
+            {
+                return -1;
+            }
+
+            AuroraTile tile = _tiles[tileY, tileX];
+            if (!tile.IsLoaded || !tile.IsWalkable)
+            {
+                // Tile is not loaded or not walkable - no valid face
+                return -1;
+            }
+
+            // Calculate face index from tile coordinates
+            // Face index = tileY * tileWidth + tileX
+            // This provides a unique face index for each tile in the grid
+            // Based on nwmain.exe: Tile array indexing pattern (width * y + x)
+            int faceIndex = tileY * _tileWidth + tileX;
+
+            // Validate face index is within expected range
+            // Maximum face index should be (tileHeight - 1) * tileWidth + (tileWidth - 1) = tileHeight * tileWidth - 1
+            int maxFaceIndex = _tileHeight * _tileWidth - 1;
+            if (faceIndex < 0 || faceIndex > maxFaceIndex)
+            {
+                // Invalid face index calculation - should not happen with valid tile coordinates
+                return -1;
+            }
+
+            return faceIndex;
         }
 
         /// <summary>
