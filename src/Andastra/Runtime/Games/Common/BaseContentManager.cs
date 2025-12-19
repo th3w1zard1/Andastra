@@ -17,9 +17,11 @@ namespace Andastra.Runtime.Games.Common
     /// Based on reverse engineering of:
     /// - swkotor.exe: Basic resource loading from BIF files
     /// - swkotor2.exe: Enhanced loading with ERF support
-    /// - nwmain.exe: Aurora resource system
-    /// - daorigins.exe: Eclipse resource management
-    /// - TODO: dragonage2, masseffect 1/2
+    /// - nwmain.exe: Aurora resource system (Neverwinter Nights)
+    /// - daorigins.exe: Eclipse resource management (Dragon Age: Origins)
+    /// - DragonAge2.exe: Eclipse resource management (Dragon Age 2) - Enhanced ERF/DAZIP support, RIM file handling
+    /// - MassEffect.exe: Eclipse resource management (Mass Effect) - PCC/UPK package format, streaming resources
+    /// - MassEffect2.exe: Eclipse resource management (Mass Effect 2) - Enhanced PCC/UPK support, cook package format
     /// - Common concepts: Resource caching, format conversion, dependency management
     ///
     /// Common functionality across engines:
