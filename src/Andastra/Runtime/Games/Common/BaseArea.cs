@@ -16,16 +16,26 @@ namespace Andastra.Runtime.Games.Common
     /// - Handles area loading from ARE/GIT files, entity spawning, navigation mesh
     /// - Provides base for engine-specific area implementations
     /// - Cross-engine analysis: All engines share ARE (area properties) and GIT (instances) file formats
-    /// - Common functionality: Entity management, navigation, area transitions, stealth XP
-    /// - Engine-specific: File format details, area effect systems, lighting models
+    /// - Common functionality: Entity management, navigation, area transitions, unescapable flag
+    /// - Engine-specific: File format details, area effect systems, lighting models, stealth XP (Odyssey only)
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
-    /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
-    /// - nwmain.exe: Area loading and entity management functions
-    /// - daorigins.exe: CArea class with similar property loading
-    /// - DragonAge2.exe: Enhanced area system with area effects
-    /// - MassEffect.exe/MassEffect2.exe: Eclipse engine area implementations
+    /// Common Functionality (all engines):
+    /// - Entity collections: Creatures, placeables, doors, triggers, waypoints, sounds
+    /// - Navigation mesh: Walkmesh projection and pathfinding
+    /// - Area transitions: Entity movement between areas with position projection
+    /// - Unescapable flag: Prevents players from leaving area
+    /// - Basic area properties: ResRef, DisplayName, Tag
+    ///
+    /// Engine-Specific (implemented in subclasses):
+    /// - Odyssey: Stealth XP system, basic lighting/fog
+    /// - Aurora: Tile-based areas, weather, enhanced area effects
+    /// - Eclipse: Physics simulation, destructible environments, advanced lighting
+    ///
+    /// Inheritance Structure:
+    /// - BaseArea (this class) - Common functionality only
+    ///   - OdysseyArea : BaseArea (swkotor.exe, swkotor2.exe)
+    ///   - AuroraArea : BaseArea (nwmain.exe)
+    ///   - EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
     /// </remarks>
     [PublicAPI]
     public abstract class BaseArea : IArea
@@ -118,11 +128,14 @@ namespace Andastra.Runtime.Games.Common
         /// TRUE means stealth XP is enabled, FALSE means it is disabled.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: StealthXPEnabled stored in AreaProperties GFF
-        /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
-        /// Ghidra analysis: LoadAreaProperties @ 0x004e26d0 reads, SaveAreaProperties @ 0x004e11d0 writes
-        /// Cross-engine: Similar stealth systems in swkotor.exe, nwmain.exe
-        /// Eclipse engines (DA/DA2/ME/ME2) have enhanced stealth/restriction systems
+        /// Odyssey Engine Specific:
+        /// - StealthXPEnabled stored in AreaProperties GFF nested struct
+        /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0 reads, SaveAreaProperties @ 0x004e11d0 writes
+        /// - swkotor2.exe: String reference "StealthXPEnabled" @ 0x007bd1b4
+        /// 
+        /// Aurora/Eclipse Engines:
+        /// - Not supported - implementations return false (no-op setter)
+        /// - Aurora and Eclipse use different progression systems
         /// </remarks>
         public abstract bool StealthXPEnabled { get; set; }
 
