@@ -10,7 +10,9 @@ using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using DLG = Andastra.Parsing.Resource.Generics.DLG.DLG;
+using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
+using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
+using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
 using HolocronToolset.Data;
 using HolocronToolset.Editors.Actions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
@@ -35,7 +37,7 @@ namespace HolocronToolset.Editors
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
         // Original: self.core_dlg: DLG = DLG()
-        private DLG _coreDlg;
+        private DLGType _coreDlg;
         private DLGModel _model;
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:117
         // Original: self.undo_stack: QUndoStack = QUndoStack()
@@ -115,7 +117,7 @@ namespace HolocronToolset.Editors
                 new[] { ResourceType.DLG },
                 installation)
         {
-            _coreDlg = new DLG();
+            _coreDlg = new DLGType();
             _model = new DLGModel(this);
             _actionHistory = new DLGActionHistory(this);
             InitializeComponent();
@@ -206,7 +208,11 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1193-1227
         // Original: def _load_dlg(self, dlg: DLG):
-        private void LoadDLG(DLG dlg)
+        /// <summary>
+        /// Loads a dialog tree into the UI view.
+        /// Made internal for test access (matching Python _load_dlg which tests access directly).
+        /// </summary>
+        internal void LoadDLG(DLGType dlg)
         {
             // Matching PyKotor implementation: Reset focus state and background color when loading
             // Original: if "(Light)" in GlobalSettings().selectedTheme or GlobalSettings().selectedTheme == "Native":
@@ -219,10 +225,25 @@ namespace HolocronToolset.Editors
             
             _coreDlg = dlg;
             _model.ResetModel();
+            
+            // Matching PyKotor: Create items for each starter and load them recursively
+            // Original: for start in dlg.starters:
+            //              item = DLGStandardItem(link=start)
+            //              self.model.appendRow(item)
+            //              self.model.load_dlg_item_rec(item)
             foreach (DLGLink start in dlg.Starters)
             {
+                var item = new DLGStandardItem(start);
                 _model.AddStarter(start);
+                // Get the item that was added and load it recursively
+                var rootItems = _model.GetRootItems();
+                if (rootItems.Count > 0)
+                {
+                    var addedItem = rootItems[rootItems.Count - 1];
+                    _model.LoadDlgItemRec(addedItem);
+                }
             }
+            
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
             UpdateTreeView();
@@ -281,7 +302,7 @@ namespace HolocronToolset.Editors
         public override void New()
         {
             base.New();
-            _coreDlg = new DLG();
+            _coreDlg = new DLGType();
             _model.ResetModel();
             // Clear undo/redo history when creating new dialog
             _actionHistory.Clear();
@@ -294,7 +315,7 @@ namespace HolocronToolset.Editors
         }
 
         // Properties for tests
-        public DLG CoreDlg => _coreDlg;
+        public DLGType CoreDlg => _coreDlg;
         public DLGModel Model => _model;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_editor.py:1170-1184
@@ -1548,6 +1569,15 @@ namespace HolocronToolset.Editors
             _selectedIndex = -1;
             _linkToItems.Clear();
             _nodeToItems.Clear();
+        }
+
+        /// <summary>
+        /// Clears the model (alias for ResetModel for Python compatibility).
+        /// Matching PyKotor implementation: def clear(self):
+        /// </summary>
+        public void Clear()
+        {
+            ResetModel();
         }
 
         public void AddStarter(DLGLink link)
