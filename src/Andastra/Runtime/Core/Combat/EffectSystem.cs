@@ -62,7 +62,8 @@ namespace Andastra.Runtime.Core.Combat
         Knockdown,
         Heal,
         Poison,
-        Disease
+        Disease,
+        AssuredHit
     }
 
     /// <summary>
@@ -491,6 +492,14 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.Poison:
                 case EffectType.Disease:
                     // These are handled by other systems
+                    break;
+
+                case EffectType.AssuredHit:
+                    // AssuredHit is handled by the combat system during attack resolution
+                    // No stat modification needed - the combat system checks for this effect
+                    // Based on swkotor.exe: AssuredHit effect guarantees next attack hits
+                    // Located via string references: EffectAssuredHit @ routine 51
+                    // Original implementation: Effect flag that forces attack to hit (bypasses AC check)
                     break;
             }
         }

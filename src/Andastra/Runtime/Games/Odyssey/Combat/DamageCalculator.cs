@@ -178,13 +178,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             result.TotalAttack = result.D20Roll + attack.AttackBonus;
 
             // Check for automatic hit/miss
+            // Natural 1 always misses, even with AssuredHit effect
             if (result.D20Roll == 1)
             {
                 result.Result = AttackResult.AutomaticMiss;
                 return result;
             }
 
-            if (result.D20Roll == 20)
+            // Check for AssuredHit effect
+            // Based on swkotor.exe: AssuredHit effect guarantees attack hits (bypasses AC check)
+            // Located via string references: EffectAssuredHit @ routine 51
+            // Original implementation: Effect flag that forces attack to hit unless natural 1
+            bool hasAssuredHit = false;
+            if (_effectSystem != null && attack.Attacker != null)
+            {
+                hasAssuredHit = _effectSystem.HasEffect(attack.Attacker, EffectType.AssuredHit);
+            }
+
+            // If AssuredHit is active, force a hit (natural 1 already handled above)
+            if (hasAssuredHit)
+            {
+                result.Result = AttackResult.Hit;
+                // Check if this would be a critical threat based on roll
+                if (result.D20Roll >= attack.CriticalThreat)
+                {
+                    result.IsCriticalThreat = true;
+                }
+            }
+            else if (result.D20Roll == 20)
             {
                 result.Result = AttackResult.AutomaticHit;
                 result.IsCriticalThreat = true;

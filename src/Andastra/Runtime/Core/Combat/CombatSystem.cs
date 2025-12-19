@@ -290,6 +290,25 @@ namespace Andastra.Runtime.Core.Combat
             // Roll d20
             result.NaturalRoll = RollD20();
 
+            // Check for automatic miss (natural 1 always misses, even with AssuredHit)
+            bool naturalMiss = result.NaturalRoll == 1;
+            if (naturalMiss)
+            {
+                result.Success = false;
+                result.Reason = "Natural 1 - automatic miss";
+                return result;
+            }
+
+            // Check for AssuredHit effect
+            // Based on swkotor.exe: AssuredHit effect guarantees attack hits (bypasses AC check)
+            // Located via string references: EffectAssuredHit @ routine 51
+            // Original implementation: Effect flag that forces attack to hit unless natural 1
+            bool hasAssuredHit = false;
+            if (_world != null && _world.EffectSystem != null && attacker != null)
+            {
+                hasAssuredHit = _world.EffectSystem.HasEffect(attacker, EffectType.AssuredHit);
+            }
+
             // Check for critical threat (natural 20)
             result.IsCriticalThreat = result.NaturalRoll >= attackerStats.CriticalThreatRange;
 
@@ -298,16 +317,17 @@ namespace Andastra.Runtime.Core.Combat
             result.TargetDefense = targetStats.Defense;
 
             // Determine hit
-            bool naturalHit = result.NaturalRoll == 20;
-            bool naturalMiss = result.NaturalRoll == 1;
-            bool regularHit = !naturalMiss && result.TotalRoll >= targetStats.Defense;
-
-            result.Success = naturalHit || regularHit;
-
-            if (naturalMiss)
+            if (hasAssuredHit)
             {
-                result.Success = false;
-                result.Reason = "Natural 1 - automatic miss";
+                // AssuredHit forces a hit (natural 1 already handled above)
+                result.Success = true;
+                result.Reason = "AssuredHit effect - automatic hit";
+            }
+            else
+            {
+                bool naturalHit = result.NaturalRoll == 20;
+                bool regularHit = result.TotalRoll >= targetStats.Defense;
+                result.Success = naturalHit || regularHit;
             }
 
             // Confirm critical if threatened

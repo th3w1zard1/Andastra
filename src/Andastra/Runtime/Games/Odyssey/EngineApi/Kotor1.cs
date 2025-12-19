@@ -397,13 +397,13 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 if (ctx.ResourceProvider != null)
                 {
                     IExecutionContext scriptCtx = ctx.WithCaller(target);
-                    
+
                     // Execute script and track instruction count
                     // Based on swkotor.exe: Script execution with instruction budget tracking
                     // Located via string references: Script execution budget limits per frame
                     // Original implementation: Tracks instruction count per entity for budget enforcement
                     int result = _vm.ExecuteScript(scriptName, scriptCtx);
-                    
+
                     // Accumulate instruction count to target entity's action queue component
                     // This allows the game loop to enforce per-frame script budget limits
                     int instructionsExecuted = _vm.InstructionsExecuted;
@@ -415,7 +415,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                             actionQueue.AddInstructionCount(instructionsExecuted);
                         }
                     }
-                    
+
                     return Variable.FromInt(result);
                 }
             }
@@ -3710,20 +3710,27 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             return Variable.Void();
         }
 
-        // TODO: PLACEHOLDER - Effect functions need full implementation (EffectAssuredHit, etc.)
         /// <summary>
-        /// EffectAssuredHit() - Creates an effect that guarantees the next attack will hit
+        /// EffectAssuredHit() - Creates an effect that guarantees attacks will hit
+        /// Based on swkotor.exe: EffectAssuredHit @ routine 51
+        /// Located via string references: EffectAssuredHit function in NWScript
+        /// Original implementation: Creates an effect that forces attacks to automatically hit (bypasses AC check)
+        /// Natural 1 still misses (automatic miss rule takes precedence)
+        /// Typically used for special abilities, Force powers, or scripted events
+        /// Effect duration is temporary (defaults to permanent until removed, but can be set to rounds)
         /// </summary>
         private Variable Func_EffectAssuredHit(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // EffectAssuredHit creates an effect that makes the next attack automatically hit
-            // This is typically used for special abilities or Force powers
-            // In KOTOR, this might be represented as an attack bonus effect or a special flag
-            var effect = new CoreCombat.Effect(CoreCombat.EffectType.AttackIncrease)
+            // EffectAssuredHit() - No parameters, creates an AssuredHit effect
+            // Based on NWScript definition: effect EffectAssuredHit();
+            // The effect guarantees that attacks will hit (unless natural 1)
+            // Duration is typically temporary, lasting for a few rounds or until next attack
+            // Default duration: permanent until removed (can be overridden when applying the effect)
+            var effect = new CoreCombat.Effect(CoreCombat.EffectType.AssuredHit)
             {
-                Amount = 1000, // Very high bonus to guarantee hit
-                DurationType = CoreCombat.EffectDurationType.Temporary,
-                DurationRounds = 1 // Lasts for 1 round (next attack only)
+                DurationType = CoreCombat.EffectDurationType.Permanent,
+                DurationRounds = 0,
+                Amount = 0 // AssuredHit doesn't use Amount field
             };
             return Variable.FromEffect(effect);
         }
