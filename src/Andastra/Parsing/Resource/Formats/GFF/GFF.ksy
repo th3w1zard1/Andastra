@@ -148,10 +148,6 @@ types:
         doc: |
           Field name label (null-padded to 16 bytes, null-terminated).
           The actual label length is determined by the first null byte.
-    instances:
-      name_trimmed:
-        value: name.rstrip('\x00')
-        doc: Label name with trailing nulls removed
   
   struct_array:
     seq:
