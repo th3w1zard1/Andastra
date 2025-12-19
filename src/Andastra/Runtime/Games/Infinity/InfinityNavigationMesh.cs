@@ -231,20 +231,7 @@ namespace Andastra.Runtime.Games.Infinity
             return null;
         }
 
-        // Helper methods
-        private bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance)
-        {
-            // TODO: Implement Infinity AABB-ray intersection
-            return false;
-        }
-
-        private bool RayAabbIntersectPoint(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance, out Vector3 hitPoint, out float hitDistance)
-        {
-            // TODO: Implement Infinity AABB-ray intersection point calculation
-            hitPoint = Vector3.Zero;
-            hitDistance = 0f;
-            return false;
-        }
+        // RayAabbIntersect and RayAabbIntersectPoint are now provided by BaseNavigationMesh base class
 
         // Internal structures
         internal struct DynamicObstacle

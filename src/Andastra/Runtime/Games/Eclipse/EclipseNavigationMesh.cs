@@ -1105,21 +1105,7 @@ namespace Andastra.Runtime.Games.Eclipse
             return false;
         }
 
-        /// <summary>
-        /// Tests ray-AABB intersection.
-        /// </summary>
-        private bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance)
-        {
-            // Simplified AABB-ray intersection test
-            Vector3 invDir = new Vector3(1.0f / direction.X, 1.0f / direction.Y, 1.0f / direction.Z);
-            Vector3 t1 = (min - origin) * invDir;
-            Vector3 t2 = (max - origin) * invDir;
-
-            float tmin = Math.Max(Math.Max(Math.Min(t1.X, t2.X), Math.Min(t1.Y, t2.Y)), Math.Min(t1.Z, t2.Z));
-            float tmax = Math.Min(Math.Min(Math.Max(t1.X, t2.X), Math.Max(t1.Y, t2.Y)), Math.Max(t1.Z, t2.Z));
-
-            return tmax >= tmin && tmin <= maxDistance && tmax >= 0;
-        }
+        // RayAabbIntersect is now provided by BaseNavigationMesh base class
 
         /// <summary>
         /// Tests ray-triangle intersection.
@@ -1766,42 +1752,18 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Checks line of sight between two points.
         /// </summary>
         /// <remarks>
-        /// Eclipse line of sight considers dynamic geometry.
-        /// Checks through destructible objects and movable obstacles.
-        /// Supports different sight types (visual, hearing, etc.).
+        /// Eclipse-specific: Uses base class common algorithm with dynamic obstacles and destructible modifications.
         /// 
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic line of sight with destructible environment support
         /// - DragonAge2.exe: Enhanced dynamic line of sight with physics integration
         /// - MassEffect.exe/MassEffect2.exe: Physics-aware line of sight with dynamic obstacles
         /// 
-        /// Algorithm:
-        /// 1. Handle edge case: same point (always has line of sight)
-        /// 2. Check static geometry with destructible modifications:
-        ///    - Raycast against static mesh
-        ///    - If hit face is destroyed, line of sight is clear (destructible objects don't block)
-        ///    - If hit face is modified, check modified geometry
-        ///    - If hit face is walkable, line of sight is clear (walkable surfaces don't block)
-        /// 3. Check dynamic obstacles:
-        ///    - Raycast against active dynamic obstacles
-        ///    - Only non-walkable obstacles block line of sight
-        ///    - Walkable obstacles (platforms, movable surfaces) don't block
-        /// 4. Consider multi-level navigation surfaces:
-        ///    - Check if ray passes through navigation levels
-        ///    - Ground-level surfaces don't block line of sight
-        /// 5. Return true if no blocking geometry found
-        /// 
         /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
         /// - daorigins.exe: Line of sight function (search for "HasLineOfSight", "LineOfSight", "Raycast" references)
         /// - DragonAge2.exe: Enhanced line of sight function (search for dynamic obstacle integration)
         /// - MassEffect.exe: Physics-aware line of sight (search for physics integration in line of sight)
         /// - MassEffect2.exe: Enhanced physics-aware line of sight (search for improved line of sight functions)
-        /// </remarks>
-        /// <summary>
-        /// Checks line of sight between two points.
-        /// </summary>
-        /// <remarks>
-        /// Eclipse-specific: Uses base class common algorithm with dynamic obstacles and destructible modifications.
         /// </remarks>
         public new bool HasLineOfSight(Vector3 start, Vector3 end)
         {
@@ -1908,83 +1870,6 @@ namespace Andastra.Runtime.Games.Eclipse
             return true;
         }
 
-        /// <summary>
-        /// Calculates the intersection point of a ray with an AABB.
-        /// </summary>
-        /// <param name="origin">Ray origin.</param>
-        /// <param name="direction">Normalized ray direction.</param>
-        /// <param name="min">AABB minimum bounds.</param>
-        /// <param name="max">AABB maximum bounds.</param>
-        /// <param name="maxDistance">Maximum ray distance.</param>
-        /// <param name="hitPoint">Output intersection point.</param>
-        /// <param name="hitDistance">Output intersection distance.</param>
-        /// <returns>True if ray intersects AABB, false otherwise.</returns>
-        private bool RayAabbIntersectPoint(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance, out Vector3 hitPoint, out float hitDistance)
-        {
-            hitPoint = Vector3.Zero;
-            hitDistance = 0f;
-
-            // Avoid division by zero
-            float invDirX = direction.X != 0f ? 1f / direction.X : float.MaxValue;
-            float invDirY = direction.Y != 0f ? 1f / direction.Y : float.MaxValue;
-            float invDirZ = direction.Z != 0f ? 1f / direction.Z : float.MaxValue;
-
-            float tmin = (min.X - origin.X) * invDirX;
-            float tmax = (max.X - origin.X) * invDirX;
-
-            if (invDirX < 0)
-            {
-                float temp = tmin;
-                tmin = tmax;
-                tmax = temp;
-            }
-
-            float tymin = (min.Y - origin.Y) * invDirY;
-            float tymax = (max.Y - origin.Y) * invDirY;
-
-            if (invDirY < 0)
-            {
-                float temp = tymin;
-                tymin = tymax;
-                tymax = temp;
-            }
-
-            if (tmin > tymax || tymin > tmax)
-            {
-                return false;
-            }
-
-            if (tymin > tmin) tmin = tymin;
-            if (tymax < tmax) tmax = tymax;
-
-            float tzmin = (min.Z - origin.Z) * invDirZ;
-            float tzmax = (max.Z - origin.Z) * invDirZ;
-
-            if (invDirZ < 0)
-            {
-                float temp = tzmin;
-                tzmin = tzmax;
-                tzmax = temp;
-            }
-
-            if (tmin > tzmax || tzmin > tmax)
-            {
-                return false;
-            }
-
-            if (tzmin > tmin) tmin = tzmin;
-            if (tzmax < tmax) tmax = tzmax;
-
-            if (tmin < 0) tmin = tmax;
-            if (tmin < 0 || tmin > maxDistance)
-            {
-                return false;
-            }
-
-            hitDistance = tmin;
-            hitPoint = origin + direction * tmin;
-            return true;
-        }
 
         /// <summary>
         /// Finds nearby cover points.

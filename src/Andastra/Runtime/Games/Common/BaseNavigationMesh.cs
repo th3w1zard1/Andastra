@@ -118,6 +118,158 @@ namespace Andastra.Runtime.Games.Common
             return true;
         }
 
+        /// <summary>
+        /// Calculates the intersection point of a ray with an AABB.
+        /// </summary>
+        /// <param name="origin">Ray origin.</param>
+        /// <param name="direction">Normalized ray direction.</param>
+        /// <param name="min">AABB minimum bounds.</param>
+        /// <param name="max">AABB maximum bounds.</param>
+        /// <param name="maxDistance">Maximum ray distance.</param>
+        /// <param name="hitPoint">Output intersection point.</param>
+        /// <param name="hitDistance">Output intersection distance.</param>
+        /// <returns>True if ray intersects AABB, false otherwise.</returns>
+        /// <remarks>
+        /// Common helper method used by engines with dynamic obstacles (Eclipse, Infinity).
+        /// Implements standard ray-AABB intersection algorithm.
+        /// </remarks>
+        protected bool RayAabbIntersectPoint(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance, out Vector3 hitPoint, out float hitDistance)
+        {
+            hitPoint = Vector3.Zero;
+            hitDistance = 0f;
+
+            // Avoid division by zero
+            float invDirX = direction.X != 0f ? 1f / direction.X : float.MaxValue;
+            float invDirY = direction.Y != 0f ? 1f / direction.Y : float.MaxValue;
+            float invDirZ = direction.Z != 0f ? 1f / direction.Z : float.MaxValue;
+
+            float tmin = (min.X - origin.X) * invDirX;
+            float tmax = (max.X - origin.X) * invDirX;
+
+            if (invDirX < 0)
+            {
+                float temp = tmin;
+                tmin = tmax;
+                tmax = temp;
+            }
+
+            float tymin = (min.Y - origin.Y) * invDirY;
+            float tymax = (max.Y - origin.Y) * invDirY;
+
+            if (invDirY < 0)
+            {
+                float temp = tymin;
+                tymin = tymax;
+                tymax = temp;
+            }
+
+            if (tmin > tymax || tymin > tmax)
+            {
+                return false;
+            }
+
+            if (tymin > tmin) tmin = tymin;
+            if (tymax < tmax) tmax = tymax;
+
+            float tzmin = (min.Z - origin.Z) * invDirZ;
+            float tzmax = (max.Z - origin.Z) * invDirZ;
+
+            if (invDirZ < 0)
+            {
+                float temp = tzmin;
+                tzmin = tzmax;
+                tzmax = temp;
+            }
+
+            if (tmin > tzmax || tzmin > tmax)
+            {
+                return false;
+            }
+
+            if (tzmin > tmin) tmin = tzmin;
+            if (tzmax < tmax) tmax = tzmax;
+
+            if (tmin < 0) tmin = tmax;
+            if (tmin < 0 || tmin > maxDistance)
+            {
+                return false;
+            }
+
+            hitDistance = tmin;
+            hitPoint = origin + direction * tmin;
+            return true;
+        }
+
+        /// <summary>
+        /// Tests if a ray intersects an AABB.
+        /// </summary>
+        /// <param name="origin">Ray origin.</param>
+        /// <param name="direction">Normalized ray direction.</param>
+        /// <param name="min">AABB minimum bounds.</param>
+        /// <param name="max">AABB maximum bounds.</param>
+        /// <param name="maxDistance">Maximum ray distance.</param>
+        /// <returns>True if ray intersects AABB, false otherwise.</returns>
+        /// <remarks>
+        /// Common helper method used by engines with dynamic obstacles (Eclipse, Infinity).
+        /// Faster than RayAabbIntersectPoint when only intersection test is needed.
+        /// </remarks>
+        protected bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance)
+        {
+            // Avoid division by zero
+            float invDirX = direction.X != 0f ? 1f / direction.X : float.MaxValue;
+            float invDirY = direction.Y != 0f ? 1f / direction.Y : float.MaxValue;
+            float invDirZ = direction.Z != 0f ? 1f / direction.Z : float.MaxValue;
+
+            float tmin = (min.X - origin.X) * invDirX;
+            float tmax = (max.X - origin.X) * invDirX;
+
+            if (invDirX < 0)
+            {
+                float temp = tmin;
+                tmin = tmax;
+                tmax = temp;
+            }
+
+            float tymin = (min.Y - origin.Y) * invDirY;
+            float tymax = (max.Y - origin.Y) * invDirY;
+
+            if (invDirY < 0)
+            {
+                float temp = tymin;
+                tymin = tymax;
+                tymax = temp;
+            }
+
+            if (tmin > tymax || tymin > tmax)
+            {
+                return false;
+            }
+
+            if (tymin > tmin) tmin = tymin;
+            if (tymax < tmax) tmax = tymax;
+
+            float tzmin = (min.Z - origin.Z) * invDirZ;
+            float tzmax = (max.Z - origin.Z) * invDirZ;
+
+            if (invDirZ < 0)
+            {
+                float temp = tzmin;
+                tzmin = tzmax;
+                tzmax = temp;
+            }
+
+            if (tmin > tzmax || tzmin > tmax)
+            {
+                return false;
+            }
+
+            if (tzmin > tmin) tmin = tzmin;
+            if (tzmax < tmax) tmax = tzmax;
+
+            if (tmin < 0) tmin = tmax;
+            return tmin >= 0 && tmin <= maxDistance;
+        }
+
         // INavigationMesh interface - all methods must be implemented by subclasses
         public abstract IList<Vector3> FindPath(Vector3 start, Vector3 goal);
         public abstract int FindFaceAt(Vector3 position);
