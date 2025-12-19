@@ -6,6 +6,7 @@ using Avalonia.Input;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
 using Andastra.Parsing.Common;
+using Andastra.Utility;
 using SettingsBase = HolocronToolset.Data.Settings;
 
 namespace HolocronToolset.Widgets.Settings
@@ -48,10 +49,15 @@ namespace HolocronToolset.Widgets.Settings
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:72-76
         // Original: def validateColour(self, colourName: str, color_value: int) -> int:
-        protected int ValidateColour(string colourName, int colorValue)
+        protected int ValidateColour(string colourName, object colorValue)
         {
-            // TODO: Validate color value when color validation is available
-            return colorValue;
+            if (!UtilityMisc.IsInt(colorValue))
+            {
+                System.Console.WriteLine($"Invalid color setting: '{colourName}', expected a RGBA color integer, but got {colorValue} (type {colorValue?.GetType().Name ?? "null"})");
+                return ResetAndGetDefaultColour(colourName);
+            }
+            // Convert to int if it's a valid integer
+            return Convert.ToInt32(colorValue);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:78-84
@@ -83,7 +89,9 @@ namespace HolocronToolset.Widgets.Settings
         // Original: def _registerColour(self, widget: ColorEdit, colourName: str):
         protected void RegisterColour(ColorEdit widget, string colourName)
         {
-            int colorValue = ValidateColour(colourName, _settings.GetValue<int>(colourName, 0));
+            // Get raw value from settings (may be any type) and validate it
+            object rawValue = _settings.GetValue<object>(colourName, 0);
+            int colorValue = ValidateColour(colourName, rawValue);
             widget.SetColor(Andastra.Parsing.Common.Color.FromRgbaInteger(colorValue));
             _colours[colourName] = widget;
         }
@@ -94,6 +102,37 @@ namespace HolocronToolset.Widgets.Settings
         {
             // TODO: Reset setting and get default when SettingsProperty system is fully available
             return Tuple.Create(new HashSet<Key>(), new HashSet<PointerUpdateKind>());
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:96-100
+        // Original: def _reset_and_get_default(self, settingName: str) -> Any:
+        private int ResetAndGetDefaultColour(string settingName)
+        {
+            try
+            {
+                _settings.ResetSetting(settingName);
+                object defaultValue = _settings.GetDefault(settingName);
+                System.Console.WriteLine($"Due to last error, will use default value '{defaultValue}'");
+                
+                // Convert default value to int
+                if (defaultValue is int intValue)
+                {
+                    return intValue;
+                }
+                if (UtilityMisc.IsInt(defaultValue))
+                {
+                    return Convert.ToInt32(defaultValue);
+                }
+                // If default is not an int, return 0 (transparent black)
+                System.Console.WriteLine($"Warning: Default value for '{settingName}' is not an integer, using 0");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error resetting color setting '{settingName}': {ex.Message}");
+                // Return 0 (transparent black) as fallback
+                return 0;
+            }
         }
     }
 }
