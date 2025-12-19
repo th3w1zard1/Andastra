@@ -797,8 +797,8 @@ namespace HolocronToolset.Tests.Formats
                 VoTextChanged = true,
                 Unskippable = true
             };
-            entry.Text.SetString(Language.English, Gender.Male, "Line");
-            entry.Text.SetString(Language.French, Gender.Female, "Ligne");
+            entry.Text.SetData(Language.English, Gender.Male, "Line");
+            entry.Text.SetData(Language.French, Gender.Female, "Ligne");
             var animation = new DLGAnimation { Participant = "p1", AnimationId = 123 };
             entry.Animations.Add(animation);
 

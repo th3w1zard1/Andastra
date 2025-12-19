@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Parsing.Formats.BWM;
-using Andastra.Runtime.Games.Eclipse;
+// TODO: Move this converter to Andastra.Runtime.Games.Eclipse to avoid circular dependency
+// using Andastra.Runtime.Games.Eclipse;
 
 namespace Andastra.Runtime.Content.Converters
 {
@@ -41,7 +42,11 @@ namespace Andastra.Runtime.Content.Converters
         /// </summary>
         /// <param name="bwm">The source BWM data from Andastra.Parsing</param>
         /// <returns>An EclipseNavigationMesh ready for pathfinding and collision</returns>
-        public static EclipseNavigationMesh Convert(BWM bwm)
+        /// <remarks>
+        /// TODO: Move this converter to Andastra.Runtime.Games.Eclipse to avoid circular dependency.
+        /// This method should return EclipseNavigationMesh but Content cannot depend on Games.
+        /// </remarks>
+        public static object Convert(BWM bwm)
         {
             if (bwm == null)
             {
