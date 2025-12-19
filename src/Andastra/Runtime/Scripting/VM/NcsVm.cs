@@ -134,6 +134,16 @@ namespace Andastra.Runtime.Scripting.VM
 
             Array.Clear(_stack, 0, _stack.Length);
 
+            // Restore stored VM state if present (for DelayCommand state restoration)
+            // Based on swkotor2.exe: State restoration for delayed actions
+            // Original implementation: Restores stack, locals, and pools before executing delayed action
+            if (ctx != null && ctx is ExecutionContext execContext && execContext.StoredVmState != null)
+            {
+                RestoreState(execContext.StoredVmState);
+                // Clear the stored state after restoration to prevent re-restoration
+                execContext.StoredVmState = null;
+            }
+
             int result = 0;
 
             try
@@ -1051,26 +1061,207 @@ namespace Andastra.Runtime.Scripting.VM
             int stackBytes = ReadInt32();
             int localsBytes = ReadInt32();
 
-            // Store state for deferred action execution
-            // This captures the current stack and local variable state
-            // The stored state will be used when the action executes later (via DelayCommand)
-            // TODO: SIMPLIFIED - For now, we capture the state but the actual restoration happens in the action system
-            // Full implementation would:
-            // 1. Capture stack region (from _sp - stackBytes to _sp)
-            // 2. Capture local variables (from _bp to _bp + localsBytes)
-            // 3. Store this state with the action for later restoration
-            // Note: The action system (DelayScheduler) handles the actual execution timing
-            // The VM just needs to mark that state should be stored for this action parameter
-            
-            // TODO: SIMPLIFIED - Full implementation would serialize stack/locals for DelayCommand state restoration
-            // In the original engine, this state is serialized and attached to the action
-            // When the action executes, the state is restored before executing the action script
-            if (_context != null)
+            // Validate stack and locals sizes
+            if (stackBytes < 0 || stackBytes > StackSize)
             {
-                // TODO: PLACEHOLDER - Store state in execution context for action system to use
-                // The action system will restore this state when executing the delayed action
-                // Full implementation would serialize the actual stack/locals bytes
+                throw new InvalidOperationException($"Invalid stackBytes in STORE_STATE: {stackBytes}");
             }
+            if (localsBytes < 0 || localsBytes > StackSize)
+            {
+                throw new InvalidOperationException($"Invalid localsBytes in STORE_STATE: {localsBytes}");
+            }
+
+            // Calculate source regions
+            int stackStart = _sp - stackBytes;
+            int localsStart = _bp;
+            int localsEnd = _bp + localsBytes;
+
+            // Validate bounds
+            if (stackStart < 0 || stackStart > _sp || _sp > _stack.Length)
+            {
+                throw new InvalidOperationException($"Invalid stack region in STORE_STATE: SP={_sp}, stackBytes={stackBytes}");
+            }
+            if (localsStart < 0 || localsEnd > _stack.Length)
+            {
+                throw new InvalidOperationException($"Invalid locals region in STORE_STATE: BP={_bp}, localsBytes={localsBytes}");
+            }
+
+            // Create VM state object
+            var vmState = new VmState
+            {
+                StackBytes = stackBytes,
+                LocalsBytes = localsBytes,
+                StackPointer = _sp,
+                BasePointer = _bp,
+                NextStringHandle = _nextStringHandle,
+                NextLocationId = _nextLocationId
+            };
+
+            // Capture stack region (from _sp - stackBytes to _sp)
+            if (stackBytes > 0)
+            {
+                vmState.StackData = new byte[stackBytes];
+                Array.Copy(_stack, stackStart, vmState.StackData, 0, stackBytes);
+            }
+            else
+            {
+                vmState.StackData = new byte[0];
+            }
+
+            // Capture local variables (from _bp to _bp + localsBytes)
+            if (localsBytes > 0)
+            {
+                vmState.LocalsData = new byte[localsBytes];
+                Array.Copy(_stack, localsStart, vmState.LocalsData, 0, localsBytes);
+            }
+            else
+            {
+                vmState.LocalsData = new byte[0];
+            }
+
+            // Capture string pool - need to find all string handles referenced in stack/locals
+            // Scan stack and locals data for 4-byte integer values that could be string handles
+            var referencedStringHandles = new HashSet<int>();
+            ScanForStringHandles(vmState.StackData, referencedStringHandles);
+            ScanForStringHandles(vmState.LocalsData, referencedStringHandles);
+
+            // Copy referenced strings to state
+            foreach (int handle in referencedStringHandles)
+            {
+                if (_stringPool.TryGetValue(handle, out string str))
+                {
+                    vmState.StringPool[handle] = str;
+                }
+            }
+
+            // Capture location pool - need to find all location IDs referenced in stack/locals
+            // Location IDs are in the range 0x80000000 and above
+            var referencedLocationIds = new HashSet<uint>();
+            ScanForLocationIds(vmState.StackData, referencedLocationIds);
+            ScanForLocationIds(vmState.LocalsData, referencedLocationIds);
+
+            // Copy referenced locations to state
+            foreach (uint locationId in referencedLocationIds)
+            {
+                if (_locationPool.TryGetValue(locationId, out Location location))
+                {
+                    vmState.LocationPool[locationId] = location;
+                }
+            }
+
+            // Store state in execution context
+            if (_context != null && _context is ExecutionContext execContext)
+            {
+                execContext.StoredVmState = vmState;
+            }
+        }
+
+        /// <summary>
+        /// Scans byte array for 4-byte integer values that could be string handles.
+        /// String handles are non-zero integers that exist in the string pool.
+        /// </summary>
+        private void ScanForStringHandles(byte[] data, HashSet<int> handles)
+        {
+            if (data == null || data.Length < 4)
+            {
+                return;
+            }
+
+            // Scan 4-byte aligned integers
+            for (int i = 0; i <= data.Length - 4; i += 4)
+            {
+                int value = (data[i] << 24) | (data[i + 1] << 16) | (data[i + 2] << 8) | data[i + 3];
+                // Check if this could be a string handle (non-zero and in valid range)
+                if (value != 0 && value > 0 && value < int.MaxValue)
+                {
+                    // Check if it exists in string pool
+                    if (_stringPool.ContainsKey(value))
+                    {
+                        handles.Add(value);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Scans byte array for 4-byte integer values that could be location IDs.
+        /// Location IDs are in the range 0x80000000 and above.
+        /// </summary>
+        private void ScanForLocationIds(byte[] data, HashSet<uint> locationIds)
+        {
+            if (data == null || data.Length < 4)
+            {
+                return;
+            }
+
+            // Scan 4-byte aligned integers
+            for (int i = 0; i <= data.Length - 4; i += 4)
+            {
+                uint value = (uint)((data[i] << 24) | (data[i + 1] << 16) | (data[i + 2] << 8) | data[i + 3]);
+                // Check if this could be a location ID (0x80000000 or above)
+                if (value >= LocationIdBase)
+                {
+                    // Check if it exists in location pool
+                    if (_locationPool.ContainsKey(value))
+                    {
+                        locationIds.Add(value);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Restores VM state from a previously stored VmState.
+        /// Used when executing delayed actions to restore the execution context.
+        /// </summary>
+        /// <param name="state">The VM state to restore.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: State restoration for DelayCommand.
+        /// Original implementation: Restores stack, locals, and pools before executing delayed action.
+        /// </remarks>
+        public void RestoreState(VmState state)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            // Restore stack and base pointers first
+            _sp = state.StackPointer;
+            _bp = state.BasePointer;
+
+            // Restore stack region (from _sp - stackBytes to _sp)
+            if (state.StackData != null && state.StackBytes > 0)
+            {
+                int stackStart = _sp - state.StackBytes;
+                if (stackStart >= 0 && stackStart + state.StackBytes <= _stack.Length)
+                {
+                    Array.Copy(state.StackData, 0, _stack, stackStart, state.StackBytes);
+                }
+            }
+
+            // Restore local variables (from _bp to _bp + localsBytes)
+            if (state.LocalsData != null && state.LocalsBytes > 0)
+            {
+                if (_bp + state.LocalsBytes <= _stack.Length)
+                {
+                    Array.Copy(state.LocalsData, 0, _stack, _bp, state.LocalsBytes);
+                }
+            }
+
+            // Restore string pool
+            foreach (var kvp in state.StringPool)
+            {
+                _stringPool[kvp.Key] = kvp.Value;
+            }
+            _nextStringHandle = state.NextStringHandle;
+
+            // Restore location pool
+            foreach (var kvp in state.LocationPool)
+            {
+                _locationPool[kvp.Key] = kvp.Value;
+            }
+            _nextLocationId = state.NextLocationId;
         }
 
         /// <summary>

@@ -47,12 +47,19 @@ namespace Andastra.Runtime.Scripting.VM
         /// </summary>
         public object AdditionalContext { get; set; }
 
+        /// <summary>
+        /// Stored VM state for DelayCommand state restoration.
+        /// Set by STORE_STATE opcode when capturing execution context for delayed actions.
+        /// </summary>
+        public VmState StoredVmState { get; set; }
+
         public IExecutionContext WithCaller(IEntity newCaller)
         {
             var ctx = new ExecutionContext(newCaller, World, EngineApi, Globals);
             ctx.Triggerer = Triggerer;
             ctx.ResourceProvider = ResourceProvider;
             ctx.AdditionalContext = AdditionalContext;
+            ctx.StoredVmState = StoredVmState?.Clone();
             return ctx;
         }
 
@@ -62,6 +69,7 @@ namespace Andastra.Runtime.Scripting.VM
             ctx.Triggerer = newTriggerer;
             ctx.ResourceProvider = ResourceProvider;
             ctx.AdditionalContext = AdditionalContext;
+            ctx.StoredVmState = StoredVmState?.Clone();
             return ctx;
         }
 

@@ -1,3 +1,5 @@
+using Andastra.Runtime.Scripting.VM;
+
 namespace Andastra.Runtime.Scripting.Interfaces
 {
     /// <summary>
@@ -57,6 +59,17 @@ namespace Andastra.Runtime.Scripting.Interfaces
         /// Whether to enable instruction tracing.
         /// </summary>
         bool EnableTracing { get; set; }
+
+        /// <summary>
+        /// Restores VM state from a previously stored VmState.
+        /// Used when executing delayed actions to restore the execution context.
+        /// </summary>
+        /// <param name="state">The VM state to restore.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: State restoration for DelayCommand.
+        /// Original implementation: Restores stack, locals, and pools before executing delayed action.
+        /// </remarks>
+        void RestoreState(VmState state);
     }
 }
 
