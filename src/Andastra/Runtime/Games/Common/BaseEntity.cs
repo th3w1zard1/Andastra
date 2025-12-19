@@ -10,25 +10,26 @@ namespace Andastra.Runtime.Games.Common
     /// </summary>
     /// <remarks>
     /// Base Entity Implementation:
-    /// - Common entity system with ObjectId, Tag, ObjectType across all engines
-    /// - Component-based architecture for stats, transform, inventory, etc.
-    /// - Script hooks for events (OnHeartbeat, OnAttacked, etc.)
-    /// - Entity serialization/deserialization for save games
-    ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Entity management and serialization functions
-    /// - swkotor2.exe: FUN_004e28c0 (save), FUN_005fb0f0 (load), ObjectId at offset +4
-    /// - nwmain.exe: Aurora entity system with similar structure
-    /// - daorigins.exe: Eclipse entity system with enhanced components
-    /// - DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Advanced entity systems
-    ///
-    /// Common structure across engines:
-    /// - ObjectId (uint32): Unique identifier assigned sequentially
-    /// - Tag (string): Script lookup identifier
-    /// - ObjectType (enum): Creature, Door, Placeable, Trigger, etc.
-    /// - Component system: Modular stats, transform, inventory, etc.
-    /// - Script hooks: OnHeartbeat, OnAttacked, OnDeath, etc.
+    /// Common entity system shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity).
+    /// 
+    /// Common structure across all engines:
+    /// - ObjectId (uint32): Unique identifier assigned sequentially, used for script references and save game serialization
+    /// - Tag (string): Script lookup identifier for GetObjectByTag functions, must be unique within an area
+    /// - ObjectType (enum): Type of object (Creature, Door, Placeable, Trigger, Waypoint, Sound, etc.)
+    /// - AreaId (uint32): Identifies which area the entity belongs to
+    /// - Component system: Modular component-based architecture for stats, transform, inventory, etc.
+    /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, OnDeath, etc.)
     /// - Event handling: DispatchEvent system routes events to entities
+    /// - Entity serialization/deserialization: Save/load entity state for save games
+    /// 
+    /// Engine-specific implementations:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyEntity - ObjectId at offset +4, GFF-based serialization
+    /// - Aurora (nwmain.exe, nwn2main.exe): AuroraEntity - CExoString-based Tag, similar structure
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): EclipseEntity - Enhanced component system
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): InfinityEntity - Streamlined entity system
+    /// 
+    /// All engine-specific details (function addresses, offsets, implementation specifics) are in subclasses.
+    /// This base class contains only functionality that is identical across ALL engines.
     /// </remarks>
     [PublicAPI]
     public abstract class BaseEntity : IEntity
@@ -40,9 +41,10 @@ namespace Andastra.Runtime.Games.Common
         /// Unique object ID for this entity.
         /// </summary>
         /// <remarks>
-        /// Based on ObjectId field at offset +4 in entity structure.
         /// Unique 32-bit identifier assigned sequentially across all entities.
         /// Used for script references and save game serialization.
+        /// Common across all engines (Odyssey, Aurora, Eclipse, Infinity).
+        /// Engine-specific offsets and implementation details are in subclasses.
         /// </remarks>
         public abstract uint ObjectId { get; }
 
@@ -110,10 +112,24 @@ namespace Andastra.Runtime.Games.Common
         /// <remarks>
         /// Attaches component to entity, enabling associated behavior.
         /// Only one component of each type allowed per entity.
+        /// Sets component Owner and calls OnAttach lifecycle hook.
         /// </remarks>
         public void AddComponent<T>(T component) where T : class, IComponent
         {
-            _components[typeof(T)] = component;
+            if (component == null)
+            {
+                throw new System.ArgumentNullException("component");
+            }
+
+            System.Type type = typeof(T);
+            if (_components.ContainsKey(type))
+            {
+                throw new System.InvalidOperationException("Component of type " + type.Name + " already exists on entity " + ObjectId);
+            }
+
+            _components[type] = component;
+            component.Owner = this;
+            component.OnAttach();
         }
 
         /// <summary>

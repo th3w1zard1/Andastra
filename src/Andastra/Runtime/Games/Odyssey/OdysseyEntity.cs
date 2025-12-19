@@ -25,13 +25,24 @@ namespace Andastra.Runtime.Games.Odyssey
     ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Entity creation and management
+    ///   - ObjectId string reference: "ObjectId" @ 0x00744c24
+    ///   - ObjectIDList string reference: "ObjectIDList" @ 0x007465cc
+    ///   - Object events: "EVENT_DESTROY_OBJECT" @ 0x00744b10, "EVENT_OPEN_OBJECT" @ 0x00744b68, "EVENT_CLOSE_OBJECT" @ 0x00744b7c
+    ///   - "EVENT_LOCK_OBJECT" @ 0x00744ae8, "EVENT_UNLOCK_OBJECT" @ 0x00744afc
     /// - swkotor2.exe: ObjectId at offset +4, FUN_004e28c0 (save), FUN_005fb0f0 (load)
-    /// - Entity structure: ObjectId (uint32), Tag (string), ObjectType (enum)
+    ///   - ObjectId string reference: "ObjectId" @ 0x007bce5c
+    ///   - ObjectIDList string reference: "ObjectIDList" @ 0x007bfd7c
+    ///   - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
+    ///   - Object list handling: "ObjectList" @ 0x007bfdbc, "ObjectValue" @ 0x007bfd70
+    ///   - Entity serialization: FUN_004e28c0 @ 0x004e28c0 saves Creature List with ObjectId fields (offset +4 in object structure)
+    ///   - Entity deserialization: FUN_005fb0f0 @ 0x005fb0f0 loads creature data from GFF, reads ObjectId at offset +4
+    ///   - AreaId: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90, "AreaId" @ 0x007bef48
+    /// - Entity structure: ObjectId (uint32) at offset +4, Tag (string), ObjectType (enum), AreaId (uint32)
     /// - Component system: Transform, stats, inventory, script hooks, etc.
     ///
     /// Entity lifecycle:
     /// - Created from GIT file templates or script instantiation
-    /// - Assigned sequential ObjectId for uniqueness
+    /// - Assigned sequential ObjectId for uniqueness (OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001)
     /// - Components attached based on ObjectType
     /// - Registered with area and world systems
     /// - Updated each frame, destroyed when no longer needed
@@ -71,8 +82,10 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on ObjectId field at offset +4 in entity structure.
+        /// Located via string references: "ObjectId" @ 0x007bce5c (swkotor2.exe), "ObjectId" @ 0x00744c24 (swkotor.exe)
         /// Assigned sequentially and must be unique across all entities.
         /// Used for script references and save game serialization.
+        /// OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001
         /// </remarks>
         public override uint ObjectId => _objectId;
 
@@ -81,6 +94,8 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Script-accessible identifier for GetObjectByTag functions.
+        /// Located via string references in swkotor.exe and swkotor2.exe (various locations).
+        /// Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 (swkotor2.exe) used for debug/error logging
         /// Can be changed at runtime for dynamic lookups.
         /// </remarks>
         public override string Tag
@@ -175,10 +190,28 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Attaches components common to all entity types.
         /// </summary>
+        /// <remarks>
+        /// Common components attached to all entities:
+        /// - TransformComponent: Position, orientation, scale for all entities
+        /// - ScriptHooksComponent: Script event hooks and local variables for all entities
+        ///
+        /// Based on swkotor2.exe: All entities have transform and script hooks capability.
+        /// Script hooks are loaded from GFF templates (UTC, UTD, UTP, etc.) and can be
+        /// set at runtime via SetScript functions.
+        /// </remarks>
         private void AttachCommonComponents()
         {
+            // Attach script hooks component for all entities
+            // Based on swkotor2.exe: All entities support script hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
+            // ComponentInitializer also attaches this, but we ensure it's attached here for consistency
+            // Script hooks are loaded from GFF templates and can be set/modified at runtime
+            if (!HasComponent<IScriptHooksComponent>())
+            {
+                var scriptHooksComponent = new ScriptHooksComponent();
+                AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+            }
+
             // TODO: Attach transform component
-            // TODO: Attach script hooks component
             // TODO: Attach any other common components
         }
 

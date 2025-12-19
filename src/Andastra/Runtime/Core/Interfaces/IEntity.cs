@@ -8,21 +8,25 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Entity Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe entity system
-    /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
-    /// - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
-    /// - Object list handling: "ObjectIDList" @ 0x007bfd7c, "ObjectList" @ 0x007bfdbc, "ObjectValue" @ 0x007bfd70
-    /// - Entity serialization: FUN_004e28c0 @ 0x004e28c0 saves Creature List with ObjectId fields (offset +4 in object structure)
-    /// - Entity deserialization: FUN_005fb0f0 @ 0x005fb0f0 loads creature data from GFF, reads ObjectId at offset +4
-    /// - Original engine: Entities have ObjectId (uint32), Tag (string), ObjectType (enum)
-    /// - Component system: Entities use component-based architecture for stats, transform, inventory, etc.
-    /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
-    /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId at offset +4
-    /// - Object events: "EVENT_DESTROY_OBJECT" @ 0x007bcd48, "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
-    /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Object entry/exit events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9f8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc
+    /// Common entity system shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity).
+    ///
+    /// Common structure across all engines:
+    /// - ObjectId (uint32): Unique identifier assigned sequentially, used for script references and save game serialization
+    /// - Tag (string): Script lookup identifier for GetObjectByTag functions, must be unique within an area
+    /// - ObjectType (enum): Type of object (Creature, Door, Placeable, Trigger, Waypoint, Sound, etc.)
+    /// - AreaId (uint32): Identifies which area the entity belongs to
+    /// - Component system: Modular component-based architecture for stats, transform, inventory, etc.
+    /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, OnDeath, etc.)
+    /// - Event handling: DispatchEvent system routes events to entities
+    /// - Entity serialization/deserialization: Save/load entity state for save games
+    ///
+    /// Engine-specific implementations:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyEntity - ObjectId at offset +4, GFF-based serialization
+    /// - Aurora (nwmain.exe, nwn2main.exe): AuroraEntity - CExoString-based Tag, similar structure
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): EclipseEntity - Enhanced component system
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): InfinityEntity - Streamlined entity system
+    ///
+    /// All engine-specific details are in subclasses. This interface defines only common functionality.
     /// </remarks>
     public interface IEntity
     {
@@ -45,9 +49,9 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Gets or sets the area ID this entity belongs to.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
-        /// Located via string reference: "AreaId" @ 0x007bef48
-        /// Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId at offset +4
+        /// AreaId identifies which area the entity is located in.
+        /// Set when entity is registered to an area in the world.
+        /// Common across all engines (Odyssey, Aurora, Eclipse, Infinity).
         /// </remarks>
         uint AreaId { get; set; }
 
