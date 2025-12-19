@@ -1144,17 +1144,12 @@ namespace HolocronToolset.Tests.Editors
             editor.Model.RowCount.Should().Be(0, "Model should still be empty");
 
             // Test 9: Complex sequence - add, remove, move, undo all, redo all
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link1);
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link2);
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link3);
+            editor.AddStarter(link1);
+            editor.AddStarter(link2);
+            editor.AddStarter(link3);
             editor.Model.SelectedIndex = 1;
-            // TODO: MoveItemDown method not yet implemented
-            // editor.MoveItemDown();
-            // TODO: RemoveStarter method not yet implemented
-            // editor.RemoveStarter(link1);
+            editor.MoveItemDown();
+            editor.RemoveStarter(link1);
 
             // Verify final state
             editor.Model.RowCount.Should().Be(2, "Model should have 2 starters");
@@ -1162,33 +1157,22 @@ namespace HolocronToolset.Tests.Editors
             editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
 
             // Undo all operations
-            // TODO: Undo method not yet implemented
-            // editor.Undo(); // Undo remove link1
-            // TODO: Undo method not yet implemented
-            // editor.Undo(); // Undo move
-            // TODO: Undo method not yet implemented
-            // editor.Undo(); // Undo add link3
-            // TODO: Undo method not yet implemented
-            // editor.Undo(); // Undo add link2
-            // TODO: Undo method not yet implemented
-            // editor.Undo(); // Undo add link1
+            editor.Undo(); // Undo remove link1
+            editor.Undo(); // Undo move
+            editor.Undo(); // Undo add link3
+            editor.Undo(); // Undo add link2
+            editor.Undo(); // Undo add link1
 
             // Verify back to initial state
             editor.Model.RowCount.Should().Be(0, "Model should be empty after undoing all");
-            // TODO: CanUndo property not yet implemented
-            // editor.CanUndo.Should().BeFalse("Undo should not be available");
+            editor.CanUndo.Should().BeFalse("Undo should not be available");
 
             // Redo all operations
-            // TODO: Redo method not yet implemented
-            // editor.Redo(); // Redo add link1
-            // TODO: Redo method not yet implemented
-            // editor.Redo(); // Redo add link2
-            // TODO: Redo method not yet implemented
-            // editor.Redo(); // Redo add link3
-            // TODO: Redo method not yet implemented
-            // editor.Redo(); // Redo move
-            // TODO: Redo method not yet implemented
-            // editor.Redo(); // Redo remove link1
+            editor.Redo(); // Redo add link1
+            editor.Redo(); // Redo add link2
+            editor.Redo(); // Redo add link3
+            editor.Redo(); // Redo move
+            editor.Redo(); // Redo remove link1
 
             // Verify final state restored
             editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after redoing all");
