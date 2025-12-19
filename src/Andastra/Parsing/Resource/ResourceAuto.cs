@@ -18,6 +18,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource
@@ -265,13 +266,79 @@ namespace Andastra.Parsing.Resource
         // Original: def resource_to_bytes(resource: ...) -> bytes:
         public static byte[] ResourceToBytes(object resource)
         {
-            if (resource is ARE || resource is DLG || resource is GIT || resource is IFO ||
-                resource is JRL || resource is PTH || resource is UTC || resource is UTD ||
-                resource is UTE || resource is UTM || resource is UTP || resource is UTS ||
-                resource is UTW)
+            // Handle GFF generic types - convert to GFF and then to bytes
+            // Matching PyKotor: uses dismantle methods to convert generics back to GFF, then bytes_gff
+            if (resource is ARE are)
             {
-                // TODO: STUB - GFF generics - would need dismantle methods
-                throw new NotImplementedException("Dismantle methods for GFF generics not yet implemented");
+                return AREHelpers.BytesAre(are, Game.K2);
+            }
+            if (resource is DLG dlg)
+            {
+                return DLGHelper.BytesDlg(dlg, Game.K2);
+            }
+            if (resource is GIT git)
+            {
+                return GITHelpers.BytesGit(git, Game.K2);
+            }
+            if (resource is IFO ifo)
+            {
+                // IFO doesn't have a BytesIfo method, so use DismantleIfo + BytesGff
+                GFF gff = IFOHelpers.DismantleIfo(ifo, Game.K2);
+                return GFFAuto.BytesGff(gff, IFO.BinaryType);
+            }
+            if (resource is JRL jrl)
+            {
+                return JRL.BytesJrl(jrl);
+            }
+            if (resource is PTH pth)
+            {
+                return PTHAuto.BytesPth(pth, Game.K2);
+            }
+            if (resource is UTC utc)
+            {
+                return UTCHelpers.BytesUtc(utc, Game.K2);
+            }
+            if (resource is UTD utd)
+            {
+                // UTD doesn't have a BytesUtd method, so use DismantleUtd + BytesGff
+                GFF gff = UTDHelpers.DismantleUtd(utd, Game.K2);
+                return GFFAuto.BytesGff(gff, UTD.BinaryType);
+            }
+            if (resource is UTE ute)
+            {
+                // UTE doesn't have a BytesUte method, so use DismantleUte + BytesGff
+                GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+                return GFFAuto.BytesGff(gff, UTE.BinaryType);
+            }
+            if (resource is UTM utm)
+            {
+                // UTM doesn't have a BytesUtm method, so use DismantleUtm + BytesGff
+                GFF gff = UTMHelpers.DismantleUtm(utm, Game.K2);
+                return GFFAuto.BytesGff(gff, UTM.BinaryType);
+            }
+            if (resource is UTP utp)
+            {
+                // UTP doesn't have a BytesUtp method, so use DismantleUtp + BytesGff
+                GFF gff = UTPHelpers.DismantleUtp(utp, Game.K2);
+                return GFFAuto.BytesGff(gff, UTP.BinaryType);
+            }
+            if (resource is UTS uts)
+            {
+                // UTS doesn't have a BytesUts method, so use DismantleUts + BytesGff
+                GFF gff = UTSHelpers.DismantleUts(uts, Game.K2);
+                return GFFAuto.BytesGff(gff, UTS.BinaryType);
+            }
+            if (resource is UTW utw)
+            {
+                return UTWAuto.BytesUtw(utw, Game.K2);
+            }
+            if (resource is UTT utt)
+            {
+                return UTTAuto.BytesUtt(utt, Game.K2);
+            }
+            if (resource is UTI uti)
+            {
+                return UTIHelpers.BytesUti(uti, Game.K2);
             }
             if (resource is BWM bwm)
             {
