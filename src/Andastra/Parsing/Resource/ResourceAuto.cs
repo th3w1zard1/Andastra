@@ -464,6 +464,11 @@ namespace Andastra.Parsing.Resource
                         var rimReader = new RIMBinaryReader(data);
                         return rimReader.Load();
 
+                    case 10000: // PCC
+                    case 10001: // UPK
+                        var pccReader = new PCCBinaryReader(data);
+                        return pccReader.Load();
+
                     case 2017: // SSF
                         var ssfReader = new SSFBinaryReader(data);
                         return ssfReader.Load();

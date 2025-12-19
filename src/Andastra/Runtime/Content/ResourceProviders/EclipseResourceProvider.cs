@@ -5,16 +5,18 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.PCC;
+using Andastra.Parsing.Formats.RIM;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
 {
     /// <summary>
-    /// Resource provider for Eclipse Engine games (Dragon Age series, Mass Effect series).
+    /// Resource provider for Eclipse Engine games (Dragon Age series).
     /// </summary>
     /// <remarks>
     /// Eclipse Resource Provider:
-    /// - Based on Eclipse/Unreal Engine resource loading system (Dragon Age, Mass Effect)
+    /// - Based on Eclipse Engine resource loading system (Dragon Age)
     /// - Eclipse Engine uses PCC/UPK packages, RIM files, and streaming resources for resource management
     /// - Resource precedence: OVERRIDE > PACKAGES (core/override) > STREAMING > HARDCODED
     /// - Original implementation: Eclipse Engine uses Unreal Engine's ResourceManager for resource loading
@@ -33,14 +35,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Override packages: "packages\\core\\override\\" (override resources)
     ///   - RIM files: Resource Index Manifest files (globalvfx.rim, guiglobal.rim, designerscripts.rim, global.rim)
     ///   - Streaming: "DragonAge::Streaming" for streaming level resources
-    /// - Eclipse Engine (MassEffect.exe): Uses package system (PCC/UPK) with streaming resources
-    ///   - Package loading: intABioSPGameexecPreloadPackage @ 0x117fede8
-    ///   - Resource extraction: intUBioInterface_Appearance_PawnexecExtractResources
-    ///   - Streaming: DisplayStreaming, OnStreamingLevelEnteringStasis, OnStreamingLevelLeavingStasis
     /// - Resource manager: daorigins.exe: "Initialize - Resource Manager" @ 0x00ad947c, "Shutdown - Resource Manager" @ 0x00ad87d8
     ///   - daorigins.exe: "Failed to initialize ResourceManager" @ 0x00ad9430
     ///   - daorigins.exe: "Shutdown of resource manager failed" @ 0x00ad8790
-    /// - Eclipse-specific: Package-based resource system (different from Odyssey/Aurora/Infinity file-based systems)
+    /// - Eclipse-specific: Package-based resource system (different from Odyssey/Aurora file-based systems)
     ///   - Packages contain multiple resources in a single file
     ///   - Streaming allows loading resources on-demand as levels are entered
     ///   - RIM files provide resource indexing for faster lookups
@@ -48,8 +46,6 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// TODO: Reverse engineer specific function addresses from Eclipse Engine executables using Ghidra MCP
     ///   - Dragon Age: Origins: daorigins.exe resource loading functions (ResourceManager initialization, package loading, RIM file handling)
     ///   - Dragon Age 2: DragonAge2.exe resource loading functions
-    ///   - Mass Effect: MassEffect.exe resource loading functions (package preloading, streaming)
-    ///   - Mass Effect 2: MassEffect2.exe resource loading functions
     /// </remarks>
     public class EclipseResourceProvider : IGameResourceProvider
     {
@@ -208,11 +204,59 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 }
             }
 
-            // TODO: Enumerate from packages (PCC/UPK files)
-            // This requires package parsing which is not yet implemented in Andastra.Parsing
+            // Enumerate from packages (PCC/UPK files)
+            string packagesPath = Path.Combine(_installationPath, "packages", "core");
+            if (Directory.Exists(packagesPath))
+            {
+                string[] packageExtensions = new[] { "pcc", "upk" };
+                foreach (string pkgExt in packageExtensions)
+                {
+                    string[] packageFiles = Directory.GetFiles(packagesPath, "*." + pkgExt, SearchOption.AllDirectories);
+                    foreach (string packageFile in packageFiles)
+                    {
+                        try
+                        {
+                            var pcc = PCCAuto.ReadPcc(packageFile);
+                            foreach (var resource in pcc)
+                            {
+                                if (resource.ResType == type)
+                                {
+                                    yield return new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType);
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Skip corrupted or invalid package files
+                            continue;
+                        }
+                    }
+                }
+            }
 
-            // TODO: Enumerate from RIM files
-            // This requires RIM file parsing which is not yet implemented in Andastra.Parsing
+            // Enumerate from RIM files
+            foreach (string rimPath in _rimFiles)
+            {
+                if (File.Exists(rimPath))
+                {
+                    try
+                    {
+                        var rim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(rimPath);
+                        foreach (var resource in rim)
+                        {
+                            if (resource.ResType == type)
+                            {
+                                yield return new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Skip corrupted or invalid RIM files
+                        continue;
+                    }
+                }
+            }
         }
 
         public async Task<byte[]> GetResourceBytesAsync(ResourceIdentifier id, CancellationToken ct)
@@ -295,16 +339,57 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 return null;
             }
 
-            // TODO: Extract resource from package (PCC/UPK file)
-            // This requires package parsing which is not yet implemented in Andastra.Parsing
-            // For now, check for loose files in package directories
+            // Search for PCC/UPK files and extract resources from them
             string extension = id.ResType?.Extension ?? "";
             if (extension.StartsWith("."))
             {
                 extension = extension.Substring(1);
             }
 
-            // Check common package subdirectories
+            // Search for package files (PCC/UPK) in packages directory
+            string[] packageExtensions = new[] { "pcc", "upk" };
+            foreach (string pkgExt in packageExtensions)
+            {
+                // Search in common package locations
+                string[] searchPaths = new[]
+                {
+                    packagesPath,
+                    Path.Combine(packagesPath, "data"),
+                    Path.Combine(packagesPath, "textures"),
+                    Path.Combine(packagesPath, "audio"),
+                    Path.Combine(packagesPath, "env")
+                };
+
+                foreach (string searchPath in searchPaths)
+                {
+                    if (!Directory.Exists(searchPath))
+                    {
+                        continue;
+                    }
+
+                    // Search for package files
+                    string[] packageFiles = Directory.GetFiles(searchPath, "*." + pkgExt, SearchOption.TopDirectoryOnly);
+                    foreach (string packageFile in packageFiles)
+                    {
+                        try
+                        {
+                            var pcc = Andastra.Parsing.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                            byte[] resourceData = pcc.Get(id.ResName, id.ResType);
+                            if (resourceData != null)
+                            {
+                                return resourceData;
+                            }
+                        }
+                        catch
+                        {
+                            // Skip corrupted or invalid package files
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            // Fallback: Check for loose files in package directories
             string[] packageSubdirs = new[]
             {
                 "data",
@@ -337,9 +422,20 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 string rimPath = _rimFiles[i];
                 if (File.Exists(rimPath))
                 {
-                    // TODO: Extract resource from RIM file
-                    // This requires RIM file parsing which is not yet implemented in Andastra.Parsing
-                    // For now, return null - RIM parsing will be implemented when Andastra.Parsing supports it
+                    try
+                    {
+                        var rim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(rimPath);
+                        byte[] resourceData = rim.Get(id.ResName, id.ResType);
+                        if (resourceData != null)
+                        {
+                            return resourceData;
+                        }
+                    }
+                    catch
+                    {
+                        // Skip corrupted or invalid RIM files
+                        continue;
+                    }
                 }
             }
 

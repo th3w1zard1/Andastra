@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.ERF;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
@@ -240,8 +241,32 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 }
             }
 
-            // TODO: Enumerate from HAK files
-            // This requires HAK file parsing which is not yet implemented in Andastra.Parsing
+            // Enumerate from HAK files
+            string hakPath = HakPath();
+            if (Directory.Exists(hakPath))
+            {
+                string[] hakFiles = Directory.GetFiles(hakPath, "*.hak", SearchOption.TopDirectoryOnly);
+                foreach (string hakFile in hakFiles)
+                {
+                    try
+                    {
+                        // HAK files are ERF format
+                        var erf = ERFAuto.ReadErf(hakFile);
+                        foreach (var resource in erf)
+                        {
+                            if (resource.ResType == type)
+                            {
+                                yield return new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Skip corrupted or invalid HAK files
+                        continue;
+                    }
+                }
+            }
         }
 
         public async Task<byte[]> GetResourceBytesAsync(ResourceIdentifier id, CancellationToken ct)
@@ -351,9 +376,21 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 string hakPath = _hakFiles[i];
                 if (File.Exists(hakPath))
                 {
-                    // TODO: Extract resource from HAK file
-                    // This requires HAK file parsing which is not yet implemented in Andastra.Parsing
-                    // For now, return null - HAK parsing will be implemented when Andastra.Parsing supports it
+                    try
+                    {
+                        // HAK files are ERF format
+                        var erf = ERFAuto.ReadErf(hakPath);
+                        byte[] resourceData = erf.Get(id.ResName, id.ResType);
+                        if (resourceData != null)
+                        {
+                            return resourceData;
+                        }
+                    }
+                    catch
+                    {
+                        // Skip corrupted or invalid HAK files
+                        continue;
+                    }
                 }
             }
 
