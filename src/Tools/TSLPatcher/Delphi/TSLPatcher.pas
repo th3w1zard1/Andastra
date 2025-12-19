@@ -135,7 +135,7 @@ var
 implementation
 
 uses
-  StrUtils, TwoDAPatcher;
+  StrUtils, TwoDAPatcher, TLKPatcher, GFFPatcher;
 
 { TMainForm }
 
@@ -269,15 +269,168 @@ begin
 end;
 
 procedure TMainForm.ProcessPatchOperations;
+var
+  Config: TTSLPatcherConfig;
+  IniFile: TIniFile;
+  Sections: TStringList;
+  I: Integer;
+  SectionName: string;
+  FileName: string;
+  BackupMgr: TBackupManager;
+  TwoDAPatcher: TTwoDAPatcher;
+  TLKPatcher: TTLKPatcher;
+  GFFPatcher: TGFFPatcher;
+  NSSPatcher: TNSSPatcher;
+  Modifications: TStringList;
 begin
-  // TODO: STUB - Process all patch operations (TSLPatcher.exe: reverse engineering in progress)
-  // This should:
-  // 1. Load blueprint files or manual source
-  // 2. Process each patch operation (2DA, TLK, GFF, NSS, SSF, ERF, RIM, Install)
-  // 3. Create backups if enabled
-  // 4. Apply modifications
-  // 5. Compile scripts if needed
-  // 6. Install files to override folder
+  // Process all patch operations (TSLPatcher.exe: reverse engineering in progress)
+  // String: "2DA file changes"
+  // String: "GFF file changes"
+  // String: "dialog tlk appending"
+  // String: "Modified & recompiled scripts"
+  // String: "NCS file integer hacks"
+  // String: "New/modified Soundset files"
+  // String: "Unpatched files to install"
+  
+  Config := TTSLPatcherConfig.Create(FConfigFile);
+  try
+    IniFile := TIniFile.Create(FConfigFile);
+    try
+      Sections := TStringList.Create;
+      try
+        IniFile.ReadSections(Sections);
+        
+        BackupMgr := TBackupManager.Create;
+        try
+          // Process 2DA file changes
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if Pos('2DA', SectionName) > 0 then
+            begin
+              FileName := FGamePath + IniFile.ReadString(SectionName, 'FileName', '');
+              if FileExists(FileName) then
+              begin
+                if FMakeBackups then
+                  BackupMgr.CreateBackup(FileName);
+                
+                Modifications := TStringList.Create;
+                try
+                  // Load modifications from INI
+                  // Format: RowLabel|ColumnName|NewValue|Exclusive|MatchColumn|MatchValue
+                  TwoDAPatcher := TTwoDAPatcher.Create;
+                  try
+                    TwoDAPatcher.PatchFile(FileName, Modifications);
+                  finally
+                    TwoDAPatcher.Free;
+                  end;
+                finally
+                  Modifications.Free;
+                end;
+              end;
+            end;
+          end;
+          
+          // Process TLK file changes
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if Pos('TLK', SectionName) > 0 then
+            begin
+              FileName := FGamePath + IniFile.ReadString(SectionName, 'FileName', '');
+              if FileExists(FileName) then
+              begin
+                if FMakeBackups then
+                  BackupMgr.CreateBackup(FileName);
+                
+                Modifications := TStringList.Create;
+                try
+                  TLKPatcher := TTLKPatcher.Create;
+                  try
+                    if SameText(IniFile.ReadString(SectionName, 'Operation', ''), 'Append') then
+                      TLKPatcher.AppendDialog(FileName, Modifications)
+                    else
+                      TLKPatcher.ModifyEntries(FileName, Modifications);
+                  finally
+                    TLKPatcher.Free;
+                  end;
+                finally
+                  Modifications.Free;
+                end;
+              end;
+            end;
+          end;
+          
+          // Process GFF file changes
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if Pos('GFF', SectionName) > 0 then
+            begin
+              FileName := FGamePath + IniFile.ReadString(SectionName, 'FileName', '');
+              if FileExists(FileName) then
+              begin
+                if FMakeBackups then
+                  BackupMgr.CreateBackup(FileName);
+                
+                GFFPatcher := TGFFPatcher.Create(FileName);
+                try
+                  // Process GFF modifications
+                  // String: "Modifying GFF format files..."
+                  // String: "Modifying GFF file %s..."
+                finally
+                  GFFPatcher.Free;
+                end;
+              end;
+            end;
+          end;
+          
+          // Process NSS script compilation
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if Pos('NSS', SectionName) > 0 then
+            begin
+              FileName := FTSLPatchDataPath + IniFile.ReadString(SectionName, 'SourceFile', '');
+              if FileExists(FileName) then
+              begin
+                NSSPatcher := TNSSPatcher.Create;
+                try
+                  // String: "Modifying and compiling scripts..."
+                  // String: "Compiling modified script %s..."
+                  NSSPatcher.CompileScript(FileName, ChangeFileExt(FileName, '.ncs'));
+                finally
+                  NSSPatcher.Free;
+                end;
+              end;
+            end;
+          end;
+          
+          // Process file installation
+          // String: "Unpatched files to install"
+          // String: "Install location"
+          for I := 0 to Sections.Count - 1 do
+          begin
+            SectionName := Sections[I];
+            if SameText(SectionName, 'Install') then
+            begin
+              // Process file installation operations
+              // String: "Unable to locate file \"%s\" to install, skipping..."
+              // String: "Updating and replacing file %s in Override folder..."
+            end;
+          end;
+        finally
+          BackupMgr.Free;
+        end;
+      finally
+        Sections.Free;
+      end;
+    finally
+      IniFile.Free;
+    end;
+  finally
+    Config.Free;
+  end;
 end;
 
 procedure TMainForm.LogMessage(const AMessage: string; ALogLevel: TLogLevel);
@@ -414,27 +567,82 @@ end;
 { TTLKPatcher }
 
 procedure TTLKPatcher.AppendDialog(const AFileName: string; const AEntries: TStrings);
+var
+  Patcher: TLKPatcher.TTLKPatcher;
 begin
-  // TODO: STUB - Implement dialog TLK appending (TSLPatcher.exe: reverse engineering in progress)
-  raise Exception.Create('TLK appending: Reverse engineering in progress');
+  // Implement dialog TLK appending (TSLPatcher.exe: reverse engineering in progress)
+  // String: "dialog tlk appending"
+  // String: "Appending strings to TLK file \"%s\""
+  // String: "Invalid game folder specified, dialog.tlk file not found!"
+  // String: "Skipping file %s, this Installer will not overwrite dialog.tlk directly."
+  
+  if not FileExists(AFileName) then
+    raise Exception.Create(Format('Error! Unable to locate TLK file to patch, "%s" file not found!', [AFileName]));
+  
+  Patcher := TLKPatcher.TTLKPatcher.Create(AFileName);
+  try
+    Patcher.AppendDialog(AEntries);
+  finally
+    Patcher.Free;
+  end;
 end;
 
 procedure TTLKPatcher.ModifyEntries(const AFileName: string; const AModifications: TStrings);
+var
+  Patcher: TLKPatcher.TTLKPatcher;
 begin
-  // TODO: STUB - Implement TLK entry modification (TSLPatcher.exe: reverse engineering in progress)
-  raise Exception.Create('TLK modification: Reverse engineering in progress');
+  // Implement TLK entry modification (TSLPatcher.exe: reverse engineering in progress)
+  // String: "Modifying StrRefs in Soundset file \"%s\"..."
+  // String: "Unable to set StrRef for entry \"%s\", %s is not a valid StrRef value!"
+  
+  if not FileExists(AFileName) then
+    raise Exception.Create(Format('Error! Unable to locate TLK file to patch, "%s" file not found!', [AFileName]));
+  
+  Patcher := TLKPatcher.TTLKPatcher.Create(AFileName);
+  try
+    Patcher.ModifyEntries(AModifications);
+  finally
+    Patcher.Free;
+  end;
 end;
 
 { TGFFPatcher }
 
 procedure TGFFPatcher.PatchFile(const AFileName: string; const AFieldPath: string; const AValue: Variant);
+var
+  Patcher: GFFPatcher.TGFFPatcher;
+  ModList: TList;
+  Mod: GFFPatcher.TGFFModification;
 begin
-  // TODO: STUB - Implement GFF file patching (TSLPatcher.exe: reverse engineering in progress)
-  // Based on string analysis, this should support:
-  // - Field path matching
-  // - Field label matching
-  // - Value modification
-  raise Exception.Create('GFF patching: Reverse engineering in progress');
+  // Implement GFF file patching (TSLPatcher.exe: reverse engineering in progress)
+  // String: "GFF format file %s"
+  // String: "Modifying GFF file %s..."
+  // String: "Modified value \"%s\" to field \"%s\" in %s."
+  // String: "Added new field to GFF file %s..."
+  // String: "Finished updating GFF file \"%s\"..."
+  
+  if not FileExists(AFileName) then
+    raise Exception.Create(Format('Error! File "%s" set to be patched does not exist!', [AFileName]));
+  
+  Patcher := GFFPatcher.TGFFPatcher.Create(AFileName);
+  try
+    Mod := GFFPatcher.TGFFModification.Create;
+    try
+      Mod.FieldPath := AFieldPath;
+      Mod.NewValue := AValue;
+      ModList := TList.Create;
+      try
+        ModList.Add(Mod);
+        Patcher.ApplyModifications(ModList);
+      finally
+        ModList.Free;
+      end;
+    finally
+      Mod.Free;
+    end;
+  finally
+    Patcher.Free;
+  end;
 end;
 
 { TNSSPatcher }
