@@ -3,6 +3,7 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
+using HolocronToolset.Common;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
@@ -16,6 +17,7 @@ namespace HolocronToolset.Editors
         private CodeEditor _codeEdit;
         private TerminalWidget _terminalWidget;
         private bool _isDecompiled;
+        private NoScrollEventFilter _noScrollFilter;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -33,6 +35,12 @@ namespace HolocronToolset.Editors
             SetupTerminal();
             SetupSignals();
             AddHelpAction();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:145-148
+            // Original: Setup scrollbar event filter to prevent scrollbar interaction with controls
+            // Setup scrollbar event filter to prevent scrollbar interaction with controls
+            _noScrollFilter = new NoScrollEventFilter();
+            _noScrollFilter.SetupFilter(this);
 
             // Set Content after AddHelpAction (which may wrap it in a DockPanel)
             if (Content == null && _codeEdit != null)

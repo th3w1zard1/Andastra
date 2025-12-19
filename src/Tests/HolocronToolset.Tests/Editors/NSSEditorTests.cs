@@ -863,14 +863,50 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestNssEditorContextMenuExists: Context menu exists test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_scrollbar_filter_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1003-1016)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1003-1016
         // Original: def test_nss_editor_scrollbar_filter_setup(qtbot, installation: HTInstallation): Test scrollbar filter setup
         [Fact]
         public void TestNssEditorScrollbarFilterSetup()
         {
-            // TODO: STUB - Implement scrollbar filter setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1003-1016
-            throw new NotImplementedException("TestNssEditorScrollbarFilterSetup: Scrollbar filter setup test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Scrollbar filter should be set up
+            // Use reflection to access private field _noScrollFilter
+            var fieldInfo = typeof(NSSEditor).GetField("_noScrollFilter", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            fieldInfo.Should().NotBeNull("NSSEditor should have _noScrollFilter field");
+            
+            var noScrollFilter = fieldInfo.GetValue(editor);
+            noScrollFilter.Should().NotBeNull("_noScrollFilter should be initialized");
         }
 
         // TODO: STUB - Implement test_nss_editor_output_panel_exists (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1018-1027)

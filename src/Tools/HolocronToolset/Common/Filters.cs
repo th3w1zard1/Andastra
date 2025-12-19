@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 
@@ -62,13 +63,35 @@ namespace HolocronToolset.Common
     // Original: class NoScrollEventFilter(QObject):
     public class NoScrollEventFilter
     {
+        private Control _parentWidget;
+        private readonly HashSet<Control> _filteredControls = new HashSet<Control>();
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:76
         // Original: def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        public bool EventFilter(Control obj, PointerWheelEventArgs evt)
+        // In Avalonia, we handle scroll events by intercepting PointerWheelChanged events
+        // and forwarding them to the parent widget to prevent scrollbar interaction with controls
+        private void OnPointerWheelChanged(object sender, PointerWheelEventArgs evt)
         {
-            // In Avalonia, we handle scroll events differently
-            // This would need to be implemented with proper event handling
-            return false;
+            if (sender is Control control && _parentWidget != null)
+            {
+                // Forward the wheel event to the parent widget
+                // This prevents controls like ComboBox, Slider, etc. from intercepting scroll events
+                // and allows the parent window/scrollviewer to handle scrolling instead
+                var parentEvent = new PointerWheelEventArgs(
+                    evt.Pointer,
+                    _parentWidget,
+                    evt.Id,
+                    evt.Position,
+                    evt.Delta,
+                    evt.KeyModifiers,
+                    evt.Properties);
+                
+                // Raise the event on the parent widget
+                _parentWidget.RaiseEvent(parentEvent);
+                
+                // Mark event as handled to prevent the control from processing it
+                evt.Handled = true;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:96
@@ -79,6 +102,8 @@ namespace HolocronToolset.Common
             {
                 return;
             }
+
+            _parentWidget = parentWidget;
 
             if (includeTypes == null)
             {
@@ -100,12 +125,18 @@ namespace HolocronToolset.Common
             {
                 if (includeType.IsInstanceOfType(widget))
                 {
-                    // Install event filter - in Avalonia this would be done differently
-                    // widget.PointerWheelChanged += OnPointerWheelChanged;
+                    // Install event filter - attach PointerWheelChanged handler
+                    // Only attach once per control to avoid duplicate handlers
+                    if (!_filteredControls.Contains(widget))
+                    {
+                        widget.PointerWheelChanged += OnPointerWheelChanged;
+                        _filteredControls.Add(widget);
+                    }
                 }
             }
 
             // Recursively process children
+            // Handle different container types in Avalonia
             if (widget is Panel panel)
             {
                 foreach (var child in panel.Children)
@@ -115,6 +146,14 @@ namespace HolocronToolset.Common
                         SetupFilterRecursive(control, includeTypes);
                     }
                 }
+            }
+            else if (widget is Decorator decorator && decorator.Child is Control childControl)
+            {
+                SetupFilterRecursive(childControl, includeTypes);
+            }
+            else if (widget is ContentControl contentControl && contentControl.Content is Control contentChild)
+            {
+                SetupFilterRecursive(contentChild, includeTypes);
             }
         }
     }
