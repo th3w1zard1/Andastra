@@ -231,16 +231,24 @@ namespace Andastra.Runtime.Content.Converters
                 combinedAdjacency,
                 combinedMaterials);
 
-            // Build a simple AABB tree from combined geometry
-            // For a full implementation, we would rebuild the AABB tree properly
-            // TODO: SIMPLIFIED - For now, we'll create a mesh without an AABB tree (it will use brute force)
-            NavigationMesh.AabbNode aabbRoot = null;
+            // Build AABB tree from combined geometry
+            // Uses recursive top-down construction with longest-axis splitting for efficient spatial queries
+            // Based on swkotor2.exe walkmesh AABB tree construction
+            Vector3[] combinedVerticesArray = combinedVertices.ToArray();
+            int[] combinedFaceIndicesArray = combinedFaceIndices.ToArray();
+            int[] combinedMaterialsArray = combinedMaterials.ToArray();
+            int combinedFaceCount = combinedFaceIndicesArray.Length / 3;
+            NavigationMesh.AabbNode aabbRoot = NavigationMesh.BuildAabbTreeFromFaces(
+                combinedVerticesArray,
+                combinedFaceIndicesArray,
+                combinedMaterialsArray,
+                combinedFaceCount);
 
             return new NavigationMesh(
-                combinedVertices.ToArray(),
-                combinedFaceIndices.ToArray(),
+                combinedVerticesArray,
+                combinedFaceIndicesArray,
                 combinedAdjacency.ToArray(),
-                combinedMaterials.ToArray(),
+                combinedMaterialsArray,
                 aabbRoot);
         }
 
