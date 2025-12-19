@@ -335,7 +335,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                             // Set encounter faction if specified
                             if (encounterComp.Faction > 0)
                             {
-                                Components.FactionComponent factionComp = creature.GetComponent<Components.FactionComponent>();
+                                IFactionComponent factionComp = creature.GetComponent<IFactionComponent>();
                                 if (factionComp != null)
                                 {
                                     factionComp.FactionId = encounterComp.Faction;
