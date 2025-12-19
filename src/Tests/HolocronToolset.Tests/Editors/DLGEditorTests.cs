@@ -169,8 +169,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAllWidgetsExist()
         {
-            // TODO: PLACEHOLDER - Implement widget existence verification test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398
+            // TODO: STUB - Implement widget existence verification test (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398)
             throw new NotImplementedException("TestDlgEditorAllWidgetsExist: Widget existence verification test not yet implemented");
         }
 
@@ -179,7 +178,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAddRootNode()
         {
-            // TODO: PLACEHOLDER - Implement add root node test
+            // TODO: STUB - Implement add root node test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:413-429
             throw new NotImplementedException("TestDlgEditorAddRootNode: Add root node test not yet implemented");
         }
@@ -189,7 +188,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAddChildNode()
         {
-            // TODO: PLACEHOLDER - Implement add child node test
+            // TODO: STUB - Implement add child node test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:431-456
             throw new NotImplementedException("TestDlgEditorAddChildNode: Add child node test not yet implemented");
         }
@@ -199,7 +198,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateConversationType()
         {
-            // TODO: PLACEHOLDER - Implement conversation type manipulation test
+            // TODO: STUB - Implement conversation type manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:458-483
             throw new NotImplementedException("TestDlgEditorManipulateConversationType: Conversation type manipulation test not yet implemented");
         }
@@ -209,7 +208,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateComputerType()
         {
-            // TODO: PLACEHOLDER - Implement computer type manipulation test
+            // TODO: STUB - Implement computer type manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:485-505
             throw new NotImplementedException("TestDlgEditorManipulateComputerType: Computer type manipulation test not yet implemented");
         }
@@ -219,7 +218,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateReplyDelaySpin()
         {
-            // TODO: PLACEHOLDER - Implement reply delay spin manipulation test
+            // TODO: STUB - Implement reply delay spin manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:507-532
             throw new NotImplementedException("TestDlgEditorManipulateReplyDelaySpin: Reply delay spin manipulation test not yet implemented");
         }
@@ -229,7 +228,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateEntryDelaySpin()
         {
-            // TODO: PLACEHOLDER - Implement entry delay spin manipulation test
+            // TODO: STUB - Implement entry delay spin manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:534-555
             throw new NotImplementedException("TestDlgEditorManipulateEntryDelaySpin: Entry delay spin manipulation test not yet implemented");
         }
@@ -239,7 +238,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateVoIdEdit()
         {
-            // TODO: PLACEHOLDER - Implement VO ID edit manipulation test
+            // TODO: STUB - Implement VO ID edit manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:557-578
             throw new NotImplementedException("TestDlgEditorManipulateVoIdEdit: VO ID edit manipulation test not yet implemented");
         }
@@ -249,7 +248,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateOnAbortCombo()
         {
-            // TODO: PLACEHOLDER - Implement on abort combo manipulation test
+            // TODO: STUB - Implement on abort combo manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:580-599
             throw new NotImplementedException("TestDlgEditorManipulateOnAbortCombo: On abort combo manipulation test not yet implemented");
         }
@@ -259,7 +258,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateOnEndEdit()
         {
-            // TODO: PLACEHOLDER - Implement on end edit manipulation test
+            // TODO: STUB - Implement on end edit manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:601-620
             throw new NotImplementedException("TestDlgEditorManipulateOnEndEdit: On end edit manipulation test not yet implemented");
         }
@@ -269,7 +268,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateCameraModelSelect()
         {
-            // TODO: PLACEHOLDER - Implement camera model select manipulation test
+            // TODO: STUB - Implement camera model select manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:622-641
             throw new NotImplementedException("TestDlgEditorManipulateCameraModelSelect: Camera model select manipulation test not yet implemented");
         }
@@ -279,7 +278,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateAmbientTrackCombo()
         {
-            // TODO: PLACEHOLDER - Implement ambient track combo manipulation test
+            // TODO: STUB - Implement ambient track combo manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:643-662
             throw new NotImplementedException("TestDlgEditorManipulateAmbientTrackCombo: Ambient track combo manipulation test not yet implemented");
         }
@@ -289,7 +288,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateFileLevelCheckboxes()
         {
-            // TODO: PLACEHOLDER - Implement file-level checkboxes manipulation test
+            // TODO: STUB - Implement file-level checkboxes manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:664-734
             throw new NotImplementedException("TestDlgEditorManipulateFileLevelCheckboxes: File-level checkboxes manipulation test not yet implemented");
         }
@@ -299,7 +298,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAllNodeWidgetsInteractions()
         {
-            // TODO: PLACEHOLDER - Implement all node widgets interactions test
+            // TODO: STUB - Implement all node widgets interactions test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:736-936
             throw new NotImplementedException("TestDlgEditorAllNodeWidgetsInteractions: All node widgets interactions test not yet implemented");
         }
@@ -309,7 +308,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorLinkWidgetsInteractions()
         {
-            // TODO: PLACEHOLDER - Implement link widgets interactions test
+            // TODO: STUB - Implement link widgets interactions test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:938-972
             throw new NotImplementedException("TestDlgEditorLinkWidgetsInteractions: Link widgets interactions test not yet implemented");
         }
@@ -319,7 +318,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorConditionParamsFull()
         {
-            // TODO: PLACEHOLDER - Implement condition params full test
+            // TODO: STUB - Implement condition params full test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:974-1023
             throw new NotImplementedException("TestDlgEditorConditionParamsFull: Condition params full test not yet implemented");
         }
@@ -329,7 +328,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorHelpDialogOpensCorrectFile()
         {
-            // TODO: PLACEHOLDER - Implement help dialog opens correct file test
+            // TODO: STUB - Implement help dialog opens correct file test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1025-1052
             throw new NotImplementedException("TestDlgEditorHelpDialogOpensCorrectFile: Help dialog opens correct file test not yet implemented");
         }
@@ -339,7 +338,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorScriptParamsFull()
         {
-            // TODO: PLACEHOLDER - Implement script params full test
+            // TODO: STUB - Implement script params full test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1054-1103
             throw new NotImplementedException("TestDlgEditorScriptParamsFull: Script params full test not yet implemented");
         }
@@ -349,7 +348,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorNodeWidgetBuildVerification()
         {
-            // TODO: PLACEHOLDER - Implement node widget build verification test
+            // TODO: STUB - Implement node widget build verification test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1105-1163
             throw new NotImplementedException("TestDlgEditorNodeWidgetBuildVerification: Node widget build verification test not yet implemented");
         }
@@ -359,7 +358,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorSearchFunctionality()
         {
-            // TODO: PLACEHOLDER - Implement search functionality test
+            // TODO: STUB - Implement search functionality test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1165-1200
             throw new NotImplementedException("TestDlgEditorSearchFunctionality: Search functionality test not yet implemented");
         }
@@ -369,7 +368,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorSearchWithOperators()
         {
-            // TODO: PLACEHOLDER - Implement search with operators test
+            // TODO: STUB - Implement search with operators test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1202-1227
             throw new NotImplementedException("TestDlgEditorSearchWithOperators: Search with operators test not yet implemented");
         }
@@ -379,7 +378,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorSearchNavigation()
         {
-            // TODO: PLACEHOLDER - Implement search navigation test
+            // TODO: STUB - Implement search navigation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1229-1253
             throw new NotImplementedException("TestDlgEditorSearchNavigation: Search navigation test not yet implemented");
         }
@@ -389,7 +388,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorCopyPasteReal()
         {
-            // TODO: PLACEHOLDER - Implement copy/paste real test
+            // TODO: STUB - Implement copy/paste real test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290
             throw new NotImplementedException("TestDlgEditorCopyPasteReal: Copy/paste real test not yet implemented");
         }
@@ -399,7 +398,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorDeleteNode()
         {
-            // TODO: PLACEHOLDER - Implement delete node test
+            // TODO: STUB - Implement delete node test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1292-1310
             throw new NotImplementedException("TestDlgEditorDeleteNode: Delete node test not yet implemented");
         }
@@ -409,7 +408,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorTreeExpansion()
         {
-            // TODO: PLACEHOLDER - Implement tree expansion test
+            // TODO: STUB - Implement tree expansion test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1312-1334
             throw new NotImplementedException("TestDlgEditorTreeExpansion: Tree expansion test not yet implemented");
         }
@@ -419,7 +418,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorMoveItemUpDown()
         {
-            // TODO: PLACEHOLDER - Implement move item up/down test
+            // TODO: STUB - Implement move item up/down test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1336-1365
             throw new NotImplementedException("TestDlgEditorMoveItemUpDown: Move item up/down test not yet implemented");
         }
@@ -429,7 +428,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorDeleteNodeEverywhere()
         {
-            // TODO: PLACEHOLDER - Implement delete node everywhere test
+            // TODO: STUB - Implement delete node everywhere test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1367-1392
             throw new NotImplementedException("TestDlgEditorDeleteNodeEverywhere: Delete node everywhere test not yet implemented");
         }
@@ -439,7 +438,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorContextMenu()
         {
-            // TODO: PLACEHOLDER - Implement context menu test
+            // TODO: STUB - Implement context menu test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1394-1409
             throw new NotImplementedException("TestDlgEditorContextMenu: Context menu test not yet implemented");
         }
@@ -449,7 +448,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorContextMenuCreation()
         {
-            // TODO: PLACEHOLDER - Implement context menu creation test
+            // TODO: STUB - Implement context menu creation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1411-1439
             throw new NotImplementedException("TestDlgEditorContextMenuCreation: Context menu creation test not yet implemented");
         }
@@ -459,7 +458,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorUndoRedo()
         {
-            // TODO: PLACEHOLDER - Implement undo/redo test
+            // TODO: STUB - Implement undo/redo test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1441-1466
             throw new NotImplementedException("TestDlgEditorUndoRedo: Undo/redo test not yet implemented");
         }
@@ -469,7 +468,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorOrphanedNodes()
         {
-            // TODO: PLACEHOLDER - Implement orphaned nodes test
+            // TODO: STUB - Implement orphaned nodes test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1468-1489
             throw new NotImplementedException("TestDlgEditorOrphanedNodes: Orphaned nodes test not yet implemented");
         }
@@ -479,7 +478,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAllMenus()
         {
-            // TODO: PLACEHOLDER - Implement all menus test
+            // TODO: STUB - Implement all menus test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1491-1510
             throw new NotImplementedException("TestDlgEditorAllMenus: All menus test not yet implemented");
         }
@@ -489,7 +488,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorStuntListExists()
         {
-            // TODO: PLACEHOLDER - Implement stunt list exists test
+            // TODO: STUB - Implement stunt list exists test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1512-1522
             throw new NotImplementedException("TestDlgEditorStuntListExists: Stunt list exists test not yet implemented");
         }
@@ -499,7 +498,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAddStuntProgrammatically()
         {
-            // TODO: PLACEHOLDER - Implement add stunt programmatically test
+            // TODO: STUB - Implement add stunt programmatically test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1524-1547
             throw new NotImplementedException("TestDlgEditorAddStuntProgrammatically: Add stunt programmatically test not yet implemented");
         }
@@ -509,7 +508,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorRemoveStunt()
         {
-            // TODO: PLACEHOLDER - Implement remove stunt test
+            // TODO: STUB - Implement remove stunt test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1549-1571
             throw new NotImplementedException("TestDlgEditorRemoveStunt: Remove stunt test not yet implemented");
         }
@@ -519,7 +518,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorMultipleStunts()
         {
-            // TODO: PLACEHOLDER - Implement multiple stunts test
+            // TODO: STUB - Implement multiple stunts test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1573-1598
             throw new NotImplementedException("TestDlgEditorMultipleStunts: Multiple stunts test not yet implemented");
         }
@@ -529,7 +528,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAnimationListExists()
         {
-            // TODO: PLACEHOLDER - Implement animation list exists test
+            // TODO: STUB - Implement animation list exists test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1600-1610
             throw new NotImplementedException("TestDlgEditorAnimationListExists: Animation list exists test not yet implemented");
         }
@@ -539,7 +538,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAddAnimationProgrammatically()
         {
-            // TODO: PLACEHOLDER - Implement add animation programmatically test
+            // TODO: STUB - Implement add animation programmatically test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1612-1638
             throw new NotImplementedException("TestDlgEditorAddAnimationProgrammatically: Add animation programmatically test not yet implemented");
         }
@@ -549,7 +548,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorRemoveAnimation()
         {
-            // TODO: PLACEHOLDER - Implement remove animation test
+            // TODO: STUB - Implement remove animation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1640-1665
             throw new NotImplementedException("TestDlgEditorRemoveAnimation: Remove animation test not yet implemented");
         }
@@ -559,7 +558,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorMultipleAnimations()
         {
-            // TODO: PLACEHOLDER - Implement multiple animations test
+            // TODO: STUB - Implement multiple animations test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1667-1691
             throw new NotImplementedException("TestDlgEditorMultipleAnimations: Multiple animations test not yet implemented");
         }
@@ -569,7 +568,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorLoadAndSavePreservesData()
         {
-            // TODO: PLACEHOLDER - Implement load and save preserves data test
+            // TODO: STUB - Implement load and save preserves data test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1718-1741
             throw new NotImplementedException("TestDlgEditorLoadAndSavePreservesData: Load and save preserves data test not yet implemented");
         }
@@ -579,7 +578,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorLoadMultipleFiles()
         {
-            // TODO: PLACEHOLDER - Implement load multiple files test
+            // TODO: STUB - Implement load multiple files test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1743-1767
             throw new NotImplementedException("TestDlgEditorLoadMultipleFiles: Load multiple files test not yet implemented");
         }
@@ -589,7 +588,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorCreateFromScratchRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement create from scratch roundtrip test
+            // TODO: STUB - Implement create from scratch roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1797-1843
             throw new NotImplementedException("TestDlgEditorCreateFromScratchRoundtrip: Create from scratch roundtrip test not yet implemented");
         }
@@ -599,7 +598,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorKeyboardShortcutsExist()
         {
-            // TODO: PLACEHOLDER - Implement keyboard shortcuts exist test
+            // TODO: STUB - Implement keyboard shortcuts exist test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1845-1854
             throw new NotImplementedException("TestDlgEditorKeyboardShortcutsExist: Keyboard shortcuts exist test not yet implemented");
         }
@@ -609,7 +608,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorKeyPressHandling()
         {
-            // TODO: PLACEHOLDER - Implement key press handling test
+            // TODO: STUB - Implement key press handling test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1856-1875
             throw new NotImplementedException("TestDlgEditorKeyPressHandling: Key press handling test not yet implemented");
         }
@@ -619,7 +618,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorFocusOnNode()
         {
-            // TODO: PLACEHOLDER - Implement focus on node test
+            // TODO: STUB - Implement focus on node test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1877-1894
             throw new NotImplementedException("TestDlgEditorFocusOnNode: Focus on node test not yet implemented");
         }
@@ -629,7 +628,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorFindReferences()
         {
-            // TODO: PLACEHOLDER - Implement find references test
+            // TODO: STUB - Implement find references test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1896-1909
             throw new NotImplementedException("TestDlgEditorFindReferences: Find references test not yet implemented");
         }
@@ -639,7 +638,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorJumpToNode()
         {
-            // TODO: PLACEHOLDER - Implement jump to node test
+            // TODO: STUB - Implement jump to node test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1911-1931
             throw new NotImplementedException("TestDlgEditorJumpToNode: Jump to node test not yet implemented");
         }
@@ -649,7 +648,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorEntryHasSpeaker()
         {
-            // TODO: PLACEHOLDER - Implement entry has speaker test
+            // TODO: STUB - Implement entry has speaker test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1933-1949
             throw new NotImplementedException("TestDlgEditorEntryHasSpeaker: Entry has speaker test not yet implemented");
         }
@@ -659,7 +658,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorReplyHidesSpeaker()
         {
-            // TODO: PLACEHOLDER - Implement reply hides speaker test
+            // TODO: STUB - Implement reply hides speaker test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1951-1969
             throw new NotImplementedException("TestDlgEditorReplyHidesSpeaker: Reply hides speaker test not yet implemented");
         }
@@ -669,7 +668,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorAlternatingNodeTypes()
         {
-            // TODO: PLACEHOLDER - Implement alternating node types test
+            // TODO: STUB - Implement alternating node types test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1971-1994
             throw new NotImplementedException("TestDlgEditorAlternatingNodeTypes: Alternating node types test not yet implemented");
         }
@@ -679,7 +678,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorBuildAllFileProperties()
         {
-            // TODO: PLACEHOLDER - Implement build all file properties test
+            // TODO: STUB - Implement build all file properties test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1996-2041
             throw new NotImplementedException("TestDlgEditorBuildAllFileProperties: Build all file properties test not yet implemented");
         }
@@ -689,7 +688,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorBuildAllNodeProperties()
         {
-            // TODO: PLACEHOLDER - Implement build all node properties test
+            // TODO: STUB - Implement build all node properties test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2043-2132
             throw new NotImplementedException("TestDlgEditorBuildAllNodeProperties: Build all node properties test not yet implemented");
         }
@@ -699,7 +698,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorBuildAllLinkProperties()
         {
-            // TODO: PLACEHOLDER - Implement build all link properties test
+            // TODO: STUB - Implement build all link properties test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2134-2198
             throw new NotImplementedException("TestDlgEditorBuildAllLinkProperties: Build all link properties test not yet implemented");
         }
@@ -709,7 +708,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorPinnedItemsListExists()
         {
-            // TODO: PLACEHOLDER - Implement pinned items list exists test
+            // TODO: STUB - Implement pinned items list exists test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2200-2208
             throw new NotImplementedException("TestDlgEditorPinnedItemsListExists: Pinned items list exists test not yet implemented");
         }
@@ -719,7 +718,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorLeftDockWidget()
         {
-            // TODO: PLACEHOLDER - Implement left dock widget test
+            // TODO: STUB - Implement left dock widget test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2210-2224
             throw new NotImplementedException("TestDlgEditorLeftDockWidget: Left dock widget test not yet implemented");
         }
@@ -729,7 +728,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorEmptyDlg()
         {
-            // TODO: PLACEHOLDER - Implement empty DLG test
+            // TODO: STUB - Implement empty DLG test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2226-2241
             throw new NotImplementedException("TestDlgEditorEmptyDlg: Empty DLG test not yet implemented");
         }
@@ -739,7 +738,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorDeepNesting()
         {
-            // TODO: PLACEHOLDER - Implement deep nesting test
+            // TODO: STUB - Implement deep nesting test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2243-2268
             throw new NotImplementedException("TestDlgEditorDeepNesting: Deep nesting test not yet implemented");
         }
@@ -749,7 +748,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManySiblings()
         {
-            // TODO: PLACEHOLDER - Implement many siblings test
+            // TODO: STUB - Implement many siblings test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2270-2288
             throw new NotImplementedException("TestDlgEditorManySiblings: Many siblings test not yet implemented");
         }
@@ -759,7 +758,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorSpecialCharactersInText()
         {
-            // TODO: PLACEHOLDER - Implement special characters in text test
+            // TODO: STUB - Implement special characters in text test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2290-2317
             throw new NotImplementedException("TestDlgEditorSpecialCharactersInText: Special characters in text test not yet implemented");
         }
@@ -769,7 +768,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorMaxValues()
         {
-            // TODO: PLACEHOLDER - Implement max values test
+            // TODO: STUB - Implement max values test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2319-2342
             throw new NotImplementedException("TestDlgEditorMaxValues: Max values test not yet implemented");
         }
@@ -779,7 +778,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorNegativeValues()
         {
-            // TODO: PLACEHOLDER - Implement negative values test
+            // TODO: STUB - Implement negative values test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2344-2366
             throw new NotImplementedException("TestDlgEditorNegativeValues: Negative values test not yet implemented");
         }
@@ -789,7 +788,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateSpeakerRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement speaker roundtrip test
+            // TODO: STUB - Implement speaker roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2368-2404
             throw new NotImplementedException("TestDlgEditorManipulateSpeakerRoundtrip: Speaker roundtrip test not yet implemented");
         }
@@ -799,7 +798,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateListenerRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement listener roundtrip test
+            // TODO: STUB - Implement listener roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2406-2438
             throw new NotImplementedException("TestDlgEditorManipulateListenerRoundtrip: Listener roundtrip test not yet implemented");
         }
@@ -809,7 +808,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateScript1Roundtrip()
         {
-            // TODO: PLACEHOLDER - Implement script1 roundtrip test
+            // TODO: STUB - Implement script1 roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2440-2470
             throw new NotImplementedException("TestDlgEditorManipulateScript1Roundtrip: Script1 roundtrip test not yet implemented");
         }
@@ -819,7 +818,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateScript1Param1Roundtrip()
         {
-            // TODO: PLACEHOLDER - Implement script1 param1 roundtrip test
+            // TODO: STUB - Implement script1 param1 roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2472-2496
             throw new NotImplementedException("TestDlgEditorManipulateScript1Param1Roundtrip: Script1 param1 roundtrip test not yet implemented");
         }
@@ -829,7 +828,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateCondition1Roundtrip()
         {
-            // TODO: PLACEHOLDER - Implement condition1 roundtrip test
+            // TODO: STUB - Implement condition1 roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2498-2528
             throw new NotImplementedException("TestDlgEditorManipulateCondition1Roundtrip: Condition1 roundtrip test not yet implemented");
         }
@@ -839,7 +838,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateCondition1NotRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement condition1 not roundtrip test
+            // TODO: STUB - Implement condition1 not roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2530-2563
             throw new NotImplementedException("TestDlgEditorManipulateCondition1NotRoundtrip: Condition1 not roundtrip test not yet implemented");
         }
@@ -849,7 +848,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateEmotionRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement emotion roundtrip test
+            // TODO: STUB - Implement emotion roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2565-2592
             throw new NotImplementedException("TestDlgEditorManipulateEmotionRoundtrip: Emotion roundtrip test not yet implemented");
         }
@@ -859,7 +858,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateExpressionRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement expression roundtrip test
+            // TODO: STUB - Implement expression roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2594-2621
             throw new NotImplementedException("TestDlgEditorManipulateExpressionRoundtrip: Expression roundtrip test not yet implemented");
         }
@@ -869,7 +868,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateSoundRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement sound roundtrip test
+            // TODO: STUB - Implement sound roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2623-2655
             throw new NotImplementedException("TestDlgEditorManipulateSoundRoundtrip: Sound roundtrip test not yet implemented");
         }
@@ -879,7 +878,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateSoundCheckboxRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement sound checkbox roundtrip test
+            // TODO: STUB - Implement sound checkbox roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2657-2690
             throw new NotImplementedException("TestDlgEditorManipulateSoundCheckboxRoundtrip: Sound checkbox roundtrip test not yet implemented");
         }
@@ -889,7 +888,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateQuestRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement quest roundtrip test
+            // TODO: STUB - Implement quest roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2692-2724
             throw new NotImplementedException("TestDlgEditorManipulateQuestRoundtrip: Quest roundtrip test not yet implemented");
         }
@@ -899,7 +898,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateQuestEntryRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement quest entry roundtrip test
+            // TODO: STUB - Implement quest entry roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2726-2758
             throw new NotImplementedException("TestDlgEditorManipulateQuestEntryRoundtrip: Quest entry roundtrip test not yet implemented");
         }
@@ -909,7 +908,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulatePlotXpRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement plot XP roundtrip test
+            // TODO: STUB - Implement plot XP roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2760-2792
             throw new NotImplementedException("TestDlgEditorManipulatePlotXpRoundtrip: Plot XP roundtrip test not yet implemented");
         }
@@ -919,7 +918,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateCommentsRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement comments roundtrip test
+            // TODO: STUB - Implement comments roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2794-2832
             throw new NotImplementedException("TestDlgEditorManipulateCommentsRoundtrip: Comments roundtrip test not yet implemented");
         }
@@ -929,7 +928,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateCameraIdRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement camera ID roundtrip test
+            // TODO: STUB - Implement camera ID roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2834-2866
             throw new NotImplementedException("TestDlgEditorManipulateCameraIdRoundtrip: Camera ID roundtrip test not yet implemented");
         }
@@ -939,7 +938,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateDelayRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement delay roundtrip test
+            // TODO: STUB - Implement delay roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2868-2900
             throw new NotImplementedException("TestDlgEditorManipulateDelayRoundtrip: Delay roundtrip test not yet implemented");
         }
@@ -949,7 +948,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateWaitFlagsRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement wait flags roundtrip test
+            // TODO: STUB - Implement wait flags roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2902-2929
             throw new NotImplementedException("TestDlgEditorManipulateWaitFlagsRoundtrip: Wait flags roundtrip test not yet implemented");
         }
@@ -959,7 +958,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateFadeTypeRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement fade type roundtrip test
+            // TODO: STUB - Implement fade type roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2931-2958
             throw new NotImplementedException("TestDlgEditorManipulateFadeTypeRoundtrip: Fade type roundtrip test not yet implemented");
         }
@@ -969,7 +968,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateVoiceRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement voice roundtrip test
+            // TODO: STUB - Implement voice roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2960-2987
             throw new NotImplementedException("TestDlgEditorManipulateVoiceRoundtrip: Voice roundtrip test not yet implemented");
         }
@@ -979,7 +978,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateAllFileFieldsCombination()
         {
-            // TODO: PLACEHOLDER - Implement all file fields combination test
+            // TODO: STUB - Implement all file fields combination test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2989-3034
             throw new NotImplementedException("TestDlgEditorManipulateAllFileFieldsCombination: All file fields combination test not yet implemented");
         }
@@ -989,7 +988,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestDlgEditorManipulateAllNodeFieldsCombination()
         {
-            // TODO: PLACEHOLDER - Implement all node fields combination test
+            // TODO: STUB - Implement all node fields combination test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:3036-3096
             throw new NotImplementedException("TestDlgEditorManipulateAllNodeFieldsCombination: All node fields combination test not yet implemented");
         }

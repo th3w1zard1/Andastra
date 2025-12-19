@@ -1681,7 +1681,7 @@ namespace HolocronToolset.Tests.Windows
             // Create a minimal image for the component (matching Python lines 72-74)
             // In Python: image = QImage(128, 128, QImage.Format.Format_RGB32); image.fill(0x808080)
             // In C# Avalonia: Use WriteableBitmap or similar
-            // TODO: PLACEHOLDER - Replace with Avalonia image implementation
+            // TODO: STUB - Replace with Avalonia image implementation
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py
             // Original: image = QImage(128, 128, QImage.Format.Format_RGB32)
             object image = new { Width = 128, Height = 128 }; // Placeholder until Avalonia image implementation

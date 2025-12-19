@@ -777,7 +777,7 @@ namespace HolocronToolset.Tests.Data
         [Fact]
         public void TestPickleUnpickle()
         {
-            // TODO: PLACEHOLDER - C# doesn't have pickle, need to implement equivalent serialization test
+            // TODO: STUB - C# doesn't have pickle, need to implement equivalent serialization test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:387-391
             // Original: pickled_data = pickle.dumps(self.installation)
             // Original: unpickled_installation: HTInstallation = pickle.loads(pickled_data)
@@ -791,7 +791,7 @@ namespace HolocronToolset.Tests.Data
         [Fact]
         public void TestPickleToFile()
         {
-            // TODO: PLACEHOLDER - C# doesn't have pickle, need to implement equivalent file serialization test
+            // TODO: STUB - C# doesn't have pickle, need to implement equivalent file serialization test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:393-399
             // Original: with BytesIO() as file: pickle.dump(self.installation, file); file.seek(0); unpickled_installation: HTInstallation = pickle.load(file)
             throw new NotImplementedException("TestPickleToFile: C# file serialization test not yet implemented - need BinaryFormatter or JSON equivalent");
@@ -803,7 +803,7 @@ namespace HolocronToolset.Tests.Data
         [Fact]
         public void TestMultipleUnpickle()
         {
-            // TODO: PLACEHOLDER - C# doesn't have pickle, need to implement equivalent multiple deserialization test
+            // TODO: STUB - C# doesn't have pickle, need to implement equivalent multiple deserialization test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:401-406
             // Original: pickled_data = pickle.dumps(self.installation); for _ in range(3): unpickled_installation: HTInstallation = pickle.loads(pickled_data)
             throw new NotImplementedException("TestMultipleUnpickle: C# multiple deserialization test not yet implemented - need BinaryFormatter or JSON equivalent");

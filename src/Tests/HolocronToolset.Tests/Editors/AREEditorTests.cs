@@ -1710,7 +1710,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateSunColors()
         {
-            // TODO: PLACEHOLDER - Implement sun color manipulation tests (ambient, diffuse, dynamic light)
+            // TODO: STUB - Implement sun color manipulation tests (ambient, diffuse, dynamic light)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:543-574
             throw new NotImplementedException("TestAreEditorManipulateSunColors: Sun color manipulation tests not yet implemented");
         }
@@ -1720,7 +1720,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateWindPower()
         {
-            // TODO: PLACEHOLDER - Implement wind power combo box manipulation test
+            // TODO: STUB - Implement wind power combo box manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:576-596
             throw new NotImplementedException("TestAreEditorManipulateWindPower: Wind power manipulation test not yet implemented");
         }
@@ -1730,7 +1730,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateWeatherCheckboxes()
         {
-            // TODO: PLACEHOLDER - Implement weather checkbox manipulation tests (rain, snow, lightning - TSL only)
+            // TODO: STUB - Implement weather checkbox manipulation tests (rain, snow, lightning - TSL only)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:598-652
             throw new NotImplementedException("TestAreEditorManipulateWeatherCheckboxes: Weather checkbox manipulation tests not yet implemented (TSL-only features)");
         }
@@ -1740,7 +1740,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateShadowsCheckbox()
         {
-            // TODO: PLACEHOLDER - Implement shadows checkbox manipulation test
+            // TODO: STUB - Implement shadows checkbox manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:654-675
             throw new NotImplementedException("TestAreEditorManipulateShadowsCheckbox: Shadows checkbox manipulation test not yet implemented");
         }
@@ -1750,7 +1750,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateShadowOpacitySpin()
         {
-            // TODO: PLACEHOLDER - Implement shadow opacity spin box manipulation test
+            // TODO: STUB - Implement shadow opacity spin box manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:677-697
             throw new NotImplementedException("TestAreEditorManipulateShadowOpacitySpin: Shadow opacity spin box manipulation test not yet implemented");
         }
@@ -1760,7 +1760,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateGrassTexture()
         {
-            // TODO: PLACEHOLDER - Implement grass texture field manipulation test
+            // TODO: STUB - Implement grass texture field manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:703-723
             throw new NotImplementedException("TestAreEditorManipulateGrassTexture: Grass texture manipulation test not yet implemented");
         }
@@ -1770,7 +1770,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateGrassColors()
         {
-            // TODO: PLACEHOLDER - Implement grass color fields manipulation test (diffuse, ambient, emissive - TSL only)
+            // TODO: STUB - Implement grass color fields manipulation test (diffuse, ambient, emissive - TSL only)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:725-757
             throw new NotImplementedException("TestAreEditorManipulateGrassColors: Grass color manipulation test not yet implemented");
         }
@@ -1780,7 +1780,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateGrassDensitySizeSpins()
         {
-            // TODO: PLACEHOLDER - Implement grass density and size spin boxes manipulation test
+            // TODO: STUB - Implement grass density and size spin boxes manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:759-785
             throw new NotImplementedException("TestAreEditorManipulateGrassDensitySizeSpins: Grass density/size spin boxes manipulation test not yet implemented");
         }
@@ -1790,7 +1790,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateGrassProbabilitySpins()
         {
-            // TODO: PLACEHOLDER - Implement grass probability spin boxes manipulation test (LL, LR, UL, UR)
+            // TODO: STUB - Implement grass probability spin boxes manipulation test (LL, LR, UL, UR)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:787-824
             throw new NotImplementedException("TestAreEditorManipulateGrassProbabilitySpins: Grass probability spin boxes manipulation test not yet implemented");
         }
@@ -1800,7 +1800,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateDirtColors()
         {
-            // TODO: PLACEHOLDER - Implement dirt color fields manipulation test (TSL only - dirtColor1Edit, dirtColor2Edit, dirtColor3Edit)
+            // TODO: STUB - Implement dirt color fields manipulation test (TSL only - dirtColor1Edit, dirtColor2Edit, dirtColor3Edit)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:826-855
             throw new NotImplementedException("TestAreEditorManipulateDirtColors: Dirt color manipulation test not yet implemented (TSL-only features)");
         }
@@ -1810,7 +1810,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateDirtFormulaSpins()
         {
-            // TODO: PLACEHOLDER - Implement dirt formula spin boxes manipulation test (TSL only - dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin)
+            // TODO: STUB - Implement dirt formula spin boxes manipulation test (TSL only - dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:857-885
             throw new NotImplementedException("TestAreEditorManipulateDirtFormulaSpins: Dirt formula spin boxes manipulation test not yet implemented (TSL-only features)");
         }
@@ -1820,7 +1820,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateDirtFunctionSpins()
         {
-            // TODO: PLACEHOLDER - Implement dirt function spin boxes manipulation test (TSL only - dirtFunction1Spin, dirtFunction2Spin, dirtFunction3Spin)
+            // TODO: STUB - Implement dirt function spin boxes manipulation test (TSL only - dirtFunction1Spin, dirtFunction2Spin, dirtFunction3Spin)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:887-915
             throw new NotImplementedException("TestAreEditorManipulateDirtFunctionSpins: Dirt function spin boxes manipulation test not yet implemented (TSL-only features)");
         }
@@ -1830,7 +1830,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateDirtSizeSpins()
         {
-            // TODO: PLACEHOLDER - Implement dirt size spin boxes manipulation test (TSL only - dirtSize1Spin, dirtSize2Spin, dirtSize3Spin)
+            // TODO: STUB - Implement dirt size spin boxes manipulation test (TSL only - dirtSize1Spin, dirtSize2Spin, dirtSize3Spin)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:917-945
             throw new NotImplementedException("TestAreEditorManipulateDirtSizeSpins: Dirt size spin boxes manipulation test not yet implemented (TSL-only features)");
         }
@@ -1840,7 +1840,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateOnEnterScript()
         {
-            // TODO: PLACEHOLDER - Implement on enter script field manipulation test
+            // TODO: STUB - Implement on enter script field manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:951-973
             throw new NotImplementedException("TestAreEditorManipulateOnEnterScript: On enter script manipulation test not yet implemented");
         }
@@ -1850,7 +1850,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateOnExitScript()
         {
-            // TODO: PLACEHOLDER - Implement on exit script field manipulation test
+            // TODO: STUB - Implement on exit script field manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:975-993
             throw new NotImplementedException("TestAreEditorManipulateOnExitScript: On exit script manipulation test not yet implemented");
         }
@@ -1860,7 +1860,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateOnHeartbeatScript()
         {
-            // TODO: PLACEHOLDER - Implement on heartbeat script field manipulation test
+            // TODO: STUB - Implement on heartbeat script field manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:995-1013
             throw new NotImplementedException("TestAreEditorManipulateOnHeartbeatScript: On heartbeat script manipulation test not yet implemented");
         }
@@ -1870,7 +1870,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateOnUserDefinedScript()
         {
-            // TODO: PLACEHOLDER - Implement on user defined script field manipulation test
+            // TODO: STUB - Implement on user defined script field manipulation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1015-1033
             throw new NotImplementedException("TestAreEditorManipulateOnUserDefinedScript: On user defined script manipulation test not yet implemented");
         }
@@ -1880,7 +1880,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateComments()
         {
-            // TODO: PLACEHOLDER - Implement comments field manipulation test (empty, single line, multi-line, special chars, very long)
+            // TODO: STUB - Implement comments field manipulation test (empty, single line, multi-line, special chars, very long)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1039-1070
             throw new NotImplementedException("TestAreEditorManipulateComments: Comments field manipulation test not yet implemented");
         }
@@ -1890,7 +1890,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateAllBasicFieldsCombination()
         {
-            // TODO: PLACEHOLDER - Implement combination test for all basic fields manipulated simultaneously
+            // TODO: STUB - Implement combination test for all basic fields manipulated simultaneously
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1076-1113
             throw new NotImplementedException("TestAreEditorManipulateAllBasicFieldsCombination: All basic fields combination test not yet implemented");
         }
@@ -1900,7 +1900,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateAllWeatherFieldsCombination()
         {
-            // TODO: PLACEHOLDER - Implement combination test for all weather fields manipulated simultaneously (TSL only)
+            // TODO: STUB - Implement combination test for all weather fields manipulated simultaneously (TSL only)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1115-1163
             throw new NotImplementedException("TestAreEditorManipulateAllWeatherFieldsCombination: All weather fields combination test not yet implemented (TSL-only features)");
         }
@@ -1910,7 +1910,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateAllMapFieldsCombination()
         {
-            // TODO: PLACEHOLDER - Implement combination test for all map fields manipulated simultaneously
+            // TODO: STUB - Implement combination test for all map fields manipulated simultaneously
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1165-1204
             throw new NotImplementedException("TestAreEditorManipulateAllMapFieldsCombination: All map fields combination test not yet implemented");
         }
@@ -1920,7 +1920,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorSaveLoadRoundtripIdentity()
         {
-            // TODO: PLACEHOLDER - Implement save/load roundtrip identity test (preserves all data exactly without modifications)
+            // TODO: STUB - Implement save/load roundtrip identity test (preserves all data exactly without modifications)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1210-1242
             throw new NotImplementedException("TestAreEditorSaveLoadRoundtripIdentity: Save/load roundtrip identity test not yet implemented");
         }
@@ -1930,7 +1930,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorSaveLoadRoundtripWithModifications()
         {
-            // TODO: PLACEHOLDER - Implement save/load roundtrip with modifications test (preserves changes through multiple cycles)
+            // TODO: STUB - Implement save/load roundtrip with modifications test (preserves changes through multiple cycles)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1244-1288
             throw new NotImplementedException("TestAreEditorSaveLoadRoundtripWithModifications: Save/load roundtrip with modifications test not yet implemented");
         }
@@ -1940,7 +1940,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMultipleSaveLoadCycles()
         {
-            // TODO: PLACEHOLDER - Implement multiple save/load cycles test (5 cycles with different modifications each time)
+            // TODO: STUB - Implement multiple save/load cycles test (5 cycles with different modifications each time)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1290-1321
             throw new NotImplementedException("TestAreEditorMultipleSaveLoadCycles: Multiple save/load cycles test not yet implemented");
         }
@@ -1950,7 +1950,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMinimumValues()
         {
-            // TODO: PLACEHOLDER - Implement minimum values edge case test (all fields set to minimums)
+            // TODO: STUB - Implement minimum values edge case test (all fields set to minimums)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1327-1364
             throw new NotImplementedException("TestAreEditorMinimumValues: Minimum values edge case test not yet implemented");
         }
@@ -1960,7 +1960,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMaximumValues()
         {
-            // TODO: PLACEHOLDER - Implement maximum values edge case test (all fields set to maximums)
+            // TODO: STUB - Implement maximum values edge case test (all fields set to maximums)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397
             throw new NotImplementedException("TestAreEditorMaximumValues: Maximum values edge case test not yet implemented");
         }
@@ -1970,7 +1970,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorEmptyStrings()
         {
-            // TODO: PLACEHOLDER - Implement empty strings edge case test (all text fields set to empty)
+            // TODO: STUB - Implement empty strings edge case test (all text fields set to empty)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1399-1432
             throw new NotImplementedException("TestAreEditorEmptyStrings: Empty strings edge case test not yet implemented");
         }
@@ -1980,7 +1980,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorSpecialCharactersInTextFields()
         {
-            // TODO: PLACEHOLDER - Implement special characters edge case test (newlines, tabs, etc. in text fields)
+            // TODO: STUB - Implement special characters edge case test (newlines, tabs, etc. in text fields)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1434-1458
             throw new NotImplementedException("TestAreEditorSpecialCharactersInTextFields: Special characters edge case test not yet implemented");
         }
@@ -1990,7 +1990,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorGffRoundtripComparison()
         {
-            // TODO: PLACEHOLDER - Implement GFF roundtrip comparison test (validates GFF structure preservation)
+            // TODO: STUB - Implement GFF roundtrip comparison test (validates GFF structure preservation)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1464-1497
             throw new NotImplementedException("TestAreEditorGffRoundtripComparison: GFF roundtrip comparison test not yet implemented");
         }
@@ -2000,7 +2000,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorGffRoundtripWithModifications()
         {
-            // TODO: PLACEHOLDER - Implement GFF roundtrip with modifications test (validates GFF structure after modifications)
+            // TODO: STUB - Implement GFF roundtrip with modifications test (validates GFF structure after modifications)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1499-1527
             throw new NotImplementedException("TestAreEditorGffRoundtripWithModifications: GFF roundtrip with modifications test not yet implemented");
         }
@@ -2010,7 +2010,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorNewFileAllDefaults()
         {
-            // TODO: PLACEHOLDER - Implement new file defaults test (verifies correct defaults for new ARE file)
+            // TODO: STUB - Implement new file defaults test (verifies correct defaults for new ARE file)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1562-1578
             throw new NotImplementedException("TestAreEditorNewFileAllDefaults: New file defaults test not yet implemented");
         }
@@ -2020,7 +2020,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMinimapRedoOnMapAxisChange()
         {
-            // TODO: PLACEHOLDER - Implement minimap redo on map axis change test (verifies signal connection)
+            // TODO: STUB - Implement minimap redo on map axis change test (verifies signal connection)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1584-1600
             throw new NotImplementedException("TestAreEditorMinimapRedoOnMapAxisChange: Minimap redo on map axis change test not yet implemented");
         }
@@ -2030,7 +2030,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMinimapRedoOnMapWorldChange()
         {
-            // TODO: PLACEHOLDER - Implement minimap redo on map world change test (verifies signal connection)
+            // TODO: STUB - Implement minimap redo on map world change test (verifies signal connection)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1602-1617
             throw new NotImplementedException("TestAreEditorMinimapRedoOnMapWorldChange: Minimap redo on map world change test not yet implemented");
         }
@@ -2040,7 +2040,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorNameDialogIntegration()
         {
-            // TODO: PLACEHOLDER - Implement name dialog integration test (verifies change_name method exists and is callable)
+            // TODO: STUB - Implement name dialog integration test (verifies change_name method exists and is callable)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1623-1638
             throw new NotImplementedException("TestAreEditorNameDialogIntegration: Name dialog integration test not yet implemented");
         }
@@ -2050,7 +2050,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorSpecifics()
         {
-            // TODO: PLACEHOLDER - Implement ARE editor specifics test (granular tag manipulation test)
+            // TODO: STUB - Implement ARE editor specifics test (granular tag manipulation test)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1645-1666
             throw new NotImplementedException("TestAreEditorSpecifics: ARE editor specifics test not yet implemented");
         }
@@ -2060,7 +2060,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorHelpDialogOpensCorrectFile()
         {
-            // TODO: PLACEHOLDER - Implement help dialog test (verifies GFF-ARE.md help file opens correctly, not 'Help File Not Found')
+            // TODO: STUB - Implement help dialog test (verifies GFF-ARE.md help file opens correctly, not 'Help File Not Found')
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1669-1695
             throw new NotImplementedException("TestAreEditorHelpDialogOpensCorrectFile: Help dialog test not yet implemented");
         }
@@ -2070,7 +2070,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorComprehensiveGffRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement comprehensive GFF roundtrip test (validates ALL GFF fields preserved, compares every field recursively)
+            // TODO: STUB - Implement comprehensive GFF roundtrip test (validates ALL GFF fields preserved, compares every field recursively)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1702-1803
             throw new NotImplementedException("TestAreEditorComprehensiveGffRoundtrip: Comprehensive GFF roundtrip test not yet implemented");
         }
@@ -2080,7 +2080,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMapCoordinatesRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement map coordinates roundtrip test (validates MapPt1X, MapPt1Y, MapPt2X, MapPt2Y, WorldPt1X, WorldPt1Y, WorldPt2X, WorldPt2Y, NorthAxis, MapZoom, MapResX preserved exactly)
+            // TODO: STUB - Implement map coordinates roundtrip test (validates MapPt1X, MapPt1Y, MapPt2X, MapPt2Y, WorldPt1X, WorldPt1Y, WorldPt2X, WorldPt2Y, NorthAxis, MapZoom, MapResX preserved exactly)
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1806-1898
             throw new NotImplementedException("TestAreEditorMapCoordinatesRoundtrip: Map coordinates roundtrip test not yet implemented");
         }

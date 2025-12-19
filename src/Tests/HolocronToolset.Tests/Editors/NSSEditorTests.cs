@@ -155,7 +155,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorCodeEditingBasic()
         {
-            // TODO: PLACEHOLDER - Implement basic code editing test
+            // TODO: STUB - Implement basic code editing test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:132-164
             throw new NotImplementedException("TestNssEditorCodeEditingBasic: Basic code editing test not yet implemented");
         }
@@ -165,7 +165,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorLoadRealNcsFile()
         {
-            // TODO: PLACEHOLDER - Implement load real NCS file test
+            // TODO: STUB - Implement load real NCS file test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:166-184
             throw new NotImplementedException("TestNssEditorLoadRealNcsFile: Load real NCS file test not yet implemented");
         }
@@ -175,7 +175,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSaveLoadRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement save/load roundtrip test
+            // TODO: STUB - Implement save/load roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:206-232
             throw new NotImplementedException("TestNssEditorSaveLoadRoundtrip: Save/load roundtrip test not yet implemented");
         }
@@ -185,7 +185,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBookmarkAddAndNavigate()
         {
-            // TODO: PLACEHOLDER - Implement bookmark add and navigate test
+            // TODO: STUB - Implement bookmark add and navigate test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:234-276
             throw new NotImplementedException("TestNssEditorBookmarkAddAndNavigate: Bookmark add and navigate test not yet implemented");
         }
@@ -195,7 +195,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBookmarkRemove()
         {
-            // TODO: PLACEHOLDER - Implement bookmark remove test
+            // TODO: STUB - Implement bookmark remove test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:278-309
             throw new NotImplementedException("TestNssEditorBookmarkRemove: Bookmark remove test not yet implemented");
         }
@@ -205,7 +205,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBookmarkNextPrevious()
         {
-            // TODO: PLACEHOLDER - Implement bookmark next/previous test
+            // TODO: STUB - Implement bookmark next/previous test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:311-350
             throw new NotImplementedException("TestNssEditorBookmarkNextPrevious: Bookmark next/previous test not yet implemented");
         }
@@ -215,7 +215,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBookmarkPersistence()
         {
-            // TODO: PLACEHOLDER - Implement bookmark persistence test
+            // TODO: STUB - Implement bookmark persistence test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:352-419
             throw new NotImplementedException("TestNssEditorBookmarkPersistence: Bookmark persistence test not yet implemented");
         }
@@ -225,7 +225,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSnippetAddAndInsert()
         {
-            // TODO: PLACEHOLDER - Implement snippet add and insert test
+            // TODO: STUB - Implement snippet add and insert test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:421-456
             throw new NotImplementedException("TestNssEditorSnippetAddAndInsert: Snippet add and insert test not yet implemented");
         }
@@ -235,7 +235,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSnippetFilter()
         {
-            // TODO: PLACEHOLDER - Implement snippet filter test
+            // TODO: STUB - Implement snippet filter test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:458-486
             throw new NotImplementedException("TestNssEditorSnippetFilter: Snippet filter test not yet implemented");
         }
@@ -245,7 +245,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSnippetPersistence()
         {
-            // TODO: PLACEHOLDER - Implement snippet persistence test
+            // TODO: STUB - Implement snippet persistence test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:488-518
             throw new NotImplementedException("TestNssEditorSnippetPersistence: Snippet persistence test not yet implemented");
         }
@@ -255,7 +255,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSyntaxHighlightingSetup()
         {
-            // TODO: PLACEHOLDER - Implement syntax highlighting setup test
+            // TODO: STUB - Implement syntax highlighting setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:520-545
             throw new NotImplementedException("TestNssEditorSyntaxHighlightingSetup: Syntax highlighting setup test not yet implemented");
         }
@@ -265,7 +265,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSyntaxHighlightingGameSwitch()
         {
-            // TODO: PLACEHOLDER - Implement syntax highlighting game switch test
+            // TODO: STUB - Implement syntax highlighting game switch test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:547-573
             throw new NotImplementedException("TestNssEditorSyntaxHighlightingGameSwitch: Syntax highlighting game switch test not yet implemented");
         }
@@ -275,7 +275,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorAutocompletionSetup()
         {
-            // TODO: PLACEHOLDER - Implement autocompletion setup test
+            // TODO: STUB - Implement autocompletion setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:575-590
             throw new NotImplementedException("TestNssEditorAutocompletionSetup: Autocompletion setup test not yet implemented");
         }
@@ -285,7 +285,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFunctionsListPopulated()
         {
-            // TODO: PLACEHOLDER - Implement functions list populated test
+            // TODO: STUB - Implement functions list populated test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:592-615
             throw new NotImplementedException("TestNssEditorFunctionsListPopulated: Functions list populated test not yet implemented");
         }
@@ -295,7 +295,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorConstantsListPopulated()
         {
-            // TODO: PLACEHOLDER - Implement constants list populated test
+            // TODO: STUB - Implement constants list populated test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:617-640
             throw new NotImplementedException("TestNssEditorConstantsListPopulated: Constants list populated test not yet implemented");
         }
@@ -305,7 +305,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorInsertFunction()
         {
-            // TODO: PLACEHOLDER - Implement insert function test
+            // TODO: STUB - Implement insert function test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:642-665
             throw new NotImplementedException("TestNssEditorInsertFunction: Insert function test not yet implemented");
         }
@@ -315,7 +315,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorInsertConstant()
         {
-            // TODO: PLACEHOLDER - Implement insert constant test
+            // TODO: STUB - Implement insert constant test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:667-695
             throw new NotImplementedException("TestNssEditorInsertConstant: Insert constant test not yet implemented");
         }
@@ -325,7 +325,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorGameSelectorSwitch()
         {
-            // TODO: PLACEHOLDER - Implement game selector switch test
+            // TODO: STUB - Implement game selector switch test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:697-717
             throw new NotImplementedException("TestNssEditorGameSelectorSwitch: Game selector switch test not yet implemented");
         }
@@ -335,7 +335,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorGameSelectorUi()
         {
-            // TODO: PLACEHOLDER - Implement game selector UI test
+            // TODO: STUB - Implement game selector UI test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:719-747
             throw new NotImplementedException("TestNssEditorGameSelectorUi: Game selector UI test not yet implemented");
         }
@@ -345,7 +345,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorOutlineViewPopulated()
         {
-            // TODO: PLACEHOLDER - Implement outline view populated test
+            // TODO: STUB - Implement outline view populated test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:749-763
             throw new NotImplementedException("TestNssEditorOutlineViewPopulated: Outline view populated test not yet implemented");
         }
@@ -355,7 +355,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorOutlineNavigation()
         {
-            // TODO: PLACEHOLDER - Implement outline navigation test
+            // TODO: STUB - Implement outline navigation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:765-790
             throw new NotImplementedException("TestNssEditorOutlineNavigation: Outline navigation test not yet implemented");
         }
@@ -365,7 +365,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFindReplaceSetup()
         {
-            // TODO: PLACEHOLDER - Implement find/replace setup test
+            // TODO: STUB - Implement find/replace setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:792-807
             throw new NotImplementedException("TestNssEditorFindReplaceSetup: Find/replace setup test not yet implemented");
         }
@@ -375,7 +375,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFindAllReferences()
         {
-            // TODO: PLACEHOLDER - Implement find all references test
+            // TODO: STUB - Implement find all references test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:809-827
             throw new NotImplementedException("TestNssEditorFindAllReferences: Find all references test not yet implemented");
         }
@@ -385,7 +385,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorErrorDiagnosticsSetup()
         {
-            // TODO: PLACEHOLDER - Implement error diagnostics setup test
+            // TODO: STUB - Implement error diagnostics setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:829-840
             throw new NotImplementedException("TestNssEditorErrorDiagnosticsSetup: Error diagnostics setup test not yet implemented");
         }
@@ -395,7 +395,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorErrorReporting()
         {
-            // TODO: PLACEHOLDER - Implement error reporting test
+            // TODO: STUB - Implement error reporting test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:842-863
             throw new NotImplementedException("TestNssEditorErrorReporting: Error reporting test not yet implemented");
         }
@@ -405,7 +405,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorClearErrors()
         {
-            // TODO: PLACEHOLDER - Implement clear errors test
+            // TODO: STUB - Implement clear errors test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:865-889
             throw new NotImplementedException("TestNssEditorClearErrors: Clear errors test not yet implemented");
         }
@@ -415,7 +415,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorCompilationUiSetup()
         {
-            // TODO: PLACEHOLDER - Implement compilation UI setup test
+            // TODO: STUB - Implement compilation UI setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:891-904
             throw new NotImplementedException("TestNssEditorCompilationUiSetup: Compilation UI setup test not yet implemented");
         }
@@ -425,7 +425,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBuildReturnsScriptContent()
         {
-            // TODO: PLACEHOLDER - Implement build returns script content test
+            // TODO: STUB - Implement build returns script content test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:906-926
             throw new NotImplementedException("TestNssEditorBuildReturnsScriptContent: Build returns script content test not yet implemented");
         }
@@ -435,7 +435,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFileExplorerSetup()
         {
-            // TODO: PLACEHOLDER - Implement file explorer setup test
+            // TODO: STUB - Implement file explorer setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:928-940
             throw new NotImplementedException("TestNssEditorFileExplorerSetup: File explorer setup test not yet implemented");
         }
@@ -445,7 +445,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFileExplorerAddressBar()
         {
-            // TODO: PLACEHOLDER - Implement file explorer address bar test
+            // TODO: STUB - Implement file explorer address bar test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:942-959
             throw new NotImplementedException("TestNssEditorFileExplorerAddressBar: File explorer address bar test not yet implemented");
         }
@@ -455,7 +455,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorTerminalSetup()
         {
-            // TODO: PLACEHOLDER - Implement terminal setup test
+            // TODO: STUB - Implement terminal setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:961-977
             throw new NotImplementedException("TestNssEditorTerminalSetup: Terminal setup test not yet implemented");
         }
@@ -465,7 +465,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorContextMenuExists()
         {
-            // TODO: PLACEHOLDER - Implement context menu exists test
+            // TODO: STUB - Implement context menu exists test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:979-1001
             throw new NotImplementedException("TestNssEditorContextMenuExists: Context menu exists test not yet implemented");
         }
@@ -475,7 +475,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorScrollbarFilterSetup()
         {
-            // TODO: PLACEHOLDER - Implement scrollbar filter setup test
+            // TODO: STUB - Implement scrollbar filter setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1003-1016
             throw new NotImplementedException("TestNssEditorScrollbarFilterSetup: Scrollbar filter setup test not yet implemented");
         }
@@ -485,7 +485,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorOutputPanelExists()
         {
-            // TODO: PLACEHOLDER - Implement output panel exists test
+            // TODO: STUB - Implement output panel exists test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1018-1027
             throw new NotImplementedException("TestNssEditorOutputPanelExists: Output panel exists test not yet implemented");
         }
@@ -495,7 +495,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorLogToOutput()
         {
-            // TODO: PLACEHOLDER - Implement log to output test
+            // TODO: STUB - Implement log to output test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1029-1046
             throw new NotImplementedException("TestNssEditorLogToOutput: Log to output test not yet implemented");
         }
@@ -505,7 +505,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorStatusBarSetup()
         {
-            // TODO: PLACEHOLDER - Implement status bar setup test
+            // TODO: STUB - Implement status bar setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1048-1056
             throw new NotImplementedException("TestNssEditorStatusBarSetup: Status bar setup test not yet implemented");
         }
@@ -515,7 +515,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorStatusBarUpdates()
         {
-            // TODO: PLACEHOLDER - Implement status bar updates test
+            // TODO: STUB - Implement status bar updates test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1058-1080
             throw new NotImplementedException("TestNssEditorStatusBarUpdates: Status bar updates test not yet implemented");
         }
@@ -525,7 +525,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorPanelToggleActions()
         {
-            // TODO: PLACEHOLDER - Implement panel toggle actions test
+            // TODO: STUB - Implement panel toggle actions test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1082-1101
             throw new NotImplementedException("TestNssEditorPanelToggleActions: Panel toggle actions test not yet implemented");
         }
@@ -535,7 +535,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFullWorkflow()
         {
-            // TODO: PLACEHOLDER - Implement full workflow test
+            // TODO: STUB - Implement full workflow test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1103-1132
             throw new NotImplementedException("TestNssEditorFullWorkflow: Full workflow test not yet implemented");
         }
@@ -545,7 +545,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorMultipleModificationsRoundtrip()
         {
-            // TODO: PLACEHOLDER - Implement multiple modifications roundtrip test
+            // TODO: STUB - Implement multiple modifications roundtrip test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1134-1161
             throw new NotImplementedException("TestNssEditorMultipleModificationsRoundtrip: Multiple modifications roundtrip test not yet implemented");
         }
@@ -555,7 +555,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorAllWidgetsExist()
         {
-            // TODO: PLACEHOLDER - Implement all widgets exist test
+            // TODO: STUB - Implement all widgets exist test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1163-1194
             throw new NotImplementedException("TestNssEditorAllWidgetsExist: All widgets exist test not yet implemented");
         }
@@ -565,7 +565,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorMenuBarExists()
         {
-            // TODO: PLACEHOLDER - Implement menu bar exists test
+            // TODO: STUB - Implement menu bar exists test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1196-1211
             throw new NotImplementedException("TestNssEditorMenuBarExists: Menu bar exists test not yet implemented");
         }
@@ -575,7 +575,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorGotoLine()
         {
-            // TODO: PLACEHOLDER - Implement goto line test
+            // TODO: STUB - Implement goto line test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1213-1259
             throw new NotImplementedException("TestNssEditorGotoLine: Goto line test not yet implemented");
         }
@@ -585,7 +585,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldableRegionsDetection()
         {
-            // TODO: PLACEHOLDER - Implement foldable regions detection test
+            // TODO: STUB - Implement foldable regions detection test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1261-1286
             throw new NotImplementedException("TestNssEditorFoldableRegionsDetection: Foldable regions detection test not yet implemented");
         }
@@ -595,7 +595,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldRegion()
         {
-            // TODO: PLACEHOLDER - Implement fold region test
+            // TODO: STUB - Implement fold region test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1288-1322
             throw new NotImplementedException("TestNssEditorFoldRegion: Fold region test not yet implemented");
         }
@@ -605,7 +605,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorUnfoldRegion()
         {
-            // TODO: PLACEHOLDER - Implement unfold region test
+            // TODO: STUB - Implement unfold region test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1324-1361
             throw new NotImplementedException("TestNssEditorUnfoldRegion: Unfold region test not yet implemented");
         }
@@ -615,7 +615,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldAll()
         {
-            // TODO: PLACEHOLDER - Implement fold all test
+            // TODO: STUB - Implement fold all test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1363-1384
             throw new NotImplementedException("TestNssEditorFoldAll: Fold all test not yet implemented");
         }
@@ -625,7 +625,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorUnfoldAll()
         {
-            // TODO: PLACEHOLDER - Implement unfold all test
+            // TODO: STUB - Implement unfold all test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1386-1410
             throw new NotImplementedException("TestNssEditorUnfoldAll: Unfold all test not yet implemented");
         }
@@ -635,7 +635,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldingPreservedOnEdit()
         {
-            // TODO: PLACEHOLDER - Implement folding preserved on edit test
+            // TODO: STUB - Implement folding preserved on edit test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1412-1445
             throw new NotImplementedException("TestNssEditorFoldingPreservedOnEdit: Folding preserved on edit test not yet implemented");
         }
@@ -645,7 +645,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldingVisualIndicators()
         {
-            // TODO: PLACEHOLDER - Implement folding visual indicators test
+            // TODO: STUB - Implement folding visual indicators test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1447-1470
             throw new NotImplementedException("TestNssEditorFoldingVisualIndicators: Folding visual indicators test not yet implemented");
         }
@@ -655,7 +655,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbsSetup()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs setup test
+            // TODO: STUB - Implement breadcrumbs setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1472-1484
             throw new NotImplementedException("TestNssEditorBreadcrumbsSetup: Breadcrumbs setup test not yet implemented");
         }
@@ -665,7 +665,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbsUpdateOnCursorMove()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs update on cursor move test
+            // TODO: STUB - Implement breadcrumbs update on cursor move test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1486-1516
             throw new NotImplementedException("TestNssEditorBreadcrumbsUpdateOnCursorMove: Breadcrumbs update on cursor move test not yet implemented");
         }
@@ -675,7 +675,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbsNavigation()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs navigation test
+            // TODO: STUB - Implement breadcrumbs navigation test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1518-1536
             throw new NotImplementedException("TestNssEditorBreadcrumbsNavigation: Breadcrumbs navigation test not yet implemented");
         }
@@ -685,7 +685,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorNavigateToSymbolFunction()
         {
-            // TODO: PLACEHOLDER - Implement navigate to symbol function test
+            // TODO: STUB - Implement navigate to symbol function test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1538-1576
             throw new NotImplementedException("TestNssEditorNavigateToSymbolFunction: Navigate to symbol function test not yet implemented");
         }
@@ -695,7 +695,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbClickNavigatesToFunction()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumb click navigates to function test
+            // TODO: STUB - Implement breadcrumb click navigates to function test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1578-1605
             throw new NotImplementedException("TestNssEditorBreadcrumbClickNavigatesToFunction: Breadcrumb click navigates to function test not yet implemented");
         }
@@ -705,7 +705,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbsContextDetection()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs context detection test
+            // TODO: STUB - Implement breadcrumbs context detection test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1607-1629
             throw new NotImplementedException("TestNssEditorBreadcrumbsContextDetection: Breadcrumbs context detection test not yet implemented");
         }
@@ -715,7 +715,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSelectNextOccurrence()
         {
-            // TODO: PLACEHOLDER - Implement select next occurrence test
+            // TODO: STUB - Implement select next occurrence test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1631-1661
             throw new NotImplementedException("TestNssEditorSelectNextOccurrence: Select next occurrence test not yet implemented");
         }
@@ -725,7 +725,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSelectAllOccurrences()
         {
-            // TODO: PLACEHOLDER - Implement select all occurrences test
+            // TODO: STUB - Implement select all occurrences test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1663-1694
             throw new NotImplementedException("TestNssEditorSelectAllOccurrences: Select all occurrences test not yet implemented");
         }
@@ -735,7 +735,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorSelectLine()
         {
-            // TODO: PLACEHOLDER - Implement select line test
+            // TODO: STUB - Implement select line test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1696-1722
             throw new NotImplementedException("TestNssEditorSelectLine: Select line test not yet implemented");
         }
@@ -745,7 +745,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorColumnSelectionMode()
         {
-            // TODO: PLACEHOLDER - Implement column selection mode test
+            // TODO: STUB - Implement column selection mode test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1724-1753
             throw new NotImplementedException("TestNssEditorColumnSelectionMode: Column selection mode test not yet implemented");
         }
@@ -755,7 +755,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorCodeFoldingShortcuts()
         {
-            // TODO: PLACEHOLDER - Implement code folding shortcuts test
+            // TODO: STUB - Implement code folding shortcuts test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1755-1783
             throw new NotImplementedException("TestNssEditorCodeFoldingShortcuts: Code folding shortcuts test not yet implemented");
         }
@@ -765,7 +765,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorWordSelectionShortcuts()
         {
-            // TODO: PLACEHOLDER - Implement word selection shortcuts test
+            // TODO: STUB - Implement word selection shortcuts test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1785-1816
             throw new NotImplementedException("TestNssEditorWordSelectionShortcuts: Word selection shortcuts test not yet implemented");
         }
@@ -775,7 +775,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorDuplicateLineShortcut()
         {
-            // TODO: PLACEHOLDER - Implement duplicate line shortcut test
+            // TODO: STUB - Implement duplicate line shortcut test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1818-1845
             throw new NotImplementedException("TestNssEditorDuplicateLineShortcut: Duplicate line shortcut test not yet implemented");
         }
@@ -785,7 +785,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorCommandPaletteSetup()
         {
-            // TODO: PLACEHOLDER - Implement command palette setup test
+            // TODO: STUB - Implement command palette setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1847-1861
             throw new NotImplementedException("TestNssEditorCommandPaletteSetup: Command palette setup test not yet implemented");
         }
@@ -795,7 +795,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorCommandPaletteActions()
         {
-            // TODO: PLACEHOLDER - Implement command palette actions test
+            // TODO: STUB - Implement command palette actions test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1863-1875
             throw new NotImplementedException("TestNssEditorCommandPaletteActions: Command palette actions test not yet implemented");
         }
@@ -805,7 +805,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorCommandPaletteShortcut()
         {
-            // TODO: PLACEHOLDER - Implement command palette shortcut test
+            // TODO: STUB - Implement command palette shortcut test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1877-1897
             throw new NotImplementedException("TestNssEditorCommandPaletteShortcut: Command palette shortcut test not yet implemented");
         }
@@ -815,7 +815,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBracketMatching()
         {
-            // TODO: PLACEHOLDER - Implement bracket matching test
+            // TODO: STUB - Implement bracket matching test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1899-1930
             throw new NotImplementedException("TestNssEditorBracketMatching: Bracket matching test not yet implemented");
         }
@@ -825,7 +825,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldingAndBreadcrumbsTogether()
         {
-            // TODO: PLACEHOLDER - Implement folding and breadcrumbs together test
+            // TODO: STUB - Implement folding and breadcrumbs together test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1932-1956
             throw new NotImplementedException("TestNssEditorFoldingAndBreadcrumbsTogether: Folding and breadcrumbs together test not yet implemented");
         }
@@ -835,7 +835,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorMultipleFeaturesIntegration()
         {
-            // TODO: PLACEHOLDER - Implement multiple features integration test
+            // TODO: STUB - Implement multiple features integration test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1958-1991
             throw new NotImplementedException("TestNssEditorMultipleFeaturesIntegration: Multiple features integration test not yet implemented");
         }
@@ -845,7 +845,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldEmptyBlock()
         {
-            // TODO: PLACEHOLDER - Implement fold empty block test
+            // TODO: STUB - Implement fold empty block test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1993-2008
             throw new NotImplementedException("TestNssEditorFoldEmptyBlock: Fold empty block test not yet implemented");
         }
@@ -855,7 +855,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldNestedBlocks()
         {
-            // TODO: PLACEHOLDER - Implement fold nested blocks test
+            // TODO: STUB - Implement fold nested blocks test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2010-2038
             throw new NotImplementedException("TestNssEditorFoldNestedBlocks: Fold nested blocks test not yet implemented");
         }
@@ -865,7 +865,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbsNoContext()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs no context test
+            // TODO: STUB - Implement breadcrumbs no context test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2040-2056
             throw new NotImplementedException("TestNssEditorBreadcrumbsNoContext: Breadcrumbs no context test not yet implemented");
         }
@@ -875,7 +875,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorWordSelectionNoMatch()
         {
-            // TODO: PLACEHOLDER - Implement word selection no match test
+            // TODO: STUB - Implement word selection no match test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2058-2083
             throw new NotImplementedException("TestNssEditorWordSelectionNoMatch: Word selection no match test not yet implemented");
         }
@@ -885,7 +885,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldMalformedCode()
         {
-            // TODO: PLACEHOLDER - Implement fold malformed code test
+            // TODO: STUB - Implement fold malformed code test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2085-2100
             throw new NotImplementedException("TestNssEditorFoldMalformedCode: Fold malformed code test not yet implemented");
         }
@@ -895,7 +895,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorBreadcrumbsMultipleFunctions()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs multiple functions test
+            // TODO: STUB - Implement breadcrumbs multiple functions test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2102-2135
             throw new NotImplementedException("TestNssEditorBreadcrumbsMultipleFunctions: Breadcrumbs multiple functions test not yet implemented");
         }
@@ -905,7 +905,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNssEditorFoldableRegionsLargeFile()
         {
-            // TODO: PLACEHOLDER - Implement foldable regions large file test
+            // TODO: STUB - Implement foldable regions large file test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2137-2163
             throw new NotImplementedException("TestNssEditorFoldableRegionsLargeFile: Foldable regions large file test not yet implemented");
         }
@@ -915,7 +915,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNsseditorEditorHelpDialogOpensCorrectFile()
         {
-            // TODO: PLACEHOLDER - Implement editor help dialog opens correct file test
+            // TODO: STUB - Implement editor help dialog opens correct file test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2165-2191
             throw new NotImplementedException("TestNsseditorEditorHelpDialogOpensCorrectFile: Editor help dialog opens correct file test not yet implemented");
         }
@@ -925,7 +925,7 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestNsseditorBreadcrumbsUpdatePerformance()
         {
-            // TODO: PLACEHOLDER - Implement breadcrumbs update performance test
+            // TODO: STUB - Implement breadcrumbs update performance test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2193-2220
             throw new NotImplementedException("TestNsseditorBreadcrumbsUpdatePerformance: Breadcrumbs update performance test not yet implemented");
         }
