@@ -348,6 +348,42 @@ namespace Andastra.Runtime.Core.Save
             }
         }
 
+        /// <summary>
+        /// Saves plot state to save data.
+        /// </summary>
+        /// <remarks>
+        /// Plot State Saving (swkotor2.exe):
+        /// - Based on swkotor2.exe: Plot state is saved as part of game state
+        /// - Original implementation: Plot states are tracked and saved to prevent duplicate processing
+        /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
+        /// </remarks>
+        private void SavePlotState(SaveGameData saveData)
+        {
+            saveData.PlotStates = new Dictionary<int, PlotState>();
+
+            if (_plotSystem == null)
+            {
+                return;
+            }
+
+            // Save all plot states
+            var allPlotStates = _plotSystem.GetAllPlotStates();
+            foreach (var kvp in allPlotStates)
+            {
+                // Create a copy of the plot state for saving
+                PlotState plotState = kvp.Value;
+                saveData.PlotStates[kvp.Key] = new PlotState
+                {
+                    PlotIndex = plotState.PlotIndex,
+                    Label = plotState.Label,
+                    IsTriggered = plotState.IsTriggered,
+                    IsCompleted = plotState.IsCompleted,
+                    TriggerCount = plotState.TriggerCount,
+                    LastTriggered = plotState.LastTriggered
+                };
+            }
+        }
+
         private void SaveAreaStates(SaveGameData saveData)
         {
             // Save state for each visited area
@@ -535,6 +571,9 @@ namespace Andastra.Runtime.Core.Save
 
             // Restore party state
             RestorePartyState(saveData);
+
+            // Restore plot state
+            RestorePlotState(saveData);
 
             // Load module (area states are restored when areas are loaded)
             // This would trigger the module loader
