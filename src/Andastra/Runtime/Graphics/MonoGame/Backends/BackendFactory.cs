@@ -317,9 +317,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case GraphicsBackend.OpenGL:
                     return new OpenGLBackend();
 
-                // TODO: STUB - Metal backend not yet implemented
-                // case GraphicsBackend.Metal:
-                //     return new MetalBackend();
+                case GraphicsBackend.Metal:
+                    return new MetalBackend();
 
                 default:
                     Console.WriteLine("[BackendFactory] Unknown backend type: " + backendType);
@@ -487,8 +486,43 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static bool IsMetalAvailable()
         {
             // Metal is only available on macOS/iOS
-            // TODO: SIMPLIFIED - In a real implementation, we would check for Metal framework
-            return RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Try to create a Metal device to verify availability
+                // This uses P/Invoke to check if Metal framework is available
+                IntPtr device = MetalNative.CreateSystemDefaultDevice();
+                if (device != IntPtr.Zero)
+                {
+                    MetalNative.ReleaseDevice(device);
+                    return true;
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                // Metal framework not found
+            }
+            catch
+            {
+                // Other errors indicate Metal is not available
+            }
+
+            return false;
+        }
+
+        private static class MetalNative
+        {
+            private const string MetalFramework = "/System/Library/Frameworks/Metal.framework/Metal";
+
+            [DllImport(MetalFramework, EntryPoint = "MTLCreateSystemDefaultDevice")]
+            public static extern IntPtr CreateSystemDefaultDevice();
+
+            [DllImport(MetalFramework)]
+            public static extern void ReleaseDevice(IntPtr device);
         }
 
         #endregion
@@ -549,6 +583,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case GraphicsBackend.Vulkan:
                 case GraphicsBackend.Direct3D12:
                 case GraphicsBackend.Direct3D9Remix:
+                case GraphicsBackend.Metal: // Metal 3.0+ supports raytracing on Apple Silicon
                     return true;
                 default:
                     return false;
