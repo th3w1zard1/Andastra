@@ -404,14 +404,45 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorAllNodeWidgetsInteractions: All node widgets interactions test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_link_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:938-972)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:938-972
         // Original: def test_dlg_editor_link_widgets_interactions(qtbot, installation: HTInstallation): Test link widget interactions
         [Fact]
         public void TestDlgEditorLinkWidgetsInteractions()
         {
-            // TODO: STUB - Implement link widgets interactions test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:938-972
-            throw new NotImplementedException("TestDlgEditorLinkWidgetsInteractions: Link widgets interactions test not yet implemented");
+            // Create editor
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Create entry -> reply structure
+            var rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+            rootItem.Link.Should().NotBeNull("Root item should have a link");
+            rootItem.Link.Node.Should().BeOfType<DLGEntry>("Root item should be an Entry");
+
+            var childItem = editor.Model.AddChildToItem(rootItem);
+            childItem.Should().NotBeNull("Child item should be created");
+            childItem.Link.Should().NotBeNull("Child item should have a link");
+            childItem.Link.Node.Should().BeOfType<DLGReply>("Child item should be a Reply");
+
+            // Select child (Reply) - simulate tree selection
+            // In a real UI, this would be done through the tree view, but for testing we'll set it directly
+            var treeItem = new TreeViewItem { Tag = childItem };
+            editor.DialogTree.SelectedItem = treeItem;
+
+            // Test condition1ResrefEdit - already tested above but test again for child
+            editor.Condition1ResrefEdit.Text = "child_cond1";
+            editor.OnNodeUpdate();
+            childItem.Link.Active1.ToString().Should().Be("child_cond1", "Condition1 should be updated");
+
+            // Test condition2ResrefEdit
+            editor.Condition2ResrefEdit.Text = "child_cond2";
+            editor.OnNodeUpdate();
+            childItem.Link.Active2.ToString().Should().Be("child_cond2", "Condition2 should be updated");
+
+            // Test logicSpin
+            editor.LogicSpin.Value = 0;
+            editor.OnNodeUpdate();
+            childItem.Link.Logic.Should().BeFalse("Logic should be false when value is 0");
         }
 
         // TODO: STUB - Implement test_dlg_editor_condition_params_full (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:974-1023)
