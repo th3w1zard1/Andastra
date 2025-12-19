@@ -9,6 +9,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
+using Avalonia.Input;
+using Avalonia.Headless;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -387,16 +389,13 @@ namespace HolocronToolset.Tests.Editors
                     int countBefore = editor.AssignedPropertiesListItemCount;
                     
                     // Matching Python: qtbot.keyPress(editor.ui.assignedPropertiesList, Qt.Key.Key_Delete)
-                    // Based on Avalonia API: KeyDown event calls OnDelShortcut when Delete key is pressed
+                    // Based on Avalonia Headless API: Window.KeyPress simulates keyboard input
+                    // Documentation: https://docs.avaloniaui.net/docs/concepts/headless/
                     // The UTIEditor handles KeyDown on the Window (line 450-457 in UTIEditor.cs)
-                    // For C# 7.3 compatibility, we call the handler method directly using reflection
-                    // This matches the Python test behavior where Delete key triggers the remove property action
-                    var handlerMethod = typeof(UTIEditor).GetMethod("OnDelShortcut", 
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    if (handlerMethod != null)
-                    {
-                        handlerMethod.Invoke(editor, null);
-                    }
+                    // This simulates the actual Delete key press event, matching Python test behavior exactly
+                    // KeyPress(Key key, RawInputModifiers modifiers, PhysicalKey physicalKey, string? keySymbol)
+                    // PhysicalKey.Delete follows W3C key codes (https://www.w3.org/TR/uievents-code/)
+                    editor.KeyPress(Key.Delete, RawInputModifiers.None, PhysicalKey.Delete, null);
                     
                     // Matching Python: assert editor.ui.assignedPropertiesList.count() == count_before - 1
                     editor.AssignedPropertiesListItemCount.Should().Be(countBefore - 1, "Delete key should remove selected property");
