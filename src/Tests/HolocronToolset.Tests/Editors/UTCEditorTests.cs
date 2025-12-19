@@ -372,7 +372,7 @@ namespace HolocronToolset.Tests.Editors
             tagEdit.Text = "persistent_tag";
             var (data5, _) = editor.Build();
             data5.Should().NotBeNull();
-            
+
             // Load the data back
             editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
             var tagEditReloaded = GetTagEdit(editor);
@@ -690,7 +690,7 @@ namespace HolocronToolset.Tests.Editors
             challengeRatingSpin.Value = 15.25m;
             var (data5, _) = editor.Build();
             data5.Should().NotBeNull();
-            
+
             // Load the data back
             editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
             var challengeRatingSpinReloaded = GetChallengeRatingSpin(editor);
@@ -774,24 +774,294 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateAllSkillSpins: All skill spin boxes manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_all_save_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756
         // Original: def test_utc_editor_manipulate_all_save_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all save spin boxes.
         [Fact]
         public void TestUtcEditorManipulateAllSaveSpins()
         {
-            // TODO: STUB - Implement all save spin boxes manipulation test (fortitude, reflex, willpower)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756
-            throw new NotImplementedException("TestUtcEditorManipulateAllSaveSpins: All save spin boxes manipulation test not yet implemented");
+            var editor = CreateEditorWithInstallation();
+            editor.New();
+
+            // Get all save spin boxes
+            var fortitudeSpin = GetFortitudeSpin(editor);
+            var reflexSpin = GetReflexSpin(editor);
+            var willSpin = GetWillSpin(editor);
+
+            fortitudeSpin.Should().NotBeNull("Fortitude spin box should exist");
+            reflexSpin.Should().NotBeNull("Reflex spin box should exist");
+            willSpin.Should().NotBeNull("Will spin box should exist");
+
+            // Test 1: Set all saves to 0
+            fortitudeSpin.Value = 0;
+            reflexSpin.Value = 0;
+            willSpin.Value = 0;
+
+            var (data1, _) = editor.Build();
+            data1.Should().NotBeNull();
+            var gff1 = GFF.FromBytes(data1);
+            var utc1 = UTCHelpers.ConstructUtc(gff1);
+            utc1.FortitudeBonus.Should().Be(0);
+            utc1.ReflexBonus.Should().Be(0);
+            utc1.WillpowerBonus.Should().Be(0);
+
+            // Test 2: Set all saves to different values (can be negative)
+            fortitudeSpin.Value = 5;
+            reflexSpin.Value = -5;
+            willSpin.Value = 10;
+
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull();
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            utc2.FortitudeBonus.Should().Be(5);
+            utc2.ReflexBonus.Should().Be(-5);
+            utc2.WillpowerBonus.Should().Be(10);
+
+            // Test 3: Set all saves to maximum positive
+            fortitudeSpin.Value = 32767;
+            reflexSpin.Value = 32767;
+            willSpin.Value = 32767;
+
+            var (data3, _) = editor.Build();
+            data3.Should().NotBeNull();
+            var gff3 = GFF.FromBytes(data3);
+            var utc3 = UTCHelpers.ConstructUtc(gff3);
+            utc3.FortitudeBonus.Should().Be(32767);
+            utc3.ReflexBonus.Should().Be(32767);
+            utc3.WillpowerBonus.Should().Be(32767);
+
+            // Test 4: Set all saves to minimum negative
+            fortitudeSpin.Value = -32768;
+            reflexSpin.Value = -32768;
+            willSpin.Value = -32768;
+
+            var (data4, _) = editor.Build();
+            data4.Should().NotBeNull();
+            var gff4 = GFF.FromBytes(data4);
+            var utc4 = UTCHelpers.ConstructUtc(gff4);
+            utc4.FortitudeBonus.Should().Be(-32768);
+            utc4.ReflexBonus.Should().Be(-32768);
+            utc4.WillpowerBonus.Should().Be(-32768);
+
+            // Test 5: Verify all saves persist through load/save cycle
+            fortitudeSpin.Value = 15;
+            reflexSpin.Value = -10;
+            willSpin.Value = 20;
+
+            var (data5, _) = editor.Build();
+            data5.Should().NotBeNull();
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
+
+            var fortitudeSpinReloaded = GetFortitudeSpin(editor);
+            var reflexSpinReloaded = GetReflexSpin(editor);
+            var willSpinReloaded = GetWillSpin(editor);
+
+            fortitudeSpinReloaded.Value.Should().Be(15);
+            reflexSpinReloaded.Value.Should().Be(-10);
+            willSpinReloaded.Value.Should().Be(20);
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_all_ability_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789
         // Original: def test_utc_editor_manipulate_all_ability_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all ability spin boxes.
         [Fact]
         public void TestUtcEditorManipulateAllAbilitySpins()
         {
-            // TODO: STUB - Implement all ability spin boxes manipulation test (strength, dexterity, constitution, intelligence, wisdom, charisma)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789
-            throw new NotImplementedException("TestUtcEditorManipulateAllAbilitySpins: All ability spin boxes manipulation test not yet implemented");
+            var editor = CreateEditorWithInstallation();
+            editor.New();
+
+            // Get all ability spin boxes
+            var strengthSpin = GetStrengthSpin(editor);
+            var dexteritySpin = GetDexteritySpin(editor);
+            var constitutionSpin = GetConstitutionSpin(editor);
+            var intelligenceSpin = GetIntelligenceSpin(editor);
+            var wisdomSpin = GetWisdomSpin(editor);
+            var charismaSpin = GetCharismaSpin(editor);
+
+            strengthSpin.Should().NotBeNull("Strength spin box should exist");
+            dexteritySpin.Should().NotBeNull("Dexterity spin box should exist");
+            constitutionSpin.Should().NotBeNull("Constitution spin box should exist");
+            intelligenceSpin.Should().NotBeNull("Intelligence spin box should exist");
+            wisdomSpin.Should().NotBeNull("Wisdom spin box should exist");
+            charismaSpin.Should().NotBeNull("Charisma spin box should exist");
+
+            // Test 1: Set all abilities to 0
+            strengthSpin.Value = 0;
+            dexteritySpin.Value = 0;
+            constitutionSpin.Value = 0;
+            intelligenceSpin.Value = 0;
+            wisdomSpin.Value = 0;
+            charismaSpin.Value = 0;
+
+            var (data1, _) = editor.Build();
+            data1.Should().NotBeNull();
+            var gff1 = GFF.FromBytes(data1);
+            var utc1 = UTCHelpers.ConstructUtc(gff1);
+            utc1.Strength.Should().Be(0);
+            utc1.Dexterity.Should().Be(0);
+            utc1.Constitution.Should().Be(0);
+            utc1.Intelligence.Should().Be(0);
+            utc1.Wisdom.Should().Be(0);
+            utc1.Charisma.Should().Be(0);
+
+            // Test 2: Set all abilities to different values
+            strengthSpin.Value = 10;
+            dexteritySpin.Value = 12;
+            constitutionSpin.Value = 14;
+            intelligenceSpin.Value = 16;
+            wisdomSpin.Value = 18;
+            charismaSpin.Value = 20;
+
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull();
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            utc2.Strength.Should().Be(10);
+            utc2.Dexterity.Should().Be(12);
+            utc2.Constitution.Should().Be(14);
+            utc2.Intelligence.Should().Be(16);
+            utc2.Wisdom.Should().Be(18);
+            utc2.Charisma.Should().Be(20);
+
+            // Test 3: Set all abilities to maximum (255)
+            strengthSpin.Value = 255;
+            dexteritySpin.Value = 255;
+            constitutionSpin.Value = 255;
+            intelligenceSpin.Value = 255;
+            wisdomSpin.Value = 255;
+            charismaSpin.Value = 255;
+
+            var (data3, _) = editor.Build();
+            data3.Should().NotBeNull();
+            var gff3 = GFF.FromBytes(data3);
+            var utc3 = UTCHelpers.ConstructUtc(gff3);
+            utc3.Strength.Should().Be(255);
+            utc3.Dexterity.Should().Be(255);
+            utc3.Constitution.Should().Be(255);
+            utc3.Intelligence.Should().Be(255);
+            utc3.Wisdom.Should().Be(255);
+            utc3.Charisma.Should().Be(255);
+
+            // Test 4: Verify all abilities persist through load/save cycle
+            strengthSpin.Value = 15;
+            dexteritySpin.Value = 16;
+            constitutionSpin.Value = 17;
+            intelligenceSpin.Value = 18;
+            wisdomSpin.Value = 19;
+            charismaSpin.Value = 20;
+
+            var (data4, _) = editor.Build();
+            data4.Should().NotBeNull();
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data4);
+
+            var strengthSpinReloaded = GetStrengthSpin(editor);
+            var dexteritySpinReloaded = GetDexteritySpin(editor);
+            var constitutionSpinReloaded = GetConstitutionSpin(editor);
+            var intelligenceSpinReloaded = GetIntelligenceSpin(editor);
+            var wisdomSpinReloaded = GetWisdomSpin(editor);
+            var charismaSpinReloaded = GetCharismaSpin(editor);
+
+            strengthSpinReloaded.Value.Should().Be(15);
+            dexteritySpinReloaded.Value.Should().Be(16);
+            constitutionSpinReloaded.Value.Should().Be(17);
+            intelligenceSpinReloaded.Value.Should().Be(18);
+            wisdomSpinReloaded.Value.Should().Be(19);
+            charismaSpinReloaded.Value.Should().Be(20);
+        }
+
+        /// <summary>
+        /// Helper methods to get save spin boxes from the editor using reflection.
+        /// </summary>
+        private static NumericUpDown GetFortitudeSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_fortitudeSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_fortitudeSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetReflexSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_reflexSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_reflexSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetWillSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_willSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_willSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        /// <summary>
+        /// Helper methods to get ability spin boxes from the editor using reflection.
+        /// </summary>
+        private static NumericUpDown GetStrengthSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_strengthSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_strengthSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetDexteritySpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_dexteritySpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_dexteritySpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetConstitutionSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_constitutionSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_constitutionSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetIntelligenceSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_intelligenceSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_intelligenceSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetWisdomSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_wisdomSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_wisdomSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
+        }
+
+        private static NumericUpDown GetCharismaSpin(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_charismaSpin", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_charismaSpin field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as NumericUpDown;
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_hp_fp_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:791-838)
