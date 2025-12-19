@@ -2,6 +2,8 @@ using System;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Aurora.Components;
+using Andastra.Runtime.Games.Aurora.Data;
 using Andastra.Runtime.Games.Common.Combat;
 using Andastra.Parsing.Formats.TwoDA;
 
@@ -32,6 +34,8 @@ namespace Andastra.Runtime.Games.Aurora.Combat
     /// </remarks>
     public class AuroraWeaponDamageCalculator : BaseWeaponDamageCalculator
     {
+        private readonly AuroraTwoDATableManager _tableManager;
+
         /// <summary>
         /// Weapon Finesse feat ID for Aurora/NWN (standard D&D 3.0 feat).
         /// </summary>
@@ -39,6 +43,18 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// Based on nwmain.exe: Standard NWN feat.2da - Weapon Finesse is typically feat ID 42
         /// </remarks>
         private const int FeatWeaponFinesse = 42;
+
+        /// <summary>
+        /// Initializes a new instance of the Aurora weapon damage calculator.
+        /// </summary>
+        /// <param name="tableManager">The Aurora 2DA table manager for accessing baseitems.2da.</param>
+        /// <remarks>
+        /// Based on nwmain.exe: Weapon damage calculation requires access to baseitems.2da via C2DA system
+        /// </remarks>
+        public AuroraWeaponDamageCalculator(AuroraTwoDATableManager tableManager)
+        {
+            _tableManager = tableManager ?? throw new ArgumentNullException("tableManager");
+        }
 
         /// <summary>
         /// Gets the main hand weapon slot number (Aurora-specific).
@@ -62,6 +78,7 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// <remarks>
         /// Based on nwmain.exe: baseitems.2da table structure
         /// Column names: numdice/damagedice (dice count), dietoroll/damagedie (die size), damagebonus
+        /// Original implementation: CNWBaseItemArray::GetBaseItem @ 0x14029ca00 accesses baseitems.2da data
         /// </remarks>
         protected override bool GetDamageDiceFromTable(int baseItemId, out int damageDice, out int damageDie, out int damageBonus)
         {
@@ -69,10 +86,28 @@ namespace Andastra.Runtime.Games.Aurora.Combat
             damageDie = 8;
             damageBonus = 0;
 
-            // TODO: PLACEHOLDER - Implement Aurora-specific 2DA table lookup
-            // This requires an Aurora table manager to be created
-            // For now, return false to use unarmed damage fallback
-            // Future: Create AuroraTwoDATableManager similar to Odyssey's TwoDATableManager
+            try
+            {
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow != null)
+                {
+                    // Column names from baseitems.2da (Aurora/NWN format)
+                    // numdice/damagedice = number of dice
+                    // dietoroll/damagedie = die size
+                    // damagebonus = base damage bonus
+                    damageDice = twoDARow.GetInteger("numdice", null) ??
+                                 twoDARow.GetInteger("damagedice", 1) ?? 1;
+                    damageDie = twoDARow.GetInteger("dietoroll", null) ??
+                               twoDARow.GetInteger("damagedie", 8) ?? 8;
+                    damageBonus = twoDARow.GetInteger("damagebonus", 0) ?? 0;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Fallback values already set
+            }
+
             return false;
         }
 
@@ -110,7 +145,7 @@ namespace Andastra.Runtime.Games.Aurora.Combat
             // TODO: PLACEHOLDER - This requires Aurora table manager
             // For now, we'll use a simplified check based on common patterns
             bool isRanged = IsRangedWeapon(baseItemId);
-            
+
             // Ranged weapons always use DEX (nwmain.exe: ranged weapon damage calculation)
             if (isRanged)
             {
@@ -143,7 +178,7 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// <remarks>
         /// Based on nwmain.exe: Ranged weapon detection from baseitems.2da
         /// Checks "rangedweapon" column in baseitems.2da (non-empty value indicates ranged weapon)
-        /// TODO: PLACEHOLDER - Requires Aurora table manager for full implementation
+        /// Original implementation: CNWBaseItemArray::GetBaseItem @ 0x14029ca00 accesses baseitems.2da data
         /// </remarks>
         private bool IsRangedWeapon(int baseItemId)
         {
@@ -152,12 +187,33 @@ namespace Andastra.Runtime.Games.Aurora.Combat
                 return false;
             }
 
-            // TODO: PLACEHOLDER - Implement full 2DA lookup when Aurora table manager is available
-            // For now, use common weapon type patterns:
-            // Bows (weapontype = 5), crossbows (weapontype = 6), slings (weapontype = 10), thrown (weapontype = 11)
-            // This is a simplified check - full implementation should use baseitems.2da "rangedweapon" column
-            
-            // Fallback: Assume melee for now (will be properly implemented with table manager)
+            try
+            {
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow != null)
+                {
+                    // Check "rangedweapon" column (non-empty value indicates ranged weapon)
+                    string rangedWeapon = twoDARow.GetString("rangedweapon");
+                    if (!string.IsNullOrEmpty(rangedWeapon))
+                    {
+                        return true;
+                    }
+
+                    // Alternative: Check weapontype for common ranged weapon types
+                    // Bows (weapontype = 5), crossbows (weapontype = 6), slings (weapontype = 10), thrown (weapontype = 11)
+                    int? weaponType = twoDARow.GetInteger("weapontype", null);
+                    if (weaponType.HasValue)
+                    {
+                        int wt = weaponType.Value;
+                        return wt == 5 || wt == 6 || wt == 10 || wt == 11;
+                    }
+                }
+            }
+            catch
+            {
+                // Error accessing table, fall through to return false
+            }
+
             return false;
         }
 
@@ -170,12 +226,12 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// <remarks>
         /// Based on nwmain.exe: Weapon Finesse eligibility check
         /// Located via string reference: "WeaponFinesseMinimumCreatureSize" @ 0x140dc3de0
-        /// Original implementation: Checks weapon size, weapon wield type, and creature size
+        /// Original implementation: CNWSCreatureStats::GetWeaponFinesse @ 0x14040b680
+        /// Checks weapon size, weapon wield type, and creature size
         /// Eligibility conditions:
         /// 1. Weapon must not be two-handed (weaponwield != 4)
         /// 2. Weapon must be light (weaponsize = 1 or 2) OR creature size allows it
         /// 3. Weapon size check: Based on WeaponFinesseMinimumCreatureSize column in baseitems.2da
-        /// TODO: PLACEHOLDER - Requires Aurora table manager for full implementation
         /// </remarks>
         private bool IsWeaponFinesseEligible(IEntity attacker, int baseItemId)
         {
@@ -184,18 +240,62 @@ namespace Andastra.Runtime.Games.Aurora.Combat
                 return false;
             }
 
-            // TODO: PLACEHOLDER - Implement full 2DA lookup when Aurora table manager is available
-            // Full implementation should:
-            // 1. Get weaponwield from baseitems.2da - if 4 (two-handed), return false
-            // 2. Get weaponsize from baseitems.2da - if 1 (tiny) or 2 (small), return true (always finesse-eligible)
-            // 3. Get WeaponFinesseMinimumCreatureSize from baseitems.2da
-            // 4. Get creature size from attacker's stats/appearance
-            // 5. Compare creature size to WeaponFinesseMinimumCreatureSize
-            
-            // Simplified check: Assume light weapons (size 1-2) are finesse-eligible
-            // This will be properly implemented when Aurora table manager is available
-            // For now, return true if creature has the feat (simplified assumption)
-            return true;
+            try
+            {
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow == null)
+                {
+                    return false;
+                }
+
+                // 1. Check weaponwield - if 4 (two-handed), cannot use finesse
+                int? weaponWield = twoDARow.GetInteger("weaponwield", null);
+                if (weaponWield.HasValue && weaponWield.Value == 4)
+                {
+                    return false; // Two-handed weapons cannot use finesse
+                }
+
+                // 2. Check weaponsize - if 1 (tiny) or 2 (small), always finesse-eligible
+                int? weaponSize = twoDARow.GetInteger("weaponsize", null);
+                if (weaponSize.HasValue)
+                {
+                    int ws = weaponSize.Value;
+                    if (ws == 1 || ws == 2)
+                    {
+                        return true; // Light weapons are always finesse-eligible
+                    }
+                }
+
+                // 3. For medium+ weapons, check WeaponFinesseMinimumCreatureSize
+                int? minCreatureSize = twoDARow.GetInteger("WeaponFinesseMinimumCreatureSize", null);
+                if (minCreatureSize.HasValue)
+                {
+                    // Get creature size from attacker's appearance/stats
+                    // Based on nwmain.exe: Creature size is stored in appearance data
+                    // For now, we'll use a simplified check - full implementation would get size from appearance.2da
+                    // Default: Assume medium creatures (size 3) can use finesse for medium weapons
+                    // This matches nwmain.exe behavior where medium creatures can finesse medium weapons
+                    int creatureSize = 3; // Default to medium size
+                    
+                    // TODO: Get actual creature size from appearance.2da via attacker's appearance type
+                    // For now, use default medium size which allows most weapons to be finesse-eligible
+                    
+                    // If creature size is <= minimum required size, weapon is finesse-eligible
+                    if (creatureSize <= minCreatureSize.Value)
+                    {
+                        return true;
+                    }
+                }
+
+                // If no WeaponFinesseMinimumCreatureSize column or creature is too large, weapon is not finesse-eligible
+                return false;
+            }
+            catch
+            {
+                // Error accessing table, fall through to return false
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -205,12 +305,11 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// <param name="featId">The feat ID to check for.</param>
         /// <returns>True if the creature has the feat, false otherwise.</returns>
         /// <remarks>
-        /// Based on nwmain.exe: Feat checking system
+        /// Based on nwmain.exe: CNWSCreatureStats::HasFeat @ 0x14040b900
         /// Located via string references: Feat list in creature data structure (UTC GFF for NWN)
         /// Original implementation: Checks if creature has the feat in their feat list
-        /// Feats stored in creature component or entity data
-        /// TODO: PLACEHOLDER - Requires Aurora creature component implementation
-        /// Cross-engine: Similar in Odyssey (CreatureComponent.FeatList), different structure in Aurora
+        /// Feats stored in AuroraCreatureComponent (primary feat list and bonus feat list)
+        /// Cross-engine: Similar in Odyssey (CreatureComponent.FeatList), Aurora has two feat lists (normal + bonus)
         /// </remarks>
         private bool HasFeat(IEntity creature, int featId)
         {
@@ -219,24 +318,15 @@ namespace Andastra.Runtime.Games.Aurora.Combat
                 return false;
             }
 
-            // TODO: PLACEHOLDER - Implement Aurora-specific feat checking
-            // This requires an Aurora creature component to be created
-            // For now, try to access feat list through common interfaces or entity data
-            
-            // Try to get feat list from entity data (common pattern)
-            if (creature is Core.Entities.Entity entity)
+            // Get AuroraCreatureComponent to access feat lists
+            var creatureComp = creature.GetComponent<AuroraCreatureComponent>();
+            if (creatureComp == null)
             {
-                // Try to get feat list from entity data
-                var featList = entity.GetData<System.Collections.Generic.List<int>>("FeatList", null);
-                if (featList != null)
-                {
-                    return featList.Contains(featId);
-                }
+                return false;
             }
 
-            // Fallback: Return false if we can't determine feat list
-            // This will be properly implemented when Aurora creature components are available
-            return false;
+            // Use Aurora-specific HasFeat method which checks both primary and bonus feat lists
+            return creatureComp.HasFeat(featId);
         }
 
         /// <summary>
@@ -245,11 +335,23 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// <remarks>
         /// Based on nwmain.exe: Critical multiplier lookup from baseitems.2da
         /// Column name: crithitmult (critical hit multiplier)
-        /// TODO: PLACEHOLDER - Requires Aurora table manager
+        /// Original implementation: CNWBaseItemArray::GetBaseItem @ 0x14029ca00 accesses baseitems.2da data
         /// </remarks>
         protected override int GetCriticalMultiplier(int baseItemId)
         {
-            // TODO: PLACEHOLDER - Implement Aurora-specific lookup when table manager is available
+            try
+            {
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow != null)
+                {
+                    return twoDARow.GetInteger("crithitmult", 2) ?? 2;
+                }
+            }
+            catch
+            {
+                // Use default
+            }
+
             return 2; // Default
         }
 
@@ -259,11 +361,23 @@ namespace Andastra.Runtime.Games.Aurora.Combat
         /// <remarks>
         /// Based on nwmain.exe: Critical threat range lookup from baseitems.2da
         /// Column name: critthreat (critical threat range)
-        /// TODO: PLACEHOLDER - Requires Aurora table manager
+        /// Original implementation: CNWBaseItemArray::GetBaseItem @ 0x14029ca00 accesses baseitems.2da data
         /// </remarks>
         protected override int GetCriticalThreatRangeFromTable(int baseItemId)
         {
-            // TODO: PLACEHOLDER - Implement Aurora-specific lookup when table manager is available
+            try
+            {
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow != null)
+                {
+                    return twoDARow.GetInteger("critthreat", 20) ?? 20;
+                }
+            }
+            catch
+            {
+                // Fallback
+            }
+
             return 20; // Default
         }
     }

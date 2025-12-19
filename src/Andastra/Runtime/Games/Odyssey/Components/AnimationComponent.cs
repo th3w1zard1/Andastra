@@ -1,165 +1,50 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Common.Components;
 
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {
     /// <summary>
-    /// Component for entities that can play animations.
+    /// Odyssey engine-specific implementation of animation component.
     /// </summary>
     /// <remarks>
-    /// Animation Component Implementation:
-    /// - Based on swkotor2.exe animation system
-    /// - Located via string references: "Animation" @ 0x007c3440, "AnimList" @ 0x007c3694
-    /// - "PlayAnim" @ 0x007c346c, "AnimLoop" @ 0x007c4c70 (animation loop flag)
-    /// - "CurrentAnim" @ 0x007c38d4, "NextAnim" @ 0x007c38c8 (animation state tracking)
-    /// - Animation timing: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668 (animation frame timing)
+    /// Odyssey Animation Component Implementation:
+    /// - Inherits from BaseAnimationComponent (Runtime.Games.Common.Components)
+    /// - Based on swkotor.exe and swkotor2.exe animation systems
+    /// - Located via string references: "Animation" @ 0x007bf604 (swkotor2.exe), "Animation" @ 0x00746060 (swkotor.exe)
+    /// - "AnimationTime" @ 0x007bf810 (swkotor2.exe), "AnimationLength" @ 0x007bf980 (swkotor2.exe)
+    /// - "AnimationState" @ 0x007c1f30 (swkotor2.exe)
     /// - Original implementation: Entities with models can play animations from MDL animation arrays
     /// - Animation IDs reference animation indices in MDL animation arrays (0-based index)
-    /// - CurrentAnimation: Currently playing animation ID (-1 = no animation, idle state)
-    /// - AnimationSpeed: Playback rate multiplier (1.0 = normal, 2.0 = double speed, 0.5 = half speed)
-    /// - IsLooping: Whether current animation should loop (true = loop, false = play once)
-    /// - AnimationTime: Current time position in animation (0.0 to animation duration)
-    /// - AnimationComplete: True when non-looping animation has finished playing
     /// - Animations loaded from MDX files (animation keyframe data), referenced by MDL model files
+    /// - MDX format: Contains animation keyframe data with timing information
+    /// - MDL format: References MDX files and contains animation array indices
     /// - Animation system updates animation time each frame, triggers completion events
     /// </remarks>
-    public class AnimationComponent : IComponent, IAnimationComponent
+    public class OdysseyAnimationComponent : BaseAnimationComponent
     {
-        private int _currentAnimation;
-        private float _animationSpeed;
-        private bool _isLooping;
-        private float _animationTime;
-        private float _animationDuration;
-
         /// <summary>
-        /// Gets or sets the entity that owns this component.
+        /// Initializes a new instance of the OdysseyAnimationComponent class.
         /// </summary>
-        public IEntity Owner { get; set; }
-
-        /// <summary>
-        /// Currently playing animation ID (-1 = no animation).
-        /// </summary>
-        public int CurrentAnimation
+        public OdysseyAnimationComponent()
+            : base()
         {
-            get { return _currentAnimation; }
-            set
-            {
-                if (_currentAnimation != value)
-                {
-                    _currentAnimation = value;
-                    _animationTime = 0.0f;
-                    // Animation duration should be retrieved from MDX data
-                    // TODO: SIMPLIFIED - For now, use a default duration
-                    _animationDuration = 1.0f; // Placeholder - should come from MDX data
-                }
-            }
+            // Base class initializes all fields
         }
 
         /// <summary>
-        /// Animation playback speed multiplier (1.0 = normal speed).
+        /// Gets the duration of an animation by ID from MDX data.
         /// </summary>
-        public float AnimationSpeed
+        /// <param name="animationId">Animation ID to get duration for.</param>
+        /// <returns>Animation duration in seconds from MDX data, or 1.0 if not available.</returns>
+        protected override float GetAnimationDuration(int animationId)
         {
-            get { return _animationSpeed; }
-            set { _animationSpeed = value; }
-        }
-
-        /// <summary>
-        /// Whether the current animation is looping.
-        /// </summary>
-        public bool IsLooping
-        {
-            get { return _isLooping; }
-            set { _isLooping = value; }
-        }
-
-        /// <summary>
-        /// Current time position in the animation (0.0 to animation duration).
-        /// </summary>
-        public float AnimationTime
-        {
-            get { return _animationTime; }
-            set { _animationTime = value; }
-        }
-
-        /// <summary>
-        /// Whether the current animation has completed (for non-looping animations).
-        /// </summary>
-        public bool AnimationComplete
-        {
-            get
-            {
-                if (_currentAnimation < 0 || _isLooping)
-                {
-                    return false;
-                }
-                return _animationTime >= _animationDuration;
-            }
-        }
-
-        /// <summary>
-        /// Gets the animation duration (from MDX data, or default if not available).
-        /// </summary>
-        public float AnimationDuration
-        {
-            get { return _animationDuration; }
-            set { _animationDuration = value; }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the AnimationComponent class.
-        /// </summary>
-        public AnimationComponent()
-        {
-            _currentAnimation = -1; // No animation playing
-            _animationSpeed = 1.0f;
-            _isLooping = false;
-            _animationTime = 0.0f;
-            _animationDuration = 1.0f; // Default duration
-        }
-
-        /// <summary>
-        /// Plays an animation.
-        /// </summary>
-        /// <param name="animationId">Animation ID (index in MDL animation array).</param>
-        /// <param name="speed">Playback speed multiplier (1.0 = normal).</param>
-        /// <param name="loop">Whether to loop the animation.</param>
-        public void PlayAnimation(int animationId, float speed = 1.0f, bool loop = false)
-        {
-            _currentAnimation = animationId;
-            _animationSpeed = speed;
-            _isLooping = loop;
-            _animationTime = 0.0f;
-            // Animation duration should be retrieved from MDX data
-            // TODO: SIMPLIFIED - For now, use a default duration
-            _animationDuration = 1.0f; // Placeholder - should come from MDX data
-        }
-
-        /// <summary>
-        /// Stops the current animation.
-        /// </summary>
-        public void StopAnimation()
-        {
-            _currentAnimation = -1;
-            _animationTime = 0.0f;
-        }
-
-        /// <summary>
-        /// Called when the component is attached to an entity.
-        /// </summary>
-        public void OnAttach()
-        {
-            // Component attached - no special initialization needed
-        }
-
-        /// <summary>
-        /// Called when the component is detached from an entity.
-        /// </summary>
-        public void OnDetach()
-        {
-            // Stop animation when component is detached
-            StopAnimation();
+            // TODO: PLACEHOLDER - Load animation duration from MDX file data
+            // Should query the entity's model component for MDX animation data
+            // MDX format contains animation keyframe timing information
+            // For now, return default duration - engine-specific implementation should override
+            return 1.0f;
         }
     }
 }

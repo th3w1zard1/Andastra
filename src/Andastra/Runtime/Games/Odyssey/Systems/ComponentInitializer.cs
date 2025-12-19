@@ -3,17 +3,18 @@ using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Games.Odyssey.Components;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Runtime.Games.Odyssey.Systems
 {
     /// <summary>
     /// Initializes default components for entities based on their object type.
     /// </summary>
     /// <remarks>
     /// Component Initializer:
+    /// - TODO: should be based on common logic between swkotor.exe/s
     /// - Based on swkotor2.exe component initialization system
     /// - Located via string references: Component system used throughout entity creation
     /// - Original implementation: Components are added during entity creation from templates
@@ -63,7 +64,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             {
                 if (!entity.HasComponent<IAnimationComponent>())
                 {
-                    entity.AddComponent(new AnimationComponent());
+                    entity.AddComponent(new OdysseyAnimationComponent());
                 }
             }
 
@@ -89,7 +90,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     }
                     if (!entity.HasComponent<IFactionComponent>())
                     {
-                        var factionComponent = new FactionComponent();
+                        var factionComponent = new Andastra.Runtime.Engines.Odyssey.Components.OdysseyFactionComponent();
                         // Set FactionID from entity data if available (loaded from UTC template)
                         if (entity.GetData("FactionID") is int factionId)
                         {
