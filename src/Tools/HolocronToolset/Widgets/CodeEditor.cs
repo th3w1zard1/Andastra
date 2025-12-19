@@ -280,10 +280,23 @@ namespace HolocronToolset.Widgets
                 if (backward)
                 {
                     // Search backward from current position
-                    MatchCollection matches = searchRegex.Matches(documentText, 0, searchStart);
-                    if (matches.Count > 0)
+                    // Get all matches up to searchStart, then take the last one
+                    string textToSearch = documentText.Substring(0, searchStart);
+                    MatchCollection matches = searchRegex.Matches(textToSearch);
+                    Match lastMatch = null;
+                    foreach (Match match in matches)
                     {
-                        Match lastMatch = matches[matches.Count - 1];
+                        if (match.Index < searchStart)
+                        {
+                            lastMatch = match;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    if (lastMatch != null)
+                    {
                         SelectionStart = lastMatch.Index;
                         SelectionEnd = lastMatch.Index + lastMatch.Length;
                         return true;
@@ -301,8 +314,8 @@ namespace HolocronToolset.Widgets
                     }
 
                     // Wrap around - search from beginning
-                    match = searchRegex.Match(documentText, 0, searchStart);
-                    if (match.Success)
+                    match = searchRegex.Match(documentText, 0);
+                    if (match.Success && match.Index < searchStart)
                     {
                         SelectionStart = match.Index;
                         SelectionEnd = match.Index + match.Length;

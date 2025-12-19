@@ -54,7 +54,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 121 calls BinkOpenMiles
             // Line 121: _BinkOpenMiles_4_exref = _BinkOpenMiles_4(...)
             IntPtr milesHandle = BinkApi.BinkOpenMiles(22050); // Standard sample rate (can be adjusted)
-            
+
             // Open BIK file
             // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 124 calls BinkOpen
             // Parameters: path, flags (0x8000000)
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             dynamic viewport = graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
-            
+
             // Calculate scaling to fill screen while maintaining aspect ratio
             float scaleX = (float)screenWidth / _frameWidth;
             float scaleY = (float)screenHeight / _frameHeight;
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Core.Video.Bink
                 //   destheight = *(undefined4 *)(iVar1 + 4) - buffer height
                 //   destx = 0, desty = 0
                 //   flags = *(undefined4 *)(iVar1 + 0x10) - copy flags
-                // 
+                //
                 // For our implementation, we need to read the buffer structure to get pitch
                 // But for simplicity, we'll use frame width * 4 (RGBA) as pitch
                 int destPitch = _frameWidth * 4; // RGBA = 4 bytes per pixel

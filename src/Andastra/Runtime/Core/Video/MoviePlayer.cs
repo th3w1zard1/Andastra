@@ -142,6 +142,7 @@ namespace Andastra.Runtime.Core.Video
                 // Create resource identifier for BIK file
                 ResourceIdentifier resourceId = new ResourceIdentifier(normalizedResRef, ResourceType.BIK);
 
+
                 // Check if resource exists (using dynamic since Core cannot depend on Content)
                 dynamic resourceProvider = _resourceProvider;
                 bool exists = await resourceProvider.ExistsAsync(resourceId, cancellationToken);
@@ -303,12 +304,12 @@ namespace Andastra.Runtime.Core.Video
             if (spriteBatch != null)
             {
                 spriteBatch.Begin();
-                
+
                 // Calculate scaling to fill screen while maintaining aspect ratio
                 float scaleX = (float)screenWidth / decoder.Width;
                 float scaleY = (float)screenHeight / decoder.Height;
                 float scale = Math.Min(scaleX, scaleY);
-                
+
                 int scaledWidth = (int)(decoder.Width * scale);
                 int scaledHeight = (int)(decoder.Height * scale);
                 int offsetX = (screenWidth - scaledWidth) / 2;
@@ -327,7 +328,7 @@ namespace Andastra.Runtime.Core.Video
                 {
                     spriteBatch.Draw(decoder.FrameTexture, destinationRect, whiteColor);
                 }
-                
+
                 spriteBatch.End();
             }
         }

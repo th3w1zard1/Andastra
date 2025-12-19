@@ -8,9 +8,9 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Common Area Interface across all BioWare engines:
-    /// 
+    ///
     /// Cross-Engine Analysis (Ghidra reverse engineering):
-    /// 
+    ///
     /// Odyssey Engine (swkotor.exe, swkotor2.exe):
     /// - String references: "Area" @ 0x007be340, "AreaName" @ 0x007be340, "AREANAME" @ 0x007be1dc
     /// - "AreaId" @ 0x007bef48, "AreaMap" @ 0x007bd118, "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Area number tracking: "AreaNumber" @ 0x007c7324 used for area identification
     /// - LoadAreaProperties @ 0x004e26d0 reads area properties from ARE file
     /// - SaveAreaProperties @ 0x004e11d0 writes area properties to ARE file
-    /// 
+    ///
     /// Aurora Engine (nwmain.exe):
     /// - CNWSArea::LoadArea @ 0x14035f4e0: Loads ARE file, calls LoadAreaHeader, LoadTileSetInfo, LoadGIT
     /// - CNWSArea::UnloadArea @ 0x1403681f0: Unloads area and cleans up resources
@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - "Area_UpdateFogColor" @ 0x140dca390, "Area_UpdateFogAmount" @ 0x140dca3a8
     /// - "Area_RecomputeStaticLighting" @ 0x140dca340, "Area_ChangeDayNight" @ 0x140dca360
     /// - Tile-based area construction with enhanced weather and environmental systems
-    /// 
+    ///
     /// Eclipse Engine (daorigins.exe, DragonAge2.exe, , ):
     /// - CArea class: Area management with advanced physics and lighting systems
     /// - String references: "CArea" @ 0x00b0d500, "AreaTransition" @ 0x00b1ad60
@@ -45,7 +45,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - "Area Transition - Start" @ 0x00af8188, "Area Transition - End" @ 0x00af8150
     /// - "Area List Swap - Start" @ 0x00af81e4, "Area List Swap - End" @ 0x00af81b8
     /// - Advanced physics integration, destructible environments, dynamic lighting
-    /// 
+    ///
     /// Common Functionality (all engines):
     /// - Areas loaded from ARE (area properties) and GIT (instances) file formats
     /// - ARE file format: GFF with "ARE " signature containing area static properties (lighting, fog, grass)
@@ -54,18 +54,18 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Navigation mesh (walkmesh) provides pathfinding and collision detection
     /// - Area transitions: Entities can move between areas with position projection to walkmesh
     /// - Unescapable flag: Prevents players from leaving area (common across all engines)
-    /// 
+    ///
     /// Engine-Specific Features:
     /// - Odyssey: Stealth XP system (StealthXPEnabled property)
     /// - Aurora: Tile-based areas, weather simulation, enhanced area effects
     /// - Eclipse: Physics simulation, destructible environments, advanced lighting, dynamic area modifications
-    /// 
+    ///
     /// Inheritance Structure:
     /// - Base Class: BaseArea (Runtime.Games.Common) - Contains common functionality
     ///   - Odyssey: OdysseyArea : BaseArea (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraArea : BaseArea (nwmain.exe)
     ///   - Eclipse: EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, , )
-    /// 
+    ///
     /// Based on ARE/GIT file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public interface IArea

@@ -445,6 +445,17 @@ namespace Andastra.Runtime.Core.Module
 
         #endregion
 
+        /// <summary>
+        /// Updates the area state (area effects, lighting, weather, entity spawning/despawning).
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since last update.</param>
+        public void Update(float deltaTime)
+        {
+            // Basic implementation - area effects, lighting, weather updates would go here
+            // Engine-specific implementations should override this method
+            // Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 updates area state
+        }
+
         #region Script Management
 
         /// <summary>

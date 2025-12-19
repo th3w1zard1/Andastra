@@ -13,6 +13,9 @@ using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
 using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
+using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
+using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
+using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using HolocronToolset.Data;
 using HolocronToolset.Editors.Actions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
@@ -32,7 +35,7 @@ namespace HolocronToolset.Editors
     //   Eclipse games primarily use .cnv "conversation" format, but DLG files follow K1-style base format
     //   (no K2-specific fields). This editor supports DLG files for Eclipse games using K1 format.
     //   Ghidra analysis: daorigins.exe, DragonAge2.exe, MassEffect.exe use "conversation" strings
-    //   Note: CNV format support may be added in the future if CNV is not DLG-compatible
+    //   TODO: Add CNV format support (and conversion between DLG/CNV)
     public class DLGEditor : Editor
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
@@ -212,7 +215,7 @@ namespace HolocronToolset.Editors
         /// Loads a dialog tree into the UI view.
         /// Made internal for test access (matching Python _load_dlg which tests access directly).
         /// </summary>
-        internal void LoadDLG(DLGType dlg)
+        public void LoadDLG(DLGType dlg)
         {
             // Matching PyKotor implementation: Reset focus state and background color when loading
             // Original: if "(Light)" in GlobalSettings().selectedTheme or GlobalSettings().selectedTheme == "Native":
@@ -1226,6 +1229,34 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Finds references to the specified item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1891
+        /// Original: def find_references(self, item: DLGStandardItem | DLGListWidgetItem):
+        /// </summary>
+        public void FindReferences(DLGStandardItem item)
+        {
+            if (item?.Link == null)
+            {
+                return;
+            }
+
+            // TODO: PLACEHOLDER - Full implementation requires reference_history and show_reference_dialog
+            // For now, this is a stub to allow tests to compile
+            // Matching PyKotor: finds all items that link to the same node as item.link
+            var references = new List<DLGStandardItem>();
+            foreach (var kvp in _model.LinkToItems)
+            {
+                foreach (var thisItem in kvp.Value)
+                {
+                    if (thisItem?.Link?.Node != null && thisItem.Link.Node.Links.Contains(item.Link))
+                    {
+                        references.Add(thisItem);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Pastes an item.
         /// Matching PyKotor implementation: self.model.paste_item(selected_item, as_new_branches=...)
         /// </summary>
@@ -1511,6 +1542,28 @@ namespace HolocronToolset.Editors
                 return -1;
             }
             return _parent._children.IndexOf(this);
+        }
+
+        /// <summary>
+        /// Gets the child item at the specified row and column.
+        /// Matching PyKotor implementation: def child(self, row: int, column: int = 0) -> QStandardItem | None
+        /// </summary>
+        public DLGStandardItem Child(int row, int column = 0)
+        {
+            if (row < 0 || row >= _children.Count || column != 0)
+            {
+                return null;
+            }
+            return _children[row];
+        }
+
+        /// <summary>
+        /// Gets whether this item has children.
+        /// Matching PyKotor implementation: def hasChildren(self) -> bool
+        /// </summary>
+        public bool HasChildren()
+        {
+            return _children.Count > 0;
         }
     }
 
