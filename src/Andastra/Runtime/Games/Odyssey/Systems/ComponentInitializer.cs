@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                     }
                     if (!entity.HasComponent<IFactionComponent>())
                     {
-                        var factionComponent = new Andastra.Runtime.Engines.Odyssey.Components.OdysseyFactionComponent();
+                        var factionComponent = new Components.OdysseyFactionComponent();
                         // Set FactionID from entity data if available (loaded from UTC template)
                         if (entity.GetData("FactionID") is int factionId)
                         {

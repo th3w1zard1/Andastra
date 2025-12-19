@@ -321,7 +321,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the creature radius for collision detection.
-        /// Based on swkotor2.exe: GetCreatureRadius @ 0x007bb128
+        /// Based on swkotor2.exe: FUN_0065a380 @ 0x0065a380 (GetCreatureRadius) calls FUN_0041d2c0 to lookup "hitradius" from appearance.2da
         /// Located via string references: "GetCreatureRadius" @ 0x007bb128
         /// Original implementation: Gets creature collision radius from appearance.2da hitradius column
         /// Falls back to size-based defaults if appearance data unavailable
@@ -333,30 +333,57 @@ namespace Andastra.Runtime.Core.Actions
                 return 0.5f; // Default radius
             }
 
-            // Try to get appearance type from creature component using reflection
-            // Note: This requires KOTOR-specific component, but we use reflection to avoid dependency
-            // The entity itself may have an appearance-related property
-            var entityType = entity.GetType();
-            var appearanceTypeProp = entityType.GetProperty("AppearanceType");
-            if (appearanceTypeProp != null)
+            // Get appearance type from entity
+            // Based on swkotor2.exe: FUN_0065a380 @ 0x0065a380 (GetCreatureRadius) gets appearance type from entity
+            // Located via string references: "AppearanceType" @ 0x007c84c8, "Appearance_Type" @ 0x007c40f0
+            // Original implementation: Gets appearance type from entity structure at offset 0x224 + 0x18
+            int appearanceType = -1;
+
+            // First, try to get appearance type from IRenderableComponent (engine-agnostic)
+            // Based on swkotor2.exe: Appearance data stored in renderable component
+            // IRenderableComponent.AppearanceRow is the index into appearance.2da
+            Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+            if (renderable != null)
             {
-                try
+                appearanceType = renderable.AppearanceRow;
+            }
+
+            // If not found, try to get appearance type from engine-specific creature component using reflection
+            // Note: This works with engine-specific components (OdysseyCreatureComponent, AuroraCreatureComponent, etc.)
+            // Based on swkotor2.exe: Creature component stores AppearanceType property
+            if (appearanceType < 0)
+            {
+                var entityType = entity.GetType();
+                var appearanceTypeProp = entityType.GetProperty("AppearanceType");
+                if (appearanceTypeProp != null)
                 {
-                    // Try to get appearance data from world if available
-                    // TODO: SIMPLIFIED - This would require IWorld to expose GameDataManager, which is KOTOR-specific
-                    // For now, use size-based defaults
-                    // Size categories: 0=Small, 1=Medium, 2=Large, 3=Huge, 4=Gargantuan
-                    // Default radii: Small=0.3, Medium=0.5, Large=0.7, Huge=1.0, Gargantuan=1.5
-                    // We'll use a default of 0.5f for medium creatures
+                    try
+                    {
+                        object appearanceTypeValue = appearanceTypeProp.GetValue(entity);
+                        if (appearanceTypeValue is int)
+                        {
+                            appearanceType = (int)appearanceTypeValue;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore reflection errors
+                    }
                 }
-                catch
-                {
-                    // Ignore reflection errors
-                }
+            }
+
+            // If we have a valid appearance type and world has GameDataProvider, use it
+            // Based on swkotor2.exe: FUN_0065a380 @ 0x0065a380 calls FUN_0041d2c0 to lookup "hitradius" from appearance.2da
+            // Original implementation: Looks up hitradius column from appearance.2da table using appearanceType as row index
+            // Cross-engine: All engines (Odyssey, Aurora, Eclipse, Infinity) use IGameDataProvider for appearance data lookup
+            if (appearanceType >= 0 && entity.World != null && entity.World.GameDataProvider != null)
+            {
+                return entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
             }
 
             // Default radius for medium creatures (most common)
             // Based on swkotor2.exe: Default creature radius is approximately 0.5 units
+            // Falls back to default if appearance data unavailable or GameDataProvider not available
             return 0.5f;
         }
 
