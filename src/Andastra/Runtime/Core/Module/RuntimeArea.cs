@@ -149,19 +149,6 @@ namespace Andastra.Runtime.Core.Module
             return NavigationMesh.ProjectToSurface(point, out result, out height);
         }
 
-        /// <summary>
-        /// Updates the area (area effects, lighting, weather, etc.).
-        /// </summary>
-        /// <param name="deltaTime">Time since last frame in seconds.</param>
-        public void Update(float deltaTime)
-        {
-            // Update area effects, lighting, weather, etc.
-            // Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 updates area state
-            // Located via call chain: FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0
-            // Original implementation: Area update handles area effects, lighting, weather, entity spawning/despawning
-            // For now, this is a placeholder - full implementation will handle area-specific updates
-        }
-
         #endregion
 
         #region Extended Properties

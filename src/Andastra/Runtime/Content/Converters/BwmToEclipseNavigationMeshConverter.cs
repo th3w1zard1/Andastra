@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Parsing.Formats.BWM;
-// TODO: Move this converter to Andastra.Runtime.Games.Eclipse to avoid circular dependency
-// using Andastra.Runtime.Games.Eclipse;
+using Andastra.Runtime.Games.Eclipse;
 
 namespace Andastra.Runtime.Content.Converters
 {
@@ -16,13 +15,13 @@ namespace Andastra.Runtime.Content.Converters
     /// - Eclipse uses BWM format similar to Odyssey but with additional features
     /// - Supports dynamic obstacles, destructible terrain, and multi-level navigation
     /// - Physics-aware navigation with collision avoidance
-    /// 
+    ///
     /// Eclipse-specific features:
     /// - Multi-level navigation surfaces (ground, platforms, elevated surfaces)
     /// - Dynamic obstacle support (added at runtime)
     /// - Destructible terrain modifications (applied at runtime)
     /// - Physics-aware navigation with collision avoidance
-    /// 
+    ///
     /// BWM file format (same as Odyssey):
     /// - Header: "BWM V1.0" signature (8 bytes)
     /// - Walkmesh type: 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
@@ -31,7 +30,7 @@ namespace Andastra.Runtime.Content.Converters
     /// - Materials: Array of uint32 (SurfaceMaterial ID per face)
     /// - Adjacency: Array of int32 triplets (face/edge pairs, -1 = no neighbor)
     /// - AABB tree: Spatial acceleration structure for efficient queries
-    /// 
+    ///
     /// Based on BWM file format documentation:
     /// - vendor/PyKotor/wiki/BWM-File-Format.md
     /// </remarks>
@@ -42,11 +41,7 @@ namespace Andastra.Runtime.Content.Converters
         /// </summary>
         /// <param name="bwm">The source BWM data from Andastra.Parsing</param>
         /// <returns>An EclipseNavigationMesh ready for pathfinding and collision</returns>
-        /// <remarks>
-        /// TODO: Move this converter to Andastra.Runtime.Games.Eclipse to avoid circular dependency.
-        /// This method should return EclipseNavigationMesh but Content cannot depend on Games.
-        /// </remarks>
-        public static object Convert(BWM bwm)
+        public static EclipseNavigationMesh Convert(BWM bwm)
         {
             if (bwm == null)
             {

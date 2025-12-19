@@ -488,8 +488,11 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     continue; // Process links after all other fields
                 }
 
+                // Convert snake_case to PascalCase for property name matching
+                string propertyName = ConvertSnakeCaseToPascalCase(key);
+
                 // Set property based on type
-                var prop = node.GetType().GetProperty(key, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+                var prop = node.GetType().GetProperty(propertyName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
                 if (prop != null && prop.CanWrite)
                 {
                     if (pyType == "str")
@@ -587,6 +590,33 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             }
 
             return node;
+        }
+
+        /// <summary>
+        /// Converts snake_case string to PascalCase.
+        /// Example: "camera_angle" -> "CameraAngle"
+        /// </summary>
+        private static string ConvertSnakeCaseToPascalCase(string snakeCase)
+        {
+            if (string.IsNullOrEmpty(snakeCase))
+            {
+                return snakeCase;
+            }
+
+            string[] parts = snakeCase.Split('_');
+            System.Text.StringBuilder result = new System.Text.StringBuilder();
+            foreach (string part in parts)
+            {
+                if (part.Length > 0)
+                {
+                    result.Append(char.ToUpperInvariant(part[0]));
+                    if (part.Length > 1)
+                    {
+                        result.Append(part.Substring(1));
+                    }
+                }
+            }
+            return result.ToString();
         }
     }
 

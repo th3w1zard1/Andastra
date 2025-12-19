@@ -10,12 +10,9 @@ using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.DLG;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
 using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
-using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
-using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
 using HolocronToolset.Data;
 using HolocronToolset.Editors.Actions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
@@ -215,7 +212,7 @@ namespace HolocronToolset.Editors
         /// Loads a dialog tree into the UI view.
         /// Made internal for test access (matching Python _load_dlg which tests access directly).
         /// </summary>
-        public void LoadDLG(DLGType dlg)
+        internal void LoadDLG(DLGType dlg)
         {
             // Matching PyKotor implementation: Reset focus state and background color when loading
             // Original: if "(Light)" in GlobalSettings().selectedTheme or GlobalSettings().selectedTheme == "Native":
@@ -1229,34 +1226,6 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
-        /// Finds references to the specified item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1891
-        /// Original: def find_references(self, item: DLGStandardItem | DLGListWidgetItem):
-        /// </summary>
-        public void FindReferences(DLGStandardItem item)
-        {
-            if (item?.Link == null)
-            {
-                return;
-            }
-
-            // TODO: PLACEHOLDER - Full implementation requires reference_history and show_reference_dialog
-            // For now, this is a stub to allow tests to compile
-            // Matching PyKotor: finds all items that link to the same node as item.link
-            var references = new List<DLGStandardItem>();
-            foreach (var kvp in _model.LinkToItems)
-            {
-                foreach (var thisItem in kvp.Value)
-                {
-                    if (thisItem?.Link?.Node != null && thisItem.Link.Node.Links.Contains(item.Link))
-                    {
-                        references.Add(thisItem);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Pastes an item.
         /// Matching PyKotor implementation: self.model.paste_item(selected_item, as_new_branches=...)
         /// </summary>
@@ -1543,28 +1512,6 @@ namespace HolocronToolset.Editors
             }
             return _parent._children.IndexOf(this);
         }
-
-        /// <summary>
-        /// Gets the child item at the specified row and column.
-        /// Matching PyKotor implementation: def child(self, row: int, column: int = 0) -> QStandardItem | None
-        /// </summary>
-        public DLGStandardItem Child(int row, int column = 0)
-        {
-            if (row < 0 || row >= _children.Count || column != 0)
-            {
-                return null;
-            }
-            return _children[row];
-        }
-
-        /// <summary>
-        /// Gets whether this item has children.
-        /// Matching PyKotor implementation: def hasChildren(self) -> bool
-        /// </summary>
-        public bool HasChildren()
-        {
-            return _children.Count > 0;
-        }
     }
 
     // Simple model class for tests (matching Python DLGStandardItemModel)
@@ -1602,32 +1549,6 @@ namespace HolocronToolset.Editors
         }
 
         public int RowCount => _rootItems.Count;
-
-        /// <summary>
-        /// Gets the item at the specified row and column.
-        /// Matching PyKotor implementation: def item(self, row: int, column: int) -> DLGStandardItem | QStandardItem
-        /// </summary>
-        public DLGStandardItem Item(int row, int column)
-        {
-            if (row < 0 || row >= _rootItems.Count || column != 0)
-            {
-                return null;
-            }
-            return _rootItems[row];
-        }
-
-        /// <summary>
-        /// Creates MIME data for drag and drop operations.
-        /// Matching PyKotor implementation: def mimeData(self, indexes: Iterable[QModelIndex]) -> QMimeData
-        /// TODO: Full implementation needed for Avalonia drag and drop (currently returns null for test compatibility)
-        /// </summary>
-        public object MimeData(List<object> indexes)
-        {
-            // TODO: Implement full MIME data serialization for Avalonia drag and drop
-            // For now, return null to allow tests to compile
-            // Full implementation should serialize DLG items similar to Python version
-            return null;
-        }
 
         private int _selectedIndex = -1;
         public int SelectedIndex
@@ -1804,6 +1725,18 @@ namespace HolocronToolset.Editors
             return newItem;
         }
 
+        /// <summary>
+        /// Gets the item at the specified row and column.
+        /// Matching PyKotor implementation: def item(self, row: int, column: int = 0) -> DLGStandardItem | None:
+        /// </summary>
+        public DLGStandardItem Item(int row, int column = 0)
+        {
+            if (row < 0 || row >= _rootItems.Count || column != 0)
+            {
+                return null;
+            }
+            return _rootItems[row];
+        }
 
         /// <summary>
         /// Gets a new list index for a node.

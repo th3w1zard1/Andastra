@@ -46,9 +46,17 @@ namespace Andastra.Runtime.Core.Actions
         {
             _destination = destination;
             _run = run;
-            // TODO: Collision detector should be injected by game-specific runtime
-            // Andastra.Runtime.Core cannot depend on Andastra.Runtime.Games.Odyssey
-            _collisionDetector = null;
+            _collisionDetector = CreateCollisionDetector();
+        }
+
+        /// <summary>
+        /// Creates the appropriate collision detector for the current engine.
+        /// </summary>
+        private BaseCreatureCollisionDetector CreateCollisionDetector()
+        {
+            // Factory method: Create engine-specific collision detector
+            // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
+            return new Games.Odyssey.Collision.OdysseyCreatureCollisionDetector();
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
@@ -177,9 +185,9 @@ namespace Andastra.Runtime.Core.Actions
             // Returns: 0 if collision detected, 1 if path is clear
             // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
             // Implementation: Now uses proper bounding box collision detection instead of simplified radius-based check
-            uint blockingCreatureId = 0x7F000000; // OBJECT_INVALID
+            uint blockingCreatureId;
             Vector3 collisionNormal;
-            bool hasCollision = _collisionDetector != null && _collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal);
+            bool hasCollision = _collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal);
 
             if (hasCollision)
             {
@@ -245,8 +253,8 @@ namespace Andastra.Runtime.Core.Actions
                 //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
                 //   - nwmain.exe: CPathfindInformation class with obstacle avoidance in pathfinding system
                 //   - daorigins.exe/DragonAge2.exe: Advanced dynamic obstacle system (different architecture)
-                IArea area = actor.World.CurrentArea;
-                if (area != null && area.NavigationMesh != null)
+                IArea currentArea = actor.World.CurrentArea;
+                if (currentArea != null && currentArea.NavigationMesh != null)
                 {
                     // Get blocking creature's position and bounding box
                     IEntity blockingCreature = actor.World.GetEntity(blockingCreatureId);
@@ -259,7 +267,7 @@ namespace Andastra.Runtime.Core.Actions
 
                             // Get creature bounding box to determine avoidance radius
                             // Use collision detector to get proper bounding box
-                            CreatureBoundingBox blockingBoundingBox = _collisionDetector != null ? _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature) : new CreatureBoundingBox(0.5f, 0.5f, 1.0f);
+                            CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
                             // Use the larger of width/depth as avoidance radius, with safety margin
                             float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
 
@@ -270,7 +278,7 @@ namespace Andastra.Runtime.Core.Actions
                             };
 
                             // Try to find path around obstacle from current position to destination
-                            IList<Vector3> newPath = area.NavigationMesh.FindPathAroundObstacles(
+                            IList<Vector3> newPath = currentArea.NavigationMesh.FindPathAroundObstacles(
                                 transform.Position,
                                 _destination,
                                 obstacles);
@@ -303,7 +311,6 @@ namespace Andastra.Runtime.Core.Actions
 
             return ActionStatus.InProgress;
         }
-
         /// <summary>
         /// Gets the bump counter for an entity.
         /// Based on swkotor2.exe: Bump counter stored at offset 0x268 in entity structure.

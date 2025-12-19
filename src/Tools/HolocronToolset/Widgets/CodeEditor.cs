@@ -280,7 +280,7 @@ namespace HolocronToolset.Widgets
                 if (backward)
                 {
                     // Search backward from current position
-                    MatchCollection matches = searchRegex.Matches(documentText.Substring(0, searchStart));
+                    MatchCollection matches = searchRegex.Matches(documentText, 0, searchStart);
                     if (matches.Count > 0)
                     {
                         Match lastMatch = matches[matches.Count - 1];

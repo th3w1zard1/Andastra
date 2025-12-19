@@ -6,6 +6,9 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Windows;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using ModuleClass = Andastra.Parsing.Common.Module;
+using GameModule = Andastra.Parsing.Common.Module;
 
 namespace HolocronToolset.Windows
 {
@@ -16,7 +19,7 @@ namespace HolocronToolset.Windows
         private HTInstallation _installation;
         private string _modulePath;
         private string _moduleName;
-        private Andastra.Parsing.Common.Module _module;
+        private GameModule _module;
         private UndoStack _undoStack;
         private List<object> _selectedInstances; // GITInstance equivalents
 
@@ -25,7 +28,7 @@ namespace HolocronToolset.Windows
         public ModuleDesignerWindowUi Ui { get; private set; }
 
         // Matching PyKotor implementation - self._module property
-        public Andastra.Parsing.Common.Module GetModule() => _module;
+        public ModuleClass GetModule() => _module;
 
         // Matching PyKotor implementation - self.undo_stack property
         public UndoStack UndoStack => _undoStack;
@@ -138,8 +141,8 @@ namespace HolocronToolset.Windows
             try
             {
                 // Matching Python: mod_root: str = self._installation.get_module_root(mod_filepath)
-                string modRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(modFilepath);
-                
+                string modRoot = _installation.GetModuleRoot(modFilepath);
+
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
                 // Note: Module class needs to be implemented in Andastra.Parsing
                 // For now, this is a placeholder matching the Python interface

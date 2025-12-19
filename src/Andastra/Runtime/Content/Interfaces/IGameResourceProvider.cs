@@ -29,33 +29,33 @@ namespace Andastra.Runtime.Content.Interfaces
         /// Opens a resource stream asynchronously.
         /// </summary>
         Task<Stream> OpenResourceAsync(ResourceIdentifier id, CancellationToken ct);
-        
+
         /// <summary>
         /// Checks if a resource exists without opening it.
         /// </summary>
         Task<bool> ExistsAsync(ResourceIdentifier id, CancellationToken ct);
-        
+
         /// <summary>
         /// Locates a resource across multiple search locations.
         /// </summary>
         Task<IReadOnlyList<Andastra.Runtime.Content.Interfaces.LocationResult>> LocateAsync(ResourceIdentifier id, SearchLocation[] order, CancellationToken ct);
-        
+
         /// <summary>
         /// Enumerates all resources of a specific type.
         /// </summary>
         IEnumerable<ResourceIdentifier> EnumerateResources(ResourceType type);
-        
+
         /// <summary>
         /// Gets the raw bytes of a resource.
         /// </summary>
         Task<byte[]> GetResourceBytesAsync(ResourceIdentifier id, CancellationToken ct);
-        
+
         /// <summary>
         /// The game type (K1, K2, BaldursGate, , , etc.).
         /// </summary>
         GameType GameType { get; }
     }
-    
+
     /// <summary>
     /// Result of locating a resource.
     /// </summary>
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Content.Interfaces
         public long Size;
         public long Offset;
     }
-    
+
     /// <summary>
     /// Search locations for resource lookup, in precedence order.
     /// </summary>
@@ -79,7 +79,7 @@ namespace Andastra.Runtime.Content.Interfaces
         Chitin,
         Hardcoded
     }
-    
+
     /// <summary>
     /// Game type.
     /// </summary>
@@ -89,9 +89,10 @@ namespace Andastra.Runtime.Content.Interfaces
         // Odyssey Engine games
         K1,
         K2,
-        // Aurora Engine games
+        //  games
         BaldursGate,
-        // TODO: Add other game types as needed
+        ,
+
     }
 }
 

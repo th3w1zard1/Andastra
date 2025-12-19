@@ -12,22 +12,22 @@ namespace Andastra.Runtime.Core.Actions
     /// - Odyssey: Runtime.Games.Odyssey.Actions.OdysseyAction
     /// - Aurora: Runtime.Games.Aurora.Actions.AuroraAction
     /// - Common: Runtime.Games.Common.Actions.BaseAction
-    /// 
+    ///
     /// This class is kept for backward compatibility. Core cannot depend on Games, so this is a standalone implementation.
     /// </remarks>
-    public abstract class ActionBase : IAction
+    public abstract class ActionBase
     {
         public ActionType Type { get; }
-        public int GroupId { get; set; }
-        public IEntity Owner { get; set; }
+
+        /// <summary>
+        /// Elapsed time since the action started executing.
+        /// </summary>
         protected float ElapsedTime { get; private set; }
 
         protected ActionBase(ActionType type)
         {
             Type = type;
             ElapsedTime = 0f;
-            GroupId = 0;
-            Owner = null;
         }
 
         /// <summary>
@@ -42,22 +42,6 @@ namespace Andastra.Runtime.Core.Actions
         {
             ElapsedTime += deltaTime;
             return ExecuteInternal(actor, deltaTime);
-        }
-
-        /// <summary>
-        /// Updates the action and returns its status.
-        /// </summary>
-        public ActionStatus Update(IEntity actor, float deltaTime)
-        {
-            return Execute(actor, deltaTime);
-        }
-
-        /// <summary>
-        /// Called when the action is cancelled or completed.
-        /// </summary>
-        public virtual void Dispose()
-        {
-            // Default implementation does nothing
         }
     }
 }

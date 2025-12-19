@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Core.Journal
     ///   - swkotor.exe: Similar JRL system (needs reverse engineering)
     ///   - nwmain.exe: Different journal format (needs reverse engineering)
     ///   - daorigins.exe: Journal system may differ (needs reverse engineering)
-    ///
+    /// 
     /// This class is maintained for backward compatibility.
     /// New code should use OdysseyJRLLoader directly.
     /// Core cannot depend on Odyssey due to circular dependency, so this is a standalone implementation.
@@ -179,20 +179,15 @@ namespace Andastra.Runtime.Core.Journal
 
             // Resolve LocalizedString to text
             LocalizedString locString = entry.Text;
-            if (locString == null || locString.StringRef < 0)
+            if (locString == null || !locString.IsValid)
             {
-                // Use substrings if StringRef is invalid
-                if (locString != null)
-                {
-                    return locString.Get(Language.English, Gender.Male, true) ?? "";
-                }
                 return null;
             }
 
             // Resolve using TLK tables
             if (_baseTlk != null)
             {
-                string text = _baseTlk.String(locString.StringRef);
+                string text = _baseTlk.GetString(locString.StringId);
                 if (!string.IsNullOrEmpty(text))
                 {
                     return text;
@@ -201,7 +196,7 @@ namespace Andastra.Runtime.Core.Journal
 
             if (_customTlk != null)
             {
-                string text = _customTlk.String(locString.StringRef);
+                string text = _customTlk.GetString(locString.StringId);
                 if (!string.IsNullOrEmpty(text))
                 {
                     return text;
@@ -209,7 +204,7 @@ namespace Andastra.Runtime.Core.Journal
             }
 
             // Fallback: return string ID if TLK not available
-            return locString.StringRef.ToString();
+            return locString.StringId.ToString();
         }
 
         /// <summary>
