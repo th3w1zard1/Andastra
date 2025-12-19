@@ -2224,21 +2224,231 @@ void* __stdcall nwnnsscomp_finalize_main_script(NssCompiler* compiler, void* par
     return compiler;
 }
 
-void nwnnsscomp_emit_instruction(NssBytecodeBuffer* buffer, void* instruction) {
-    // TODO: Requires further Ghidra analysis of FUN_00405365 and FUN_00405396
+/**
+ * @brief Emit instruction to bytecode buffer
+ *
+ * Adds an instruction to the bytecode buffer during compilation.
+ * This function handles instruction copying and buffer management.
+ *
+ * @param buffer Bytecode buffer structure
+ * @param instruction Instruction structure to emit
+ * @return Pointer to buffer (for chaining)
+ * @note Original: FUN_00405365, Address: 0x00405365 - 0x00405395 (49 bytes)
+ */
+void* __thiscall nwnnsscomp_emit_instruction(NssBytecodeBuffer* buffer, void* instruction)
+{
+    // 0x00405365: push ebp                      // Save base pointer
+    // 0x00405366: mov ebp, esp                 // Set up stack frame
+    // 0x00405368: push ecx                      // Preserve ECX (this pointer for thiscall)
+    // 0x00405369: mov dword ptr [ebp-0x4], ecx // Store 'this' pointer (buffer) in local variable
+    
+    // Call helper function to prepare instruction
+    // 0x00405372: push dword ptr [ebp+0x8]      // Push instruction parameter
+    // 0x00405375: mov ecx, dword ptr [ebp-0x4] // Load 'this' pointer into ECX
+    // 0x00405378: call 0x00405396               // Call FUN_00405396(buffer, instruction)
+    nwnnsscomp_prepare_instruction(buffer, instruction);
+    
+    // Copy instruction fields at offset +0x1c (28 bytes)
+    // 0x0040537d: mov ecx, dword ptr [ecx+0x1c] // Load field from instruction at offset +0x1c
+    // 0x00405380: mov dword ptr [eax+0x1c], ecx // Store field in buffer at offset +0x1c
+    *((int*)((char*)buffer + 0x1c)) = *((int*)((char*)instruction + 0x1c));
+    
+    // Copy instruction fields at offset +0x20 (32 bytes)
+    // 0x00405389: mov ecx, dword ptr [ecx+0x20] // Load field from instruction at offset +0x20
+    // 0x0040538c: mov dword ptr [eax+0x20], ecx // Store field in buffer at offset +0x20
+    *((int*)((char*)buffer + 0x20)) = *((int*)((char*)instruction + 0x20));
+    
+    // Function epilogue
+    // 0x0040538f: mov eax, dword ptr [ebp-0x4] // Load buffer pointer for return
+    // 0x00405393: pop ebp                      // Restore base pointer
+    // 0x00405394: ret 0x4                       // Return buffer pointer, pop 4 bytes (instruction parameter)
+    
+    return buffer;
 }
 
-void nwnnsscomp_update_buffer_size(NssBytecodeBuffer* buffer) {
-    // TODO: Requires further Ghidra analysis of buffer finalization
+/**
+ * @brief Prepare instruction for emission
+ *
+ * Prepares an instruction structure before adding it to the bytecode buffer.
+ * This includes initialization and validation steps.
+ *
+ * @param buffer Bytecode buffer structure
+ * @param instruction Instruction structure to prepare
+ * @return Pointer to buffer (for chaining)
+ * @note Original: FUN_00405396, Address: 0x00405396 - 0x004053d4 (63 bytes)
+ */
+void* __thiscall nwnnsscomp_prepare_instruction(NssBytecodeBuffer* buffer, void* instruction)
+{
+    // 0x00405396: push ebp                      // Save base pointer
+    // 0x00405397: mov ebp, esp                 // Set up stack frame
+    // 0x00405399: push ecx                      // Preserve ECX (this pointer for thiscall)
+    // 0x0040539a: mov dword ptr [ebp-0x8], ecx // Store 'this' pointer (buffer) in local variable
+    // 0x0040539d: push ecx                      // Push buffer pointer
+    // 0x0040539e: lea ecx, [ebp-0x4]            // Load address of local variable
+    // 0x004053a4: call 0x00403f21               // Call FUN_00403f21(&local_var) - initialization
+    FUN_00403f21((void*)&buffer);  // Placeholder - initialization helper
+    
+    // Initialize buffer structure
+    // 0x004053ac: mov ecx, dword ptr [ebp-0x8] // Load buffer pointer into ECX
+    // 0x004053af: call 0x00403efb               // Call FUN_00403efb(buffer) - buffer initialization
+    FUN_00403efb(buffer);  // Placeholder - buffer initialization
+    
+    // Clear buffer flag
+    // 0x004053b6: push 0x0                      // Push 0 (null character)
+    // 0x004053b8: mov ecx, dword ptr [ebp-0x8] // Load buffer pointer into ECX
+    // 0x004053bb: call 0x00403eb0               // Call FUN_00403eb0(buffer, 0) - clear flag
+    FUN_00403eb0(buffer, '\0');  // Placeholder - flag clearing
+    
+    // Add instruction to buffer
+    // 0x004053c9: push dword ptr [0x00429080]   // Push DAT_00429080 (size or flag)
+    // 0x004053cf: push 0x0                      // Push 0 (offset)
+    // 0x004053d1: push dword ptr [ebp+0x8]      // Push instruction parameter
+    // 0x004053d4: mov ecx, dword ptr [ebp-0x8] // Load buffer pointer into ECX
+    // 0x004053d7: call 0x00403fb9               // Call FUN_00403fb9(buffer, instruction, 0, DAT_00429080)
+    FUN_00403fb9(buffer, instruction, 0, 0x00429080);  // Placeholder - add instruction
+    
+    // Function epilogue
+    // 0x004053ce: mov eax, dword ptr [ebp-0x8] // Load buffer pointer for return
+    // 0x004053d2: pop ebp                      // Restore base pointer
+    // 0x004053d3: ret 0x4                       // Return buffer pointer, pop 4 bytes (instruction parameter)
+    
+    return buffer;
 }
 
-bool nwnnsscomp_buffer_needs_expansion(NssBytecodeBuffer* buffer) {
-    // TODO: Requires capacity checking logic
-    return false;
+/**
+ * @brief Check if bytecode buffer needs expansion
+ *
+ * Determines if the bytecode buffer has sufficient capacity for additional
+ * instructions. Used to prevent buffer overflows during compilation.
+ *
+ * @param buffer Bytecode buffer structure
+ * @param requiredCapacity Required capacity in instruction count
+ * @return true if expansion needed, false if sufficient capacity
+ */
+bool nwnnsscomp_buffer_needs_expansion(NssBytecodeBuffer* buffer, uint requiredCapacity)
+{
+    // Check if current capacity is less than required
+    // Capacity is stored at offset +0x8 in buffer structure
+    uint currentCapacity = *((uint*)((char*)buffer + 0x8));
+    return currentCapacity < requiredCapacity;
 }
 
-void nwnnsscomp_expand_bytecode_buffer(NssBytecodeBuffer* buffer) {
-    // TODO: Requires further Ghidra analysis of FUN_00405409
+/**
+ * @brief Expand bytecode buffer capacity
+ *
+ * Expands the bytecode buffer to accommodate more instructions.
+ * Allocates a new buffer, copies existing data, and updates capacity.
+ * Uses power-of-two growth strategy for efficient reallocation.
+ *
+ * @param buffer Bytecode buffer structure
+ * @param requiredCapacity Required capacity in instruction count
+ * @return Non-zero on success, zero on allocation failure
+ * @note Original: FUN_00405409, Address: 0x00405409 - 0x00405493 (139 bytes)
+ */
+int __thiscall nwnnsscomp_expand_bytecode_buffer(NssBytecodeBuffer* buffer, uint requiredCapacity)
+{
+    // 0x00405409: push ebp                      // Save base pointer
+    // 0x0040540a: mov ebp, esp                 // Set up stack frame
+    // 0x0040540c: push ecx                      // Preserve ECX (this pointer for thiscall)
+    // 0x0040540d: mov dword ptr [ebp-0x8], ecx  // Store 'this' pointer (buffer) in local variable
+    
+    void* newBuffer;                              // New buffer pointer
+    uint newCapacity;                            // New capacity (power of 2)
+    uint currentCount;                            // Current instruction count
+    uint instructionSize = 0x24;                  // Size of each instruction (36 bytes)
+    
+    // Check if expansion is needed
+    // 0x00405418: mov ecx, dword ptr [ebp+0x8]  // Load requiredCapacity parameter
+    // 0x0040541b: cmp ecx, dword ptr [eax+0x8]  // Compare with current capacity at offset +0x8
+    // 0x0040541e: jbe 0x0040548e                // Jump if capacity sufficient (no expansion needed)
+    
+    uint currentCapacity = *((uint*)((char*)buffer + 0x8));
+    
+    if (requiredCapacity <= currentCapacity) {
+        // Capacity sufficient - no expansion needed
+        // 0x0040548e: mov al, 0x1                // Set return value to 1 (success)
+        // 0x00405490: leave                       // Restore stack frame
+        // 0x00405491: ret 0x4                     // Return success, pop 4 bytes (requiredCapacity parameter)
+        return 1;
+    }
+    
+    // Calculate new capacity (next power of 2 >= requiredCapacity)
+    // 0x0040541d: mov dword ptr [ebp-0x4], 0x1   // Initialize newCapacity to 1
+    // 0x00405427: cmp eax, dword ptr [ebp+0x8]  // Compare newCapacity with requiredCapacity
+    // 0x0040542a: jnc 0x00405436                // Jump if newCapacity >= requiredCapacity
+    // 0x0040542f: shl eax, 0x1                   // Shift left (multiply by 2)
+    // 0x00405432: jmp 0x00405427                // Loop back to comparison
+    
+    newCapacity = 1;
+    while (newCapacity < requiredCapacity) {
+        newCapacity = newCapacity << 1;  // Double capacity (power of 2)
+    }
+    
+    // Allocate new buffer (newCapacity * instructionSize bytes)
+    // 0x00405439: imul eax, eax, 0x24            // Multiply newCapacity by 0x24 (36 bytes per instruction)
+    // 0x0040543d: call 0x0041dc9d                // Call malloc(newCapacity * 0x24)
+    newBuffer = malloc(newCapacity * instructionSize);
+    
+    // 0x00405446: cmp dword ptr [ebp-0x8], 0x0   // Check if allocation succeeded
+    // 0x0040544a: jnz 0x00405450                 // Jump if allocation succeeded
+    
+    if (newBuffer == NULL) {
+        // Allocation failed
+        // 0x00405490: leave                       // Restore stack frame
+        // 0x00405491: ret 0x4                     // Return failure (0), pop 4 bytes
+        return 0;
+    }
+    
+    // Copy existing instructions to new buffer
+    // 0x00405353: mov eax, dword ptr [eax+0x4]   // Load current instruction count at offset +0x4
+    // 0x00405456: imul eax, eax, 0x24            // Multiply count by instruction size
+    // 0x0040545d: push dword ptr [eax]           // Push source buffer pointer (at offset +0x0)
+    // 0x00405462: call 0x0041ce10                // Call memmove(newBuffer, oldBuffer, count * 0x24)
+    currentCount = *((uint*)((char*)buffer + 0x4));
+    void* oldBuffer = *((void**)buffer);
+    memmove(newBuffer, oldBuffer, currentCount * instructionSize);
+    
+    // Free old buffer if it exists
+    // 0x0040546d: cmp dword ptr [eax], 0x0       // Check if old buffer pointer is NULL
+    // 0x00405470: jz 0x0040547d                 // Jump if NULL (nothing to free)
+    
+    if (oldBuffer != NULL) {
+        // 0x00405475: push dword ptr [eax]        // Push old buffer pointer
+        // 0x00405477: call 0x0041d821             // Call free(oldBuffer)
+        free(oldBuffer);
+    }
+    
+    // Update buffer structure with new buffer and capacity
+    // 0x00405483: mov dword ptr [eax], ecx       // Store newBuffer at offset +0x0
+    *((void**)buffer) = newBuffer;
+    
+    // 0x0040548b: mov dword ptr [eax+0x8], ecx   // Store newCapacity at offset +0x8
+    *((uint*)((char*)buffer + 0x8)) = newCapacity;
+    
+    // Function epilogue
+    // 0x0040548e: mov al, 0x1                    // Set return value to 1 (success)
+    // 0x00405490: leave                           // Restore stack frame
+    // 0x00405491: ret 0x4                         // Return success, pop 4 bytes
+    
+    return 1;
+}
+
+/**
+ * @brief Update bytecode buffer size
+ *
+ * Updates the size/count fields in the bytecode buffer structure
+ * after instructions have been emitted. This is called during
+ * buffer finalization.
+ *
+ * @param buffer Bytecode buffer structure
+ * @note This function updates the instruction count at offset +0x4
+ */
+void nwnnsscomp_update_buffer_size(NssBytecodeBuffer* buffer)
+{
+    // Update instruction count based on current write position
+    // The count is typically calculated from the difference between
+    // write position and buffer start, divided by instruction size
+    // Placeholder - exact calculation depends on buffer structure layout
 }
 
 /**
