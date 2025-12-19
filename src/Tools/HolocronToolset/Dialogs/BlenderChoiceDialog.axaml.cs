@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using HolocronToolset.Blender;
 
 namespace HolocronToolset.Dialogs
 {
@@ -19,6 +20,7 @@ namespace HolocronToolset.Dialogs
         private Button _cancelButton;
         private Border _infoFrame;
         private StackPanel _infoLayout;
+        private BlenderInfo _blenderInfo;
 
         // Public parameterless constructor for XAML
         public BlenderChoiceDialog() : this(null, null, "Module Designer")
@@ -27,11 +29,12 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:49-66
         // Original: def __init__(self, parent, blender_info=None, context="Module Designer"):
-        public BlenderChoiceDialog(Window parent, object blenderInfo = null, string context = "Module Designer")
+        public BlenderChoiceDialog(Window parent, BlenderInfo blenderInfo = null, string context = "Module Designer")
         {
             InitializeComponent();
             Title = "Choose Editor";
             MinWidth = 500;
+            _blenderInfo = blenderInfo ?? BlenderDetection.DetectBlender();
             SetupUI(context);
         }
 
@@ -148,25 +151,131 @@ namespace HolocronToolset.Dialogs
 
             _infoLayout.Children.Clear();
 
-            // TODO: Implement Blender detection when available
-            // For now, show a placeholder
-            var statusLabel = new TextBlock
+            if (_blenderInfo == null)
             {
-                Text = "Blender detection not yet implemented",
-                Foreground = new SolidColorBrush(Colors.Orange)
-            };
-            _infoLayout.Children.Add(statusLabel);
+                _blenderInfo = BlenderDetection.DetectBlender();
+            }
+
+            if (_blenderInfo.IsValid)
+            {
+                // Blender found - show status
+                var statusLabel = new TextBlock
+                {
+                    Text = $"Blender {_blenderInfo.VersionString} detected",
+                    FontWeight = FontWeight.Bold,
+                    Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80)) // Green
+                };
+                _infoLayout.Children.Add(statusLabel);
+
+                var pathLabel = new TextBlock
+                {
+                    Text = _blenderInfo.Executable,
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                    TextWrapping = TextWrapping.Wrap
+                };
+                _infoLayout.Children.Add(pathLabel);
+
+                if (_blenderInfo.HasKotorblender)
+                {
+                    // kotorblender installed - all good
+                    var addonLabel = new TextBlock
+                    {
+                        Text = $"kotorblender {_blenderInfo.KotorblenderVersion} installed",
+                        FontWeight = FontWeight.Bold,
+                        Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80))
+                    };
+                    _infoLayout.Children.Add(addonLabel);
+                }
+                else
+                {
+                    // kotorblender missing - show warning
+                    var warningLabel = new TextBlock
+                    {
+                        Text = "Warning: kotorblender not found",
+                        Foreground = new SolidColorBrush(Color.FromRgb(255, 152, 0)) // Orange
+                    };
+                    _infoLayout.Children.Add(warningLabel);
+
+                    var hintLabel = new TextBlock
+                    {
+                        Text = "kotorblender is required to use Blender. Install it to enable the Blender option.",
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                        TextWrapping = TextWrapping.Wrap
+                    };
+                    _infoLayout.Children.Add(hintLabel);
+                }
+            }
+            else
+            {
+                // No Blender found - show error
+                var errorLabel = new TextBlock
+                {
+                    Text = "Blender not found",
+                    FontWeight = FontWeight.Bold,
+                    Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54)) // Red
+                };
+                _infoLayout.Children.Add(errorLabel);
+
+                var hintLabel = new TextBlock
+                {
+                    Text = "Install Blender 3.6 or later, or browse to an existing installation.",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                    TextWrapping = TextWrapping.Wrap
+                };
+                _infoLayout.Children.Add(hintLabel);
+
+                if (!string.IsNullOrEmpty(_blenderInfo?.Error))
+                {
+                    var errorDetailLabel = new TextBlock
+                    {
+                        Text = _blenderInfo.Error,
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                        TextWrapping = TextWrapping.Wrap
+                    };
+                    _infoLayout.Children.Add(errorDetailLabel);
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:290-310
         // Original: def _update_blender_button_state(self):
         private void UpdateBlenderButtonState()
         {
-            if (_blenderButton != null)
+            if (_blenderButton == null)
             {
-                // TODO: Enable/disable based on Blender detection
-                _blenderButton.IsEnabled = false; // Disabled until Blender detection is implemented
+                return;
             }
+
+            if (_blenderInfo == null)
+            {
+                _blenderInfo = BlenderDetection.DetectBlender();
+            }
+
+            bool isEnabled = _blenderInfo.IsValid && _blenderInfo.HasKotorblender;
+            _blenderButton.IsEnabled = isEnabled;
+
+            string tooltip;
+            if (_blenderInfo.HasKotorblender)
+            {
+                tooltip = "Use Blender for professional-grade 3D editing with full kotorblender support.\n" +
+                         "Better performance, more features, industry-standard tools.";
+            }
+            else if (_blenderInfo.IsValid)
+            {
+                tooltip = "kotorblender is required to use Blender.\n" +
+                         "Click 'Install kotorblender' above to install it.";
+            }
+            else
+            {
+                tooltip = "Blender is not installed or not found.\n" +
+                         "Click 'Browse for Blender...' above to locate it.";
+            }
+
+            ToolTip.SetTip(_blenderButton, tooltip);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:312-315
