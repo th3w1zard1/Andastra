@@ -65,6 +65,16 @@ namespace Andastra.Runtime.Games.Common
         public abstract ObjectType ObjectType { get; }
 
         /// <summary>
+        /// Gets or sets the area ID this entity belongs to.
+        /// </summary>
+        /// <remarks>
+        /// Based on entity structure across all engines.
+        /// AreaId identifies which area the entity is located in.
+        /// Set when entity is registered to an area in the world.
+        /// </remarks>
+        public abstract uint AreaId { get; set; }
+
+        /// <summary>
         /// Whether this entity is valid and not destroyed.
         /// </summary>
         /// <remarks>

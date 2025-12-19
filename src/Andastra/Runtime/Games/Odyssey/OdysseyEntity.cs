@@ -37,6 +37,7 @@ namespace Andastra.Runtime.Games.Odyssey
         private readonly ObjectType _objectType;
         private IWorld _world;
         private bool _isValid = true;
+        private uint _areaId;
 
         /// <summary>
         /// Creates a new Odyssey entity.
@@ -110,6 +111,21 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             get => _world;
             set => _world = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the area ID this entity belongs to.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// AreaId identifies which area the entity is located in.
+        /// Set when entity is registered to an area in the world.
+        /// </remarks>
+        public override uint AreaId
+        {
+            get => _areaId;
+            set => _areaId = value;
         }
 
         /// <summary>

@@ -42,6 +42,16 @@ namespace Andastra.Runtime.Core.Interfaces
         ObjectType ObjectType { get; }
 
         /// <summary>
+        /// Gets or sets the area ID this entity belongs to.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId at offset +4
+        /// </remarks>
+        uint AreaId { get; set; }
+
+        /// <summary>
         /// Gets a component of the specified type.
         /// </summary>
         T GetComponent<T>() where T : class, IComponent;
