@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Myra;
 using Myra.Graphics2D.UI;
+using Andastra.Runtime.Graphics.Common.GUI;
 
 namespace Andastra.Runtime.MonoGame.GUI
 {
@@ -25,31 +26,29 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// - Based on swkotor2.exe: Main menu uses GUI system with panel-based rendering
     /// - This implementation: Uses Myra UI library for modern, cross-platform menu rendering
     /// - Myra provides declarative UI with XML-based layouts and event handling
+    /// 
+    /// Inheritance:
+    /// - BaseMenuRenderer (Runtime.Graphics.Common.GUI) - Common menu functionality
+    ///   - MyraMenuRenderer (this class) - MonoGame-specific Myra UI implementation
     /// </remarks>
-    public class MyraMenuRenderer : IDisposable
+    public class MyraMenuRenderer : BaseMenuRenderer
     {
-        private bool _isVisible = false;
-        private bool _isInitialized = false;
         private GraphicsDevice _graphicsDevice;
         private Desktop _desktop;
         private Panel _rootPanel;
+        private bool _isDisposed = false;
 
-        public bool IsVisible
-        {
-            get { return _isVisible; }
-            set { _isVisible = value; }
-        }
-
-        public bool IsInitialized
-        {
-            get { return _isInitialized; }
-        }
-
+        /// <summary>
+        /// Gets the Myra Desktop instance for UI hierarchy management.
+        /// </summary>
         public Desktop Desktop
         {
             get { return _desktop; }
         }
 
+        /// <summary>
+        /// Gets the root Panel that contains all menu widgets.
+        /// </summary>
         public Panel RootPanel
         {
             get { return _rootPanel; }
@@ -98,7 +97,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // All UI elements will be children of this panel
                 _desktop.Root = _rootPanel;
 
-                _isInitialized = true;
+                // Initialize base class with viewport dimensions
+                Initialize(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
 
                 Console.WriteLine("[MyraMenuRenderer] Myra UI initialized successfully");
                 Console.WriteLine($"[MyraMenuRenderer] Viewport: {_graphicsDevice.Viewport.Width}x{_graphicsDevice.Viewport.Height}");
@@ -107,19 +107,21 @@ namespace Andastra.Runtime.MonoGame.GUI
             {
                 Console.WriteLine($"[MyraMenuRenderer] ERROR: Failed to initialize Myra UI: {ex.Message}");
                 Console.WriteLine($"[MyraMenuRenderer] Stack trace: {ex.StackTrace}");
-                _isInitialized = false;
+                IsInitialized = false;
                 _desktop = null;
                 _rootPanel = null;
             }
         }
 
         /// <summary>
-        /// Updates the viewport size when the window is resized.
+        /// Called when viewport size changes. Updates Myra UI panel dimensions.
         /// </summary>
         /// <param name="width">New viewport width.</param>
         /// <param name="height">New viewport height.</param>
-        public void UpdateViewport(int width, int height)
+        protected override void OnViewportChanged(int width, int height)
         {
+            base.OnViewportChanged(width, height);
+            
             if (_rootPanel != null)
             {
                 _rootPanel.Width = width;
@@ -127,11 +129,11 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
         }
 
-        public void SetVisible(bool visible)
-        {
-            _isVisible = visible;
-        }
-
+        /// <summary>
+        /// Renders the Myra UI menu system.
+        /// </summary>
+        /// <param name="gameTime">Current game time for frame timing.</param>
+        /// <param name="device">Graphics device to render to (must match the one used for initialization).</param>
         /// <summary>
         /// Renders the Myra UI menu system.
         /// </summary>
@@ -139,7 +141,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <param name="device">Graphics device to render to (must match the one used for initialization).</param>
         public void Draw(GameTime gameTime, GraphicsDevice device)
         {
-            if (!_isVisible || !_isInitialized)
+            if (!IsVisible || !IsInitialized || _isDisposed)
             {
                 return;
             }
@@ -175,9 +177,13 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Updates the Myra UI system (handles input, animations, etc.).
         /// </summary>
         /// <param name="gameTime">Current game time for update timing.</param>
+        /// <summary>
+        /// Updates the Myra UI system (handles input, animations, etc.).
+        /// </summary>
+        /// <param name="gameTime">Current game time for update timing.</param>
         public void Update(GameTime gameTime)
         {
-            if (!_isInitialized || _desktop == null)
+            if (!IsInitialized || _desktop == null || _isDisposed)
             {
                 return;
             }
@@ -198,8 +204,16 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
         }
 
-        public void Dispose()
+        /// <summary>
+        /// Disposes of resources used by the menu renderer.
+        /// </summary>
+        public override void Dispose()
         {
+            if (_isDisposed)
+            {
+                return;
+            }
+
             if (_desktop != null)
             {
                 _desktop.Root = null;
@@ -212,7 +226,9 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             _graphicsDevice = null;
-            _isInitialized = false;
+            _isDisposed = true;
+
+            base.Dispose();
 
             Console.WriteLine("[MyraMenuRenderer] Disposed");
         }
