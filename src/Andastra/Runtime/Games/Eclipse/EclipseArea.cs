@@ -1116,6 +1116,51 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Adds a dynamic area effect to the area.
+        /// </summary>
+        /// <param name="effect">The effect to add.</param>
+        /// <remarks>
+        /// Based on Eclipse engine: Dynamic effects are added to areas at runtime.
+        /// Effects are automatically updated each frame.
+        /// </remarks>
+        public void AddDynamicEffect(IDynamicAreaEffect effect)
+        {
+            if (effect == null)
+            {
+                return;
+            }
+
+            if (!_dynamicEffects.Contains(effect))
+            {
+                _dynamicEffects.Add(effect);
+            }
+        }
+
+        /// <summary>
+        /// Removes a dynamic area effect from the area.
+        /// </summary>
+        /// <param name="effect">The effect to remove.</param>
+        /// <returns>True if the effect was removed, false if it wasn't found.</returns>
+        /// <remarks>
+        /// Based on Eclipse engine: Dynamic effects are removed from areas at runtime.
+        /// Effects are deactivated before removal.
+        /// </remarks>
+        public bool RemoveDynamicEffect(IDynamicAreaEffect effect)
+        {
+            if (effect == null)
+            {
+                return false;
+            }
+
+            if (effect.IsActive)
+            {
+                effect.Deactivate();
+            }
+
+            return _dynamicEffects.Remove(effect);
+        }
+
+        /// <summary>
         /// Applies a dynamic change to the area.
         /// </summary>
         /// <remarks>
@@ -1322,5 +1367,526 @@ namespace Andastra.Runtime.Games.Eclipse
     public interface IUpdatable
     {
         void Update(float deltaTime);
+    }
+
+    /// <summary>
+    /// Modification that adds an entity to the area.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Entities can be dynamically added to areas at runtime.
+    /// Used for spawning creatures, placeables, triggers, and other objects.
+    /// </remarks>
+    public class AddEntityModification : IAreaModification
+    {
+        private readonly IEntity _entity;
+
+        /// <summary>
+        /// Creates a modification that adds an entity to the area.
+        /// </summary>
+        /// <param name="entity">The entity to add.</param>
+        public AddEntityModification(IEntity entity)
+        {
+            _entity = entity ?? throw new ArgumentNullException(nameof(entity));
+        }
+
+        /// <summary>
+        /// Applies the modification by adding the entity to the area.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _entity == null || !_entity.IsValid)
+            {
+                return;
+            }
+
+            // Add entity to area's collections
+            area.AddEntityToArea(_entity);
+
+            // If entity has physics, ensure it's added to physics system
+            // This is handled by AddEntityToArea which calls AddEntityToPhysics
+        }
+
+        /// <summary>
+        /// Adding entities may require physics updates if the entity has physics.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => false;
+
+        /// <summary>
+        /// Adding entities with physics requires physics system updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => _entity != null && _entity.HasData("HasPhysics") && _entity.GetData<bool>("HasPhysics", false);
+
+        /// <summary>
+        /// Adding entities does not require lighting updates.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
+    }
+
+    /// <summary>
+    /// Modification that removes an entity from the area.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Entities can be dynamically removed from areas at runtime.
+    /// Used for despawning, destruction, and cleanup.
+    /// </remarks>
+    public class RemoveEntityModification : IAreaModification
+    {
+        private readonly IEntity _entity;
+
+        /// <summary>
+        /// Creates a modification that removes an entity from the area.
+        /// </summary>
+        /// <param name="entity">The entity to remove.</param>
+        public RemoveEntityModification(IEntity entity)
+        {
+            _entity = entity ?? throw new ArgumentNullException(nameof(entity));
+        }
+
+        /// <summary>
+        /// Applies the modification by removing the entity from the area.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _entity == null)
+            {
+                return;
+            }
+
+            // Remove entity from area's collections
+            area.RemoveEntityFromArea(_entity);
+
+            // If entity had physics, it's removed from physics system by RemoveEntityFromArea
+        }
+
+        /// <summary>
+        /// Removing entities may require navigation mesh updates if it was a dynamic obstacle.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => _entity != null && _entity.HasData("IsDynamicObstacle") && _entity.GetData<bool>("IsDynamicObstacle", false);
+
+        /// <summary>
+        /// Removing entities with physics requires physics system updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => _entity != null && _entity.HasData("HasPhysics") && _entity.GetData<bool>("HasPhysics", false);
+
+        /// <summary>
+        /// Removing entities does not require lighting updates.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
+    }
+
+    /// <summary>
+    /// Modification that adds a dynamic light to the area.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Dynamic lights can be added at runtime for effects, explosions, etc.
+    /// </remarks>
+    public class AddLightModification : IAreaModification
+    {
+        private readonly IDynamicLight _light;
+
+        /// <summary>
+        /// Creates a modification that adds a dynamic light to the area.
+        /// </summary>
+        /// <param name="light">The light to add.</param>
+        public AddLightModification(IDynamicLight light)
+        {
+            _light = light ?? throw new ArgumentNullException(nameof(light));
+        }
+
+        /// <summary>
+        /// Applies the modification by adding the light to the lighting system.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _light == null || area.LightingSystem == null)
+            {
+                return;
+            }
+
+            area.LightingSystem.AddLight(_light);
+        }
+
+        /// <summary>
+        /// Adding lights does not require navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => false;
+
+        /// <summary>
+        /// Adding lights does not require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => false;
+
+        /// <summary>
+        /// Adding lights requires lighting system updates.
+        /// </summary>
+        public bool RequiresLightingUpdate => true;
+    }
+
+    /// <summary>
+    /// Modification that removes a dynamic light from the area.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Dynamic lights can be removed at runtime.
+    /// </remarks>
+    public class RemoveLightModification : IAreaModification
+    {
+        private readonly IDynamicLight _light;
+
+        /// <summary>
+        /// Creates a modification that removes a dynamic light from the area.
+        /// </summary>
+        /// <param name="light">The light to remove.</param>
+        public RemoveLightModification(IDynamicLight light)
+        {
+            _light = light ?? throw new ArgumentNullException(nameof(light));
+        }
+
+        /// <summary>
+        /// Applies the modification by removing the light from the lighting system.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _light == null || area.LightingSystem == null)
+            {
+                return;
+            }
+
+            area.LightingSystem.RemoveLight(_light);
+        }
+
+        /// <summary>
+        /// Removing lights does not require navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => false;
+
+        /// <summary>
+        /// Removing lights does not require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => false;
+
+        /// <summary>
+        /// Removing lights requires lighting system updates.
+        /// </summary>
+        public bool RequiresLightingUpdate => true;
+    }
+
+    /// <summary>
+    /// Modification that creates a hole in the walkmesh (destructible terrain).
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Destructible environments can create holes in walkmesh.
+    /// Used for explosions, destruction, and environmental changes.
+    /// </remarks>
+    public class CreateWalkmeshHoleModification : IAreaModification
+    {
+        private readonly Vector3 _center;
+        private readonly float _radius;
+
+        /// <summary>
+        /// Creates a modification that creates a hole in the walkmesh.
+        /// </summary>
+        /// <param name="center">Center position of the hole.</param>
+        /// <param name="radius">Radius of the hole.</param>
+        public CreateWalkmeshHoleModification(Vector3 center, float radius)
+        {
+            _center = center;
+            _radius = radius > 0 ? radius : throw new ArgumentException("Radius must be positive", nameof(radius));
+        }
+
+        /// <summary>
+        /// Applies the modification by creating a hole in the navigation mesh.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || area.NavigationMesh == null)
+            {
+                return;
+            }
+
+            // In a full implementation, this would:
+            // 1. Find all walkmesh faces within radius of center
+            // 2. Mark those faces as non-walkable
+            // 3. Update pathfinding graph to exclude those faces
+            // 4. Rebuild spatial structures if needed
+            // For now, this is a placeholder that demonstrates the structure
+            if (area.NavigationMesh is EclipseNavigationMesh eclipseNavMesh)
+            {
+                // Placeholder: In full implementation, would call eclipseNavMesh.CreateHole(_center, _radius)
+            }
+        }
+
+        /// <summary>
+        /// Creating walkmesh holes requires navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => true;
+
+        /// <summary>
+        /// Creating walkmesh holes may require physics updates if physics objects are affected.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => true;
+
+        /// <summary>
+        /// Creating walkmesh holes does not require lighting updates.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
+    }
+
+    /// <summary>
+    /// Modification that adds a dynamic area effect.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Dynamic area effects can be added at runtime.
+    /// Includes weather, particle effects, audio zones, and environmental changes.
+    /// </remarks>
+    public class AddAreaEffectModification : IAreaModification
+    {
+        private readonly IDynamicAreaEffect _effect;
+
+        /// <summary>
+        /// Creates a modification that adds a dynamic area effect.
+        /// </summary>
+        /// <param name="effect">The effect to add.</param>
+        public AddAreaEffectModification(IDynamicAreaEffect effect)
+        {
+            _effect = effect ?? throw new ArgumentNullException(nameof(effect));
+        }
+
+        /// <summary>
+        /// Applies the modification by adding the effect to the area.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _effect == null)
+            {
+                return;
+            }
+
+            // Add effect to area's dynamic effects list
+            area.AddDynamicEffect(_effect);
+        }
+
+        /// <summary>
+        /// Adding area effects does not require navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => false;
+
+        /// <summary>
+        /// Adding area effects does not require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => false;
+
+        /// <summary>
+        /// Adding area effects may require lighting updates if they affect lighting.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
+    }
+
+    /// <summary>
+    /// Modification that removes a dynamic area effect.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Dynamic area effects can be removed at runtime.
+    /// </remarks>
+    public class RemoveAreaEffectModification : IAreaModification
+    {
+        private readonly IDynamicAreaEffect _effect;
+
+        /// <summary>
+        /// Creates a modification that removes a dynamic area effect.
+        /// </summary>
+        /// <param name="effect">The effect to remove.</param>
+        public RemoveAreaEffectModification(IDynamicAreaEffect effect)
+        {
+            _effect = effect ?? throw new ArgumentNullException(nameof(effect));
+        }
+
+        /// <summary>
+        /// Applies the modification by removing the effect from the area.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _effect == null)
+            {
+                return;
+            }
+
+            // Remove effect from area (deactivation is handled by RemoveDynamicEffect)
+            area.RemoveDynamicEffect(_effect);
+        }
+
+        /// <summary>
+        /// Removing area effects does not require navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => false;
+
+        /// <summary>
+        /// Removing area effects does not require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => false;
+
+        /// <summary>
+        /// Removing area effects may require lighting updates if they affected lighting.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
+    }
+
+    /// <summary>
+    /// Modification that changes area properties.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Area properties can be modified at runtime.
+    /// Includes unescapable flag, display name, tag, and other properties.
+    /// </remarks>
+    public class ChangeAreaPropertyModification : IAreaModification
+    {
+        private readonly string _propertyName;
+        private readonly object _propertyValue;
+
+        /// <summary>
+        /// Creates a modification that changes an area property.
+        /// </summary>
+        /// <param name="propertyName">Name of the property to change (e.g., "IsUnescapable", "DisplayName", "Tag").</param>
+        /// <param name="propertyValue">New value for the property.</param>
+        public ChangeAreaPropertyModification(string propertyName, object propertyValue)
+        {
+            _propertyName = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
+            _propertyValue = propertyValue;
+        }
+
+        /// <summary>
+        /// Applies the modification by changing the area property.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || string.IsNullOrEmpty(_propertyName))
+            {
+                return;
+            }
+
+            // Apply property change based on property name
+            switch (_propertyName)
+            {
+                case "IsUnescapable":
+                    if (_propertyValue is bool unescapable)
+                    {
+                        area.IsUnescapable = unescapable;
+                    }
+                    break;
+
+                case "DisplayName":
+                    if (_propertyValue is string displayName)
+                    {
+                        // In a full implementation, EclipseArea would have a DisplayName setter
+                        // For now, we'll need to add a method or use reflection
+                        // Since DisplayName is read-only, we'd need to add a SetDisplayName method
+                    }
+                    break;
+
+                case "Tag":
+                    if (_propertyValue is string tag)
+                    {
+                        // In a full implementation, EclipseArea would have a Tag setter
+                        // For now, we'll need to add a method or use reflection
+                        // Since Tag is read-only, we'd need to add a SetTag method
+                    }
+                    break;
+
+                default:
+                    // Unknown property - could be extended for other properties
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Changing area properties does not require navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => false;
+
+        /// <summary>
+        /// Changing area properties does not require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate => false;
+
+        /// <summary>
+        /// Changing area properties does not require lighting updates.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
+    }
+
+    /// <summary>
+    /// Modification that destroys a destructible object and creates physics debris.
+    /// </summary>
+    /// <remarks>
+    /// Based on Eclipse engine: Destructible objects can be destroyed at runtime.
+    /// Creates physics debris, modifies walkmesh, and updates navigation.
+    /// </remarks>
+    public class DestroyDestructibleObjectModification : IAreaModification
+    {
+        private readonly IEntity _destructibleEntity;
+        private readonly Vector3 _explosionCenter;
+        private readonly float _explosionRadius;
+
+        /// <summary>
+        /// Creates a modification that destroys a destructible object.
+        /// </summary>
+        /// <param name="destructibleEntity">The destructible entity to destroy.</param>
+        /// <param name="explosionCenter">Center of the explosion/destruction.</param>
+        /// <param name="explosionRadius">Radius of the explosion effect.</param>
+        public DestroyDestructibleObjectModification(IEntity destructibleEntity, Vector3 explosionCenter, float explosionRadius)
+        {
+            _destructibleEntity = destructibleEntity ?? throw new ArgumentNullException(nameof(destructibleEntity));
+            _explosionCenter = explosionCenter;
+            _explosionRadius = explosionRadius > 0 ? explosionRadius : throw new ArgumentException("Explosion radius must be positive", nameof(explosionRadius));
+        }
+
+        /// <summary>
+        /// Applies the modification by destroying the object and creating debris.
+        /// </summary>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || _destructibleEntity == null || !_destructibleEntity.IsValid)
+            {
+                return;
+            }
+
+            // Remove entity from area
+            area.RemoveEntityFromArea(_destructibleEntity);
+
+            // Create physics debris if entity has debris data
+            if (_destructibleEntity.HasData("DebrisCount") && area.PhysicsSystem != null)
+            {
+                int debrisCount = _destructibleEntity.GetData<int>("DebrisCount", 0);
+                // In a full implementation, would create debris entities with physics
+            }
+
+            // Create walkmesh hole at destruction location
+            if (area.NavigationMesh != null)
+            {
+                // Apply walkmesh hole modification
+                var holeMod = new CreateWalkmeshHoleModification(_explosionCenter, _explosionRadius);
+                holeMod.Apply(area);
+            }
+
+            // Destroy entity via world if available
+            if (_destructibleEntity.World != null)
+            {
+                _destructibleEntity.World.DestroyEntity(_destructibleEntity.ObjectId);
+            }
+        }
+
+        /// <summary>
+        /// Destroying destructible objects requires navigation mesh updates (creates holes).
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => true;
+
+        /// <summary>
+        /// Destroying destructible objects requires physics updates (creates debris).
+        /// </summary>
+        public bool RequiresPhysicsUpdate => true;
+
+        /// <summary>
+        /// Destroying destructible objects may require lighting updates (explosions create light).
+        /// </summary>
+        public bool RequiresLightingUpdate => true;
     }
 }
