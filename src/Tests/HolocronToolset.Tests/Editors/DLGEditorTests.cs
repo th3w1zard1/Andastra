@@ -305,14 +305,63 @@ namespace HolocronToolset.Tests.Editors
             modifiedDlg.OnAbort.ToString().Should().Be("test_abort", "OnAbort script should be saved correctly");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_on_end_edit (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:601-620)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:601-620
         // Original: def test_dlg_editor_manipulate_on_end_edit(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating on end edit field
         [Fact]
         public void TestDlgEditorManipulateOnEndEdit()
         {
-            // TODO: STUB - Implement on end edit manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:601-620
-            throw new NotImplementedException("TestDlgEditorManipulateOnEndEdit: On end edit manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Modify OnEnd script (matching Python: editor.ui.onEndEdit.set_combo_box_text("test_on_end"))
+            // Since UI controls are not exposed yet, we modify the CoreDlg directly
+            // This tests that the Build() method properly saves the OnEnd field
+            ResRef testOnEndScript = ResRef.FromString("test_on_end");
+            editor.CoreDlg.OnEnd = testOnEndScript;
+
+            // Save and verify (matching Python: data, _ = editor.build())
+            var (savedData, _) = editor.Build();
+
+            // Verify the change was saved (matching Python: assert str(modified_dlg.on_end) == "test_on_end")
+            DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+            modifiedDlg.OnEnd.ToString().Should().Be("test_on_end", "OnEnd script should be saved correctly");
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_camera_model_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:622-641)
@@ -925,57 +974,51 @@ namespace HolocronToolset.Tests.Editors
             var editor = new DLGEditor(null, null);
             editor.New();
 
-            // TODO: CanUndo/CanRedo methods not yet implemented
-            // editor.CanUndo.Should().BeFalse("No undo should be available initially");
-            // editor.CanRedo.Should().BeFalse("No redo should be available initially");
+            editor.CanUndo.Should().BeFalse("No undo should be available initially");
+            editor.CanRedo.Should().BeFalse("No redo should be available initially");
             editor.Model.RowCount.Should().Be(0, "Model should start empty");
             editor.CoreDlg.Starters.Count.Should().Be(0, "CoreDlg should start empty");
 
             // Test 1: Add starter and verify undo
             var node1 = new DLGEntry();
             var link1 = new DLGLink(node1);
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link1);
+            editor.AddStarter(link1);
 
             // Verify link was added
             editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after adding");
             editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after adding");
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1, "First starter should be link1");
             editor.Model.GetStarterAt(0).Should().BeSameAs(link1, "Model first starter should be link1");
-            // TODO: CanUndo/Undo methods not yet implemented
-            // editor.CanUndo.Should().BeTrue("Undo should be available after adding");
-            // editor.CanRedo.Should().BeFalse("Redo should not be available after new action");
+            editor.CanUndo.Should().BeTrue("Undo should be available after adding");
+            editor.CanRedo.Should().BeFalse("Redo should not be available after new action");
 
             // Undo the add
-            // editor.Undo();
+            editor.Undo();
 
             // Verify link was removed
             editor.Model.RowCount.Should().Be(0, "Model should be empty after undo");
             editor.CoreDlg.Starters.Count.Should().Be(0, "CoreDlg should be empty after undo");
-            // TODO: CanUndo/CanRedo/Redo methods not yet implemented
-            // editor.CanUndo.Should().BeFalse("Undo should not be available after undoing all actions");
-            // editor.CanRedo.Should().BeTrue("Redo should be available after undo");
+            editor.CanUndo.Should().BeFalse("Undo should not be available after undoing all actions");
+            editor.CanRedo.Should().BeTrue("Redo should be available after undo");
 
             // Test 2: Redo the add
-            // editor.Redo();
+            editor.Redo();
 
             // Verify link was restored
             editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after redo");
             editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after redo");
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1, "First starter should be link1 after redo");
             editor.Model.GetStarterAt(0).Should().BeSameAs(link1, "Model first starter should be link1 after redo");
-            // TODO: CanUndo/CanRedo methods not yet implemented
-            // editor.CanUndo.Should().BeTrue("Undo should be available after redo");
-            // editor.CanRedo.Should().BeFalse("Redo should not be available after redo");
+            editor.CanUndo.Should().BeTrue("Undo should be available after redo");
+            editor.CanRedo.Should().BeFalse("Redo should not be available after redo");
 
             // Test 3: Multiple operations and undo/redo chain
             var node2 = new DLGEntry();
             var node3 = new DLGEntry();
             var link2 = new DLGLink(node2);
             var link3 = new DLGLink(node3);
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link2);
-            // editor.AddStarter(link3);
+            editor.AddStarter(link2);
+            editor.AddStarter(link3);
 
             // Verify all links are present
             editor.Model.RowCount.Should().Be(3, "Model should have 3 starters");
@@ -984,55 +1027,54 @@ namespace HolocronToolset.Tests.Editors
             editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
             editor.CoreDlg.Starters[2].Should().BeSameAs(link3);
 
-            // TODO: Undo/Redo/CanUndo/CanRedo/AddStarter methods not yet implemented
             // Undo last add (link3)
-            // editor.Undo();
-            // editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after undoing link3");
-            // editor.CoreDlg.Starters.Count.Should().Be(2, "CoreDlg should have 2 starters after undoing link3");
-            // editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
-            // editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
-            // editor.CanUndo.Should().BeTrue("Undo should still be available");
-            // editor.CanRedo.Should().BeTrue("Redo should be available");
+            editor.Undo();
+            editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after undoing link3");
+            editor.CoreDlg.Starters.Count.Should().Be(2, "CoreDlg should have 2 starters after undoing link3");
+            editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
+            editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
+            editor.CanUndo.Should().BeTrue("Undo should still be available");
+            editor.CanRedo.Should().BeTrue("Redo should be available");
 
             // Undo second add (link2)
-            // editor.Undo();
-            // editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after undoing link2");
-            // editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after undoing link2");
-            // editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
+            editor.Undo();
+            editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after undoing link2");
+            editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after undoing link2");
+            editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
 
             // Undo first add (link1)
-            // editor.Undo();
-            // editor.Model.RowCount.Should().Be(0, "Model should be empty after undoing all");
-            // editor.CoreDlg.Starters.Count.Should().Be(0, "CoreDlg should be empty after undoing all");
-            // editor.CanUndo.Should().BeFalse("Undo should not be available after undoing all");
-            // editor.CanRedo.Should().BeTrue("Redo should be available");
+            editor.Undo();
+            editor.Model.RowCount.Should().Be(0, "Model should be empty after undoing all");
+            editor.CoreDlg.Starters.Count.Should().Be(0, "CoreDlg should be empty after undoing all");
+            editor.CanUndo.Should().BeFalse("Undo should not be available after undoing all");
+            editor.CanRedo.Should().BeTrue("Redo should be available");
 
             // Test 4: Redo chain
-            // editor.Redo(); // Redo link1
-            // editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after redoing link1");
-            // editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
+            editor.Redo(); // Redo link1
+            editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after redoing link1");
+            editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
 
-            // editor.Redo(); // Redo link2
-            // editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after redoing link2");
-            // editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
+            editor.Redo(); // Redo link2
+            editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after redoing link2");
+            editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
 
-            // editor.Redo(); // Redo link3
-            // editor.Model.RowCount.Should().Be(3, "Model should have 3 starters after redoing link3");
-            // editor.CoreDlg.Starters[2].Should().BeSameAs(link3);
-            // editor.CanRedo.Should().BeFalse("Redo should not be available after redoing all");
+            editor.Redo(); // Redo link3
+            editor.Model.RowCount.Should().Be(3, "Model should have 3 starters after redoing link3");
+            editor.CoreDlg.Starters[2].Should().BeSameAs(link3);
+            editor.CanRedo.Should().BeFalse("Redo should not be available after redoing all");
 
             // Test 5: New action clears redo stack
-            // editor.Undo(); // Undo link3
-            // editor.Undo(); // Undo link2
-            // editor.CanRedo.Should().BeTrue("Redo should be available");
+            editor.Undo(); // Undo link3
+            editor.Undo(); // Undo link2
+            editor.CanRedo.Should().BeTrue("Redo should be available");
 
             // Add new link (this should clear redo stack)
             var node4 = new DLGEntry();
             var link4 = new DLGLink(node4);
-            // editor.AddStarter(link4);
+            editor.AddStarter(link4);
 
             // Verify redo stack was cleared
-            // editor.CanRedo.Should().BeFalse("Redo should not be available after new action");
+            editor.CanRedo.Should().BeFalse("Redo should not be available after new action");
             editor.Model.RowCount.Should().Be(2, "Model should have 2 starters (link1 and link4)");
             editor.CoreDlg.Starters.Count.Should().Be(2, "CoreDlg should have 2 starters");
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
@@ -1042,29 +1084,26 @@ namespace HolocronToolset.Tests.Editors
             // This is standard undo/redo behavior: new actions clear the redo stack
 
             // Test 6: Remove starter with undo/redo
-            // TODO: RemoveStarter, Undo, Redo methods not yet implemented
-            // editor.RemoveStarter(link4);
-            // editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after removing link4");
-            // editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after removing link4");
-            // editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
+            editor.RemoveStarter(link4);
+            editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after removing link4");
+            editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after removing link4");
+            editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
 
             // Undo remove
-            // editor.Undo();
-            // editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after undoing remove");
-            // editor.CoreDlg.Starters.Count.Should().Be(2, "CoreDlg should have 2 starters after undoing remove");
-            // editor.CoreDlg.Starters[1].Should().BeSameAs(link4, "link4 should be restored after undo");
+            editor.Undo();
+            editor.Model.RowCount.Should().Be(2, "Model should have 2 starters after undoing remove");
+            editor.CoreDlg.Starters.Count.Should().Be(2, "CoreDlg should have 2 starters after undoing remove");
+            editor.CoreDlg.Starters[1].Should().BeSameAs(link4, "link4 should be restored after undo");
 
             // Redo remove
-            // editor.Redo();
-            // editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after redoing remove");
-            // editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after redoing remove");
+            editor.Redo();
+            editor.Model.RowCount.Should().Be(1, "Model should have 1 starter after redoing remove");
+            editor.CoreDlg.Starters.Count.Should().Be(1, "CoreDlg should have 1 starter after redoing remove");
 
             // Test 7: Move item with undo/redo
             // Add more links for movement test
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link2);
-            // TODO: AddStarter method not yet implemented
-            // editor.AddStarter(link3);
+            editor.AddStarter(link2);
+            editor.AddStarter(link3);
             editor.Model.RowCount.Should().Be(3, "Model should have 3 starters");
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1);
             editor.CoreDlg.Starters[1].Should().BeSameAs(link2);
@@ -1072,8 +1111,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Select and move link2 down
             editor.Model.SelectedIndex = 1;
-            // TODO: MoveItemDown method not yet implemented
-            // editor.MoveItemDown();
+            editor.MoveItemDown();
 
             // Verify order changed
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1, "First should still be link1");
@@ -1084,31 +1122,25 @@ namespace HolocronToolset.Tests.Editors
             editor.Model.GetStarterAt(2).Should().BeSameAs(link2);
 
             // Undo move
-            // TODO: Undo method not yet implemented
-            // editor.Undo();
+            editor.Undo();
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1, "First should be link1 after undo");
             editor.CoreDlg.Starters[1].Should().BeSameAs(link2, "Second should be link2 after undo");
             editor.CoreDlg.Starters[2].Should().BeSameAs(link3, "Third should be link3 after undo");
 
             // Redo move
-            // TODO: Redo method not yet implemented
-            // editor.Redo();
+            editor.Redo();
             editor.CoreDlg.Starters[0].Should().BeSameAs(link1, "First should be link1 after redo");
             editor.CoreDlg.Starters[1].Should().BeSameAs(link3, "Second should be link3 after redo");
             editor.CoreDlg.Starters[2].Should().BeSameAs(link2, "Third should be link2 after redo");
 
             // Test 8: Edge cases - undo when empty, redo when empty
             editor.New(); // Clear everything
-            // TODO: CanUndo property not yet implemented
-            // editor.CanUndo.Should().BeFalse("Undo should not be available after New()");
-            // TODO: CanRedo property not yet implemented
-            // editor.CanRedo.Should().BeFalse("Redo should not be available after New()");
+            editor.CanUndo.Should().BeFalse("Undo should not be available after New()");
+            editor.CanRedo.Should().BeFalse("Redo should not be available after New()");
 
             // Undo/Redo when empty should do nothing
-            // TODO: Undo method not yet implemented
-            // editor.Undo(); // Should not throw
-            // TODO: Redo method not yet implemented
-            // editor.Redo(); // Should not throw
+            editor.Undo(); // Should not throw
+            editor.Redo(); // Should not throw
             editor.Model.RowCount.Should().Be(0, "Model should still be empty");
 
             // Test 9: Complex sequence - add, remove, move, undo all, redo all
