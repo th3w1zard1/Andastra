@@ -5980,9 +5980,12 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// <remarks>
         /// Based on swkotor.exe: Feat checking system
         /// Located via string references: "FeatList" @ 0x007c2f88, "FeatID" @ 0x007c2f8c
-        /// Original implementation: Checks if creature has the feat in their feat list
-        /// Returns TRUE if creature has the feat and it is currently usable
-        /// Returns FALSE if creature doesn't have the feat or it's not usable (daily limits, restrictions)
+        /// Original implementation: Checks if creature has the feat in their feat list AND it is currently usable
+        /// Returns TRUE if creature has the feat and it is currently usable (not exhausted, not restricted)
+        /// Returns FALSE if creature doesn't have the feat or it's not usable (daily limits exhausted, restrictions)
+        /// Daily limits: Feats with UsesPerDay > 0 are checked against remaining daily uses
+        /// Special feats: Feats with UsesPerDay = -1 may have class-level-based limits
+        /// Disabled feats: Feats with UsesPerDay = 0 are never usable
         /// </remarks>
         private Variable Func_GetHasFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -6000,15 +6003,25 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             }
 
             CreatureComponent creature = entity.GetComponent<CreatureComponent>();
-            if (creature != null && creature.FeatList != null)
+            if (creature == null || creature.FeatList == null)
             {
-                // Check if creature has the feat
-                bool hasFeat = creature.FeatList.Contains(featId);
-                // TODO: Check if feat is currently usable (daily limits, restrictions, etc.)
-                return Variable.FromInt(hasFeat ? 1 : 0);
+                return Variable.FromInt(0);
             }
 
-            return Variable.FromInt(0);
+            // Get GameDataManager from context to look up feat data
+            Data.GameDataManager gameDataManager = null;
+            if (ctx != null && ctx.World != null && ctx.World.GameDataProvider != null)
+            {
+                Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Data.OdysseyGameDataProvider;
+                if (odysseyProvider != null)
+                {
+                    gameDataManager = odysseyProvider.GameDataManager;
+                }
+            }
+
+            // Check if feat is currently usable (includes daily limit checking)
+            bool isUsable = creature.IsFeatUsable(featId, gameDataManager);
+            return Variable.FromInt(isUsable ? 1 : 0);
         }
 
         /// <summary>
