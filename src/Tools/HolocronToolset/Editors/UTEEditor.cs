@@ -479,6 +479,8 @@ namespace HolocronToolset.Editors
                 // Python: 0 = Single Shot, 1 = Continuous
                 // C#: 0 = Single Shot, 1 = Continuous
                 _spawnSelect.SelectedIndex = ute.SingleShot ? 1 : 0;
+                // Ensure respawn fields are properly enabled/disabled based on spawn mode
+                SetContinuous();
             }
             if (_minCreatureSpin != null)
             {
@@ -539,30 +541,8 @@ namespace HolocronToolset.Editors
             }
 
             // Scripts
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:192-197
-            if (_onEnterSelect != null)
-            {
-                _onEnterSelect.Text = ute.OnEntered.ToString();
-            }
-            if (_onExitSelect != null)
-            {
-                _onExitSelect.Text = ute.OnExit.ToString();
-            }
-            if (_onExhaustedEdit != null)
-            {
-                _onExhaustedEdit.Text = ute.OnExhausted.ToString();
-            }
-            if (_onHeartbeatSelect != null)
-            {
-                _onHeartbeatSelect.Text = ute.OnHeartbeat.ToString();
-            }
-            if (_onUserDefinedSelect != null)
-            {
-                _onUserDefinedSelect.Text = ute.OnUserDefined.ToString();
-            }
-
-            // Populate script combo boxes
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:199-214
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:192-214
+            // First, get relevant script resources and populate combo boxes
             if (_installation != null && !string.IsNullOrEmpty(base._filepath))
             {
                 HashSet<FileResource> scriptResources = _installation.GetRelevantResources(ResourceType.NCS, base._filepath);
@@ -572,7 +552,7 @@ namespace HolocronToolset.Editors
                     .OrderBy(r => r)
                     .ToList();
 
-                // Populate all script combo boxes with relevant script resources
+                // Populate all script combo boxes with relevant script resources (matching Python populate_combo_box)
                 if (_onEnterSelect != null)
                 {
                     _onEnterSelect.Items.Clear();
@@ -611,6 +591,75 @@ namespace HolocronToolset.Editors
                     foreach (var resname in _relevantScriptResnames)
                     {
                         _onUserDefinedSelect.Items.Add(resname);
+                    }
+                }
+            }
+
+            // Then set the text values (matching Python set_combo_box_text)
+            // This must be done after populating items to ensure the text is set correctly
+            if (_onEnterSelect != null)
+            {
+                string onEnterText = ute.OnEntered.ToString();
+                _onEnterSelect.Text = onEnterText;
+                // Try to select the item if it exists in the list
+                if (!string.IsNullOrEmpty(onEnterText))
+                {
+                    int index = _onEnterSelect.Items.IndexOf(onEnterText);
+                    if (index >= 0)
+                    {
+                        _onEnterSelect.SelectedIndex = index;
+                    }
+                }
+            }
+            if (_onExitSelect != null)
+            {
+                string onExitText = ute.OnExit.ToString();
+                _onExitSelect.Text = onExitText;
+                if (!string.IsNullOrEmpty(onExitText))
+                {
+                    int index = _onExitSelect.Items.IndexOf(onExitText);
+                    if (index >= 0)
+                    {
+                        _onExitSelect.SelectedIndex = index;
+                    }
+                }
+            }
+            if (_onExhaustedEdit != null)
+            {
+                string onExhaustedText = ute.OnExhausted.ToString();
+                _onExhaustedEdit.Text = onExhaustedText;
+                if (!string.IsNullOrEmpty(onExhaustedText))
+                {
+                    int index = _onExhaustedEdit.Items.IndexOf(onExhaustedText);
+                    if (index >= 0)
+                    {
+                        _onExhaustedEdit.SelectedIndex = index;
+                    }
+                }
+            }
+            if (_onHeartbeatSelect != null)
+            {
+                string onHeartbeatText = ute.OnHeartbeat.ToString();
+                _onHeartbeatSelect.Text = onHeartbeatText;
+                if (!string.IsNullOrEmpty(onHeartbeatText))
+                {
+                    int index = _onHeartbeatSelect.Items.IndexOf(onHeartbeatText);
+                    if (index >= 0)
+                    {
+                        _onHeartbeatSelect.SelectedIndex = index;
+                    }
+                }
+            }
+            if (_onUserDefinedSelect != null)
+            {
+                string onUserDefinedText = ute.OnUserDefined.ToString();
+                _onUserDefinedSelect.Text = onUserDefinedText;
+                if (!string.IsNullOrEmpty(onUserDefinedText))
+                {
+                    int index = _onUserDefinedSelect.Items.IndexOf(onUserDefinedText);
+                    if (index >= 0)
+                    {
+                        _onUserDefinedSelect.SelectedIndex = index;
                     }
                 }
             }

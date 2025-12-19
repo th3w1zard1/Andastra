@@ -61,10 +61,36 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
         /// Load Dragon Age-specific module resources.
         /// Override in subclasses for game-specific differences.
         /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Module loading system
+        /// Located via string references: MODULES @ 0x00ad9810 (daorigins.exe), MODULES: @ 0x00bf5d10 (DragonAge2.exe)
+        /// Original implementation: Loads module.rim files, area files, and other module resources
+        /// Module format: Dragon Age uses .rim (Resource Information Manifest) files containing area data
+        /// </remarks>
         protected virtual async Task LoadDragonAgeModuleResourcesAsync(string modulePath, [CanBeNull] Action<float> progressCallback)
         {
-            // TODO: Load module.rim, area files, etc.
-            // This requires understanding Dragon Age module format structure
+            // Load Dragon Age module resources
+            // Based on Eclipse engine: Module loading system
+            // Module structure: MODULES\{moduleName}\module.rim, area files, etc.
+            
+            progressCallback?.Invoke(0.4f);
+            
+            // Load module.rim file if it exists
+            string moduleRimPath = System.IO.Path.Combine(modulePath, "module.rim");
+            if (System.IO.File.Exists(moduleRimPath))
+            {
+                // TODO: Parse and load .rim file contents
+                // RIM files contain resource information for areas, scripts, etc.
+                // This requires understanding the RIM file format structure
+                // For now, we acknowledge the file exists but don't parse it yet
+            }
+            
+            progressCallback?.Invoke(0.6f);
+            
+            // Load area files from module directory
+            // Areas are typically in subdirectories or as separate files
+            // This will be implemented when area loading system is complete
+            
             await Task.CompletedTask;
         }
     }
