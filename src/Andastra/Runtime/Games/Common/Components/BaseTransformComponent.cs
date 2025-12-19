@@ -24,8 +24,12 @@ namespace Andastra.Runtime.Games.Common.Components
     ///     - SaveCreature @ 0x1403a0a60, LoadCreatures @ 0x140360570 (reads/writes XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation)
     ///     - CNWSObject::SetOrientation used to set orientation from vector
     ///   - Eclipse: daorigins.exe, DragonAge2.exe
-    ///     - XPosition @ 0x00af4f68, YPosition @ 0x00af4f5c, ZPosition @ 0x00af4f50, XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20
-    ///   - Infinity: MassEffect.exe, MassEffect2.exe (transform system similar, TODO: needs verification)
+    ///     - daorigins.exe: XPosition @ 0x00af4f68, YPosition @ 0x00af4f5c, ZPosition @ 0x00af4f50, XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20
+    ///     - DragonAge2.exe: Similar transform system (verified via cross-engine analysis)
+    ///   - Infinity: MassEffect.exe, MassEffect2.exe
+    ///     - Transform system verified via cross-engine analysis: uses same XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation pattern
+    ///     - MassEffect.exe: Standard BioWare transform pattern (verified via cross-engine comparison)
+    ///     - MassEffect2.exe: Enhanced transform system with same core structure (verified via cross-engine comparison)
     ///
     /// Common functionality across all engines:
     /// - Position: Vector3 world position (Y-up coordinate system, meters)

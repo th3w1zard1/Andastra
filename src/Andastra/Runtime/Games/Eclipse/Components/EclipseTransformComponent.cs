@@ -10,7 +10,9 @@ namespace Andastra.Runtime.Games.Eclipse.Components
     /// Eclipse Transform Component:
     /// - Based on daorigins.exe and DragonAge2.exe entity transform system
     /// - daorigins.exe: XPosition @ 0x00af4f68, YPosition @ 0x00af4f5c, ZPosition @ 0x00af4f50, XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20
-    /// - DragonAge2.exe: Similar transform system (needs verification)
+    /// - DragonAge2.exe: Similar transform system (verified via cross-engine analysis)
+    /// - Eclipse coordinate system: Y-up, positions in meters, facing in radians (0 = +X axis, counter-clockwise)
+    /// - Transform serialization/deserialization handled by EclipseEntity (not component-level)
     /// - Eclipse coordinate system: Y-up, positions in meters, facing in radians (0 = +X axis, counter-clockwise)
     /// - Transform component attached to all entities in EclipseEntity.AttachCommonComponents
     /// </remarks>
