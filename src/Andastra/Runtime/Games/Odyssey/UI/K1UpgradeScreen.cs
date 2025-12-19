@@ -53,6 +53,18 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         }
 
         /// <summary>
+        /// Gets the upgrade GUI name for K1.
+        /// </summary>
+        /// <returns>GUI name "upgradeitems".</returns>
+        /// <remarks>
+        /// Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
+        /// </remarks>
+        protected override string GetUpgradeGuiName()
+        {
+            return "upgradeitems";
+        }
+
+        /// <summary>
         /// Applies an upgrade to an item.
         /// </summary>
         /// <param name="item">Item to upgrade.</param>

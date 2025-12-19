@@ -7,14 +7,21 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Action Queue Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe action system
-    /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0
-    /// - Original implementation: Entities maintain action queue with current action and pending actions
+    /// Common action queue component system shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity).
+    /// 
+    /// Common structure across all engines:
+    /// - Entities maintain action queue with current action and pending actions
     /// - Actions processed sequentially: Current action executes until complete, then next action dequeued
     /// - Update processes current action, returns number of script instructions executed
     /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc.
+    /// 
+    /// Engine-specific implementations:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): Uses GFF-based action serialization (ActionList field)
+    /// - Aurora (nwmain.exe, nwn2main.exe): Uses GFF-based action serialization (ActionList field, CNWSObject methods)
+    /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): Uses ActionFramework (different architecture)
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): May use different system (needs investigation)
+    /// 
+    /// All engine-specific details (function addresses, serialization formats, implementation specifics) are in engine-specific implementations.
     /// </remarks>
     public interface IActionQueueComponent : IComponent
     {

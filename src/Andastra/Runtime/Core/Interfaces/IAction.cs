@@ -7,16 +7,22 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Action Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe action system
-    /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
-    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
-    /// - FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF)
+    /// Common action system shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity).
+    /// 
+    /// Common structure across all engines:
+    /// - ActionId (uint32): Action type identifier
+    /// - GroupActionId (int16): Group ID for batching/clearing related actions together
     /// - Actions are executed by entities, return status (Complete, InProgress, Failed)
     /// - Actions update each frame until they complete or fail
     /// - Action types defined in ActionType enum (Move, Attack, UseObject, SpeakString, etc.)
-    /// - Group IDs allow batching/clearing related actions together
+    /// 
+    /// Engine-specific implementations:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): Uses GFF-based action serialization (ActionList field)
+    /// - Aurora (nwmain.exe, nwn2main.exe): Uses GFF-based action serialization (ActionList field, CNWSObject methods)
+    /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): Uses ActionFramework (different architecture)
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): May use different system (needs investigation)
+    /// 
+    /// All engine-specific details (function addresses, serialization formats, implementation specifics) are in engine-specific base classes.
     /// </remarks>
     public interface IAction
     {

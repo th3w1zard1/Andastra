@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource.Generics;
 
 namespace Andastra.Runtime.Engines.Odyssey.UI
 {
@@ -47,6 +48,18 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
         /// </remarks>
         protected override string GetRegularUpgradeTableName()
+        {
+            return "upgradeitems_p";
+        }
+
+        /// <summary>
+        /// Gets the upgrade GUI name for K2.
+        /// </summary>
+        /// <returns>GUI name "upgradeitems_p".</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
+        /// </remarks>
+        protected override string GetUpgradeGuiName()
         {
             return "upgradeitems_p";
         }
