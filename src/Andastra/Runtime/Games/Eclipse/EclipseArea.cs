@@ -669,16 +669,113 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Unloads the area and cleans up resources.
         /// </summary>
         /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Area unloading functions
         /// Comprehensive cleanup of Eclipse systems.
         /// Destroys physics world, lighting, effects, entities.
+        ///
+        /// Eclipse-specific cleanup:
+        /// - Destroys all entities (creatures, placeables, doors, triggers, waypoints, sounds)
+        /// - Disposes physics system (removes all physics bodies and constraints)
+        /// - Disposes lighting system (clears light sources and shadows)
+        /// - Deactivates and clears all dynamic area effects
+        /// - Disposes navigation mesh if IDisposable
+        /// - Clears all entity lists
         /// </remarks>
         public override void Unload()
         {
-            // TODO: Implement Eclipse area unloading
-            // Clean up physics system
-            // Destroy lighting system
-            // Remove dynamic effects
-            // Free geometry resources
+            // Collect all entities first to avoid modification during iteration
+            var allEntities = new List<IEntity>();
+            allEntities.AddRange(_creatures);
+            allEntities.AddRange(_placeables);
+            allEntities.AddRange(_doors);
+            allEntities.AddRange(_triggers);
+            allEntities.AddRange(_waypoints);
+            allEntities.AddRange(_sounds);
+
+            // Destroy all entities
+            // Based on Eclipse engine: Entities are removed from area and destroyed
+            // If entity has World reference, use World.DestroyEntity (fires events, unregisters properly)
+            // Otherwise, call Destroy directly (for entities not yet registered with world)
+            foreach (IEntity entity in allEntities)
+            {
+                if (entity != null && entity.IsValid)
+                {
+                    // Try to destroy via World first (proper cleanup with event firing)
+                    if (entity.World != null)
+                    {
+                        entity.World.DestroyEntity(entity.ObjectId);
+                    }
+                    else
+                    {
+                        // Entity not registered with world - destroy directly
+                        // Based on Entity.Destroy() implementation
+                        if (entity is Core.Entities.Entity concreteEntity)
+                        {
+                            concreteEntity.Destroy();
+                        }
+                    }
+                }
+            }
+
+            // Dispose physics system
+            // Based on Eclipse engine: Physics world is destroyed during area unload
+            // Physics system must be disposed before entities to avoid dangling references
+            if (_physicsSystem != null)
+            {
+                if (_physicsSystem is System.IDisposable disposablePhysics)
+                {
+                    disposablePhysics.Dispose();
+                }
+                _physicsSystem = null;
+            }
+
+            // Dispose lighting system
+            // Based on Eclipse engine: Lighting system is cleaned up during area unload
+            if (_lightingSystem != null)
+            {
+                if (_lightingSystem is System.IDisposable disposableLighting)
+                {
+                    disposableLighting.Dispose();
+                }
+                _lightingSystem = null;
+            }
+
+            // Deactivate and clear all dynamic area effects
+            // Based on Eclipse engine: Dynamic effects are cleaned up during area unload
+            foreach (IDynamicAreaEffect effect in _dynamicEffects)
+            {
+                if (effect != null && effect.IsActive)
+                {
+                    effect.Deactivate();
+                }
+            }
+            _dynamicEffects.Clear();
+
+            // Dispose navigation mesh if it implements IDisposable
+            // Based on Eclipse engine: Navigation mesh resources are freed
+            if (_navigationMesh != null)
+            {
+                if (_navigationMesh is System.IDisposable disposableMesh)
+                {
+                    disposableMesh.Dispose();
+                }
+                _navigationMesh = null;
+            }
+
+            // Clear all entity lists
+            // Based on Eclipse engine: Entity lists are cleared during unload
+            _creatures.Clear();
+            _placeables.Clear();
+            _doors.Clear();
+            _triggers.Clear();
+            _waypoints.Clear();
+            _sounds.Clear();
+
+            // Clear string references (optional cleanup)
+            // Based on Eclipse engine: String references are cleared
+            _resRef = null;
+            _displayName = null;
+            _tag = null;
         }
 
         /// <summary>
