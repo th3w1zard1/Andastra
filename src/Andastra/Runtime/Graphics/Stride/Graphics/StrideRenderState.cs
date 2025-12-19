@@ -351,11 +351,11 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction
         {
-            get { return ConvertBlendFunction(_description.AlphaSourceBlend); }
+            get { return ConvertBlendFunction(_description.AlphaBlendFunction); }
             set
             {
                 var desc = _description;
-                desc.AlphaSourceBlend = ConvertBlendFunction(value);
+                desc.AlphaBlendFunction = ConvertBlendFunction(value);
                 _description = desc;
             }
         }
@@ -384,11 +384,11 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public Andastra.Runtime.Graphics.BlendFunction ColorBlendFunction
         {
-            get { return ConvertBlendFunction(_description.ColorSourceBlend); }
+            get { return ConvertBlendFunction(_description.ColorBlendFunction); }
             set
             {
                 var desc = _description;
-                desc.ColorSourceBlend = ConvertBlendFunction(value);
+                desc.ColorBlendFunction = ConvertBlendFunction(value);
                 _description = desc;
             }
         }
@@ -518,16 +518,32 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal BlendStateDescription Description => _description;
 
-        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(Andastra.Runtime.Graphics.Blend blend)
+        /// <summary>
+        /// Converts Andastra BlendFunction to Stride BlendFunction.
+        /// Both enums have identical values (Add, Subtract, ReverseSubtract, Min, Max),
+        /// so a direct cast is appropriate.
+        /// </summary>
+        /// <param name="func">Andastra blend function to convert.</param>
+        /// <returns>Equivalent Stride blend function.</returns>
+        private static StrideGraphics.BlendFunction ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
         {
-            // TODO: SIMPLIFIED - This is a simplified conversion - Stride uses Blend enum for both source and function
-            return Andastra.Runtime.Graphics.BlendFunction.Add; // Default
+            // Stride's BlendFunction enum matches Andastra's BlendFunction enum exactly:
+            // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
+            return (StrideGraphics.BlendFunction)(int)func;
         }
 
-        private static StrideGraphics.Blend ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
+        /// <summary>
+        /// Converts Stride BlendFunction to Andastra BlendFunction.
+        /// Both enums have identical values (Add, Subtract, ReverseSubtract, Min, Max),
+        /// so a direct cast is appropriate.
+        /// </summary>
+        /// <param name="func">Stride blend function to convert.</param>
+        /// <returns>Equivalent Andastra blend function.</returns>
+        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(StrideGraphics.BlendFunction func)
         {
-            // TODO: SIMPLIFIED - This is a simplified conversion
-            return StrideGraphics.Blend.One; // Default
+            // Andastra's BlendFunction enum matches Stride's BlendFunction enum exactly:
+            // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
+            return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
         }
 
         private static StrideGraphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
