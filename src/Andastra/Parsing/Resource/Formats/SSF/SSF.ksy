@@ -10,14 +10,14 @@ meta:
 doc: |
   SSF (Sound Set File) files store sound string references (StrRefs) for character voice sets.
   Each SSF file contains exactly 28 sound slots, mapping to different game events and actions.
-  
+
   Binary Format:
   - Header (12 bytes): File type signature, version, and offset to sounds array
   - Sounds Array (112 bytes): 28 uint32 values representing StrRefs (0xFFFFFFFF = -1 = no sound)
   - Padding (12 bytes): 3 uint32 values of 0xFFFFFFFF (reserved/unused)
-  
+
   Total file size: 136 bytes (12 + 112 + 12)
-  
+
   Sound Slots (in order):
   0-5: Battle Cry 1-6
   6-8: Select 1-3
@@ -37,7 +37,7 @@ doc: |
   25: Separated From Party
   26: Rejoined Party
   27: Poisoned
-  
+
   References:
   - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ssf/ssf_binary_reader.py
   - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ssf/ssf_binary_writer.py
@@ -51,7 +51,7 @@ seq:
       File type signature. Must be "SSF " (space-padded).
       Bytes: 0x53 0x53 0x46 0x20
     valid: "SSF "
-  
+
   - id: file_version
     type: str
     encoding: ASCII
@@ -60,7 +60,7 @@ seq:
       File format version. Always "V1.1" for KotOR SSF files.
       Bytes: 0x56 0x31 0x2E 0x31
     valid: "V1.1"
-  
+
   - id: sounds_offset
     type: u4
     doc: |
@@ -68,7 +68,7 @@ seq:
       Always 12 (0x0C) in valid SSF files, as the sounds array immediately follows the header.
       This field exists for format consistency, though it's always the same value.
     valid: 12
-  
+
   - id: sounds
     type: sound_array
     pos: sounds_offset
@@ -89,7 +89,7 @@ types:
           Array of exactly 28 sound entries, one for each SSFSound enum value.
           Each entry is a uint32 representing a StrRef (string reference).
           Value 0xFFFFFFFF (4294967295) represents -1 (no sound assigned).
-          
+
           Entry indices map to SSFSound enum:
           - 0-5: Battle Cry 1-6
           - 6-8: Select 1-3
@@ -119,7 +119,7 @@ types:
           Value 0xFFFFFFFF (4294967295) represents -1 (no sound assigned).
           All other values are valid StrRefs (typically 0-999999).
           The conversion from 0xFFFFFFFF to -1 is handled by SSFBinaryReader.ReadInt32MaxNeg1().
-    
+
     instances:
       is_no_sound:
         value: strref_raw == 0xFFFFFFFF
@@ -137,4 +137,5 @@ types:
           Reserved padding bytes. Always 3 uint32 values of 0xFFFFFFFF.
           Total size: 12 bytes (3 * 4 bytes).
           These bytes are unused but must be present for format compatibility.
+          Each padding byte should be 0xFFFFFFFF (4294967295).
 
