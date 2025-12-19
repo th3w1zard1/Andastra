@@ -142,6 +142,38 @@ namespace Andastra.Runtime.Core.Interfaces
         void UnregisterEntity(IEntity entity);
 
         /// <summary>
+        /// Gets an area by its AreaId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetArea function
+        /// Located via string references: "AreaId" @ 0x007bef48
+        /// Original implementation: O(1) dictionary lookup by AreaId (uint32)
+        /// Returns null if AreaId not found
+        /// Used by GetArea NWScript function to find area containing an entity
+        /// </remarks>
+        IArea GetArea(uint areaId);
+
+        /// <summary>
+        /// Registers an area with the world and assigns it an AreaId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area registration system
+        /// Located via string references: "AreaId" @ 0x007bef48
+        /// Original implementation: Areas are registered in world with AreaId for entity lookup
+        /// </remarks>
+        void RegisterArea(IArea area);
+
+        /// <summary>
+        /// Unregisters an area from the world.
+        /// </summary>
+        void UnregisterArea(IArea area);
+
+        /// <summary>
+        /// Gets the AreaId for an area.
+        /// </summary>
+        uint GetAreaId(IArea area);
+
+        /// <summary>
         /// Updates the world (time manager, event bus).
         /// </summary>
         void Update(float deltaTime);

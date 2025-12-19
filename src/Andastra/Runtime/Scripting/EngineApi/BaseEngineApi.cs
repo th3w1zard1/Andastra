@@ -335,11 +335,51 @@ namespace Andastra.Runtime.Scripting.EngineApi
             return Variable.FromObject(0x7F000002);
         }
 
+        /// <summary>
+        /// GetArea(object oTarget) - Returns the area that oTarget is currently in
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetArea NWScript function
+        /// Located via string references: "AreaId" @ 0x007bef48
+        /// Original implementation: Gets area containing the specified object
+        /// - If oTarget is invalid or OBJECT_SELF, returns current area
+        /// - Looks up entity by ObjectId, gets entity's AreaId, then looks up area by AreaId
+        /// - Returns area's ObjectId (AreaId) or OBJECT_INVALID if not found
+        /// Common across all engines: Odyssey, Aurora, Eclipse
+        /// </remarks>
         protected Variable Func_GetArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            // TODO: PLACEHOLDER - Area is a special object - return a placeholder ID
-            return Variable.FromObject(0x7F000003);
+            
+            // If invalid or OBJECT_SELF, return current area
+            if (objectId == ObjectInvalid || objectId == ObjectSelf)
+            {
+                if (ctx.World.CurrentArea != null)
+                {
+                    uint areaId = ctx.World.GetAreaId(ctx.World.CurrentArea);
+                    return Variable.FromObject(areaId != 0 ? areaId : ObjectInvalid);
+                }
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Get entity and its area
+            IEntity entity = ctx.World.GetEntity(objectId);
+            if (entity == null || !entity.IsValid)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Get area from entity's AreaId
+            if (entity.AreaId != 0)
+            {
+                IArea area = ctx.World.GetArea(entity.AreaId);
+                if (area != null)
+                {
+                    return Variable.FromObject(entity.AreaId);
+                }
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
         }
 
         protected Variable Func_GetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)

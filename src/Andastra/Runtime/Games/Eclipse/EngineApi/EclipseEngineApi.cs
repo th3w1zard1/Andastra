@@ -2846,13 +2846,19 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             
             // Get object's area
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null)
+            if (entity != null && entity.IsValid)
             {
-                // Check if entity has area ID stored
-                if (entity.HasData("AreaId"))
+                // Get area from entity's AreaId
+                // Based on swkotor2.exe: Entity AreaId property
+                // Located via string references: "AreaId" @ 0x007bef48
+                // Original implementation: Entities store AreaId of area they belong to
+                if (entity.AreaId != 0)
                 {
-                    uint areaId = entity.GetData<uint>("AreaId");
-                    return Variable.FromObject(areaId);
+                    IArea area = ctx.World.GetArea(entity.AreaId);
+                    if (area != null)
+                    {
+                        return Variable.FromObject(entity.AreaId);
+                    }
                 }
             }
             

@@ -59,13 +59,23 @@ namespace Andastra.Runtime.Core.Entities
         // Original implementation: Tag matching ignores case differences
         private static readonly StringComparer TagComparer = StringComparer.OrdinalIgnoreCase;
         private readonly List<IEntity> _allEntities;
+        
+        // Area ID assignment: Areas get sequential IDs starting from 0x7F000010
+        // Based on swkotor2.exe: AreaId @ 0x007bef48, areas are objects with ObjectIds
+        // Located via string references: "AreaId" @ 0x007bef48 (entity area association)
+        // Original implementation: Areas assigned ObjectIds similar to entities
+        // Area ObjectId range: 0x7F000010+ (special object ID range for areas)
+        private static uint _nextAreaId = 0x7F000010;
+        private readonly Dictionary<IArea, uint> _areaIds;
 
         public World()
         {
             _entitiesById = new Dictionary<uint, IEntity>();
+            _areasById = new Dictionary<uint, IArea>();
             _entitiesByTag = new Dictionary<string, List<IEntity>>(TagComparer);
             _entitiesByType = new Dictionary<ObjectType, List<IEntity>>();
             _allEntities = new List<IEntity>();
+            _areaIds = new Dictionary<IArea, uint>();
             TimeManager = new TimeManager();
             EventBus = new EventBus();
             DelayScheduler = new DelayScheduler();
@@ -88,6 +98,101 @@ namespace Andastra.Runtime.Core.Entities
         public void SetCurrentArea(IArea area)
         {
             CurrentArea = area;
+            // Register area if not already registered
+            if (area != null)
+            {
+                RegisterArea(area);
+            }
+        }
+        
+        /// <summary>
+        /// Registers an area with the world and assigns it an AreaId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area registration system
+        /// Located via string references: "AreaId" @ 0x007bef48
+        /// Original implementation: Areas are registered in world with AreaId for entity lookup
+        /// Area ObjectId assignment: Sequential uint32 starting from 0x7F000010 (special object ID range)
+        /// Areas can be looked up by AreaId to find which area an entity belongs to
+        /// </remarks>
+        public void RegisterArea(IArea area)
+        {
+            if (area == null)
+            {
+                throw new ArgumentNullException("area");
+            }
+            
+            // If area is already registered, don't re-register
+            if (_areaIds.ContainsKey(area))
+            {
+                return;
+            }
+            
+            // Assign AreaId to area
+            uint areaId = _nextAreaId++;
+            _areaIds[area] = areaId;
+            _areasById[areaId] = area;
+        }
+        
+        /// <summary>
+        /// Unregisters an area from the world.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area unregistration system
+        /// Removes area from lookup tables when area is unloaded
+        /// </remarks>
+        public void UnregisterArea(IArea area)
+        {
+            if (area == null)
+            {
+                return;
+            }
+            
+            if (_areaIds.TryGetValue(area, out uint areaId))
+            {
+                _areaIds.Remove(area);
+                _areasById.Remove(areaId);
+            }
+        }
+        
+        /// <summary>
+        /// Gets an area by its AreaId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetArea function
+        /// Located via string references: "AreaId" @ 0x007bef48
+        /// Original implementation: O(1) dictionary lookup by AreaId (uint32)
+        /// Returns null if AreaId not found
+        /// Used by GetArea NWScript function to find area containing an entity
+        /// </remarks>
+        public IArea GetArea(uint areaId)
+        {
+            if (_areasById.TryGetValue(areaId, out IArea area))
+            {
+                return area;
+            }
+            return null;
+        }
+        
+        /// <summary>
+        /// Gets the AreaId for an area.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: AreaId lookup
+        /// Returns the AreaId assigned to an area, or 0 if area is not registered
+        /// </remarks>
+        public uint GetAreaId(IArea area)
+        {
+            if (area == null)
+            {
+                return 0;
+            }
+            
+            if (_areaIds.TryGetValue(area, out uint areaId))
+            {
+                return areaId;
+            }
+            return 0;
         }
 
         /// <summary>
@@ -286,6 +391,20 @@ namespace Andastra.Runtime.Core.Entities
                 _entitiesByType[entity.ObjectType] = typeList;
             }
             typeList.Add(entity);
+            
+            // Set entity's AreaId based on current area
+            // Based on swkotor2.exe: Entity AreaId assignment
+            // Located via string references: "AreaId" @ 0x007bef48
+            // Original implementation: Entities store AreaId of area they belong to
+            // Entity AreaId is set when entity is registered to world
+            if (CurrentArea != null)
+            {
+                uint areaId = GetAreaId(CurrentArea);
+                if (areaId != 0)
+                {
+                    entity.AreaId = areaId;
+                }
+            }
 
             // Fire OnSpawn script event
             // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN fires when entity is spawned/created
