@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// Based on reverse engineering of:
     /// - swkotor.exe: Walkmesh loading and navigation functions
     /// - swkotor2.exe: Walkmesh projection (FUN_004f5070 @ 0x004f5070)
-    /// - swkotor2.exe: Line-of-sight raycast (FUN_0054be70 @ 0x0054be70) - performs walkmesh raycasts for visibility checks
+    /// - swkotor2.exe: Line-of-sight raycast (UpdateCreatureMovement @ 0x0054be70) - performs walkmesh raycasts for visibility checks
     /// - Walkmesh binary format: Vertices, faces, adjacency information
     ///
     /// Walkmesh features:
@@ -168,7 +168,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Returns height (Z coordinate) at projected point
         /// 
         /// Called from:
-        /// - FUN_0054be70 @ 0x0054be70 (line-of-sight and pathfinding)
+        /// - UpdateCreatureMovement @ 0x0054be70 (line-of-sight and pathfinding)
         /// - FUN_00553970 @ 0x00553970 (creature movement)
         /// - FUN_005522e0 @ 0x005522e0 (entity positioning)
         /// - FUN_004dc300 @ 0x004dc300 (area transition projection)
@@ -282,7 +282,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Tests if line segment between points doesn't intersect unwalkable geometry.
         /// Used for AI perception and projectile collision.
         /// 
-        /// Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 performs walkmesh raycasts for visibility checks.
+        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
         /// The original implementation:
         /// 1. Performs a raycast from start to end position
         /// 2. If a hit is found, checks if the hit face is walkable (walkable faces don't block line of sight)
@@ -448,9 +448,10 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on swkotor2.exe: FUN_0061c390 @ 0x0061c390 - pathfinding around obstacles
-        /// Called from FUN_0054be70 @ 0x0054be70 (line 183) when creature collision detected
-        /// Equivalent in swkotor.exe: FUN_005d0840 @ 0x005d0840 (called from FUN_00516630 @ 0x00516630, line 254)
+        /// Based on swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
+        /// Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
+        /// Called from UpdateCreatureMovement @ 0x0054be70 (line 183) when creature collision detected
+        /// Equivalent in swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
         /// </summary>
         public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
         {
@@ -1096,7 +1097,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Performs a raycast against the walkmesh.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 performs walkmesh raycasts for visibility checks.
+        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
         /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
         /// Returns the closest hit point and face index along the ray.
         /// </remarks>

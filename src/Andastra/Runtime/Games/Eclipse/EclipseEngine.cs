@@ -158,8 +158,97 @@ namespace Andastra.Runtime.Engines.Eclipse
             }
 
             _installationPath = installationPath;
-            Installation installation = new Installation(installationPath);
-            return new GameResourceProvider(installation);
+
+            // Determine game type from installation path and Game enum
+            GameType gameType = DetectEclipseGameType(installationPath, _game);
+
+            return new EclipseResourceProvider(installationPath, gameType);
+        }
+
+        /// <summary>
+        /// Detects the specific Eclipse Engine game type from the installation path and Game enum.
+        /// </summary>
+        /// <param name="installationPath">The installation path to check.</param>
+        /// <param name="game">The Game enum value (already determined from profile).</param>
+        /// <returns>The detected game type, or Unknown if detection fails.</returns>
+        /// <remarks>
+        /// Eclipse Engine Game Detection:
+        /// - Based on Eclipse Engine game detection patterns (Dragon Age series, Mass Effect series)
+        /// - Detection method: Uses Game enum from profile, with fallback to executable detection
+        /// - Dragon Age: Origins: Game.DA or Game.DA_ORIGINS, checks for "daorigins.exe"
+        /// - Dragon Age 2: Game.DA2 or Game.DRAGON_AGE_2, checks for "DragonAge2.exe"
+        /// - Mass Effect: Game.ME or Game.MASS_EFFECT or Game.ME1, checks for "MassEffect.exe"
+        /// - Mass Effect 2: Game.ME2 or Game.MASS_EFFECT_2, checks for "MassEffect2.exe"
+        /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
+        /// - Original implementation: Eclipse Engine executables identify themselves via executable name
+        /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
+        /// </remarks>
+        private static GameType DetectEclipseGameType(string installationPath, Game game)
+        {
+            if (string.IsNullOrEmpty(installationPath) || !System.IO.Directory.Exists(installationPath))
+            {
+                return GameType.Unknown;
+            }
+
+            // Use Game enum to determine game type
+            if (game.IsDragonAgeOrigins())
+            {
+                // Verify with executable check
+                string daOriginsExe = System.IO.Path.Combine(installationPath, "daorigins.exe");
+                string daOriginsExeUpper = System.IO.Path.Combine(installationPath, "DAORIGINS.EXE");
+                if (System.IO.File.Exists(daOriginsExe) || System.IO.File.Exists(daOriginsExeUpper))
+                {
+                    // GameType enum doesn't have Dragon Age games yet, return Unknown for now
+                    // TODO: Extend GameType enum to support Eclipse Engine games
+                    return GameType.Unknown;
+                }
+            }
+            else if (game.IsDragonAge2())
+            {
+                // Verify with executable check
+                string da2Exe = System.IO.Path.Combine(installationPath, "DragonAge2.exe");
+                string da2ExeUpper = System.IO.Path.Combine(installationPath, "DRAGONAGE2.EXE");
+                if (System.IO.File.Exists(da2Exe) || System.IO.File.Exists(da2ExeUpper))
+                {
+                    // GameType enum doesn't have Dragon Age games yet, return Unknown for now
+                    // TODO: Extend GameType enum to support Eclipse Engine games
+                    return GameType.Unknown;
+                }
+            }
+            else if (game.IsMassEffect1())
+            {
+                // Verify with executable check
+                string meExe = System.IO.Path.Combine(installationPath, "MassEffect.exe");
+                string meExeUpper = System.IO.Path.Combine(installationPath, "MASSEFFECT.EXE");
+                if (System.IO.File.Exists(meExe) || System.IO.File.Exists(meExeUpper))
+                {
+                    // GameType enum doesn't have Mass Effect games yet, return Unknown for now
+                    // TODO: Extend GameType enum to support Eclipse Engine games
+                    return GameType.Unknown;
+                }
+            }
+            else if (game.IsMassEffect2())
+            {
+                // Verify with executable check
+                string me2Exe = System.IO.Path.Combine(installationPath, "MassEffect2.exe");
+                string me2ExeUpper = System.IO.Path.Combine(installationPath, "MASSEFFECT2.EXE");
+                if (System.IO.File.Exists(me2Exe) || System.IO.File.Exists(me2ExeUpper))
+                {
+                    // GameType enum doesn't have Mass Effect games yet, return Unknown for now
+                    // TODO: Extend GameType enum to support Eclipse Engine games
+                    return GameType.Unknown;
+                }
+            }
+
+            // Fallback: Check for packages directory (indicates Eclipse Engine installation)
+            string packagesPath = System.IO.Path.Combine(installationPath, "packages");
+            if (System.IO.Directory.Exists(packagesPath))
+            {
+                // Eclipse Engine installation detected via directory structure
+                return GameType.Unknown; // GameType enum doesn't support Eclipse games yet
+            }
+
+            return GameType.Unknown;
         }
     }
 }

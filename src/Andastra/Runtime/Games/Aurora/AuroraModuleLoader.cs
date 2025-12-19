@@ -9,7 +9,6 @@ using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
-using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.GFF;
 
@@ -85,7 +84,7 @@ namespace Andastra.Runtime.Games.Aurora
     /// </remarks>
     public class AuroraModuleLoader : BaseEngineModule
     {
-        private readonly Installation _installation;
+        private readonly AuroraResourceProvider _auroraResourceProvider;
         private GFFStruct _currentModuleInfo;
         private AuroraArea _currentAuroraArea;
         private List<string> _loadedHakFiles;
@@ -95,18 +94,18 @@ namespace Andastra.Runtime.Games.Aurora
         /// </summary>
         /// <param name="world">The game world instance.</param>
         /// <param name="resourceProvider">The resource provider for loading module resources.</param>
-        /// <exception cref="ArgumentException">Thrown if resource provider is not GameResourceProvider.</exception>
+        /// <exception cref="ArgumentException">Thrown if resource provider is not AuroraResourceProvider.</exception>
         public AuroraModuleLoader(IWorld world, IGameResourceProvider resourceProvider)
             : base(world, resourceProvider)
         {
-            // Extract Installation from GameResourceProvider
-            if (resourceProvider is GameResourceProvider gameResourceProvider)
+            // Extract AuroraResourceProvider
+            if (resourceProvider is AuroraResourceProvider auroraProvider)
             {
-                _installation = gameResourceProvider.Installation;
+                _auroraResourceProvider = auroraProvider;
             }
             else
             {
-                throw new ArgumentException("Resource provider must be GameResourceProvider for Aurora engine", nameof(resourceProvider));
+                throw new ArgumentException("Resource provider must be AuroraResourceProvider for Aurora engine", nameof(resourceProvider));
             }
 
             _loadedHakFiles = new List<string>();
@@ -165,6 +164,9 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     throw new InvalidOperationException($"Failed to load Module.ifo for module '{moduleName}'");
                 }
+
+                // Set current module context for resource lookups
+                _auroraResourceProvider.SetCurrentModule(moduleName);
 
                 // Load HAK files (hak packs)
                 progressCallback?.Invoke(0.2f);
@@ -249,7 +251,7 @@ namespace Andastra.Runtime.Games.Aurora
             try
             {
                 // Check for Module.ifo in module directory
-                string modulePath = _installation.ModulePath();
+                string modulePath = _auroraResourceProvider.ModulePath();
                 string moduleIfoPath = Path.Combine(modulePath, moduleName, "Module.ifo");
                 if (File.Exists(moduleIfoPath))
                 {
@@ -323,7 +325,7 @@ namespace Andastra.Runtime.Games.Aurora
             try
             {
                 // Try to load Module.ifo from module directory
-                string modulePath = _installation.ModulePath();
+                string modulePath = _auroraResourceProvider.ModulePath();
                 string moduleIfoPath = Path.Combine(modulePath, moduleName, "Module.ifo");
                 
                 if (File.Exists(moduleIfoPath))
@@ -359,8 +361,21 @@ namespace Andastra.Runtime.Games.Aurora
         /// </remarks>
         private async Task LoadHakFilesAsync(string moduleName)
         {
+            // Set current module context
+            _auroraResourceProvider.SetCurrentModule(moduleName);
+
             // TODO: Load HAK files from Module.ifo HAK list
-            // For now, this is a placeholder
+            // Extract HAK file list from Module.ifo and set on resource provider
+            // For now, check for HAK files in hak directory
+            string hakPath = _auroraResourceProvider.HakPath();
+            if (Directory.Exists(hakPath))
+            {
+                // TODO: Load HAK files specified in Module.ifo
+                // For now, this is a placeholder
+                // When HAK parsing is available, extract HAK list from Module.ifo and call:
+                // _auroraResourceProvider.SetHakFiles(hakFileList);
+            }
+
             await Task.CompletedTask;
         }
 
@@ -407,14 +422,16 @@ namespace Andastra.Runtime.Games.Aurora
         {
             try
             {
-                // Try to load ARE file using resource provider
-                byte[] areData = _resourceProvider.LoadResource(areaResRef, "ARE");
-                if (areData != null && areData.Length > 0)
+                // Set current module context for resource lookup
+                if (!string.IsNullOrEmpty(_currentModuleName))
                 {
-                    return await Task.FromResult(areData);
+                    _auroraResourceProvider.SetCurrentModule(_currentModuleName);
                 }
 
-                return null;
+                // Try to load ARE file from resource provider
+                var resourceId = new ResourceIdentifier(areaResRef, ResourceType.ARE);
+                byte[] areData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
+                return areData;
             }
             catch
             {
@@ -440,14 +457,16 @@ namespace Andastra.Runtime.Games.Aurora
         {
             try
             {
-                // Try to load GIT file using resource provider
-                byte[] gitData = _resourceProvider.LoadResource(areaResRef, "GIT");
-                if (gitData != null && gitData.Length > 0)
+                // Set current module context for resource lookup
+                if (!string.IsNullOrEmpty(_currentModuleName))
                 {
-                    return await Task.FromResult(gitData);
+                    _auroraResourceProvider.SetCurrentModule(_currentModuleName);
                 }
 
-                return null;
+                // Try to load GIT file from resource provider
+                var resourceId = new ResourceIdentifier(areaResRef, ResourceType.GIT);
+                byte[] gitData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
+                return gitData;
             }
             catch
             {

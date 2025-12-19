@@ -170,8 +170,8 @@ namespace Andastra.Runtime.Core.Perception
             // Raycast through walkmesh to check line-of-sight
             // Based on swkotor2.exe: Line-of-sight raycast implementation
             // Located via string references: "Raycast" @ navigation mesh functions
-            // Original implementation: FUN_0054be70 @ 0x0054be70 performs walkmesh raycasts for visibility checks
-            // Walking collision function: FUN_0054be70 @ 0x0054be70 handles creature collision and line-of-sight checks
+            // Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
+            // Walking collision function: UpdateCreatureMovement @ 0x0054be70 handles creature collision and line-of-sight checks
             // Located via string reference: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             if (_world.CurrentArea != null && _world.CurrentArea.NavigationMesh != null)
             {

@@ -6,7 +6,6 @@ using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
 
 namespace Andastra.Runtime.Engines.Eclipse
 {
@@ -23,7 +22,7 @@ namespace Andastra.Runtime.Engines.Eclipse
     public abstract class EclipseGameSession : BaseEngineGame
     {
         protected readonly EclipseEngine _engine;
-        protected readonly Installation _installation;
+        protected readonly EclipseResourceProvider _eclipseResourceProvider;
         protected readonly EclipseModuleLoader _moduleLoader;
 
         protected EclipseGameSession(EclipseEngine engine)
@@ -36,14 +35,14 @@ namespace Andastra.Runtime.Engines.Eclipse
 
             _engine = engine;
 
-            // Get installation from resource provider
-            if (engine.ResourceProvider is GameResourceProvider gameResourceProvider)
+            // Get Eclipse resource provider
+            if (engine.ResourceProvider is EclipseResourceProvider eclipseProvider)
             {
-                _installation = gameResourceProvider.Installation;
+                _eclipseResourceProvider = eclipseProvider;
             }
             else
             {
-                throw new InvalidOperationException("Resource provider must be GameResourceProvider for Eclipse engine");
+                throw new InvalidOperationException("Resource provider must be EclipseResourceProvider for Eclipse engine");
             }
 
             // Initialize module loader

@@ -14,14 +14,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Input
     /// </summary>
     /// <remarks>
     /// Player Controller (Input) - Odyssey-specific:
-    /// - Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 (movement handling), CExoInputInternal input system
+    /// - Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 (movement handling), CExoInputInternal input system
     /// - Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "DirectInput8Create" @ 0x0080a6ac
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CClientExoAppInternal::ProcessInput, HandleLMouseDown, HandleRMouseDown, Input_WalkToWayPoint - similar click-to-move system
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): "Initialize - Input", "InputSystem", "Mouse::LeftClick", "Keyboard::Button_*" - UnrealScript-based input system
     /// - Inheritance: Base class BasePlayerController (Runtime.Games.Common) - abstract player input, Odyssey override (Runtime.Games.Odyssey) - click-to-move with pathfinding
     /// - Original implementation: Handles click-to-move with pathfinding on walkmesh, uses DirectInput8 for input, NavigationMesh for pathfinding
-    /// - Click-to-move: Left-click on walkmesh initiates pathfinding and movement (FUN_0054be70 @ 0x0054be70 handles movement)
+    /// - Click-to-move: Left-click on walkmesh initiates pathfinding and movement (UpdateCreatureMovement @ 0x0054be70 handles movement)
     /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
     /// </remarks>
     public class PlayerController

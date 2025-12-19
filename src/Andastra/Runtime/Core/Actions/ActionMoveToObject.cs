@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Core.Actions
         private readonly BaseCreatureCollisionDetector _collisionDetector;
 
         // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
-        // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
+        // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
         // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
         // Maximum bumps: 5 (aborts movement if exceeded)
         private const string BumpCounterKey = "ActionMoveToObject_BumpCounter";
@@ -86,13 +86,13 @@ namespace Andastra.Runtime.Core.Actions
             // If we're within range, we're done
             // Based on swkotor2.exe: ActionMoveToObject implementation
             // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
-            // Walking collision checking: FUN_0054be70 @ 0x0054be70
+            // Walking collision checking: UpdateCreatureMovement @ 0x0054be70
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
             //   - "aborted walking, Maximum number of bumps happened" @ 0x007c0458
-            // Original implementation (from decompiled FUN_0054be70):
-            //   - Function signature: `undefined4 FUN_0054be70(int *param_1, float *param_2, float *param_3, float *param_4, int *param_5)`
+            // Original implementation (from decompiled UpdateCreatureMovement):
+            //   - Function signature: `int UpdateCreatureMovement(int* creature, float* currentPosition, float* destination, float* movementDirection, int* additionalParam)`
             //   - param_1: Entity pointer (this pointer for creature object)
             //   - param_2: Output position (final position after movement)
             //   - param_3: Output position (intermediate position)
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 newPosition = currentPosition + direction2 * moveDistance;
 
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-            // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
+            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
             // Original implementation: FUN_004f5070 projects 3D position to walkmesh surface height
             IArea area = actor.World.CurrentArea;
@@ -180,13 +180,13 @@ namespace Andastra.Runtime.Core.Actions
             if (hasCollision)
             {
                 // Get bump counter (stored at offset 0x268 in swkotor2.exe entity structure)
-                // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
+                // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
                 int bumpCount = GetBumpCounter(actor);
                 bumpCount++;
                 SetBumpCounter(actor, bumpCount);
 
                 // Check if maximum bumps exceeded
-                // Based on swkotor2.exe: FUN_0054be70 aborts movement if bump count > 5
+                // Based on swkotor2.exe: UpdateCreatureMovement aborts movement if bump count > 5
                 // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
                 // Original implementation: If bump count > 5, clears path array and sets path length to 0
                 if (bumpCount > MaxBumps)
@@ -197,7 +197,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Check if same creature blocks repeatedly (matches offset 0x254 in swkotor2.exe)
-                // Based on swkotor2.exe: FUN_0054be70 checks if local_c0 == entity ID at offset 0x254
+                // Based on swkotor2.exe: UpdateCreatureMovement checks if local_c0 == entity ID at offset 0x254
                 // Original implementation: If same creature blocks repeatedly, aborts movement
                 uint lastBlockingCreature = GetLastBlockingCreature(actor);
                 if (blockingCreatureId != 0x7F000000 && blockingCreatureId == lastBlockingCreature)
@@ -210,11 +210,12 @@ namespace Andastra.Runtime.Core.Actions
                 SetLastBlockingCreature(actor, blockingCreatureId);
 
                 // Try to navigate around the blocking creature
-                // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 calls FUN_0061c390 @ 0x0061c390 for pathfinding around obstacles
+                // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 calls FindPathAroundObstacle @ 0x0061c390 for pathfinding around obstacles
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
-                // Original implementation: FUN_0061c390 @ 0x0061c390 finds alternative path around blocking creature
+                // Original implementation: FindPathAroundObstacle @ 0x0061c390 finds alternative path around blocking creature
+                // Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
                 // Equivalent functions:
-                //   - swkotor.exe: FUN_005d0840 @ 0x005d0840 (called from FUN_00516630 @ 0x00516630)
+                //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630)
                 //   - nwmain.exe: CPathfindInformation obstacle avoidance in pathfinding system
                 //   - daorigins.exe/DragonAge2.exe: Dynamic obstacle system with cover integration
                 // For ActionMoveToObject, we use direct movement but still try to avoid obstacles when blocked

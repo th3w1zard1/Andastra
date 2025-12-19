@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 newPosition = transform.Position + direction * moveDistance;
             
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-            // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
+            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             IArea area = actor.World.CurrentArea;
             if (area != null && area.NavigationMesh != null)
             {

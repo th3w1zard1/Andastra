@@ -587,15 +587,15 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on swkotor2.exe: FUN_0061c390 @ 0x0061c390 - pathfinding around obstacles
+        /// Based on swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
         /// Located via string references:
         ///   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
-        ///   - Called from FUN_0054be70 @ 0x0054be70 (line 183) when creature collision is detected
+        ///   - Called from UpdateCreatureMovement @ 0x0054be70 (line 183) when creature collision is detected
         /// Original implementation (from Ghidra reverse engineering):
-        ///   - Function signature: `undefined4 __thiscall FUN_0061c390(void *this, int param_1, void *param_2)`
+        ///   - Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
         ///   - this: Pathfinding context object containing obstacle polygon and path data
-        ///   - param_1: Entity pointer (offset to entity structure at +0x380)
-        ///   - param_2: Blocking creature object pointer
+        ///   - movingCreature: Entity pointer (offset to entity structure at +0x380)
+        ///   - blockingCreature: Blocking creature object pointer
         ///   - Returns: float* pointer to new path waypoints, or DAT_007c52ec (null) if no path found
         ///   - Implementation algorithm:
         ///     1. Builds obstacle polygon from creature bounding box (FUN_0061a670)
@@ -607,7 +607,7 @@ namespace Andastra.Runtime.Core.Navigation
         ///     7. Updates path array and adjusts path index if waypoints inserted
         ///   - If pathfinding fails, returns null and movement is aborted
         /// Equivalent functions in other engines:
-        ///   - swkotor.exe: FUN_005d0840 @ 0x005d0840 (called from FUN_00516630 @ 0x00516630, line 254)
+        ///   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
         ///     - Similar structure to swkotor2.exe, uses same obstacle avoidance algorithm
         ///   - nwmain.exe: CPathfindInformation class with obstacle avoidance
         ///     - Tile-based pathfinding with obstacle blocking

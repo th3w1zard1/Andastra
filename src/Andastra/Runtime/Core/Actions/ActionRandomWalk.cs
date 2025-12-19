@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - Action saving: FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF)
     /// - Action creation: FUN_00507fd0 @ 0x00507fd0 (create action from parameters)
     /// - Action parameter setting: FUN_00504130 @ 0x00504130 (set action parameter by index/type)
-    /// - Walking collision: FUN_0054be70 @ 0x0054be70 (walk collision check with "aborted walking" @ 0x007c03c0)
+    /// - Walking collision: UpdateCreatureMovement @ 0x0054be70 (walk collision check with "aborted walking" @ 0x007c03c0)
     /// - Walkmesh checking: FUN_005775d0 @ 0x005775d0 (load walkmesh properties, "WalkCheck" @ 0x007c1514)
     /// - Original implementation: Entity randomly walks within max distance from start position using pathfinding
     /// - Used for idle NPC behavior, wandering creatures, ambient activity
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 newPosition = transform.Position + direction * moveDistance;
             
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-            // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
+            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             IArea area = actor.World?.CurrentArea;
             if (area != null && area.NavigationMesh != null)
             {
@@ -193,7 +193,7 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 newPosition = transform.Position + direction * moveDistance;
             
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-            // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
+            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             IArea area = actor.World?.CurrentArea;
             if (area != null && area.NavigationMesh != null)
             {
@@ -220,7 +220,7 @@ namespace Andastra.Runtime.Core.Actions
             // Original implementation: Picks random angle (0-2π) and random distance (0 to maxDistance)
             // Target position is relative to start position, not current position
             // This ensures entity doesn't wander too far from original spawn point
-            // Walkmesh collision checking via FUN_0054be70 @ 0x0054be70 handles path validation
+            // Walkmesh collision checking via UpdateCreatureMovement @ 0x0054be70 handles path validation
             float angle = (float)(_random.NextDouble() * Math.PI * 2);
             float distance = (float)(_random.NextDouble() * _maxDistance);
 

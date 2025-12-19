@@ -7,7 +7,6 @@ using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
 
 namespace Andastra.Runtime.Engines.Eclipse
 {
@@ -24,19 +23,19 @@ namespace Andastra.Runtime.Engines.Eclipse
     /// </remarks>
     public abstract class EclipseModuleLoader : BaseEngineModule
     {
-        protected readonly Installation _installation;
+        protected readonly EclipseResourceProvider _eclipseResourceProvider;
         protected string _currentModuleId;
 
         protected EclipseModuleLoader(IWorld world, IGameResourceProvider resourceProvider)
             : base(world, resourceProvider)
         {
-            if (resourceProvider is GameResourceProvider gameResourceProvider)
+            if (resourceProvider is EclipseResourceProvider eclipseProvider)
             {
-                _installation = gameResourceProvider.Installation;
+                _eclipseResourceProvider = eclipseProvider;
             }
             else
             {
-                throw new ArgumentException("Resource provider must be GameResourceProvider for Eclipse engine", nameof(resourceProvider));
+                throw new ArgumentException("Resource provider must be EclipseResourceProvider for Eclipse engine", nameof(resourceProvider));
             }
         }
 
@@ -87,8 +86,22 @@ namespace Andastra.Runtime.Engines.Eclipse
 
             try
             {
-                var modulePath = _installation.ModulePath();
-                return System.IO.Directory.Exists(System.IO.Path.Combine(modulePath, moduleName));
+                // Eclipse games may use packages or modules directory
+                // Check packages directory first (Dragon Age, Mass Effect)
+                string packagesPath = _eclipseResourceProvider.PackagePath();
+                if (System.IO.Directory.Exists(packagesPath))
+                {
+                    // Check for module in packages
+                    string modulePackagePath = System.IO.Path.Combine(packagesPath, moduleName);
+                    if (System.IO.Directory.Exists(modulePackagePath))
+                    {
+                        return true;
+                    }
+                }
+
+                // Fallback: Check modules directory (if it exists for Eclipse games)
+                // Note: Some Eclipse games may not use modules directory
+                return false;
             }
             catch
             {
@@ -97,13 +110,14 @@ namespace Andastra.Runtime.Engines.Eclipse
         }
 
         /// <summary>
-        /// Helper method to get the full module path from MODULES directory.
-        /// Common across all Eclipse games that use MODULES directory.
+        /// Helper method to get the full module path from packages or modules directory.
+        /// Common across all Eclipse games.
         /// </summary>
         protected string GetModulePath(string moduleName)
         {
-            var modulePath = _installation.ModulePath();
-            return System.IO.Path.Combine(modulePath, moduleName);
+            // Eclipse games use packages directory
+            string packagesPath = _eclipseResourceProvider.PackagePath();
+            return System.IO.Path.Combine(packagesPath, moduleName);
         }
     }
 }
