@@ -16,6 +16,33 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect
     /// - ME1: intABioSPGameexecPreloadPackage @ 0x117fede8, Engine.StartupPackages @ 0x11849d54, Package @ 0x11849d84
     /// - ME2: Similar package system to ME1
     /// - Loads packages from Packages directory
+    /// 
+    /// Inheritance Structure:
+    /// - BaseEngineModule (Runtime.Games.Common): Common module state management, unloading sequence, resource provider integration
+    ///   - EclipseModuleLoader : BaseEngineModule (Runtime.Games.Eclipse)
+    ///     - Engine-specific: UnrealScript packages, .rim files, message-based loading
+    ///     - MassEffectModuleLoaderBase : EclipseModuleLoader (Runtime.Games.Eclipse.MassEffect)
+    ///       - Mass Effect-specific: .upk package files, Packages directory, CookedPC directory
+    ///       - MassEffectModuleLoader : MassEffectModuleLoaderBase (ME1-specific)
+    ///       - MassEffect2ModuleLoader : MassEffectModuleLoaderBase (ME2-specific)
+    /// 
+    /// Cross-Engine Analysis:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): Uses MODULES directory with IFO/LYT/VIS/GIT/ARE files
+    /// - Aurora (nwmain.exe, nwn2main.exe): Uses MODULES directory with Module.ifo files
+    /// - Eclipse/DragonAge (daorigins.exe, DragonAge2.exe): Uses MODULES directory with .rim files
+    /// - Eclipse/MassEffect (MassEffect.exe, MassEffect2.exe): Uses Packages directory with .upk files (UNIQUE)
+    /// 
+    /// Ghidra Reverse Engineering Required:
+    /// - MassEffect.exe: Verify package existence checking function addresses
+    ///   - Package @ 0x11849d84 (needs verification - may be data structure, not function)
+    ///   - intABioSPGameexecPreloadPackage @ 0x117fede8 (package preloading function)
+    ///   - Engine.StartupPackages @ 0x11849d54 (startup package list - data structure)
+    ///   - Search for: "Packages", ".upk", "CookedPC" string references
+    ///   - Search for: Package loading functions, package existence checks
+    /// - MassEffect2.exe: Verify ME2-specific package checking differences
+    ///   - Similar package system but may have ME2-specific optimizations
+    ///   - Search for: Package loading functions, package existence checks
+    ///   - Compare with ME1 implementation to identify common vs. ME2-specific code
     /// </remarks>
     public abstract class MassEffectModuleLoaderBase : EclipseModuleLoader
     {
@@ -27,18 +54,33 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect
         /// <summary>
         /// Checks if a Mass Effect package exists and can be loaded.
         /// </summary>
-        /// <param name="packageName">The resource reference name of the package to check.</param>
+        /// <param name="packageName">The name of the package to check (without extension).</param>
         /// <returns>True if the package exists and can be loaded, false otherwise.</returns>
         /// <remarks>
         /// Mass Effect Package Existence Check:
-        /// - Validates package name (non-null, non-empty)
-        /// - Checks for package file in Packages directory: Packages\{packageName}.upk
-        /// - Also checks for package file without extension (package name matches directory or file)
+        /// - Mass Effect uses Unreal Engine packages (.upk files) stored in Packages directory
+        /// - Package names are case-insensitive
+        /// - Checks for .upk file in Packages directory: Packages\{packageName}.upk
+        /// - Also checks CookedPC directory for cooked packages (ME1/ME2 specific)
         /// - Returns false for invalid input or missing packages
         /// 
-        /// Based on MassEffect.exe: Package existence checking pattern (Package @ 0x11849d84)
-        /// Mass Effect uses Unreal Engine package format (.upk files) stored in Packages directory.
-        /// Package names are case-insensitive and may or may not include the .upk extension.
+        /// Based on reverse engineering of Mass Effect executables:
+        /// - MassEffect.exe: Package existence checking pattern (needs Ghidra verification)
+        ///   - Function address: Package @ 0x11849d84 (needs verification)
+        ///   - intABioSPGameexecPreloadPackage @ 0x117fede8 (package preloading)
+        ///   - Engine.StartupPackages @ 0x11849d54 (startup package list)
+        /// - MassEffect2.exe: Similar package checking pattern (needs Ghidra verification)
+        ///   - Package system similar to ME1 but may have ME2-specific differences
+        /// 
+        /// Package File Structure:
+        /// - Unreal Package format (.upk)
+        /// - Packages contain game resources: textures, models, scripts, etc.
+        /// - Package names typically match Unreal class names (e.g., "BioGame", "BioH_")
+        /// 
+        /// Search Order (based on Unreal Engine package loading):
+        /// 1. Packages\{packageName}.upk (primary location)
+        /// 2. CookedPC\{packageName}.upk (cooked packages, ME1/ME2 specific)
+        /// 3. CookedPC\Splash\{packageName}.upk (splash packages, if applicable)
         /// </remarks>
         public override bool HasModule(string packageName)
         {
@@ -50,14 +92,8 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect
             try
             {
                 // Mass Effect uses packages stored in Packages directory
-                // Based on MassEffect.exe: Package @ 0x11849d84
                 string packagesPath = _installation.PackagePath();
                 
-                if (!Directory.Exists(packagesPath))
-                {
-                    return false;
-                }
-
                 // Remove .upk extension if present (package names may or may not include extension)
                 string packageNameWithoutExt = packageName;
                 if (packageName.EndsWith(".upk", StringComparison.OrdinalIgnoreCase))
@@ -65,32 +101,73 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect
                     packageNameWithoutExt = packageName.Substring(0, packageName.Length - 4);
                 }
 
-                // Check for package file with .upk extension
-                string packageFilePath = Path.Combine(packagesPath, packageNameWithoutExt + ".upk");
-                if (File.Exists(packageFilePath))
-                {
-                    return true;
-                }
-
-                // Also check if package name matches a file without extension
-                // (some Mass Effect packages may be referenced without extension)
-                string packageFileWithoutExt = Path.Combine(packagesPath, packageNameWithoutExt);
-                if (File.Exists(packageFileWithoutExt))
-                {
-                    return true;
-                }
-
-                // Check case-insensitive match (Windows file system is case-insensitive, but we check explicitly)
-                // Search for matching package files in Packages directory
+                // Check if Packages directory exists
                 if (Directory.Exists(packagesPath))
                 {
-                    string[] packageFiles = Directory.GetFiles(packagesPath, "*.upk", SearchOption.TopDirectoryOnly);
-                    foreach (string packageFile in packageFiles)
+                    // Check for package file with .upk extension (primary location)
+                    string packageFilePath = Path.Combine(packagesPath, packageNameWithoutExt + ".upk");
+                    if (File.Exists(packageFilePath))
                     {
-                        string fileName = Path.GetFileNameWithoutExtension(packageFile);
+                        return true;
+                    }
+
+                    // Case-insensitive match in Packages directory
+                    // Search for matching .upk file regardless of case
+                    string[] upkFiles = Directory.GetFiles(packagesPath, "*.upk", SearchOption.TopDirectoryOnly);
+                    foreach (string upkFile in upkFiles)
+                    {
+                        string fileName = Path.GetFileNameWithoutExtension(upkFile);
                         if (string.Equals(fileName, packageNameWithoutExt, StringComparison.OrdinalIgnoreCase))
                         {
                             return true;
+                        }
+                    }
+                }
+
+                // Check CookedPC directory for cooked packages (ME1/ME2 specific)
+                // Cooked packages are pre-processed packages used at runtime
+                string installPath = _installation.Path;
+                string cookedPcPath = Path.Combine(installPath, "CookedPC");
+                
+                if (Directory.Exists(cookedPcPath))
+                {
+                    // Check CookedPC directory
+                    string cookedPackagePath = Path.Combine(cookedPcPath, packageNameWithoutExt + ".upk");
+                    if (File.Exists(cookedPackagePath))
+                    {
+                        return true;
+                    }
+
+                    // Case-insensitive check in CookedPC
+                    string[] cookedUpkFiles = Directory.GetFiles(cookedPcPath, "*.upk", SearchOption.TopDirectoryOnly);
+                    foreach (string cookedUpkFile in cookedUpkFiles)
+                    {
+                        string fileName = Path.GetFileNameWithoutExtension(cookedUpkFile);
+                        if (string.Equals(fileName, packageNameWithoutExt, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+
+                    // Check CookedPC\Splash for splash packages (if applicable)
+                    string splashPath = Path.Combine(cookedPcPath, "Splash");
+                    if (Directory.Exists(splashPath))
+                    {
+                        string splashPackagePath = Path.Combine(splashPath, packageNameWithoutExt + ".upk");
+                        if (File.Exists(splashPackagePath))
+                        {
+                            return true;
+                        }
+
+                        // Case-insensitive check in Splash
+                        string[] splashUpkFiles = Directory.GetFiles(splashPath, "*.upk", SearchOption.TopDirectoryOnly);
+                        foreach (string splashUpkFile in splashUpkFiles)
+                        {
+                            string fileName = Path.GetFileNameWithoutExtension(splashUpkFile);
+                            if (string.Equals(fileName, packageNameWithoutExt, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -99,6 +176,7 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect
             }
             catch
             {
+                // Return false on any error (file system errors, permissions, etc.)
                 return false;
             }
         }

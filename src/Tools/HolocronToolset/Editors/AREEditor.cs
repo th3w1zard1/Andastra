@@ -700,6 +700,8 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
             // Original: def build(self) -> tuple[bytes, bytes]:
+            // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/ME)
+            // Default to K1 if no installation is provided (for backward compatibility)
             Game game = _installation?.Game ?? Game.K1;
             var gff = AREHelpers.DismantleAre(are, game);
 
