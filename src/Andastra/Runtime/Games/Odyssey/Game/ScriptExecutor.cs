@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Uses Installation resource system for NCS bytecode loading
     /// - Supports both swkotor.exe (KOTOR1) and swkotor2.exe (KOTOR2) via engine API parameter
     /// - Game-specific behavior is handled by engine API (Kotor1 vs TheSithLords)
-    /// 
+    ///
     /// Common Odyssey script execution features:
     /// - NCS file format: Compiled NWScript bytecode with "NCS " signature, "V1.0" version string
     /// - Script loading: Loads NCS files from installation via ResourceLookup (ResourceType.NCS)
@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Return value: Script return value (0 = FALSE, non-zero = TRUE) for condition scripts
     /// - Error handling: Returns 0 (FALSE) on script load failure or execution error
     /// - Instruction budget tracking: Tracks instruction count per entity for budget enforcement
-    /// 
+    ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Script execution functions (KOTOR1)
     /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, FUN_004dcfb0 @ 0x004dcfb0 (KOTOR2)
@@ -49,7 +49,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Based on NCS VM execution in vendor/PyKotor/wiki/NCS-File-Format.md
     /// - Event types: Comprehensive mapping from 0x0 (ON_HEARTBEAT) to 0x26 (ON_DESTROYPLAYERCREATURE)
     /// </remarks>
-    public abstract class OdysseyScriptExecutor : BaseScriptExecutor, IScriptExecutor
+    public abstract class OdysseyScriptExecutor : BaseScriptExecutor
     {
         private readonly Installation _installation;
         private readonly IGameServicesContext _servicesContext;
@@ -124,11 +124,6 @@ namespace Andastra.Runtime.Games.Odyssey
             return resource?.Data;
         }
 
-        // IScriptExecutor interface implementation (parameter order differs)
-        int IScriptExecutor.ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
-        {
-            return ExecuteScript(owner, scriptResRef, triggerer);
-        }
     }
 
     /// <summary>
@@ -140,7 +135,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Uses Kotor1 engine API (~850 engine functions, function IDs 0-849)
     /// - KOTOR1-specific features: Pazaak, Swoop Racing, Turret minigames
     /// - Does not support: Influence system, Prestige Classes, Combat Forms, Item Crafting
-    /// 
+    ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Script execution functions
     /// - Script execution: FUN_004dcfb0 @ 0x004dcfb0 (similar to KOTOR2 but with K1-specific behavior)
@@ -169,7 +164,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Uses TheSithLords engine API (~950 engine functions, function IDs 0-949)
     /// - TSL-specific features: Influence system, Prestige Classes, Combat Forms, Item Crafting
     /// - Enhanced script execution with additional context support
-    /// 
+    ///
     /// Based on reverse engineering of:
     /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, FUN_004dcfb0 @ 0x004dcfb0
     /// - Script execution: Enhanced script execution with instruction budget tracking

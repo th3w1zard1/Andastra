@@ -14,16 +14,19 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Use Item Action:
-    /// - Based on swkotor2.exe item usage system
-    /// - Located via string references: "OnUsed" @ 0x007c1f70, "i_useitemm" @ 0x007ccde0, "BTN_USEITEM" @ 0x007d1080
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "Mod_OnActvtItem" @ 0x007be7f4
-    /// - Item usage: Items can be used from inventory or quick slots
-    /// - Consumable items: Items with charges (potions, grenades, etc.) consume a charge when used
-    /// - Item effects: Items can have properties that apply effects (healing, damage, status effects, etc.)
-    /// - OnUsed script: Items can have OnUsed script that executes when item is used
-    /// - Original implementation: Uses item, applies effects, consumes charge if applicable, fires OnUsed script
-    /// - Items with 0 charges are removed from inventory after use
-    /// - Based on swkotor2.exe: Item usage system handles consumables, usable items, and item effects
+    /// - Common item usage system across all BioWare engines
+    /// - Based on reverse engineering of:
+    ///   - swkotor.exe/swkotor2.exe: "OnUsed" @ 0x007c1f70, "i_useitemm" @ 0x007ccde0, "BTN_USEITEM" @ 0x007d1080
+    ///   - swkotor2.exe: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "Mod_OnActvtItem" @ 0x007be7f4
+    ///   - nwmain.exe: Aurora item usage system (similar patterns)
+    ///   - daorigins.exe/DragonAge2.exe: Eclipse item usage with enhanced effects
+    /// - Common functionality across engines:
+    ///   - Item usage: Items can be used from inventory or quick slots
+    ///   - Consumable items: Items with charges (potions, grenades, etc.) consume a charge when used
+    ///   - Item effects: Items can have properties that apply effects (healing, damage, status effects, etc.)
+    ///   - OnUsed script: Items can have OnUsed script that executes when item is used
+    ///   - Charge consumption: Items with 0 charges are removed from inventory after use
+    /// - Engine-specific: Property-to-effect conversion uses engine-specific 2DA tables (itempropdef.2da)
     /// </remarks>
     public class ActionUseItem : ActionBase
     {
@@ -216,7 +219,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // Try to access itempropdef.2da through world's resource system
             TwoDA itempropDefTable = TryGetItemPropDefTable(property);
-            
+
             if (itempropDefTable != null)
             {
                 // Use 2DA table for property definition lookup
@@ -370,7 +373,7 @@ namespace Andastra.Runtime.Core.Actions
             {
                 if (amount > 0 && subtype >= 0)
                 {
-                    DamageType damageType = (DamageType)subtype;
+                    Combat.DamageType damageType = (Combat.DamageType)subtype;
                     return Combat.Effect.DamageResistance(damageType, amount, 0);
                 }
             }

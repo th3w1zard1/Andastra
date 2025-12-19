@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
@@ -33,7 +34,7 @@ namespace Andastra.Runtime.Games.Common
     /// - DelayCommand state management
     /// </remarks>
     [PublicAPI]
-    public abstract class BaseScriptExecutor
+    public abstract class BaseScriptExecutor : IScriptExecutor
     {
         protected readonly IWorld _world;
         protected readonly IEngineApi _engineApi;
@@ -258,6 +259,21 @@ namespace Andastra.Runtime.Games.Common
         {
             get => _vm.EnableTracing;
             set => _vm.EnableTracing = value;
+        }
+
+        /// <summary>
+        /// IScriptExecutor interface implementation (parameter order differs from ExecuteScript).
+        /// </summary>
+        /// <remarks>
+        /// Dialogue system uses IScriptExecutor with different parameter order:
+        /// ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
+        /// vs BaseScriptExecutor.ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
+        /// This adapter method provides compatibility for dialogue system.
+        /// Common across all engines: Dialogue system requires this interface.
+        /// </remarks>
+        int IScriptExecutor.ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
+        {
+            return ExecuteScript(owner, scriptResRef, triggerer);
         }
     }
 }
