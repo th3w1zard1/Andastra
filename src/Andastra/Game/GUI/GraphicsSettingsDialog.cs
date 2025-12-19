@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Numerics;
+using System.Xml.Serialization;
 using Eto.Forms;
 using Eto.Drawing;
 using Andastra.Runtime.Graphics;
@@ -24,6 +27,10 @@ namespace Andastra.Game.GUI
         private GraphicsSettingsData _settings;
         private TabControl _tabControl;
         private Dictionary<string, Control> _controlMap;
+        private DropDown _presetComboBox;
+        private GraphicsPreset _currentPreset;
+        private TextBox _searchTextBox;
+        private Dictionary<string, TabPage> _tabPageMap;
 
         /// <summary>
         /// Gets the graphics settings.
@@ -40,62 +47,129 @@ namespace Andastra.Game.GUI
             _selectedBackend = backendType;
             _settings = initialSettings ?? new GraphicsSettingsData();
             _controlMap = new Dictionary<string, Control>();
+            _tabPageMap = new Dictionary<string, TabPage>();
+            _currentPreset = GraphicsPreset.Custom;
 
             Title = $"Graphics Settings - {GetBackendName(backendType)}";
-            ClientSize = new Size(900, 700);
+            ClientSize = new Size(1000, 750);
             Resizable = true;
             WindowStyle = WindowStyle.Default;
+            MinimumSize = new Size(800, 600);
 
             InitializeComponent();
             LoadSettings();
+            DetectCurrentPreset();
         }
 
         private void InitializeComponent()
         {
-            _tabControl = new TabControl();
-
-            // Window Settings Tab
-            _tabControl.Pages.Add(CreateWindowSettingsTab());
-
-            // Rasterizer State Tab
-            _tabControl.Pages.Add(CreateRasterizerStateTab());
-
-            // Depth Stencil State Tab
-            _tabControl.Pages.Add(CreateDepthStencilStateTab());
-
-            // Blend State Tab
-            _tabControl.Pages.Add(CreateBlendStateTab());
-
-            // Sampler State Tab
-            _tabControl.Pages.Add(CreateSamplerStateTab());
-
-            // Basic Effect Tab
-            _tabControl.Pages.Add(CreateBasicEffectTab());
-
-            // SpriteBatch Tab
-            _tabControl.Pages.Add(CreateSpriteBatchTab());
-
-            // Spatial Audio Tab
-            _tabControl.Pages.Add(CreateSpatialAudioTab());
-
-            // Content Manager Tab
-            _tabControl.Pages.Add(CreateContentManagerTab());
-
-            // Backend-Specific Tabs
-            if (_selectedBackend == GraphicsBackendType.MonoGame)
-            {
-                _tabControl.Pages.Add(CreateMonoGameSpecificTab());
-            }
-            else if (_selectedBackend == GraphicsBackendType.Stride)
-            {
-                _tabControl.Pages.Add(CreateStrideSpecificTab());
-            }
-
             var layout = new TableLayout
             {
                 Spacing = new Size(10, 10),
                 Padding = new Padding(10)
             };
+
+            // Top toolbar with presets and search
+            var toolbarLayout = new TableLayout
+            {
+                Spacing = new Size(10, 0)
+            };
+
+            // Preset selector
+            var presetLabel = new Label { Text = "Preset:", VerticalAlignment = VerticalAlignment.Center };
+            _presetComboBox = new DropDown { Width = 150 };
+            _presetComboBox.Items.Add("Low");
+            _presetComboBox.Items.Add("Medium");
+            _presetComboBox.Items.Add("High");
+            _presetComboBox.Items.Add("Ultra");
+            _presetComboBox.Items.Add("Custom");
+            _presetComboBox.SelectedValue = "Custom";
+            _presetComboBox.SelectedIndexChanged += PresetComboBox_SelectedIndexChanged;
+
+            // Search box
+            var searchLabel = new Label { Text = "Search:", VerticalAlignment = VerticalAlignment.Center };
+            _searchTextBox = new TextBox { PlaceholderText = "Search settings..." };
+            _searchTextBox.TextChanged += SearchTextBox_TextChanged;
+
+            // Import/Export buttons
+            var importButton = new Button { Text = "Import..." };
+            importButton.Click += ImportButton_Click;
+            var exportButton = new Button { Text = "Export..." };
+            exportButton.Click += ExportButton_Click;
+
+            toolbarLayout.Rows.Add(new TableRow(
+                new TableCell(presetLabel, false),
+                new TableCell(_presetComboBox, false),
+                new TableCell(null, true),
+                new TableCell(searchLabel, false),
+                new TableCell(_searchTextBox, true),
+                new TableCell(importButton, false),
+                new TableCell(exportButton, false)
+            ));
+
+            layout.Rows.Add(new TableRow(new TableCell(toolbarLayout, true)));
+
+            // Tab control
+            _tabControl = new TabControl();
+
+            // Window Settings Tab
+            var windowTab = CreateWindowSettingsTab();
+            _tabControl.Pages.Add(windowTab);
+            _tabPageMap["Window"] = windowTab;
+
+            // Rasterizer State Tab
+            var rasterizerTab = CreateRasterizerStateTab();
+            _tabControl.Pages.Add(rasterizerTab);
+            _tabPageMap["Rasterizer"] = rasterizerTab;
+
+            // Depth Stencil State Tab
+            var depthStencilTab = CreateDepthStencilStateTab();
+            _tabControl.Pages.Add(depthStencilTab);
+            _tabPageMap["DepthStencil"] = depthStencilTab;
+
+            // Blend State Tab
+            var blendTab = CreateBlendStateTab();
+            _tabControl.Pages.Add(blendTab);
+            _tabPageMap["Blend"] = blendTab;
+
+            // Sampler State Tab
+            var samplerTab = CreateSamplerStateTab();
+            _tabControl.Pages.Add(samplerTab);
+            _tabPageMap["Sampler"] = samplerTab;
+
+            // Basic Effect Tab
+            var basicEffectTab = CreateBasicEffectTab();
+            _tabControl.Pages.Add(basicEffectTab);
+            _tabPageMap["BasicEffect"] = basicEffectTab;
+
+            // SpriteBatch Tab
+            var spriteBatchTab = CreateSpriteBatchTab();
+            _tabControl.Pages.Add(spriteBatchTab);
+            _tabPageMap["SpriteBatch"] = spriteBatchTab;
+
+            // Spatial Audio Tab
+            var spatialAudioTab = CreateSpatialAudioTab();
+            _tabControl.Pages.Add(spatialAudioTab);
+            _tabPageMap["SpatialAudio"] = spatialAudioTab;
+
+            // Content Manager Tab
+            var contentManagerTab = CreateContentManagerTab();
+            _tabControl.Pages.Add(contentManagerTab);
+            _tabPageMap["ContentManager"] = contentManagerTab;
+
+            // Backend-Specific Tabs
+            if (_selectedBackend == GraphicsBackendType.MonoGame)
+            {
+                var monoGameTab = CreateMonoGameSpecificTab();
+                _tabControl.Pages.Add(monoGameTab);
+                _tabPageMap["MonoGame"] = monoGameTab;
+            }
+            else if (_selectedBackend == GraphicsBackendType.Stride)
+            {
+                var strideTab = CreateStrideSpecificTab();
+                _tabControl.Pages.Add(strideTab);
+                _tabPageMap["Stride"] = strideTab;
+            }
 
             layout.Rows.Add(new TableRow(new TableCell(_tabControl, true)));
 
@@ -113,6 +187,18 @@ namespace Andastra.Game.GUI
             okButton.Click += (sender, e) =>
             {
                 SaveSettings();
+                var validationResult = GraphicsSettingsSerializer.Validate(_settings);
+                if (!validationResult.IsValid)
+                {
+                    var result = MessageBox.Show(
+                        this,
+                        "Some settings have validation errors:\n\n" + validationResult.GetFormattedMessage() + "\n\nDo you want to continue anyway?",
+                        "Validation Warnings",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxType.Warning);
+                    if (result == DialogResult.No)
+                        return;
+                }
                 Result = DialogResult.Ok;
                 Close();
             };
@@ -135,12 +221,51 @@ namespace Andastra.Game.GUI
             };
             resetButton.Click += (sender, e) =>
             {
-                _settings = new GraphicsSettingsData();
-                LoadSettings();
+                var result = MessageBox.Show(
+                    this,
+                    "Reset all settings to default values?",
+                    "Reset Settings",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxType.Question);
+                if (result == DialogResult.Yes)
+                {
+                    _settings = new GraphicsSettingsData();
+                    _currentPreset = GraphicsPreset.Custom;
+                    _presetComboBox.SelectedValue = "Custom";
+                    LoadSettings();
+                }
+            };
+
+            var validateButton = new Button
+            {
+                Text = "Validate",
+                Width = 100
+            };
+            validateButton.Click += (sender, e) =>
+            {
+                SaveSettings();
+                var validationResult = GraphicsSettingsSerializer.Validate(_settings);
+                if (validationResult.IsValid)
+                {
+                    MessageBox.Show(
+                        this,
+                        "All settings are valid!",
+                        "Validation Success",
+                        MessageBoxType.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        this,
+                        validationResult.GetFormattedMessage(),
+                        "Validation Errors",
+                        MessageBoxType.Error);
+                }
             };
 
             buttonLayout.Rows.Add(new TableRow(
                 new TableCell(null, true),
+                new TableCell(validateButton, false),
                 new TableCell(resetButton, false),
                 new TableCell(okButton, false),
                 new TableCell(cancelButton, false)
@@ -167,7 +292,7 @@ namespace Andastra.Game.GUI
             // Window Title
             var windowTitleTextBox = new TextBox { Text = _settings.WindowTitle ?? "Andastra Game" };
             _controlMap["WindowTitle"] = windowTitleTextBox;
-            layout.Rows.Add(CreateLabeledControl("Title:", windowTitleTextBox, ref row));
+            layout.Rows.Add(CreateLabeledControl("Title:", windowTitleTextBox, ref row, "WindowTitle"));
 
             // Window Size
             var windowWidthNumeric = new NumericStepper { Value = _settings.WindowWidth ?? 1280, MinValue = 320, MaxValue = 7680 };
@@ -915,7 +1040,7 @@ namespace Andastra.Game.GUI
             return page;
         }
 
-        private TableRow CreateLabeledControl(string labelText, Control control, ref int row)
+        private TableRow CreateLabeledControl(string labelText, Control control, ref int row, string helpKey = null)
         {
             var label = new Label
             {
@@ -924,9 +1049,37 @@ namespace Andastra.Game.GUI
                 Width = 200
             };
 
+            // Add tooltip to control
+            if (!string.IsNullOrEmpty(helpKey))
+            {
+                AddTooltip(control, helpKey);
+                AddTooltip(label, helpKey);
+            }
+
+            // Add help button
+            var helpButton = new Button
+            {
+                Text = "?",
+                Width = 25,
+                Height = 25
+            };
+            if (!string.IsNullOrEmpty(helpKey))
+            {
+                helpButton.Click += (sender, e) =>
+                {
+                    var helpText = GraphicsSettingsHelp.GetHelpText(helpKey);
+                    MessageBox.Show(
+                        this,
+                        helpText,
+                        $"{labelText} - Help",
+                        MessageBoxType.Information);
+                };
+            }
+
             return new TableRow(
                 new TableCell(label, false),
-                new TableCell(control, true)
+                new TableCell(control, true),
+                new TableCell(helpButton, false)
             );
         }
 
@@ -1188,12 +1341,190 @@ namespace Andastra.Game.GUI
             }
             return backendType.ToString();
         }
+
+        private void PresetComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selectedValue = _presetComboBox.SelectedValue?.ToString();
+            if (string.IsNullOrEmpty(selectedValue))
+                return;
+
+            GraphicsPreset preset;
+            if (!Enum.TryParse<GraphicsPreset>(selectedValue, out preset))
+                return;
+
+            if (preset == GraphicsPreset.Custom)
+            {
+                _currentPreset = GraphicsPreset.Custom;
+                return;
+            }
+
+            var result = MessageBox.Show(
+                this,
+                $"Apply {selectedValue} preset? This will overwrite your current settings.",
+                "Apply Preset",
+                MessageBoxButtons.YesNo,
+                MessageBoxType.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                _settings = GraphicsSettingsPresetFactory.CreatePreset(preset);
+                _currentPreset = preset;
+                LoadSettings();
+            }
+            else
+            {
+                _presetComboBox.SelectedValue = _currentPreset.ToString();
+            }
+        }
+
+        private void SearchTextBox_TextChanged(object sender, EventArgs e)
+        {
+            var searchText = _searchTextBox.Text?.ToLowerInvariant() ?? string.Empty;
+            if (string.IsNullOrEmpty(searchText))
+            {
+                // Show all tabs
+                foreach (var tab in _tabControl.Pages)
+                {
+                    tab.Visible = true;
+                }
+                return;
+            }
+
+            // Filter tabs and controls based on search
+            foreach (var kvp in _tabPageMap)
+            {
+                var tab = kvp.Value;
+                var tabName = kvp.Key.ToLowerInvariant();
+                var matchesTab = tabName.Contains(searchText);
+
+                // Check if any controls in this tab match
+                var matchesControl = false;
+                foreach (var controlKvp in _controlMap)
+                {
+                    if (controlKvp.Key.ToLowerInvariant().Contains(searchText) ||
+                        GraphicsSettingsHelp.GetHelpText(controlKvp.Key).ToLowerInvariant().Contains(searchText))
+                    {
+                        matchesControl = true;
+                        break;
+                    }
+                }
+
+                tab.Visible = matchesTab || matchesControl;
+            }
+        }
+
+        private void ImportButton_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Import Graphics Settings",
+                Filters = { new FileFilter("XML Files", "*.xml"), new FileFilter("All Files", "*.*") }
+            };
+
+            if (dialog.ShowDialog(this) == DialogResult.Ok)
+            {
+                try
+                {
+                    _settings = GraphicsSettingsSerializer.ImportFromXml(dialog.FileName);
+                    _currentPreset = GraphicsPreset.Custom;
+                    _presetComboBox.SelectedValue = "Custom";
+                    LoadSettings();
+                    MessageBox.Show(
+                        this,
+                        "Settings imported successfully!",
+                        "Import Success",
+                        MessageBoxType.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        this,
+                        $"Failed to import settings:\n\n{ex.Message}",
+                        "Import Error",
+                        MessageBoxType.Error);
+                }
+            }
+        }
+
+        private void ExportButton_Click(object sender, EventArgs e)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = "Export Graphics Settings",
+                Filters = { new FileFilter("XML Files", "*.xml"), new FileFilter("All Files", "*.*") },
+                FileName = "graphics_settings.xml"
+            };
+
+            if (dialog.ShowDialog(this) == DialogResult.Ok)
+            {
+                try
+                {
+                    SaveSettings();
+                    GraphicsSettingsSerializer.ExportToXml(_settings, dialog.FileName);
+                    MessageBox.Show(
+                        this,
+                        "Settings exported successfully!",
+                        "Export Success",
+                        MessageBoxType.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        this,
+                        $"Failed to export settings:\n\n{ex.Message}",
+                        "Export Error",
+                        MessageBoxType.Error);
+                }
+            }
+        }
+
+        private void DetectCurrentPreset()
+        {
+            // Try to match current settings to a preset
+            var presets = new[] { GraphicsPreset.Low, GraphicsPreset.Medium, GraphicsPreset.High, GraphicsPreset.Ultra };
+            foreach (var preset in presets)
+            {
+                var presetSettings = GraphicsSettingsPresetFactory.CreatePreset(preset);
+                if (SettingsMatch(_settings, presetSettings))
+                {
+                    _currentPreset = preset;
+                    _presetComboBox.SelectedValue = preset.ToString();
+                    return;
+                }
+            }
+            _currentPreset = GraphicsPreset.Custom;
+            _presetComboBox.SelectedValue = "Custom";
+        }
+
+        private bool SettingsMatch(GraphicsSettingsData a, GraphicsSettingsData b)
+        {
+            // Compare key settings to determine if they match
+            return a.WindowWidth == b.WindowWidth &&
+                   a.WindowHeight == b.WindowHeight &&
+                   a.WindowFullscreen == b.WindowFullscreen &&
+                   a.MonoGameSynchronizeWithVerticalRetrace == b.MonoGameSynchronizeWithVerticalRetrace &&
+                   a.MonoGamePreferMultiSampling == b.MonoGamePreferMultiSampling &&
+                   a.RasterizerMultiSampleAntiAlias == b.RasterizerMultiSampleAntiAlias &&
+                   a.SamplerMaxAnisotropy == b.SamplerMaxAnisotropy &&
+                   a.SamplerFilter == b.SamplerFilter;
+        }
+
+        private void AddTooltip(Control control, string key)
+        {
+            var tooltip = GraphicsSettingsHelp.GetHelpText(key);
+            if (!string.IsNullOrEmpty(tooltip))
+            {
+                control.ToolTip = tooltip;
+            }
+        }
     }
 
     /// <summary>
     /// Comprehensive graphics settings data structure.
     /// Contains ALL settings from all graphics backends with zero omissions.
     /// </summary>
+    [Serializable]
+    [XmlRoot("GraphicsSettings")]
     public class GraphicsSettingsData
     {
         // Window Settings
