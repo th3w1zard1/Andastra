@@ -67,6 +67,12 @@ namespace HolocronToolset.Editors
         private NumericUpDown _logicSpin;
         private TreeView _dialogTree;
         
+        // UI Controls - Node widgets (Quest/Plot)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QLineEdit questEdit, QSpinBox questEntrySpin, QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
+        private TextBox _questEdit;
+        private NumericUpDown _questEntrySpin;
+        
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
 
@@ -318,6 +324,11 @@ namespace HolocronToolset.Editors
         public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
         public NumericUpDown LogicSpin => _logicSpin;
         public TreeView DialogTree => _dialogTree;
+        
+        // Expose quest widgets for testing
+        // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
+        public TextBox QuestEdit => _questEdit;
+        public NumericUpDown QuestEntrySpin => _questEntrySpin;
 
         /// <summary>
         /// Handles selection changes in the dialog tree.
@@ -373,6 +384,7 @@ namespace HolocronToolset.Editors
             }
 
             var link = item.Link;
+            var node = link.Node;
             
             // Load condition1
             if (_condition1ResrefEdit != null)
@@ -390,6 +402,19 @@ namespace HolocronToolset.Editors
             if (_logicSpin != null)
             {
                 _logicSpin.Value = link.Logic ? 1 : 0;
+            }
+            
+            // Load quest fields from node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2433-2434
+            // Original: self.ui.questEdit.setText(item.link.node.quest), self.ui.questEntrySpin.setValue(item.link.node.quest_entry or 0)
+            if (_questEdit != null && node != null)
+            {
+                _questEdit.Text = node.Quest ?? string.Empty;
+            }
+            
+            if (_questEntrySpin != null && node != null)
+            {
+                _questEntrySpin.Value = node.QuestEntry ?? 0;
             }
         }
 
@@ -453,7 +478,7 @@ namespace HolocronToolset.Editors
         /// <summary>
         /// Updates the tree view with the current model data.
         /// </summary>
-        private void UpdateTreeView()
+        public void UpdateTreeView()
         {
             if (_dialogTree == null || _model == null)
             {
@@ -1088,6 +1113,13 @@ namespace HolocronToolset.Editors
             }
             
             UpdateItemDisplayText(newItem);
+            
+            // Update tree view if editor is available
+            if (_editor != null)
+            {
+                _editor.UpdateTreeView();
+            }
+            
             return newItem;
         }
 
@@ -1264,6 +1296,14 @@ namespace HolocronToolset.Editors
             var item = _rootItems[oldIndex];
             _rootItems.RemoveAt(oldIndex);
             _rootItems.Insert(newIndex, item);
+        }
+
+        /// <summary>
+        /// Gets all root items in the model.
+        /// </summary>
+        public IReadOnlyList<DLGStandardItem> GetRootItems()
+        {
+            return _rootItems;
         }
     }
 }
