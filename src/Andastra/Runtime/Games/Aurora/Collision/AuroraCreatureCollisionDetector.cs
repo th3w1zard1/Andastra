@@ -36,7 +36,9 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     /// - Inheritance structure:
     ///   - BaseCreatureCollisionDetector (Runtime.Core.Collision): Common collision detection logic (line-segment vs AABB intersection)
     ///   - AuroraCreatureCollisionDetector (Runtime.Games.Aurora.Collision): Aurora-specific bounding box retrieval from appearance.2da
-    ///   - OdysseyCreatureCollisionDetector (Runtime.Games.Odyssey.Collision): Odyssey-specific bounding box (swkotor.exe, swkotor2.exe)
+    ///   - OdysseyCreatureCollisionDetector (Runtime.Games.Odyssey.Collision): Common Odyssey logic (defaults to K2)
+    ///   - K1CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K1-specific (swkotor.exe: offset 0x340)
+    ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (swkotor2.exe: offset 0x380)
     ///   - EclipseCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): Eclipse-specific bounding box (daorigins.exe, DragonAge2.exe)
     ///   - InfinityCreatureCollisionDetector (Runtime.Games.Infinity.Collision): Infinity-specific bounding box (MassEffect.exe, MassEffect2.exe)
     /// </remarks>
