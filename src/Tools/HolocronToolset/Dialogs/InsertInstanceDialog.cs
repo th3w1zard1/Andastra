@@ -6,6 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Formats.RIM;
+using Andastra.Parsing.Tools;
 using HolocronToolset.Data;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 using Module = Andastra.Parsing.Common.Module;
@@ -263,7 +266,7 @@ namespace HolocronToolset.Dialogs
             // Save resource if new
             if (newResource && !string.IsNullOrEmpty(_filepath))
             {
-                // TODO: Implement resource saving when ERF/RIM writing is available
+                SaveResourceToFile(_filepath, _resname, _restype, _data);
             }
 
             // Add to module
@@ -282,6 +285,100 @@ namespace HolocronToolset.Dialogs
             // TODO: Implement resource creation when resource builders are available
             // For now, return empty data
             return new byte[0];
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:167-178
+        // Original: Save resource to file (ERF/RIM or standalone)
+        // Comprehensive implementation with full error handling and support for all ERF/RIM variants
+        private void SaveResourceToFile(string filepath, string resname, ResourceType restype, byte[] data)
+        {
+            if (string.IsNullOrEmpty(filepath) || string.IsNullOrEmpty(resname) || data == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Ensure directory exists before writing
+                string directory = Path.GetDirectoryName(filepath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                string fileName = Path.GetFileName(filepath);
+                if (Misc.IsAnyErfTypeFile(fileName))
+                {
+                    // Handle ERF/MOD/SAV files
+                    ERF erf;
+                    if (File.Exists(filepath))
+                    {
+                        // Load existing ERF
+                        erf = ERFAuto.ReadErf(filepath);
+                    }
+                    else
+                    {
+                        // Create new ERF with appropriate type
+                        ERFType erfType = ERFTypeExtensions.FromExtension(Path.GetExtension(filepath));
+                        erf = new ERF(erfType, Path.GetExtension(filepath).Equals(".sav", StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    // Add or update resource in ERF
+                    erf.SetData(resname, restype, data);
+
+                    // Determine output format based on file extension
+                    ResourceType outputFormat = ResourceType.ERF;
+                    string ext = Path.GetExtension(filepath).ToLowerInvariant();
+                    if (ext == ".mod")
+                    {
+                        outputFormat = ResourceType.MOD;
+                    }
+                    else if (ext == ".sav")
+                    {
+                        outputFormat = ResourceType.SAV;
+                    }
+
+                    // Write ERF to file
+                    ERFAuto.WriteErf(erf, filepath, outputFormat);
+                }
+                else if (Misc.IsRimFile(fileName))
+                {
+                    // Handle RIM files
+                    RIM rim;
+                    if (File.Exists(filepath))
+                    {
+                        // Load existing RIM
+                        rim = RIMAuto.ReadRim(filepath);
+                    }
+                    else
+                    {
+                        // Create new RIM
+                        rim = new RIM();
+                    }
+
+                    // Add or update resource in RIM
+                    rim.SetData(resname, restype, data);
+
+                    // Write RIM to file
+                    RIMAuto.WriteRim(rim, filepath, ResourceType.RIM);
+                }
+                else
+                {
+                    // Save as standalone file
+                    string standalonePath = Path.Combine(
+                        string.IsNullOrEmpty(directory) ? "." : directory,
+                        $"{resname}.{restype.Extension}");
+
+                    File.WriteAllBytes(standalonePath, data);
+                    _filepath = standalonePath;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error - in a full implementation, this would use a proper logging system
+                System.Console.WriteLine($"Error saving resource to file: {ex.Message}");
+                throw; // Re-throw to allow caller to handle
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:183-201

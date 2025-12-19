@@ -38,6 +38,30 @@ namespace Andastra.Parsing.Resource.Generics
         public float GrassProbLR { get; set; }
         public float GrassProbUL { get; set; }
         public float GrassProbUR { get; set; }
+        /// <summary>
+        /// Grass diffuse color (RGB).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:68
+        /// Original: grass_diffuse: "Grass_Diffuse" field.
+        /// </remarks>
+        public Color GrassDiffuse { get; set; } = new Color(0, 0, 0);
+        /// <summary>
+        /// Grass ambient color (RGB).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:67
+        /// Original: grass_ambient: "Grass_Ambient" field.
+        /// </remarks>
+        public Color GrassAmbient { get; set; } = new Color(0, 0, 0);
+        /// <summary>
+        /// Grass emissive color (RGB). KotOR 2 Only.
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:73
+        /// Original: grass_emissive: "Grass_Emissive" field. KotOR 2 Only.
+        /// </remarks>
+        public Color GrassEmissive { get; set; } = new Color(0, 0, 0);
         public bool FogEnabled { get; set; }
         public float FogNear { get; set; }
         public float FogFar { get; set; }
@@ -96,6 +120,15 @@ namespace Andastra.Parsing.Resource.Generics
         public ResRef OnUserDefined2 { get; set; } = ResRef.FromBlank();
         public List<string> AreaList { get; set; } = new List<string>();
         public List<ResRef> MapList { get; set; } = new List<ResRef>();
+
+        /// <summary>
+        /// Developer comments/notes (toolset only, not used by game engine).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:140
+        /// Original: self.comment: str = ""
+        /// </remarks>
+        public string Comment { get; set; } = string.Empty;
 
         /// <summary>
         /// Map north axis orientation.

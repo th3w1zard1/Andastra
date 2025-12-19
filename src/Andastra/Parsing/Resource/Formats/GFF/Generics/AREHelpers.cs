@@ -62,6 +62,13 @@ namespace Andastra.Parsing.Resource.Generics
             are.GrassProbLR = root.Acquire<float>("Grass_Prob_LR", 0.0f);
             are.GrassProbUL = root.Acquire<float>("Grass_Prob_UL", 0.0f);
             are.GrassProbUR = root.Acquire<float>("Grass_Prob_UR", 0.0f);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:506-509
+            // Original: are.grass_ambient = Color.from_rgb_integer(root.acquire("Grass_Ambient", 0))
+            are.GrassAmbient = Color.FromRgbInteger(root.Acquire<int>("Grass_Ambient", 0));
+            // Original: are.grass_diffuse = Color.from_rgb_integer(root.acquire("Grass_Diffuse", 0))
+            are.GrassDiffuse = Color.FromRgbInteger(root.Acquire<int>("Grass_Diffuse", 0));
+            // Original: are.grass_emissive = Color.from_rgb_integer(root.acquire("Grass_Emissive", 0))
+            are.GrassEmissive = Color.FromRgbInteger(root.Acquire<int>("Grass_Emissive", 0));
             are.FogEnabled = root.Acquire<int>("SunFogOn", 0) != 0;
             are.FogNear = root.Acquire<float>("SunFogNear", 0.0f);
             are.FogFar = root.Acquire<float>("SunFogFar", 0.0f);
@@ -150,6 +157,17 @@ namespace Andastra.Parsing.Resource.Generics
             root.SetSingle("Grass_Prob_LR", are.GrassProbLR);
             root.SetSingle("Grass_Prob_UL", are.GrassProbUL);
             root.SetSingle("Grass_Prob_UR", are.GrassProbUR);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:593-594
+            // Original: root.set_uint32("Grass_Ambient", are.grass_ambient.rgb_integer())
+            root.SetUInt32("Grass_Ambient", (uint)are.GrassAmbient.ToRgbInteger());
+            // Original: root.set_uint32("Grass_Diffuse", are.grass_diffuse.rgb_integer())
+            root.SetUInt32("Grass_Diffuse", (uint)are.GrassDiffuse.ToRgbInteger());
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:639
+            // Original: root.set_uint32("Grass_Emissive", are.grass_emissive.rgb_integer()) (KotOR 2 only)
+            if (game == Game.K2)
+            {
+                root.SetUInt32("Grass_Emissive", (uint)are.GrassEmissive.ToRgbInteger());
+            }
             root.SetUInt8("SunFogOn", are.FogEnabled ? (byte)1 : (byte)0);
             root.SetSingle("SunFogNear", are.FogNear);
             root.SetSingle("SunFogFar", are.FogFar);
@@ -162,6 +180,9 @@ namespace Andastra.Parsing.Resource.Generics
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:673
             // Original: root.set_uint16("LoadScreenID", are.loadscreen_id)
             root.SetUInt16("LoadScreenID", (ushort)are.LoadScreenID);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
+            // Original: root.set_string("Comments", are.comment)
+            root.SetString("Comments", are.Comment);
 
             // Set color fields (as RGB integers)
             // root.SetUInt32("SunAmbientColor", are.SunAmbient.RgbInteger());

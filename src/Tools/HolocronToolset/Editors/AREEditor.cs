@@ -49,6 +49,15 @@ namespace HolocronToolset.Editors
         private ColorEdit _ambientColorEdit;
         private ColorEdit _diffuseColorEdit;
         private ColorEdit _dynamicColorEdit;
+        private ColorEdit _grassDiffuseEdit;
+        private ColorEdit _grassAmbientEdit;
+        private ColorEdit _grassEmissiveEdit;
+        private TextBox _commentsEdit;
+        private ComboBox _onEnterSelect;
+        private ComboBox _onExitSelect;
+        private ComboBox _onHeartbeatSelect;
+        private ComboBox _onUserDefinedSelect;
+        private List<string> _relevantScriptResnames;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -259,6 +268,18 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dynamicColorLabel);
             panel.Children.Add(_dynamicColorEdit);
 
+            // Comments edit - matching Python: self.ui.commentsEdit
+            var commentsLabel = new Avalonia.Controls.TextBlock { Text = "Comments:" };
+            _commentsEdit = new TextBox
+            {
+                AcceptsReturn = true,
+                AcceptsTab = false,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                MinHeight = 100
+            };
+            panel.Children.Add(commentsLabel);
+            panel.Children.Add(_commentsEdit);
+
             Content = panel;
         }
 
@@ -292,6 +313,7 @@ namespace HolocronToolset.Editors
         public ColorEdit AmbientColorEdit => _ambientColorEdit;
         public ColorEdit DiffuseColorEdit => _diffuseColorEdit;
         public ColorEdit DynamicColorEdit => _dynamicColorEdit;
+        public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -468,6 +490,11 @@ namespace HolocronToolset.Editors
             {
                 _dynamicColorEdit.SetColor(are.DynamicLight);
             }
+            // Matching Python: self.ui.commentsEdit.setPlainText(are.comment) (line 247)
+            if (_commentsEdit != null)
+            {
+                _commentsEdit.Text = are.Comment ?? "";
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -609,6 +636,11 @@ namespace HolocronToolset.Editors
             if (_dynamicColorEdit != null)
             {
                 are.DynamicLight = _dynamicColorEdit.GetColor();
+            }
+            // Matching Python: are.comment = self.ui.commentsEdit.toPlainText() (line 357)
+            if (_commentsEdit != null)
+            {
+                are.Comment = _commentsEdit.Text ?? "";
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -802,6 +834,30 @@ namespace HolocronToolset.Editors
             _are = new ARE();
             _originalGff = null; // Clear original GFF when creating new file
             // Clear UI
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:386-391
+        // Original: def change_name(self):
+        public void ChangeName()
+        {
+            if (_installation == null)
+            {
+                throw new InvalidOperationException("Installation is not set");
+            }
+
+            LocalizedString currentName = _nameEdit?.GetLocString() ?? _are?.Name ?? LocalizedString.FromInvalid();
+            var dialog = new LocalizedStringDialog(this, _installation, currentName);
+            if (dialog.ShowDialog())
+            {
+                if (_are != null)
+                {
+                    _are.Name = dialog.LocString;
+                }
+                if (_nameEdit != null)
+                {
+                    _nameEdit.SetLocString(dialog.LocString);
+                }
+            }
         }
 
         public override void SaveAs()

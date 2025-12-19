@@ -1925,14 +1925,147 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorSaveLoadRoundtripIdentity: Save/load roundtrip identity test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_save_load_roundtrip_with_modifications (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1244-1288)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1244-1288
         // Original: def test_are_editor_save_load_roundtrip_with_modifications(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test save/load roundtrip with modifications preserves changes.
         [Fact]
         public void TestAreEditorSaveLoadRoundtripWithModifications()
         {
-            // TODO: STUB - Implement save/load roundtrip with modifications test (preserves changes through multiple cycles)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1244-1288
-            throw new NotImplementedException("TestAreEditorSaveLoadRoundtripWithModifications: Save/load roundtrip with modifications test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: are_file = test_files_dir / "tat001.are"
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Make modifications
+            // Matching Python: editor.ui.tagEdit.setText("modified_roundtrip")
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = "modified_roundtrip";
+            }
+            // Matching Python: editor.ui.alphaTestSpin.setValue(200)
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value = 200;
+            }
+            // Matching Python: editor.ui.fogEnabledCheck.setChecked(True)
+            if (editor.FogEnabledCheck != null)
+            {
+                editor.FogEnabledCheck.IsChecked = true;
+            }
+            // Matching Python: editor.ui.fogNearSpin.setValue(10.0)
+            if (editor.FogNearSpin != null)
+            {
+                editor.FogNearSpin.Value = 10.0M;
+            }
+            // Matching Python: editor.ui.fogFarSpin.setValue(200.0)
+            if (editor.FogFarSpin != null)
+            {
+                editor.FogFarSpin.Value = 200.0M;
+            }
+            // Matching Python: editor.ui.commentsEdit.setPlainText("Roundtrip test comment")
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text = "Roundtrip test comment";
+            }
+
+            // Matching Python: Save
+            // Matching Python: data1, _ = editor.build()
+            var (data1, _) = editor.Build();
+            // Matching Python: saved_are1 = read_are(data1)
+            var savedAre1 = AREHelpers.ReadAre(data1);
+
+            // Matching Python: Load saved data
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data1)
+            editor.Load(areFile, "tat001", ResourceType.ARE, data1);
+
+            // Matching Python: Verify modifications preserved
+            // Matching Python: assert editor.ui.tagEdit.text() == "modified_roundtrip"
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text.Should().Be("modified_roundtrip");
+            }
+            // Matching Python: assert editor.ui.alphaTestSpin.value() == 200
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value.Should().Be(200);
+            }
+            // Matching Python: assert editor.ui.fogEnabledCheck.isChecked()
+            if (editor.FogEnabledCheck != null)
+            {
+                editor.FogEnabledCheck.IsChecked.Should().BeTrue();
+            }
+            // Matching Python: assert editor.ui.fogNearSpin.value() == 10.0
+            if (editor.FogNearSpin != null)
+            {
+                System.Math.Abs((double)(editor.FogNearSpin.Value ?? 0) - 10.0).Should().BeLessThan(0.001);
+            }
+            // Matching Python: assert editor.ui.fogFarSpin.value() == 200.0
+            if (editor.FogFarSpin != null)
+            {
+                System.Math.Abs((double)(editor.FogFarSpin.Value ?? 0) - 200.0).Should().BeLessThan(0.001);
+            }
+            // Matching Python: assert editor.ui.commentsEdit.toPlainText() == "Roundtrip test comment"
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text.Should().Be("Roundtrip test comment");
+            }
+
+            // Matching Python: Save again
+            // Matching Python: data2, _ = editor.build()
+            var (data2, _) = editor.Build();
+            // Matching Python: saved_are2 = read_are(data2)
+            var savedAre2 = AREHelpers.ReadAre(data2);
+
+            // Matching Python: Verify second save matches first
+            // Matching Python: assert saved_are2.tag == saved_are1.tag
+            savedAre2.Tag.Should().Be(savedAre1.Tag);
+            // Matching Python: assert saved_are2.alpha_test == saved_are1.alpha_test
+            savedAre2.AlphaTest.Should().Be(savedAre1.AlphaTest);
+            // Matching Python: assert saved_are2.fog_enabled == saved_are1.fog_enabled
+            savedAre2.FogEnabled.Should().Be(savedAre1.FogEnabled);
+            // Matching Python: assert saved_are2.comment == saved_are1.comment
+            savedAre2.Comment.Should().Be(savedAre1.Comment);
         }
 
         // TODO: STUB - Implement test_are_editor_multiple_save_load_cycles (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1290-1321)
