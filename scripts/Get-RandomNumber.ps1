@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
@@ -95,6 +96,8 @@ catch {
 }
 
 =======
+=======
+>>>>>>> Stashed changes
 <#
 .SYNOPSIS
     Generates a random number within a specified range.
@@ -132,4 +135,7 @@ param(
 # Generate and return a random number between 0 (inclusive) and UpperBound (exclusive)
 $randomNumber = Get-Random -Minimum 0 -Maximum $UpperBound
 Write-Output $randomNumber
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

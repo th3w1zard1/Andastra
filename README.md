@@ -165,6 +165,7 @@ dotnet build src/Andastra/Runtime/
 dotnet build src/Tools/
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 # Build with release configuration
 dotnet build Andastra.sln --configuration Release
 ```
@@ -271,6 +272,8 @@ dotnet test --collect:"XPlat Code Coverage"
 - **[Engine Roadmap](docs/engine_roadmap.md)** - Implementation roadmap and status
 - **[Architecture Documentation](docs/)** - Detailed architecture and design documents
 =======
+=======
+>>>>>>> Stashed changes
 **Total Estimated**: 105-155 hours of reverse engineering work
 >>>>>>> Stashed changes
 
@@ -310,4 +313,7 @@ Andastra is under active development. The Odyssey engine implementation is the m
 ---
 
 **Status**: Active reverse engineering project - Contributions welcome!
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
