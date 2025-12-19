@@ -21,6 +21,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
     public class NativeRaytracingSystem : IRaytracingSystem
     {
         private IGraphicsBackend _backend;
+        private IDevice _device;
         private RaytracingSettings _settings;
         private bool _initialized;
         private bool _enabled;
@@ -28,9 +29,12 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
         // Acceleration structures
         private readonly Dictionary<IntPtr, BlasEntry> _blasEntries;
+        private readonly Dictionary<IntPtr, IAccelStruct> _blasAccelStructs; // Map IntPtr handle to IAccelStruct
         private readonly List<TlasInstance> _tlasInstances;
-        private IntPtr _tlas;
+        private IAccelStruct _tlas;
+        private IBuffer _instanceBuffer;
         private bool _tlasDirty = true;
+        private uint _nextBlasHandle = 1;
 
         // Ray tracing pipelines
         private IntPtr _shadowPipeline;
@@ -81,10 +85,12 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             get { return _settings.Level == RaytracingLevel.PathTracing ? 8 : 3; }
         }
 
-        public NativeRaytracingSystem(IGraphicsBackend backend)
+        public NativeRaytracingSystem(IGraphicsBackend backend, IDevice device = null)
         {
-            _backend = backend;
+            _backend = backend ?? throw new ArgumentNullException(nameof(backend));
+            _device = device;
             _blasEntries = new Dictionary<IntPtr, BlasEntry>();
+            _blasAccelStructs = new Dictionary<IntPtr, IAccelStruct>();
             _tlasInstances = new List<TlasInstance>();
         }
 
@@ -98,6 +104,15 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             if (!IsAvailable)
             {
                 Console.WriteLine("[NativeRT] Hardware raytracing not available");
+                return false;
+            }
+
+            // Get device from backend if not provided
+            if (_device == null)
+            {
+                // Try to get device from backend - this may need to be implemented in backend
+                // For now, we require device to be passed in constructor
+                Console.WriteLine("[NativeRT] Error: IDevice must be provided for raytracing");
                 return false;
             }
 
@@ -141,11 +156,27 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             }
             _blasEntries.Clear();
 
-            // Destroy TLAS
-            if (_tlas != IntPtr.Zero)
+            foreach (IAccelStruct blas in _blasAccelStructs.Values)
             {
-                _backend.DestroyResource(_tlas);
-                _tlas = IntPtr.Zero;
+                if (blas != null)
+                {
+                    blas.Dispose();
+                }
+            }
+            _blasAccelStructs.Clear();
+
+            // Destroy TLAS
+            if (_tlas != null)
+            {
+                _tlas.Dispose();
+                _tlas = null;
+            }
+
+            // Destroy instance buffer
+            if (_instanceBuffer != null)
+            {
+                _instanceBuffer.Dispose();
+                _instanceBuffer = null;
             }
 
             // Destroy pipelines
@@ -168,15 +199,105 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
         public void BuildTopLevelAS()
         {
-            if (!_initialized || !_tlasDirty)
+            if (!_initialized || !_tlasDirty || _device == null)
             {
                 return;
             }
 
-            // Rebuild TLAS from instances
-            // TODO: STUB - In real implementation:
-            // - Create instance buffer with transforms and BLAS references
-            // - Call vkCmdBuildAccelerationStructuresKHR / BuildRaytracingAccelerationStructure
+            if (_tlasInstances.Count == 0)
+            {
+                // No instances to build
+                _tlasDirty = false;
+                return;
+            }
+
+            // Create or update instance buffer with transforms and BLAS references
+            int instanceCount = _tlasInstances.Count;
+            int instanceBufferSize = instanceCount * 64; // AccelStructInstance is 64 bytes (VkAccelerationStructureInstanceKHR)
+
+            // Create or resize instance buffer if needed
+            if (_instanceBuffer == null || instanceBufferSize > _instanceBuffer.Desc.ByteSize)
+            {
+                if (_instanceBuffer != null)
+                {
+                    _instanceBuffer.Dispose();
+                }
+
+                _instanceBuffer = _device.CreateBuffer(new BufferDesc
+                {
+                    ByteSize = instanceBufferSize,
+                    Usage = BufferUsageFlags.AccelStructStorage,
+                    InitialState = ResourceState.AccelStructBuildInput,
+                    IsAccelStructBuildInput = true,
+                    DebugName = "TLAS_InstanceBuffer"
+                });
+            }
+
+            // Create instance data array with transforms and BLAS references
+            AccelStructInstance[] instances = new AccelStructInstance[instanceCount];
+            for (int i = 0; i < instanceCount; i++)
+            {
+                TlasInstance tlasInst = _tlasInstances[i];
+                BlasEntry blasEntry = _blasEntries[tlasInst.BlasHandle];
+
+                // Get BLAS device address from IAccelStruct
+                ulong blasAddress = 0;
+                if (_blasAccelStructs.TryGetValue(tlasInst.BlasHandle, out IAccelStruct blas))
+                {
+                    blasAddress = blas.DeviceAddress;
+                }
+
+                instances[i] = new AccelStructInstance
+                {
+                    Transform = Matrix3x4.FromMatrix4x4(tlasInst.Transform),
+                    InstanceCustomIndex = (uint)i,
+                    Mask = (byte)(tlasInst.InstanceMask & 0xFF),
+                    InstanceShaderBindingTableRecordOffset = tlasInst.HitGroupIndex,
+                    Flags = blasEntry.IsOpaque ? AccelStructInstanceFlags.ForceOpaque : AccelStructInstanceFlags.None,
+                    AccelerationStructureReference = blasAddress
+                };
+            }
+
+            // Write instance data to buffer using command list
+            ICommandList commandList = _device.CreateCommandList(CommandListType.Graphics);
+            commandList.Open();
+            commandList.WriteBuffer(_instanceBuffer, instances);
+            commandList.Close();
+            _device.ExecuteCommandList(commandList);
+            commandList.Dispose();
+
+            // Create or update TLAS acceleration structure
+            int maxInstances = Math.Max(instanceCount, 1024); // Allocate space for growth
+            if (_tlas == null)
+            {
+                _tlas = _device.CreateAccelStruct(new AccelStructDesc
+                {
+                    IsTopLevel = true,
+                    TopLevelMaxInstances = maxInstances,
+                    BuildFlags = AccelStructBuildFlags.AllowUpdate | AccelStructBuildFlags.PreferFastTrace,
+                    DebugName = "TopLevelAS"
+                });
+            }
+            else if (instanceCount > maxInstances)
+            {
+                // Need to recreate with larger capacity
+                _tlas.Dispose();
+                _tlas = _device.CreateAccelStruct(new AccelStructDesc
+                {
+                    IsTopLevel = true,
+                    TopLevelMaxInstances = maxInstances * 2,
+                    BuildFlags = AccelStructBuildFlags.AllowUpdate | AccelStructBuildFlags.PreferFastTrace,
+                    DebugName = "TopLevelAS"
+                });
+            }
+
+            // Build TLAS using command list
+            commandList = _device.CreateCommandList(CommandListType.Graphics);
+            commandList.Open();
+            commandList.BuildTopLevelAccelStruct(_tlas, instances);
+            commandList.Close();
+            _device.ExecuteCommandList(commandList);
+            commandList.Dispose();
 
             _tlasDirty = false;
             _lastStats.TlasInstanceCount = _tlasInstances.Count;
@@ -184,24 +305,54 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
         public IntPtr BuildBottomLevelAS(MeshGeometry geometry)
         {
-            if (!_initialized)
+            if (!_initialized || _device == null)
             {
                 return IntPtr.Zero;
             }
 
             // Create BLAS for mesh geometry
-            // TODO: STUB - In real implementation:
-            // - Create VkAccelerationStructureGeometryKHR from vertex/index buffers
-            // - Query prebuild info for scratch/result buffer sizes
-            // - Create scratch and result buffers
-            // - Build BLAS
+            // - Create geometry description from vertex/index buffers
+            // - Create acceleration structure
+            // - Build BLAS using command list
 
-            IntPtr handle = _backend.CreateBuffer(new BufferDescription
+            // Create geometry description
+            // Note: This assumes geometry has vertex/index buffers already created
+            // In a real implementation, we'd need to get these from the MeshGeometry
+            GeometryDesc geometryDesc = new GeometryDesc
             {
-                SizeInBytes = 1024 * 1024, // TODO: PLACEHOLDER - Placeholder buffer size
-                Usage = BufferUsage.AccelerationStructure,
-                DebugName = "BLAS"
+                Type = GeometryType.Triangles,
+                Flags = geometry.IsOpaque ? GeometryFlags.Opaque : GeometryFlags.None,
+                Triangles = new GeometryTriangles
+                {
+                    // These would come from geometry.VertexBuffer, geometry.IndexBuffer
+                    // For now, we create a placeholder - in real implementation these must be provided
+                    VertexCount = geometry.VertexCount,
+                    IndexCount = geometry.IndexCount,
+                    VertexFormat = TextureFormat.R32G32B32_Float, // Typical vertex format
+                    VertexStride = 12, // 3 floats * 4 bytes
+                    IndexFormat = TextureFormat.R32_UInt
+                }
+            };
+
+            // Create BLAS acceleration structure
+            IAccelStruct blas = _device.CreateAccelStruct(new AccelStructDesc
+            {
+                IsTopLevel = false,
+                BottomLevelGeometries = new GeometryDesc[] { geometryDesc },
+                BuildFlags = AccelStructBuildFlags.PreferFastTrace,
+                DebugName = "BottomLevelAS"
             });
+
+            // Build BLAS using command list
+            ICommandList commandList = _device.CreateCommandList(CommandListType.Graphics);
+            commandList.Open();
+            commandList.BuildBottomLevelAccelStruct(blas, new GeometryDesc[] { geometryDesc });
+            commandList.Close();
+            _device.ExecuteCommandList(commandList);
+            commandList.Dispose();
+
+            // Create handle for this BLAS
+            IntPtr handle = new IntPtr(_nextBlasHandle++);
 
             _blasEntries[handle] = new BlasEntry
             {
@@ -211,6 +362,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 IsOpaque = geometry.IsOpaque
             };
 
+            _blasAccelStructs[handle] = blas;
             _lastStats.BlasCount = _blasEntries.Count;
 
             return handle;
