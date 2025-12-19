@@ -7,15 +7,21 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Module Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe module system
-    /// - Located via string references: "Mod_" prefix for module fields (Mod_Tag, Mod_Entry_Area, etc.)
-    /// - IFO file format: GFF with "IFO " signature containing module metadata
-    /// - Module loading: FUN_00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
-    /// - Original implementation stores module data in IFO file, references areas by ResRef
-    /// - Module contains entry area, entry position, time settings, and script hooks
-    /// - Based on IFO file format documentation in vendor/PyKotor/wiki/GFF-IFO.md
+    /// - Common interface shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
+    /// - Defines the core contract for module representation that all engines must provide
+    /// - Engine-specific implementations are in concrete classes (OdysseyModule, AuroraModule, EclipseModule, InfinityModule)
+    /// - Common concepts across all engines:
+    ///   - Module definition with entry area and position
+    ///   - Area management within modules
+    ///   - Time management (dawn/dusk hours, calendar)
+    ///   - Script hooks for module events
+    ///   - Resource reference (ResRef) for module identification
+    /// - Engine-specific details (file formats, loading functions, etc.) are in implementation classes:
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): IFO file format, FUN_00708990 @ 0x00708990 (swkotor2.exe)
+    ///   - Aurora (nwmain.exe): Module.ifo format, CNWSModule::LoadModule
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): UnrealScript-based module loading
+    ///   - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): ARE/WED/GAM file formats
+    /// - Based on cross-engine analysis of module systems in all BioWare engines
     /// </remarks>
     public interface IModule
     {

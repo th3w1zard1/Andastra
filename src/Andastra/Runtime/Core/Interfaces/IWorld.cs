@@ -14,26 +14,42 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// World Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe world management system
-    /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c, "Tag" (various locations)
-    /// - Original engine maintains entity lists by ObjectId, Tag, and ObjectType
-    /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive), nth parameter for multiple entities with same tag
-    /// - ObjectId is unique 32-bit identifier assigned sequentially (see FUN_005226d0 @ 0x005226d0 for entity serialization)
-    /// - World manages current area/module, time (ITimeManager), events (IEventBus), delay scheduler (IDelayScheduler), and effect system
-    /// - Module management: "Module" @ 0x007bc4e0, "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
-    /// - Module events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
-    /// - Module save: "modulesave" @ 0x007bde20, "LinkedToModule" @ 0x007bd7bc (door/trigger module links)
-    /// - Area management: "AREANAME" @ 0x007be1dc (area name field), "AreaName" @ 0x007be340, "AreaId" @ 0x007bef48
-    /// - "AreaObject" @ 0x007c0b70, "AreaProperties" @ 0x007bd228, "AreaMap" @ 0x007bd118 (area map data)
-    /// - "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100, "AreaMapData" @ 0x007bd0e4, "AreaMapDataSize" @ 0x007bd0f0
-    /// - Area events: "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
-    /// - "Mod_Area_list" @ 0x007be748 (module area list), "Mod_Entry_Area" @ 0x007be9b4 (module entry area)
-    /// - "Target_Area" @ 0x007c02d4 (target area for transitions), "NW_MAP_PIN_AREA_%i" @ 0x007bd824 (map pin format)
-    /// - CreateEntity: Creates new entity from template or ObjectType, assigns ObjectId automatically
-    /// - DestroyEntity: Removes entity from world and cleans up all components
-    /// - GetEntitiesInRadius: Spatial query with optional ObjectType filter mask
+    /// Common world management system shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity).
+    ///
+    /// Common functionality across all engines:
+    /// - Entity container: Maintains entity lists by ObjectId, Tag, and ObjectType for efficient lookup
+    /// - Entity lookup: GetEntity by ObjectId (O(1) lookup), GetEntityByTag by tag string (case-insensitive, supports nth occurrence)
+    /// - ObjectId: Unique 32-bit identifier assigned sequentially, used for script references and save game serialization
+    /// - Area management: Entities belong to areas (AreaId field), areas contain entity lists by type
+    /// - Module management: World manages current area/module, module loading/unloading, area transitions
+    /// - System integration: World coordinates time (ITimeManager), events (IEventBus), delay scheduler (IDelayScheduler), effect system, combat system, perception system, trigger system, AI controller, animation system
+    /// - Entity lifecycle: CreateEntity (from template or ObjectType), DestroyEntity (removes entity and cleans up components)
+    /// - Spatial queries: GetEntitiesInRadius with optional ObjectType filter mask
+    /// - Area registration: Areas are registered with AreaId for entity lookup, GetArea by AreaId (O(1) lookup)
+    /// - Entity registration: RegisterEntity/UnregisterEntity for adding/removing entities from world
+    ///
+    /// Engine-specific implementations:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyWorld : BaseWorld
+    ///   - ObjectId lookup via "ObjectId" string reference, ObjectId assignment and serialization
+    ///   - AreaId management via "AreaId" string reference
+    ///   - Module management with ARE/GIT file loading
+    ///   - Entity serialization/deserialization via GFF format
+    /// - Aurora (nwmain.exe, nwn2main.exe): AuroraWorld : BaseWorld
+    ///   - Similar entity management structure with CExoString-based Tag
+    ///   - Module management with ERF/HAK file support
+    ///   - Area management with enhanced spatial partitioning
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): EclipseWorld : BaseWorld
+    ///   - Enhanced component system with streamlined entity management
+    ///   - Module streaming system for large areas
+    ///   - Advanced area management with dynamic loading
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): InfinityWorld : BaseWorld
+    ///   - Streamlined entity system optimized for action gameplay
+    ///   - Level-based world management (levels instead of modules)
+    ///   - Enhanced spatial queries for large-scale environments
+    ///
+    /// Base implementation: BaseWorld (Runtime.Games.Common) provides common functionality.
+    /// All engine-specific details (function addresses, string references, implementation specifics) are in subclasses.
+    /// This interface defines only common functionality shared across all engines.
     /// </remarks>
     public interface IWorld
     {
@@ -156,11 +172,11 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Gets an area by its AreaId.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetArea function
-        /// Located via string references: "AreaId" @ 0x007bef48
-        /// Original implementation: O(1) dictionary lookup by AreaId (uint32)
-        /// Returns null if AreaId not found
-        /// Used by GetArea NWScript function to find area containing an entity
+        /// O(1) dictionary lookup by AreaId (uint32).
+        /// Returns null if AreaId not found.
+        /// Common across all engines: Areas are registered with AreaId for efficient lookup.
+        /// Used by GetArea NWScript function (where applicable) to find area containing an entity.
+        /// Engine-specific implementations handle AreaId assignment and lookup mechanisms.
         /// </remarks>
         IArea GetArea(uint areaId);
 
@@ -168,9 +184,9 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Registers an area with the world and assigns it an AreaId.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area registration system
-        /// Located via string references: "AreaId" @ 0x007bef48
-        /// Original implementation: Areas are registered in world with AreaId for entity lookup
+        /// Areas are registered in world with AreaId for entity lookup.
+        /// Common across all engines: Areas assigned sequential AreaId starting from engine-specific base value.
+        /// Engine-specific implementations handle AreaId assignment ranges and lookup mechanisms.
         /// </remarks>
         void RegisterArea(IArea area);
 

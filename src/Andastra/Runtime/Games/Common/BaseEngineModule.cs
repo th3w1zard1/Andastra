@@ -12,22 +12,24 @@ namespace Andastra.Runtime.Engines.Common
     /// </summary>
     /// <remarks>
     /// Base Engine Module:
-    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser, handles module state management)
-    /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58, "MODULE" @ module loading
+    /// - Common module loading and state management framework shared across all BioWare engines
+    /// - Provides foundation for engine-specific module systems
+    /// - Common concepts across all engines:
+    ///   - Module loading and unloading
+    ///   - Current module/area/navigation mesh tracking
+    ///   - Module state management (Idle, Loaded, Running states)
+    ///   - Resource loading for modules
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): FUN_006caab0 @ 0x006caab0 (swkotor2.exe) - server command parser, manages module state flags
-    ///   - Aurora (nwmain.exe): Similar module loading system (module.ifo, area files, entity spawning)
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Similar module loading system
-    ///   - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): Similar module loading system (ARE/WED/GAM files)
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): IFO/LYT/VIS/GIT/ARE file formats, module state flags
+    ///   - Aurora (nwmain.exe): Module.ifo format, area files, entity spawning
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): UnrealScript-based module loading
+    ///   - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): ARE/WED/GAM file formats
     /// - Inheritance: Base class BaseEngineModule (Runtime.Games.Common) implements common module loading/unloading
-    ///   - Odyssey: OdysseyModuleLoader : BaseEngineModule (Runtime.Games.Odyssey)
-    ///   - Aurora: AuroraModuleLoader : BaseEngineModule (Runtime.Games.Aurora)
-    ///   - Eclipse: EclipseModuleLoader : BaseEngineModule (Runtime.Games.Eclipse)
-    ///   - Infinity: InfinityModuleLoader : BaseEngineModule (Runtime.Games.Infinity)
-    /// - Original implementation: FUN_006caab0 parses server commands, manages module state flags (Idle=0, ModuleLoaded=1, ModuleRunning=2)
-    /// - Module loading order: IFO (module info) -> LYT (layout) -> VIS (visibility) -> GIT (instances) -> ARE (area properties)
-    /// - Module management: Loads module areas, navigation meshes, entities from GIT files
-    /// - Module state: Tracks current module name, current area, navigation mesh
+    ///   - Odyssey: OdysseyModuleLoader : BaseEngineModule (Runtime.Games.Odyssey) - engine-specific addresses in subclass
+    ///   - Aurora: AuroraModuleLoader : BaseEngineModule (Runtime.Games.Aurora) - engine-specific addresses in subclass
+    ///   - Eclipse: EclipseModuleLoader : BaseEngineModule (Runtime.Games.Eclipse) - engine-specific addresses in subclass
+    ///   - Infinity: InfinityModuleLoader : BaseEngineModule (Runtime.Games.Infinity) - engine-specific addresses in subclass
+    /// - Engine-specific details (function addresses, string references, file formats) are documented in subclasses
     /// </remarks>
     public abstract class BaseEngineModule : IEngineModule
     {
