@@ -278,23 +278,79 @@ namespace Andastra.Runtime.Games.Infinity
         /// Updates all attached components.
         /// Processes any pending script events.
         /// Handles component interactions.
+        /// 
+        /// Based on MassEffect.exe and MassEffect2.exe: Entity update loop processes components in dependency order.
+        /// Component update order:
+        /// 1. TransformComponent (position, orientation updates)
+        /// 2. ActionQueueComponent (action execution, may modify transform)
+        /// 3. StatsComponent (HP regeneration, stat updates)
+        /// 4. PerceptionComponent (perception checks, uses transform position)
+        /// 5. Other components (in arbitrary order)
+        /// 
+        /// Component interactions:
+        /// - Transform changes trigger perception updates
+        /// - HP changes trigger death state updates
+        /// - Action queue execution may modify transform
+        /// - Inventory changes affect encumbrance and movement speed
         /// </remarks>
         public override void Update(float deltaTime)
         {
             if (!IsValid)
                 return;
 
-            // Update all components
+            // Update components in dependency order
+            // 1. TransformComponent first (position/orientation)
+            var transformComponent = GetComponent<ITransformComponent>();
+            if (transformComponent is IUpdatableComponent updatableTransform)
+            {
+                updatableTransform.Update(deltaTime);
+            }
+
+            // 2. ActionQueueComponent (may modify transform through movement actions)
+            var actionQueueComponent = GetComponent<IActionQueueComponent>();
+            if (actionQueueComponent != null)
+            {
+                actionQueueComponent.Update(this, deltaTime);
+            }
+
+            // 3. StatsComponent (HP regeneration, stat updates)
+            var statsComponent = GetComponent<IStatsComponent>();
+            if (statsComponent is IUpdatableComponent updatableStats)
+            {
+                updatableStats.Update(deltaTime);
+            }
+
+            // 4. PerceptionComponent (uses transform position)
+            var perceptionComponent = GetComponent<IPerceptionComponent>();
+            if (perceptionComponent is IUpdatableComponent updatablePerception)
+            {
+                updatablePerception.Update(deltaTime);
+            }
+
+            // 5. Other components (in arbitrary order)
             foreach (var component in GetAllComponents())
             {
+                // Skip already-updated components
+                if (component == transformComponent || 
+                    component == actionQueueComponent || 
+                    component == statsComponent || 
+                    component == perceptionComponent)
+                {
+                    continue;
+                }
+
                 if (component is IUpdatableComponent updatable)
                 {
                     updatable.Update(deltaTime);
                 }
             }
 
-            // TODO: Process script events and hooks
-            // TODO: Handle component interactions
+            // Handle component interactions after all components are updated
+            HandleComponentInteractions(deltaTime);
+
+            // Process script events and hooks
+            // Script events are processed by the game loop, not here
+            // But we could fire heartbeat events here if needed
         }
 
         /// <summary>
