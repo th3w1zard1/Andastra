@@ -514,6 +514,21 @@ namespace HolocronToolset.Editors
             {
                 _dynamicColorEdit.SetColor(are.DynamicLight);
             }
+            // Matching Python: self.ui.grassDiffuseEdit.set_color(are.grass_diffuse) (line 328)
+            if (_grassDiffuseEdit != null)
+            {
+                _grassDiffuseEdit.SetColor(are.GrassDiffuse);
+            }
+            // Matching Python: self.ui.grassAmbientEdit.set_color(are.grass_ambient) (line 329)
+            if (_grassAmbientEdit != null)
+            {
+                _grassAmbientEdit.SetColor(are.GrassAmbient);
+            }
+            // Matching Python: self.ui.grassEmissiveEdit.set_color(are.grass_emissive) (line 330) (TSL only)
+            if (_grassEmissiveEdit != null)
+            {
+                _grassEmissiveEdit.SetColor(are.GrassEmissive);
+            }
             // Matching Python: self.ui.commentsEdit.setPlainText(are.comment) (line 247)
             if (_commentsEdit != null)
             {
