@@ -161,6 +161,45 @@ namespace Andastra.Runtime.Core.Camera
         #region Mode Switching
 
         /// <summary>
+        /// Gets the player entity from the world.
+        /// Based on swkotor2.exe: Player entity lookup for camera reset
+        /// Original implementation: Returns player entity for camera to follow after dialogue ends
+        /// </summary>
+        /// <returns>The player entity, or null if not found.</returns>
+        public IEntity GetPlayerEntity()
+        {
+            if (_world == null)
+            {
+                return null;
+            }
+
+            // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
+            IEntity playerEntity = _world.GetEntityByTag("Player", 0);
+            if (playerEntity != null)
+            {
+                return playerEntity;
+            }
+
+            // Strategy 2: Try to find entity by tag "PlayerCharacter" (Eclipse engine pattern)
+            playerEntity = _world.GetEntityByTag("PlayerCharacter", 0);
+            if (playerEntity != null)
+            {
+                return playerEntity;
+            }
+
+            // Strategy 3: Search through all entities for one marked as player
+            foreach (IEntity entity in _world.GetAllEntities())
+            {
+                if (entity != null && entity.GetData<bool>("IsPlayer", false))
+                {
+                    return entity;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Sets chase camera mode following an entity.
         /// </summary>
         public void SetChaseMode(IEntity target)

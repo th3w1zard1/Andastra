@@ -229,15 +229,26 @@ namespace Andastra.Runtime.MonoGame.Camera
 
         /// <summary>
         /// Resets the camera to normal gameplay mode.
+        /// Based on swkotor2.exe: Camera reset to chase mode
+        /// Located via string references: Camera mode switching
+        /// Original implementation: Returns camera to chase mode following player
+        /// Reverse engineered from swkotor2.exe: Camera reset after dialogue ends returns to chase mode with player as target
         /// </summary>
         public void Reset()
         {
-            // Based on swkotor2.exe: Camera reset to chase mode
-            // Located via string references: Camera mode switching
-            // Original implementation: Returns camera to chase mode following player
-            // TODO: SIMPLIFIED - Get player entity from world (would need IWorld reference)
-            // TODO: SIMPLIFIED - For now, just switch to chase mode without target (will be set by game loop)
-            _cameraController.SetFreeMode();
+            // Get player entity from world via camera controller
+            IEntity playerEntity = _cameraController.GetPlayerEntity();
+            
+            if (playerEntity != null)
+            {
+                // Reset to chase mode following player
+                _cameraController.SetChaseMode(playerEntity);
+            }
+            else
+            {
+                // Fallback to free mode if player entity not found (shouldn't happen in normal gameplay)
+                _cameraController.SetFreeMode();
+            }
         }
     }
 }
