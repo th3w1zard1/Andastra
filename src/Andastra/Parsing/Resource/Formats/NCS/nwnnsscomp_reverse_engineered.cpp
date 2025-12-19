@@ -2862,8 +2862,13 @@ void nwnnsscomp_perform_additional_cleanup(NssCompiler* compiler) {
 // - nwnnsscomp_destroy_compiler (0x00401e50) - Compiler cleanup
 // - nwnnsscomp_perform_additional_cleanup (0x00401e80) - Additional cleanup
 //
-// TOTAL: ~6000+ bytes of assembly fully documented with every instruction
-// TOTAL: 2600+ lines of C++ code with complete assembly annotations
+// Instruction Emission and Buffer Management:
+// - nwnnsscomp_emit_instruction (0x00405365) - 49 bytes - Instruction emission
+// - nwnnsscomp_prepare_instruction (0x00405396) - 63 bytes - Instruction preparation
+// - nwnnsscomp_expand_bytecode_buffer (0x00405409) - 139 bytes - Buffer expansion
+//
+// TOTAL: ~6500+ bytes of assembly fully documented with every instruction
+// TOTAL: 2800+ lines of C++ code with complete assembly annotations
 //
 // REMAINING FUNCTIONS (Less critical, can be expanded as needed):
 //
@@ -2871,11 +2876,12 @@ void nwnnsscomp_perform_additional_cleanup(NssCompiler* compiler) {
 // - FUN_00408ca6 - 17075 bytes - Entire parser state machine (extremely large)
 //   This is the complete NSS parser. Can be expanded section by section if needed.
 //
-// Instruction Emission:
-// - nwnnsscomp_emit_instruction - Instruction emission to bytecode buffer
-// - nwnnsscomp_update_buffer_size - Buffer size management
-// - nwnnsscomp_buffer_needs_expansion - Buffer capacity checking
-// - nwnnsscomp_expand_bytecode_buffer - Buffer expansion logic
+// Instruction Emission (COMPLETED):
+// - nwnnsscomp_emit_instruction (0x00405365) - 49 bytes - Instruction emission to bytecode buffer
+// - nwnnsscomp_prepare_instruction (0x00405396) - 63 bytes - Instruction preparation
+// - nwnnsscomp_buffer_needs_expansion - Buffer capacity checking helper
+// - nwnnsscomp_expand_bytecode_buffer (0x00405409) - 139 bytes - Buffer expansion with power-of-2 growth
+// - nwnnsscomp_update_buffer_size - Buffer size management (structure documented)
 //
 // Helper Functions:
 // - FUN_00404398 - Buffer allocation helper
