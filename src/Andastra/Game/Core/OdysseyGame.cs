@@ -1481,11 +1481,22 @@ namespace Andastra.Runtime.Game.Core
         }
 
         /// <summary>
-        /// Draws the player entity as a simple representation.
+        /// Draws the player entity using model renderer if available, otherwise as a simple box.
         /// </summary>
+        /// <remarks>
+        /// Player Entity Rendering:
+        /// - Based on swkotor2.exe: Player entity is rendered using the same entity model rendering system as other creatures
+        /// - Located via string references: Player entity uses CSWCCreature::LoadModel() @ 0x005261b0 for model loading
+        /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
+        /// - Original implementation: Player entity model is resolved from appearance.2da using appearance type
+        /// - Model resolution: FUN_005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
+        /// - Player rendering: Uses same rendering pipeline as other creatures, no special handling required
+        /// - Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (load creature model), player entity uses standard creature rendering
+        /// </remarks>
         private void DrawPlayerEntity(Andastra.Runtime.Core.Interfaces.IEntity playerEntity)
         {
-            // Player rendering using abstraction layer
+            // Player rendering using abstraction layer - same as regular entities
+            // Based on swkotor2.exe: Player entity uses standard creature model rendering (swkotor2.exe: 0x005261b0)
 
             Kotor.Components.TransformComponent transform = playerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
@@ -1493,8 +1504,24 @@ namespace Andastra.Runtime.Game.Core
                 return;
             }
 
-            // Create a simple representation of the player (colored box)
-            // TODO: Replace with actual player model rendering
+            // Try to render with model renderer first (same approach as DrawEntity)
+            // Player entity is a Creature entity, so it uses the same model resolution system
+            if (_entityModelRenderer != null)
+            {
+                try
+                {
+                    _entityModelRenderer.RenderEntity(playerEntity, _viewMatrix, _projectionMatrix);
+                    return; // Successfully rendered with model
+                }
+                catch (Exception ex)
+                {
+                    // Fall back to box rendering if model rendering fails
+                    Console.WriteLine("[Odyssey] Model rendering failed for player entity: " + ex.Message);
+                }
+            }
+
+            // Fallback: Draw as simple colored box (same as DrawEntity fallback)
+            // This provides visual feedback when model rendering is unavailable
             var playerPos = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
             var playerWorld = MatrixHelper.CreateTranslation(playerPos);
 
