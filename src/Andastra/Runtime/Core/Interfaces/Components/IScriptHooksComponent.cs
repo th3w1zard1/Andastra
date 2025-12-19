@@ -7,17 +7,24 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Script Hooks Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe script event system
-    /// - Located via string references: "ScriptHeartbeat" @ 0x007bee60, "ScriptOnNotice" @ 0x007bee70,
-    ///   "ScriptAttacked" @ 0x007bee80, "ScriptDamaged" @ 0x007bee90, "ScriptDeath" @ 0x007beea0
+    /// - Common interface for script hooks functionality across all BioWare engines
+    /// - Base implementation: BaseScriptHooksComponent in Runtime.Games.Common.Components
+    /// - Engine-specific implementations: OdysseyScriptHooksComponent (inherits from base, no differences)
+    /// - Cross-engine analysis completed via Ghidra reverse engineering:
+    ///   - Odyssey: swkotor.exe, swkotor2.exe
+    ///     - swkotor.exe: FUN_004ebf20, FUN_00500610, FUN_0058e660, FUN_0058da80 (script hooks save/load)
+    ///     - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures), FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables), FUN_00584f40 @ 0x00584f40 (save script hooks for doors), FUN_0050c510 @ 0x0050c510 (load script hooks from UTC template)
+    ///     - String references: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0, "ScriptAttacked" @ 0x007bee80
+    ///   - Aurora: nwmain.exe
+    ///     - SaveCreature @ 0x1403a0a60, LoadFromTemplate @ 0x140501c90, SaveTrigger @ 0x140504290
+    ///     - String references: "ScriptHeartbeat" @ 0x140dddb10, "ScriptOnNotice" @ 0x140dddb20, "ScriptAttacked" @ 0x140dddb40
+    ///   - Eclipse: daorigins.exe, DragonAge2.exe (script hooks system similar, needs verification)
+    ///   - Infinity: MassEffect.exe, MassEffect2.exe (script hooks system similar, needs verification)
     /// - Script events: Stored as script ResRef strings in GFF structures (UTC, UTD, UTP, etc.)
     /// - GetScript/SetScript: Manages script ResRefs for event types (OnHeartbeat, OnAttacked, etc.)
     /// - Local variables: Per-entity local variables (int, float, string) stored in GFF LocalVars structure
     /// - Local variables persist in save games and are accessible via NWScript GetLocal* functions
     /// - Script hooks executed by event bus when game events occur (combat, damage, dialogue, etc.)
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks), FUN_0050c510 @ 0x0050c510 (load script hooks)
     /// </remarks>
     public interface IScriptHooksComponent : IComponent
     {

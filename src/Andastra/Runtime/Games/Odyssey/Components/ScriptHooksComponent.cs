@@ -1,27 +1,28 @@
-using System.Collections.Generic;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Common.Components;
 
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {
     /// <summary>
-    /// Component for storing script event hooks.
+    /// Odyssey Engine (KotOR/KotOR2) specific script hooks component.
     /// </summary>
     /// <remarks>
-    /// Script Hooks Component:
-    /// - Based on swkotor2.exe script event system
-    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0
+    /// Odyssey Script Hooks Component:
+    /// - Inherits from BaseScriptHooksComponent (common functionality)
+    /// - Odyssey-specific: No engine-specific differences identified - uses base implementation
+    /// - Based on swkotor.exe and swkotor2.exe script event system
+    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0 (swkotor2.exe), "ScriptOnNotice" @ 0x007beea0
     /// - "ScriptAttacked" @ 0x007bee80, "ScriptDamaged" @ 0x007bee70, "ScriptDeath" @ 0x007bee20
     /// - "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0, "ScriptSpawn" @ 0x007bee30
     /// - "ScriptOnEnter" @ 0x007c1d40, "ScriptOnExit" @ 0x007c1d30, "ScriptOnUsed" @ 0x007beeb8
     /// - "ScriptOnOpen" @ 0x007c1a54, "ScriptOnClose" @ 0x007c1a8c, "ScriptOnDisarm" @ 0x007c1a1c
     /// - "ScriptOnTrapTriggered" @ 0x007c1a34, "ScriptOnClick" @ 0x007c1a20, "ScriptOnLock" @ 0x007c1a0c
     /// - "ScriptOnUnlock" @ 0x007c1a00, "ScriptOnFailToOpen" @ 0x007c1a10, "ScriptOnUserDefined" @ 0x007bee10
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures)
-    /// - FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables)
-    /// - FUN_00584f40 @ 0x00584f40 (save script hooks for doors)
-    /// - FUN_0050c510 @ 0x0050c510 (load script hooks from UTC template)
+    /// - Original implementation:
+    ///   - swkotor.exe: FUN_004ebf20, FUN_00500610, FUN_0058e660, FUN_0058da80 (script hooks save/load)
+    ///   - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures)
+    ///   - swkotor2.exe: FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables)
+    ///   - swkotor2.exe: FUN_00584f40 @ 0x00584f40 (save script hooks for doors)
+    ///   - swkotor2.exe: FUN_0050c510 @ 0x0050c510 (load script hooks from UTC template)
     /// - Maps script events to script resource references (ResRef strings)
     /// - Scripts are executed by NCS VM when events fire (OnHeartbeat, OnPerception, OnAttacked, etc.)
     /// - Script ResRefs stored in GFF structures (e.g., ScriptHeartbeat, ScriptOnNotice fields)
@@ -29,147 +30,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - Local variables accessed via GetLocalInt/GetLocalFloat/GetLocalString NWScript functions
     /// - Script execution context: Entity is caller (OBJECT_SELF), event triggerer is parameter
     /// </remarks>
-    public class ScriptHooksComponent : IComponent, IScriptHooksComponent
+    public class ScriptHooksComponent : BaseScriptHooksComponent
     {
-        private readonly Dictionary<ScriptEvent, string> _scripts;
-        private readonly Dictionary<string, int> _localInts;
-        private readonly Dictionary<string, float> _localFloats;
-        private readonly Dictionary<string, string> _localStrings;
-
-        public IEntity Owner { get; set; }
-
-        public void OnAttach() { }
-        public void OnDetach() { }
-
-        public ScriptHooksComponent()
-        {
-            _scripts = new Dictionary<ScriptEvent, string>();
-            _localInts = new Dictionary<string, int>();
-            _localFloats = new Dictionary<string, float>();
-            _localStrings = new Dictionary<string, string>();
-        }
-
-        /// <summary>
-        /// Gets the script ResRef for an event.
-        /// </summary>
-        public string GetScript(ScriptEvent evt)
-        {
-            string script;
-            if (_scripts.TryGetValue(evt, out script))
-            {
-                return script;
-            }
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// Sets the script ResRef for an event.
-        /// </summary>
-        public void SetScript(ScriptEvent evt, string scriptResRef)
-        {
-            if (string.IsNullOrEmpty(scriptResRef))
-            {
-                _scripts.Remove(evt);
-            }
-            else
-            {
-                _scripts[evt] = scriptResRef;
-            }
-        }
-
-        /// <summary>
-        /// Checks if an event has a script assigned.
-        /// </summary>
-        public bool HasScript(ScriptEvent evt)
-        {
-            return _scripts.ContainsKey(evt) && !string.IsNullOrEmpty(_scripts[evt]);
-        }
-
-        /// <summary>
-        /// Gets all registered script events.
-        /// </summary>
-        public IEnumerable<ScriptEvent> GetScriptEvents()
-        {
-            return _scripts.Keys;
-        }
-
-        /// <summary>
-        /// Removes a script hook.
-        /// </summary>
-        public void RemoveScript(ScriptEvent evt)
-        {
-            _scripts.Remove(evt);
-        }
-
-        /// <summary>
-        /// Clears all script hooks.
-        /// </summary>
-        public void Clear()
-        {
-            _scripts.Clear();
-        }
-
-        /// <summary>
-        /// Gets a local integer variable.
-        /// </summary>
-        public int GetLocalInt(string name)
-        {
-            int value;
-            if (_localInts.TryGetValue(name, out value))
-            {
-                return value;
-            }
-            return 0;
-        }
-
-        /// <summary>
-        /// Sets a local integer variable.
-        /// </summary>
-        public void SetLocalInt(string name, int value)
-        {
-            _localInts[name] = value;
-        }
-
-        /// <summary>
-        /// Gets a local float variable.
-        /// </summary>
-        public float GetLocalFloat(string name)
-        {
-            float value;
-            if (_localFloats.TryGetValue(name, out value))
-            {
-                return value;
-            }
-            return 0f;
-        }
-
-        /// <summary>
-        /// Sets a local float variable.
-        /// </summary>
-        public void SetLocalFloat(string name, float value)
-        {
-            _localFloats[name] = value;
-        }
-
-        /// <summary>
-        /// Gets a local string variable.
-        /// </summary>
-        public string GetLocalString(string name)
-        {
-            string value;
-            if (_localStrings.TryGetValue(name, out value))
-            {
-                return value;
-            }
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// Sets a local string variable.
-        /// </summary>
-        public void SetLocalString(string name, string value)
-        {
-            _localStrings[name] = value ?? string.Empty;
-        }
+        // Odyssey-specific implementation: Currently uses base class implementation
+        // No engine-specific differences identified - all script hooks functionality is common
     }
 }
