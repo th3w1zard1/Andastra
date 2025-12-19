@@ -9,6 +9,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Engines.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -200,11 +201,23 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
         /// Based on door component structure in swkotor2.exe.
+        /// - FUN_005838d0 @ 0x005838d0: Door initialization from GIT/GFF
+        /// - FUN_00580ed0 @ 0x00580ed0: Door loading function that loads door properties
+        /// - Door component attached during entity creation from UTD templates
+        /// - Doors support: open/closed states, locks, traps, module/area transitions
+        /// - Component provides: IsOpen, IsLocked, LockDC, KeyTag, LinkedTo, LinkedToModule
         /// </remarks>
         private void AttachDoorComponents()
         {
-            // TODO: Attach door-specific components
-            // DoorComponent with open/close/lock state
+            // Attach door component if not already present
+            // Based on swkotor2.exe: Door component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<IDoorComponent>())
+            {
+                var doorComponent = new DoorComponent();
+                doorComponent.Owner = this;
+                AddComponent<IDoorComponent>(doorComponent);
+            }
         }
 
         /// <summary>
@@ -332,7 +345,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on FUN_004e28c0 @ 0x004e28c0 in swkotor2.exe.
         /// Serializes ObjectId, Tag, components, and custom data.
         /// Uses GFF format for structured data storage.
-        /// 
+        ///
         /// Serialized data includes:
         /// - Basic entity properties (ObjectId, Tag, ObjectType, AreaId)
         /// - Transform component (position, facing, scale)
@@ -369,7 +382,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 root.SetSingle("ScaleX", transformComponent.Scale.X);
                 root.SetSingle("ScaleY", transformComponent.Scale.Y);
                 root.SetSingle("ScaleZ", transformComponent.Scale.Z);
-                
+
                 // Serialize parent entity reference if present
                 if (transformComponent.Parent != null)
                 {
@@ -464,7 +477,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (inventoryComponent != null)
             {
                 var inventoryList = root.Acquire<GFFList>("Inventory", new GFFList());
-                
+
                 // Search through all possible inventory slots (0-255 is a reasonable upper bound)
                 // This ensures we capture all items including those in inventory bag slots
                 for (int slot = 0; slot < 256; slot++)
@@ -500,7 +513,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Based on swkotor2.exe: Local variables are stored in ScriptHooksComponent
                 // and serialized to GFF LocalVars structure
                 var localVarsStruct = root.Acquire<GFFStruct>("LocalVariables", new GFFStruct());
-                
+
                 // Access private _localInts, _localFloats, _localStrings dictionaries via reflection
                 Type componentType = scriptHooksComponent.GetType();
                 FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -558,7 +571,7 @@ namespace Andastra.Runtime.Games.Odyssey
             var customDataStruct = root.Acquire<GFFStruct>("CustomData", new GFFStruct());
             Type baseEntityType = typeof(BaseEntity);
             FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
-            
+
             if (dataField != null)
             {
                 var data = dataField.GetValue(this) as Dictionary<string, object>;
@@ -569,7 +582,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     {
                         var dataStruct = dataList.Add();
                         dataStruct.SetString("Key", kvp.Key);
-                        
+
                         // Serialize value based on type
                         if (kvp.Value == null)
                         {
@@ -580,7 +593,7 @@ namespace Andastra.Runtime.Games.Odyssey
                         {
                             Type valueType = kvp.Value.GetType();
                             dataStruct.SetString("Type", valueType.Name);
-                            
+
                             if (valueType == typeof(int))
                             {
                                 dataStruct.SetInt32("Value", (int)kvp.Value);
