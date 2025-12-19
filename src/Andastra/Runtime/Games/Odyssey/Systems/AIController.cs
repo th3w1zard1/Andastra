@@ -164,8 +164,52 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
             if (perception != null)
             {
-                // Perception system would track seen/heard enemies
-                // TODO: SIMPLIFIED - For now, simplified check
+                // Get faction component to check hostility
+                IFactionComponent faction = creature.GetComponent<IFactionComponent>();
+                if (faction != null)
+                {
+                    // Check all seen objects for hostile creatures
+                    foreach (IEntity seenEntity in perception.GetSeenObjects())
+                    {
+                        if (seenEntity == null || !seenEntity.IsValid)
+                        {
+                            continue;
+                        }
+
+                        // Check if this entity is hostile
+                        if (faction.IsHostile(seenEntity))
+                        {
+                            // Verify the hostile entity is alive
+                            IStatsComponent seenStats = seenEntity.GetComponent<IStatsComponent>();
+                            if (seenStats != null && seenStats.CurrentHP > 0)
+                            {
+                                // Found a hostile, alive creature that we can see
+                                return true;
+                            }
+                        }
+                    }
+
+                    // Check all heard objects for hostile creatures
+                    foreach (IEntity heardEntity in perception.GetHeardObjects())
+                    {
+                        if (heardEntity == null || !heardEntity.IsValid)
+                        {
+                            continue;
+                        }
+
+                        // Check if this entity is hostile
+                        if (faction.IsHostile(heardEntity))
+                        {
+                            // Verify the hostile entity is alive
+                            IStatsComponent heardStats = heardEntity.GetComponent<IStatsComponent>();
+                            if (heardStats != null && heardStats.CurrentHP > 0)
+                            {
+                                // Found a hostile, alive creature that we can hear
+                                return true;
+                            }
+                        }
+                    }
+                }
             }
 
             return false;
