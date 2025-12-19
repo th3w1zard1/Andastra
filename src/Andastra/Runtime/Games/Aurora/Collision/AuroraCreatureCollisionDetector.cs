@@ -25,8 +25,9 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - "HandleNotifyCollision" @ 0x140d93d48 (nwmain.exe: collision notification handler)
     ///   - "Tile Has No Axis-Aligned Bounding Box!" @ 0x140dc8368 (nwmain.exe: tile bounding box error)
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): FUN_005479f0 @ 0x005479f0 (swkotor2.exe: creature bounding box), FUN_004e17a0 @ 0x004e17a0 (spatial query), FUN_004f5290 @ 0x004f5290 (detailed collision), FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup for hitradius), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius wrapper)
-    ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSArea::NoCreaturesOnLine @ 0x14036ec90, CNWSCreature::GetIsCreatureBumpable @ 0x140391100, CNWSCreature::BumpFriends @ 0x140385130, C2DA::GetFloatingPoint (appearance.2da lookup)
+    ///   - Odyssey K1 (swkotor.exe): FUN_004ed6e0 @ 0x004ed6e0 (updates bounding box), FUN_004f1310 @ 0x004f1310 (collision distance), FUN_00413350 @ 0x00413350 (2DA lookup), FUN_0060e170 @ 0x0060e170 (GetCreatureRadius wrapper), bounding box at offset 0x340
+    ///   - Odyssey K2 (swkotor2.exe): FUN_005479f0 @ 0x005479f0 (creature bounding box), FUN_004e17a0 @ 0x004e17a0 (spatial query), FUN_004f5290 @ 0x004f5290 (detailed collision), FUN_0041d2c0 @ 0x0041d2c0 (2DA lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius wrapper), bounding box at offset 0x380
+    ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSArea::NoCreaturesOnLine @ 0x14036ec90, CNWSCreature::GetIsCreatureBumpable @ 0x140391100, CNWSCreature::BumpFriends @ 0x140385130, C2DA::GetFloatingPoint (appearance.2da lookup), bounding box at offset 0x530
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): Similar bounding box system using appearance.2da hitradius (needs Ghidra verification)
     ///   - Infinity (MassEffect.exe, MassEffect2.exe): Similar bounding box system using appearance.2da hitradius (needs Ghidra verification)
     /// - Common pattern: All engines use appearance.2da hitradius column for creature collision radius
