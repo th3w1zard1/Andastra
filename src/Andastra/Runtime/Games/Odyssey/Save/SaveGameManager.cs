@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,69 +11,74 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Save;
+using Andastra.Runtime.Games.Common.Save;
 
-namespace Andastra.Runtime.Engines.Odyssey.Save
+namespace Andastra.Runtime.Games.Odyssey.Save
 {
     /// <summary>
-    /// Manages save game operations (save and load).
+    /// Odyssey Engine (KotOR/KotOR2) save game manager implementation.
     /// </summary>
     /// <remarks>
-    /// Save Game Manager:
-    /// - Based on swkotor2.exe save game system
-    /// - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
-    /// - "LoadSavegame" @ 0x007bdc90, "SavegameList" @ 0x007bdca0, "GetSavegameList" @ 0x007bdcb0
-    /// - "SAVEGAMENAME" @ 0x007be1a8, "Mod_IsSaveGame" @ 0x007bea48, "BTN_SAVEGAME" @ 0x007d0dbc
-    /// - Save function: FUN_004eb750 @ 0x004eb750 creates save game ERF archive
-    /// - Load function: FUN_00708990 @ 0x00708990 (main load function, loads ERF archive)
-    ///   - Original implementation (from decompiled FUN_00708990):
-    ///     - Function signature: `void FUN_00708990(void *this, int *param_1)`
-    ///     - param_1: Save game data structure pointer
-    ///     - Constructs save path: "SAVES:\{saveName}\SAVEGAME" using format string "%06d - %s" (save number and name)
-    ///     - Creates GAMEINPROGRESS: directory if missing (checks existence via FUN_004069c0, creates via FUN_00409670 if not found)
-    ///     - Loads savegame.sav ERF archive from constructed path (via FUN_00629d60, FUN_0062a2b0)
-    ///     - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature
-    ///     - Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e), 35% (0x23), 40% (0x28), 45% (0x2d), 50% (0x32)
-    ///     - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
-    ///     - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
-    ///     - Reads AUTOSAVEPARAMS from NFO GFF if present (via FUN_00412b30, FUN_00708660)
-    ///     - Sets module state flags and initializes game session (via FUN_004dc470, FUN_004dc9e0, FUN_004dc9c0)
-    ///     - Module state: Sets flags at offset 0x48 in game session object (bit 0x200 = module loaded flag)
-    ///     - Final progress: 50% (0x32) when savegame load completes
+    /// Odyssey Save Game Manager:
+    /// - Inherits from BaseSaveGameManager for common save directory naming (shared with Aurora)
+    /// - Odyssey-specific: ERF archive save format, NFO GFF metadata structure
+    /// - Based on swkotor.exe and swkotor2.exe save game systems
+    ///
+    /// Engine-Specific Details (Odyssey):
+    /// - Save file format: ERF archive with "MOD V1.0" signature
+    /// - Save function: FUN_004eb750 @ 0x004eb750 (swkotor2.exe) creates save game ERF archive
+    /// - Load function: FUN_00708990 @ 0x00708990 (swkotor2.exe) loads ERF archive
+    ///   - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
+    ///   - "LoadSavegame" @ 0x007bdc90, "SavegameList" @ 0x007bdca0, "GetSavegameList" @ 0x007bdcb0
+    ///   - "SAVEGAMENAME" @ 0x007be1a8, "Mod_IsSaveGame" @ 0x007bea48, "BTN_SAVEGAME" @ 0x007d0dbc
+    ///   - Constructs save path: "SAVES:\{saveName}\SAVEGAME" using format string "%06d - %s" (save number and name)
+    ///   - Creates GAMEINPROGRESS: directory if missing (checks existence via FUN_004069c0, creates via FUN_00409670 if not found)
+    ///   - Loads savegame.sav ERF archive from constructed path (via FUN_00629d60, FUN_0062a2b0)
+    ///   - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature
+    ///   - Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e), 35% (0x23), 40% (0x28), 45% (0x2d), 50% (0x32)
+    ///   - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
+    ///   - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
+    ///   - Reads AUTOSAVEPARAMS from NFO GFF if present (via FUN_00412b30, FUN_00708660)
+    ///   - Sets module state flags and initializes game session (via FUN_004dc470, FUN_004dc9e0, FUN_004dc9c0)
+    ///   - Module state: Sets flags at offset 0x48 in game session object (bit 0x200 = module loaded flag)
+    ///   - Final progress: 50% (0x32) when savegame load completes
     /// - FUN_004e28c0 @ 0x004e28c0 loads creature list from module state
     ///   - Original implementation: Iterates through "Creature List" GFF list, loads each creature via FUN_005226d0
     ///   - Only loads creatures that are not PC (IsPC == 0) and not destroyed (IsDestroyed == 0)
     ///   - Creates creature entities from saved ObjectId and GFF data
     ///   - Saves creature state to GFF structure (position, stats, inventory, scripts, etc.)
-    /// - Save file format: ERF archive with "MOD V1.0" signature containing:
+    /// - Save file structure: ERF archive containing:
     ///   - savenfo.res (GFF with "NFO " signature): Save metadata (AREANAME, TIMEPLAYED, SAVEGAMENAME, etc.)
     ///   - GLOBALVARS.res (GFF with "GLOB" signature): Global variable state
     ///   - PARTYTABLE.res (GFF with "PT  " signature): Party state
     ///   - [module]_s.rim: Per-module state ERF archive (area states, entity positions, etc.)
     /// - Save location: "SAVES:\{saveName}\savegame.sav" (ERF archive)
-    /// - Original implementation: Save files are ERF archives containing GFF resources
     /// - Based on KOTOR save game format documentation in vendor/PyKotor/wiki/
+    ///
+    /// Common Functionality (from BaseSaveGameManager):
+    /// - Save directory naming: "%06d - %s" format (shared with Aurora engine)
+    /// - Save number auto-generation and parsing
+    /// - Directory name formatting and parsing
     /// </remarks>
-    public class SaveGameManager
+    public class OdysseySaveGameManager : BaseSaveGameManager
     {
         private readonly IGameResourceProvider _resourceProvider;
-        private readonly string _savesDirectory;
 
-        public SaveGameManager(IGameResourceProvider resourceProvider, string savesDirectory)
+        public OdysseySaveGameManager(IGameResourceProvider resourceProvider, string savesDirectory)
+            : base(savesDirectory)
         {
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
-            _savesDirectory = savesDirectory ?? throw new ArgumentNullException("savesDirectory");
-            
-            // Ensure saves directory exists
-            if (!Directory.Exists(_savesDirectory))
-            {
-                Directory.CreateDirectory(_savesDirectory);
-            }
         }
 
         /// <summary>
         /// Saves the current game state to a save file.
         /// </summary>
-        public async Task<bool> SaveGameAsync(SaveGameData saveData, string saveName, CancellationToken ct = default)
+        /// <remarks>
+        /// Odyssey-specific implementation:
+        /// - Uses ERF archive format with "MOD V1.0" signature
+        /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// </remarks>
+        public override async Task<bool> SaveGameAsync(SaveGameData saveData, string saveName, CancellationToken ct = default)
         {
             if (saveData == null)
             {
@@ -94,7 +100,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
                     saveData.SaveNumber = GetNextSaveNumber();
                 }
 
-                // Create save directory
+                // Create save directory using common format (shared with Aurora)
                 // Based on swkotor2.exe: FUN_00708990 @ 0x00708990
                 // Original implementation: Constructs path using format "%06d - %s" (save number and name)
                 // Path format: "SAVES:\{saveNumber:06d} - {saveName}\SAVEGAME"
@@ -151,11 +157,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
         /// Loads a save game from a save file.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
-        /// Original implementation: Accepts save name and constructs path using format "%06d - %s"
-        /// Supports both formatted names ("000001 - SaveName") and plain names (for backward compatibility)
+        /// Odyssey-specific implementation:
+        /// - Loads ERF archive format with "MOD V1.0" signature
+        /// - Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// - Original implementation: Accepts save name and constructs path using format "%06d - %s"
+        /// - Supports both formatted names ("000001 - SaveName") and plain names (for backward compatibility)
         /// </remarks>
-        public async Task<SaveGameData> LoadGameAsync(string saveName, CancellationToken ct = default)
+        public override async Task<SaveGameData> LoadGameAsync(string saveName, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(saveName))
             {
@@ -173,6 +181,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
                 if (!File.Exists(saveFilePath))
                 {
                     // Try to find save by matching the name part (after " - ")
+                    // Uses common parsing logic from BaseSaveGameManager
                     string namePart = ParseSaveNameFromDirectory(saveName);
                     if (!string.IsNullOrEmpty(namePart))
                     {
@@ -249,7 +258,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
         /// <summary>
         /// Lists all available save games.
         /// </summary>
-        public IEnumerable<SaveGameInfo> ListSaves()
+        /// <remarks>
+        /// Odyssey-specific implementation:
+        /// - Parses ERF archive format to extract save metadata
+        /// - Uses common directory name parsing from BaseSaveGameManager
+        /// </remarks>
+        public override IEnumerable<SaveGameInfo> ListSaves()
         {
             if (!Directory.Exists(_savesDirectory))
             {
@@ -278,8 +292,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
                     {
                         GFF nfoGff = DeserializeGFF(nfoData);
                         
-                        // Parse save number and name from directory name
+                        // Parse save number and name from directory name using common logic
                         // Based on swkotor2.exe: Format "%06d - %s" (6-digit number - name)
+                        // Uses common parsing methods from BaseSaveGameManager (shared with Aurora)
                         int saveNumber = ParseSaveNumberFromDirectory(saveName);
                         string displayName = ParseSaveNameFromDirectory(saveName);
                         if (string.IsNullOrEmpty(displayName))
@@ -1088,128 +1103,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
 
         #endregion
 
-        #region Save Name Formatting Helpers
-
-        /// <summary>
-        /// Gets the next available save number by scanning existing saves.
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Save number auto-increment logic
-        /// Original implementation: Scans "SAVES:" directory, parses save numbers from directory names,
-        /// finds the highest number, and returns the next available number (highest + 1)
-        /// Starts at 1 if no saves exist
-        /// </remarks>
-        private int GetNextSaveNumber()
-        {
-            int maxSaveNumber = 0;
-
-            if (Directory.Exists(_savesDirectory))
-            {
-                foreach (string saveDir in Directory.GetDirectories(_savesDirectory))
-                {
-                    string dirName = Path.GetFileName(saveDir);
-                    int saveNumber = ParseSaveNumberFromDirectory(dirName);
-                    if (saveNumber > maxSaveNumber)
-                    {
-                        maxSaveNumber = saveNumber;
-                    }
-                }
-            }
-
-            // Return next available number (highest + 1, or 1 if no saves exist)
-            return maxSaveNumber + 1;
-        }
-
-        /// <summary>
-        /// Formats a save directory name using the original engine format: "%06d - %s"
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
-        /// Located via string reference: "%06d - %s" @ 0x007be298
-        /// Original implementation: 6-digit zero-padded save number, followed by " - ", followed by save name
-        /// Example: "000001 - MySave" for save number 1 with name "MySave"
-        /// </remarks>
-        private string FormatSaveDirectoryName(int saveNumber, string saveName)
-        {
-            if (string.IsNullOrEmpty(saveName))
-            {
-                throw new ArgumentException("Save name cannot be null or empty", "saveName");
-            }
-
-            // Format: 6-digit zero-padded number, " - ", save name
-            // Based on swkotor2.exe format string "%06d - %s" @ 0x007be298
-            return string.Format("{0:D6} - {1}", saveNumber, saveName);
-        }
-
-        /// <summary>
-        /// Parses the save number from a formatted directory name.
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
-        /// Parses format "%06d - %s" to extract the 6-digit save number
-        /// Returns 0 if the format doesn't match (for backward compatibility with unformatted names)
-        /// </remarks>
-        private int ParseSaveNumberFromDirectory(string directoryName)
-        {
-            if (string.IsNullOrEmpty(directoryName))
-            {
-                return 0;
-            }
-
-            // Format: "000001 - SaveName" or just "SaveName" (backward compatibility)
-            int dashIndex = directoryName.IndexOf(" - ");
-            if (dashIndex > 0 && dashIndex == 6)
-            {
-                // Check if first 6 characters are digits
-                string numberPart = directoryName.Substring(0, 6);
-                int saveNumber;
-                if (int.TryParse(numberPart, out saveNumber))
-                {
-                    return saveNumber;
-                }
-            }
-
-            // Not in formatted format, return 0 (backward compatibility)
-            return 0;
-        }
-
-        /// <summary>
-        /// Parses the save name from a formatted directory name.
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
-        /// Parses format "%06d - %s" to extract the save name part (after " - ")
-        /// Returns the original directory name if the format doesn't match (for backward compatibility)
-        /// </remarks>
-        private string ParseSaveNameFromDirectory(string directoryName)
-        {
-            if (string.IsNullOrEmpty(directoryName))
-            {
-                return directoryName;
-            }
-
-            // Format: "000001 - SaveName" or just "SaveName" (backward compatibility)
-            int dashIndex = directoryName.IndexOf(" - ");
-            if (dashIndex > 0 && dashIndex == 6)
-            {
-                // Check if first 6 characters are digits
-                string numberPart = directoryName.Substring(0, 6);
-                int saveNumber;
-                if (int.TryParse(numberPart, out saveNumber))
-                {
-                    // Extract name part (after " - ")
-                    if (directoryName.Length > dashIndex + 3)
-                    {
-                        return directoryName.Substring(dashIndex + 3);
-                    }
-                }
-            }
-
-            // Not in formatted format, return original (backward compatibility)
-            return directoryName;
-        }
-
-        #endregion
+        #region Odyssey-Specific Save Helpers (ERF/GFF Format)
 
         #region GFF Field Helpers
 
