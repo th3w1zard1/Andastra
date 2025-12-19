@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
+using Eto.Forms;
+using Eto.Drawing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Tools;
 using Andastra.Runtime.Core;
@@ -11,20 +12,21 @@ using Andastra.Runtime.Game.Core;
 namespace Andastra.Game.GUI
 {
     /// <summary>
-    /// Game launcher dialog with game selection and path configuration.
+    /// Cross-platform game launcher dialog with game selection and path configuration.
     /// </summary>
     /// <remarks>
     /// Launcher UI:
-    /// - Standard WinForms dialog (not GL/drawn)
+    /// - Cross-platform using Eto.Forms (Windows/Mac/Linux)
+    /// - Native look-and-feel on each platform
     /// - Game selection combobox (K1, K2, NWN, DA:O, DA2, ME, ME2, ME3)
     /// - Editable installation path combobox with browse button
     /// - Start button to launch the game
     /// - Error dialog for launch failures
     /// </remarks>
-    public class GameLauncher : Form
+    public class GameLauncher : Dialog
     {
-        private ComboBox _gameComboBox;
-        private ComboBox _pathComboBox;
+        private DropDown _gameComboBox;
+        private TextBox _pathTextBox;
         private Button _browseButton;
         private Button _startButton;
         private Label _gameLabel;
@@ -50,9 +52,15 @@ namespace Andastra.Game.GUI
         /// </summary>
         public GameLauncher()
         {
+            Title = "Andastra Game Launcher";
+            ClientSize = new Size(600, 200);
+            Resizable = false;
+            WindowStyle = WindowStyle.Default;
+
+            SelectedGame = Game.K1; // Default
+
             InitializeComponent();
             PopulateGameComboBox();
-            SelectedGame = Game.K1; // Default
             _gameComboBox.SelectedIndex = 0;
             _gameComboBox.SelectedIndexChanged += GameComboBox_SelectedIndexChanged;
             UpdatePathComboBox();
@@ -60,86 +68,89 @@ namespace Andastra.Game.GUI
 
         private void InitializeComponent()
         {
-            this.Text = "Andastra Game Launcher";
-            this.Size = new System.Drawing.Size(600, 250);
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.ShowInTaskbar = true;
+            var layout = new TableLayout
+            {
+                Spacing = new Size(10, 10),
+                Padding = new Padding(20)
+            };
 
-            // Game label
+            // Game selection row
             _gameLabel = new Label
             {
                 Text = "Game:",
-                Location = new System.Drawing.Point(20, 20),
-                Size = new System.Drawing.Size(100, 23),
-                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+                VerticalAlignment = VerticalAlignment.Center
             };
-            this.Controls.Add(_gameLabel);
 
-            // Game combobox
-            _gameComboBox = new ComboBox
+            _gameComboBox = new DropDown
             {
-                Location = new System.Drawing.Point(130, 17),
-                Size = new System.Drawing.Size(400, 23),
-                DropDownStyle = ComboBoxStyle.DropDownList
+                Width = 400
             };
-            this.Controls.Add(_gameComboBox);
 
-            // Path label
+            layout.Rows.Add(new TableRow(
+                new TableCell(_gameLabel, true),
+                new TableCell(_gameComboBox, true)
+            ));
+
+            // Path selection row
             _pathLabel = new Label
             {
                 Text = "Installation Path:",
-                Location = new System.Drawing.Point(20, 60),
-                Size = new System.Drawing.Size(100, 23),
-                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+                VerticalAlignment = VerticalAlignment.Center
             };
-            this.Controls.Add(_pathLabel);
 
-            // Path combobox (editable)
-            _pathComboBox = new ComboBox
+            // Use a TextBox for editable path input
+            _pathTextBox = new TextBox
             {
-                Location = new System.Drawing.Point(130, 57),
-                Size = new System.Drawing.Size(350, 23),
-                DropDownStyle = ComboBoxStyle.DropDown,
-                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
-                AutoCompleteSource = AutoCompleteSource.FileSystemDirectories
+                Width = 400
             };
-            this.Controls.Add(_pathComboBox);
 
-            // Browse button
             _browseButton = new Button
             {
                 Text = "Browse...",
-                Location = new System.Drawing.Point(490, 56),
-                Size = new System.Drawing.Size(80, 25)
+                Width = 100
             };
             _browseButton.Click += BrowseButton_Click;
-            this.Controls.Add(_browseButton);
 
-            // Start button
+            layout.Rows.Add(new TableRow(
+                new TableCell(_pathLabel, true),
+                new TableCell(_pathTextBox, true),
+                new TableCell(_browseButton, false)
+            ));
+
+            // Button row
+            var buttonLayout = new TableLayout
+            {
+                Spacing = new Size(10, 0)
+            };
+
             _startButton = new Button
             {
                 Text = "Start",
-                Location = new System.Drawing.Point(250, 120),
-                Size = new System.Drawing.Size(100, 35),
-                DialogResult = DialogResult.OK
+                Width = 100
             };
             _startButton.Click += StartButton_Click;
-            this.Controls.Add(_startButton);
-            this.AcceptButton = _startButton;
-            this.CancelButton = _startButton; // Allow ESC to close
 
-            // Cancel button (close)
             var cancelButton = new Button
             {
                 Text = "Cancel",
-                Location = new System.Drawing.Point(360, 120),
-                Size = new System.Drawing.Size(100, 35),
-                DialogResult = DialogResult.Cancel
+                Width = 100
             };
-            this.Controls.Add(cancelButton);
+            cancelButton.Click += (sender, e) => Close();
+
+            buttonLayout.Rows.Add(new TableRow(
+                new TableCell(null, true),
+                new TableCell(_startButton, false),
+                new TableCell(cancelButton, false)
+            ));
+
+            layout.Rows.Add(new TableRow(
+                new TableCell(buttonLayout, true)
+            ));
+
+            Content = layout;
+
+            // Set default button
+            DefaultButton = _startButton;
         }
 
         private void PopulateGameComboBox()
@@ -166,7 +177,7 @@ namespace Andastra.Game.GUI
 
         private void GameComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_gameComboBox.SelectedItem is GameItem gameItem)
+            if (_gameComboBox.SelectedValue is GameItem gameItem)
             {
                 SelectedGame = gameItem.Game;
                 UpdatePathComboBox();
@@ -175,8 +186,7 @@ namespace Andastra.Game.GUI
 
         private void UpdatePathComboBox()
         {
-            _pathComboBox.Items.Clear();
-            _pathComboBox.Text = string.Empty;
+            _pathTextBox.Text = string.Empty;
 
             // Get paths for the selected game
             List<string> paths = new List<string>();
@@ -217,99 +227,86 @@ namespace Andastra.Game.GUI
                 // TODO: Implement path detection for NWN, DA, ME games
             }
 
-            // Populate combobox with found paths
-            foreach (string path in paths)
+            // Set first path if available
+            if (paths.Count > 0)
             {
-                _pathComboBox.Items.Add(path);
-            }
-
-            // Select first path if available
-            if (_pathComboBox.Items.Count > 0)
-            {
-                _pathComboBox.SelectedIndex = 0;
+                _pathTextBox.Text = paths[0];
             }
         }
 
         private void BrowseButton_Click(object sender, EventArgs e)
         {
-            using (var dialog = new FolderBrowserDialog())
+            var dialog = new SelectFolderDialog
             {
-                dialog.Description = "Select game installation directory";
-                dialog.ShowNewFolderButton = false;
+                Title = "Select game installation directory"
+            };
 
-                // Set initial directory if path is already set
-                if (!string.IsNullOrEmpty(_pathComboBox.Text) && Directory.Exists(_pathComboBox.Text))
+            // Set initial directory if path is already set
+            if (!string.IsNullOrEmpty(_pathTextBox.Text) && Directory.Exists(_pathTextBox.Text))
+            {
+                dialog.Directory = _pathTextBox.Text;
+            }
+
+            if (dialog.ShowDialog(this) == DialogResult.Ok)
+            {
+                string selectedPath = dialog.Directory;
+
+                // Validate installation
+                if (ValidateInstallation(selectedPath))
                 {
-                    dialog.SelectedPath = _pathComboBox.Text;
+                    _pathTextBox.Text = selectedPath;
                 }
-
-                if (dialog.ShowDialog() == DialogResult.OK)
+                else
                 {
-                    string selectedPath = dialog.SelectedPath;
-
-                    // Validate installation
-                    if (ValidateInstallation(selectedPath))
-                    {
-                        _pathComboBox.Text = selectedPath;
-                        
-                        // Add to combobox if not already present
-                        if (!_pathComboBox.Items.Cast<string>().Contains(selectedPath))
-                        {
-                            _pathComboBox.Items.Insert(0, selectedPath);
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show(
-                            $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\n" +
-                            "Please select a directory containing the game files.",
-                            "Invalid Installation",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning);
-                    }
+                    MessageBox.Show(
+                        this,
+                        $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\n" +
+                        "Please select a directory containing the game files.",
+                        "Invalid Installation",
+                        MessageBoxType.Warning);
                 }
             }
         }
 
         private void StartButton_Click(object sender, EventArgs e)
         {
-            string path = _pathComboBox.Text.Trim();
+            string path = _pathTextBox.Text.Trim();
 
             if (string.IsNullOrEmpty(path))
             {
                 MessageBox.Show(
+                    this,
                     "Please select or enter a game installation path.",
                     "Path Required",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                    MessageBoxType.Warning);
                 return;
             }
 
             if (!Directory.Exists(path))
             {
                 MessageBox.Show(
+                    this,
                     "The specified path does not exist.",
                     "Invalid Path",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxType.Error);
                 return;
             }
 
             if (!ValidateInstallation(path))
             {
                 MessageBox.Show(
+                    this,
                     $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\n" +
                     "Please select a directory containing the game files.",
                     "Invalid Installation",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                    MessageBoxType.Warning);
                 return;
             }
 
             SelectedPath = path;
             StartClicked = true;
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            Result = DialogResult.Ok;
+            Close();
         }
 
         private bool ValidateInstallation(string path)

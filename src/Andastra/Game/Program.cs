@@ -1,5 +1,5 @@
 using System;
-using System.Windows.Forms;
+using Eto.Forms;
 using Andastra.Parsing.Common;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics;
@@ -50,17 +50,23 @@ namespace Andastra.Runtime.Game
 
             if (!skipLauncher)
             {
+                // Initialize Eto.Forms application (cross-platform)
+                var app = new Application(Eto.Platform.Detect);
+                
                 // Show launcher UI
-                using (var launcher = new GUI.GameLauncher())
+                using (var launcher = new Andastra.Game.GUI.GameLauncher())
                 {
-                    if (launcher.ShowDialog() != DialogResult.OK || !launcher.StartClicked)
+                    if (launcher.ShowModal() != DialogResult.Ok || !launcher.StartClicked)
                     {
+                        app.Dispose();
                         return 0; // User cancelled
                     }
 
                     selectedGame = launcher.SelectedGame;
                     gamePath = launcher.SelectedPath;
                 }
+                
+                app.Dispose();
 
                 // Convert Game enum to KotorGame for settings
                 KotorGame kotorGame = KotorGame.K1;
@@ -72,11 +78,12 @@ namespace Andastra.Runtime.Game
                 {
                     // For non-KOTOR games, we'll need to handle differently
                     // For now, show error
+                    var errorApp = new Application(Eto.Platform.Detect);
                     MessageBox.Show(
                         $"Game {selectedGame} is not yet fully supported. Only KotOR 1 and KotOR 2 are currently supported.",
                         "Unsupported Game",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
+                        MessageBoxType.Warning);
+                    errorApp.Dispose();
                     return 1;
                 }
 
@@ -138,7 +145,7 @@ namespace Andastra.Runtime.Game
             }
             catch (Exception ex)
             {
-                // Show error dialog
+                // Show error dialog (cross-platform)
                 string errorMessage = $"Failed to start the game:\n\n{ex.Message}";
                 if (ex.InnerException != null)
                 {
@@ -146,11 +153,13 @@ namespace Andastra.Runtime.Game
                 }
                 errorMessage += $"\n\nStack Trace:\n{ex.StackTrace}";
 
+                // Use Eto.Forms for cross-platform message box
+                var app = new Application(Eto.Platform.Detect);
                 MessageBox.Show(
                     errorMessage,
                     "Game Launch Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxType.Error);
+                app.Dispose();
 
                 return 1;
             }
@@ -158,11 +167,12 @@ namespace Andastra.Runtime.Game
         catch (Exception ex)
         {
             // Fatal error in launcher itself
+            var app = new Application(Eto.Platform.Detect);
             MessageBox.Show(
                 $"Fatal error in launcher:\n\n{ex.Message}\n\n{ex.StackTrace}",
                 "Launcher Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
+                MessageBoxType.Error);
+            app.Dispose();
             return 1;
         }
     }
