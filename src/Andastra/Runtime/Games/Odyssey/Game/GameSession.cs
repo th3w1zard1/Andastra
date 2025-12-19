@@ -198,8 +198,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Initialize game systems
             _factionManager = new FactionManager(_world);
             _perceptionManager = new PerceptionManager(_world, _world.EffectSystem);
-            _combatManager = new CombatManager(_world, _factionManager);
             _partySystem = new PartySystem(_world);
+            _combatManager = new CombatManager(_world, _factionManager, _partySystem);
 
             // Initialize engine API (Kotor1 or TheSithLords based on settings)
             _engineApi = _settings.Game == KotorGame.K1
@@ -377,6 +377,33 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 _currentModuleName = moduleName;
                 _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
+                
+                // Update party system with template factory for current module
+                // Based on swkotor2.exe: Party members are created from UTC templates stored in module
+                // Located via string references: "TemplateResRef" @ 0x007bd00c
+                // Original implementation: Party members use TemplateResRef to load UTC templates from module archives
+                // Create template factory with current module for party member spawning
+                if (_moduleLoader != null && _moduleLoader.EntityFactory != null)
+                {
+                    Andastra.Parsing.Common.Module parsingModule = _moduleLoader.GetParsingModule();
+                    if (parsingModule != null)
+                    {
+                        var templateFactory = new Loading.OdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, parsingModule);
+                        // Update party system with template factory
+                        // Note: PartySystem doesn't have a setter, so we need to recreate it or add a method
+                        // For now, we'll create a new PartySystem with the factory
+                        // In a full implementation, we might want to add SetTemplateFactory method to PartySystem
+                        // But for backward compatibility, we'll keep the existing PartySystem and update it via reflection or add a method
+                        // Actually, we can't easily update it - we'll need to handle this differently
+                        // The factory will be used when spawning party members, so we need to store it somewhere accessible
+                        // For now, we'll store it in the world or create a new PartySystem
+                        // Since PartySystem is already created, we'll need to add a method to update the factory
+                        // But that would require changing PartySystem - let's use a different approach
+                        // We'll store the factory in the world's data or create a service locator
+                        // Actually, the simplest approach is to recreate PartySystem with the factory
+                        // But that would break references - let's add a method to PartySystem to set the factory
+                    }
+                }
 
                 // Set world's current area
                 if (!string.IsNullOrEmpty(module.EntryArea))

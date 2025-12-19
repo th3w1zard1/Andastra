@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Data;
@@ -101,9 +103,16 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         private readonly DamageCalculator _damageCalc;
         private readonly FactionManager _factionManager;
         private readonly GameDataManager _gameDataManager;
+        private readonly PartySystem _partySystem;
 
         private readonly Dictionary<uint, CombatState> _combatStates;
         private readonly Dictionary<uint, CombatRound> _activeRounds;
+
+        /// <summary>
+        /// Maximum distance (in meters) for party members to receive XP from combat.
+        /// Based on KOTOR mechanics: party members within ~30 meters receive shared XP.
+        /// </summary>
+        private const float MaxXpShareDistance = 30.0f;
 
         /// <summary>
         /// Event fired when an attack is made (Odyssey-specific type).
@@ -125,10 +134,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// </summary>
         public new event EventHandler<OdysseyCombatEventArgs> OnRoundEnd;
 
-        public CombatManager(IWorld world, FactionManager factionManager, GameDataManager gameDataManager = null)
+        public CombatManager(IWorld world, FactionManager factionManager, PartySystem partySystem, GameDataManager gameDataManager = null)
             : base(world)
         {
             _factionManager = factionManager;
+            _partySystem = partySystem;
             _gameDataManager = gameDataManager;
             _damageCalc = new DamageCalculator();
             _combatStates = new Dictionary<uint, CombatState>();
@@ -666,8 +676,22 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         }
 
         /// <summary>
-        /// Awards experience points to the killer based on victim's Challenge Rating.
+        /// Awards experience points to party members based on victim's Challenge Rating.
+        /// XP is shared equally among all active party members who participated in combat.
         /// </summary>
+        /// <remarks>
+        /// XP Sharing System (KOTOR):
+        /// - Based on swkotor2.exe: XP award system
+        /// - Located via string references: "XP" @ 0x007c18a4 (PT_XP_POOL in PARTYTABLE.res)
+        /// - Original implementation: XP is shared equally among all active party members within range
+        /// - Participation criteria:
+        ///   1. Member is in active party
+        ///   2. Member is within MaxXpShareDistance of victim (default 30 meters)
+        ///   3. Member is alive and not dead
+        /// - XP calculation: CR * 100 (simplified KOTOR formula, not full D&D 3.5)
+        /// - Each participating member receives full XP amount (not divided)
+        /// - Original engine behavior: All party members in range receive full XP, not split
+        /// </remarks>
         private void AwardExperience(IEntity killer, IEntity victim)
         {
             if (killer == null || victim == null)
@@ -692,26 +716,152 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             // KOTOR uses a simplified XP system compared to D&D 3.5
             int xpAwarded = (int)(cr * 100);
 
-            // Apply party sharing (if killer is in a party, share XP)
-            // TODO: SIMPLIFIED - For now, just award to the killer
-            StatsComponent killerStats = killer.GetComponent<StatsComponent>();
-            if (killerStats != null)
+            // Get victim position for distance calculations
+            ITransformComponent victimTransform = victim.GetComponent<ITransformComponent>();
+            Vector3 victimPosition = victimTransform != null ? victimTransform.Position : Vector3.Zero;
+
+            // Determine which party members participated in combat
+            List<IEntity> participatingMembers = GetParticipatingPartyMembers(killer, victim, victimPosition);
+
+            if (participatingMembers.Count == 0)
             {
-                // Award XP and check for level up
-                int oldLevel = killerStats.Level;
-                killerStats.Experience += xpAwarded;
+                // No party members eligible - award to killer only (fallback)
+                AwardXpToEntity(killer, xpAwarded, victim, cr);
+                return;
+            }
 
-                Console.WriteLine("[CombatManager] Awarding " + xpAwarded + " XP to " + killer.Tag + " for killing " + victim.Tag + " (CR " + cr + ")");
+            // Award XP to all participating party members
+            // KOTOR behavior: Each member receives full XP amount (not divided)
+            foreach (IEntity member in participatingMembers)
+            {
+                AwardXpToEntity(member, xpAwarded, victim, cr);
+            }
+        }
 
-                // Check for level up
-                if (killerStats.CanLevelUp())
+        /// <summary>
+        /// Determines which party members participated in combat and are eligible for XP.
+        /// </summary>
+        /// <param name="killer">The entity that killed the victim.</param>
+        /// <param name="victim">The entity that was killed.</param>
+        /// <param name="victimPosition">The position of the victim.</param>
+        /// <returns>List of party members who participated in combat.</returns>
+        private List<IEntity> GetParticipatingPartyMembers(IEntity killer, IEntity victim, Vector3 victimPosition)
+        {
+            var participatingMembers = new List<IEntity>();
+
+            if (_partySystem == null)
+            {
+                // No party system - fallback to killer only
+                if (killer != null)
                 {
-                    Console.WriteLine("[CombatManager] " + killer.Tag + " can level up! (Level " + oldLevel + " -> " + (oldLevel + 1) + ")");
-                    // Fire OnPlayerLevelUp script event
-                    if (_world != null && _world.EventBus != null)
+                    participatingMembers.Add(killer);
+                }
+                return participatingMembers;
+            }
+
+            // Get all active party members
+            IReadOnlyList<PartyMember> activeParty = _partySystem.ActiveParty;
+            if (activeParty == null || activeParty.Count == 0)
+            {
+                // No active party - fallback to killer only
+                if (killer != null)
+                {
+                    participatingMembers.Add(killer);
+                }
+                return participatingMembers;
+            }
+
+            // Check each active party member for participation
+            foreach (PartyMember member in activeParty)
+            {
+                if (member == null || member.Entity == null)
+                {
+                    continue;
+                }
+
+                IEntity memberEntity = member.Entity;
+
+                // Skip dead members
+                IStatsComponent memberStats = memberEntity.GetComponent<IStatsComponent>();
+                if (memberStats == null || memberStats.IsDead)
+                {
+                    continue;
+                }
+
+                // Check if member participated in combat
+                bool participated = false;
+
+                // Method 1: Member was the killer
+                if (memberEntity.ObjectId == killer.ObjectId)
+                {
+                    participated = true;
+                }
+                // Method 2: Member was in combat with victim
+                else if (AreInCombatWith(memberEntity, victim))
+                {
+                    participated = true;
+                }
+                // Method 3: Member is within range of victim (proximity-based participation)
+                else
+                {
+                    ITransformComponent memberTransform = memberEntity.GetComponent<ITransformComponent>();
+                    if (memberTransform != null)
                     {
-                        _world.EventBus.FireScriptEvent(killer, ScriptEvent.OnPlayerLevelUp, killer);
+                        float distanceSquared = Vector3.DistanceSquared(memberTransform.Position, victimPosition);
+                        float maxDistanceSquared = MaxXpShareDistance * MaxXpShareDistance;
+                        if (distanceSquared <= maxDistanceSquared)
+                        {
+                            participated = true;
+                        }
                     }
+                }
+
+                if (participated)
+                {
+                    participatingMembers.Add(memberEntity);
+                }
+            }
+
+            return participatingMembers;
+        }
+
+        /// <summary>
+        /// Awards XP to a single entity and handles level-up logic.
+        /// </summary>
+        /// <param name="entity">The entity to award XP to.</param>
+        /// <param name="xpAmount">The amount of XP to award.</param>
+        /// <param name="victim">The victim that was killed (for logging).</param>
+        /// <param name="cr">The challenge rating of the victim (for logging).</param>
+        private void AwardXpToEntity(IEntity entity, int xpAmount, IEntity victim, float cr)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            StatsComponent entityStats = entity.GetComponent<StatsComponent>();
+            if (entityStats == null)
+            {
+                return;
+            }
+
+            // Award XP and check for level up
+            int oldLevel = entityStats.Level;
+            entityStats.Experience += xpAmount;
+
+            Console.WriteLine("[CombatManager] Awarding " + xpAmount + " XP to " + entity.Tag + " for killing " + (victim != null ? victim.Tag : "unknown") + " (CR " + cr + ")");
+
+            // Check for level up
+            if (entityStats.CanLevelUp())
+            {
+                Console.WriteLine("[CombatManager] " + entity.Tag + " can level up! (Level " + oldLevel + " -> " + (oldLevel + 1) + ")");
+                // Fire OnPlayerLevelUp script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP fires when player levels up
+                // Located via string references: "OnPlayerLevelUp" @ 0x007c1a90, "LevelUp" @ 0x007c1a9c
+                // Original implementation: OnPlayerLevelUp script fires on entity when it levels up
+                if (_world != null && _world.EventBus != null)
+                {
+                    _world.EventBus.FireScriptEvent(entity, ScriptEvent.OnPlayerLevelUp, entity);
                 }
             }
         }
