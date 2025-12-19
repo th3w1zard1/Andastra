@@ -154,6 +154,12 @@ namespace Andastra.Runtime.Core.Interfaces
         /// - Not present in Aurora or Eclipse engines (always returns false in those implementations)
         /// </remarks>
         bool StealthXPEnabled { get; set; }
+
+        /// <summary>
+        /// Updates the area state (area effects, lighting, weather, entity spawning/despawning).
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since last update.</param>
+        void Update(float deltaTime);
     }
 }
 

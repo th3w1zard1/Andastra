@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Core.Journal
     ///   - swkotor.exe: Similar JRL system (needs reverse engineering)
     ///   - nwmain.exe: Different journal format (needs reverse engineering)
     ///   - daorigins.exe: Journal system may differ (needs reverse engineering)
-    /// 
+    ///
     /// This class is maintained for backward compatibility.
     /// New code should use OdysseyJRLLoader directly.
     /// Core cannot depend on Odyssey due to circular dependency, so this is a standalone implementation.
@@ -179,32 +179,39 @@ namespace Andastra.Runtime.Core.Journal
 
             // Resolve LocalizedString to text
             LocalizedString locString = entry.Text;
-            if (locString == null || !locString.IsValid)
+            if (locString == null)
             {
                 return null;
             }
 
-            // Resolve using TLK tables
-            if (_baseTlk != null)
+            // If StringRef is valid (>= 0), use TLK lookup
+            if (locString.StringRef >= 0)
             {
-                string text = _baseTlk.GetString(locString.StringId);
-                if (!string.IsNullOrEmpty(text))
+                // Resolve using TLK tables
+                if (_baseTlk != null)
                 {
-                    return text;
+                    TLKEntry tlkEntry = _baseTlk.Get(locString.StringRef);
+                    if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
+                    {
+                        return tlkEntry.Text;
+                    }
                 }
+
+                if (_customTlk != null)
+                {
+                    TLKEntry tlkEntry = _customTlk.Get(locString.StringRef);
+                    if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
+                    {
+                        return tlkEntry.Text;
+                    }
+                }
+
+                // Fallback: return string ID if TLK not available
+                return locString.StringRef.ToString();
             }
 
-            if (_customTlk != null)
-            {
-                string text = _customTlk.GetString(locString.StringId);
-                if (!string.IsNullOrEmpty(text))
-                {
-                    return text;
-                }
-            }
-
-            // Fallback: return string ID if TLK not available
-            return locString.StringId.ToString();
+            // If StringRef is -1, use stored substrings (get English male as fallback)
+            return locString.Get(Language.English, Gender.Male, useFallback: true);
         }
 
         /// <summary>

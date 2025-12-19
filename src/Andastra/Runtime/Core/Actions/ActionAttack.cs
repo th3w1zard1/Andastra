@@ -42,7 +42,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - Attack bonuses displayed: " + %d (Base Attack Bonus)" @ 0x007c3b44, " + %d (Effect Attack Bonus)" @ 0x007c39d0
     /// - " + %d (PC Charisma Attack Bonus)" @ 0x007c39ac, " + %d (Offhand Attack Penalty)" @ 0x007c3b24
     /// </remarks>
-    public class ActionAttack : ActionBase
+    public class ActionAttack : ActionBase, IAction
     {
         private readonly uint _targetObjectId;
         private readonly bool _passive;
@@ -50,12 +50,25 @@ namespace Andastra.Runtime.Core.Actions
         private const float AttackRange = 2.0f;
         private const float AttackInterval = 2.0f; // Time between attacks
 
+        public int GroupId { get; set; }
+        public IEntity Owner { get; set; }
+
         public ActionAttack(uint targetObjectId, bool passive = false)
             : base(ActionType.AttackObject)
         {
             _targetObjectId = targetObjectId;
             _passive = passive;
             _attackTimer = 0;
+        }
+
+        public ActionStatus Update(IEntity actor, float deltaTime)
+        {
+            return Execute(actor, deltaTime);
+        }
+
+        public void Dispose()
+        {
+            // Cleanup if needed
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)

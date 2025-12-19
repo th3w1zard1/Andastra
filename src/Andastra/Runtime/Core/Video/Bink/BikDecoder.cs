@@ -97,7 +97,8 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Set buffer scale and offset for fullscreen rendering
             // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154-160
             // BinkBufferSetScale and BinkBufferSetOffset are called to position video
-            Viewport viewport = _graphicsDevice.Viewport;
+            dynamic graphicsDevice = _graphicsDevice;
+            dynamic viewport = graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
             
@@ -121,8 +122,9 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Allocate frame buffer for copying to texture (RGBA format)
             _frameBuffer = new byte[_frameWidth * _frameHeight * 4];
 
-            // Create texture for rendering
-            _frameTexture = _graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
+            // Create texture for rendering (using dynamic since Core cannot depend on Graphics)
+            dynamic graphicsDevice = _graphicsDevice;
+            _frameTexture = graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
         }
 
         /// <summary>
@@ -269,9 +271,9 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Original: Blits buffer directly to screen, we update texture for rendering
             if (_frameTexture != null && _frameBuffer != null)
             {
-                // Update texture with frame buffer data
-                // object.SetData updates the texture with new pixel data
-                _frameTexture.SetData(_frameBuffer);
+                // Update texture with frame buffer data (using dynamic since Core cannot depend on Graphics)
+                dynamic frameTexture = _frameTexture;
+                frameTexture.SetData(_frameBuffer);
             }
 
             // Get destination rectangles for blitting
@@ -347,7 +349,12 @@ namespace Andastra.Runtime.Core.Video.Bink
 
             if (_frameTexture != null)
             {
-                _frameTexture.Dispose();
+                // Dispose texture (using dynamic since Core cannot depend on Graphics)
+                dynamic frameTexture = _frameTexture;
+                if (frameTexture is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
                 _frameTexture = null;
             }
 

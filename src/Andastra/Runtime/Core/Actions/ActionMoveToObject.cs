@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Odyssey.Collision;
 
 namespace Andastra.Runtime.Core.Actions
 {
@@ -55,7 +57,7 @@ namespace Andastra.Runtime.Core.Actions
         {
             // Factory method: Create engine-specific collision detector
             // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
-            return new Games.Odyssey.Collision.OdysseyCreatureCollisionDetector();
+            return new OdysseyCreatureCollisionDetector();
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)

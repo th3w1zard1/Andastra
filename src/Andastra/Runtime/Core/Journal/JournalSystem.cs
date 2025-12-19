@@ -37,6 +37,10 @@ namespace Andastra.Runtime.Core.Journal
     // Core cannot depend on Odyssey due to circular dependency, so this is a standalone implementation
     public class JournalSystem
     {
+        private readonly Dictionary<string, QuestData> _quests;
+        private readonly Dictionary<string, int> _questStates;
+        private readonly List<JournalEntry> _entries;
+        private readonly JRLLoader _jrlLoader;
 
         /// <summary>
         /// Event fired when quest state changes.

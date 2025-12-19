@@ -141,7 +141,7 @@ namespace HolocronToolset.Windows
             try
             {
                 // Matching Python: mod_root: str = self._installation.get_module_root(mod_filepath)
-                string modRoot = _installation.GetModuleRoot(modFilepath);
+                string modRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(modFilepath);
 
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
                 // Note: Module class needs to be implemented in Andastra.Parsing

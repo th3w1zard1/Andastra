@@ -30,7 +30,7 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 ### Read Functions
 - **Status**: ✅ COMPLETE
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:63-106`
-- **Implementation**: 
+- **Implementation**:
   - `read_mdl()` accepts `file_format: ResourceType | None`
   - Supports `ResourceType.MDL_ASCII` via `MDLAsciiReader`
   - `read_mdl_fast()` also supports ASCII (falls back to regular loading)
@@ -70,8 +70,8 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 - ⏳ Adjacent face calculations
 
 ### ASCII Writer Implementation
-- **Status**: ✅ COMPLETE (with minor improvements needed)
-- **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:278-526`
+- **Status**: ✅ COMPLETE
+- **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:278-600`
 - **Reference**: MDLOpsM.pm:3004-3900 (`writeasciimdl`)
 
 #### Completed Features

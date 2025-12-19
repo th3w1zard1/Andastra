@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Odyssey.Collision;
 
 namespace Andastra.Runtime.Core.Actions
 {
@@ -56,7 +57,7 @@ namespace Andastra.Runtime.Core.Actions
         {
             // Factory method: Create engine-specific collision detector
             // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
-            return new Games.Odyssey.Collision.OdysseyCreatureCollisionDetector();
+            return new OdysseyCreatureCollisionDetector();
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
@@ -253,7 +254,6 @@ namespace Andastra.Runtime.Core.Actions
                 //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
                 //   - nwmain.exe: CPathfindInformation class with obstacle avoidance in pathfinding system
                 //   - daorigins.exe/DragonAge2.exe: Advanced dynamic obstacle system (different architecture)
-                IArea currentArea = actor.World.CurrentArea;
                 if (currentArea != null && currentArea.NavigationMesh != null)
                 {
                     // Get blocking creature's position and bounding box
