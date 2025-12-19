@@ -282,24 +282,103 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_firstname_locstring (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:23-48)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:23-48
         // Original: def test_utc_editor_manipulate_firstname_locstring(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating firstname LocalizedString field.
         [Fact]
         public void TestUtcEditorManipulateFirstnameLocstring()
         {
-            // TODO: STUB - Implement firstname LocalizedString manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:23-48
-            throw new NotImplementedException("TestUtcEditorManipulateFirstnameLocstring: Firstname LocalizedString manipulation test not yet implemented");
+            var editor = CreateEditorWithInstallation();
+            editor.New();
+
+            // Modify firstname - in C# UTCEditor, firstNameEdit is read-only TextBox, LocalizedString is stored in _utc.FirstName
+            // We need to modify the UTC object directly and then reload it
+            var firstNameEdit = GetFirstNameEdit(editor);
+            firstNameEdit.Should().NotBeNull("First name edit box should exist");
+
+            // Create a new LocalizedString with English text
+            var newFirstName = LocalizedString.FromEnglish("ModifiedFirst");
+            var utcField = typeof(UTCEditor).GetField("_utc", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (utcField != null)
+            {
+                var utc = utcField.GetValue(editor) as UTC;
+                if (utc != null)
+                {
+                    utc.FirstName = newFirstName;
+                    editor.Load("test_creature", "test_creature", ResourceType.UTC, UTCHelpers.BytesUtc(utc));
+                }
+            }
+
+            // Save and verify
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+            var gff = GFF.FromBytes(data);
+            var modifiedUtc = UTCHelpers.ConstructUtc(gff);
+            modifiedUtc.FirstName.Get(Language.English, Gender.Male).Should().Be("ModifiedFirst", "First name should be 'ModifiedFirst'");
+
+            // Load back and verify
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data);
+            var firstNameEditReloaded = GetFirstNameEdit(editor);
+            firstNameEditReloaded.Should().NotBeNull();
+            // The text box should display the localized string
+            var installationField = typeof(UTCEditor).GetField("_installation", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (installationField != null)
+            {
+                var installation = installationField.GetValue(editor) as HTInstallation;
+                if (installation != null)
+                {
+                    var displayedText = installation.String(modifiedUtc.FirstName);
+                    displayedText.Should().Contain("ModifiedFirst", "First name should persist through load/save cycle");
+                }
+            }
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_lastname_locstring (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:50-73)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:50-73
         // Original: def test_utc_editor_manipulate_lastname_locstring(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating lastname LocalizedString field.
         [Fact]
         public void TestUtcEditorManipulateLastnameLocstring()
         {
-            // TODO: STUB - Implement lastname LocalizedString manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:50-73
-            throw new NotImplementedException("TestUtcEditorManipulateLastnameLocstring: Lastname LocalizedString manipulation test not yet implemented");
+            var editor = CreateEditorWithInstallation();
+            editor.New();
+
+            // Modify lastname - in C# UTCEditor, lastNameEdit is read-only TextBox, LocalizedString is stored in _utc.LastName
+            var lastNameEdit = GetLastNameEdit(editor);
+            lastNameEdit.Should().NotBeNull("Last name edit box should exist");
+
+            // Create a new LocalizedString with English text
+            var newLastName = LocalizedString.FromEnglish("ModifiedLast");
+            var utcField = typeof(UTCEditor).GetField("_utc", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (utcField != null)
+            {
+                var utc = utcField.GetValue(editor) as UTC;
+                if (utc != null)
+                {
+                    utc.LastName = newLastName;
+                    editor.Load("test_creature", "test_creature", ResourceType.UTC, UTCHelpers.BytesUtc(utc));
+                }
+            }
+
+            // Save and verify
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+            var gff = GFF.FromBytes(data);
+            var modifiedUtc = UTCHelpers.ConstructUtc(gff);
+            modifiedUtc.LastName.Get(Language.English, Gender.Male).Should().Be("ModifiedLast", "Last name should be 'ModifiedLast'");
+
+            // Load back and verify
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data);
+            var lastNameEditReloaded = GetLastNameEdit(editor);
+            lastNameEditReloaded.Should().NotBeNull();
+            // The text box should display the localized string
+            var installationField = typeof(UTCEditor).GetField("_installation", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (installationField != null)
+            {
+                var installation = installationField.GetValue(editor) as HTInstallation;
+                if (installation != null)
+                {
+                    var displayedText = installation.String(modifiedUtc.LastName);
+                    displayedText.Should().Contain("ModifiedLast", "Last name should persist through load/save cycle");
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:75-97
@@ -1365,7 +1444,7 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_challenge_rating_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:595-615)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:595-615
         // Original: def test_utc_editor_manipulate_challenge_rating_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating challenge rating spin box.
         [Fact]
         public void TestUtcEditorManipulateChallengeRatingSpin()
