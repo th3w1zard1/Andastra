@@ -5,6 +5,9 @@ using System.Linq;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
+using Andastra.Parsing;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Common;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -215,13 +218,179 @@ namespace Andastra.Runtime.Games.Aurora
         /// Saves area properties to GFF data.
         /// </summary>
         /// <remarks>
-        /// Based on Aurora area property saving.
-        /// Includes runtime state changes.
+        /// Based on Aurora area property saving in nwmain.exe.
+        /// - SaveArea @ 0x140365160: Saves main ARE file structure with Tag, Name, Unescapable, lighting, fog, weather, script hooks, tiles
+        /// - SaveProperties @ 0x140367390: Saves AreaProperties nested struct with SkyBox, lighting directions, wind, grass overrides, ambient sounds
+        ///
+        /// This implementation saves runtime-modifiable area properties to a valid ARE GFF format.
+        /// Saves properties that can change during gameplay: Unescapable, Tag, DisplayName, ResRef.
+        /// Creates minimal but valid ARE GFF structure following nwmain.exe SaveArea pattern.
         /// </remarks>
         protected override byte[] SaveAreaProperties()
         {
-            // TODO: Implement Aurora area properties serialization
-            throw new NotImplementedException("Aurora area properties serialization not yet implemented");
+            // Based on nwmain.exe: CNWSArea::SaveArea @ 0x140365160
+            // Creates ARE GFF structure and saves runtime-modifiable area properties
+            var gff = new GFF(GFFContent.ARE);
+            var root = gff.Root;
+
+            // Save basic identity fields (based on SaveArea lines 27-66 in nwmain.exe)
+            // Tag field - based on line 66: WriteFieldCExoString("Tag")
+            root.SetString("Tag", _tag ?? _resRef ?? "");
+
+            // Name field - based on line 48: WriteFieldCExoLocString("Name")
+            // Convert display name to LocalizedString format
+            LocalizedString name = LocalizedString.FromInvalid();
+            if (!string.IsNullOrEmpty(_displayName))
+            {
+                // Create a simple localized string with the display name
+                name = LocalizedString.FromEnglish(_displayName);
+            }
+            root.SetLocString("Name", name);
+
+            // Unescapable field - based on ARE format specification
+            // Aurora uses Unescapable flag like Odyssey, stored as UInt8
+            root.SetUInt8("Unescapable", _isUnescapable ? (byte)1 : (byte)0);
+
+            // ResRef field - based on line 59: WriteFieldCResRef("ResRef")
+            if (!string.IsNullOrEmpty(_resRef))
+            {
+                ResRef resRefObj = ResRef.FromString(_resRef);
+                root.SetResRef("ResRef", resRefObj);
+            }
+
+            // Set default values for required ARE fields to ensure valid GFF structure
+            // These match the minimal structure expected by the ARE format
+            // Based on SaveArea function structure in nwmain.exe
+
+            // Creator_ID - based on line 31: WriteFieldDWORD("Creator_ID", -1)
+            root.SetUInt32("Creator_ID", 0xFFFFFFFF); // -1 as DWORD
+
+            // ID - based on line 35: WriteFieldINT("ID", -1)
+            root.SetInt32("ID", -1);
+
+            // Version - based on line 98: WriteFieldINT("Version", version)
+            root.SetInt32("Version", 0);
+
+            // Flags - based on line 33: WriteFieldDWORD("Flags", flags)
+            root.SetUInt32("Flags", 0);
+
+            // Width and Height - based on lines 34, 99: WriteFieldINT("Height"/"Width")
+            root.SetInt32("Width", 0);
+            root.SetInt32("Height", 0);
+
+            // Script hooks - set to empty ResRefs if not specified
+            // Based on lines 51-57: WriteFieldCResRef("OnEnter", "OnExit", "OnHeartbeat", "OnUserDefined")
+            root.SetResRef("OnEnter", ResRef.FromBlank());
+            root.SetResRef("OnExit", ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", ResRef.FromBlank());
+
+            // Lighting defaults - based on lines 61-65: WriteFieldDWORD/BYTE for lighting
+            root.SetUInt32("SunAmbientColor", 0);
+            root.SetUInt32("SunDiffuseColor", 0);
+            root.SetUInt8("SunShadows", 0);
+            root.SetUInt8("ShadowOpacity", 0);
+
+            // Fog defaults - based on lines 63-64: WriteFieldBYTE/DWORD for fog
+            root.SetUInt8("SunFogAmount", 0);
+            root.SetUInt32("SunFogColor", 0);
+
+            // Moon lighting defaults - based on lines 41-46: WriteFieldDWORD/BYTE for moon
+            root.SetUInt32("MoonAmbientColor", 0);
+            root.SetUInt32("MoonDiffuseColor", 0);
+            root.SetUInt8("MoonFogAmount", 0);
+            root.SetUInt32("MoonFogColor", 0);
+            root.SetUInt8("MoonShadows", 0);
+
+            // Weather defaults - based on lines 27-29: WriteFieldINT for weather chances
+            root.SetInt32("ChanceRain", 0);
+            root.SetInt32("ChanceSnow", 0);
+            root.SetInt32("ChanceLightning", 0);
+            root.SetInt32("WindPower", 0);
+
+            // Day/Night cycle defaults - based on line 32: WriteFieldBYTE("DayNightCycle")
+            root.SetUInt8("DayNightCycle", 0);
+            root.SetUInt8("IsNight", 0);
+
+            // Lighting scheme - based on line 37: WriteFieldBYTE("LightingScheme")
+            root.SetUInt8("LightingScheme", 0);
+
+            // Load screen - based on line 38: WriteFieldWORD("LoadScreenID")
+            root.SetUInt16("LoadScreenID", 0);
+
+            // Modifier checks - based on lines 39-40: WriteFieldINT("ModListenCheck", "ModSpotCheck")
+            root.SetInt32("ModListenCheck", 0);
+            root.SetInt32("ModSpotCheck", 0);
+
+            // Fog clip distance - based on line 45: WriteFieldFLOAT("FogClipDist")
+            root.SetSingle("FogClipDist", 0.0f);
+
+            // No rest flag - based on line 49: WriteFieldBYTE("NoRest")
+            root.SetUInt8("NoRest", 0);
+
+            // Player vs Player - based on line 58: WriteFieldBYTE("PlayerVsPlayer")
+            root.SetUInt8("PlayerVsPlayer", 0);
+
+            // Tileset - based on line 97: WriteFieldCResRef("Tileset")
+            root.SetResRef("Tileset", ResRef.FromBlank());
+
+            // Comments - based on line 30: WriteFieldCExoString("Comments")
+            root.SetString("Comments", "");
+
+            // Create AreaProperties nested struct (based on SaveProperties @ 0x140367390)
+            // This struct contains additional runtime properties
+            var areaPropertiesStruct = new GFFStruct(100); // Struct ID 100 as seen in SaveProperties line 21
+            root.SetStruct("AreaProperties", areaPropertiesStruct);
+
+            // SkyBox - based on SaveProperties line 22: WriteFieldBYTE("SkyBox")
+            areaPropertiesStruct.SetUInt8("SkyBox", 0);
+
+            // DisplayName - based on SaveProperties line 37: WriteFieldCExoString("DisplayName")
+            if (!string.IsNullOrEmpty(_displayName))
+            {
+                areaPropertiesStruct.SetString("DisplayName", _displayName);
+            }
+            else
+            {
+                areaPropertiesStruct.SetString("DisplayName", _resRef ?? "");
+            }
+
+            // Lighting directions and colors (defaults) - based on SaveProperties lines 29-36
+            areaPropertiesStruct.SetUInt32("MoonFogColor", 0);
+            areaPropertiesStruct.SetUInt32("SunFogColor", 0);
+            areaPropertiesStruct.SetUInt8("MoonFogAmount", 0);
+            areaPropertiesStruct.SetUInt8("SunFogAmount", 0);
+            areaPropertiesStruct.SetUInt32("MoonAmbientColor", 0);
+            areaPropertiesStruct.SetUInt32("MoonDiffuseColor", 0);
+            areaPropertiesStruct.SetSingle("MoonDirectionX", 0.0f);
+            areaPropertiesStruct.SetSingle("MoonDirectionY", 0.0f);
+            areaPropertiesStruct.SetSingle("MoonDirectionZ", 0.0f);
+            areaPropertiesStruct.SetUInt32("SunAmbientColor", 0);
+            areaPropertiesStruct.SetUInt32("SunDiffuseColor", 0);
+            areaPropertiesStruct.SetSingle("SunDirectionX", 0.0f);
+            areaPropertiesStruct.SetSingle("SunDirectionY", 0.0f);
+            areaPropertiesStruct.SetSingle("SunDirectionZ", 0.0f);
+
+            // Wind properties (defaults) - based on SaveProperties lines 39-44
+            // Wind is only saved if wind power is 3 (line 38 check)
+            areaPropertiesStruct.SetSingle("WindDirectionX", 0.0f);
+            areaPropertiesStruct.SetSingle("WindDirectionY", 0.0f);
+            areaPropertiesStruct.SetSingle("WindDirectionZ", 0.0f);
+            areaPropertiesStruct.SetSingle("WindMagnitude", 0.0f);
+            areaPropertiesStruct.SetSingle("WindYaw", 0.0f);
+            areaPropertiesStruct.SetSingle("WindPitch", 0.0f);
+
+            // Grass properties (defaults) - based on SaveProperties lines 46-70
+            areaPropertiesStruct.SetUInt8("GrassDefDisabled", 0);
+
+            // Create empty Tile_List - based on SaveArea lines 67-96
+            // Tile list is required for valid ARE structure
+            var tileList = new GFFList();
+            root.SetList("Tile_List", tileList);
+
+            // Serialize GFF to byte array
+            // Based on pattern used in OdysseyEntity.Serialize() and other serialization methods
+            return gff.ToBytes();
         }
 
         /// <summary>
