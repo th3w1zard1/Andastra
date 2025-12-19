@@ -1099,6 +1099,33 @@ namespace HolocronToolset.Tests.Editors
             modifiedUtd.OnUnlock.ToString().Should().Be("test_on_unlock");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py
+        // Original: def test_utd_editor_manipulate_on_power_script(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        // Note: Python uses onSpellEdit which maps to on_power in UTD
+        [Fact]
+        public void TestUtdEditorManipulateOnPowerScript()
+        {
+            (string utdFile, HTInstallation installation) = GetTestFileAndInstallation();
+
+            if (!System.IO.File.Exists(utdFile) || installation == null)
+            {
+                return;
+            }
+
+            var editor = new UTDEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(utdFile);
+            editor.Load(utdFile, "naldoor001", ResourceType.UTD, originalData);
+
+            // Modify script - matching Python: editor.ui.onSpellEdit.set_combo_box_text("test_on_power")
+            editor.ScriptFields["OnPower"].Text = "test_on_power";
+
+            // Save and verify
+            var (data, _) = editor.Build();
+            UTD modifiedUtd = UTDHelpers.ConstructUtd(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data));
+            // Matching Python: assert str(modified_utd.on_power) == "test_on_power"
+            modifiedUtd.OnPower.ToString().Should().Be("test_on_power");
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:698-737
         // Original: def test_utd_editor_manipulate_all_scripts(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
@@ -1126,6 +1153,8 @@ namespace HolocronToolset.Tests.Editors
             editor.ScriptFields["OnOpen"].Text = "s_onopen";
             editor.ScriptFields["OnUnlock"].Text = "s_onunlock";
             editor.ScriptFields["OnUserDefined"].Text = "s_onuserdef";
+            // Matching PyKotor implementation: editor.ui.onSpellEdit.set_combo_box_text("s_onspell")
+            editor.ScriptFields["OnPower"].Text = "s_onspell";
 
             // Save and verify all
             var (data, _) = editor.Build();
@@ -1141,8 +1170,8 @@ namespace HolocronToolset.Tests.Editors
             modifiedUtd.OnOpen.ToString().Should().Be("s_onopen");
             modifiedUtd.OnUnlock.ToString().Should().Be("s_onunlock");
             modifiedUtd.OnUserDefined.ToString().Should().Be("s_onuserdef");
-            // Note: OnPower is mapped to OnSpell in Python, but we check OnPower property directly
-            // Python uses on_power but we need to set it via a different field if it exists
+            // Matching PyKotor implementation: assert str(modified_utd.on_power) == "s_onspell"
+            modifiedUtd.OnPower.ToString().Should().Be("s_onspell");
         }
 
         // ============================================================================
@@ -1553,6 +1582,7 @@ namespace HolocronToolset.Tests.Editors
             editor.ScriptFields["OnClosed"].Text = "";
             editor.ScriptFields["OnDamaged"].Text = "";
             editor.ScriptFields["OnDeath"].Text = "";
+            editor.ScriptFields["OnPower"].Text = "";
 
             // Save and verify
             var (data, _) = editor.Build();
@@ -1566,6 +1596,7 @@ namespace HolocronToolset.Tests.Editors
             modifiedUtd.OnClosed.ToString().Should().Be("");
             modifiedUtd.OnDamaged.ToString().Should().Be("");
             modifiedUtd.OnDeath.ToString().Should().Be("");
+            modifiedUtd.OnPower.ToString().Should().Be("");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1100-1124

@@ -272,7 +272,7 @@ namespace HolocronToolset.Editors
             var scriptsPanel = new StackPanel { Orientation = Orientation.Vertical };
 
             string[] scriptNames = { "OnClick", "OnClosed", "OnDamaged", "OnDeath", "OnOpenFailed",
-                "OnHeartbeat", "OnMelee", "OnOpen", "OnUnlock", "OnUserDefined" };
+                "OnHeartbeat", "OnMelee", "OnOpen", "OnUnlock", "OnUserDefined", "OnPower" };
             foreach (string scriptName in scriptNames)
             {
                 var scriptLabel = new TextBlock { Text = scriptName + ":" };
@@ -394,6 +394,8 @@ namespace HolocronToolset.Editors
                 _scriptFields["OnUnlock"].Text = utd.OnUnlock.ToString();
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
                 _scriptFields["OnUserDefined"].Text = utd.OnUserDefined.ToString();
+            if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
+                _scriptFields["OnPower"].Text = utd.OnPower.ToString();
 
             // Comments
             if (_commentsEdit != null) _commentsEdit.Text = utd.Comment;
@@ -555,6 +557,11 @@ namespace HolocronToolset.Editors
             {
                 utd.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text ?? "");
             }
+            // Python: utd.on_power = ResRef(self.ui.onSpellEdit.currentText())
+            if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
+            {
+                utd.OnPower = new ResRef(_scriptFields["OnPower"].Text ?? "");
+            }
 
             // Comments
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:322
@@ -693,9 +700,16 @@ namespace HolocronToolset.Editors
         // Original: def edit_conversation(self):
         private void EditConversation()
         {
-            // Placeholder for conversation editor
-            // Will be implemented when DLG editor is available
-            System.Console.WriteLine("Conversation editor not yet implemented");
+            // Matching PyKotor implementation: Opens DLG editor for conversation
+            // This is a placeholder - actual implementation would require DLG editor to be available
+            // For now, we just log that it was called
+            if (_conversationEdit == null || string.IsNullOrEmpty(_conversationEdit.Text))
+            {
+                System.Console.WriteLine("Conversation field cannot be blank.");
+                return;
+            }
+            // TODO: Implement DLG editor opening when available
+            System.Console.WriteLine($"EditConversation called for: {_conversationEdit.Text}");
         }
 
         public override void SaveAs()
