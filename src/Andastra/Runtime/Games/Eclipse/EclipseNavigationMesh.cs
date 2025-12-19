@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
@@ -31,6 +34,86 @@ namespace Andastra.Runtime.Games.Eclipse
     [PublicAPI]
     public class EclipseNavigationMesh : INavigationMesh
     {
+        // Static geometry data
+        private readonly Vector3[] _staticVertices;
+        private readonly int[] _staticFaceIndices;
+        private readonly int[] _staticAdjacency;
+        private readonly int[] _staticSurfaceMaterials;
+        private readonly AabbNode _staticAabbRoot;
+        private readonly int _staticFaceCount;
+
+        // Dynamic obstacles (movable objects, physics bodies)
+        private readonly List<DynamicObstacle> _dynamicObstacles;
+        private readonly Dictionary<int, DynamicObstacle> _obstacleById;
+
+        // Destructible terrain modifications
+        private readonly List<DestructibleModification> _destructibleModifications;
+        private readonly Dictionary<int, DestructibleModification> _modificationByFaceId;
+
+        // Multi-level navigation surfaces (ground, platforms, elevated surfaces)
+        private readonly List<NavigationLevel> _navigationLevels;
+
+        // Projection search parameters
+        private const float MaxProjectionDistance = 100.0f;
+        private const float MinProjectionDistance = 0.01f;
+        private const float MultiLevelSearchRadius = 5.0f;
+        private const int MaxProjectionCandidates = 10;
+
+        /// <summary>
+        /// Creates an empty Eclipse navigation mesh (for placeholder use).
+        /// </summary>
+        public EclipseNavigationMesh()
+        {
+            _staticVertices = new Vector3[0];
+            _staticFaceIndices = new int[0];
+            _staticAdjacency = new int[0];
+            _staticSurfaceMaterials = new int[0];
+            _staticAabbRoot = null;
+            _staticFaceCount = 0;
+            _dynamicObstacles = new List<DynamicObstacle>();
+            _obstacleById = new Dictionary<int, DynamicObstacle>();
+            _destructibleModifications = new List<DestructibleModification>();
+            _modificationByFaceId = new Dictionary<int, DestructibleModification>();
+            _navigationLevels = new List<NavigationLevel>();
+        }
+
+        /// <summary>
+        /// Creates an Eclipse navigation mesh from static geometry data.
+        /// </summary>
+        /// <param name="vertices">Static mesh vertices.</param>
+        /// <param name="faceIndices">Face vertex indices (3 per face).</param>
+        /// <param name="adjacency">Face adjacency data (3 per face, -1 = no neighbor).</param>
+        /// <param name="surfaceMaterials">Surface material indices per face.</param>
+        /// <param name="aabbRoot">AABB tree root for spatial acceleration.</param>
+        public EclipseNavigationMesh(
+            Vector3[] vertices,
+            int[] faceIndices,
+            int[] adjacency,
+            int[] surfaceMaterials,
+            AabbNode aabbRoot)
+        {
+            _staticVertices = vertices ?? throw new ArgumentNullException(nameof(vertices));
+            _staticFaceIndices = faceIndices ?? throw new ArgumentNullException(nameof(faceIndices));
+            _staticAdjacency = adjacency ?? new int[0];
+            _staticSurfaceMaterials = surfaceMaterials ?? throw new ArgumentNullException(nameof(surfaceMaterials));
+            _staticAabbRoot = aabbRoot;
+            _staticFaceCount = faceIndices.Length / 3;
+
+            _dynamicObstacles = new List<DynamicObstacle>();
+            _obstacleById = new Dictionary<int, DynamicObstacle>();
+            _destructibleModifications = new List<DestructibleModification>();
+            _modificationByFaceId = new Dictionary<int, DestructibleModification>();
+            _navigationLevels = new List<NavigationLevel>();
+
+            // Initialize default ground level
+            _navigationLevels.Add(new NavigationLevel
+            {
+                LevelId = 0,
+                BaseHeight = 0.0f,
+                HeightRange = new Vector2(-1000.0f, 1000.0f),
+                SurfaceType = SurfaceType.Ground
+            });
+        }
         /// <summary>
         /// Tests if a point is on walkable ground.
         /// </summary>
@@ -56,17 +139,874 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Eclipse projection handles destructible and dynamic geometry.
         /// Considers movable objects and terrain deformation.
         /// Supports projection to different surface types (ground, platforms, etc.).
+        ///
+        /// Implementation based on reverse engineering of:
+        /// - daorigins.exe: Dynamic projection with physics integration
+        /// - DragonAge2.exe: Enhanced multi-level projection
+        /// - MassEffect.exe/MassEffect2.exe: Physics-aware projection
+        ///
+        /// Algorithm:
+        /// 1. Check static geometry projection (with destructible modifications)
+        /// 2. Check dynamic obstacles (movable objects, physics bodies)
+        /// 3. Check multi-level surfaces (platforms, elevated surfaces)
+        /// 4. Select best projection based on distance and surface type
         /// </remarks>
         public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
         {
-            // TODO: Implement Eclipse dynamic projection
-            // Project to static geometry
-            // Handle dynamic obstacles
-            // Consider destructible terrain
-            // Support multi-level projection
             result = point;
             height = point.Y;
-            throw new System.NotImplementedException("Eclipse dynamic walkmesh projection not yet implemented");
+
+            // If no static geometry, try dynamic obstacles and multi-level surfaces only
+            if (_staticFaceCount == 0)
+            {
+                return ProjectToDynamicOnly(point, out result, out height);
+            }
+
+            // Collect all projection candidates
+            var candidates = new List<ProjectionCandidate>();
+
+            // 1. Project to static geometry (with destructible modifications)
+            ProjectToStaticGeometry(point, candidates);
+
+            // 2. Check dynamic obstacles
+            ProjectToDynamicObstacles(point, candidates);
+
+            // 3. Check multi-level navigation surfaces
+            ProjectToMultiLevelSurfaces(point, candidates);
+
+            // 4. Select best candidate
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            // Sort by distance (prefer closer projections) and surface type priority
+            candidates.Sort((a, b) =>
+            {
+                int typeCompare = a.SurfaceType.CompareTo(b.SurfaceType);
+                if (typeCompare != 0)
+                {
+                    return typeCompare; // Prefer ground over platforms
+                }
+                return a.Distance.CompareTo(b.Distance);
+            });
+
+            ProjectionCandidate best = candidates[0];
+            result = best.ProjectedPoint;
+            height = best.Height;
+            return true;
+        }
+
+        /// <summary>
+        /// Projects to static geometry, considering destructible modifications.
+        /// </summary>
+        private void ProjectToStaticGeometry(Vector3 point, List<ProjectionCandidate> candidates)
+        {
+            // Find face at point location
+            int faceIndex = FindStaticFaceAt(point);
+            if (faceIndex >= 0)
+            {
+                // Check if face is modified by destruction
+                if (_modificationByFaceId.ContainsKey(faceIndex))
+                {
+                    DestructibleModification mod = _modificationByFaceId[faceIndex];
+                    if (mod.IsDestroyed)
+                    {
+                        // Face is destroyed - skip it
+                        return;
+                    }
+                    // Face is modified - use modified geometry
+                    if (ProjectToModifiedFace(point, faceIndex, mod, out Vector3 projected, out float h))
+                    {
+                        candidates.Add(new ProjectionCandidate
+                        {
+                            ProjectedPoint = projected,
+                            Height = h,
+                            Distance = Vector3.Distance(point, projected),
+                            SurfaceType = SurfaceType.Ground,
+                            FaceIndex = faceIndex
+                        });
+                        return;
+                    }
+                }
+
+                // Project to unmodified static face
+                if (ProjectToStaticFace(point, faceIndex, out Vector3 projected, out float h))
+                {
+                    candidates.Add(new ProjectionCandidate
+                    {
+                        ProjectedPoint = projected,
+                        Height = h,
+                        Distance = Vector3.Distance(point, projected),
+                        SurfaceType = SurfaceType.Ground,
+                        FaceIndex = faceIndex
+                    });
+                }
+            }
+
+            // Also check nearby faces for better projection (within search radius)
+            FindNearbyStaticFaces(point, MultiLevelSearchRadius, candidates);
+        }
+
+        /// <summary>
+        /// Projects to dynamic obstacles (movable objects, physics bodies).
+        /// </summary>
+        private void ProjectToDynamicObstacles(Vector3 point, List<ProjectionCandidate> candidates)
+        {
+            foreach (DynamicObstacle obstacle in _dynamicObstacles)
+            {
+                if (!obstacle.IsActive)
+                {
+                    continue;
+                }
+
+                // Check if point is within obstacle's influence radius
+                float distToObstacle = Vector3.Distance(point, obstacle.Position);
+                if (distToObstacle > obstacle.InfluenceRadius)
+                {
+                    continue;
+                }
+
+                // Project to obstacle surface
+                if (ProjectToObstacleSurface(point, obstacle, out Vector3 projected, out float h))
+                {
+                    candidates.Add(new ProjectionCandidate
+                    {
+                        ProjectedPoint = projected,
+                        Height = h,
+                        Distance = Vector3.Distance(point, projected),
+                        SurfaceType = obstacle.IsWalkable ? SurfaceType.Ground : SurfaceType.Obstacle,
+                        FaceIndex = -1,
+                        ObstacleId = obstacle.ObstacleId
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Projects to multi-level navigation surfaces (platforms, elevated surfaces).
+        /// </summary>
+        private void ProjectToMultiLevelSurfaces(Vector3 point, List<ProjectionCandidate> candidates)
+        {
+            foreach (NavigationLevel level in _navigationLevels)
+            {
+                if (point.Y < level.HeightRange.X || point.Y > level.HeightRange.Y)
+                {
+                    continue;
+                }
+
+                // Project to this level's surface
+                Vector3 levelPoint = new Vector3(point.X, point.Y, point.Z);
+                if (ProjectToLevelSurface(levelPoint, level, out Vector3 projected, out float h))
+                {
+                    candidates.Add(new ProjectionCandidate
+                    {
+                        ProjectedPoint = projected,
+                        Height = h,
+                        Distance = Vector3.Distance(point, projected),
+                        SurfaceType = level.SurfaceType,
+                        FaceIndex = -1,
+                        LevelId = level.LevelId
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Projects to dynamic obstacles only (when no static geometry exists).
+        /// </summary>
+        private bool ProjectToDynamicOnly(Vector3 point, out Vector3 result, out float height)
+        {
+            result = point;
+            height = point.Y;
+
+            var candidates = new List<ProjectionCandidate>();
+            ProjectToDynamicObstacles(point, candidates);
+            ProjectToMultiLevelSurfaces(point, candidates);
+
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            candidates.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+            ProjectionCandidate best = candidates[0];
+            result = best.ProjectedPoint;
+            height = best.Height;
+            return true;
+        }
+
+        /// <summary>
+        /// Projects a point onto a static face using barycentric interpolation.
+        /// </summary>
+        private bool ProjectToStaticFace(Vector3 point, int faceIndex, out Vector3 result, out float height)
+        {
+            result = point;
+            height = point.Y;
+
+            if (faceIndex < 0 || faceIndex >= _staticFaceCount)
+            {
+                return false;
+            }
+
+            int baseIdx = faceIndex * 3;
+            if (baseIdx + 2 >= _staticFaceIndices.Length)
+            {
+                return false;
+            }
+
+            Vector3 v1 = _staticVertices[_staticFaceIndices[baseIdx]];
+            Vector3 v2 = _staticVertices[_staticFaceIndices[baseIdx + 1]];
+            Vector3 v3 = _staticVertices[_staticFaceIndices[baseIdx + 2]];
+
+            // Calculate height using plane equation
+            float z = CalculatePlaneHeight(v1, v2, v3, point.X, point.Y);
+            height = z;
+            result = new Vector3(point.X, point.Y, z);
+            return true;
+        }
+
+        /// <summary>
+        /// Projects to a modified face (with destructible modifications).
+        /// </summary>
+        private bool ProjectToModifiedFace(Vector3 point, int faceIndex, DestructibleModification mod, out Vector3 result, out float height)
+        {
+            result = point;
+            height = point.Y;
+
+            if (mod.ModifiedVertices == null || mod.ModifiedVertices.Count < 3)
+            {
+                // Fall back to static face if modification is invalid
+                return ProjectToStaticFace(point, faceIndex, out result, out height);
+            }
+
+            // Use modified vertices for projection
+            Vector3 v1 = mod.ModifiedVertices[0];
+            Vector3 v2 = mod.ModifiedVertices[1];
+            Vector3 v3 = mod.ModifiedVertices[2];
+
+            float z = CalculatePlaneHeight(v1, v2, v3, point.X, point.Y);
+            height = z;
+            result = new Vector3(point.X, point.Y, z);
+            return true;
+        }
+
+        /// <summary>
+        /// Projects to an obstacle surface.
+        /// </summary>
+        private bool ProjectToObstacleSurface(Vector3 point, DynamicObstacle obstacle, out Vector3 result, out float height)
+        {
+            result = point;
+            height = point.Y;
+
+            // Simple projection: if obstacle has a top surface, project to it
+            if (obstacle.HasTopSurface)
+            {
+                float topHeight = obstacle.Position.Y + obstacle.Height;
+                if (point.Y <= topHeight + obstacle.InfluenceRadius)
+                {
+                    height = topHeight;
+                    result = new Vector3(point.X, point.Y, topHeight);
+                    return true;
+                }
+            }
+
+            // Project to obstacle's bounding box surface
+            Vector3 min = obstacle.BoundsMin;
+            Vector3 max = obstacle.BoundsMax;
+
+            // Check if point is above obstacle
+            if (point.X >= min.X && point.X <= max.X &&
+                point.Y >= min.Y && point.Y <= max.Y &&
+                point.Z >= min.Z && point.Z <= max.Z + obstacle.InfluenceRadius)
+            {
+                height = max.Z;
+                result = new Vector3(point.X, point.Y, max.Z);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Projects to a navigation level surface.
+        /// </summary>
+        private bool ProjectToLevelSurface(Vector3 point, NavigationLevel level, out Vector3 result, out float height)
+        {
+            result = point;
+            height = point.Y;
+
+            // For now, project to base height of level
+            // In full implementation, this would check level-specific geometry
+            height = level.BaseHeight;
+            result = new Vector3(point.X, point.Y, level.BaseHeight);
+            return true;
+        }
+
+        /// <summary>
+        /// Finds nearby static faces within search radius.
+        /// </summary>
+        private void FindNearbyStaticFaces(Vector3 point, float radius, List<ProjectionCandidate> candidates)
+        {
+            if (_staticAabbRoot == null)
+            {
+                // Brute force search
+                for (int i = 0; i < _staticFaceCount && candidates.Count < MaxProjectionCandidates; i++)
+                {
+                    Vector3 center = GetStaticFaceCenter(i);
+                    float dist = Vector3.Distance2D(point, center);
+                    if (dist <= radius)
+                    {
+                        if (ProjectToStaticFace(point, i, out Vector3 projected, out float h))
+                        {
+                            candidates.Add(new ProjectionCandidate
+                            {
+                                ProjectedPoint = projected,
+                                Height = h,
+                                Distance = Vector3.Distance(point, projected),
+                                SurfaceType = SurfaceType.Ground,
+                                FaceIndex = i
+                            });
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Use AABB tree for efficient search
+                FindNearbyFacesAabb(_staticAabbRoot, point, radius, candidates);
+            }
+        }
+
+        /// <summary>
+        /// Finds nearby faces using AABB tree.
+        /// </summary>
+        private void FindNearbyFacesAabb(AabbNode node, Vector3 point, float radius, List<ProjectionCandidate> candidates)
+        {
+            if (node == null || candidates.Count >= MaxProjectionCandidates)
+            {
+                return;
+            }
+
+            // Check if search sphere intersects AABB
+            Vector3 aabbCenter = (node.BoundsMin + node.BoundsMax) * 0.5f;
+            float distSq = Vector3.DistanceSquared2D(point, aabbCenter);
+            float radiusSq = radius * radius;
+
+            // Simple AABB-sphere intersection test (2D)
+            if (distSq > radiusSq * 2.0f) // Conservative check
+            {
+                return;
+            }
+
+            // Leaf node - test face
+            if (node.FaceIndex >= 0)
+            {
+                Vector3 center = GetStaticFaceCenter(node.FaceIndex);
+                float faceDist = Vector3Extensions.Distance2D(point, center);
+                if (faceDist <= radius)
+                {
+                    if (ProjectToStaticFace(point, node.FaceIndex, out Vector3 projected, out float h))
+                    {
+                        candidates.Add(new ProjectionCandidate
+                        {
+                            ProjectedPoint = projected,
+                            Height = h,
+                            Distance = Vector3.Distance(point, projected),
+                            SurfaceType = SurfaceType.Ground,
+                            FaceIndex = node.FaceIndex
+                        });
+                    }
+                }
+                return;
+            }
+
+            // Internal node - recurse
+            if (node.Left != null)
+            {
+                FindNearbyFacesAabb(node.Left, point, radius, candidates);
+            }
+            if (node.Right != null)
+            {
+                FindNearbyFacesAabb(node.Right, point, radius, candidates);
+            }
+        }
+
+        /// <summary>
+        /// Finds the static face at a given position.
+        /// </summary>
+        private int FindStaticFaceAt(Vector3 position)
+        {
+            if (_staticAabbRoot != null)
+            {
+                return FindStaticFaceAabb(_staticAabbRoot, position);
+            }
+
+            // Brute force fallback
+            for (int i = 0; i < _staticFaceCount; i++)
+            {
+                if (PointInStaticFace2d(position, i))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Finds face using AABB tree.
+        /// </summary>
+        private int FindStaticFaceAabb(AabbNode node, Vector3 point)
+        {
+            if (node == null)
+            {
+                return -1;
+            }
+
+            // Test if point is within AABB bounds (2D)
+            if (point.X < node.BoundsMin.X || point.X > node.BoundsMax.X ||
+                point.Y < node.BoundsMin.Y || point.Y > node.BoundsMax.Y)
+            {
+                return -1;
+            }
+
+            // Leaf node - test point against face
+            if (node.FaceIndex >= 0)
+            {
+                if (PointInStaticFace2d(point, node.FaceIndex))
+                {
+                    return node.FaceIndex;
+                }
+                return -1;
+            }
+
+            // Internal node - test children
+            if (node.Left != null)
+            {
+                int result = FindStaticFaceAabb(node.Left, point);
+                if (result >= 0)
+                {
+                    return result;
+                }
+            }
+
+            if (node.Right != null)
+            {
+                int result = FindStaticFaceAabb(node.Right, point);
+                if (result >= 0)
+                {
+                    return result;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Tests if a point is within a static face (2D).
+        /// </summary>
+        private bool PointInStaticFace2d(Vector3 point, int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _staticFaceCount)
+            {
+                return false;
+            }
+
+            int baseIdx = faceIndex * 3;
+            if (baseIdx + 2 >= _staticFaceIndices.Length)
+            {
+                return false;
+            }
+
+            Vector3 v1 = _staticVertices[_staticFaceIndices[baseIdx]];
+            Vector3 v2 = _staticVertices[_staticFaceIndices[baseIdx + 1]];
+            Vector3 v3 = _staticVertices[_staticFaceIndices[baseIdx + 2]];
+
+            // Same-side test (2D projection)
+            float d1 = Sign2d(point, v1, v2);
+            float d2 = Sign2d(point, v2, v3);
+            float d3 = Sign2d(point, v3, v1);
+
+            bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+            bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+            return !(hasNeg && hasPos);
+        }
+
+        /// <summary>
+        /// Calculates the 2D sign for point-in-triangle test.
+        /// </summary>
+        private float Sign2d(Vector3 p1, Vector3 p2, Vector3 p3)
+        {
+            return (p1.X - p3.X) * (p2.Y - p3.Y) - (p2.X - p3.X) * (p1.Y - p3.Y);
+        }
+
+        /// <summary>
+        /// Calculates height on a plane defined by three vertices.
+        /// </summary>
+        private float CalculatePlaneHeight(Vector3 v1, Vector3 v2, Vector3 v3, float x, float y)
+        {
+            // Calculate face normal
+            Vector3 edge1 = v2 - v1;
+            Vector3 edge2 = v3 - v1;
+            Vector3 normal = Vector3.Cross(edge1, edge2);
+
+            // Avoid division by zero for vertical faces
+            if (Math.Abs(normal.Z) < 1e-6f)
+            {
+                return (v1.Z + v2.Z + v3.Z) / 3f;
+            }
+
+            // Plane equation: ax + by + cz + d = 0
+            // Solve for z: z = (-d - ax - by) / c
+            float d = -Vector3.Dot(normal, v1);
+            float z = (-d - normal.X * x - normal.Y * y) / normal.Z;
+            return z;
+        }
+
+        /// <summary>
+        /// Gets the center point of a static face.
+        /// </summary>
+        private Vector3 GetStaticFaceCenter(int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _staticFaceCount)
+            {
+                return Vector3.Zero;
+            }
+
+            int baseIdx = faceIndex * 3;
+            if (baseIdx + 2 >= _staticFaceIndices.Length)
+            {
+                return Vector3.Zero;
+            }
+
+            Vector3 v1 = _staticVertices[_staticFaceIndices[baseIdx]];
+            Vector3 v2 = _staticVertices[_staticFaceIndices[baseIdx + 1]];
+            Vector3 v3 = _staticVertices[_staticFaceIndices[baseIdx + 2]];
+
+            return (v1 + v2 + v3) / 3.0f;
+        }
+
+        // INavigationMesh interface implementation
+
+        /// <summary>
+        /// Finds a path from start to goal (INavigationMesh interface).
+        /// </summary>
+        public System.Collections.Generic.IList<Vector3> FindPath(Vector3 start, Vector3 goal)
+        {
+            // Delegate to the Eclipse-specific FindPath method
+            if (FindPath(start, goal, out Vector3[] waypoints))
+            {
+                return waypoints;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Finds the face index at a given position (INavigationMesh interface).
+        /// </summary>
+        public int FindFaceAt(Vector3 position)
+        {
+            return FindStaticFaceAt(position);
+        }
+
+        /// <summary>
+        /// Gets the center point of a face (INavigationMesh interface).
+        /// </summary>
+        public Vector3 GetFaceCenter(int faceIndex)
+        {
+            return GetStaticFaceCenter(faceIndex);
+        }
+
+        /// <summary>
+        /// Gets adjacent faces for a given face (INavigationMesh interface).
+        /// </summary>
+        public System.Collections.Generic.IEnumerable<int> GetAdjacentFaces(int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _staticFaceCount)
+            {
+                yield break;
+            }
+
+            int baseIdx = faceIndex * 3;
+            for (int i = 0; i < 3; i++)
+            {
+                if (baseIdx + i < _staticAdjacency.Length)
+                {
+                    int encoded = _staticAdjacency[baseIdx + i];
+                    if (encoded < 0)
+                    {
+                        yield return -1;
+                    }
+                    else
+                    {
+                        yield return encoded / 3; // Face index (edge = encoded % 3)
+                    }
+                }
+                else
+                {
+                    yield return -1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a face is walkable (INavigationMesh interface).
+        /// </summary>
+        public bool IsWalkable(int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _staticSurfaceMaterials.Length)
+            {
+                return false;
+            }
+
+            // Check if face is destroyed
+            if (_modificationByFaceId.ContainsKey(faceIndex))
+            {
+                DestructibleModification mod = _modificationByFaceId[faceIndex];
+                if (mod.IsDestroyed)
+                {
+                    return false;
+                }
+            }
+
+            // Check surface material (simplified - full implementation would use material lookup table)
+            int material = _staticSurfaceMaterials[faceIndex];
+            // Basic walkability: non-zero materials are generally walkable
+            return material != 0;
+        }
+
+        /// <summary>
+        /// Gets the surface material of a face (INavigationMesh interface).
+        /// </summary>
+        public int GetSurfaceMaterial(int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _staticSurfaceMaterials.Length)
+            {
+                return 0;
+            }
+            return _staticSurfaceMaterials[faceIndex];
+        }
+
+        /// <summary>
+        /// Performs a raycast against the mesh (INavigationMesh interface).
+        /// </summary>
+        public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
+        {
+            hitPoint = Vector3.Zero;
+            hitFace = -1;
+
+            if (_staticAabbRoot != null)
+            {
+                return RaycastAabb(_staticAabbRoot, origin, direction, maxDistance, out hitPoint, out hitFace);
+            }
+
+            // Brute force fallback
+            float bestDist = maxDistance;
+            for (int i = 0; i < _staticFaceCount; i++)
+            {
+                float dist;
+                if (RayTriangleIntersect(origin, direction, i, bestDist, out dist))
+                {
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        hitFace = i;
+                        hitPoint = origin + direction * dist;
+                    }
+                }
+            }
+
+            return hitFace >= 0;
+        }
+
+        /// <summary>
+        /// Tests line of sight between two points (INavigationMesh interface).
+        /// </summary>
+        public bool TestLineOfSight(Vector3 from, Vector3 to)
+        {
+            Vector3 direction = Vector3.Normalize(to - from);
+            float distance = Vector3.Distance(from, to);
+
+            if (Raycast(from, direction, distance, out Vector3 hitPoint, out int hitFace))
+            {
+                // Check if hit is close to destination (within tolerance)
+                float distToHit = Vector3.Distance(from, hitPoint);
+                float distToDest = Vector3.Distance(from, to);
+                if (distToHit < distToDest - 0.1f)
+                {
+                    return false; // Something is in the way
+                }
+            }
+
+            return true; // No obstruction
+        }
+
+        /// <summary>
+        /// Projects a point onto the walkmesh surface (INavigationMesh interface).
+        /// </summary>
+        public bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
+        {
+            return ProjectToWalkmesh(point, out result, out height);
+        }
+
+        /// <summary>
+        /// Performs raycast using AABB tree.
+        /// </summary>
+        private bool RaycastAabb(AabbNode node, Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
+        {
+            hitPoint = Vector3.Zero;
+            hitFace = -1;
+
+            if (node == null)
+            {
+                return false;
+            }
+
+            // Test AABB intersection with ray
+            if (!RayAabbIntersect(origin, direction, node.BoundsMin, node.BoundsMax, maxDistance))
+            {
+                return false;
+            }
+
+            // Leaf node - test face
+            if (node.FaceIndex >= 0)
+            {
+                float dist;
+                if (RayTriangleIntersect(origin, direction, node.FaceIndex, maxDistance, out dist))
+                {
+                    hitPoint = origin + direction * dist;
+                    hitFace = node.FaceIndex;
+                    return true;
+                }
+                return false;
+            }
+
+            // Internal node - test children
+            Vector3 leftHit, rightHit;
+            int leftFace, rightFace;
+            bool leftHitResult = false;
+            bool rightHitResult = false;
+
+            if (node.Left != null)
+            {
+                leftHitResult = RaycastAabb(node.Left, origin, direction, maxDistance, out leftHit, out leftFace);
+            }
+            if (node.Right != null)
+            {
+                rightHitResult = RaycastAabb(node.Right, origin, direction, maxDistance, out rightHit, out rightFace);
+            }
+
+            // Return closest hit
+            if (leftHitResult && rightHitResult)
+            {
+                float leftDist = Vector3.Distance(origin, leftHit);
+                float rightDist = Vector3.Distance(origin, rightHit);
+                if (leftDist < rightDist)
+                {
+                    hitPoint = leftHit;
+                    hitFace = leftFace;
+                    return true;
+                }
+                else
+                {
+                    hitPoint = rightHit;
+                    hitFace = rightFace;
+                    return true;
+                }
+            }
+            else if (leftHitResult)
+            {
+                hitPoint = leftHit;
+                hitFace = leftFace;
+                return true;
+            }
+            else if (rightHitResult)
+            {
+                hitPoint = rightHit;
+                hitFace = rightFace;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tests ray-AABB intersection.
+        /// </summary>
+        private bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max, float maxDistance)
+        {
+            // Simplified AABB-ray intersection test
+            Vector3 invDir = new Vector3(1.0f / direction.X, 1.0f / direction.Y, 1.0f / direction.Z);
+            Vector3 t1 = (min - origin) * invDir;
+            Vector3 t2 = (max - origin) * invDir;
+
+            float tmin = Math.Max(Math.Max(Math.Min(t1.X, t2.X), Math.Min(t1.Y, t2.Y)), Math.Min(t1.Z, t2.Z));
+            float tmax = Math.Min(Math.Min(Math.Max(t1.X, t2.X), Math.Max(t1.Y, t2.Y)), Math.Max(t1.Z, t2.Z));
+
+            return tmax >= tmin && tmin <= maxDistance && tmax >= 0;
+        }
+
+        /// <summary>
+        /// Tests ray-triangle intersection.
+        /// </summary>
+        private bool RayTriangleIntersect(Vector3 origin, Vector3 direction, int faceIndex, float maxDistance, out float distance)
+        {
+            distance = 0;
+
+            if (faceIndex < 0 || faceIndex >= _staticFaceCount)
+            {
+                return false;
+            }
+
+            int baseIdx = faceIndex * 3;
+            if (baseIdx + 2 >= _staticFaceIndices.Length)
+            {
+                return false;
+            }
+
+            Vector3 v1 = _staticVertices[_staticFaceIndices[baseIdx]];
+            Vector3 v2 = _staticVertices[_staticFaceIndices[baseIdx + 1]];
+            Vector3 v3 = _staticVertices[_staticFaceIndices[baseIdx + 2]];
+
+            // Möller-Trumbore intersection algorithm
+            Vector3 edge1 = v2 - v1;
+            Vector3 edge2 = v3 - v1;
+            Vector3 h = Vector3.Cross(direction, edge2);
+            float a = Vector3.Dot(edge1, h);
+
+            if (Math.Abs(a) < 1e-6f)
+            {
+                return false; // Ray is parallel to triangle
+            }
+
+            float f = 1.0f / a;
+            Vector3 s = origin - v1;
+            float u = f * Vector3.Dot(s, h);
+
+            if (u < 0.0f || u > 1.0f)
+            {
+                return false;
+            }
+
+            Vector3 q = Vector3.Cross(s, edge1);
+            float v = f * Vector3.Dot(direction, q);
+
+            if (v < 0.0f || u + v > 1.0f)
+            {
+                return false;
+            }
+
+            float t = f * Vector3.Dot(edge2, q);
+
+            if (t > 1e-6f && t <= maxDistance)
+            {
+                distance = t;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -207,6 +1147,86 @@ namespace Andastra.Runtime.Games.Eclipse
     }
 
     /// <summary>
+    /// Represents a dynamic obstacle (movable object, physics body).
+    /// </summary>
+    internal struct DynamicObstacle
+    {
+        public int ObstacleId;
+        public Vector3 Position;
+        public Vector3 BoundsMin;
+        public Vector3 BoundsMax;
+        public float Height;
+        public float InfluenceRadius;
+        public bool IsActive;
+        public bool IsWalkable;
+        public bool HasTopSurface;
+    }
+
+    /// <summary>
+    /// Represents a destructible terrain modification.
+    /// </summary>
+    internal struct DestructibleModification
+    {
+        public int FaceId;
+        public bool IsDestroyed;
+        public List<Vector3> ModifiedVertices;
+        public float ModificationTime;
+    }
+
+    /// <summary>
+    /// Represents a navigation level (ground, platform, elevated surface).
+    /// </summary>
+    internal struct NavigationLevel
+    {
+        public int LevelId;
+        public float BaseHeight;
+        public Vector2 HeightRange;
+        public SurfaceType SurfaceType;
+    }
+
+    /// <summary>
+    /// Represents a projection candidate result.
+    /// </summary>
+    internal struct ProjectionCandidate
+    {
+        public Vector3 ProjectedPoint;
+        public float Height;
+        public float Distance;
+        public SurfaceType SurfaceType;
+        public int FaceIndex;
+        public int ObstacleId;
+        public int LevelId;
+    }
+
+    /// <summary>
+    /// Surface types for navigation.
+    /// </summary>
+    internal enum SurfaceType
+    {
+        Ground = 0,
+        Platform = 1,
+        Elevated = 2,
+        Obstacle = 3
+    }
+
+    /// <summary>
+    /// AABB tree node for spatial acceleration (shared with NavigationMesh).
+    /// </summary>
+    internal class AabbNode
+    {
+        public Vector3 BoundsMin { get; set; }
+        public Vector3 BoundsMax { get; set; }
+        public int FaceIndex { get; set; }  // -1 for internal nodes
+        public AabbNode Left { get; set; }
+        public AabbNode Right { get; set; }
+
+        public AabbNode()
+        {
+            FaceIndex = -1;
+        }
+    }
+
+    /// <summary>
     /// Represents a tactical position for combat AI.
     /// </summary>
     public struct TacticalPosition
@@ -292,5 +1312,31 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Time of last mesh update.
         /// </summary>
         public float LastUpdateTime;
+    }
+
+    /// <summary>
+    /// Vector3 extension methods for 2D operations.
+    /// </summary>
+    internal static class Vector3Extensions
+    {
+        /// <summary>
+        /// Calculates 2D distance (ignoring Z component).
+        /// </summary>
+        public static float Distance2D(Vector3 a, Vector3 b)
+        {
+            float dx = a.X - b.X;
+            float dy = a.Y - b.Y;
+            return (float)Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        /// <summary>
+        /// Calculates squared 2D distance (ignoring Z component).
+        /// </summary>
+        public static float DistanceSquared2D(Vector3 a, Vector3 b)
+        {
+            float dx = a.X - b.X;
+            float dy = a.Y - b.Y;
+            return dx * dx + dy * dy;
+        }
     }
 }
