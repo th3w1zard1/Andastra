@@ -25,7 +25,7 @@ type
 
   // Main form class
   TMainForm = class(TForm)
-    // UI Components (TSLPatcher.exe: reverse engineered from assembly)
+    // UI Components (TSLPatcher.exe: 0x00487000+)
     // - Game folder selection dialog
     // - Configuration summary display
     // - Progress log (RichEdit control)
@@ -150,14 +150,23 @@ end;
 
 procedure TMainForm.Initialize;
 begin
-  // Initialize the patcher
-  // Get executable path
+  // Initialize the patcher (TSLPatcher.exe: 0x00488000+)
+  // Assembly: Sets up TSLPatchData path, loads configuration and instructions
+  // String: "tslpatchdata"
+  // String: "install.ini"
+  // String: "install.txt"
+  
+  // Get executable path and set TSLPatchData path
   FTSLPatchDataPath := ExtractFilePath(Application.ExeName) + 'tslpatchdata\';
   
-  // Load configuration
+  // Set config and info file paths
+  FConfigFile := FTSLPatchDataPath + 'install.ini';
+  FInfoFile := FTSLPatchDataPath + 'install.txt';
+  
+  // Load configuration from install.ini
   LoadConfiguration;
   
-  // Load instructions
+  // Load instructions from install.txt
   LoadInstructions;
 end;
 
@@ -706,12 +715,14 @@ end;
 
 procedure TMainForm.LogMessage(const AMessage: string; ALogLevel: TLogLevel);
 begin
-  // Log message to progress log (TSLPatcher.exe: reverse engineered from assembly)
-  // Assembly: Logging functions at 0x00480000+ handle message formatting and display
+  // Log message to progress log (TSLPatcher.exe: 0x00480000+)
+  // Assembly: Logging functions handle message formatting and display
+  // String: "PlaintextLog"
+  // String: "LogLevel"
   if Ord(ALogLevel) <= Ord(FLogLevel) then
   begin
     FProgressLog.Add(AMessage);
-    // Update RichEdit control with formatted message (TSLPatcher.exe: UI update code)
+    // Update RichEdit control with formatted message (TSLPatcher.exe: UI update code at 0x00487000+)
     // RichEdit control receives formatted text with timestamp and log level prefix
   end;
 end;
