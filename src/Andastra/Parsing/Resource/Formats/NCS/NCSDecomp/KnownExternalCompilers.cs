@@ -99,7 +99,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             "B1F398C2F64F4ACF2F39C417E7C7EB6F5483369BB95853C63A009F925A2E257C",
             "ncsdis",
             new DateTime(2020, 8, 3),
-            "Unknown", // Author not identified in original DeNCS source - ncsdis is a community tool
+            "Sven Hesse", // Original author of ncsdis (DrMcCoy), xoreos project lead. Added to xoreos-tools package in 2015. See https://drmccoy.de/gobsmacked/ and https://wiki.xoreos.org/index.php?title=Ncsdis
             new string[] { }, // ncsdis doesn't support compilation
             new string[] { "{source}", "{output}" } // ncsdis.exe <input.ncs> <output.pcode>
         );
@@ -117,7 +117,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 V1,
                 KOTOR_SCRIPTING_TOOL,
                 XOREOS,
-                NSSCOMP
+                NSSCOMP,
+                NCSDIS
             };
 
             foreach (CompilerInfo compiler in allCompilers)
