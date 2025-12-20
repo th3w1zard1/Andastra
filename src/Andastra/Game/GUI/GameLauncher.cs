@@ -480,11 +480,65 @@ namespace Andastra.Game.GUI
                            hasNwn2ActorsZip && hasNwn2ModelsZip && hasNwn2ScriptsZip;
 
                 case Game.DA:
+                    // Validate Dragon Age: Origins installation
+                    // Based on xoreos/src/engines/dragonage/probes.cpp:69-75
+                    // Required files:
+                    // - daoriginslauncher.exe: Launcher executable (Windows retail, mandatory)
+                    // - daorigins.exe: Main game executable (mandatory)
+                    // - packages directory: Eclipse Engine package structure (mandatory)
+                    // - data directory: Contains game data files (mandatory)
+                    // - data/global.rim: Global resource archive (mandatory, DA:O specific)
+                    // Optional but commonly present:
+                    // - modules directory: Contains game modules
+                    // - addins directory: DLC and addon content
+                    string daLauncherExe = Path.Combine(path, "daoriginslauncher.exe");
+                    string daLauncherExeUpper = Path.Combine(path, "DAORIGINSLAUNCHER.EXE");
+                    string daOriginsExe = Path.Combine(path, "daorigins.exe");
+                    string daOriginsExeUpper = Path.Combine(path, "DAORIGINS.EXE");
+                    string daPackagesDir = Path.Combine(path, "packages");
+                    string daDataDir = Path.Combine(path, "data");
+                    string daGlobalRim = Path.Combine(daDataDir, "global.rim");
+                    
+                    // Check for launcher (Windows retail) OR main executable
+                    bool hasLauncher = File.Exists(daLauncherExe) || File.Exists(daLauncherExeUpper);
+                    bool hasExe = File.Exists(daOriginsExe) || File.Exists(daOriginsExeUpper);
+                    bool hasPackagesDir = Directory.Exists(daPackagesDir);
+                    bool hasDataDir = Directory.Exists(daDataDir);
+                    bool hasGlobalRim = File.Exists(daGlobalRim);
+                    
+                    // All mandatory files/directories must exist
+                    // Either launcher OR main executable is acceptable (different distribution methods)
+                    return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
+                    
                 case Game.DA2:
-                    // TODO: Validate Dragon Age installation
-                    return Directory.Exists(Path.Combine(path, "data")) ||
-                           File.Exists(Path.Combine(path, "DragonAge.exe")) ||
-                           File.Exists(Path.Combine(path, "DragonAge2.exe"));
+                    // Validate Dragon Age II installation
+                    // Based on xoreos/src/engines/dragonage2/probes.cpp:72-89
+                    // Required files:
+                    // - dragonage2launcher.exe: Launcher executable (Windows retail, mandatory)
+                    // - dragonage2.exe: Main executable in bin_ship (Windows Origin, mandatory)
+                    // - DragonAge2.exe: Main game executable (mandatory)
+                    // - modules/campaign_base/campaign_base.cif: Campaign base module (mandatory, DA2 specific)
+                    // Optional but commonly present:
+                    // - packages directory: Eclipse Engine package structure
+                    // - addins directory: DLC and addon content
+                    string da2LauncherExe = Path.Combine(path, "dragonage2launcher.exe");
+                    string da2LauncherExeUpper = Path.Combine(path, "DRAGONAGE2LAUNCHER.EXE");
+                    string da2Exe = Path.Combine(path, "DragonAge2.exe");
+                    string da2ExeUpper = Path.Combine(path, "DRAGONAGE2.EXE");
+                    string da2ExeLower = Path.Combine(path, "dragonage2.exe");
+                    string da2BinShipExe = Path.Combine(path, "bin_ship", "dragonage2.exe");
+                    string da2BinShipExeUpper = Path.Combine(path, "bin_ship", "DRAGONAGE2.EXE");
+                    string da2CampaignBaseCif = Path.Combine(path, "modules", "campaign_base", "campaign_base.cif");
+                    
+                    // Check for launcher (Windows retail) OR main executable (various locations)
+                    bool hasDa2Launcher = File.Exists(da2LauncherExe) || File.Exists(da2LauncherExeUpper);
+                    bool hasDa2Exe = File.Exists(da2Exe) || File.Exists(da2ExeUpper) || File.Exists(da2ExeLower);
+                    bool hasDa2BinShipExe = File.Exists(da2BinShipExe) || File.Exists(da2BinShipExeUpper);
+                    bool hasCampaignBaseCif = File.Exists(da2CampaignBaseCif);
+                    
+                    // All mandatory files must exist
+                    // Either launcher OR main executable is acceptable (different distribution methods)
+                    return (hasDa2Launcher || hasDa2Exe || hasDa2BinShipExe) && hasCampaignBaseCif;
 
 
                 default:
