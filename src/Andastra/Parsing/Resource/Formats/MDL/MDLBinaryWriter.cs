@@ -845,34 +845,46 @@ namespace Andastra.Parsing.Formats.MDL
                 Vector3 ambient = mdlNode.Mesh.Ambient;
                 binNode.Trimesh.Ambient = new Vector3(ambient.Z, ambient.Y, ambient.X);
                 binNode.Trimesh.TransparencyHint = (uint)mdlNode.Mesh.TransparencyHint;
-                
+
                 // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2019-2033
                 // Set rendering and material properties
                 binNode.Trimesh.Render = (byte)(mdlNode.Mesh.Render != 0 ? 1 : 0);
                 binNode.Trimesh.Beaming = (byte)(mdlNode.Mesh.Beaming != 0 ? 1 : 0);
                 binNode.Trimesh.HasShadow = (byte)(mdlNode.Mesh.Shadow != 0.0f ? 1 : 0);
                 binNode.Trimesh.HasLightmap = (byte)(mdlNode.Mesh.HasLightmap ? 1 : 0);
-                binNode.Trimesh.RotateTexture = (byte)(mdlNode.Mesh.Rotational != 0 ? 1 : 0);
-                
+                // Rotate texture flag (matching PyKotor io_mdl.py:2026)
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2026
+                binNode.Trimesh.RotateTexture = mdlNode.Mesh.RotateTexture ? (byte)1 : (byte)0;
+
                 // Background geometry flag (matching PyKotor io_mdl.py:2027)
                 // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2027
                 binNode.Trimesh.Background = mdlNode.Mesh.BackgroundGeometry ? (byte)1 : (byte)0;
-                
+
                 // UV animation properties (matching PyKotor io_mdl.py:2021-2024)
                 // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2021-2024
                 binNode.Trimesh.UvJitter = mdlNode.Mesh.UvJitter;
                 binNode.Trimesh.UvSpeed = mdlNode.Mesh.UvJitterSpeed;
                 binNode.Trimesh.UvDirection = new Vector2(mdlNode.Mesh.UvDirectionX, mdlNode.Mesh.UvDirectionY);
-                
-                // Texture count: 1 if texture2 is present and not "NULL", otherwise 0
-                // Reference: PyKotor io_mdl.py:2035 (texture_count calculation)
-                binNode.Trimesh.TextureCount = (ushort)(!string.IsNullOrEmpty(mdlNode.Mesh.Texture2) && mdlNode.Mesh.Texture2 != "NULL" ? 1 : 0);
-                
-                // Saber unknowns (default initialized in TrimeshHeader constructor)
-                // Reference: PyKotor mdl_data.py:MDLMesh.saber_unknowns (tuple of 8 ints, default: (3, 0, 0, 0, 0, 0, 0, 0))
-                // Note: SaberUnknowns is already initialized to 8 zero bytes in TrimeshHeader constructor
-                // If mesh has saber data, we could set it here, but saber_unknowns is not available in MDLMesh
-                
+
+                // Texture count: 2 if lightmap (texture2) is present, otherwise 1
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2035
+                // texture_count = 1 (always has texture1), +1 if has_lightmap (texture2)
+                binNode.Trimesh.TextureCount = (ushort)(mdlNode.Mesh.HasLightmap ? 2 : 1);
+
+                // TotalArea2: duplicate of TotalArea for compatibility
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2030
+                binNode.Trimesh.TotalArea2 = mdlNode.Mesh.Area;
+
+                // Saber unknowns: default is [3, 0, 0, 0, 0, 0, 0, 0] per PyKotor
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:539
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2033
+                // Note: If mesh has saber data, saber_unknowns would be set from mdlNode.Mesh.saber_unknowns
+                // For now, we use the default value since saber_unknowns is not available in MDLMesh
+                if (binNode.Trimesh.SaberUnknowns == null || binNode.Trimesh.SaberUnknowns.Length != 8)
+                {
+                    binNode.Trimesh.SaberUnknowns = new byte[] { 3, 0, 0, 0, 0, 0, 0, 0 };
+                }
+
                 binNode.Trimesh.VertexCount = (ushort)mdlNode.Mesh.Vertices.Count;
                 binNode.Trimesh.Vertices.Clear();
                 binNode.Trimesh.Vertices.AddRange(mdlNode.Mesh.Vertices);
@@ -1156,25 +1168,52 @@ namespace Andastra.Parsing.Formats.MDL
         private int _NodeType(MDLData.MDLNode node)
         {
             // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_types.py:41-69
+            // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:647-666 (get_flags method)
             // Reference: vendor/mdlops/MDLOpsM.pm:301-311 (Node type quick reference)
             // Reference: vendor/kotorblender/io_scene_kotor/format/mdl/types.py:93-101 (Node flags)
+            // Matching PyKotor MDLNode.get_flags() implementation for 1:1 parity
             // Base node always has HEADER flag (0x0001)
             int typeId = (int)MDLNodeFlags.HEADER;
 
+            // LIGHT flag (0x0002) - Light source data
+            // Reference: vendor/PyKotor:mdl_data.py:650-651, vendor/mdlops/MDLOpsM.pm:303
+            // Note: LIGHT does not require MESH (light = HEADER + LIGHT = 0x003 = 3)
+            if (node.Light != null)
+            {
+                typeId |= (int)MDLNodeFlags.LIGHT;
+            }
+
+            // EMITTER flag (0x0004) - Particle emitter data
+            // Reference: vendor/PyKotor:mdl_data.py:652-653, vendor/mdlops/MDLOpsM.pm:304
+            // Note: EMITTER does not require MESH (emitter = HEADER + EMITTER = 0x005 = 5)
+            if (node.Emitter != null)
+            {
+                typeId |= (int)MDLNodeFlags.EMITTER;
+            }
+
+            // REFERENCE flag (0x0010) - Reference to another model
+            // Reference: vendor/PyKotor:mdl_data.py:654-655, vendor/mdlops/MDLOpsM.pm:305
+            // Note: REFERENCE does not require MESH (reference = HEADER + REFERENCE = 0x011 = 17)
+            if (node.Reference != null)
+            {
+                typeId |= (int)MDLNodeFlags.REFERENCE;
+            }
+
             // MESH flag (0x0020) - Triangle mesh geometry
+            // Reference: vendor/PyKotor:mdl_data.py:656-657, vendor/mdlops/MDLOpsM.pm:306
             if (node.Mesh != null)
             {
                 typeId |= (int)MDLNodeFlags.MESH;
             }
 
             // SKIN flag (0x0040) - Skinned mesh with bone weighting
-            // Reference: vendor/mdlops/MDLOpsM.pm:307, vendor/PyKotor:mdl_data.py:536-540
+            // Reference: vendor/PyKotor:mdl_data.py:658-659, vendor/mdlops/MDLOpsM.pm:307
             // Note: SKIN requires MESH flag to be set (skin mesh = HEADER + MESH + SKIN = 0x061 = 97)
-            // Check both node.Skin (direct property) and node.Mesh.Skin (mesh property)
+            // Check both node.Skin (direct property matching PyKotor) and node.Mesh.Skin (mesh property for compatibility)
             if (node.Skin != null || (node.Mesh != null && node.Mesh.Skin != null))
             {
                 typeId |= (int)MDLNodeFlags.SKIN;
-                // Ensure MESH flag is set when SKIN is present
+                // Ensure MESH flag is set when SKIN is present (SKIN always implies MESH)
                 if ((typeId & (int)MDLNodeFlags.MESH) == 0)
                 {
                     typeId |= (int)MDLNodeFlags.MESH;
@@ -1182,26 +1221,13 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             // DANGLY flag (0x0100) - Cloth/hair physics mesh with constraints
-            // Reference: vendor/mdlops/MDLOpsM.pm:309, vendor/PyKotor:mdl_data.py:542-546
+            // Reference: vendor/PyKotor:mdl_data.py:660-661, vendor/mdlops/MDLOpsM.pm:309
             // Note: DANGLY requires MESH flag to be set (dangly mesh = HEADER + MESH + DANGLY = 0x121 = 289)
-            // Check both node.Dangly (direct property) and node.Mesh.Dangly (mesh property)
+            // Check both node.Dangly (direct property matching PyKotor) and node.Mesh.Dangly (mesh property for compatibility)
             if (node.Dangly != null || (node.Mesh != null && node.Mesh.Dangly != null))
             {
                 typeId |= (int)MDLNodeFlags.DANGLY;
-                // Ensure MESH flag is set when DANGLY is present
-                if ((typeId & (int)MDLNodeFlags.MESH) == 0)
-                {
-                    typeId |= (int)MDLNodeFlags.MESH;
-                }
-            }
-
-            // SABER flag (0x0800) - Lightsaber blade mesh with special rendering
-            // Reference: vendor/mdlops/MDLOpsM.pm:311, vendor/PyKotor:mdl_data.py:554-558
-            // Note: SABER requires MESH flag to be set (saber mesh = HEADER + MESH + SABER = 0x821 = 2081)
-            if (node.Saber != null || (node.Mesh != null && node.Mesh.Saber != null))
-            {
-                typeId |= (int)MDLNodeFlags.SABER;
-                // Ensure MESH flag is set when SABER is present
+                // Ensure MESH flag is set when DANGLY is present (DANGLY always implies MESH)
                 if ((typeId & (int)MDLNodeFlags.MESH) == 0)
                 {
                     typeId |= (int)MDLNodeFlags.MESH;
@@ -1209,37 +1235,30 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             // AABB flag (0x0200) - Axis-aligned bounding box tree for walkmesh collision
-            // Reference: vendor/mdlops/MDLOpsM.pm:310, vendor/PyKotor:mdl_data.py:548-552
+            // Reference: vendor/PyKotor:mdl_data.py:662-663, vendor/mdlops/MDLOpsM.pm:310
             // Note: AABB requires MESH flag to be set (aabb mesh = HEADER + MESH + AABB = 0x221 = 545)
             if (node.Aabb != null)
             {
                 typeId |= (int)MDLNodeFlags.AABB;
-                // Ensure MESH flag is set when AABB is present
+                // Ensure MESH flag is set when AABB is present (AABB always implies MESH)
                 if ((typeId & (int)MDLNodeFlags.MESH) == 0)
                 {
                     typeId |= (int)MDLNodeFlags.MESH;
                 }
             }
 
-            // EMITTER flag (0x0004) - Particle emitter data
-            // Note: EMITTER does not require MESH (emitter = HEADER + EMITTER = 0x005 = 5)
-            if (node.Emitter != null)
+            // SABER flag (0x0800) - Lightsaber blade mesh with special rendering
+            // Reference: vendor/PyKotor:mdl_data.py:664-665, vendor/mdlops/MDLOpsM.pm:311
+            // Note: SABER requires MESH flag to be set (saber mesh = HEADER + MESH + SABER = 0x821 = 2081)
+            // Check both node.Saber (direct property matching PyKotor) and node.Mesh.Saber (mesh property for compatibility)
+            if (node.Saber != null || (node.Mesh != null && node.Mesh.Saber != null))
             {
-                typeId |= (int)MDLNodeFlags.EMITTER;
-            }
-
-            // LIGHT flag (0x0002) - Light source data
-            // Note: LIGHT does not require MESH (light = HEADER + LIGHT = 0x003 = 3)
-            if (node.Light != null)
-            {
-                typeId |= (int)MDLNodeFlags.LIGHT;
-            }
-
-            // REFERENCE flag (0x0010) - Reference to another model
-            // Note: REFERENCE does not require MESH (reference = HEADER + REFERENCE = 0x011 = 17)
-            if (node.Reference != null)
-            {
-                typeId |= (int)MDLNodeFlags.REFERENCE;
+                typeId |= (int)MDLNodeFlags.SABER;
+                // Ensure MESH flag is set when SABER is present (SABER always implies MESH)
+                if ((typeId & (int)MDLNodeFlags.MESH) == 0)
+                {
+                    typeId |= (int)MDLNodeFlags.MESH;
+                }
             }
 
             return typeId;
