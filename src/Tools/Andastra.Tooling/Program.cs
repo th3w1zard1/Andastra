@@ -3,6 +3,8 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 
 namespace Andastra.Runtime.Tooling
 {
@@ -135,11 +137,138 @@ namespace Andastra.Runtime.Tooling
 
         private static void DumpResource(string resref, string type, DirectoryInfo install)
         {
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(resref))
+            {
+                Console.Error.WriteLine("ERROR: Resource reference (--resref) is required.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                Console.Error.WriteLine("ERROR: Resource type (--type) is required.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            if (install == null || !install.Exists)
+            {
+                Console.Error.WriteLine("ERROR: Installation path (--install) is required and must exist.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
             Console.WriteLine("Dumping resource: " + resref + "." + type);
-            Console.WriteLine("Installation: " + (install?.FullName ?? "not specified"));
-            
-            // TODO: Implement resource dumping
-            Console.WriteLine("Resource dumping not yet implemented.");
+            Console.WriteLine("Installation: " + install.FullName);
+
+            try
+            {
+                // Parse resource type
+                ResourceType resourceType;
+                try
+                {
+                    resourceType = ResourceType.FromExtension(type);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Invalid resource type '{type}': {ex.Message}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                // Create installation object
+                Installation installation;
+                try
+                {
+                    installation = new Installation(install.FullName);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Failed to load installation: {ex.Message}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                Console.WriteLine($"Detected game: {installation.Game}");
+
+                // Lookup resource
+                var resourceResult = installation.Resources.LookupResource(resref, resourceType);
+                if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
+                {
+                    Console.Error.WriteLine($"ERROR: Resource '{resref}.{type}' not found in installation.");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                Console.WriteLine($"Found resource at: {resourceResult.FilePath}");
+                Console.WriteLine($"Resource size: {resourceResult.Data.Length} bytes");
+
+                // Determine output directory (use current directory)
+                string outputDir = Directory.GetCurrentDirectory();
+                string rawFileName = $"{resref}.{resourceType.Extension}";
+                string rawFilePath = Path.Combine(outputDir, rawFileName);
+
+                // Save raw bytes
+                try
+                {
+                    File.WriteAllBytes(rawFilePath, resourceResult.Data);
+                    Console.WriteLine($"Saved raw resource to: {rawFilePath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Failed to save raw resource: {ex.Message}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                // Try to decode and save decoded version
+                try
+                {
+                    object decodedResource = ResourceAuto.LoadResource(resourceResult.Data, resourceType);
+                    if (decodedResource != null)
+                    {
+                        // Try to serialize the decoded resource back to bytes
+                        byte[] decodedBytes = ResourceAuto.SaveResource(decodedResource, resourceType);
+                        if (decodedBytes != null && decodedBytes.Length > 0)
+                        {
+                            string decodedFileName = $"{resref}.decoded.{resourceType.Extension}";
+                            string decodedFilePath = Path.Combine(outputDir, decodedFileName);
+                            File.WriteAllBytes(decodedFilePath, decodedBytes);
+                            Console.WriteLine($"Saved decoded resource to: {decodedFilePath}");
+                            Console.WriteLine($"Decoded resource size: {decodedBytes.Length} bytes");
+                            
+                            // Compare sizes
+                            if (decodedBytes.Length != resourceResult.Data.Length)
+                            {
+                                Console.WriteLine($"NOTE: Decoded size ({decodedBytes.Length}) differs from raw size ({resourceResult.Data.Length})");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("WARNING: Could not serialize decoded resource to bytes. Skipping decoded output.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"WARNING: Could not decode resource of type '{type}'. Only raw bytes saved.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Decoding is optional, so we don't fail if it doesn't work
+                    Console.WriteLine($"WARNING: Failed to decode resource: {ex.Message}");
+                    Console.WriteLine("Raw resource was saved successfully.");
+                }
+
+                Console.WriteLine("Resource dumping complete.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"ERROR: Unexpected error during resource dumping: {ex.Message}");
+                Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
+                Environment.ExitCode = 1;
+            }
         }
 
         private static void RunScript(FileInfo script)
