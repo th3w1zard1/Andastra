@@ -1889,14 +1889,40 @@ void helper() {
             throw new NotImplementedException("TestNssEditorFindAllReferences: Find all references test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_error_diagnostics_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:829-840)
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:829-840
         // Original: def test_nss_editor_error_diagnostics_setup(qtbot, installation: HTInstallation): Test error diagnostics setup
         [Fact]
         public void TestNssEditorErrorDiagnosticsSetup()
         {
-            // TODO: STUB - Implement error diagnostics setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:829-840
-            throw new NotImplementedException("TestNssEditorErrorDiagnosticsSetup: Error diagnostics setup test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching PyKotor implementation: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor implementation: editor.new()
+            editor.New();
+
+            // Error tracking should exist
+            // Matching PyKotor implementation: assert hasattr(editor, '_error_lines')
+            editor.ErrorLines.Should().NotBeNull("ErrorLines should be initialized");
+            // Matching PyKotor implementation: assert hasattr(editor, '_warning_lines')
+            editor.WarningLines.Should().NotBeNull("WarningLines should be initialized");
+            // Matching PyKotor implementation: assert isinstance(editor._error_lines, set)
+            editor.ErrorLines.Should().BeOfType<HashSet<int>>("ErrorLines should be a HashSet<int>");
+            // Matching PyKotor implementation: assert isinstance(editor._warning_lines, set)
+            editor.WarningLines.Should().BeOfType<HashSet<int>>("WarningLines should be a HashSet<int>");
         }
 
         // TODO: STUB - Implement test_nss_editor_error_reporting (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:842-863)

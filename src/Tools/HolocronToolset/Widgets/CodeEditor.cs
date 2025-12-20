@@ -27,6 +27,11 @@ namespace HolocronToolset.Widgets
         private Dictionary<int, int> _foldableRegions = new Dictionary<int, int>(); // Map start block number to end block number for foldable regions
         private Dictionary<int, string> _foldedContentCache = new Dictionary<int, string>(); // Cache of folded content for restoration (for future use)
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1416-1470
+        // Original: Extra selections for highlighting multiple occurrences (QTextEdit.ExtraSelection)
+        // In Avalonia, we track selections as tuples of (start, end) positions
+        private List<Tuple<int, int>> _extraSelections = new List<Tuple<int, int>>(); // Extra selections for highlighting multiple occurrences
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:95-121
         // Original: def __init__(self, parent: QWidget):
         public CodeEditor()
@@ -149,6 +154,92 @@ namespace HolocronToolset.Widgets
             }
 
             return false;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1416-1470
+        // Original: def select_all_occurrences(self): Select all occurrences of current word (VS Code Ctrl+Shift+L behavior)
+        /// <summary>
+        /// Selects all occurrences of the current word or selected text.
+        /// Matching VS Code Ctrl+Shift+L behavior.
+        /// </summary>
+        public void SelectAllOccurrences()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return;
+            }
+
+            // Get the word to search for
+            string searchText;
+            if (SelectionStart != SelectionEnd && !string.IsNullOrEmpty(SelectedText))
+            {
+                // Use selected text
+                searchText = SelectedText;
+            }
+            else
+            {
+                // Get word at cursor position
+                int wordStart = GetWordAtCursorStart();
+                int wordEnd = GetWordAtCursorEnd();
+                if (wordStart == -1 || wordEnd == -1 || wordStart >= wordEnd)
+                {
+                    return;
+                }
+                searchText = Text.Substring(wordStart, wordEnd - wordStart);
+            }
+
+            if (string.IsNullOrEmpty(searchText))
+            {
+                return;
+            }
+
+            // Clear existing extra selections
+            _extraSelections.Clear();
+
+            // Find all occurrences (case-sensitive, whole words only)
+            // Matching PyKotor: QTextDocument.FindFlag.FindCaseSensitively | QTextDocument.FindFlag.FindWholeWords
+            string documentText = Text;
+            int searchStart = 0;
+
+            // Build regex pattern for whole word matching
+            string escapedSearchText = Regex.Escape(searchText);
+            string pattern = @"\b" + escapedSearchText + @"\b";
+
+            try
+            {
+                Regex searchRegex = new Regex(pattern, RegexOptions.None);
+                MatchCollection matches = searchRegex.Matches(documentText);
+
+                foreach (Match match in matches)
+                {
+                    // Add selection (start, end)
+                    _extraSelections.Add(new Tuple<int, int>(match.Index, match.Index + match.Length));
+                }
+
+                if (_extraSelections.Count > 0)
+                {
+                    // Set cursor to first selection (matching PyKotor behavior)
+                    var firstSelection = _extraSelections[0];
+                    SelectionStart = firstSelection.Item1;
+                    SelectionEnd = firstSelection.Item2;
+                }
+            }
+            catch (ArgumentException)
+            {
+                // Invalid regex pattern - return without selections
+                return;
+            }
+        }
+
+        // Matching PyKotor implementation: QPlainTextEdit.extraSelections()
+        // Original: Returns list of extra selections for testing
+        /// <summary>
+        /// Gets the list of extra selections (for testing purposes).
+        /// Returns list of (start, end) tuples representing all extra selections.
+        /// </summary>
+        public List<Tuple<int, int>> GetExtraSelections()
+        {
+            return new List<Tuple<int, int>>(_extraSelections);
         }
 
         // Get the start position of the word at the current cursor position
@@ -1186,6 +1277,15 @@ namespace HolocronToolset.Widgets
         public Dictionary<int, int> GetFoldableRegions()
         {
             return new Dictionary<int, int>(_foldableRegions);
+        }
+
+        /// <summary>
+        /// Gets the count of folded blocks.
+        /// Exposed for testing purposes to match Python test behavior (len(_folded_block_numbers)).
+        /// </summary>
+        public int GetFoldedBlockCount()
+        {
+            return _foldedBlockNumbers.Count;
         }
     }
 }
