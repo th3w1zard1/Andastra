@@ -11,7 +11,8 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
   </PropertyGroup>
-  <!-- .NET 8+: Modern Windows RIDs + cross-platform (forward-compatible with net10.0, net11.0, etc.) -->
+  <!-- .NET 8+: Modern Windows RIDs + cross-platform (forward-compatible with net10.0, net11.0,
+  etc.) -->
   <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
@@ -24,10 +25,12 @@
       $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
     </TargetFrameworks>
     <!-- Add each TFM conditionally -->
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+    <TargetFrameworks
+      Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
       $(TargetFrameworks);net10
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+    <TargetFrameworks
+      Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
     <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
@@ -38,10 +41,12 @@
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
       $(TargetFrameworks);net6
     </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+    <TargetFrameworks
+      Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
       $(TargetFrameworks);net48
     </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+    <TargetFrameworks
+      Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
       $(TargetFrameworks);net462
     </TargetFrameworks>
     <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
@@ -52,8 +57,8 @@
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Target frameworks for Debug builds - include net9.0 for test project compatibility -->
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <!-- Target framework for Debug builds - include net9.0 for test project compatibility -->
+    <TargetFramework>net9.0</TargetFramework>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -92,7 +97,8 @@
   <!-- Default to Library -->
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <!-- NuGet Package Configuration -->
@@ -103,7 +109,9 @@
     <Authors>th3w1zard1</Authors>
     <Company>bolabaden</Company>
     <Product>Andastra.Parsing</Product>
-    <Description>Common shared library for BioWare Aurora engine family games. Provides file format parsers, installation management, and resource access. No dependencies on MonoGame/Stride rendering frameworks.</Description>
+    <Description>Common shared library for BioWare Aurora engine family games. Provides file format
+      parsers, installation management, and resource access. No dependencies on MonoGame/Stride
+      rendering frameworks.</Description>
     <PackageTags>andastra;kotor;tsl;patcher;mod;gff;2da;tlk;nss;ncs</PackageTags>
     <PackageProjectUrl>https://github.com/th3w1zard1/Andastra</PackageProjectUrl>
     <RepositoryUrl>https://github.com/th3w1zard1/Andastra</RepositoryUrl>
@@ -129,7 +137,7 @@
 
   <!-- Include Utility files directly in this project -->
   <ItemGroup>
-    <Compile Include="..\Utility\**\*.cs" />
+    <Compile Include="..\Utility\**\*.cs" Exclude="..\Utility\**\*AssemblyInfo.cs;..\Utility\obj\**\*" />
   </ItemGroup>
 
 </Project>
