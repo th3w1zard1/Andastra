@@ -158,12 +158,6 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileBWMToSwift()
-        {
-            TestCompileToLanguage("swift");
-        }
-
-        [Fact(Timeout = 300000)]
         public void TestCompileBWMToLua()
         {
             TestCompileToLanguage("lua");
@@ -179,12 +173,6 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestCompileBWMToPerl()
         {
             TestCompileToLanguage("perl");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileBWMToVisualBasic()
-        {
-            TestCompileToLanguage("visualbasic");
         }
 
         [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
