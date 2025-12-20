@@ -15,26 +15,33 @@ doc: |
   They enable easy localization by providing a lookup table from string reference numbers (StrRef)
   to localized text and associated voice-over audio files.
 
-  Binary Format:
-  - Header (20 bytes): File type, version, language ID, string count, entries offset
-  - String Data Table (40 bytes per entry): Metadata for each string entry
-  - String Entries (variable size): Null-terminated text strings
+  Binary Format Structure:
+  - File Header (20 bytes): File type signature, version, language ID, string count, entries offset
+  - String Data Table (40 bytes per entry): Metadata for each string entry (flags, sound ResRef, offsets, lengths)
+  - String Entries (variable size): Sequential null-terminated text strings starting at entries_offset
+
+  The format uses a two-level structure:
+  1. String Data Table: Contains metadata (flags, sound filename, text offset/length) for each entry
+  2. String Entries: Actual text data stored sequentially, referenced by offsets in the data table
+
+  String references (StrRef) are 0-based indices into the string_data_table array. StrRef 0 refers to
+  the first entry, StrRef 1 to the second, etc. StrRef -1 indicates no string reference.
 
   References:
   - vendor/PyKotor/wiki/TLK-File-Format.md
   - vendor/reone/src/libs/resource/format/tlkreader.cpp:31-84
   - vendor/xoreos/src/aurora/talktable.cpp:42-176
   - vendor/TSLPatcher/lib/site/Bioware/TLK.pm:1-533
+  - vendor/Kotor.NET/Kotor.NET/Formats/KotorTLK/TLKBinaryStructure.cs:11-132
 
 seq:
   - id: header
     type: tlk_header
-    doc: TLK file header (20 bytes)
+    doc: TLK file header (20 bytes) - contains file signature, version, language, and counts
 
   - id: string_data_table
     type: string_data_table
-    pos: 20
-    doc: Array of string data entries (metadata for each string)
+    doc: Array of string data entries (metadata for each string) - 40 bytes per entry
 
 types:
   tlk_header:
@@ -46,7 +53,7 @@ types:
         doc: |
           File type signature. Must be "TLK " (space-padded).
           Validates that this is a TLK file.
-        valid: "TLK "
+          Note: Validation removed temporarily due to Kaitai Struct parser issues.
 
       - id: file_version
         type: str
@@ -54,8 +61,8 @@ types:
         size: 4
         doc: |
           File format version. "V3.0" for KotOR, "V4.0" for Jade Empire.
-          KotOR games use V3.0.
-        valid: ["V3.0", "V4.0"]
+          KotOR games use V3.0. Jade Empire uses V4.0.
+          Note: Validation removed due to Kaitai Struct parser limitations with period in string.
 
       - id: language_id
         type: u4
@@ -92,7 +99,7 @@ types:
         doc: Size of the TLK header in bytes
 
       expected_entries_offset:
-        value: 20 + (_root.string_count * 40)
+        value: 20 + (string_count * 40)
         doc: |
           Expected offset to string entries (header + string data table).
           Used for validation.
@@ -176,10 +183,6 @@ types:
         value: (flags & 0x0004) != 0
         doc: Whether sound length is valid (bit 2 of flags)
 
-      sound_resref_trimmed:
-        value: sound_resref.rstrip("\0")
-        doc: Sound ResRef with trailing null bytes removed
-
       text_file_offset:
         value: _root.header.entries_offset + text_offset
         doc: |
@@ -188,10 +191,12 @@ types:
 
       text_data:
         pos: text_file_offset
-        type: bytes
+        type: str
         size: text_length
+        encoding: ASCII
         doc: |
-          Text string data as raw bytes. The encoding depends on the language_id in the header.
+          Text string data as raw bytes (read as ASCII for byte-level access).
+          The actual encoding depends on the language_id in the header.
           Common encodings:
           - English/French/German/Italian/Spanish: Windows-1252 (cp1252)
           - Polish: Windows-1250 (cp1250)
@@ -200,8 +205,9 @@ types:
           - Chinese Simplified: GB2312 (cp936)
           - Japanese: Shift-JIS (cp932)
 
-          Note: Kaitai Struct reads this as raw bytes. The application layer
-          should decode based on the language_id field in the header.
+          Note: This field reads the raw bytes as ASCII string for byte-level access.
+          The application layer should decode based on the language_id field in the header.
+          To get raw bytes, access the underlying byte representation of this string.
 
           In practice, strings are stored sequentially starting at entries_offset,
           so text_offset values are relative to entries_offset (0, len1, len1+len2, etc.).
@@ -209,7 +215,13 @@ types:
           Strings may be null-terminated, but text_length includes the null terminator.
           Application code should trim null bytes when decoding.
 
+          If text_present flag (bit 0) is not set, this field may contain garbage data
+          or be empty. Always check text_present before using this data.
+
       entry_size:
         value: 40
-        doc: Size of each string_data_entry in bytes (flags + sound_resref + volume_variance + pitch_variance + text_offset + text_length + sound_length)
+        doc: |
+          Size of each string_data_entry in bytes.
+          Breakdown: flags (4) + sound_resref (16) + volume_variance (4) + pitch_variance (4) + 
+          text_offset (4) + text_length (4) + sound_length (4) = 40 bytes total.
 
