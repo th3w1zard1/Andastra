@@ -439,6 +439,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
             }
+            else if (_currentState == GameState.OptionsMenu)
+            {
+                UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
+            }
             else if (_currentState == GameState.MoviesMenu)
             {
                 UpdateMoviesMenu(deltaTime, keyboardState, mouseState);
