@@ -396,6 +396,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             entity.SetData("CurrentHP", GetIntField(root, "CurrentHP", 1));
             entity.SetData("Static", GetIntField(root, "Static", 0) != 0);
 
+            // Load TSL-specific fields (KotOR2 only)
+            // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
+            // Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only), "NotBlastable" (UInt8/Byte, KotOR2 only)
+            // Original implementation: These fields do not exist in swkotor.exe (KotOR1)
+            entity.SetData("Min1HP", GetIntField(root, "Min1HP", 0) != 0);
+            entity.SetData("NotBlastable", GetIntField(root, "NotBlastable", 0) != 0);
+
             // Load Conversation field (dialogue ResRef for BeginConversation)
             // Based on swkotor2.exe: FUN_00580330 @ 0x00580330 saves door data including Conversation field
             // Located via string reference: "Conversation" @ 0x007c1abc
@@ -412,6 +419,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                 { "OnDamaged", ScriptEvent.OnDamaged },
                 { "OnDeath", ScriptEvent.OnDeath },
                 { "OnDisarm", ScriptEvent.OnDisarm },
+                { "OnFailToOpen", ScriptEvent.OnFailToOpen }, // TSL/KotOR2 only
                 { "OnHeartbeat", ScriptEvent.OnHeartbeat },
                 { "OnLock", ScriptEvent.OnLock },
                 { "OnMeleeAttacked", ScriptEvent.OnPhysicalAttacked },

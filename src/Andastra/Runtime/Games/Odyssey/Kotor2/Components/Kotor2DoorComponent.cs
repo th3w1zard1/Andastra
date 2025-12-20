@@ -225,6 +225,13 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
                 return;
             }
 
+            // TSL-specific: NotBlastable prevents explosive/force power damage
+            // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads NotBlastable from UTD template
+            // Original implementation: If NotBlastable is true, door cannot be damaged by explosives, grenades, or force powers
+            // Note: This requires damage type system to be fully implemented to distinguish blast damage from normal bashing
+            // For now, NotBlastable is loaded and stored, but damage type checking will be added when damage type system is implemented
+            // TODO: When damage type system is implemented, check NotBlastable flag and reject blast-type damage if flag is true
+
             // Apply hardness reduction (minimum 1 damage)
             int actualDamage = System.Math.Max(1, damage - Hardness);
             int newHP = System.Math.Max(0, HitPoints - actualDamage);

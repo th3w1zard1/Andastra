@@ -197,6 +197,36 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// </summary>
         public bool Plot { get; set; }
 
+        /// <summary>
+        /// Whether the door cannot drop below 1 HP (TSL/KotOR2 only).
+        /// </summary>
+        /// <remarks>
+        /// Min1HP Flag:
+        /// - Based on swkotor2.exe door system (KotOR2/TSL only)
+        /// - Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only)
+        /// - Original implementation: If Min1HP is true (1), door cannot drop below 1 HP when damaged
+        /// - Plot doors: Min1HP=1 prevents door from being destroyed, making it effectively indestructible
+        /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP from UTD template
+        /// - swkotor2.exe: FUN_00585ec0 @ 0x00585ec0 saves Min1HP to UTD template
+        /// - Note: This field does not exist in swkotor.exe (KotOR1); always false for K1 doors
+        /// </remarks>
+        public bool Min1HP { get; set; }
+
+        /// <summary>
+        /// Whether the door cannot be blasted (TSL/KotOR2 only).
+        /// </summary>
+        /// <remarks>
+        /// NotBlastable Flag:
+        /// - Based on swkotor2.exe door system (KotOR2/TSL only)
+        /// - Located via UTD field: "NotBlastable" (UInt8/Byte, KotOR2 only)
+        /// - Original implementation: If NotBlastable is true (1), door cannot be blasted (explosive damage)
+        /// - Blasting: Refers to damage from explosives, grenades, or force powers that bypass normal hardness
+        /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads NotBlastable from UTD template
+        /// - swkotor2.exe: FUN_00585ec0 @ 0x00585ec0 saves NotBlastable to UTD template
+        /// - Note: This field does not exist in swkotor.exe (KotOR1); always false for K1 doors
+        /// </remarks>
+        public bool NotBlastable { get; set; }
+
         // OpenState property is defined above (line 103)
 
         /// <summary>
