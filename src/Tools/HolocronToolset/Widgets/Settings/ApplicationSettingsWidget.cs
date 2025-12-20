@@ -124,7 +124,7 @@ namespace HolocronToolset.Widgets.Settings
             }
 
             // Get current font from settings or use default
-            Font currentFont = null;
+            FontInfo currentFont = null;
             string fontString = _settings.GlobalFont;
             if (!string.IsNullOrEmpty(fontString))
             {
@@ -137,14 +137,13 @@ namespace HolocronToolset.Widgets.Settings
                         string family = parts[0].Trim();
                         if (double.TryParse(parts[1].Trim(), out double size))
                         {
-                            var fontFamily = new FontFamily(family);
-                            FontWeight weight = FontWeight.Normal;
-                            FontStyle style = FontStyle.Normal;
+                            bool isBold = false;
+                            bool isItalic = false;
 
                             // Parse weight if available
                             if (parts.Length >= 4 && int.TryParse(parts[3].Trim(), out int weightValue))
                             {
-                                weight = weightValue >= 700 ? FontWeight.Bold : FontWeight.Normal;
+                                isBold = weightValue >= 700;
                             }
 
                             // Parse style if available
@@ -153,11 +152,17 @@ namespace HolocronToolset.Widgets.Settings
                                 string styleStr = parts[2].Trim().ToLowerInvariant();
                                 if (styleStr.Contains("italic"))
                                 {
-                                    style = FontStyle.Italic;
+                                    isItalic = true;
                                 }
                             }
 
-                            currentFont = new Font(fontFamily, size, style, weight);
+                            currentFont = new FontInfo
+                            {
+                                FamilyName = family,
+                                Size = size,
+                                IsBold = isBold,
+                                IsItalic = isItalic
+                            };
                         }
                     }
                 }
@@ -184,9 +189,9 @@ namespace HolocronToolset.Widgets.Settings
                 
                 // Save font as string (format: "Family|Size|Style|Weight")
                 // Matching PyKotor: self.settings.settings.setValue("GlobalFont", font.toString())
-                string fontStringToSave = $"{selectedFont.FontFamily?.Name ?? "Arial"}|{selectedFont.FontSize}|" +
-                    $"{(selectedFont.FontStyle == FontStyle.Italic ? "Italic" : "Normal")}|" +
-                    $"{(selectedFont.FontWeight == FontWeight.Bold || selectedFont.FontWeight == FontWeight.SemiBold || selectedFont.FontWeight == FontWeight.ExtraBold ? "700" : "400")}";
+                string fontStringToSave = $"{selectedFont.FamilyName ?? "Arial"}|{selectedFont.Size}|" +
+                    $"{(selectedFont.IsItalic ? "Italic" : "Normal")}|" +
+                    $"{(selectedFont.IsBold ? "700" : "400")}";
                 
                 _settings.GlobalFont = fontStringToSave;
 

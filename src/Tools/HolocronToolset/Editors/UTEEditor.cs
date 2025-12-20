@@ -90,7 +90,7 @@ namespace HolocronToolset.Editors
         private ComboBox _onUserDefinedSelect;
 
         // UI Controls - Comments
-        private TextBlock _commentsEdit;
+        private TextBox _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:27-66
         // Original: def __init__(self, parent, installation):

@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Settings;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Dialogs
 {
@@ -31,6 +33,9 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
         // Original: self.installation_edited: bool = False
         public bool InstallationEdited => _installationEdited;
+
+        // Dialog result property (true if OK clicked, false if Cancel or closed)
+        public bool? Result { get; private set; }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:19-125
         // Original: def __init__(self, parent):
@@ -182,9 +187,9 @@ namespace HolocronToolset.Dialogs
             // Set up close handler to set result to false if closed without Accept
             this.Closing += (s, e) =>
             {
-                if (this.Result == null)
+                if (Result == null)
                 {
-                    this.Result = false;
+                    Result = false;
                 }
             };
 
@@ -276,9 +281,10 @@ namespace HolocronToolset.Dialogs
                 _gitEditorWidget?.Save();
                 _moduleDesignerWidget?.Save();
                 _installationsWidget?.Save();
-                _applicationSettingsWidget?.Save();
+                // ApplicationSettingsWidget doesn't have Save() - settings are saved directly when changed
             }
             // Set result to true (accepted) to match PyKotor's dialog.exec() behavior
+            Result = true;
             Close(true);
         }
 

@@ -796,8 +796,9 @@ namespace HolocronToolset.Editors
             var dialog = new PropertyEditorDialog(this, _installation, selectedItem.Property);
             
             // Matching PyKotor implementation: if not dialog.exec(): return
-            // Use ShowDialogAsync<bool> for proper modal dialog handling
-            bool result = await dialog.ShowDialogAsync<bool>(this);
+            // Use ShowDialogAsync for proper modal dialog handling
+            var resultObj = await dialog.ShowDialogAsync(this);
+            bool result = resultObj is bool b ? b : false;
             if (!result)
             {
                 return;

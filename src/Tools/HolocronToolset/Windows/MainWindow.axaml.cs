@@ -1269,7 +1269,7 @@ namespace HolocronToolset.Windows
                 erfFileResource,
                 _active,
                 this,
-                useSpecializedEditor: null);
+                gffSpecialized: null);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1517-1522

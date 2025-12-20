@@ -1853,7 +1853,7 @@ namespace HolocronToolset.Editors
         {
             // Show dialog asking user to decompile or download
             var dialog = new DecompileOrDownloadDialog(_sourcerepoUrl);
-            dialog.ShowDialogAsync(this).GetAwaiter().GetResult();
+            dialog.ShowDialog(this);
 
             string source = null;
             bool errorOccurred = false;
@@ -1924,7 +1924,7 @@ namespace HolocronToolset.Editors
             var selectedFiles = new List<string> { scriptFilename };
 
             var dialog = new GitHubSelectorDialog(_owner, _repo, selectedFiles, this);
-            dialog.ShowDialogAsync(this).GetAwaiter().GetResult();
+            dialog.ShowDialog(this);
 
             string selectedPath = dialog.SelectedPath;
             if (string.IsNullOrEmpty(selectedPath) || !selectedPath.Trim().Any())
