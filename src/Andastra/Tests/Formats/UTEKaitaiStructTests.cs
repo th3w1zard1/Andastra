@@ -257,8 +257,25 @@ namespace Andastra.Parsing.Tests.Formats
         private (int ExitCode, string Output, string Error) RunKaitaiCompiler(
             string ksyPath, string arguments, string outputDir)
         {
-            // Try different ways to invoke Kaitai Struct compiler
-            // 1. As a command (if installed via package manager)
+            // Try to find compiler first
+            string compilerPath = FindKaitaiCompiler();
+            if (!string.IsNullOrEmpty(compilerPath))
+            {
+                // Check if it's a JAR path (contains .jar)
+                if (compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ||
+                    (File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".jar", StringComparison.OrdinalIgnoreCase)))
+                {
+                    // Use Java to run JAR
+                    return RunCommand("java", $"-jar \"{compilerPath}\" {arguments} -d \"{outputDir}\" \"{ksyPath}\"");
+                }
+                else
+                {
+                    // Use compiler directly
+                    return RunCommand(compilerPath, $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
+                }
+            }
+
+            // Fallback: Try command directly
             var result = RunCommand("kaitai-struct-compiler", $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
 
             if (result.ExitCode == 0)
@@ -266,7 +283,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
-            // 2. Try as Java JAR (common installation method)
+            // Fallback: Try as Java JAR (common installation method)
             var jarPath = FindKaitaiCompilerJar();
             if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
             {
@@ -276,6 +293,69 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Return the last result (which will be a failure)
             return result;
+        }
+
+        private string FindKaitaiCompiler()
+        {
+            // Try common locations and PATH
+            string[] possiblePaths = new[]
+            {
+                "kaitai-struct-compiler",
+                "ksc",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                "/usr/bin/kaitai-struct-compiler",
+                "/usr/local/bin/kaitai-struct-compiler",
+                "C:\\Program Files\\kaitai-struct-compiler\\kaitai-struct-compiler.exe"
+            };
+
+            foreach (string path in possiblePaths)
+            {
+                try
+                {
+                    var processInfo = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(processInfo))
+                    {
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            if (process.ExitCode == 0)
+                            {
+                                return path;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            // Check environment variable for JAR
+            var envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
+            if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
+            {
+                return envJar;
+            }
+
+            // Try as Java JAR (common installation method)
+            var jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                return jarPath;
+            }
+
+            return null;
         }
 
         private string FindKaitaiCompilerJar()
