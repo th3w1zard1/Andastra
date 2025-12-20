@@ -9,51 +9,52 @@ meta:
     reone: vendor/reone/src/libs/resource/parser/gff/uti.cpp
     wiki: vendor/PyKotor/wiki/GFF-UTI.md
 doc: |
-  UTI (Item Template) files are GFF-based format files that define item templates for all objects
-  in creature inventories, containers, and stores. Items range from weapons and armor to quest items,
-  upgrades, and consumables. UTI files use the GFF (Generic File Format) binary structure with
-  file type signature "UTI ".
+  UTI (Item Template) files are GFF-based format files that store item definitions including
+  properties, costs, charges, and upgrade information. UTI files use the GFF (Generic File Format)
+  binary structure with file type signature "UTI ".
   
   UTI files contain:
   - Root struct with item metadata:
     - TemplateResRef: Item template ResRef (unique identifier, max 16 characters, ResRef type)
     - LocalizedName: Localized item name (LocalizedString/CExoLocString type)
-    - Description: Generic description (LocalizedString/CExoLocString type, shown when unidentified)
-    - DescIdentified: Description when identified (LocalizedString/CExoLocString type)
+    - Description: Generic description when unidentified (LocalizedString/CExoLocString type)
+    - DescIdentified: Description when item is identified (LocalizedString/CExoLocString type)
     - Tag: Item tag identifier (String/CExoString type, used for scripting references)
-    - Comment: Developer comment string (String/CExoString type, not used by game engine)
-    - BaseItem: Base item type index (Int32, index into baseitems.2da, defines item type: weapon, armor, quest item, etc.)
+    - Comment: Developer comment string (String/CExoString type, toolset only, not used by game engine)
+  - Base Item Configuration:
+    - BaseItem: Index into baseitems.2da (Int32, defines item type: weapon, armor, upgrade, etc.)
     - Cost: Base value in credits (UInt32, base item cost)
-    - AddCost: Additional cost from properties (UInt32, cost added by item properties/enchantments)
+    - AddCost: Additional cost from properties (UInt32, added to base cost for final value)
     - Plot: Plot-critical item flag (UInt8/Byte, 0 = normal item, 1 = cannot be sold/destroyed)
-    - Charges: Number of uses remaining (UInt8/Byte, 0 = unlimited/unused)
-    - StackSize: Current stack quantity (UInt16, number of items in stack, 1 = single item)
+    - Charges: Number of uses remaining (UInt8/Byte, 0 = unlimited/not applicable)
+    - StackSize: Current stack quantity (UInt16, how many items in this stack)
     - ModelVariation: Model variation index (UInt8/Byte, 1-99, determines which model variant to use)
-    - BodyVariation: Body variation for armor (UInt8/Byte, 1-9, armor body model variant)
-    - TextureVar: Texture variation for armor (UInt8/Byte, 1-9, armor texture variant)
+    - BodyVariation: Body variation for armor (UInt8/Byte, 1-9, body model variation)
+    - TextureVar: Texture variation for armor (UInt8/Byte, 1-9, texture variant)
     - PaletteID: Toolset palette category (UInt8/Byte, editor organization, doesn't affect gameplay)
-    - Identified: Item identification status (Int32, 0 = unidentified, 1 = identified)
-    - Stolen: Stolen item flag (Int32, 0 = not stolen, 1 = stolen)
-    - UpgradeLevel: Current upgrade tier (UInt8/Byte, KotOR2 only, 0-2)
-    - Upgradable: Can accept upgrades (UInt8/Byte, KotOR1 only, 0 = no, 1 = yes)
-    - WeaponColor: Blade color for lightsabers (UInt8/Byte, KotOR2 only, 0-10)
-    - WeaponWhoosh: Whoosh sound type (UInt8/Byte, KotOR2 only)
-    - ArmorRulesType: Armor class category (UInt8/Byte, KotOR2 only)
-    - Cursed: Cannot be unequipped flag (UInt8/Byte, 0 = normal, 1 = cursed item, deprecated in some versions)
-  - PropertiesList: Array of UTI_PropertiesList structs containing item properties and enchantments (List type)
+  - Quest & Special Item flags:
+    - Identified: Player has identified the item (Int32, 0 = unidentified, 1 = identified)
+    - Stolen: Marked as stolen (Int32, deprecated, 0 = not stolen, 1 = stolen)
+  - Item Properties:
+    - PropertiesList: List of item properties and enchantments (List type, contains property structs)
     Each property struct contains:
-    - PropertyName: Property index (UInt16, index into itempropdef.2da)
-    - Subtype: Property subtype/category (UInt16, property subtype identifier)
-    - CostTable: Cost table index (UInt8/Byte, index into cost tables for property pricing)
-    - CostValue: Cost value (UInt16, property cost multiplier/value)
-    - Param1: First parameter (UInt8/Byte, property-specific parameter)
-    - Param1Value: First parameter value (UInt8/Byte, value for Param1)
-    - ChanceAppear: Percentage chance to appear (UInt8/Byte, 0-100, for random loot generation)
-    - UsesPerDay: Daily usage limit (UInt8/Byte, 0 = unlimited, optional/deprecated field)
-    - UsesLeft: Remaining uses for today (UInt8/Byte, optional/deprecated field)
-    - UpgradeType: Upgrade type (UInt8/Byte, optional, KotOR2 upgrade slot type)
+      - PropertyName: Index into itempropdef.2da (UInt16, property type identifier)
+      - Subtype: Property subtype/category (UInt16, property category)
+      - CostTable: Cost table index (UInt8/Byte, which cost table to use)
+      - CostValue: Cost value (UInt16, property cost value)
+      - Param1: First parameter (UInt8/Byte, property parameter)
+      - Param1Value: First parameter value (UInt8/Byte, parameter value)
+      - ChanceAppear: Percentage chance to appear (UInt8/Byte, 0-100, for random loot)
+      - UpgradeType: Upgrade type (UInt8/Byte, optional, KotOR2 only, upgrade slot type)
+  - KotOR1-specific fields:
+    - Upgradable: Item accepts upgrade items (UInt8/Byte, 0 = no upgrades, 1 = can upgrade)
+  - KotOR2-specific fields:
+    - UpgradeLevel: Current upgrade tier (UInt8/Byte, 0-2, number of upgrade slots used)
+    - WeaponColor: Blade color for lightsabers (UInt8/Byte, 0-10, color index)
+    - WeaponWhoosh: Whoosh sound type (UInt8/Byte, sound variant for weapon swings)
+    - ArmorRulesType: Armor class category (UInt8/Byte, armor restriction category)
   
-  BaseItem types (from baseitems.2da):
+  BaseItem Types (from baseitems.2da):
   - 0-10: Various weapon types (shortsword, longsword, blaster, etc.)
   - 11-30: Armor types and shields
   - 31-50: Quest items, grenades, medical supplies
@@ -61,7 +62,7 @@ doc: |
   - 71-90: Droid equipment, special items
   - 91+: KotOR2-specific items
   
-  Common Item Properties:
+  Common Item Properties (from itempropdef.2da):
   - Attack Bonus: +1 to +12 attack rolls
   - Damage Bonus: Additional damage dice
   - Ability Bonus: +1 to +12 to ability scores
@@ -73,7 +74,7 @@ doc: |
   - Keen: Expanded critical threat range
   - Massive Criticals: Bonus damage on critical hit
   
-  Lightsaber colors (KotOR2 WeaponColor):
+  Lightsaber Colors (KotOR2 WeaponColor):
   - 0: Blue, 1: Yellow, 2: Green, 3: Red
   - 4: Violet, 5: Orange, 6: Cyan, 7: Silver
   - 8: White, 9: Viridian, 10: Bronze
@@ -81,7 +82,7 @@ doc: |
   References:
   - vendor/PyKotor/wiki/GFF-UTI.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/uti.py:16-280
+  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/uti.py:20-400
   - vendor/reone/src/libs/resource/parser/gff/uti.cpp
 
 seq:
@@ -123,7 +124,7 @@ seq:
     type: list_indices_array
     if: gff_header.list_indices_count > 0
     pos: gff_header.list_indices_offset
-    doc: List indices array for LIST type fields
+    doc: List indices array for LIST type fields (used for PropertiesList)
 
 types:
   # GFF Header (56 bytes)
@@ -134,7 +135,7 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "UTI " for item template files.
+          File type signature. Must be "UTI " (space-padded) for item template files.
           Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTD ", "UTM ", "GIT ", etc.
         valid: "UTI "
       
@@ -216,9 +217,8 @@ types:
           Common UTI field names: "TemplateResRef", "LocalizedName", "Description", "DescIdentified",
           "Tag", "Comment", "BaseItem", "Cost", "AddCost", "Plot", "Charges", "StackSize",
           "ModelVariation", "BodyVariation", "TextureVar", "PaletteID", "Identified", "Stolen",
-          "UpgradeLevel", "Upgradable", "WeaponColor", "WeaponWhoosh", "ArmorRulesType", "Cursed",
-          "PropertiesList", "PropertyName", "Subtype", "CostTable", "CostValue", "Param1",
-          "Param1Value", "ChanceAppear", "UsesPerDay", "UsesLeft", "UpgradeType".
+          "PropertiesList", "Upgradable" (KotOR1), "UpgradeLevel" (KotOR2), "WeaponColor" (KotOR2),
+          "WeaponWhoosh" (KotOR2), "ArmorRulesType" (KotOR2).
     instances:
       name_trimmed:
         value: name.rstrip('\x00')
@@ -242,8 +242,7 @@ types:
           Root struct always has struct_id = 0xFFFFFFFF (-1).
           UTI-specific struct IDs:
           - 0xFFFFFFFF (-1): Root struct containing item metadata
-          - Typically 0 or custom IDs: PropertiesList entry structs (UTI_PropertiesList)
-          Other structs have programmer-defined IDs.
+          - PropertiesList entries: Each property in PropertiesList is a struct (typically struct_id = 0)
       
       - id: data_or_offset
         type: u4
@@ -288,8 +287,9 @@ types:
         doc: |
           Field data type (see gff_field_type enum):
           0 = Byte (UInt8) - Used for: Plot, Charges, ModelVariation, BodyVariation, TextureVar,
-              PaletteID, UpgradeLevel, Upgradable, WeaponColor, WeaponWhoosh, ArmorRulesType,
-              CostTable, Param1, Param1Value, ChanceAppear, UpgradeType
+              PaletteID, Upgradable (KotOR1), UpgradeLevel (KotOR2), WeaponColor (KotOR2),
+              WeaponWhoosh (KotOR2), ArmorRulesType (KotOR2), CostTable, Param1, Param1Value,
+              ChanceAppear, UpgradeType (KotOR2)
           1 = Char (Int8)
           2 = UInt16 - Used for: StackSize, PropertyName, Subtype, CostValue
           3 = Int16
@@ -377,8 +377,7 @@ types:
         type: u1
         doc: |
           Length of ResRef string (0-16). ResRef strings are limited to 16 characters.
-          Common UTI ResRefs: item template names (e.g., "g_w_lghtsbr001", "g_a_robe01"),
-          these reference the actual item templates used by the game.
+          Common UTI ResRefs: item template names (e.g., "w_sword001", "g_w_lghtsbr01").
       
       - id: name
         type: str
@@ -422,11 +421,11 @@ types:
           Array of field indices. When a struct has multiple fields, it stores an offset
           into this array, and the next N consecutive u4 values (where N = struct.field_count)
           are the field indices for that struct.
-          Example: Root struct with 20 fields stores offset to this array, then 20 consecutive
+          Example: Root struct with 20+ fields stores offset to this array, then 20+ consecutive
           u4 values here are the field indices for TemplateResRef, LocalizedName, Description,
           DescIdentified, Tag, Comment, BaseItem, Cost, AddCost, Plot, Charges, StackSize, etc.
   
-  # List Indices Array
+  # List Indices Array (used for PropertiesList)
   list_indices_array:
     seq:
       - id: raw_data
@@ -434,11 +433,11 @@ types:
         size: _root.gff_header.list_indices_count
         doc: |
           Raw list indices data. List entries are accessed via offsets stored in
-          list-type field entries. Each entry starts with a count (u4), followed
-          by that many struct indices (u4 each).
-          Example: PropertiesList field stores offset to this array. At that offset:
-          - First u4: count of properties (number of struct indices)
-          - Next N×u4: struct indices (N = count) pointing to PropertiesList entry structs
+          list-type field entries (e.g., PropertiesList field). Each entry starts with a count (u4),
+          followed by that many struct indices (u4 each).
+          For PropertiesList: count = number of properties, then that many struct indices pointing
+          to property structs in struct_array. Each property struct contains PropertyName, Subtype,
+          CostTable, CostValue, Param1, Param1Value, ChanceAppear, UpgradeType (optional).
       
       - id: entries
         type: list_entry
@@ -448,7 +447,7 @@ types:
           Array of list entries. In practice, list entries are accessed via offsets
           stored in list-type field entries (field_entry.list_indices_offset_value),
           not as a sequential array. This is a simplified representation for documentation.
-          For UTI, the PropertiesList field uses this to store array of PropertiesList entry struct indices.
+          For PropertiesList: typically contains one list_entry with count = number of properties.
   
   list_entry:
     seq:
@@ -456,7 +455,7 @@ types:
         type: u4
         doc: |
           Number of struct indices in this list.
-          For PropertiesList, this is the number of item properties/enchantments.
+          For PropertiesList: count = number of item properties.
       
       - id: struct_indices
         type: u4
@@ -464,8 +463,54 @@ types:
         repeat-expr: count
         doc: |
           Array of struct indices (indices into struct_array).
-          For PropertiesList, each struct index points to a PropertiesList entry struct containing
-          PropertyName, Subtype, CostTable, CostValue, Param1, Param1Value, ChanceAppear, UpgradeType fields.
+          For PropertiesList: each struct index points to a property struct containing
+          PropertyName, Subtype, CostTable, CostValue, Param1, Param1Value, ChanceAppear, UpgradeType.
+  
+  # Property struct (documentation only - actual parsing accesses via struct_array)
+  # Each property in PropertiesList is a struct in struct_array with fields:
+  property_struct:
+    doc: |
+      Property struct fields (accessed via struct_array entry):
+      - PropertyName (UInt16): Index into itempropdef.2da, property type identifier
+      - Subtype (UInt16): Property subtype/category
+      - CostTable (UInt8): Cost table index
+      - CostValue (UInt16): Cost value
+      - Param1 (UInt8): First parameter
+      - Param1Value (UInt8): First parameter value
+      - ChanceAppear (UInt8): Percentage chance to appear (0-100, for random loot)
+      - UpgradeType (UInt8, optional, KotOR2 only): Upgrade slot type
+    seq:
+      - id: property_name
+        type: u2
+        doc: Index into itempropdef.2da (UInt16, property type identifier)
+      
+      - id: subtype
+        type: u2
+        doc: Property subtype/category (UInt16)
+      
+      - id: cost_table
+        type: u1
+        doc: Cost table index (UInt8)
+      
+      - id: cost_value
+        type: u2
+        doc: Cost value (UInt16)
+      
+      - id: param1
+        type: u1
+        doc: First parameter (UInt8)
+      
+      - id: param1_value
+        type: u1
+        doc: First parameter value (UInt8)
+      
+      - id: chance_appear
+        type: u1
+        doc: Percentage chance to appear (UInt8, 0-100, for random loot)
+      
+      - id: upgrade_type
+        type: u1
+        doc: Upgrade type (UInt8, optional, KotOR2 only, upgrade slot type)
   
   # Complex field data types (used when accessing field_data section)
   
@@ -545,18 +590,15 @@ enums:
     0: uint8
     doc: |
       8-bit unsigned integer (byte).
-      Used in UTI for: Plot (plot-critical flag), Charges (uses remaining), ModelVariation (model variant),
-      BodyVariation (armor body variant), TextureVar (texture variant), PaletteID (editor category),
-      UpgradeLevel (KotOR2 upgrade tier), Upgradable (KotOR1 upgrade flag), WeaponColor (KotOR2 lightsaber color),
-      WeaponWhoosh (KotOR2 sound type), ArmorRulesType (KotOR2 armor category), CostTable (property cost table),
-      Param1 (property parameter), Param1Value (property parameter value), ChanceAppear (random loot chance),
-      UpgradeType (KotOR2 upgrade slot type).
+      Used in UTI for: Plot, Charges, ModelVariation, BodyVariation, TextureVar, PaletteID,
+      Upgradable (KotOR1), UpgradeLevel (KotOR2), WeaponColor (KotOR2), WeaponWhoosh (KotOR2),
+      ArmorRulesType (KotOR2), CostTable, Param1, Param1Value, ChanceAppear, UpgradeType (KotOR2).
     1: int8
     doc: 8-bit signed integer (char)
     2: uint16
     doc: |
       16-bit unsigned integer (word).
-      Used in UTI for: StackSize (stack quantity), PropertyName (property index into itempropdef.2da),
+      Used in UTI for: StackSize (stack quantity), PropertyName (property type index),
       Subtype (property subtype), CostValue (property cost value).
     3: int16
     doc: 16-bit signed integer (short)
@@ -567,8 +609,8 @@ enums:
     5: int32
     doc: |
       32-bit signed integer (int).
-      Used in UTI for: BaseItem (base item type index into baseitems.2da), Identified (identification status),
-      Stolen (stolen item flag).
+      Used in UTI for: BaseItem (index into baseitems.2da), Identified (identification flag),
+      Stolen (stolen flag, deprecated).
     6: uint64
     doc: 64-bit unsigned integer (stored in field_data section)
     7: int64
@@ -589,7 +631,7 @@ enums:
     doc: |
       Localized string (CExoLocString, stored in field_data section).
       Used in UTI for: LocalizedName (localized item name with multiple language/gender support),
-      Description (generic description shown when unidentified), DescIdentified (description shown when identified).
+      Description (generic description when unidentified), DescIdentified (description when identified).
     13: binary
     doc: Binary data blob (Void, stored in field_data section)
     14: struct
@@ -597,7 +639,7 @@ enums:
     15: list
     doc: |
       List of structs (offset to list_indices stored inline).
-      Used in UTI for: PropertiesList (array of PropertiesList entry structs containing item properties/enchantments).
+      Used in UTI for: PropertiesList (list of item property structs).
     16: vector4
     doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
     17: vector3
