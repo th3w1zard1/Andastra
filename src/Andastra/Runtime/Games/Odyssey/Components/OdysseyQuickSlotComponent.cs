@@ -1,5 +1,7 @@
+using System;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common.Components;
 
 namespace Andastra.Runtime.Games.Odyssey.Components
 {
@@ -20,15 +22,48 @@ namespace Andastra.Runtime.Games.Odyssey.Components
     /// - swkotor.exe: Quick slot system identical to swkotor2.exe (function addresses to be determined via Ghidra)
     /// - swkotor2.exe: Enhanced quick slot system with 12 slots (FUN_005226d0 @ 0x005226d0 saves, FUN_005223a0 @ 0x005223a0 loads)
     /// </remarks>
-    public class QuickSlotComponent : OdysseyQuickSlotComponent
+    public class OdysseyQuickSlotComponent : BaseQuickSlotComponent
     {
+        private const int OdysseyMaxQuickSlots = 12; // 0-11
+
+        /// <summary>
+        /// Gets the maximum number of quick slots for Odyssey engine (12 slots).
+        /// </summary>
+        protected override int MaxQuickSlots
+        {
+            get { return OdysseyMaxQuickSlots; }
+        }
+
         /// <summary>
         /// Initializes a new instance of the Odyssey quick slot component.
         /// </summary>
         /// <param name="owner">The entity this component is attached to.</param>
-        public QuickSlotComponent([NotNull] IEntity owner)
-            : base(owner)
+        public OdysseyQuickSlotComponent([NotNull] IEntity owner)
         {
+            if (owner == null)
+            {
+                throw new ArgumentNullException("owner");
+            }
+
+            Owner = owner;
+        }
+
+        /// <summary>
+        /// Called when the component is attached to an entity.
+        /// </summary>
+        public override void OnAttach()
+        {
+            // Odyssey-specific initialization if needed
+            base.OnAttach();
+        }
+
+        /// <summary>
+        /// Called when the component is detached from an entity.
+        /// </summary>
+        public override void OnDetach()
+        {
+            // Odyssey-specific cleanup if needed
+            base.OnDetach();
         }
     }
 }

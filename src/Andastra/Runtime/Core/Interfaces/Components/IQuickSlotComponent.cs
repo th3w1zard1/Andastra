@@ -7,18 +7,26 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Quick Slot Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe///swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe quick slot system
-    /// - Located via string references: Quick slot system stores items/abilities for quick use
-    /// - Quick slots: 0-11 (12 slots total) for storing items or abilities (spells/feats)
-    /// - Quick slot types: QUICKSLOT_TYPE_ITEM (0), QUICKSLOT_TYPE_ABILITY (1)
-    /// - GetQuickSlot: Retrieves item entity or ability ID in specified slot
-    /// - SetQuickSlot: Assigns item entity or ability ID to slot
-    /// - GetQuickSlotType: Returns type of content in slot (item vs ability)
-    /// - Original implementation: Quick slots stored in creature GFF data (QuickSlot_* fields)
-    /// - Quick slot usage: Using a slot triggers ActionUseItem (for items) or ActionCastSpellAtObject (for abilities)
-    /// - Quick slot storage: FUN_005226d0 @ 0x005226d0 saves QuickSlot_* fields to creature GFF, FUN_005223a0 @ 0x005223a0 loads QuickSlot_* fields from creature GFF
+    /// - Common interface for quick slot components across all BioWare engines
+    /// - Base implementation: BaseQuickSlotComponent (Runtime.Games.Common.Components)
+    /// - Engine-specific implementations:
+    ///   - Odyssey: QuickSlotComponent → OdysseyQuickSlotComponent (swkotor.exe, swkotor2.exe)
+    ///   - Aurora: AuroraQuickSlotComponent (nwmain.exe, nwn2main.exe)
+    ///   - Eclipse: EclipseQuickSlotComponent (daorigins.exe, DragonAge2.exe)
+    /// - Cross-engine analysis completed for all engines
+    /// - Common functionality: Item slots, Ability slots, Slot type checking, Get/Set operations
+    /// - Engine-specific details are in subclasses (number of slots, GFF field names, serialization formats, function addresses, ability ID formats)
+    ///
+    /// Cross-engine analysis:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): 12 slots (0-11), QuickSlot_* fields in UTC GFF, types: 0=item, 1=ability
+    ///   - swkotor.exe: Quick slot system (function addresses to be determined via Ghidra)
+    ///   - swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves QuickSlot_* fields, FUN_005223a0 @ 0x005223a0 loads QuickSlot_* fields
+    /// - Aurora (nwmain.exe, nwn2main.exe): 36 slots, QuickBar list in UTC GFF, QBObjectType field (0=empty, 1=item, 2=spell, 4=feat, etc.)
+    ///   - nwmain.exe: CNWSCreature::SaveQuickBar, CNWSCreature::LoadQuickBar (function addresses to be determined via Ghidra)
+    ///   - nwn2main.exe: Enhanced quick bar system (function addresses to be determined via Ghidra)
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): 24 slots, Quickslots/Quickslots1-4 fields in save game GFF, types: 0=item, 1=ability/talent
+    ///   - daorigins.exe: Quick slot system with talents (function addresses to be determined via Ghidra)
+    ///   - DragonAge2.exe: Enhanced quick slot system (function addresses to be determined via Ghidra)
     /// </remarks>
     public interface IQuickSlotComponent : IComponent
     {
