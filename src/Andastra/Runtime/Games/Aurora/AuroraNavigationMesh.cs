@@ -1418,10 +1418,104 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Gets adjacent faces for a given face.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Aurora tile-based adjacent face finding.
+        /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
+        /// Adjacent faces are determined by finding adjacent tiles in the 8-directional grid (N, S, E, W, NE, NW, SE, SW).
+        /// 
+        /// Algorithm:
+        /// 1. Validate face index is within expected range (0 to tileHeight * tileWidth - 1)
+        /// 2. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+        /// 3. Validate tile coordinates are within bounds
+        /// 4. Use GetTileNeighbors to find adjacent walkable tiles
+        /// 5. Convert each neighbor tile back to a face index: faceIndex = tileY * tileWidth + tileX
+        /// 6. Return only walkable faces (GetTileNeighbors already filters for walkable tiles)
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - Tile neighbor traversal
+        /// - nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - Grid-based pathfinding uses adjacent tiles
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
+        /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
+        /// - Tile array indexing pattern: width * y + x (matches face index calculation)
+        /// 
+        /// Tile neighbor directions (8-directional):
+        /// - Cardinal: North (0, 1), South (0, -1), East (1, 0), West (-1, 0)
+        /// - Diagonal: Northeast (1, 1), Northwest (-1, 1), Southeast (1, -1), Southwest (-1, -1)
+        /// 
+        /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles with explicit
+        /// adjacency data, Aurora uses a tile-based system where each face index maps to a tile in the grid.
+        /// Adjacent faces are determined by grid adjacency (8-directional neighbors), and only walkable
+        /// tiles are considered valid adjacent faces.
+        /// 
+        /// The GetTileNeighbors method already filters for valid, loaded, and walkable tiles, so all
+        /// returned face indices will be walkable. This matches the behavior expected by pathfinding
+        /// algorithms that use GetAdjacentFaces to traverse the navigation mesh.
+        /// </remarks>
         public IEnumerable<int> GetAdjacentFaces(int faceIndex)
         {
-            // TODO: Implement Aurora adjacent face finding
-            yield break;
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                yield break;
+            }
+
+            // Validate face index is within expected range
+            // Maximum face index should be (tileHeight - 1) * tileWidth + (tileWidth - 1) = tileHeight * tileWidth - 1
+            int maxFaceIndex = _tileHeight * _tileWidth - 1;
+            if (faceIndex < 0 || faceIndex > maxFaceIndex)
+            {
+                // Face index is out of bounds - no adjacent faces
+                yield break;
+            }
+
+            // Convert face index to tile coordinates
+            // Based on FindFaceAt: faceIndex = tileY * tileWidth + tileX
+            // Reverse: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+            int tileY = faceIndex / _tileWidth;
+            int tileX = faceIndex % _tileWidth;
+
+            // Validate tile coordinates are within bounds
+            // This should always be true if faceIndex is valid, but check for safety
+            if (tileX < 0 || tileX >= _tileWidth || tileY < 0 || tileY >= _tileHeight)
+            {
+                // Invalid tile coordinates - no adjacent faces
+                yield break;
+            }
+
+            // Check if the source tile is valid and walkable
+            // Based on nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 validation checks
+            if (!IsTileValid(tileX, tileY))
+            {
+                // Source tile is not valid (not loaded, out of bounds, or invalid tile ID) - no adjacent faces
+                yield break;
+            }
+
+            AuroraTile sourceTile = _tiles[tileY, tileX];
+            if (!sourceTile.IsLoaded || !sourceTile.IsWalkable)
+            {
+                // Source tile is not loaded or not walkable - no adjacent faces
+                yield break;
+            }
+
+            // Find adjacent tiles using GetTileNeighbors
+            // Based on nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260
+            // GetTileNeighbors returns 8-directional neighbors (N, S, E, W, NE, NW, SE, SW)
+            // and already filters for valid, loaded, and walkable tiles
+            foreach ((int x, int y) neighbor in GetTileNeighbors(tileX, tileY))
+            {
+                // Convert neighbor tile coordinates back to face index
+                // Based on FindFaceAt: faceIndex = tileY * tileWidth + tileX
+                int neighborFaceIndex = neighbor.y * _tileWidth + neighbor.x;
+
+                // Validate neighbor face index is within expected range
+                // This should always be true if neighbor tile coordinates are valid, but check for safety
+                if (neighborFaceIndex >= 0 && neighborFaceIndex <= maxFaceIndex)
+                {
+                    // Return the adjacent face index
+                    // GetTileNeighbors already ensures the tile is valid, loaded, and walkable
+                    yield return neighborFaceIndex;
+                }
+            }
         }
 
         /// <summary>
