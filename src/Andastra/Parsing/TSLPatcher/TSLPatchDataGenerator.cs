@@ -18,6 +18,7 @@ using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.LIP;
+using Andastra.Parsing.Formats.Capsule;
 using GFFContent = Andastra.Parsing.Formats.GFF.GFFContent;
 using TLKAuto = Andastra.Parsing.Formats.TLK.TLKAuto;
 using TwoDAAuto = Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
@@ -443,6 +444,8 @@ namespace Andastra.Parsing.TSLPatcher
                     }
 
                     // For module-specific resources, extract from capsule
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:182-206
+                    // Original: if folder.startswith("modules\\"): ... capsule = Capsule(module_path) ... self._write_resource_with_io(res.data(), dest_file, res_ext)
                     if (folder.StartsWith("modules\\") || folder.StartsWith("modules/"))
                     {
                         // Extract from module capsule
@@ -456,14 +459,43 @@ namespace Andastra.Parsing.TSLPatcher
                             {
                                 try
                                 {
-                                    // TODO: Extract from capsule - requires Capsule implementation
-                                    // For now, skip module resource extraction
-                                    Console.WriteLine($"[DEBUG] Module resource extraction not yet implemented: {filename} from {moduleName}");
+                                    // Load the module capsule file
+                                    var capsule = new Capsule(modulePath.FullName);
+
+                                    // Parse filename to extract resource name and type
+                                    // Matching PyKotor: resref_name = Path(filename).stem, res_ext = Path(filename).suffix.lstrip(".")
+                                    string resrefName = Path.GetFileNameWithoutExtension(filename);
+                                    string resExt = Path.GetExtension(filename).TrimStart('.');
+
+                                    // Get resource type from extension
+                                    ResourceType resType = ResourceType.FromExtension(resExt);
+                                    if (resType.IsInvalid)
+                                    {
+                                        Console.WriteLine($"[WARNING] Invalid resource type for {filename}, skipping extraction");
+                                        continue;
+                                    }
+
+                                    // Extract resource from capsule
+                                    byte[] resourceData = capsule.GetResource(resrefName, resType);
+                                    if (resourceData == null)
+                                    {
+                                        Console.WriteLine($"[WARNING] Resource '{resrefName}.{resExt}' not found in module capsule '{moduleName}'");
+                                        continue;
+                                    }
+
+                                    // Write extracted resource using appropriate io function
+                                    WriteResourceWithIo(resourceData, destFile.FullName, resExt);
+                                    copiedFiles[filename] = destFile;
+                                    Console.WriteLine($"[DEBUG] Extracted resource from module: {filename} from {moduleName}");
                                 }
                                 catch (Exception e)
                                 {
                                     Console.WriteLine($"[ERROR] Failed to extract {filename} from {moduleName}: {e.Message}");
                                 }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[WARNING] Module capsule '{moduleName}' not found at {modulePath.FullName}");
                             }
                         }
                         continue;
