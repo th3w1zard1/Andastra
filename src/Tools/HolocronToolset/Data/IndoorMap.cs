@@ -17,7 +17,7 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Extract;
-using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Installation;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -1447,5 +1447,3 @@ namespace HolocronToolset.Data
     }
 }
 
-    }
-}
