@@ -681,7 +681,7 @@ namespace HolocronToolset.Dialogs
         {
             if (resource == null)
             {
-                return "";
+                return "No resource selected";
             }
 
             // Original: summary: list[str] = [
@@ -691,52 +691,6 @@ namespace HolocronToolset.Dialogs
             // Original:     f"Path: {resource.filepath().relative_to(self._installation.path())}"
             // Original: ]
             // Original: return "\n".join(summary)
-            var summary = new System.Collections.Generic.List<string>
-            {
-                $"Name: {resource.ResName}",
-                $"Type: {resource.ResType.Name}",
-                $"Size: {resource.GetData().Length} bytes"
-            };
-
-            // Get relative path if installation path is available
-            if (_installation != null && !string.IsNullOrEmpty(_installation.Path) && !string.IsNullOrEmpty(resource.FilePath))
-            {
-                try
-                {
-                    string installationPath = _installation.Path;
-                    string resourcePath = resource.FilePath;
-                    if (resourcePath.StartsWith(installationPath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        string relativePath = resourcePath.Substring(installationPath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                        summary.Add($"Path: {relativePath}");
-                    }
-                    else
-                    {
-                        summary.Add($"Path: {resourcePath}");
-                    }
-                }
-                catch
-                {
-                    summary.Add($"Path: {resource.FilePath}");
-                }
-            }
-            else
-            {
-                summary.Add($"Path: {resource.FilePath}");
-            }
-
-            return string.Join("\n", summary);
-        }
-
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:279-289
-        // Original: def generate_resource_summary(self, resource: FileResource) -> str:
-        private string GenerateResourceSummary(FileResource resource)
-        {
-            if (resource == null)
-            {
-                return "No resource selected";
-            }
-
             var summary = new System.Collections.Generic.List<string>
             {
                 $"Name: {resource.ResName}",
@@ -755,7 +709,8 @@ namespace HolocronToolset.Dialogs
                     // Check if resource path is within installation path
                     if (resourcePath.StartsWith(installationPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        string relativePath = Path.GetRelativePath(installationPath, resourcePath);
+                        // Use Substring for .NET Framework 4.x compatibility (Path.GetRelativePath requires .NET Core 2.1+)
+                        string relativePath = resourcePath.Substring(installationPath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                         summary.Add($"Path: {relativePath}");
                     }
                     else
