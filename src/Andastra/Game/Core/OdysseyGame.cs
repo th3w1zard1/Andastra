@@ -130,18 +130,9 @@ namespace Andastra.Runtime.Game.Core
         private bool _isEnteringSaveName = false;
         private float _saveNameInputCursorTime = 0f;
 
-        // Options menu system
-        private Andastra.Runtime.Game.GUI.OptionsMenuSettings _optionsSettings;
-        private Andastra.Runtime.Game.GUI.OptionsMenuSettings _optionsOriginalSettings;
-        private Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab _optionsTab = Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab.Graphics;
-        private int _optionsSelectedIndex = 0;
-        private bool _optionsHasChanges = false;
-
         // Input tracking
         private IMouseState _previousMouseState;
         private IKeyboardState _previousKeyboardState;
-
-        // Options menu system
 
         public OdysseyGame(Andastra.Runtime.Core.GameSettings settings, IGraphicsBackend graphicsBackend)
         {
@@ -255,13 +246,15 @@ namespace Andastra.Runtime.Game.Core
                     if (musicPlayerObj is IMusicPlayer musicPlayer)
                     {
                         _musicPlayer = musicPlayer;
-                        
-                        // Apply initial music volume from settings (combined with master volume)
-                        // Based on swkotor.exe and swkotor2.exe: Volume settings loaded from INI file
-                        float combinedMusicVolume = _settings.MasterVolume * _settings.MusicVolume;
-                        _musicPlayer.Volume = combinedMusicVolume;
-                        
                         Console.WriteLine("[Odyssey] Music player initialized successfully");
+                    }
+
+                    // Create sound player from graphics backend
+                    var soundPlayerObj = _graphicsBackend.CreateSoundPlayer(resourceProvider);
+                    if (soundPlayerObj is Andastra.Runtime.Core.Audio.ISoundPlayer soundPlayer)
+                    {
+                        _soundPlayer = soundPlayer;
+                        Console.WriteLine("[Odyssey] Sound player initialized successfully");
                     }
                     else
                     {
@@ -286,9 +279,6 @@ namespace Andastra.Runtime.Game.Core
                     {
                         Console.WriteLine("[Odyssey] WARNING: GUI manager requires MonoGame graphics device");
                     }
-
-                    // Store installation for 3D model loading
-                    _menuInstallation = installation;
 
                     // Load main menu 3D models (gui3D_room + menu variant)
                     // Based on swkotor.exe FUN_0067c4c0: Loads gui3D_room and mainmenu model
@@ -346,7 +336,7 @@ namespace Andastra.Runtime.Game.Core
                 if (!_musicStarted && _musicPlayer != null && _musicEnabled)
                 {
                     string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
-                    if (_musicPlayer.Play(musicResRef, _settings.Audio.MusicVolume))
+                    if (_musicPlayer.Play(musicResRef, 1.0f))
                     {
                         _musicStarted = true;
                         Console.WriteLine($"[Odyssey] Main menu music started: {musicResRef}");
@@ -457,6 +447,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
             }
+            else if (_currentState == GameState.OptionsMenu)
+            {
+                UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
+            }
             else if (_currentState == GameState.MoviesMenu)
             {
                 UpdateMoviesMenu(deltaTime, keyboardState, mouseState);
@@ -534,6 +528,10 @@ namespace Andastra.Runtime.Game.Core
             else if (_currentState == GameState.LoadMenu)
             {
                 DrawLoadMenu();
+            }
+            else if (_currentState == GameState.OptionsMenu)
+            {
+                DrawOptionsMenu();
             }
             else if (_currentState == GameState.MoviesMenu)
             {
@@ -743,8 +741,8 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Gameplay options button clicked - gameplay options submenu not yet implemented");
-                        // TODO: Implement gameplay options submenu
+                        Console.WriteLine("[Odyssey] Gameplay options button clicked - opening gameplay options submenu");
+                        OpenGameplayOptionsMenu();
                     }
                     break;
                 
@@ -759,14 +757,12 @@ namespace Andastra.Runtime.Game.Core
                     break;
                 
                 case "BTN_AUTOPAUSE":
-                    // Autopause options button - switch to autopause options tab
+                    // Autopause options button - open autopause options submenu
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnAutopauseOpt @ 0x006de2c0
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        // Switch to Autopause category (index 3: Graphics=0, Audio=1, Game=2, Autopause=3, Controls=4)
-                        _selectedOptionsCategoryIndex = 3;
-                        _selectedOptionsItemIndex = 0;
-                        Console.WriteLine("[Odyssey] Autopause options button clicked - switched to autopause options tab");
+                        Console.WriteLine("[Odyssey] Autopause options button clicked - autopause options submenu not yet implemented");
+                        // TODO: Implement autopause options submenu
                     }
                     break;
                 
@@ -775,8 +771,10 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Graphics options button clicked - graphics options submenu not yet implemented");
-                        // TODO: Implement graphics options submenu
+                        // Navigate to Graphics category in options menu
+                        _selectedOptionsCategoryIndex = (int)Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory.Graphics;
+                        _selectedOptionsItemIndex = 0; // Reset to first option in Graphics category
+                        Console.WriteLine("[Odyssey] Graphics options submenu opened - navigating to Graphics category");
                     }
                     break;
                 
@@ -817,7 +815,6 @@ namespace Andastra.Runtime.Game.Core
                             {
                                 _musicPlayer.Stop();
                                 _musicStarted = false;
-                                _musicPaused = false;
                             }
                             _musicEnabled = false;
                             Console.WriteLine("[Odyssey] Music disabled by user");
@@ -829,10 +826,9 @@ namespace Andastra.Runtime.Game.Core
                             if (_currentState == GameState.MainMenu && !_musicStarted)
                             {
                                 string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
-                                if (_musicPlayer.Play(musicResRef, _settings.Audio.MusicVolume))
+                                if (_musicPlayer.Play(musicResRef, 1.0f))
                                 {
                                     _musicStarted = true;
-                                    _musicPaused = false;
                                     Console.WriteLine($"[Odyssey] Music enabled and started: {musicResRef}");
                                 }
                                 else
@@ -4166,75 +4162,10 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Initializes the options menu.
         /// </summary>
-        /// <remarks>
-        /// Options Menu Initialization:
-        /// - Loads options GUI panel ("optionsmain" for main menu, "optionsingame" for in-game menu)
-        /// - Initializes options settings from GameSettings (configuration loaded at startup)
-        /// - Sets up options menu UI elements (categories, options, navigation state)
-        /// - Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 (constructor)
-        /// </remarks>
-        private void InitializeOptionsMenu()
-        {
-            // Initialize options settings from configuration
-            // Settings are loaded from GameSettings which is initialized at startup
-            // Future enhancement: Load from swkotor.ini/swkotor2.ini file if available
-            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(
-                _settings,
-                _soundPlayer,
-                _musicPlayer,
-                _voicePlayer);
-            
-            // Set up options menu UI elements (tabs/categories, navigation state)
-            _selectedOptionsCategoryIndex = 0;
-            _selectedOptionsItemIndex = 0;
-            _isEditingOptionValue = false;
-            _editingOptionValue = string.Empty;
-            
-            // Mark GUI panel for loading (actual loading happens in Update() when state changes to OptionsMenu)
-            // GUI panel name: "optionsmain" for main menu options, "optionsingame" for in-game options
-            // Based on swkotor2.exe: CSWGuiOptionsMain loads "optionsmain" GUI file
-            _optionsMenuGuiLoaded = false; // Will be loaded in Update() when entering OptionsMenu state
-            
-            Console.WriteLine("[Odyssey] Options menu initialized - GUI will be loaded when entering options menu state");
-        }
 
         /// <summary>
         /// Updates the options menu.
         /// </summary>
-        private void UpdateOptionsMenu(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
-        {
-            var inputManager = _graphicsBackend.InputManager;
-            var currentKeyboard = inputManager.KeyboardState;
-            var currentMouse = inputManager.MouseState;
-
-            Andastra.Runtime.Game.GUI.OptionsMenu.UpdateOptionsMenu(
-                deltaTime,
-                currentKeyboard,
-                _previousKeyboardState,
-                currentMouse,
-                _previousMouseState,
-                ref _selectedOptionsCategoryIndex,
-                ref _selectedOptionsItemIndex,
-                ref _isEditingOptionValue,
-                ref _editingOptionValue,
-                _settings,
-                _optionsByCategory,
-                (updatedSettings) =>
-                {
-                    // Settings applied - return to main menu
-                    Console.WriteLine("[Odyssey] Options applied, returning to main menu");
-                    _currentState = GameState.MainMenu;
-                },
-                () =>
-                {
-                    // Cancel - return to main menu without applying
-                    Console.WriteLine("[Odyssey] Options cancelled, returning to main menu");
-                    _currentState = GameState.MainMenu;
-                });
-
-            _previousKeyboardState = currentKeyboard;
-            _previousMouseState = currentMouse;
-        }
 
         /// <summary>
         /// Draws the options menu.
@@ -4631,171 +4562,11 @@ namespace Andastra.Runtime.Game.Core
         /// </remarks>
         private void InitializeOptionsMenu()
         {
-            // Load options GUI panel
-            // Based on swkotor.exe and swkotor2.exe: Options menu uses GUI panels for interface
-            // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 loads "optionsmain" GUI for main menu options
-            // Based on swkotor2.exe: In-game options may use "optionsingame" or similar GUI panel
-            string guiPanelName = "optionsmain"; // Use main menu options panel
-
-            if (_guiManager != null)
-            {
-                // Determine appropriate GUI scaling based on current viewport
-                int viewportWidth = _graphicsDevice.Viewport.Width;
-                int viewportHeight = _graphicsDevice.Viewport.Height;
-
-                if (_guiManager.LoadGui(guiPanelName, viewportWidth, viewportHeight))
-                {
-                    Console.WriteLine($"[Odyssey] Loaded options GUI panel: {guiPanelName}");
-                }
-                else
-                {
-                    Console.WriteLine($"[Odyssey] WARNING: Failed to load options GUI panel: {guiPanelName}, falling back to programmatic options");
-                }
-            }
-            else
-            {
-                Console.WriteLine("[Odyssey] WARNING: GUI manager not available, using programmatic options menu");
-            }
-
-            // Load options settings from configuration file
-            // Based on swkotor.exe and swkotor2.exe: Settings loaded from swkotor.ini (K1) or swkotor2.ini (K2)
-            // Based on swkotor2.exe FUN_00633270 @ 0x00633270: Loads configuration values from INI file
-            string iniFileName = _settings.Game == KotorGame.K1 ? "swkotor.ini" : "swkotor2.ini";
-            string iniPath = System.IO.Path.Combine(_settings.GamePath ?? "", iniFileName);
-
-            // Try to load settings from INI file, fall back to current settings if file doesn't exist
-            var optionsSettings = Andastra.Runtime.Game.GUI.OptionsMenuSettings.LoadFromIni(iniPath);
-
-            // Apply loaded settings to current game settings
-            // Graphics settings
-            _settings.Width = optionsSettings.ResolutionWidth;
-            _settings.Height = optionsSettings.ResolutionHeight;
-            _settings.Fullscreen = optionsSettings.Fullscreen;
-
-            // Audio settings
-            _settings.Audio.MasterVolume = optionsSettings.MasterVolume;
-            _settings.Audio.MusicVolume = optionsSettings.MusicVolume;
-            _settings.Audio.SfxVolume = optionsSettings.EffectsVolume;
-            _settings.Audio.VoiceVolume = optionsSettings.VoiceVolume;
-
-            // Game settings
-            _settings.SkipIntro = optionsSettings.SkipIntro;
-
-            // Controls settings
-            _settings.MouseSensitivity = optionsSettings.MouseSensitivity;
-            _settings.InvertMouseY = optionsSettings.InvertMouseY;
-
-            // Initialize options menu with loaded settings
-            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings, null, _musicPlayer);
-            _selectedOptionsCategoryIndex = 0;
-            _selectedOptionsItemIndex = 0;
-            _isEditingOptionValue = false;
-            _editingOptionValue = string.Empty;
-
-            Console.WriteLine($"[Odyssey] Options menu initialized from {iniFileName}");
-        }
-
-        /// <summary>
-        /// Checks autopause conditions and pauses the game if appropriate.
-        /// </summary>
-        /// <param name="condition">The autopause condition to check.</param>
-        /// <remarks>
-        /// Autopause Logic:
-        /// - Based on swkotor.exe and swkotor2.exe autopause system
-        /// - Game automatically pauses under various conditions based on user settings
-        /// - Only pauses when in InGame state (not during menus, loading, etc.)
-        /// - Autopause conditions are checked at appropriate times during gameplay
-        /// - Based on swkotor2.exe: Autopause triggers are checked in various game systems
-        /// </remarks>
-        private void CheckAutopause(AutopauseCondition condition)
-        {
-            // Only autopause when actively in-game
-            if (_currentState != GameState.InGame)
-            {
-                return;
-            }
-
-            bool shouldPause = false;
-            string reason = "";
-
-            switch (condition)
-            {
-                case AutopauseCondition.LostFocus:
-                    if (_settings.Autopause.PauseOnLostFocus)
-                    {
-                        shouldPause = true;
-                        reason = "window lost focus";
-                    }
-                    break;
-
-                case AutopauseCondition.Conversation:
-                    if (_settings.Autopause.PauseOnConversation)
-                    {
-                        shouldPause = true;
-                        reason = "conversation started";
-                    }
-                    break;
-
-                case AutopauseCondition.Container:
-                    if (_settings.Autopause.PauseOnContainer)
-                    {
-                        shouldPause = true;
-                        reason = "container opened";
-                    }
-                    break;
-
-                case AutopauseCondition.Corpse:
-                    if (_settings.Autopause.PauseOnCorpse)
-                    {
-                        shouldPause = true;
-                        reason = "corpse looted";
-                    }
-                    break;
-
-                case AutopauseCondition.AreaTransition:
-                    if (_settings.Autopause.PauseOnAreaTransition)
-                    {
-                        shouldPause = true;
-                        reason = "area transition";
-                    }
-                    break;
-
-                case AutopauseCondition.PartyDeath:
-                    if (_settings.Autopause.PauseOnPartyDeath)
-                    {
-                        shouldPause = true;
-                        reason = "party member died";
-                    }
-                    break;
-
-                case AutopauseCondition.PlayerDeath:
-                    if (_settings.Autopause.PauseOnPlayerDeath)
-                    {
-                        shouldPause = true;
-                        reason = "player died";
-                    }
-                    break;
-            }
-
-            if (shouldPause)
-            {
-                _currentState = GameState.Paused;
-                Console.WriteLine($"[Odyssey] Game autopause: {reason}");
-            }
-        }
-
-        /// <summary>
-        /// Autopause condition enumeration.
-        /// </summary>
-        private enum AutopauseCondition
-        {
-            LostFocus,
-            Conversation,
-            Container,
-            Corpse,
-            AreaTransition,
-            PartyDeath,
-            PlayerDeath
+            // Options menu initialization
+            // TODO: Load options GUI panel ("optionsmain" or "optionsingame")
+            // TODO: Initialize options settings from configuration
+            // TODO: Set up options menu UI elements (tabs, sliders, checkboxes, etc.)
+            Console.WriteLine("[Odyssey] Options menu initialized");
         }
     }
 }
