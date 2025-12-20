@@ -2425,14 +2425,54 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_load_multiple_files (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1743-1767)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1743-1767
         // Original: def test_dlg_editor_load_multiple_files(qtbot, installation: HTInstallation, test_files_dir: Path): Test loading multiple files
         [Fact]
         public void TestDlgEditorLoadMultipleFiles()
         {
-            // TODO: STUB - Implement load multiple files test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1743-1767
-            throw new NotImplementedException("TestDlgEditorLoadMultipleFiles: Load multiple files test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip test if file doesn't exist (matching Python pytest.skip behavior)
+                return;
+            }
+
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Load first time
+            // Matching PyKotor: editor.load(dlg_file, "ORIHA", ResourceType.DLG, dlg_file.read_bytes())
+            byte[] fileData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, fileData);
+            int firstCount = editor.Model.RowCount;
+
+            // Create new (clears the model)
+            // Matching PyKotor: editor.new()
+            editor.New();
+            // Matching PyKotor: assert editor.model.rowCount() == 0
+            editor.Model.RowCount.Should().Be(0);
+
+            // Load again
+            // Matching PyKotor: editor.load(dlg_file, "ORIHA", ResourceType.DLG, dlg_file.read_bytes())
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, fileData);
+            // Matching PyKotor: assert editor.model.rowCount() == first_count
+            editor.Model.RowCount.Should().Be(firstCount);
         }
 
         /// <summary>
