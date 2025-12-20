@@ -142,11 +142,6 @@ namespace Andastra.Runtime.Game.Core
         private IKeyboardState _previousKeyboardState;
 
         // Options menu system
-        private Dictionary<Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory, List<Andastra.Runtime.Game.GUI.OptionsMenu.OptionItem>> _optionsByCategory;
-        private int _selectedOptionsCategoryIndex = 0;
-        private int _selectedOptionsItemIndex = 0;
-        private bool _isEditingOptionValue = false;
-        private string _editingOptionValue = string.Empty;
 
         public OdysseyGame(Andastra.Runtime.Core.GameSettings settings, IGraphicsBackend graphicsBackend)
         {
@@ -333,20 +328,6 @@ namespace Andastra.Runtime.Game.Core
                     // Return to game from save/load menu
                     _currentState = GameState.InGame;
                 }
-                else if (_currentState == GameState.OptionsMenu)
-                {
-                    // Return to previous state from options menu (main menu or in-game)
-                    // Based on swkotor.exe and swkotor2.exe: Options menu can be accessed from main menu or in-game
-                    if (_previousStateBeforeOptions != GameState.None)
-                    {
-                        _currentState = _previousStateBeforeOptions;
-                        _previousStateBeforeOptions = GameState.None;
-                    }
-                    else
-                    {
-                        _currentState = GameState.MainMenu;
-                    }
-                }
                 else
                 {
                     // Return to main menu
@@ -365,7 +346,7 @@ namespace Andastra.Runtime.Game.Core
                 if (!_musicStarted && _musicPlayer != null && _musicEnabled)
                 {
                     string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
-                    if (_musicPlayer.Play(musicResRef, 1.0f))
+                    if (_musicPlayer.Play(musicResRef, _settings.Audio.MusicVolume))
                     {
                         _musicStarted = true;
                         Console.WriteLine($"[Odyssey] Main menu music started: {musicResRef}");
@@ -843,7 +824,7 @@ namespace Andastra.Runtime.Game.Core
                             if (_currentState == GameState.MainMenu && !_musicStarted)
                             {
                                 string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
-                                if (_musicPlayer.Play(musicResRef, 1.0f))
+                                if (_musicPlayer.Play(musicResRef, _settings.Audio.MusicVolume))
                                 {
                                     _musicStarted = true;
                                     Console.WriteLine($"[Odyssey] Music enabled and started: {musicResRef}");
