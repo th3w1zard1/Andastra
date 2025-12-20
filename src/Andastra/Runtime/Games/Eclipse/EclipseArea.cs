@@ -803,18 +803,18 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Set waypoint-specific properties from GIT
                     // Based on daorigins.exe/DragonAge2.exe: Reads MapNote, MapNoteEnabled, HasMapNote
                     var waypointComponent = entity.GetComponent<IWaypointComponent>();
-                    if (waypointComponent != null && waypointComponent is Components.EclipseWaypointComponent eclipseWaypoint)
+                    if (waypointComponent != null)
                     {
-                        eclipseWaypoint.HasMapNote = waypoint.HasMapNote;
+                        waypointComponent.HasMapNote = waypoint.HasMapNote;
                         if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.IsInvalid)
                         {
-                            eclipseWaypoint.MapNote = waypoint.MapNote.ToString();
-                            eclipseWaypoint.MapNoteEnabled = waypoint.MapNoteEnabled;
+                            waypointComponent.MapNote = waypoint.MapNote.ToString();
+                            waypointComponent.MapNoteEnabled = waypoint.MapNoteEnabled;
                         }
                         else
                         {
-                            eclipseWaypoint.MapNote = string.Empty;
-                            eclipseWaypoint.MapNoteEnabled = false;
+                            waypointComponent.MapNote = string.Empty;
+                            waypointComponent.MapNoteEnabled = false;
                         }
                     }
 
