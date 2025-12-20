@@ -87,11 +87,6 @@ namespace HolocronToolset.Editors
         private Button _removeAnimButton;
         private Button _editAnimButton;
 
-        // Search functionality
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:122-124, 451-465
-        // Original: self.search_results: list[DLGStandardItem] = [], self.current_search_text: str = "", self.current_result_index: int = 0
-        private List<DLGStandardItem> _searchResults = new List<DLGStandardItem>();
-        private string _currentSearchText = "";
         private int _currentResultIndex = 0;
 
         // Search UI Controls
@@ -146,28 +141,25 @@ namespace HolocronToolset.Editors
         // Original: QLineEdit listenerEdit
         private TextBox _listenerEdit;
 
-        // UI Controls - Script widgets
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
-        // Original: QSpinBox script1Param1Spin, script1Param2Spin, etc.
-        private NumericUpDown _script1Param1Spin;
-        private StackPanel _script1Param1Panel; // Panel containing script1Param1 control for visibility management
 
         // UI Controls - Node timing widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QSpinBox delaySpin, waitFlagSpin, fadeTypeSpin
         private NumericUpDown _delaySpin;
-        private NumericUpDown _waitFlagSpin;
-        private NumericUpDown _fadeTypeSpin;
-
-        // UI Controls - Voice widget
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
-        // Original: QComboBox voiceComboBox
-        private ComboBox _voiceComboBox;
-
-        // UI Controls - File-level properties (root DLG fields)
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1595
         // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
         private TextBox _voIdEdit;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QComboBox ambientTrackCombo
+        private ComboBox _ambientTrackCombo;
+
+        // UI Controls - File-level checkboxes
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QCheckBox unequipHandsCheckbox, unequipAllCheckbox, skippableCheckbox, animatedCutCheckbox, oldHitCheckbox
+        private CheckBox _unequipHandsCheckbox;
+        private CheckBox _unequipAllCheckbox;
+        private CheckBox _skippableCheckbox;
+        private CheckBox _animatedCutCheckbox;
+        private CheckBox _oldHitCheckbox;
 
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
@@ -239,18 +231,59 @@ namespace HolocronToolset.Editors
             // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
             _voIdEdit = new TextBox();
             _voIdEdit.LostFocus += (s, e) => OnFilePropertyChanged();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox ambientTrackCombo
+            _ambientTrackCombo = new ComboBox { IsEditable = true };
+            _ambientTrackCombo.LostFocus += (s, e) => OnFilePropertyChanged();
             var filePropertiesPanel = new StackPanel();
             filePropertiesPanel.Children.Add(new TextBlock { Text = "File Properties" });
             var voIdPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
             voIdPanel.Children.Add(new TextBlock { Text = "Voiceover ID:", Width = 120 });
             voIdPanel.Children.Add(_voIdEdit);
             filePropertiesPanel.Children.Add(voIdPanel);
+            var ambientTrackPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            ambientTrackPanel.Children.Add(new TextBlock { Text = "Ambient Track:", Width = 120 });
+            ambientTrackPanel.Children.Add(_ambientTrackCombo);
+            filePropertiesPanel.Children.Add(ambientTrackPanel);
+
+            // Initialize file-level checkboxes
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QCheckBox unequipHandsCheckbox, unequipAllCheckbox, skippableCheckbox, animatedCutCheckbox, oldHitCheckbox
+            _unequipHandsCheckbox = new CheckBox { Content = "Unequip Hands" };
+            _unequipHandsCheckbox.Checked += (s, e) => OnFilePropertyChanged();
+            _unequipHandsCheckbox.Unchecked += (s, e) => OnFilePropertyChanged();
+            filePropertiesPanel.Children.Add(_unequipHandsCheckbox);
+
+            _unequipAllCheckbox = new CheckBox { Content = "Unequip All" };
+            _unequipAllCheckbox.Checked += (s, e) => OnFilePropertyChanged();
+            _unequipAllCheckbox.Unchecked += (s, e) => OnFilePropertyChanged();
+            filePropertiesPanel.Children.Add(_unequipAllCheckbox);
+
+            _skippableCheckbox = new CheckBox { Content = "Skippable" };
+            _skippableCheckbox.Checked += (s, e) => OnFilePropertyChanged();
+            _skippableCheckbox.Unchecked += (s, e) => OnFilePropertyChanged();
+            filePropertiesPanel.Children.Add(_skippableCheckbox);
+
+            _animatedCutCheckbox = new CheckBox { Content = "Animated Cut" };
+            _animatedCutCheckbox.Checked += (s, e) => OnFilePropertyChanged();
+            _animatedCutCheckbox.Unchecked += (s, e) => OnFilePropertyChanged();
+            filePropertiesPanel.Children.Add(_animatedCutCheckbox);
+
+            _oldHitCheckbox = new CheckBox { Content = "Old Hit Check" };
+            _oldHitCheckbox.Checked += (s, e) => OnFilePropertyChanged();
+            _oldHitCheckbox.Unchecked += (s, e) => OnFilePropertyChanged();
+            filePropertiesPanel.Children.Add(_oldHitCheckbox);
+
             panel.Children.Add(filePropertiesPanel);
 
             // Initialize dialog tree view
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             _dialogTree = new TreeView();
             _dialogTree.SelectionChanged += (s, e) => OnSelectionChanged();
+
+            // Setup context menu for dialog tree
+            SetupDialogTreeContextMenu();
+
             panel.Children.Add(_dialogTree);
 
             // Initialize link condition widgets
@@ -410,6 +443,59 @@ namespace HolocronToolset.Editors
             panel.Children.Add(animPanel);
         }
 
+        /// <summary>
+        /// Sets up the context menu for the dialog tree.
+        /// Matching PyKotor implementation that checks for customContextMenuRequested signal receivers.
+        /// </summary>
+        private void SetupDialogTreeContextMenu()
+        {
+            if (_dialogTree == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // Add menu item for adding child nodes
+            var addChildItem = new MenuItem
+            {
+                Header = "Add Child",
+                Command = ReactiveUI.ReactiveCommand.Create(AddChildToSelectedItem)
+            };
+            menuItems.Add(addChildItem);
+
+            // Add menu item for deleting nodes
+            var deleteItem = new MenuItem
+            {
+                Header = "Delete",
+                Command = ReactiveUI.ReactiveCommand.Create(DeleteSelectedItem)
+            };
+            menuItems.Add(deleteItem);
+
+            // Add separator
+            menuItems.Add(new Separator());
+
+            // Add menu item for copying nodes
+            var copyItem = new MenuItem
+            {
+                Header = "Copy",
+                Command = ReactiveUI.ReactiveCommand.Create(CopySelectedItem)
+            };
+            menuItems.Add(copyItem);
+
+            // Add menu item for pasting nodes
+            var pasteItem = new MenuItem
+            {
+                Header = "Paste",
+                Command = ReactiveUI.ReactiveCommand.Create(PasteToSelectedItem)
+            };
+            menuItems.Add(pasteItem);
+
+            contextMenu.Items = menuItems;
+            _dialogTree.ContextMenu = contextMenu;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1135-1171
         // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes | bytearray):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -427,6 +513,8 @@ namespace HolocronToolset.Editors
                 _coreDlg = DLGHelper.ReadDlg(data);
             }
             LoadDLG(_coreDlg);
+            // Matching PyKotor implementation: self.refresh_stunt_list() after _load_dlg
+            RefreshStuntList();
             UpdateUIForGame(); // Update UI visibility after loading (game may have changed)
         }
 
@@ -475,10 +563,45 @@ namespace HolocronToolset.Editors
             {
                 _voIdEdit.Text = dlg.VoId ?? string.Empty;
             }
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+            // Original: self.ui.ambientTrackCombo.set_combo_box_text(str(dlg.ambient_track))
+            if (_ambientTrackCombo != null)
+            {
+                string ambientTrackText = dlg.AmbientTrack.ToString();
+                _ambientTrackCombo.Text = ambientTrackText;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1155-1161
+            // Original: self.ui.skippableCheckbox.setChecked(dlg.skippable)
+            // Original: self.ui.animatedCutCheckbox.setChecked(bool(dlg.animated_cut))
+            // Original: self.ui.oldHitCheckbox.setChecked(dlg.old_hit_check)
+            // Original: self.ui.unequipHandsCheckbox.setChecked(dlg.unequip_hands)
+            // Original: self.ui.unequipAllCheckbox.setChecked(dlg.unequip_items)
+            if (_skippableCheckbox != null)
+            {
+                _skippableCheckbox.IsChecked = dlg.Skippable;
+            }
+            if (_animatedCutCheckbox != null)
+            {
+                _animatedCutCheckbox.IsChecked = dlg.AnimatedCut != 0;
+            }
+            if (_oldHitCheckbox != null)
+            {
+                _oldHitCheckbox.IsChecked = dlg.OldHitCheck;
+            }
+            if (_unequipHandsCheckbox != null)
+            {
+                _unequipHandsCheckbox.IsChecked = dlg.UnequipHands;
+            }
+            if (_unequipAllCheckbox != null)
+            {
+                _unequipAllCheckbox.IsChecked = dlg.UnequipItems;
+            }
 
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
             UpdateTreeView();
+            RefreshStuntList();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1229-1254
@@ -562,11 +685,40 @@ namespace HolocronToolset.Editors
             // Clear undo/redo history when creating new dialog
             _actionHistory.Clear();
             UpdateTreeView();
+            RefreshStuntList();
         }
 
         public override void SaveAs()
         {
             Save();
+        }
+
+        /// <summary>
+        /// Refreshes the stunt list UI from the core DLG stunts.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2621-2627
+        /// Original: def refresh_stunt_list(self):
+        /// </summary>
+        public void RefreshStuntList()
+        {
+            if (_stuntList == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: self.ui.stuntList.clear()
+            _stuntList.Items.Clear();
+
+            // Matching PyKotor implementation: for stunt in self.core_dlg.stunts:
+            // Original: text: str = f"{stunt.stunt_model} ({stunt.participant})"
+            // Original: item = QListWidgetItem(text)
+            // Original: item.setData(Qt.ItemDataRole.UserRole, stunt)
+            // Original: self.ui.stuntList.addItem(item)
+            foreach (DLGStunt stunt in _coreDlg.Stunts)
+            {
+                string text = $"{stunt.StuntModel} ({stunt.Participant})";
+                var item = new ListBoxItem { Content = text, Tag = stunt };
+                _stuntList.Items.Add(item);
+            }
         }
 
         // Properties for tests
@@ -726,8 +878,18 @@ namespace HolocronToolset.Editors
         public TextBlock SpeakerEditLabel => _speakerEditLabel;
 
         // Expose listener widget for testing
+        // Expose comments widget for testing
+        // Matching PyKotor implementation: editor.ui.commentsEdit
+        public TextBox CommentsEdit => _commentsEdit;
+
         // Matching PyKotor implementation: editor.ui.listenerEdit
         public TextBox ListenerEdit => _listenerEdit;
+
+        // Expose left dock widget for testing
+        // Matching PyKotor implementation: editor.left_dock_widget, editor.orphaned_nodes_list, editor.pinned_items_list
+        public Panel LeftDockWidget => _leftDockWidget;
+        public DLGListWidget OrphanedNodesList => _orphanedNodesList;
+        public DLGListWidget PinnedItemsList => _pinnedItemsList;
 
         // Expose script widgets for testing
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
@@ -738,13 +900,7 @@ namespace HolocronToolset.Editors
         public ComboBox VoiceComboBox => _voiceComboBox;
 
         // Expose VO ID widget for testing
-        // Matching PyKotor implementation: editor.ui.voIdEdit
-        public TextBox VoIdEdit => _voIdEdit;
 
-        /// <summary>
-        /// Handles selection changes in the dialog tree.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
-        /// Original: def on_selection_changed(self, selection: QItemSelection):
         /// </summary>
         private void OnSelectionChanged()
         {
@@ -842,10 +998,6 @@ namespace HolocronToolset.Editors
                 {
                     _speakerEditLabel.IsVisible = false;
                 }
-                _nodeLoadedIntoUi = true;
-                return;
-            }
-
             // Get selected item from tree
             var selectedItem = _dialogTree.SelectedItem;
             if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
@@ -4873,3 +5025,4 @@ namespace HolocronToolset.Editors
         }
     }
 }
+
