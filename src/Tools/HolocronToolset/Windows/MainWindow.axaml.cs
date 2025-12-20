@@ -11,6 +11,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 using Control = Avalonia.Controls.Control;
 using ResourceList = HolocronToolset.Widgets.ResourceList;
@@ -1042,7 +1044,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1475-1486
         // Original: def open_active_talktable(self):
-        private void OpenActiveTalktable()
+        private async void OpenActiveTalktable()
         {
             if (_active == null)
             {
@@ -1052,8 +1054,14 @@ namespace HolocronToolset.Windows
             var tlkPath = Path.Combine(_active.Path, "dialog.tlk");
             if (!File.Exists(tlkPath))
             {
-                // TODO: Show MessageBox when available
-                System.Console.WriteLine($"dialog.tlk not found at {tlkPath}");
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1479-1483
+                // Original: QMessageBox(QMessageBox.Icon.Information, "dialog.tlk not found", f"Could not open the TalkTable editor, dialog.tlk not found at the expected location<br><br>{c_filepath}.").exec()
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "dialog.tlk not found",
+                    $"Could not open the TalkTable editor, dialog.tlk not found at the expected location\n\n{tlkPath}.",
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                await messageBox.ShowAsync();
                 return;
             }
 
