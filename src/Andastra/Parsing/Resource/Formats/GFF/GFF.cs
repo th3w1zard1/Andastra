@@ -14,10 +14,57 @@ namespace Andastra.Parsing.Formats.GFF
         public GFFContent Content { get; set; }
         public GFFStruct Root { get; set; }
 
+        /// <summary>
+        /// GFF file header containing file type, version, and section offsets/counts.
+        /// </summary>
+        public GFFHeader Header { get; set; }
+
+        /// <summary>
+        /// Array of all structs in the GFF file (read-only, populated during Load).
+        /// </summary>
+        public IReadOnlyList<GFFStruct> Structs { get; internal set; }
+
+        /// <summary>
+        /// Array of all field entries in the GFF file (read-only, populated during Load).
+        /// Each field entry contains type, label index, and data/offset.
+        /// </summary>
+        public IReadOnlyList<GFFFieldEntry> Fields { get; internal set; }
+
+        /// <summary>
+        /// Array of all label strings in the GFF file (read-only, populated during Load).
+        /// </summary>
+        public IReadOnlyList<string> Labels { get; internal set; }
+
+        /// <summary>
+        /// Raw field data section bytes (read-only, populated during Load).
+        /// </summary>
+        public IReadOnlyList<byte> FieldData { get; internal set; }
+
+        /// <summary>
+        /// Field indices array bytes (read-only, populated during Load).
+        /// </summary>
+        public IReadOnlyList<byte> FieldIndices { get; internal set; }
+
+        /// <summary>
+        /// List indices array bytes (read-only, populated during Load).
+        /// </summary>
+        public IReadOnlyList<byte> ListIndices { get; internal set; }
+
         public GFF(GFFContent content = GFFContent.GFF)
         {
             Content = content;
             Root = new GFFStruct(-1);
+            Header = new GFFHeader
+            {
+                FileType = content.ToFourCC(),
+                FileVersion = "V3.2"
+            };
+            Structs = new List<GFFStruct>().AsReadOnly();
+            Fields = new List<GFFFieldEntry>().AsReadOnly();
+            Labels = new List<string>().AsReadOnly();
+            FieldData = new List<byte>().AsReadOnly();
+            FieldIndices = new List<byte>().AsReadOnly();
+            ListIndices = new List<byte>().AsReadOnly();
         }
 
         /// <summary>

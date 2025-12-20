@@ -81,9 +81,6 @@ namespace Andastra.Parsing.Tests.Formats
             version.Should().BeOneOf("V3.2", "V3.3", "V4.0", "V4.1", "Version should match UTI.ksy valid values");
         }
 
-        // TODO: GFF.Header property is not exposed in public API - commented out until API is extended
-        // [Fact(Timeout = 120000)]
-        // public void TestUtiGffStructure() { ... }
 
         [Fact(Timeout = 120000)]
         public void TestUtiRootStruct()
@@ -670,13 +667,12 @@ namespace Andastra.Parsing.Tests.Formats
             GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
 
             // Validate field array structure matches UTI.ksy
-            // TODO: GFF.Header and GFF.Fields are not exposed in public API
-            // gff.Header.FieldCount.Should().BeGreaterThanOrEqualTo(0, "Field count should be non-negative");
-            // if (gff.Header.FieldCount > 0)
-            // {
-            //     gff.Fields.Should().NotBeNull("Field array should exist");
-            //     gff.Fields.Count.Should().Be((int)gff.Header.FieldCount, "Field count should match header");
-            // }
+            gff.Header.FieldCount.Should().BeGreaterThanOrEqualTo(0, "Field count should be non-negative");
+            if (gff.Header.FieldCount > 0)
+            {
+                gff.Fields.Should().NotBeNull("Field array should exist");
+                gff.Fields.Count.Should().Be((int)gff.Header.FieldCount, "Field count should match header");
+            }
         }
 
         [Fact(Timeout = 120000)]
