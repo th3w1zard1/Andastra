@@ -1847,5 +1847,164 @@ namespace HolocronToolset.Widgets
             newFontSize = Math.Max(6.0, Math.Min(72.0, newFontSize));
             FontSize = newFontSize;
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:244-272
+        // Original: def toggle_comment(self):
+        /// <summary>
+        /// Toggles comment for the current line or selected lines.
+        /// If any selected line is not commented, all selected lines are commented.
+        /// If all selected lines are commented, all selected lines are uncommented.
+        /// Matching PyKotor behavior: adds "// " prefix for commenting, removes "//" for uncommenting.
+        /// </summary>
+        public void ToggleComment()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+
+            int selectionStart = SelectionStart;
+            int selectionEnd = SelectionEnd;
+
+            // Get start and end lines of selection
+            int startLine = GetLineFromPosition(selectionStart);
+            int endLine = GetLineFromPosition(selectionEnd);
+
+            // Expand selection to full lines (matching PyKotor: StartOfLine to EndOfLine)
+            int firstLineStart = GetPositionFromLine(startLine);
+            int lastLineEnd = GetPositionFromLineContentEnd(endLine);
+
+            // Get selected lines (from startLine to endLine inclusive)
+            if (endLine >= lines.Length)
+            {
+                endLine = lines.Length - 1;
+            }
+
+            // Determine if we should comment out or uncomment
+            // commentOut = true if any non-empty line doesn't start with "//"
+            bool commentOut = false;
+            for (int i = startLine; i <= endLine && i < lines.Length; i++)
+            {
+                string trimmedLine = lines[i].TrimStart();
+                if (!string.IsNullOrWhiteSpace(lines[i]) && !trimmedLine.StartsWith("//"))
+                {
+                    commentOut = true;
+                    break;
+                }
+            }
+
+            // Process each line
+            for (int i = startLine; i <= endLine && i < lines.Length; i++)
+            {
+                if (commentOut)
+                {
+                    // Comment out: add "// " prefix to non-empty lines
+                    if (!string.IsNullOrWhiteSpace(lines[i]))
+                    {
+                        lines[i] = "// " + lines[i];
+                    }
+                }
+                else
+                {
+                    // Uncomment: remove "//" prefix if present
+                    string trimmedLine = lines[i].TrimStart();
+                    if (trimmedLine.StartsWith("//"))
+                    {
+                        // Remove "//" and any following space
+                        int commentIndex = lines[i].IndexOf("//");
+                        if (commentIndex >= 0)
+                        {
+                            string beforeComment = lines[i].Substring(0, commentIndex);
+                            string afterComment = lines[i].Substring(commentIndex + 2);
+                            // Remove leading space after "//" if present
+                            if (afterComment.StartsWith(" "))
+                            {
+                                afterComment = afterComment.Substring(1);
+                            }
+                            lines[i] = beforeComment + afterComment;
+                        }
+                    }
+                }
+            }
+
+            // Reconstruct text with modified lines
+            string newText = string.Join(newline, lines);
+
+            // Calculate new selection positions
+            // The selection should cover the same lines after modification
+            int newFirstLineStart = GetPositionFromLineInText(newText, newline, startLine);
+            int newLastLineEnd = GetPositionFromLineContentEndInText(newText, newline, endLine);
+
+            // Update text
+            Text = newText;
+
+            // Restore selection
+            SelectionStart = newFirstLineStart;
+            SelectionEnd = newLastLineEnd;
+        }
+
+        /// <summary>
+        /// Helper method to get position from line number in a given text string.
+        /// </summary>
+        private int GetPositionFromLineInText(string text, string newline, int line)
+        {
+            if (string.IsNullOrEmpty(text) || line < 0)
+            {
+                return 0;
+            }
+
+            string[] lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (line >= lines.Length)
+            {
+                return text.Length;
+            }
+
+            int position = 0;
+            int newlineLength = newline.Length;
+
+            for (int i = 0; i < line && i < lines.Length; i++)
+            {
+                position += lines[i].Length + newlineLength;
+            }
+
+            return position;
+        }
+
+        /// <summary>
+        /// Helper method to get end position of line content (excluding newline) in a given text string.
+        /// </summary>
+        private int GetPositionFromLineContentEndInText(string text, string newline, int line)
+        {
+            if (string.IsNullOrEmpty(text) || line < 0)
+            {
+                return 0;
+            }
+
+            string[] lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (line >= lines.Length)
+            {
+                return text.Length;
+            }
+
+            int position = 0;
+            int newlineLength = newline.Length;
+
+            for (int i = 0; i <= line && i < lines.Length; i++)
+            {
+                if (i < line)
+                {
+                    position += lines[i].Length + newlineLength;
+                }
+                else
+                {
+                    position += lines[i].Length;
+                }
+            }
+
+            return position;
+        }
     }
 }

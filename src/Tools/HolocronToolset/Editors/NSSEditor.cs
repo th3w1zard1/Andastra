@@ -604,12 +604,20 @@ namespace HolocronToolset.Editors
         {
             // Add KeyDown event handler for global shortcuts
             // Matching PyKotor: self.ui.actionToggleFileExplorer.setShortcut(QKeySequence("Ctrl+B"))
+            // Matching PyKotor: self.ui.actionToggleTerminal.setShortcut(QKeySequence("Ctrl+`"))
             this.KeyDown += (s, e) =>
             {
                 // Ctrl+B: Toggle file explorer
                 if (e.Key == Key.B && e.KeyModifiers == KeyModifiers.Control)
                 {
                     ToggleFileExplorer();
+                    e.Handled = true;
+                }
+                // Ctrl+`: Toggle terminal panel (bookmarks/snippets)
+                // Note: Backtick key is Key.Oem3 on Windows, Key.OemTilde on some layouts
+                else if ((e.Key == Key.Oem3 || e.Key == Key.OemTilde) && e.KeyModifiers == KeyModifiers.Control)
+                {
+                    ToggleTerminalPanel();
                     e.Handled = true;
                 }
             };
@@ -2722,8 +2730,14 @@ namespace HolocronToolset.Editors
             // View operations
             // Note: Toggle Explorer, Terminal, Output Panel would need UI actions to trigger
             // For now, we register placeholders
-            _commandPalette.RegisterCommand("view.toggleExplorer", "Toggle Explorer", () => { /* TODO: Implement */ }, "View");
-            _commandPalette.RegisterCommand("view.toggleTerminal", "Toggle Terminal", () => { /* TODO: Implement */ }, "View");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:630, 677
+            // Original: {"id": "view.toggleExplorer", "label": "Toggle Explorer", "category": "View"},
+            // Original: "view.toggleExplorer": lambda: self.ui.actionToggleFileExplorer.trigger(),
+            _commandPalette.RegisterCommand("view.toggleExplorer", "Toggle Explorer", () => ToggleFileExplorer(), "View");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:631, 678
+            // Original: {"id": "view.toggleTerminal", "label": "Toggle Terminal", "category": "View"},
+            // Original: "view.toggleTerminal": lambda: self.ui.actionToggleTerminal.trigger(),
+            _commandPalette.RegisterCommand("view.toggleTerminal", "Toggle Terminal", () => ToggleTerminalPanel(), "View");
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2749-2759
             // Original: "view.toggleOutput": lambda: self.ui.actionToggle_Output_Panel.trigger()
             _commandPalette.RegisterCommand("view.toggleOutput", "Toggle Output Panel", () => ToggleOutputPanel(), "View");
@@ -4467,6 +4481,114 @@ namespace HolocronToolset.Editors
         /// Matching PyKotor implementation: editor._warning_lines
         /// </summary>
         public HashSet<int> WarningLines => _warningLines;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2739-2741
+        // Original: def _toggle_file_explorer(self):
+        /// <summary>
+        /// Toggle file explorer dock visibility.
+        /// </summary>
+        private void ToggleFileExplorer()
+        {
+            if (_fileExplorerDock == null) return;
+            _fileExplorerDock.IsVisible = !_fileExplorerDock.IsVisible;
+        }
+
+        /// <summary>
+        /// Integrate the file explorer dock into the main UI layout.
+        /// </summary>
+        private void IntegrateFileExplorerDock()
+        {
+            if (_fileExplorerDock == null) return;
+            _fileExplorerDock.IsVisible = false;
+            if (Content is DockPanel mainDockPanel)
+            {
+                if (!mainDockPanel.Children.Contains(_fileExplorerDock))
+                {
+                    mainDockPanel.Children.Add(_fileExplorerDock);
+                    DockPanel.SetDock(_fileExplorerDock, Dock.Left);
+                }
+            }
+            else
+            {
+                var newDockPanel = new DockPanel();
+                newDockPanel.Children.Add(_fileExplorerDock);
+                DockPanel.SetDock(_fileExplorerDock, Dock.Left);
+                if (Content != null && Content is Control existingContent)
+                    newDockPanel.Children.Add(existingContent);
+                else if (_codeEdit != null)
+                    newDockPanel.Children.Add(_codeEdit);
+                Content = newDockPanel;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2743-2747
+        // Original: def _toggle_terminal_panel(self):
+        /// <summary>
+        /// Toggle terminal/bookmarks/snippets dock visibility.
+        /// </summary>
+        private void ToggleTerminalPanel()
+        {
+            if (_bookmarksDock == null || _snippetsDock == null) return;
+            bool isVisible = _bookmarksDock.IsVisible;
+            _bookmarksDock.IsVisible = !isVisible;
+            _snippetsDock.IsVisible = !isVisible;
+        }
+
+        /// <summary>
+        /// Integrate the bookmarks dock into the main UI layout.
+        /// </summary>
+        private void IntegrateBookmarksDock()
+        {
+            if (_bookmarksDock == null) return;
+            _bookmarksDock.IsVisible = false;
+            if (Content is DockPanel mainDockPanel)
+            {
+                if (!mainDockPanel.Children.Contains(_bookmarksDock))
+                {
+                    mainDockPanel.Children.Add(_bookmarksDock);
+                    DockPanel.SetDock(_bookmarksDock, Dock.Right);
+                }
+            }
+            else
+            {
+                var newDockPanel = new DockPanel();
+                newDockPanel.Children.Add(_bookmarksDock);
+                DockPanel.SetDock(_bookmarksDock, Dock.Right);
+                if (Content != null && Content is Control existingContent)
+                    newDockPanel.Children.Add(existingContent);
+                else if (_codeEdit != null)
+                    newDockPanel.Children.Add(_codeEdit);
+                Content = newDockPanel;
+            }
+        }
+
+        /// <summary>
+        /// Integrate the snippets dock into the main UI layout.
+        /// </summary>
+        private void IntegrateSnippetsDock()
+        {
+            if (_snippetsDock == null) return;
+            _snippetsDock.IsVisible = false;
+            if (Content is DockPanel mainDockPanel)
+            {
+                if (!mainDockPanel.Children.Contains(_snippetsDock))
+                {
+                    mainDockPanel.Children.Add(_snippetsDock);
+                    DockPanel.SetDock(_snippetsDock, Dock.Right);
+                }
+            }
+            else
+            {
+                var newDockPanel = new DockPanel();
+                newDockPanel.Children.Add(_snippetsDock);
+                DockPanel.SetDock(_snippetsDock, Dock.Right);
+                if (Content != null && Content is Control existingContent)
+                    newDockPanel.Children.Add(existingContent);
+                else if (_codeEdit != null)
+                    newDockPanel.Children.Add(_codeEdit);
+                Content = newDockPanel;
+            }
+        }
 
         // Helper class to store bookmark data
         // Internal class for bookmark data (accessible to tests)
