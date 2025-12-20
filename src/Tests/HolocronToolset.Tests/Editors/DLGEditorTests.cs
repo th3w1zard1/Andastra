@@ -2801,14 +2801,38 @@ namespace HolocronToolset.Tests.Editors
             editor.SpeakerEditLabel.IsVisible.Should().BeFalse("Speaker edit label should be hidden for Reply nodes");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_alternating_node_types (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1971-1994)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1971-1994
         // Original: def test_dlg_editor_alternating_node_types(qtbot, installation: HTInstallation): Test alternating node types
         [Fact]
         public void TestDlgEditorAlternatingNodeTypes()
         {
-            // TODO: STUB - Implement alternating node types test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1971-1994
-            throw new NotImplementedException("TestDlgEditorAlternatingNodeTypes: Alternating node types test not yet implemented");
+            // Matching PyKotor implementation: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, null);
+            editor.Show();
+
+            // Matching PyKotor implementation: editor.new()
+            editor.New();
+
+            // Matching PyKotor implementation: editor.model.add_root_node()
+            // Start with Entry (root)
+            var root = editor.Model.AddRootNode();
+            root.Should().NotBeNull("Root item should be created");
+            root.Link.Should().NotBeNull("Root item should have a link");
+            root.Link.Node.Should().BeOfType<DLGEntry>("Root item should be an Entry");
+
+            // Matching PyKotor implementation: child1 = editor.model.add_child_to_item(root)
+            // Add child - should be Reply
+            var child1 = editor.Model.AddChildToItem(root);
+            child1.Should().NotBeNull("Child item should be created");
+            child1.Link.Should().NotBeNull("Child item should have a link");
+            child1.Link.Node.Should().BeOfType<DLGReply>("Child item should be a Reply");
+
+            // Matching PyKotor implementation: child2 = editor.model.add_child_to_item(child1)
+            // Add grandchild - should be Entry
+            var child2 = editor.Model.AddChildToItem(child1);
+            child2.Should().NotBeNull("Grandchild item should be created");
+            child2.Link.Should().NotBeNull("Grandchild item should have a link");
+            child2.Link.Node.Should().BeOfType<DLGEntry>("Grandchild item should be an Entry");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1996-2041
@@ -4365,14 +4389,115 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_fade_type_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2931-2958)
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2931-2958
         // Original: def test_dlg_editor_manipulate_fade_type_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test fade type roundtrip
         [Fact]
         public void TestDlgEditorManipulateFadeTypeRoundtrip()
         {
-            // TODO: STUB - Implement fade type roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2931-2958
-            throw new NotImplementedException("TestDlgEditorManipulateFadeTypeRoundtrip: Fade type roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor: original_data = dlg_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+
+            // Matching PyKotor: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching PyKotor: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching PyKotor: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null)
+                {
+                    // Matching PyKotor: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    // In Avalonia, we need to select the item in the tree view
+                    // Create a TreeViewItem with the DLGStandardItem as Tag to simulate selection
+                    var treeItem = new Avalonia.Controls.TreeViewItem { Tag = firstItem };
+                    editor.DialogTree.SelectedItem = treeItem;
+
+                    // Matching PyKotor: test_values = [0, 1, 2, 3]
+                    int[] testValues = { 0, 1, 2, 3 };
+                    foreach (int val in testValues)
+                    {
+                        // Matching PyKotor: editor.ui.fadeTypeSpin.setValue(val)
+                        if (editor.FadeTypeSpin != null)
+                        {
+                            editor.FadeTypeSpin.Value = val;
+                        }
+
+                        // Matching PyKotor: editor.on_node_update()
+                        editor.OnNodeUpdate();
+
+                        // Matching PyKotor: data, _ = editor.build()
+                        var (data, _) = editor.Build();
+                        data.Should().NotBeNull();
+
+                        // Matching PyKotor: modified_dlg = read_dlg(data)
+                        var modifiedDlg = DLGHelper.ReadDlg(data);
+
+                        // Matching PyKotor: if modified_dlg.starters: assert modified_dlg.starters[0].node.fade_type == val
+                        if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                        {
+                            var firstStarter = modifiedDlg.Starters[0];
+                            if (firstStarter.Node != null)
+                            {
+                                firstStarter.Node.FadeType.Should().Be(val,
+                                    $"FadeType should be {val} after setting fadeTypeSpin to {val} and calling OnNodeUpdate");
+
+                                // Load back and verify (following pattern from delay roundtrip test for comprehensive testing)
+                                // Matching PyKotor pattern: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data)
+                                editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
+
+                                // Matching PyKotor pattern: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                                editor.DialogTree.SelectedItem = treeItem;
+
+                                // Matching PyKotor pattern: assert editor.ui.fadeTypeSpin.value() == val
+                                if (editor.FadeTypeSpin != null)
+                                {
+                                    editor.FadeTypeSpin.Value.Should().Be(val,
+                                        $"FadeTypeSpin should be {val} after loading back the saved data");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2960-2987
