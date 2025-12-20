@@ -32,13 +32,19 @@ namespace HolocronToolset.Editors
         private FindReplaceWidget _findReplaceWidget;
         private TreeView _bookmarkTree;
         private ListBox _functionList;
+        private ListBox _constantList;
+        private TextBox _functionSearchEdit;
+        private TextBox _constantSearchEdit;
+        private ComboBox _gameSelector;
         private BreadcrumbsWidget _breadcrumbs;
         private bool _isTsl;
         private List<ScriptFunction> _functions;
+        private List<ScriptConstant> _constants;
         private GlobalSettings _globalSettings;
         private string _owner;
         private string _repo;
         private string _sourcerepoUrl;
+        private Label _statusLabel;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -52,6 +58,7 @@ namespace HolocronToolset.Editors
             _isDecompiled = false;
             _isTsl = installation?.Tsl ?? false;
             _functions = new List<ScriptFunction>();
+            _constants = new List<ScriptConstant>();
             _globalSettings = new GlobalSettings();
             
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:164-167
@@ -134,11 +141,72 @@ namespace HolocronToolset.Editors
         // Based on Avalonia control access patterns and testability best practices
         public TerminalWidget TerminalWidget => _terminalWidget;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:149
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:969-977
         // Original: def _setup_signals(self):
         private void SetupSignals()
         {
-            // TODO: STUB - Signals setup - will be implemented as needed
+            // Connect compile action (if available via menu or shortcut)
+            // Note: In Avalonia, actions are typically handled via menu items or keyboard shortcuts
+            // This will be connected when actionCompile menu item is available
+            
+            // Connect constant list double-click
+            if (_constantList != null)
+            {
+                _constantList.DoubleTapped += (s, e) => InsertSelectedConstant();
+            }
+            
+            // Connect function list double-click
+            if (_functionList != null)
+            {
+                _functionList.DoubleTapped += (s, e) => InsertSelectedFunction();
+            }
+            
+            // Connect function search text changed
+            if (_functionSearchEdit != null)
+            {
+                _functionSearchEdit.TextChanged += (s, e) => OnFunctionSearch(_functionSearchEdit.Text ?? "");
+            }
+            
+            // Connect constant search text changed
+            if (_constantSearchEdit != null)
+            {
+                _constantSearchEdit.TextChanged += (s, e) => OnConstantSearch(_constantSearchEdit.Text ?? "");
+            }
+            
+            // Connect code editor text changed events
+            if (_codeEdit != null)
+            {
+                // Update status bar on text change
+                _codeEdit.TextChanged += (s, e) => UpdateStatusBar();
+                
+                // Update status bar on cursor position change
+                _codeEdit.SelectionChanged += (s, e) => UpdateStatusBar();
+                
+                // Validate bookmarks when text changes
+                _codeEdit.TextChanged += (s, e) => ValidateBookmarks();
+                
+                // Update bookmark visualization when text changes
+                _codeEdit.TextChanged += (s, e) => UpdateBookmarkVisualization();
+                
+                // Connect text changed to code editor's internal handler (if available)
+                // Note: CodeEditor.on_text_changed equivalent would be handled internally
+            }
+            
+            // Connect game selector changed
+            if (_gameSelector != null)
+            {
+                _gameSelector.SelectionChanged += (s, e) =>
+                {
+                    if (_gameSelector.SelectedIndex >= 0)
+                    {
+                        OnGameSelectorChanged(_gameSelector.SelectedIndex);
+                    }
+                };
+            }
+            
+            // Connect context menu (if available)
+            // Note: Avalonia handles context menus differently than Qt
+            // Context menu setup would be done in SetupUI or via XAML
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3060-3117
@@ -783,7 +851,7 @@ namespace HolocronToolset.Editors
         // Original: def _update_game_specific_data(self):
         /// <summary>
         /// Updates constants and functions based on the selected game (K1 or TSL).
-        /// Populates the function list with functions from ScriptDefs.
+        /// Populates the function list and constant list with data from ScriptDefs.
         /// </summary>
         public void UpdateGameSpecificData()
         {
@@ -801,6 +869,20 @@ namespace HolocronToolset.Editors
             // Sort functions by name (matching Python implementation)
             _functions = _functions.OrderBy(f => f.Name).ToList();
 
+            // Update constants based on the selected game
+            _constants.Clear();
+            if (_isTsl)
+            {
+                _constants.AddRange(ScriptDefs.TSL_CONSTANTS);
+            }
+            else
+            {
+                _constants.AddRange(ScriptDefs.KOTOR_CONSTANTS);
+            }
+
+            // Sort constants by name (matching Python implementation)
+            _constants = _constants.OrderBy(c => c.Name).ToList();
+
             // Clear and repopulate the function list
             if (_functionList != null)
             {
@@ -814,6 +896,22 @@ namespace HolocronToolset.Editors
                         Tag = function
                     };
                     _functionList.Items.Add(item);
+                }
+            }
+
+            // Clear and repopulate the constant list
+            if (_constantList != null)
+            {
+                _constantList.Items.Clear();
+
+                foreach (var constant in _constants)
+                {
+                    var item = new ListBoxItem
+                    {
+                        Content = constant.Name,
+                        Tag = constant
+                    };
+                    _constantList.Items.Add(item);
                 }
             }
         }
@@ -891,6 +989,38 @@ namespace HolocronToolset.Editors
         private void SetupFunctionList()
         {
             _functionList = new ListBox();
+            
+            // Initialize constant list if not already initialized
+            if (_constantList == null)
+            {
+                _constantList = new ListBox();
+            }
+            
+            // Initialize search edit boxes if not already initialized
+            if (_functionSearchEdit == null)
+            {
+                _functionSearchEdit = new TextBox();
+            }
+            
+            if (_constantSearchEdit == null)
+            {
+                _constantSearchEdit = new TextBox();
+            }
+            
+            // Initialize game selector if not already initialized
+            if (_gameSelector == null)
+            {
+                _gameSelector = new ComboBox();
+                _gameSelector.Items.Add("KOTOR");
+                _gameSelector.Items.Add("TSL");
+                _gameSelector.SelectedIndex = _isTsl ? 1 : 0;
+            }
+            
+            // Initialize status label if not already initialized
+            if (_statusLabel == null)
+            {
+                _statusLabel = new Label();
+            }
             
             // Update game-specific data when function list is set up
             UpdateGameSpecificData();
@@ -1228,6 +1358,298 @@ namespace HolocronToolset.Editors
                     return File.ReadAllText(localPath, Encoding.GetEncoding("latin-1"));
                 }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2298-2320
+        // Original: def compile_current_script(self):
+        /// <summary>
+        /// Compiles the current script and saves it as an NCS file.
+        /// Shows a success message when compilation and save are successful.
+        /// </summary>
+        public void CompileCurrentScript()
+        {
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Set resource type to NCS for compilation
+                _restype = ResourceType.NCS;
+                
+                // Determine filepath for saving
+                string filepath = _filepath;
+                if (string.IsNullOrEmpty(filepath))
+                {
+                    filepath = Path.Combine(Directory.GetCurrentDirectory(), "untitled_script.ncs");
+                }
+                else
+                {
+                    // Change extension to .ncs if needed
+                    if (!filepath.EndsWith(".ncs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        filepath = Path.ChangeExtension(filepath, ".ncs");
+                    }
+                }
+
+                // Check if filepath is an ERF/RIM file (would need special handling)
+                // For now, if installation is set and filepath is empty or BIF, use override path
+                if (_installation != null && (string.IsNullOrEmpty(_filepath) || Path.GetFileName(filepath).EndsWith(".bif", StringComparison.OrdinalIgnoreCase)))
+                {
+                    string overridePath = Path.Combine(_installation.Path, "override");
+                    if (!Directory.Exists(overridePath))
+                    {
+                        Directory.CreateDirectory(overridePath);
+                    }
+                    filepath = Path.Combine(overridePath, $"{_resname ?? "untitled_script"}.ncs");
+                }
+
+                // Save the file (this will trigger Build() which compiles the script)
+                _filepath = filepath;
+                Save();
+
+                // Show success message
+                string displayPath = filepath;
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Success",
+                    $"Compiled script successfully saved to:\n{displayPath}",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Info);
+                infoBox.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                // Show error message
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Failed to compile",
+                    ex.Message,
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2349-2354
+        // Original: def insert_selected_constant(self):
+        /// <summary>
+        /// Inserts the selected constant from the constant list into the code editor at the cursor position.
+        /// Inserts the constant name and value in the format: "ConstantName = value"
+        /// </summary>
+        public void InsertSelectedConstant()
+        {
+            if (_constantList == null || _codeEdit == null)
+            {
+                return;
+            }
+
+            var selectedItem = _constantList.SelectedItem as ListBoxItem;
+            if (selectedItem == null)
+            {
+                return;
+            }
+
+            var constant = selectedItem.Tag as ScriptConstant;
+            if (constant == null)
+            {
+                return;
+            }
+
+            // Insert constant name and value: "ConstantName = value"
+            string insert = $"{constant.Name} = {constant.Value}";
+            InsertTextAtCursor(insert);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2374-2383
+        // Original: def on_constant_search(self):
+        /// <summary>
+        /// Filters the constant list based on the search text.
+        /// Hides items that don't match the search string (case-insensitive).
+        /// </summary>
+        /// <param name="searchText">The text to search for in constant names.</param>
+        public void OnConstantSearch(string searchText)
+        {
+            if (_constantList == null)
+            {
+                return;
+            }
+
+            // If search text is empty or whitespace, show all items
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                foreach (var item in _constantList.Items.OfType<ListBoxItem>())
+                {
+                    item.IsVisible = true;
+                }
+                return;
+            }
+
+            // Filter items based on search text (case-insensitive)
+            string lowerSearchText = searchText.ToLowerInvariant();
+            foreach (var item in _constantList.Items.OfType<ListBoxItem>())
+            {
+                if (item?.Content is string itemText)
+                {
+                    item.IsVisible = itemText.ToLowerInvariant().Contains(lowerSearchText);
+                }
+                else
+                {
+                    item.IsVisible = false;
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2707-2737
+        // Original: def _update_status_bar(self):
+        /// <summary>
+        /// Updates the status bar with current cursor position and selection info.
+        /// Displays line number, column number, selection info, and total lines.
+        /// </summary>
+        private void UpdateStatusBar()
+        {
+            // Check if status label is initialized (may be called during initialization)
+            if (_statusLabel == null || _codeEdit == null)
+            {
+                return;
+            }
+
+            // Get current line and column from cursor position
+            int lineNumber = GetCurrentLineNumber();
+            int columnNumber = GetCurrentColumnNumber();
+            
+            // Calculate total lines
+            int totalLines = GetTotalLineCount();
+            
+            // Get selection info
+            string selectedText = _codeEdit.SelectedText ?? "";
+            int selectedCount = selectedText.Length;
+            
+            // Format like VS Code: "Ln 1, Col 1" or "Ln 1, Col 1 (5 selected)"
+            string statusText;
+            if (selectedCount > 0)
+            {
+                // Count lines in selection
+                int selectionLines = selectedText.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+                if (selectionLines > 1)
+                {
+                    statusText = $"Ln {lineNumber}, Col {columnNumber} ({selectedCount} chars in {selectionLines} lines) | {totalLines} lines";
+                }
+                else
+                {
+                    statusText = $"Ln {lineNumber}, Col {columnNumber} ({selectedCount} selected) | {totalLines} lines";
+                }
+            }
+            else
+            {
+                statusText = $"Ln {lineNumber}, Col {columnNumber} | {totalLines} lines";
+            }
+            
+            _statusLabel.Content = statusText;
+        }
+
+        // Helper method to get current column number from cursor position
+        private int GetCurrentColumnNumber()
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(_codeEdit.Text))
+            {
+                return 1;
+            }
+
+            int cursorPosition = _codeEdit.SelectionStart;
+            string text = _codeEdit.Text;
+            
+            // Find the start of the current line
+            int lineStart = 0;
+            for (int i = cursorPosition - 1; i >= 0; i--)
+            {
+                if (text[i] == '\n')
+                {
+                    lineStart = i + 1;
+                    break;
+                }
+            }
+            
+            // Column number is 1-indexed (cursor position - line start + 1)
+            return cursorPosition - lineStart + 1;
+        }
+
+        // Helper method to get total line count
+        private int GetTotalLineCount()
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(_codeEdit.Text))
+            {
+                return 1;
+            }
+
+            string text = _codeEdit.Text;
+            int lineCount = 1;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    lineCount++;
+                }
+            }
+            return lineCount;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:518-550
+        // Original: def _validate_bookmarks(self):
+        /// <summary>
+        /// Validates and updates bookmark line numbers when text changes.
+        /// Removes bookmarks for lines that no longer exist.
+        /// </summary>
+        private void ValidateBookmarks()
+        {
+            if (_bookmarkTree == null || _codeEdit == null)
+            {
+                return;
+            }
+
+            int maxLines = GetTotalLineCount();
+            var itemsToRemove = new List<TreeViewItem>();
+            
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ?? new List<TreeViewItem>();
+            foreach (var item in itemsList)
+            {
+                if (item?.Tag is BookmarkData bookmarkData)
+                {
+                    // Remove bookmarks for lines that no longer exist
+                    if (bookmarkData.LineNumber > maxLines)
+                    {
+                        itemsToRemove.Add(item);
+                    }
+                }
+            }
+            
+            // Remove invalid bookmarks
+            foreach (var item in itemsToRemove)
+            {
+                itemsList.Remove(item);
+            }
+            
+            if (itemsToRemove.Count > 0)
+            {
+                _bookmarkTree.ItemsSource = itemsList;
+                SaveBookmarks();
+                UpdateBookmarkVisualization();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:897-902
+        // Original: def _on_game_selector_changed(self, index: int):
+        /// <summary>
+        /// Handles game change from dropdown selector.
+        /// Updates game-specific data (functions and constants) based on selected game.
+        /// </summary>
+        /// <param name="index">The selected index (0 = K1, 1 = TSL)</param>
+        private void OnGameSelectorChanged(int index)
+        {
+            // Update game flag (0 = K1, 1 = TSL)
+            _isTsl = index == 1;
+            
+            // Update game-specific data
+            UpdateGameSpecificData();
         }
 
         // Helper class to store bookmark data
