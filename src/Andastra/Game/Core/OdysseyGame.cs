@@ -4602,11 +4602,68 @@ namespace Andastra.Runtime.Game.Core
         /// </remarks>
         private void InitializeOptionsMenu()
         {
-            // Options menu initialization
-            // TODO: Load options GUI panel ("optionsmain" or "optionsingame")
-            // TODO: Initialize options settings from configuration
-            // TODO: Set up options menu UI elements (tabs, sliders, checkboxes, etc.)
-            Console.WriteLine("[Odyssey] Options menu initialized");
+            // Load options GUI panel
+            // Based on swkotor.exe and swkotor2.exe: Options menu uses GUI panels for interface
+            // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 loads "optionsmain" GUI for main menu options
+            // Based on swkotor2.exe: In-game options may use "optionsingame" or similar GUI panel
+            string guiPanelName = "optionsmain"; // Use main menu options panel
+
+            if (_guiManager != null)
+            {
+                // Determine appropriate GUI scaling based on current viewport
+                int viewportWidth = _graphicsDevice.Viewport.Width;
+                int viewportHeight = _graphicsDevice.Viewport.Height;
+
+                if (_guiManager.LoadGui(guiPanelName, viewportWidth, viewportHeight))
+                {
+                    Console.WriteLine($"[Odyssey] Loaded options GUI panel: {guiPanelName}");
+                }
+                else
+                {
+                    Console.WriteLine($"[Odyssey] WARNING: Failed to load options GUI panel: {guiPanelName}, falling back to programmatic options");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[Odyssey] WARNING: GUI manager not available, using programmatic options menu");
+            }
+
+            // Load options settings from configuration file
+            // Based on swkotor.exe and swkotor2.exe: Settings loaded from swkotor.ini (K1) or swkotor2.ini (K2)
+            // Based on swkotor2.exe FUN_00633270 @ 0x00633270: Loads configuration values from INI file
+            string iniFileName = _settings.Game == KotorGame.K1 ? "swkotor.ini" : "swkotor2.ini";
+            string iniPath = System.IO.Path.Combine(_settings.GamePath ?? "", iniFileName);
+
+            // Try to load settings from INI file, fall back to current settings if file doesn't exist
+            var optionsSettings = Andastra.Runtime.Game.GUI.OptionsMenuSettings.LoadFromIni(iniPath);
+
+            // Apply loaded settings to current game settings
+            // Graphics settings
+            _settings.Width = optionsSettings.ResolutionWidth;
+            _settings.Height = optionsSettings.ResolutionHeight;
+            _settings.Fullscreen = optionsSettings.Fullscreen;
+
+            // Audio settings
+            _settings.Audio.MasterVolume = optionsSettings.MasterVolume;
+            _settings.Audio.MusicVolume = optionsSettings.MusicVolume;
+            _settings.Audio.SfxVolume = optionsSettings.EffectsVolume;
+            _settings.Audio.VoiceVolume = optionsSettings.VoiceVolume;
+
+            // Game settings
+            _settings.SkipIntro = optionsSettings.SkipIntro;
+
+            // Controls settings
+            _settings.MouseSensitivity = optionsSettings.MouseSensitivity;
+            _settings.InvertMouseY = optionsSettings.InvertMouseY;
+
+            // Initialize options menu with loaded settings
+            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings, null, _musicPlayer);
+            _selectedOptionsCategoryIndex = 0;
+            _selectedOptionsItemIndex = 0;
+            _isEditingOptionValue = false;
+            _editingOptionValue = string.Empty;
+
+            Console.WriteLine($"[Odyssey] Options menu initialized from {iniFileName}");
         }
     }
 }
