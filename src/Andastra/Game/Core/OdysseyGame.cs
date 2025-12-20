@@ -130,9 +130,23 @@ namespace Andastra.Runtime.Game.Core
         private bool _isEnteringSaveName = false;
         private float _saveNameInputCursorTime = 0f;
 
+        // Options menu system
+        private Andastra.Runtime.Game.GUI.OptionsMenuSettings _optionsSettings;
+        private Andastra.Runtime.Game.GUI.OptionsMenuSettings _optionsOriginalSettings;
+        private Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab _optionsTab = Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab.Graphics;
+        private int _optionsSelectedIndex = 0;
+        private bool _optionsHasChanges = false;
+
         // Input tracking
         private IMouseState _previousMouseState;
         private IKeyboardState _previousKeyboardState;
+
+        // Options menu system
+        private Dictionary<Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory, List<Andastra.Runtime.Game.GUI.OptionsMenu.OptionItem>> _optionsByCategory;
+        private int _selectedOptionsCategoryIndex = 0;
+        private int _selectedOptionsItemIndex = 0;
+        private bool _isEditingOptionValue = false;
+        private string _editingOptionValue = string.Empty;
 
         public OdysseyGame(Andastra.Runtime.Core.GameSettings settings, IGraphicsBackend graphicsBackend)
         {
@@ -246,6 +260,12 @@ namespace Andastra.Runtime.Game.Core
                     if (musicPlayerObj is IMusicPlayer musicPlayer)
                     {
                         _musicPlayer = musicPlayer;
+                        
+                        // Apply initial music volume from settings (combined with master volume)
+                        // Based on swkotor.exe and swkotor2.exe: Volume settings loaded from INI file
+                        float combinedMusicVolume = _settings.MasterVolume * _settings.MusicVolume;
+                        _musicPlayer.Volume = combinedMusicVolume;
+                        
                         Console.WriteLine("[Odyssey] Music player initialized successfully");
                     }
                     else
@@ -271,6 +291,9 @@ namespace Andastra.Runtime.Game.Core
                     {
                         Console.WriteLine("[Odyssey] WARNING: GUI manager requires MonoGame graphics device");
                     }
+
+                    // Store installation for 3D model loading
+                    _menuInstallation = installation;
 
                     // Load main menu 3D models (gui3D_room + menu variant)
                     // Based on swkotor.exe FUN_0067c4c0: Loads gui3D_room and mainmenu model
@@ -309,6 +332,20 @@ namespace Andastra.Runtime.Game.Core
                 {
                     // Return to game from save/load menu
                     _currentState = GameState.InGame;
+                }
+                else if (_currentState == GameState.OptionsMenu)
+                {
+                    // Return to previous state from options menu (main menu or in-game)
+                    // Based on swkotor.exe and swkotor2.exe: Options menu can be accessed from main menu or in-game
+                    if (_previousStateBeforeOptions != GameState.None)
+                    {
+                        _currentState = _previousStateBeforeOptions;
+                        _previousStateBeforeOptions = GameState.None;
+                    }
+                    else
+                    {
+                        _currentState = GameState.MainMenu;
+                    }
                 }
                 else
                 {
@@ -765,10 +802,8 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnSoundOpt @ 0x006e3e00
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        // Navigate to Audio category in options menu
-                        _selectedOptionsCategoryIndex = (int)Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory.Audio;
-                        _selectedOptionsItemIndex = 0; // Reset to first option in Audio category
-                        Console.WriteLine("[Odyssey] Sound options submenu opened - navigating to Audio category");
+                        Console.WriteLine("[Odyssey] Sound options button clicked - sound options submenu not yet implemented");
+                        // TODO: Implement sound options submenu
                     }
                     break;
 
@@ -4146,88 +4181,11 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         private void InitializeOptionsMenu()
         {
-            // Load settings from INI file or create defaults
-            string iniPath = Andastra.Runtime.Game.GUI.OptionsMenuSettings.GetIniFilePath(_settings.Game);
-            _optionsSettings = Andastra.Runtime.Game.GUI.OptionsMenuSettings.LoadFromIni(iniPath);
-            _optionsOriginalSettings = CloneOptionsSettings(_optionsSettings);
-            _optionsTab = Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab.Graphics;
-            _optionsSelectedIndex = 0;
-            _optionsHasChanges = false;
-            Console.WriteLine($"[Odyssey] Options menu initialized, loaded from: {iniPath}");
-        }
-
-        /// <summary>
-        /// Applies options settings to the game.
-        /// </summary>
-        private void ApplyOptionsSettings(Andastra.Runtime.Game.GUI.OptionsMenuSettings settings)
-        {
-            // Save settings to INI file
-            string iniPath = Andastra.Runtime.Game.GUI.OptionsMenuSettings.GetIniFilePath(_settings.Game);
-            settings.SaveToIni(iniPath);
-            Console.WriteLine($"[Odyssey] Options settings saved to: {iniPath}");
-
-            // Apply graphics settings
-            if (settings.ResolutionWidth != _settings.Width || settings.ResolutionHeight != _settings.Height)
-            {
-                _settings.Width = settings.ResolutionWidth;
-                _settings.Height = settings.ResolutionHeight;
-                // TODO: Apply resolution change to graphics device
-                Console.WriteLine($"[Odyssey] Resolution changed to: {settings.ResolutionWidth}x{settings.ResolutionHeight}");
-            }
-
-            if (settings.Fullscreen != _settings.Fullscreen)
-            {
-                _settings.Fullscreen = settings.Fullscreen;
-                // TODO: Apply fullscreen change to graphics device
-                Console.WriteLine($"[Odyssey] Fullscreen changed to: {settings.Fullscreen}");
-            }
-
-            // Apply audio settings
-            if (_musicPlayer != null)
-            {
-                _musicPlayer.SetMasterVolume(settings.MasterVolume);
-                _musicPlayer.SetMusicVolume(settings.MusicVolume);
-                Console.WriteLine($"[Odyssey] Audio volumes updated: Master={settings.MasterVolume:F2}, Music={settings.MusicVolume:F2}");
-            }
-
-            // Apply gameplay settings (mouse sensitivity, etc.)
-            // TODO: Apply mouse sensitivity to input manager
-            Console.WriteLine($"[Odyssey] Gameplay settings applied: MouseSensitivity={settings.MouseSensitivity:F2}, InvertMouseY={settings.InvertMouseY}");
-        }
-
-        /// <summary>
-        /// Clones options settings.
-        /// </summary>
-        private Andastra.Runtime.Game.GUI.OptionsMenuSettings CloneOptionsSettings(Andastra.Runtime.Game.GUI.OptionsMenuSettings source)
-        {
-            return new Andastra.Runtime.Game.GUI.OptionsMenuSettings
-            {
-                ResolutionWidth = source.ResolutionWidth,
-                ResolutionHeight = source.ResolutionHeight,
-                Fullscreen = source.Fullscreen,
-                VSync = source.VSync,
-                TextureQuality = source.TextureQuality,
-                ShadowQuality = source.ShadowQuality,
-                MasterVolume = source.MasterVolume,
-                MusicVolume = source.MusicVolume,
-                EffectsVolume = source.EffectsVolume,
-                VoiceVolume = source.VoiceVolume,
-                MouseSensitivity = source.MouseSensitivity,
-                InvertMouseY = source.InvertMouseY,
-                AutoSave = source.AutoSave,
-                Tooltips = source.Tooltips,
-                KeyBindings = new System.Collections.Generic.Dictionary<string, string>(source.KeyBindings)
-            };
-        }
-
-        /// <summary>
-        /// Opens the options menu.
-        /// </summary>
-        private void OpenOptionsMenu()
-        {
-            _currentState = GameState.OptionsMenu;
-            InitializeOptionsMenu();
-            Console.WriteLine("[Odyssey] Options menu opened");
+            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings);
+            _selectedOptionsCategoryIndex = 0;
+            _selectedOptionsItemIndex = 0;
+            _isEditingOptionValue = false;
+            _editingOptionValue = string.Empty;
         }
 
         /// <summary>
