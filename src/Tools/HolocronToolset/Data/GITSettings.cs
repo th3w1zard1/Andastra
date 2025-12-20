@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Avalonia.Input;
 using Andastra.Parsing.Common;
 using KotorColor = Andastra.Parsing.Common.Color;
 
@@ -264,7 +265,65 @@ namespace HolocronToolset.Data
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:152-189
-        // Original: Binds (Controls) - TODO: Implement when SetBindWidget and key/mouse bind system is available
-        // These will be implemented as Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> when available
+        // Original: Binds (Controls)
+        private static Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> CreateBind(HashSet<Key> keys, HashSet<PointerUpdateKind> mouseButtons)
+        {
+            return Tuple.Create(keys ?? new HashSet<Key>(), mouseButtons ?? new HashSet<PointerUpdateKind>());
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:153-156
+        // Original: moveCameraBind = Settings.addSetting("moveCameraBind", ({Qt.Key.Key_Control}, {Qt.MouseButton.LeftButton}))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> MoveCameraBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("moveCameraBind",
+                CreateBind(new HashSet<Key> { Key.LeftCtrl }, new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:157-160
+        // Original: rotateCameraBind = Settings.addSetting("rotateCameraBind", ({Qt.Key.Key_Control}, {Qt.MouseButton.MiddleButton}))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> RotateCameraBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("rotateCameraBind",
+                CreateBind(new HashSet<Key> { Key.LeftCtrl }, new HashSet<PointerUpdateKind> { PointerUpdateKind.MiddleButtonPressed }));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:161-164
+        // Original: zoomCameraBind = Settings.addSetting("zoomCameraBind", ({Qt.Key.Key_Control}, set()))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> ZoomCameraBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("zoomCameraBind",
+                CreateBind(new HashSet<Key> { Key.LeftCtrl }, new HashSet<PointerUpdateKind>()));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:165-168
+        // Original: rotateSelectedToPointBind = Settings.addSetting("rotateSelectedToPointBind", (set(), {Qt.MouseButton.MiddleButton}))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> RotateSelectedToPointBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("rotateSelectedToPointBind",
+                CreateBind(new HashSet<Key>(), new HashSet<PointerUpdateKind> { PointerUpdateKind.MiddleButtonPressed }));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:169-172
+        // Original: moveSelectedBind = Settings.addSetting("moveSelectedBind", (set(), {Qt.MouseButton.LeftButton}))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> MoveSelectedBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("moveSelectedBind",
+                CreateBind(new HashSet<Key>(), new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:173-176
+        // Original: selectUnderneathBind = Settings.addSetting("selectUnderneathBind", (set(), {Qt.MouseButton.LeftButton}))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> SelectUnderneathBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("selectUnderneathBind",
+                CreateBind(new HashSet<Key>(), new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:177-180
+        // Original: deleteSelectedBind = Settings.addSetting("deleteSelectedBind", ({Qt.Key.Key_Delete}, None))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> DeleteSelectedBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("deleteSelectedBind",
+                CreateBind(new HashSet<Key> { Key.Delete }, new HashSet<PointerUpdateKind>()));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:181-184
+        // Original: duplicateSelectedBind = Settings.addSetting("duplicateSelectedBind", ({Qt.Key.Key_Alt}, {Qt.MouseButton.LeftButton}))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> DuplicateSelectedBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("duplicateSelectedBind",
+                CreateBind(new HashSet<Key> { Key.LeftAlt }, new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:185-188
+        // Original: toggleLockInstancesBind = Settings.addSetting("toggleLockInstancesBind", ({Qt.Key.Key_L}, set()))
+        public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> ToggleLockInstancesBind { get; } =
+            new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("toggleLockInstancesBind",
+                CreateBind(new HashSet<Key> { Key.L }, new HashSet<PointerUpdateKind>()));
+        // endregion
     }
 }
