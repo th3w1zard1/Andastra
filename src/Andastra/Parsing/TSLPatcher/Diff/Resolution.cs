@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
+using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
@@ -124,14 +125,37 @@ namespace Andastra.Parsing.Diff
 
         /// <summary>
         /// Get all resources from an installation (chitin, core, override, modules).
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:431-446
+        /// In Python, Installation is iterable and includes all resources, but in C# we need to combine different sources.
+        /// Note: CoreResources() already includes ChitinResources() and patch.erf resources, so we only call CoreResources().
         /// </summary>
         private static IEnumerable<FileResource> GetAllResources(Installation.Installation installation)
         {
             var allResources = new List<FileResource>();
-            allResources.AddRange(installation.ChitinResources());
+            // CoreResources() includes ChitinResources() and patch.erf for K1
             allResources.AddRange(installation.CoreResources());
             allResources.AddRange(installation.OverrideResources());
-            // TODO: Add module resources when available
+            
+            // Get module resources from all module files
+            List<string> moduleRoots = installation.GetModuleRoots();
+            foreach (string moduleRoot in moduleRoots)
+            {
+                List<string> moduleFiles = installation.GetModuleFiles(moduleRoot);
+                foreach (string moduleFile in moduleFiles)
+                {
+                    try
+                    {
+                        LazyCapsule capsule = new LazyCapsule(moduleFile);
+                        allResources.AddRange(capsule.GetResources());
+                    }
+                    catch
+                    {
+                        // Skip modules that can't be loaded (corrupted or invalid files)
+                        continue;
+                    }
+                }
+            }
+            
             return allResources;
         }
 
