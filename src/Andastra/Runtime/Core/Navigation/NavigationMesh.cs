@@ -1172,10 +1172,13 @@ namespace Andastra.Runtime.Core.Navigation
         /// <remarks>
         /// Raycast Implementation:
         /// - Based on swkotor2.exe walkmesh raycast system
-        /// - Located via string references: "Raycast" @ navigation mesh functions
         /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
+        /// - Core walkmesh query: FUN_004f4260 @ 0x004f4260 (FindFaceAt equivalent)
+        /// - AABB tree traversal: FUN_00575350 @ 0x00575350 (recursive AABB traversal with flag-based ordering)
+        /// - AABB-ray intersection: FUN_004d7400 @ 0x004d7400 (slab method with edge case handling)
+        /// - Ray-triangle intersection: FUN_004d9030 @ 0x004d9030 (plane-based with edge containment tests)
         /// - Comprehensive edge case handling: empty mesh, zero direction, degenerate triangles, ray on surface
-        /// - Optimizations: normalized direction caching, early termination, optimized AABB traversal
+        /// - Optimizations: normalized direction caching, early termination, distance-based AABB traversal (optimized from original flag-based)
         /// - Handles all edge cases: degenerate triangles, ray starting inside triangle, precision issues
         /// </remarks>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
@@ -1284,7 +1287,11 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Internal node - test children with optimized traversal order
-            // Optimization: Test closer child first to potentially reduce maxDist earlier
+            // Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+            // Original implementation: Uses flag-based traversal order (param_4[1] & node flag)
+            // Original: Lines 31-38 check param_4[1] flag to determine left/right traversal order
+            // Optimization: This implementation uses distance-based ordering (test closer child first)
+            // This is a reasonable optimization that improves performance while maintaining correctness
             float bestDist = maxDist;
             bool hit = false;
 
@@ -1506,70 +1513,110 @@ namespace Andastra.Runtime.Core.Navigation
             Vector3 v1 = _vertices[idx1];
             Vector3 v2 = _vertices[idx2];
 
-            // Edge case: Check for degenerate triangle (collinear vertices)
-            Vector3 edge1 = v1 - v0;
-            Vector3 edge2 = v2 - v0;
-            Vector3 normal = Vector3.Cross(edge1, edge2);
-            float triangleArea = normal.Length();
-            
-            // Degenerate triangle (zero area) - skip
-            if (triangleArea < 1e-8f)
+            // Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+            // Original algorithm: Computes normal from triangle vertices, then plane intersection test
+            // Located via cross-reference from FUN_00575350 (AABB tree traversal)
+            // Original implementation uses polygon normal computation and edge containment tests
+
+            // Compute triangle normal using cross products of edges (matches original algorithm)
+            // Original: Lines 32-55 compute normal from polygon vertices
+            Vector3 edge01 = v1 - v0;
+            Vector3 edge12 = v2 - v1;
+            Vector3 edge20 = v0 - v2;
+
+            // Compute normal as sum of cross products (original algorithm approach)
+            Vector3 normal = Vector3.Cross(edge01, edge12);
+            float normalLength = normal.Length();
+
+            // Edge case: Degenerate triangle (zero area) - skip
+            // Original: Line 57-58 checks if normal length >= _DAT_007bc338 (epsilon)
+            const float degenerateEpsilon = 1e-6f;
+            if (normalLength < degenerateEpsilon)
             {
                 return false;
             }
 
-            // Möller-Trumbore intersection algorithm
-            Vector3 h = Vector3.Cross(direction, edge2);
-            float a = Vector3.Dot(edge1, h);
+            // Normalize normal (original: Lines 59-62)
+            normal = normal / normalLength;
 
-            // Edge case: Ray is parallel to triangle plane
-            const float epsilon = 1e-6f;
-            if (Math.Abs(a) < epsilon)
+            // Compute plane equation: ax + by + cz + d = 0
+            // Original: Line 63 computes d = -(normal.x * v0.x + normal.y * v0.y + normal.z * v0.z)
+            float d = -(normal.X * v0.X + normal.Y * v0.Y + normal.Z * v0.Z);
+
+            // Compute ray endpoints (original uses param_3 and param_4 as ray start/end)
+            Vector3 rayEnd = origin + direction * maxDist;
+
+            // Check if ray crosses plane (both endpoints on opposite sides)
+            // Original: Lines 65-67 check if ray crosses plane
+            float dist0 = normal.X * origin.X + normal.Y * origin.Y + normal.Z * origin.Z + d;
+            float dist1 = normal.X * rayEnd.X + normal.Y * rayEnd.Y + normal.Z * rayEnd.Z + d;
+
+            // Ray must cross plane (one side positive, one negative, or both zero)
+            // Original: Checks _DAT_007b56fc <= dist0 && dist1 <= _DAT_007b56fc && dist0 != dist1
+            const float planeEpsilon = 1e-6f;
+            if (!((dist0 <= planeEpsilon && dist1 >= -planeEpsilon) || (dist0 >= -planeEpsilon && dist1 <= planeEpsilon)) || Math.Abs(dist0 - dist1) < planeEpsilon)
             {
                 return false;
             }
 
-            float f = 1f / a;
-            Vector3 s = origin - v0;
-            float u = f * Vector3.Dot(s, h);
+            // Compute intersection point on plane
+            // Original: Lines 71-76 compute intersection using interpolation
+            float t = dist0 / (dist0 - dist1);
+            Vector3 intersection = origin + direction * (t * maxDist);
 
-            // Edge case: Check barycentric coordinate u (with tolerance for edge hits)
-            if (u < -epsilon || u > 1f + epsilon)
+            // Test if intersection point is inside triangle using edge tests
+            // Original: Lines 79-95 test point containment using edge cross products
+            // For each edge, check if point is on the correct side
+            bool inside = true;
+            const float edgeEpsilon = 1e-6f;
+
+            // Edge 0->1: Check if intersection is on correct side
+            Vector3 edge0 = v1 - v0;
+            Vector3 toPoint0 = intersection - v0;
+            Vector3 cross0 = Vector3.Cross(edge0, toPoint0);
+            float dot0 = Vector3.Dot(cross0, normal);
+            if (dot0 < -edgeEpsilon)
+            {
+                inside = false;
+            }
+
+            // Edge 1->2: Check if intersection is on correct side
+            if (inside)
+            {
+                Vector3 edge1 = v2 - v1;
+                Vector3 toPoint1 = intersection - v1;
+                Vector3 cross1 = Vector3.Cross(edge1, toPoint1);
+                float dot1 = Vector3.Dot(cross1, normal);
+                if (dot1 < -edgeEpsilon)
+                {
+                    inside = false;
+                }
+            }
+
+            // Edge 2->0: Check if intersection is on correct side
+            if (inside)
+            {
+                Vector3 edge2 = v0 - v2;
+                Vector3 toPoint2 = intersection - v2;
+                Vector3 cross2 = Vector3.Cross(edge2, toPoint2);
+                float dot2 = Vector3.Dot(cross2, normal);
+                if (dot2 < -edgeEpsilon)
+                {
+                    inside = false;
+                }
+            }
+
+            if (!inside)
             {
                 return false;
             }
 
-            Vector3 q = Vector3.Cross(s, edge1);
-            float v = f * Vector3.Dot(direction, q);
-
-            // Edge case: Check barycentric coordinate v (with tolerance for edge hits)
-            if (v < -epsilon || u + v > 1f + epsilon)
-            {
-                return false;
-            }
-
-            float t = f * Vector3.Dot(edge2, q);
-
-            // Edge case: Ray starting inside triangle (t < 0, within tolerance)
-            // Allow small negative values for rays starting on or very close to triangle surface
-            const float surfaceTolerance = 1e-5f;
-            if (t < -surfaceTolerance)
-            {
-                return false; // Ray starts behind triangle
-            }
-
-            // Edge case: Ray starting on triangle surface (t ≈ 0)
-            if (t < surfaceTolerance)
-            {
-                // Ray starts on or very close to triangle - return as hit with distance 0
-                distance = 0f;
-                return true;
-            }
+            // Compute distance along ray
+            distance = Vector3.Distance(origin, intersection);
 
             // Check if intersection is within max distance
-            if (t < maxDist)
+            if (distance <= maxDist)
             {
-                distance = t;
                 return true;
             }
 
