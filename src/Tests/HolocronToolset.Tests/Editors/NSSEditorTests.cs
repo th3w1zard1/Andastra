@@ -2040,14 +2040,72 @@ xyz uvw";
             codeEditor.SelectedText.Should().Be("int", "Selected text should be 'int'");
         }
 
-        // TODO: STUB - Implement test_nss_editor_duplicate_line_shortcut (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1818-1845)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1818-1845
         // Original: def test_nss_editor_duplicate_line_shortcut(qtbot, installation: HTInstallation): Test duplicate line shortcut
         [Fact]
         public void TestNssEditorDuplicateLineShortcut()
         {
-            // TODO: STUB - Implement duplicate line shortcut test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1818-1845
-            throw new NotImplementedException("TestNssEditorDuplicateLineShortcut: Duplicate line shortcut test not yet implemented");
+            // Matching PyKotor implementation: test_nss_editor_duplicate_line_shortcut
+            // Original: def test_nss_editor_duplicate_line_shortcut(qtbot, installation: HTInstallation):
+            var editor = new NSSEditor(null, null);
+            editor.New();
+
+            string script = "Line 1\nLine 2\nLine 3";
+            
+            // Access CodeEditor via reflection
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+            
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+            
+            // Set the script text
+            codeEditor.SetPlainText(script);
+            
+            // Store original text for comparison
+            string originalText = codeEditor.ToPlainText();
+            int originalCount = CountOccurrences(originalText, "Line 2");
+            
+            // Move cursor to line 2
+            // Line 1 is 7 characters ("Line 1\n"), so position 7 is the start of line 2
+            int line2Start = script.IndexOf("Line 2");
+            line2Start.Should().BeGreaterThan(0, "Script should contain 'Line 2'");
+            
+            // Set cursor to start of line 2
+            codeEditor.SelectionStart = line2Start;
+            codeEditor.SelectionEnd = line2Start;
+            
+            // Duplicate line
+            codeEditor.DuplicateLine();
+            
+            // Verify line was duplicated
+            string newText = codeEditor.ToPlainText();
+            newText.Should().Contain("Line 2", "New text should contain 'Line 2'");
+            
+            int newCount = CountOccurrences(newText, "Line 2");
+            newCount.Should().BeGreaterThan(originalCount, "New text should have more occurrences of 'Line 2' than original");
+        }
+
+        /// <summary>
+        /// Helper method to count occurrences of a substring in a string.
+        /// </summary>
+        private int CountOccurrences(string text, string pattern)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(pattern))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            int index = 0;
+            while ((index = text.IndexOf(pattern, index, StringComparison.Ordinal)) != -1)
+            {
+                count++;
+                index += pattern.Length;
+            }
+
+            return count;
         }
 
         // TODO: STUB - Implement test_nss_editor_command_palette_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1847-1861)

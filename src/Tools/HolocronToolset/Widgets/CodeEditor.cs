@@ -697,5 +697,175 @@ namespace HolocronToolset.Widgets
         /// Exposed for testing purposes.
         /// </summary>
         public bool ColumnSelectionMode => _columnSelectionMode;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1257-1272
+        // Original: def duplicate_line(self):
+        /// <summary>
+        /// Duplicates the current line or selected lines.
+        /// If there's a selection, duplicates the lines containing the selection.
+        /// If there's no selection, duplicates the current line.
+        /// Matching Python behavior: selects line content (without trailing newline), then inserts newline + selected text.
+        /// </summary>
+        public void DuplicateLine()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+
+            int currentPos = SelectionStart;
+            int selectionStart = SelectionStart;
+            int selectionEnd = SelectionEnd;
+
+            // Calculate which line the cursor/selection is on
+            int currentLine = GetLineFromPosition(currentPos);
+            int startLine = GetLineFromPosition(selectionStart);
+            int endLine = GetLineFromPosition(selectionEnd);
+
+            // If there's a selection, select from start of first line to end of last line (without trailing newline)
+            if (selectionStart != selectionEnd)
+            {
+                // Get start position of first selected line
+                int firstLineStart = GetPositionFromLine(startLine);
+                // Get end position of last selected line (end of line content, NOT including newline)
+                // This matches Python's EndOfLine behavior which stops before the newline
+                int lastLineEnd = GetPositionFromLineContentEnd(endLine);
+                
+                // Select the full lines (content only, no trailing newline)
+                SelectionStart = firstLineStart;
+                SelectionEnd = lastLineEnd;
+            }
+            else
+            {
+                // No selection - select current line (content only, no trailing newline)
+                int lineStart = GetPositionFromLine(currentLine);
+                int lineEnd = GetPositionFromLineContentEnd(currentLine);
+                
+                SelectionStart = lineStart;
+                SelectionEnd = lineEnd;
+            }
+
+            // Get the selected text (the line(s) to duplicate, without trailing newline)
+            string selectedText = SelectedText;
+            
+            if (string.IsNullOrEmpty(selectedText))
+            {
+                return;
+            }
+
+            // Move cursor to end of the selected line(s) (where SelectionEnd is now)
+            int insertPosition = SelectionEnd;
+            
+            // Insert newline + selected text (matching Python: cursor.insertText("\n" + text))
+            string textToInsert = newline + selectedText;
+            
+            // Update the text
+            string newText = Text.Insert(insertPosition, textToInsert);
+            Text = newText;
+            
+            // Move cursor to end of inserted text
+            SelectionStart = insertPosition + textToInsert.Length;
+            SelectionEnd = SelectionStart;
+        }
+
+        /// <summary>
+        /// Gets the line number (0-based) from a character position.
+        /// </summary>
+        private int GetLineFromPosition(int position)
+        {
+            if (string.IsNullOrEmpty(Text) || position < 0)
+            {
+                return 0;
+            }
+
+            if (position > Text.Length)
+            {
+                position = Text.Length;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            int currentPos = 0;
+            
+            for (int i = 0; i < lines.Length; i++)
+            {
+                int lineLength = lines[i].Length;
+                int newlineLength = (i < lines.Length - 1) ? (Text.Contains("\r\n") ? 2 : 1) : 0;
+                
+                if (position >= currentPos && position <= currentPos + lineLength)
+                {
+                    return i;
+                }
+                
+                currentPos += lineLength + newlineLength;
+            }
+            
+            return lines.Length - 1;
+        }
+
+        /// <summary>
+        /// Gets the character position of the start of a line (0-based).
+        /// </summary>
+        private int GetPositionFromLine(int line)
+        {
+            if (string.IsNullOrEmpty(Text) || line < 0)
+            {
+                return 0;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (line >= lines.Length)
+            {
+                return Text.Length;
+            }
+
+            int position = 0;
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+            int newlineLength = newline.Length;
+
+            for (int i = 0; i < line && i < lines.Length; i++)
+            {
+                position += lines[i].Length + newlineLength;
+            }
+
+            return position;
+        }
+
+        /// <summary>
+        /// Gets the character position of the end of a line content (0-based), NOT including the newline.
+        /// This matches Python's QTextCursor.MoveOperation.EndOfLine behavior which stops before the newline.
+        /// </summary>
+        private int GetPositionFromLineContentEnd(int line)
+        {
+            if (string.IsNullOrEmpty(Text) || line < 0)
+            {
+                return 0;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (line >= lines.Length)
+            {
+                return Text.Length;
+            }
+
+            int position = 0;
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+            int newlineLength = newline.Length;
+
+            // Calculate position up to and including the specified line's content (but not its newline)
+            for (int i = 0; i <= line && i < lines.Length; i++)
+            {
+                position += lines[i].Length;
+                // Only add newline for lines before the target line (not for the target line itself)
+                if (i < line && i < lines.Length - 1)
+                {
+                    position += newlineLength;
+                }
+            }
+
+            return position;
+        }
     }
 }
