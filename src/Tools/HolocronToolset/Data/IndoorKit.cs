@@ -598,6 +598,54 @@ namespace HolocronToolset.Data
         /// <returns>The re-centered walkmesh (same instance, modified in place)</returns>
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:203-243
         // Original: def _recenter_bwm(self, bwm: BWM) -> BWM:
+        /// <summary>
+        /// Re-centers a walkmesh so its center is at the origin (0, 0, 0).
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function takes a walkmesh and moves all its vertices so that the walkmesh's center
+        /// is at the origin (0, 0, 0). This is important because when components are placed in the
+        /// indoor map builder, they are positioned relative to their center point. If the walkmesh
+        /// is not centered, the component will appear in the wrong position.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Find the Bounding Box
+        /// - Get all vertices from the walkmesh
+        /// - Find the smallest and largest X, Y, Z coordinates
+        /// - This creates a box that contains all the vertices
+        /// 
+        /// STEP 2: Calculate the Center
+        /// - The center is the midpoint of the bounding box
+        /// - centerX = (minX + maxX) / 2
+        /// - centerY = (minY + maxY) / 2
+        /// - centerZ = (minZ + maxZ) / 2
+        /// 
+        /// STEP 3: Move the Walkmesh
+        /// - Translate all vertices by (-centerX, -centerY, -centerZ)
+        /// - This moves the walkmesh so its center is at (0, 0, 0)
+        /// 
+        /// WHY THIS IS NEEDED:
+        /// 
+        /// When a walkmesh is loaded from a game module, its vertices are in world coordinates.
+        /// The walkmesh might be positioned anywhere in the world (e.g., at position 100, 200, 50).
+        /// When we create a kit component from this walkmesh, we want it to be centered at the origin
+        /// so that when we place it in the map builder, we can position it correctly by just moving
+        /// it to the desired location.
+        /// 
+        /// EXAMPLE:
+        /// 
+        /// Before: Walkmesh vertices range from (95, 195, 45) to (105, 205, 55)
+        /// - Center is at (100, 200, 50)
+        /// - After translation: Vertices range from (-5, -5, -5) to (5, 5, 5)
+        /// - Center is now at (0, 0, 0)
+        /// 
+        /// EDGE CASES HANDLED:
+        /// 
+        /// - Empty walkmesh: Returns unchanged (no vertices to process)
+        /// </summary>
+        /// <param name="bwm">The walkmesh to re-center</param>
+        /// <returns>The re-centered walkmesh (same object, vertices modified)</returns>
         private BWM _RecenterBwm(BWM bwm)
         {
             var vertices = bwm.Vertices();
