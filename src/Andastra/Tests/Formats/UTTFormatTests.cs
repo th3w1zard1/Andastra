@@ -184,7 +184,7 @@ namespace Andastra.Parsing.Tests.Formats
             root.Acquire<string>("Tag", "").Should().NotBeNull("Tag should not be null");
             root.Acquire<LocalizedString>("LocalizedName", LocalizedString.FromInvalid()).Should().NotBeNull("LocalizedName should not be null");
             root.Acquire<string>("KeyName", "").Should().NotBeNull("KeyName should not be null");
-            root.Acquire<int>("Type", 0).Should().BeGreaterOrEqualTo(0, "Type should be non-negative");
+            root.Acquire<int>("Type", 0).Should().BeGreaterThanOrEqualTo(0, "Type should be non-negative");
             root.Acquire<int>("TrapFlag", 0).Should().BeInRange(0, 1, "TrapFlag should be 0 or 1");
         }
 
@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Test LocalizedName field (LocalizedString)
             var utt = new UTT();
             utt.Name = LocalizedString.FromEnglish("English Trigger Name");
-            utt.Name.Set(Language.German, Gender.Male, "Deutscher Triggername");
+            utt.Name.SetData(Language.German, Gender.Male, "Deutscher Triggername");
 
             byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
             UTT loaded = UTTAuto.ReadUtt(data);
@@ -471,7 +471,7 @@ namespace Andastra.Parsing.Tests.Formats
             var utt = new UTT();
             utt.ResRef = new ResRef("all_fields_trigger");
             utt.Name = LocalizedString.FromEnglish("All Fields Trigger");
-            utt.Name.Set(Language.French, Gender.Female, "Déclencheur Tous Champs");
+            utt.Name.SetData(Language.French, Gender.Female, "Déclencheur Tous Champs");
             utt.Tag = "ALLFIELDS";
             utt.Comment = "Trigger with all fields set";
             utt.TypeId = 5; // Area of Effect
@@ -538,7 +538,7 @@ namespace Andastra.Parsing.Tests.Formats
             utt.Should().NotBeNull();
             utt.ResRef.Should().NotBeNull();
             utt.Name.Should().NotBeNull();
-            utt.TypeId.Should().BeGreaterOrEqualTo(0);
+            utt.TypeId.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestUttFile(string path)

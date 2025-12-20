@@ -32,14 +32,14 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Test reading UTE file
-            GFF gff = GFFAuto.ReadGff(BinaryTestFile);
+            GFF gff = GFFAuto.ReadGff(BinaryTestFile, 0, null);
             UTE ute = UTEHelpers.ConstructUte(gff);
             ValidateIO(ute);
 
             // Test writing and reading back
             GFF writtenGff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(writtenGff);
-            gff = GFFAuto.ReadGff(data);
+            gff = GFFAuto.ReadGff(data, 0, null);
             ute = UTEHelpers.ConstructUte(gff);
             ValidateIO(ute);
         }
@@ -93,7 +93,7 @@ namespace Andastra.Parsing.Tests.Formats
                 CreateTestUteFile(BinaryTestFile);
             }
 
-            GFF gff = GFFAuto.ReadGff(BinaryTestFile);
+            GFF gff = GFFAuto.ReadGff(BinaryTestFile, 0, null);
             UTE ute = UTEHelpers.ConstructUte(gff);
 
             // Validate basic UTE properties exist
@@ -111,7 +111,7 @@ namespace Andastra.Parsing.Tests.Formats
                 CreateTestUteFile(BinaryTestFile);
             }
 
-            GFF gff = GFFAuto.ReadGff(BinaryTestFile);
+            GFF gff = GFFAuto.ReadGff(BinaryTestFile, 0, null);
             UTE ute = UTEHelpers.ConstructUte(gff);
 
             // Validate spawn configuration properties
@@ -133,7 +133,7 @@ namespace Andastra.Parsing.Tests.Formats
                 CreateTestUteFile(BinaryTestFile);
             }
 
-            GFF gff = GFFAuto.ReadGff(BinaryTestFile);
+            GFF gff = GFFAuto.ReadGff(BinaryTestFile, 0, null);
             UTE ute = UTEHelpers.ConstructUte(gff);
 
             // Validate respawn logic properties
@@ -151,7 +151,7 @@ namespace Andastra.Parsing.Tests.Formats
                 CreateTestUteFile(BinaryTestFile);
             }
 
-            GFF gff = GFFAuto.ReadGff(BinaryTestFile);
+            GFF gff = GFFAuto.ReadGff(BinaryTestFile, 0, null);
             UTE ute = UTEHelpers.ConstructUte(gff);
 
             // Validate script hooks exist
@@ -170,7 +170,7 @@ namespace Andastra.Parsing.Tests.Formats
                 CreateTestUteFile(BinaryTestFile);
             }
 
-            GFF gff = GFFAuto.ReadGff(BinaryTestFile);
+            GFF gff = GFFAuto.ReadGff(BinaryTestFile, 0, null);
             UTE ute = UTEHelpers.ConstructUte(gff);
 
             // Validate creature list exists
@@ -201,7 +201,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Creatures.Count.Should().Be(0);
@@ -242,7 +242,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Creatures.Count.Should().Be(2);
@@ -259,7 +259,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Active.Should().BeTrue();
@@ -274,7 +274,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Active.Should().BeFalse();
@@ -291,7 +291,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.DifficultyId.Should().Be(5);
@@ -311,7 +311,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.MaxCreatures.Should().Be(10);
@@ -331,7 +331,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Reset.Should().Be(1);
@@ -352,7 +352,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.OnEnteredScript.ToString().Should().Be("on_entered");
@@ -380,7 +380,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Creatures.Count.Should().Be(1);
@@ -438,7 +438,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Tag.Should().Be(ute.Tag);
@@ -476,7 +476,7 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestReadRaises()
         {
             // Test reading from directory
-            Action act1 = () => GFFAuto.ReadGff(".");
+            Action act1 = () => GFFAuto.ReadGff(".", 0, null);
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
                 act1.Should().Throw<UnauthorizedAccessException>();
@@ -487,13 +487,13 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Test reading non-existent file
-            Action act2 = () => GFFAuto.ReadGff(DoesNotExistFile);
+            Action act2 = () => GFFAuto.ReadGff(DoesNotExistFile, 0, null);
             act2.Should().Throw<FileNotFoundException>();
 
             // Test reading corrupted file
             if (File.Exists(CorruptBinaryTestFile))
             {
-                Action act3 = () => GFFAuto.ReadGff(CorruptBinaryTestFile);
+                Action act3 = () => GFFAuto.ReadGff(CorruptBinaryTestFile, 0, null);
                 act3.Should().Throw<ArgumentException>();
             }
         }
@@ -511,7 +511,7 @@ namespace Andastra.Parsing.Tests.Formats
                     fs.Write(invalid, 0, invalid.Length);
                 }
 
-                Action act = () => GFFAuto.ReadGff(tempFile);
+                Action act = () => GFFAuto.ReadGff(tempFile, 0, null);
                 act.Should().Throw<ArgumentException>();
             }
             finally
@@ -537,19 +537,17 @@ namespace Andastra.Parsing.Tests.Formats
 
                 // Manually write invalid version (this is a simplified test)
                 // In practice, GFFBinaryWriter would handle this
-                using (var writer = new GFFBinaryWriter(gff))
+                var writer = new GFFBinaryWriter(gff);
+                byte[] data = writer.Write();
+                // Modify version bytes
+                if (data.Length >= 8)
                 {
-                    byte[] data = writer.Write();
-                    // Modify version bytes
-                    if (data.Length >= 8)
-                    {
-                        System.Text.Encoding.ASCII.GetBytes("V9.9").CopyTo(data, 4);
-                        File.WriteAllBytes(tempFile, data);
-                    }
+                    System.Text.Encoding.ASCII.GetBytes("V9.9").CopyTo(data, 4);
+                    File.WriteAllBytes(tempFile, data);
                 }
 
                 // This should fail when reading
-                Action act = () => GFFAuto.ReadGff(tempFile);
+                Action act = () => GFFAuto.ReadGff(tempFile, 0, null);
                 act.Should().Throw<ArgumentException>();
             }
             finally
@@ -570,7 +568,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2, true);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.PaletteId.Should().Be(5);
@@ -585,7 +583,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2, true);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Name.StringRef.Should().Be(12345);
@@ -606,7 +604,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Creatures[0].CR.Should().Be(15);
@@ -628,7 +626,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Creatures[0].SingleSpawn.Should().Be(1);
@@ -651,7 +649,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Test with K2 game
             GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
             byte[] data = GFFAuto.BytesGff(gff);
-            GFF loadedGff = GFFAuto.ReadGff(data);
+            GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
             loaded.Creatures[0].GuaranteedCount.Should().Be(3);
