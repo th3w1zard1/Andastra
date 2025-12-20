@@ -397,7 +397,7 @@ namespace HolocronToolset.Dialogs
                     "No Release Found",
                     "No toolset releases found?",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 msgBox.ShowAsync();
                 return;
             }
@@ -421,7 +421,7 @@ namespace HolocronToolset.Dialogs
                     "Select a release",
                     "No release selected, select one first.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 msgBox.ShowAsync();
                 return;
             }
@@ -505,7 +505,7 @@ namespace HolocronToolset.Dialogs
                             "Update Not Available",
                             "The update process is not yet fully implemented. Please download and install updates manually.",
                             ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Information);
+                            MsBox.Avalonia.Enums.Icon.Info);
                         msgBox.ShowAsync();
                     });
                 }

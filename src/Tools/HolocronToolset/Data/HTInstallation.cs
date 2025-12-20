@@ -10,6 +10,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using JetBrains.Annotations;

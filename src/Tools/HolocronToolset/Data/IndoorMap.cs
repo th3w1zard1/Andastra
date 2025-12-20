@@ -1451,7 +1451,7 @@ namespace HolocronToolset.Data
             // Convert to RGB888 format (matching Python line 1010: image.convertTo(QImage.Format.Format_RGB888))
             // In Avalonia, we create a WriteableBitmap with RGB format
             // Note: Avalonia's WriteableBitmap uses RGBA by default, but we can extract RGB data
-            var rgbImage = new WriteableBitmap(new PixelSize(512, 256), new Vector(96, 96), PixelFormat.Rgba8888);
+            var rgbImage = new WriteableBitmap(new PixelSize(512, 256), new Avalonia.Vector(96, 96), PixelFormat.Rgba8888);
             using (var lockedBitmap = rgbImage.Lock())
             {
                 // Copy pixel data from flipped image

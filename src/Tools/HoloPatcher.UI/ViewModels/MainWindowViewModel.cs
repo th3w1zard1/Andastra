@@ -25,7 +25,6 @@ using Andastra.Utility;
 using HoloPatcher.UI;
 using HoloPatcher.UI.Rte;
 using HoloPatcher.UI.Update;
-using HoloPatcher.UI.Views;
 using HoloPatcher.UI.Views.Dialogs;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
@@ -979,14 +978,44 @@ namespace HoloPatcher.UI.ViewModels
 
         private async Task<string> ShowChoiceDialogAsync(string title, string message, params string[] options)
         {
-            Window window = GetMainWindow();
-            if (window is null)
+            // Use MsBox for simple dialogs - for multiple options, use the first option as default
+            // This is a simplified implementation to avoid circular dependency with Views
+            if (options == null || options.Length == 0)
             {
                 return null;
             }
-
-            var dialog = new ChoiceDialog(title, message, options);
-            return await dialog.ShowDialog<string>(window);
+            
+            if (options.Length == 1)
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
+                    title,
+                    message,
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                await box.ShowAsync();
+                return options[0];
+            }
+            
+            // For multiple options, show Yes/No dialog for first two options, or use first option
+            if (options.Length == 2)
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
+                    title,
+                    message,
+                    ButtonEnum.YesNo,
+                    Icon.Question);
+                ButtonResult result = await box.ShowAsync();
+                return result == ButtonResult.Yes ? options[0] : options[1];
+            }
+            
+            // For more than 2 options, default to first option
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> defaultBox = MessageBoxManager.GetMessageBoxStandard(
+                title,
+                message + $"\n\n(Using default: {options[0]})",
+                ButtonEnum.Ok,
+                Icon.Info);
+            await defaultBox.ShowAsync();
+            return options[0];
         }
 
         private async Task ShowErrorAsync(string title, string message)
@@ -1009,7 +1038,23 @@ namespace HoloPatcher.UI.ViewModels
             }
 
             var updater = new AutoUpdater(info, window, useBetaChannel);
-            await updater.RunAsync();
+            
+            // Create progress window and pass its ViewModel to the updater
+            var progressWindow = new UpdateProgressWindow
+            {
+                WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner
+            };
+            progressWindow.Show(window);
+            
+            try
+            {
+                await updater.RunAsync(progressWindow.ViewModel);
+            }
+            finally
+            {
+                progressWindow.AllowClose();
+                progressWindow.Close();
+            }
         }
 
         /// <summary>

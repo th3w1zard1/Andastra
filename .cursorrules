@@ -186,59 +186,135 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 
 1. **Use Ghidra MCP** for understanding original engine behavior:
    - Verify implementation faithfulness against original engine behavior
-   - **MANDATORY: Cross-Engine Analysis and Inheritance Structure**:
-     - **NEVER document a function without specifying which .exe it's from** (e.g., `swkotor2.exe: 0x004eb750`, `nwmain.exe: 0x14051d5c0`)
-     - **CRITICAL: Base Class Implementation Workflow**:
-       - **NEVER implement or document base classes (Runtime.Games.Common) until ALL engines have been reverse engineered**
-       - **MANDATORY WORKFLOW for base classes**:
-         1. **FIRST**: Search for and analyze equivalent functions in ALL engines (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
-         2. **SECOND**: Decompile and compare implementations across ALL engines to identify common patterns
-         3. **THIRD**: Document findings in Ghidra for ALL engines with function addresses and analysis
-         4. **FOURTH**: Only after complete cross-engine analysis, identify what is truly common across ALL engines
-         5. **FIFTH**: Implement base class with ONLY common functionality (no engine-specific details)
-         6. **SIXTH**: Implement engine-specific subclasses with engine-specific details
-       - **Base classes MUST NOT contain**:
-         - Engine-specific function addresses (e.g., `swkotor2.exe: 0x004eb750`)
-         - Engine-specific implementation details
-         - References to engine-specific file formats or systems
-         - Any details that differ between engines
-       - **Base classes MUST ONLY contain**:
-         - Abstract methods/properties that all engines share
-         - Common initialization patterns (if identical across all engines)
-         - Shared interfaces and contracts
-         - Generic documentation that applies to all engines
-       - **Engine-specific details MUST be in subclasses**:
-         - All Ghidra function addresses go in engine-specific subclasses
-         - All engine-specific implementation details go in subclasses
-         - All engine-specific file format references go in subclasses
+   - **MANDATORY: Three-Tier Inheritance Structure - EXTREMELY METICULOUS AND VERY IMPORTANT**:
+     
+     **THE THREE-TIER INHERITANCE STRUCTURE IS CRITICAL FOR MAINTAINABILITY, CODE REUSE, AND ACCURATE REVERSE ENGINEERING DOCUMENTATION. FAILURE TO FOLLOW THIS STRUCTURE CORRECTLY WILL RESULT IN INCORRECT IMPLEMENTATIONS, DUPLICATED CODE, AND DIFFICULTY MAINTAINING ENGINE-SPECIFIC AND GAME-SPECIFIC DIFFERENCES.**
+     
+     **Tier 1: Base Classes (`Runtime.Games.Common`)**
+     - **Purpose**: Contains functionality that is IDENTICAL across ALL engine families (Odyssey, Aurora, Eclipse, Infinity)
+     - **Content**: Only truly universal functionality that exists in all engines with identical behavior
+     - **MUST NOT contain**:
+       - Any engine-specific function addresses (e.g., `swkotor2.exe: 0x004eb750`)
+       - Any engine-specific implementation details
+       - Any references to engine-specific file formats or systems
+       - Any details that differ between ANY engines
+       - Any game-specific details (e.g., KOTOR 1 vs KOTOR 2 differences)
+     - **MUST ONLY contain**:
+       - Abstract methods/properties that all engines share
+       - Common initialization patterns (ONLY if identical across ALL engines)
+       - Shared interfaces and contracts
+       - Generic documentation that applies to ALL engines universally
+       - Algorithmic/logical patterns that are identical across all engines
+     
+     **Tier 2: Engine Subclasses (`Runtime.Games.{Engine}`)**
+     - **Purpose**: Contains functionality that is common within an engine family but differs between engine families
+     - **Examples**: `OdysseyEventDispatcher`, `AuroraEventDispatcher`, `EclipseEventDispatcher`, `InfinityEventDispatcher`
+     - **Content**: Functionality shared across all games within an engine family (e.g., KOTOR 1 and KOTOR 2 both use same event dispatch logic, but addresses differ between games)
+     - **MUST contain**:
+       - Engine family-specific function addresses (e.g., `swkotor.exe` and `swkotor2.exe` addresses in comments)
+       - Engine family-specific implementation details
+       - Engine family-specific file format references
+       - Common patterns within the engine family
+     - **MUST NOT contain**:
+       - Game-specific differences (e.g., KOTOR 1 vs KOTOR 2 specific code paths)
+       - Any details that are unique to a single game within the engine family
+     
+     **Tier 3: Game Subclasses (`Runtime.Games.{Engine}.{Game}`)**
+     - **Purpose**: Contains functionality that is specific to individual games within an engine family
+     - **Examples**: `Kotor1EventDispatcher : OdysseyEventDispatcher`, `Kotor2EventDispatcher : OdysseyEventDispatcher`
+     - **Content**: Game-specific implementations where games in the same engine family differ
+     - **MUST contain**:
+       - Game-specific function addresses (e.g., `swkotor.exe: 0x004af630` for K1, `swkotor2.exe: 0x004dcfb0` for K2)
+       - Game-specific implementation details
+       - Game-specific constants, addresses, or configurations
+       - Any code paths that differ between games in the same engine family
+     
+     **WHY THIS STRUCTURE IS CRITICAL**:
+     1. **Accurate Documentation**: Function addresses and implementation details must be documented at the correct level (game-specific addresses in game subclasses, engine-specific in engine subclasses, never in base classes)
+     2. **Code Reuse**: Common functionality is shared correctly without duplicating code
+     3. **Maintainability**: Changes to engine-specific behavior affect only the engine subclass, changes to game-specific behavior affect only the game subclass
+     4. **Reverse Engineering Accuracy**: When documenting from Ghidra, addresses and implementation details are placed at the correct abstraction level matching the actual executable they come from
+     5. **Prevents Errors**: Incorrectly placing game-specific code in base classes or engine classes leads to incorrect implementations for other games/engines
+     6. **Clear Separation of Concerns**: Each tier has a clear, well-defined responsibility that prevents confusion and implementation errors
+     
+     **MANDATORY WORKFLOW**:
+     - **For Tier 1 (Base Classes)**:
+       1. **NEVER implement or document base classes until ALL engines have been reverse engineered**
+       2. Search for and analyze equivalent functions in ALL engines (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+       3. Decompile and compare implementations across ALL engines to identify truly common patterns
+       4. Document findings in Ghidra for ALL engines with function addresses and analysis
+       5. Only after complete cross-engine analysis, identify what is truly common across ALL engines
+       6. Implement base class with ONLY universal functionality (no engine-specific or game-specific details)
+     
+     - **For Tier 2 (Engine Subclasses)**:
+       1. Search for and analyze equivalent functions in ALL games within the engine family (e.g., for Odyssey: swkotor.exe AND swkotor2.exe)
+       2. Decompile and compare implementations across games in the engine family to identify engine-common patterns
+       3. Document findings in Ghidra for ALL games in the engine family
+       4. Identify what is common within the engine family (even if addresses differ between games)
+       5. Implement engine subclass with engine-common functionality and document addresses for all games in the engine family
+     
+     - **For Tier 3 (Game Subclasses)**:
+       1. Search Ghidra for functions specific to the individual game executable
+       2. Decompile functions to understand game-specific implementation
+       3. Document game-specific function addresses, constants, and implementation details
+       4. Implement game subclass with game-specific functionality
+       5. Override engine subclass methods only when game-specific behavior differs
+     
      - **MANDATORY**: When finding ANY function in ANY engine, AI agents MUST:
-       1. Search for similar/equivalent functions in ALL other engines (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, etc.)
-       2. Decompile and compare implementations across engines to identify common patterns
-       3. Document findings in Ghidra for ALL engines before implementing base classes
-       4. Establish base class inheritance structure:
-          - Create base classes in `Runtime.Games.Common` for shared functionality (ONLY after complete cross-engine analysis)
-          - Create engine-specific implementations in `Runtime.Games.{Engine}` that inherit from base classes
-          - Document which functions map to base class methods vs. engine-specific overrides
-       5. Document inheritance structure in roadmap with format (example):
-          - Base Class: `CommonScriptExecutor` (Runtime.Games.Common)
-            - Odyssey: `OdysseyScriptExecutor : CommonScriptExecutor` (swkotor.exe: 0x..., swkotor2.exe: 0x...)
-            - Aurora: `AuroraScriptExecutor : CommonScriptExecutor` (nwmain.exe: 0x...)
-            - Eclipse: `EclipseScriptExecutor : CommonScriptExecutor` (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
-            - Infinity: `InfinityScriptExecutor : CommonScriptExecutor` (MassEffect.exe: 0x..., MassEffect2.exe: 0x...)
+       1. Identify which tier it belongs to by comparing across engines and games
+       2. Search for similar/equivalent functions in ALL other engines and ALL games
+       3. Decompile and compare implementations to determine the correct tier
+       4. Document findings in Ghidra for ALL relevant executables before implementing
+       5. Place code and documentation at the correct tier level
+       6. Document inheritance structure clearly showing all three tiers
+     
+     - **Example Inheritance Structure**:
+       ```
+       BaseEventDispatcher (Runtime.Games.Common)
+       ├── Common event dispatching interface and abstract methods
+       ├── Generic event handling patterns (universal across all engines)
+       └── NO engine-specific or game-specific details
+       
+       OdysseyEventDispatcher : BaseEventDispatcher (Runtime.Games.Odyssey)
+       ├── Odyssey engine family common event dispatch logic
+       ├── References to swkotor.exe and swkotor2.exe (both games)
+       ├── Common event subtype mapping logic (same for both games)
+       └── NO game-specific addresses or differences
+       
+       ├── Kotor1EventDispatcher : OdysseyEventDispatcher (Runtime.Games.Odyssey)
+       │   ├── KOTOR 1 specific function addresses (swkotor.exe: 0x...)
+       │   ├── KOTOR 1 specific constants and configurations
+       │   └── Overrides only when K1 behavior differs from engine-common
+       │
+       └── Kotor2EventDispatcher : OdysseyEventDispatcher (Runtime.Games.Odyssey)
+           ├── KOTOR 2 specific function addresses (swkotor2.exe: 0x...)
+           ├── KOTOR 2 specific constants and configurations
+           └── Overrides only when K2 behavior differs from engine-common
+       ```
 
      - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
-       - **For base classes (Runtime.Games.Common)**:
-         - MUST reverse engineer ALL engines first (Odyssey, Aurora, Eclipse)
+       - **For Tier 1 (Base Classes)**:
+         - MUST reverse engineer ALL engines first (Odyssey, Aurora, Eclipse, Infinity)
          - MUST compare implementations across ALL engines
-         - MUST only document common functionality (no engine-specific details)
-         - MUST NOT include engine-specific function addresses or implementation details
-       - **For engine-specific subclasses (Runtime.Games.{Engine})**:
-         - Search Ghidra for related functions using string searches and function name searches in the relevant engine executable(s)
-         - Decompile relevant functions to understand original implementation
-         - Add detailed comments with Ghidra function addresses, executable name, and context
-         - Use consistent comment format matching the MonoGame API documentation pattern
-         - **ALWAYS specify the source executable** in comments (e.g., `swkotor2.exe: 0x004eb750`)
-       - **PRIORITY**: When working on base classes, prioritize reverse engineering Aurora and Eclipse engines FIRST (they are less documented than Odyssey)
+         - MUST only document universal functionality (no engine-specific or game-specific details)
+         - MUST NOT include ANY function addresses or executable-specific details
+         - MUST NOT assume behavior is common without verifying across ALL engines
+       
+       - **For Tier 2 (Engine Subclasses)**:
+         - MUST reverse engineer ALL games within the engine family first
+         - MUST compare implementations across ALL games in the engine family
+         - MUST document engine-common functionality with addresses from ALL games in the family
+         - MUST NOT include game-specific differences (those belong in Tier 3)
+         - MUST specify which executables the addresses come from (e.g., "swkotor.exe and swkotor2.exe")
+       
+       - **For Tier 3 (Game Subclasses)**:
+         - MUST search Ghidra for functions in the specific game executable
+         - MUST document game-specific function addresses, executable name, and context
+         - MUST use consistent comment format matching the MonoGame API documentation pattern
+         - MUST ALWAYS specify the source executable in comments (e.g., `swkotor.exe: 0x004af630` or `swkotor2.exe: 0x004dcfb0`)
+         - MUST override engine subclass methods only when game-specific behavior is required
+       
+       - **PRIORITY**: When working on Tier 1 (base classes), prioritize reverse engineering Aurora and Eclipse engines FIRST (they are less documented than Odyssey)
    - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra
      - **Documentation must be comprehensive**: Every analyzed function should have:
        - Descriptive function name (not `FUN_004eb750`, but `SaveGlobalVariables` or similar)

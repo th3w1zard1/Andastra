@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
+using static NUnit.Framework.Assert;
 using Andastra.Parsing.Formats.TXI;
 
 namespace AuroraEngine.Common.Tests
@@ -26,7 +27,7 @@ namespace AuroraEngine.Common.Tests
         public void ParseBlending_MatchesPython(string input, bool expected)
         {
             bool result = TXI.ParseBlending(input);
-            Assert.AreEqual(expected, result);
+            AreEqual(expected, result);
         }
     }
 
@@ -67,29 +68,29 @@ namespace AuroraEngine.Common.Tests
         public void ReadTxi_ParsesFeatures()
         {
             TXI txi = ReadSample();
-            Assert.IsNotNull(txi);
-            Assert.IsFalse(txi.Features.Mipmap ?? true);
-            Assert.IsFalse(txi.Features.Filter ?? true);
-            Assert.AreEqual(256, txi.Features.Numchars);
-            Assert.AreEqual(0.5f, txi.Features.Fontheight.GetValueOrDefault(), 1e-6f);
-            Assert.AreEqual(0.4f, txi.Features.Baselineheight.GetValueOrDefault(), 1e-6f);
-            Assert.AreEqual(1.0f, txi.Features.Texturewidth.GetValueOrDefault(), 1e-6f);
-            Assert.AreEqual(1.0f, txi.Features.Fontwidth.GetValueOrDefault(), 1e-6f);
-            Assert.AreEqual(0.0026f, txi.Features.SpacingR.GetValueOrDefault(), 1e-6f);
-            Assert.AreEqual(0.1f, txi.Features.SpacingB.GetValueOrDefault(), 1e-6f);
-            Assert.AreEqual(-0.01f, txi.Features.Caretindent.GetValueOrDefault(), 1e-6f);
+            IsNotNull(txi);
+            IsFalse(txi.Features.Mipmap ?? true);
+            IsFalse(txi.Features.Filter ?? true);
+            AreEqual(256, txi.Features.Numchars);
+            AreEqual(0.5f, txi.Features.Fontheight.GetValueOrDefault(), 1e-6f);
+            AreEqual(0.4f, txi.Features.Baselineheight.GetValueOrDefault(), 1e-6f);
+            AreEqual(1.0f, txi.Features.Texturewidth.GetValueOrDefault(), 1e-6f);
+            AreEqual(1.0f, txi.Features.Fontwidth.GetValueOrDefault(), 1e-6f);
+            AreEqual(0.0026f, txi.Features.SpacingR.GetValueOrDefault(), 1e-6f);
+            AreEqual(0.1f, txi.Features.SpacingB.GetValueOrDefault(), 1e-6f);
+            AreEqual(-0.01f, txi.Features.Caretindent.GetValueOrDefault(), 1e-6f);
 
-            Assert.IsNotNull(txi.Features.Upperleftcoords);
-            Assert.AreEqual(256, txi.Features.Upperleftcoords.Count);
-            Assert.AreEqual(0.0f, txi.Features.Upperleftcoords[0].Item1, 1e-6f);
-            Assert.AreEqual(0.0625f, txi.Features.Upperleftcoords[1].Item1, 1e-6f);
-            Assert.AreEqual(0.125f, txi.Features.Upperleftcoords[2].Item1, 1e-6f);
+            IsNotNull(txi.Features.Upperleftcoords);
+            AreEqual(256, txi.Features.Upperleftcoords.Count);
+            AreEqual(0.0f, txi.Features.Upperleftcoords[0].Item1, 1e-6f);
+            AreEqual(0.0625f, txi.Features.Upperleftcoords[1].Item1, 1e-6f);
+            AreEqual(0.125f, txi.Features.Upperleftcoords[2].Item1, 1e-6f);
 
-            Assert.IsNotNull(txi.Features.Lowerrightcoords);
-            Assert.AreEqual(256, txi.Features.Lowerrightcoords.Count);
-            Assert.AreEqual(0.0625f, txi.Features.Lowerrightcoords[0].Item1, 1e-6f);
-            Assert.AreEqual(0.125f, txi.Features.Lowerrightcoords[1].Item1, 1e-6f);
-            Assert.AreEqual(0.1875f, txi.Features.Lowerrightcoords[2].Item1, 1e-6f);
+            IsNotNull(txi.Features.Lowerrightcoords);
+            AreEqual(256, txi.Features.Lowerrightcoords.Count);
+            AreEqual(0.0625f, txi.Features.Lowerrightcoords[0].Item1, 1e-6f);
+            AreEqual(0.125f, txi.Features.Lowerrightcoords[1].Item1, 1e-6f);
+            AreEqual(0.1875f, txi.Features.Lowerrightcoords[2].Item1, 1e-6f);
         }
 
         [Test]
@@ -99,14 +100,14 @@ namespace AuroraEngine.Common.Tests
             byte[] bytes = TXIAuto.BytesTxi(txi);
 
             TXI written = TXIAuto.ReadTxi(bytes);
-            Assert.IsFalse(written.Features.Mipmap ?? true);
-            Assert.IsFalse(written.Features.Filter ?? true);
-            Assert.AreEqual(txi.Features.Numchars, written.Features.Numchars);
-            Assert.AreEqual(txi.Features.Fontheight.GetValueOrDefault(), written.Features.Fontheight.GetValueOrDefault(), 1e-6f);
-            Assert.IsNotNull(written.Features.Upperleftcoords);
-            Assert.AreEqual(txi.Features.Upperleftcoords.Count, written.Features.Upperleftcoords.Count);
-            Assert.IsNotNull(written.Features.Lowerrightcoords);
-            Assert.AreEqual(txi.Features.Lowerrightcoords.Count, written.Features.Lowerrightcoords.Count);
+            IsFalse(written.Features.Mipmap ?? true);
+            IsFalse(written.Features.Filter ?? true);
+            AreEqual(txi.Features.Numchars, written.Features.Numchars);
+            AreEqual(txi.Features.Fontheight.GetValueOrDefault(), written.Features.Fontheight.GetValueOrDefault(), 1e-6f);
+            IsNotNull(written.Features.Upperleftcoords);
+            AreEqual(txi.Features.Upperleftcoords.Count, written.Features.Upperleftcoords.Count);
+            IsNotNull(written.Features.Lowerrightcoords);
+            AreEqual(txi.Features.Lowerrightcoords.Count, written.Features.Lowerrightcoords.Count);
         }
     }
 }

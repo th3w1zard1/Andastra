@@ -1237,8 +1237,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     if (textureCount > 0)
                     {
                         // Read texture IDs from the array
-                        uint[] textureIds = new uint[textureCount];
-                        Marshal.Copy(textureArrayPtr, textureIds, 0, (int)textureCount);
+                        // Marshal.Copy doesn't support uint[] directly, so use int[] and convert
+                        int[] textureIdsInt = new int[textureCount];
+                        Marshal.Copy(textureArrayPtr, textureIdsInt, 0, textureCount);
+                        uint[] textureIds = Array.ConvertAll(textureIdsInt, x => (uint)x);
                         
                         // Delete textures
                         if (textureIds.Length > 0)
@@ -1660,10 +1662,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 glGenTextures(1, ref _kotor1SecondaryTextures[0]);
                 glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor1SecondaryTextures[0]);
                 glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                 
                 // Create first secondary window and context (matching swkotor.exe lines 23-27)
                 _kotor1SecondaryWindows[0] = CreateKotor1SecondaryWindow(); // FUN_00426560
@@ -1681,8 +1683,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             // Create texture in secondary context (matching swkotor.exe lines 28-33)
                             glGenTextures(1, ref _kotor1SecondaryTextures[1]);
                             glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[1]);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                             
@@ -2035,8 +2037,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             wglMakeCurrent(_kotor1SecondaryDCs[i], _kotor1SecondaryContexts[i]);
                             glGenTextures(1, ref _kotor1SecondaryTextures[i]);
                             glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[i]);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                             wglMakeCurrent(_kotor1PrimaryDC, _kotor1PrimaryContext);

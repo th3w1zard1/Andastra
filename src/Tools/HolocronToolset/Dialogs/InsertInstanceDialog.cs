@@ -329,7 +329,7 @@ namespace HolocronToolset.Dialogs
                     Localization.Translate("Choose an instance"),
                     Localization.Translate("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."),
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await msgBox.ShowDialogAsync(this);
                 return;
             }

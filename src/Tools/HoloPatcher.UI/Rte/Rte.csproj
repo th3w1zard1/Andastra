@@ -37,4 +37,9 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <ProjectReference Include="..\..\..\AvRichTextBox\AvRichTextBox\AvRichTextBox.csproj" />
+  </ItemGroup>
+
 </Project>

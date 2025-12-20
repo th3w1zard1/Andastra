@@ -716,8 +716,7 @@ namespace HolocronToolset.Dialogs
                                 {
                                     Text = linkText,
                                     Foreground = new SolidColorBrush(Color.FromRgb(3, 102, 214)),
-                                    TextDecorations = TextDecorations.Underline,
-                                    Cursor = new Cursor(StandardCursorType.Hand)
+                                    TextDecorations = TextDecorations.Underline
                                 };
                                 // Store href in Tag property for click handling
                                 // Note: Inline Run elements don't support click events directly,

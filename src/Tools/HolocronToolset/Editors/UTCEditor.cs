@@ -2,10 +2,13 @@ using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Andastra.Parsing.Installation;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LTR;
@@ -1025,7 +1028,7 @@ namespace HolocronToolset.Editors
             }
 
             // Get base portrait resref
-            string portrait = portraits.GetCell(index, "baseresref");
+            string portrait = portraits.GetCellString(index, "baseresref");
             if (string.IsNullOrEmpty(portrait))
             {
                 System.Console.WriteLine($"Cannot build portrait: baseresref not found for index {index}");
@@ -1036,7 +1039,7 @@ namespace HolocronToolset.Editors
             // Python: if 40 >= alignment > 30 and portraits.get_cell(index, "baseresrefe"):
             if (alignment <= 40 && alignment > 30)
             {
-                string variant = portraits.GetCell(index, "baseresrefe");
+                string variant = portraits.GetCellString(index, "baseresrefe");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     portrait = variant;
@@ -1045,7 +1048,7 @@ namespace HolocronToolset.Editors
             // Python: elif 30 >= alignment > 20 and portraits.get_cell(index, "baseresrefve"):
             else if (alignment <= 30 && alignment > 20)
             {
-                string variant = portraits.GetCell(index, "baseresrefve");
+                string variant = portraits.GetCellString(index, "baseresrefve");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     portrait = variant;
@@ -1054,7 +1057,7 @@ namespace HolocronToolset.Editors
             // Python: elif 20 >= alignment > 10 and portraits.get_cell(index, "baseresrefvve"):
             else if (alignment <= 20 && alignment > 10)
             {
-                string variant = portraits.GetCell(index, "baseresrefvve");
+                string variant = portraits.GetCellString(index, "baseresrefvve");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     portrait = variant;
@@ -1063,7 +1066,7 @@ namespace HolocronToolset.Editors
             // Python: elif alignment <= 10 and portraits.get_cell(index, "baseresrefvvve"):
             else if (alignment <= 10)
             {
-                string variant = portraits.GetCell(index, "baseresrefvvve");
+                string variant = portraits.GetCellString(index, "baseresrefvvve");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     portrait = variant;
@@ -1172,7 +1175,7 @@ namespace HolocronToolset.Editors
                 return "Unknown";
             }
 
-            string result = portraits.GetCell(index, "baseresref");
+            string result = portraits.GetCellString(index, "baseresref");
             if (string.IsNullOrEmpty(result))
             {
                 return "Unknown";
@@ -1181,7 +1184,7 @@ namespace HolocronToolset.Editors
             // Check alignment-based variants (matching Python logic)
             if (alignment <= 40 && alignment > 30)
             {
-                string variant = portraits.GetCell(index, "baseresrefe");
+                string variant = portraits.GetCellString(index, "baseresrefe");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     result = variant;
@@ -1189,7 +1192,7 @@ namespace HolocronToolset.Editors
             }
             else if (alignment <= 30 && alignment > 20)
             {
-                string variant = portraits.GetCell(index, "baseresrefve");
+                string variant = portraits.GetCellString(index, "baseresrefve");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     result = variant;
@@ -1197,7 +1200,7 @@ namespace HolocronToolset.Editors
             }
             else if (alignment <= 20 && alignment > 10)
             {
-                string variant = portraits.GetCell(index, "baseresrefvve");
+                string variant = portraits.GetCellString(index, "baseresrefvve");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     result = variant;
@@ -1205,7 +1208,7 @@ namespace HolocronToolset.Editors
             }
             else if (alignment <= 10)
             {
-                string variant = portraits.GetCell(index, "baseresrefvvve");
+                string variant = portraits.GetCellString(index, "baseresrefvvve");
                 if (!string.IsNullOrEmpty(variant))
                 {
                     result = variant;

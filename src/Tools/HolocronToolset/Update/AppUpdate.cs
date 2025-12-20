@@ -28,7 +28,7 @@ namespace HolocronToolset.Update
         private readonly List<Action<Dictionary<string, object>>> _progressHooks;
         private readonly Action<bool> _exithook;
         private readonly Func<string, string> _versionToTagParser;
-        private readonly Func<List<string>> _getArchiveNames;
+        private Func<List<string>> _getArchiveNames;
         private bool _isDownloading;
         private bool _downloadStatus;
         private string _archiveName;

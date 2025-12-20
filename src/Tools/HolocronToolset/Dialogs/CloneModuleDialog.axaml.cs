@@ -313,7 +313,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:85-148
         // Original: def ok(self):
-        private void Ok()
+        private async void Ok()
         {
             // Validate that a module is selected
             if (!(_moduleSelect?.SelectedItem is ModuleOption option))
@@ -440,7 +440,7 @@ namespace HolocronToolset.Dialogs
             {
                 try
                 {
-                    Module.CloneModule(
+                    Andastra.Parsing.Tools.ModuleTools.CloneModule(
                         root,
                         identifier,
                         prefix,
@@ -471,8 +471,8 @@ namespace HolocronToolset.Dialogs
 
             // Show the loader dialog and wait for it to complete
             // In PyKotor, exec() blocks until dialog closes and returns True/False
-            // We'll use ShowDialogAsync to wait for completion
-            bool? dialogResult = loader.ShowDialog(this);
+            // We'll use ShowDialog to wait for completion
+            bool? dialogResult = await loader.ShowDialog<bool?>(this);
 
             // Check if cloning succeeded
             if (loader.Error != null)

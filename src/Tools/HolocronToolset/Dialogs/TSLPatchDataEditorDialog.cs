@@ -923,7 +923,7 @@ namespace HolocronToolset.Dialogs
                     "No File Selected",
                     "Please select a GFF file from the list first.",
                     ButtonEnum.Ok,
-                    Icon.Warning);
+                    MsBox.Avalonia.Enums.Icon.Warning);
                 await msgBox.ShowAsync();
                 return;
             }
@@ -959,7 +959,7 @@ namespace HolocronToolset.Dialogs
                     "File Not Found",
                     $"Could not find GFF file: {selectedItem}\n\nPlease ensure the file exists in the tslpatchdata folder or installation.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorBox.ShowAsync();
                 return;
             }
@@ -985,7 +985,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     $"Failed to open GFF editor:\n{ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorBox.ShowAsync();
             }
         }
@@ -1151,7 +1151,7 @@ namespace HolocronToolset.Dialogs
                     "No Selection",
                     "Please select a TLK string to edit.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 await errorBox.ShowAsync();
                 return;
             }
@@ -1357,7 +1357,7 @@ namespace HolocronToolset.Dialogs
                     "No 2DA Selected",
                     "Please select a 2DA file from the list first.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 await errorBox.ShowAsync();
                 return;
             }
@@ -1416,7 +1416,7 @@ namespace HolocronToolset.Dialogs
                     "No Selection",
                     "Please select a token to edit.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 await errorBox.ShowAsync();
                 return;
             }
@@ -1590,7 +1590,7 @@ namespace HolocronToolset.Dialogs
                         "Error",
                         "TSLPatchData path is not set. Please specify a path first.",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     await errorBox.ShowAsync();
                     return;
                 }
@@ -1867,7 +1867,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     $"Failed to generate TSLPatchData:\n{ex.Message}\n\n{ex.StackTrace}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorBox.ShowAsync();
             }
         }
@@ -2467,7 +2467,7 @@ namespace HolocronToolset.Dialogs
                     "No Selection",
                     "Please select a 2DA file.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 errorBox.ShowAsync();
             }
         }

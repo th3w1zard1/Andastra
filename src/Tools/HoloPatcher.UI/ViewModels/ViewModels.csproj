@@ -37,4 +37,15 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="MessageBox.Avalonia" Version="3.3.0" />
+    <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\..\Andastra\Utility\Utility.csproj" />
+    <ProjectReference Include="..\Rte\Rte.csproj" />
+    <ProjectReference Include="..\Update\Update.csproj" />
+  </ItemGroup>
+
 </Project>

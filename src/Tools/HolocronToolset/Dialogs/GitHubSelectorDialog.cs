@@ -218,7 +218,7 @@ namespace HolocronToolset.Dialogs
                             "Rate Limited",
                             "You have submitted too many requests to GitHub's API. Check the status bar at the bottom.",
                             ButtonEnum.Ok,
-                            Icon.Error);
+                            MsBox.Avalonia.Enums.Icon.Error);
                         msgBox.ShowAsync();
                         StartRateLimitTimer(null);
                     }
@@ -247,7 +247,7 @@ namespace HolocronToolset.Dialogs
                             "Using Fork",
                             $"The main repository is not available. Using the fork: {firstFork}",
                             ButtonEnum.Ok,
-                            Icon.Information);
+                            MsBox.Avalonia.Enums.Icon.Information);
                         await infoMsgBox.ShowAsync();
 
                         string[] forkParts = firstFork.Split('/');
@@ -829,7 +829,7 @@ namespace HolocronToolset.Dialogs
                     "No Fork Selected",
                     "Please select a fork to clone.",
                     ButtonEnum.Ok,
-                    Icon.Warning);
+                            MsBox.Avalonia.Enums.Icon.Warning);
                 warningMsgBox.ShowAsync();
                 return;
             }
@@ -903,7 +903,7 @@ namespace HolocronToolset.Dialogs
                             "Clone Failed",
                             $"Failed to clone repository: {errorMessage}",
                             ButtonEnum.Ok,
-                            Icon.Error);
+                            MsBox.Avalonia.Enums.Icon.Error);
                         errorMsgBox.ShowAsync();
                     }
                 }

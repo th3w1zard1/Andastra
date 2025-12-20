@@ -1094,7 +1094,7 @@ namespace HolocronToolset.Windows
                     "dialog.tlk not found",
                     $"Could not open the TalkTable editor, dialog.tlk not found at the expected location\n\n{tlkPath}.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 await messageBox.ShowAsync();
                 return;
             }
@@ -1127,7 +1127,7 @@ namespace HolocronToolset.Windows
                     "global.jrl not found",
                     "Could not open the journal editor: 'global.jrl' not found.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await messageBox.ShowAsync();
                 return;
             }
@@ -1333,7 +1333,7 @@ namespace HolocronToolset.Windows
                     "Reload the installations?",
                     "You appear to have made changes to your installations, would you like to reload?",
                     ButtonEnum.YesNo,
-                    Icon.Question);
+                    MsBox.Avalonia.Enums.Icon.Question);
                 
                 var messageResult = await messageBox.ShowAsync();
                 

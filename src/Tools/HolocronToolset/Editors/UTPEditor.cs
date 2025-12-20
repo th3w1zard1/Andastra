@@ -72,7 +72,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _difficultyModSpin;
 
         // UI Controls - Scripts
-        private Dictionary<string, TextBlock> _scriptFields;
+        private Dictionary<string, TextBox> _scriptFields;
         private List<string> _relevantScriptResnames;
 
         // UI Controls - Comments
@@ -88,7 +88,7 @@ namespace HolocronToolset.Editors
         {
             _installation = installation;
             _utp = new UTP();
-            _scriptFields = new Dictionary<string, TextBlock>();
+            _scriptFields = new Dictionary<string, TextBox>();
             _relevantScriptResnames = new List<string>();
 
             InitializeComponent();

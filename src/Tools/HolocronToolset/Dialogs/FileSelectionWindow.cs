@@ -588,7 +588,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     $"Error opening resource:\n{errorMessage}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
             }
         }

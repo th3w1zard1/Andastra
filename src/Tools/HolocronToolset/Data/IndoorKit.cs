@@ -1540,7 +1540,7 @@ namespace HolocronToolset.Data
                                 var pixelSize = originalBitmap.PixelSize;
                                 var mirroredBitmap = new RenderTargetBitmap(
                                     new PixelSize(pixelSize.Width, pixelSize.Height),
-                                    new Vector(96, 96));
+                                    new Avalonia.Vector(96, 96));
 
                                 using (var context = mirroredBitmap.CreateDrawingContext())
                                 {

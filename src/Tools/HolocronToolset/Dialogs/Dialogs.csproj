@@ -37,4 +37,16 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
+    <PackageReference Include="MessageBox.Avalonia" Version="3.3.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Utils\Utils.csproj" />
+    <ProjectReference Include="..\Widgets\Widgets.csproj" />
+  </ItemGroup>
+
 </Project>

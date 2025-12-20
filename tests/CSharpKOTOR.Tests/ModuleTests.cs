@@ -3,7 +3,9 @@ using System.IO;
 using NUnit.Framework;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
+using InstallationClass = Andastra.Parsing.Installation.Installation;
 using Andastra.Parsing.Resource;
+using static NUnit.Framework.Assert;
 
 namespace AuroraEngine.Common.Tests
 {
@@ -24,19 +26,19 @@ namespace AuroraEngine.Common.Tests
         {
             // This test assumes we have a valid KotOR installation
             // In a real test environment, this would be set up with test data
-            if (!Installation.Installation.DetermineGame(_testInstallPath).HasValue)
+            if (!InstallationClass.DetermineGame(_testInstallPath).HasValue)
             {
                 Assert.Ignore("Test requires a valid KotOR installation path");
                 return;
             }
 
-            var installation = new Installation.Installation(_testInstallPath);
+            var installation = new InstallationClass(_testInstallPath);
 
             // Test module creation with a dummy module name
             var module = new Module("test", installation, true);
 
-            Assert.IsNotNull(module);
-            Assert.AreEqual("test", module.Root);
+            IsNotNull(module);
+            AreEqual("test", module.Root);
         }
 
         [Test]
@@ -46,7 +48,7 @@ namespace AuroraEngine.Common.Tests
             // Skip this test if we can't create a valid installation
             // (requires a valid game installation path)
             var testPath = Path.GetTempPath();
-            Game? gameType = Installation.Installation.DetermineGame(testPath);
+            Game? gameType = InstallationClass.DetermineGame(testPath);
             if (!gameType.HasValue)
             {
                 // Skip test if no valid game installation
@@ -54,10 +56,10 @@ namespace AuroraEngine.Common.Tests
             }
 
             // Create installation for testing
-            Installation.Installation installation;
+            InstallationClass installation;
             try
             {
-                installation = new Installation.Installation(testPath);
+                installation = new InstallationClass(testPath);
             }
             catch (InvalidOperationException)
             {

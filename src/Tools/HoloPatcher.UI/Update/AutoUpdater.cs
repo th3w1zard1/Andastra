@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using HoloPatcher.UI.Views.Dialogs;
 using JetBrains.Annotations;
 
 namespace HoloPatcher.UI.Update
@@ -32,32 +31,18 @@ namespace HoloPatcher.UI.Update
             _useBetaChannel = useBetaChannel;
         }
 
-        public async Task RunAsync(CancellationToken cancellationToken = default)
+        public async Task RunAsync(IUpdateProgress progress = null, CancellationToken cancellationToken = default)
         {
-            var progressWindow = new UpdateProgressWindow
-            {
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-            progressWindow.Show(_owner);
-
-            try
-            {
-                string tempRoot = CreateTempDirectory();
-                string archivePath = await DownloadUpdateAsync(tempRoot, progressWindow.ViewModel, cancellationToken);
-                string payloadRoot = await ExtractArchiveAsync(archivePath, progressWindow.ViewModel, cancellationToken);
-                await ApplyUpdateAsync(payloadRoot, progressWindow.ViewModel, cancellationToken);
-            }
-            finally
-            {
-                progressWindow.AllowClose();
-                progressWindow.Close();
-            }
+            string tempRoot = CreateTempDirectory();
+            string archivePath = await DownloadUpdateAsync(tempRoot, progress, cancellationToken);
+            string payloadRoot = await ExtractArchiveAsync(archivePath, progress, cancellationToken);
+            await ApplyUpdateAsync(payloadRoot, progress, cancellationToken);
         }
 
-        private async Task<string> DownloadUpdateAsync(string tempRoot, UpdateProgressViewModel progress, CancellationToken token)
+        private async Task<string> DownloadUpdateAsync(string tempRoot, IUpdateProgress progress, CancellationToken token)
         {
             string version = _info.GetChannelVersion(_useBetaChannel);
-            progress.ReportStatus($"Downloading HoloPatcher {version}...");
+            progress?.ReportStatus($"Downloading HoloPatcher {version}...");
 
             System.Collections.Generic.IReadOnlyList<string> mirrors = _info.GetPlatformMirrors(_useBetaChannel);
             Exception lastError = null;
@@ -121,7 +106,7 @@ namespace HoloPatcher.UI.Update
                                         }
                                     }
 
-                                    progress.ReportDownload(downloaded, contentLength, eta);
+                                    progress?.ReportDownload(downloaded, contentLength, eta);
                                 }
 
                                 if (contentLength.HasValue && downloaded < contentLength.Value)
@@ -129,7 +114,7 @@ namespace HoloPatcher.UI.Update
                                     throw new IOException("The download ended prematurely.");
                                 }
 
-                                progress.ReportStatus("Download complete.");
+                                progress?.ReportStatus("Download complete.");
                                 return destination;
                             }
                         }
@@ -141,7 +126,7 @@ namespace HoloPatcher.UI.Update
                     catch (Exception ex)
                     {
                         lastError = ex;
-                        progress.ReportStatus($"Download failed from {mirror}: {ex.Message}");
+                        progress?.ReportStatus($"Download failed from {mirror}: {ex.Message}");
                     }
                 }
             }
@@ -164,9 +149,9 @@ namespace HoloPatcher.UI.Update
             return client;
         }
 
-        private async Task<string> ExtractArchiveAsync(string archivePath, UpdateProgressViewModel progress, CancellationToken token)
+        private async Task<string> ExtractArchiveAsync(string archivePath, IUpdateProgress progress, CancellationToken token)
         {
-            progress.ReportStatus("Extracting update package...");
+            progress?.ReportStatus("Extracting update package...");
             string extractRoot = Path.Combine(Path.GetDirectoryName(archivePath) ?? Path.GetTempPath(), "extracted");
             Directory.CreateDirectory(extractRoot);
 
@@ -188,7 +173,7 @@ namespace HoloPatcher.UI.Update
                 throw new NotSupportedException($"Unsupported archive format: {Path.GetExtension(archivePath)}");
             }
 
-            progress.ReportStatus("Archive extracted.");
+            progress?.ReportStatus("Archive extracted.");
             return LocatePayloadRoot(extractRoot);
         }
 
@@ -254,7 +239,7 @@ namespace HoloPatcher.UI.Update
             }
         }
 
-        private async Task ApplyUpdateAsync(string payloadRoot, UpdateProgressViewModel progress, CancellationToken token)
+        private async Task ApplyUpdateAsync(string payloadRoot, IUpdateProgress progress, CancellationToken token)
         {
 #if NET8_0_OR_GREATER
             string currentProcessPath = Environment.ProcessPath
@@ -291,9 +276,9 @@ namespace HoloPatcher.UI.Update
 #endif
             }
 
-            progress.ReportStatus("Finalizing update...");
+            progress?.ReportStatus("Finalizing update...");
             LaunchScript(scriptPath);
-            progress.ReportStatus("Restarting to complete the update...");
+            progress?.ReportStatus("Restarting to complete the update...");
 
             await Task.Delay(TimeSpan.FromSeconds(2), token);
             Environment.Exit((int)Core.ExitCode.CloseForUpdateProcess);

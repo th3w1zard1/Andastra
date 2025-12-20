@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Media;
+using Andastra.Parsing.Installation;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
@@ -30,7 +32,8 @@ using StackPanel = Avalonia.Controls.StackPanel;
 using Expander = Avalonia.Controls.Expander;
 using ResourceTYpe = Andastra.Parsing.Resource.ResourceType;
 using GFF = Andastra.Parsing.Formats.GFF.GFF;
-using MsBox = MsBox.Avalonia;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Editors
 {
@@ -631,11 +634,11 @@ namespace HolocronToolset.Editors
             else
             {
                 // Matching PyKotor implementation: QMessageBox(QMessageBox.Icon.Critical, "Could not find audio file", f"Could not find audio resource '{resname}'.")
-                var msgBox = MsBox.MessageBoxManager.GetMessageBoxStandard(
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
                     "Could not find audio file",
                     $"Could not find audio resource '{resname}'.",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
+                    ButtonEnum.Ok,
+                    Icon.Error);
                 msgBox.ShowAsync();
             }
         }
@@ -680,11 +683,11 @@ namespace HolocronToolset.Editors
             {
                 // Log error and show message box
                 System.Console.WriteLine($"Failed to play sound: {ex}");
-                var msgBox = MsBox.MessageBoxManager.GetMessageBoxStandard(
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
                     "Error Playing Sound",
                     $"Failed to play sound:\n{ex.Message}",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
+                    ButtonEnum.Ok,
+                    Icon.Error);
                 msgBox.ShowAsync();
                 return false;
             }

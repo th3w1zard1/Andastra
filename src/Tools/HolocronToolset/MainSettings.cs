@@ -124,9 +124,6 @@ namespace HolocronToolset.NET
                             // In Avalonia, fonts are typically applied via styles/resources
                             if (Application.Current != null)
                             {
-                                // Create a font resource that can be used throughout the application
-                                var font = new Font(fontFamily, size, style, weight);
-                                
                                 // Set default font family and size in application resources
                                 // This will be used as the default for all controls
                                 if (!Application.Current.Resources.ContainsKey("DefaultFontFamily"))

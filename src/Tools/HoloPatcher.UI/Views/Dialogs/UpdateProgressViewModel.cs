@@ -4,9 +4,11 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using Avalonia.Threading;
 
+using HoloPatcher.UI.Update;
+
 namespace HoloPatcher.UI.Views.Dialogs
 {
-    public sealed class UpdateProgressViewModel : INotifyPropertyChanged
+    public sealed class UpdateProgressViewModel : INotifyPropertyChanged, IUpdateProgress
     {
         private string _statusText = "Preparing update...";
         private string _bytesText = string.Empty;
