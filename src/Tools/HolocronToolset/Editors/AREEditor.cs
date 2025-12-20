@@ -816,24 +816,21 @@ namespace HolocronToolset.Editors
                 _windPowerSelect.SelectedIndex = are.WindPower;
             }
             // Matching Python: self.ui.rainCheck.setChecked(are.chance_rain == max_value) (line 210)
-            // Note: ARE class has ChancesOfRain as ResRef, but PyKotor uses int (0 or 100)
-            // For now, we'll check if it's non-blank to indicate enabled
+            // Original: max_value: int = 100
+            // PyKotor uses chance_rain == 100 to indicate enabled
             if (_rainCheck != null)
             {
-                // PyKotor uses chance_rain == 100 to indicate enabled
-                // Since C# ARE uses ResRef, we'll need to check the GFF directly or use a workaround
-                // For now, default to false - this may need adjustment based on actual GFF structure
-                _rainCheck.IsChecked = false;
+                _rainCheck.IsChecked = are.ChanceRain == 100;
             }
             // Matching Python: self.ui.snowCheck.setChecked(are.chance_snow == max_value) (line 211)
             if (_snowCheck != null)
             {
-                _snowCheck.IsChecked = false;
+                _snowCheck.IsChecked = are.ChanceSnow == 100;
             }
             // Matching Python: self.ui.lightningCheck.setChecked(are.chance_lightning == max_value) (line 212)
             if (_lightningCheck != null)
             {
-                _lightningCheck.IsChecked = false;
+                _lightningCheck.IsChecked = are.ChanceLightning == 100;
             }
             // Matching Python: self.ui.shadowsCheck.setChecked(are.shadows) (line 213)
             // Note: ARE class doesn't have Shadows bool, but has ShadowOpacity as ResRef
@@ -1194,9 +1191,41 @@ namespace HolocronToolset.Editors
             {
                 are.WindPower = _windPowerSelect.SelectedIndex;
             }
-            // Original: are.chance_rain = 100 if self.ui.rainCheck.isChecked() else 0 (line 315)
-            // Note: ARE class has ChancesOfRain as ResRef, not int
-            // For TSL installations, we would need to write this to GFF directly
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:313-322
+            // Original: # Read checkbox state - if checkbox is checked, use 100; otherwise use 0
+            // Original: # For K1 installations, weather checkboxes are TSL-only and should always be 0
+            // Original: if self._installation and self._installation.tsl:
+            // Original:     are.chance_rain = 100 if self.ui.rainCheck.isChecked() else 0
+            // Original:     are.chance_snow = 100 if self.ui.snowCheck.isChecked() else 0
+            // Original:     are.chance_lightning = 100 if self.ui.lightningCheck.isChecked() else 0
+            // Original: else:
+            // Original:     # K1 installations don't support weather checkboxes
+            // Original:     are.chance_rain = 0
+            // Original:     are.chance_snow = 0
+            // Original:     are.chance_lightning = 0
+            if (_installation != null && _installation.IsTsl)
+            {
+                // TSL (K2) installations support weather checkboxes
+                if (_rainCheck != null)
+                {
+                    are.ChanceRain = _rainCheck.IsChecked == true ? 100 : 0;
+                }
+                if (_snowCheck != null)
+                {
+                    are.ChanceSnow = _snowCheck.IsChecked == true ? 100 : 0;
+                }
+                if (_lightningCheck != null)
+                {
+                    are.ChanceLightning = _lightningCheck.IsChecked == true ? 100 : 0;
+                }
+            }
+            else
+            {
+                // K1 installations don't support weather checkboxes - always set to 0
+                are.ChanceRain = 0;
+                are.ChanceSnow = 0;
+                are.ChanceLightning = 0;
+            }
             // Original: are.shadows = self.ui.shadowsCheck.isChecked() (line 323)
             // Note: ARE class doesn't have Shadows bool - would need to write to GFF directly
             // Original: are.shadow_opacity = self.ui.shadowsSpin.value() (line 324)
@@ -1567,9 +1596,9 @@ namespace HolocronToolset.Editors
             copy.DirtyFormula3 = source.DirtyFormula3;
             copy.WindPower = source.WindPower;
             copy.ShadowOpacity = source.ShadowOpacity;
-            copy.ChancesOfRain = source.ChancesOfRain;
-            copy.ChancesOfSnow = source.ChancesOfSnow;
-            copy.ChancesOfLightning = source.ChancesOfLightning;
+            copy.ChanceRain = source.ChanceRain;
+            copy.ChanceSnow = source.ChanceSnow;
+            copy.ChanceLightning = source.ChanceLightning;
             copy.ChancesOfFog = source.ChancesOfFog;
             copy.Weather = source.Weather;
             copy.SkyBox = source.SkyBox;

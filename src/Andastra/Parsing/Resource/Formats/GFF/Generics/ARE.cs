@@ -75,9 +75,30 @@ namespace Andastra.Parsing.Resource.Generics
         public Color DynamicLight { get; set; } = new Color(0, 0, 0);
         public int WindPower { get; set; }
         public ResRef ShadowOpacity { get; set; } = ResRef.FromBlank();
-        public ResRef ChancesOfRain { get; set; } = ResRef.FromBlank();
-        public ResRef ChancesOfSnow { get; set; } = ResRef.FromBlank();
-        public ResRef ChancesOfLightning { get; set; } = ResRef.FromBlank();
+        /// <summary>
+        /// Percent chance of rain (0-100). KotOR 2 Only.
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:74
+        /// Original: chance_rain: "ChanceRain" field. KotOR 2 Only.
+        /// </remarks>
+        public int ChanceRain { get; set; }
+        /// <summary>
+        /// Percent chance of snow (0-100). KotOR 2 Only.
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:75
+        /// Original: chance_snow: "ChanceSnow" field. KotOR 2 Only.
+        /// </remarks>
+        public int ChanceSnow { get; set; }
+        /// <summary>
+        /// Percent chance of lightning (0-100). KotOR 2 Only.
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:76
+        /// Original: chance_lightning: "ChanceLightning" field. KotOR 2 Only.
+        /// </remarks>
+        public int ChanceLightning { get; set; }
         public ResRef ChancesOfFog { get; set; } = ResRef.FromBlank();
         public int Weather { get; set; }
         public int SkyBox { get; set; }

@@ -80,6 +80,14 @@ namespace Andastra.Parsing.Resource.Generics
             are.FogFar = root.Acquire<float>("SunFogFar", 0.0f);
             are.WindPower = root.Acquire<int>("WindPower", 0);
             are.ShadowOpacity = root.Acquire<ResRef>("ShadowOpacity", ResRef.FromBlank());
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:131-134
+            // Original: are.chance_lightning = root.acquire("ChanceLightning", 0)
+            // Original: are.chance_snow = root.acquire("ChanceSnow", 0)
+            // Original: are.chance_rain = root.acquire("ChanceRain", 0)
+            // Note: These are K2-specific fields (KotOR 2 Only), will be 0 for K1, Aurora, and Eclipse
+            are.ChanceRain = root.Acquire<int>("ChanceRain", 0);
+            are.ChanceSnow = root.Acquire<int>("ChanceSnow", 0);
+            are.ChanceLightning = root.Acquire<int>("ChanceLightning", 0);
             are.OnEnter = root.Acquire<ResRef>("OnEnter", ResRef.FromBlank());
             are.OnExit = root.Acquire<ResRef>("OnExit", ResRef.FromBlank());
             are.OnHeartbeat = root.Acquire<ResRef>("OnHeartbeat", ResRef.FromBlank());
@@ -214,14 +222,18 @@ namespace Andastra.Parsing.Resource.Generics
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:635-652
                 // Original: K2-specific fields (DirtyARGB, ChanceRain/Snow/Lightning, DirtySize/Formula/Func)
                 // Note: These fields are only in K2, not in K1, Aurora, or Eclipse
-                // TODO: Add remaining K2-specific properties to ARE class (DirtyArgb1-3, ChanceRain/Snow/Lightning, DirtySize/Func1-3)
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:640-642
+                // Original: root.set_int32("ChanceRain", are.chance_rain)
+                // Original: root.set_int32("ChanceSnow", are.chance_snow)
+                // Original: root.set_int32("ChanceLightning", are.chance_lightning)
+                root.SetInt32("ChanceRain", are.ChanceRain);
+                root.SetInt32("ChanceSnow", are.ChanceSnow);
+                root.SetInt32("ChanceLightning", are.ChanceLightning);
+                // TODO: Add remaining K2-specific properties to ARE class (DirtyArgb1-3, DirtySize/Func1-3)
                 // When ARE class has these properties, uncomment:
                 // root.SetInt32("DirtyARGBOne", (int)are.DirtyArgb1.ToRgbInteger());
                 // root.SetInt32("DirtyARGBTwo", (int)are.DirtyArgb2.ToRgbInteger());
                 // root.SetInt32("DirtyARGBThree", (int)are.DirtyArgb3.ToRgbInteger());
-                // root.SetInt32("ChanceRain", are.ChanceRain);
-                // root.SetInt32("ChanceSnow", are.ChanceSnow);
-                // root.SetInt32("ChanceLightning", are.ChanceLightning);
                 // root.SetInt32("DirtySizeOne", are.DirtySize1);
                 // root.SetInt32("DirtyFuncOne", are.DirtyFunc1);
                 // root.SetInt32("DirtySizeTwo", are.DirtySize2);
