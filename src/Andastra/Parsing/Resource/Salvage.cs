@@ -12,7 +12,7 @@ using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Formats.MDL;
-using MDLData = Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.SSF;
@@ -573,7 +573,7 @@ namespace Andastra.Parsing.Resource
                     try {
                         byte[] data = fileRes.GetData();
                         if (data == null) return null;
-                        MDLData.MDL mdl = MDLAuto.ReadMdl(data);
+                        var mdl = MDLAuto.ReadMdl(data);
                         using (var ms = new System.IO.MemoryStream())
                         {
                             MDLAuto.WriteMdl(mdl, ms);
