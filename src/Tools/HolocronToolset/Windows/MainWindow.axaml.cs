@@ -1281,13 +1281,19 @@ namespace HolocronToolset.Windows
         // Original: def open_settings_dialog(self):
         private async void OpenSettingsDialog()
         {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
+            // Original: dialog = SettingsDialog(self)
             var dialog = new Dialogs.SettingsDialog(this);
-            bool? result = await dialog.ShowDialog<bool?>(this);
             
-            // Matching PyKotor implementation: check if dialog was accepted (result == true) and installations were edited
+            // Matching PyKotor implementation: if (dialog.exec() and dialog.installation_edited and ...)
+            // In Avalonia, ShowDialog returns a result indicating if dialog was accepted
+            var result = await dialog.ShowDialog<bool?>(this);
+            
+            // Matching PyKotor implementation: if dialog was accepted and installations were edited
             if (result == true && dialog.InstallationEdited)
             {
-                // Matching PyKotor implementation: show confirmation dialog
+                // Matching PyKotor implementation: QMessageBox(...).exec() == QMessageBox.StandardButton.Yes
+                // Show message box asking if user wants to reload installations
                 var messageBox = MessageBoxManager.GetMessageBoxStandard(
                     "Reload the installations?",
                     "You appear to have made changes to your installations, would you like to reload?",
@@ -1296,9 +1302,10 @@ namespace HolocronToolset.Windows
                 
                 var messageResult = await messageBox.ShowAsync();
                 
-                // Matching PyKotor implementation: reload settings if user confirms
+                // Matching PyKotor implementation: if user clicks Yes, reload settings
                 if (messageResult == ButtonResult.Yes)
                 {
+                    // Matching PyKotor implementation: self.reload_settings()
                     ReloadSettings();
                 }
             }
