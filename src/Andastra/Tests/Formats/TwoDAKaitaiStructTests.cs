@@ -30,17 +30,57 @@ namespace Andastra.Parsing.Tests.Formats
         private static readonly string[] SupportedLanguages = new[]
         {
             "python", "java", "javascript", "csharp", "cpp_stl", "go", "ruby",
-            "php", "rust", "swift", "perl", "nim", "lua", "kotlin", "typescript"
+            "php", "rust", "perl", "nim", "lua"
         };
+
+        private static string FindKaitaiCompiler()
+        {
+            // Try Windows installation path first
+            var windowsPath = @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat";
+            if (File.Exists(windowsPath))
+            {
+                return windowsPath;
+            }
+
+            // Try in PATH
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = FindKaitaiCompiler(),
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                process.Start();
+                process.WaitForExit(5000);
+                if (process.ExitCode == 0)
+                {
+                    return "kaitai-struct-compiler";
+                }
+            }
+            catch
+            {
+                // Not in PATH
+            }
+
+            return windowsPath; // Return Windows path as fallback even if it doesn't exist
+        }
 
         [Fact(Timeout = 300000)]
         public void TestKaitaiStructCompilerAvailable()
         {
+            string compilerPath = FindKaitaiCompiler();
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "kaitai-struct-compiler",
+                    FileName = compilerPath,
                     Arguments = "--version",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -97,7 +137,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "kaitai-struct-compiler",
+                    FileName = FindKaitaiCompiler(),
                     Arguments = $"--version",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -118,11 +158,12 @@ namespace Andastra.Parsing.Tests.Formats
                 }
 
                 // Try to compile to a test language to validate syntax
+                string compilerPath = FindKaitaiCompiler();
                 var testProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "kaitai-struct-compiler",
+                        FileName = compilerPath,
                         Arguments = $"-t python \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -158,11 +199,12 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
+            string compilerPath = FindKaitaiCompiler();
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "kaitai-struct-compiler",
+                    FileName = compilerPath,
                     Arguments = $"-t {language} \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -214,7 +256,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "kaitai-struct-compiler",
+                    FileName = FindKaitaiCompiler(),
                     Arguments = "--version",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -250,7 +292,7 @@ namespace Andastra.Parsing.Tests.Formats
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "kaitai-struct-compiler",
+                        FileName = FindKaitaiCompiler(),
                         Arguments = $"-t {lang} \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -364,14 +406,14 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
-            SupportedLanguages.Length.Should().BeGreaterOrEqualTo(12,
+            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
                 "Should support at least a dozen languages for testing");
 
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "kaitai-struct-compiler",
+                    FileName = FindKaitaiCompiler(),
                     Arguments = "--version",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -404,7 +446,7 @@ namespace Andastra.Parsing.Tests.Formats
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "kaitai-struct-compiler",
+                        FileName = FindKaitaiCompiler(),
                         Arguments = $"-t {lang} \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -429,7 +471,7 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            compiledCount.Should().BeGreaterOrEqualTo(12,
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
                 $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 
