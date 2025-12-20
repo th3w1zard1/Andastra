@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Avalonia;
+using Avalonia.Media;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.NET
@@ -10,23 +12,140 @@ namespace HolocronToolset.NET
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:16-37
         // Original: def setup_pre_init_settings():
+        /// <summary>
+        /// Setup pre-initialization settings for the Holocron Toolset.
+        /// 
+        /// This function is called before the application window is created.
+        /// It sets up environment variables from user settings, prioritizing existing
+        /// environment variable values to allow system-level overrides.
+        /// 
+        /// Matching PyKotor: setup_pre_init_settings() in main_settings.py
+        /// </summary>
         public static void SetupPreInitSettings()
         {
             // Some application settings must be set before the app starts.
-            // TODO: SIMPLIFIED - For now, this is a simplified version - full implementation will come with ApplicationSettings widget
-            var settings = new Settings("Application");
-
-            // Set environment variables from settings if needed
-            // This will be expanded when ApplicationSettings widget is ported
+            // These ones are accessible through the in-app settings window widget.
+            var settings = new GlobalSettings();
+            
+            // Get environment variables from settings
+            Dictionary<string, string> environmentVariables = settings.AppEnvVariables;
+            
+            // Set environment variables, prioritizing existing environment variable values
+            // This matches Python's os.environ.get(key, value) behavior - only set if not already set
+            foreach (var kvp in environmentVariables)
+            {
+                string key = kvp.Key;
+                string value = kvp.Value;
+                
+                // Use Environment.GetEnvironmentVariable to check if already set
+                // Only set if not already set (preserves existing env vars)
+                string existingValue = Environment.GetEnvironmentVariable(key);
+                if (string.IsNullOrEmpty(existingValue))
+                {
+                    Environment.SetEnvironmentVariable(key, value);
+                }
+            }
+            
+            // Note: In PyKotor, this also applies Qt attributes from REQUIRES_RESTART dict
+            // Since we're using Avalonia instead of Qt, Qt-specific attributes don't apply.
+            // However, we maintain the structure for potential future Avalonia equivalents.
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:40-72
         // Original: def setup_post_init_settings():
+        /// <summary>
+        /// Set up post-initialization settings for the application.
+        /// 
+        /// This function performs the following tasks:
+        /// 1. Retrieves the GlobalSettings instance and sets the global font.
+        /// 2. Applies font settings that can be changed without restarting.
+        /// 
+        /// The function uses the GlobalSettings class to manage and apply various
+        /// settings to the Avalonia Application instance.
+        /// 
+        /// Matching PyKotor: setup_post_init_settings() in main_settings.py
+        /// </summary>
         public static void SetupPostInitSettings()
         {
-            // Set up post-initialization settings for the application.
-            // This will be expanded when ApplicationSettings widget is ported
-            var settings = new Settings("Application");
+            var settings = new GlobalSettings();
+            
+            // Apply font settings
+            string fontString = settings.GlobalFont;
+            if (!string.IsNullOrEmpty(fontString))
+            {
+                try
+                {
+                    // Parse font string (format: "Family|Size|Style|Weight")
+                    var parts = fontString.Split('|');
+                    if (parts.Length >= 2)
+                    {
+                        string family = parts[0].Trim();
+                        if (double.TryParse(parts[1].Trim(), out double size))
+                        {
+                            var fontFamily = new FontFamily(family);
+                            FontWeight weight = FontWeight.Normal;
+                            FontStyle style = FontStyle.Normal;
+
+                            // Parse weight if available
+                            if (parts.Length >= 4 && int.TryParse(parts[3].Trim(), out int weightValue))
+                            {
+                                weight = weightValue >= 700 ? FontWeight.Bold : FontWeight.Normal;
+                            }
+
+                            // Parse style if available
+                            if (parts.Length >= 3)
+                            {
+                                string styleStr = parts[2].Trim().ToLowerInvariant();
+                                if (styleStr.Contains("italic"))
+                                {
+                                    style = FontStyle.Italic;
+                                }
+                            }
+
+                            // Apply font to Application.Current.Resources
+                            // In Avalonia, fonts are typically applied via styles/resources
+                            if (Application.Current != null)
+                            {
+                                // Create a font resource that can be used throughout the application
+                                var font = new Font(fontFamily, size, style, weight);
+                                
+                                // Set default font family and size in application resources
+                                // This will be used as the default for all controls
+                                if (!Application.Current.Resources.ContainsKey("DefaultFontFamily"))
+                                {
+                                    Application.Current.Resources.Add("DefaultFontFamily", fontFamily);
+                                }
+                                else
+                                {
+                                    Application.Current.Resources["DefaultFontFamily"] = fontFamily;
+                                }
+                                
+                                if (!Application.Current.Resources.ContainsKey("DefaultFontSize"))
+                                {
+                                    Application.Current.Resources.Add("DefaultFontSize", size);
+                                }
+                                else
+                                {
+                                    Application.Current.Resources["DefaultFontSize"] = size;
+                                }
+                                
+                                // Note: In PyKotor/Qt, QApplication.setFont() applies globally
+                                // In Avalonia, fonts are typically applied via styles or per-control
+                                // For now, we store the font preference in resources for use by styles
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // If font parsing fails, use default font
+                    // This matches PyKotor behavior where invalid font strings are ignored
+                }
+            }
+            
+            // Note: In PyKotor, this also applies Qt attributes (AA_*) and MISC_SETTINGS
+            // Since we're using Avalonia instead of Qt, Qt-specific attributes don't apply.
+            // However, we maintain the structure for potential future Avalonia equivalents.
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:75-103
