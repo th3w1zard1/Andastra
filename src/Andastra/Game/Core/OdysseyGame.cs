@@ -130,6 +130,13 @@ namespace Andastra.Runtime.Game.Core
         private bool _isEnteringSaveName = false;
         private float _saveNameInputCursorTime = 0f;
 
+        // Movies menu system
+        private List<string> _availableMovies;
+        private int _selectedMovieIndex = 0;
+        private Andastra.Runtime.Core.Video.MoviePlayer _moviePlayer;
+        private bool _isPlayingMovie = false;
+        private System.Threading.CancellationTokenSource _movieCancellationTokenSource;
+
         // Input tracking
         private IMouseState _previousMouseState;
         private IKeyboardState _previousKeyboardState;
@@ -439,10 +446,6 @@ namespace Andastra.Runtime.Game.Core
             {
                 UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
             }
-            else if (_currentState == GameState.MoviesMenu)
-            {
-                UpdateMoviesMenu(deltaTime, keyboardState, mouseState);
-            }
             else if (_currentState == GameState.CharacterCreation)
             {
                 if (_characterCreationScreen != null)
@@ -700,70 +703,8 @@ namespace Andastra.Runtime.Game.Core
 
                 case "BTN_OPTIONS":
                     // Options button - show options menu
-                    // Based on swkotor.exe and swkotor2.exe: Options menu system
-                    // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 (constructor), loads "optionsmain" GUI
-                    Console.WriteLine("[Odyssey] Options button clicked - opening options menu");
-                    OpenOptionsMenu();
-                    break;
-                
-                case "BTN_BACK":
-                    // Back button - return to previous menu
-                    // Based on swkotor.exe and swkotor2.exe: Back button handler in options menu
-                    if (_currentState == GameState.OptionsMenu)
-                    {
-                        Console.WriteLine("[Odyssey] Back button clicked - closing options menu");
-                        CloseOptionsMenu();
-                    }
-                    break;
-                
-                case "BTN_GAMEPLAY":
-                    // Gameplay options button - open gameplay options submenu
-                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
-                    if (_currentState == GameState.OptionsMenu)
-                    {
-                        Console.WriteLine("[Odyssey] Gameplay options button clicked - gameplay options submenu not yet implemented");
-                        // TODO: Implement gameplay options submenu
-                    }
-                    break;
-                
-                case "BTN_FEEDBACK":
-                    // Feedback options button - open feedback options submenu
-                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
-                    if (_currentState == GameState.OptionsMenu)
-                    {
-                        Console.WriteLine("[Odyssey] Feedback options button clicked - feedback options submenu not yet implemented");
-                        // TODO: Implement feedback options submenu
-                    }
-                    break;
-                
-                case "BTN_AUTOPAUSE":
-                    // Autopause options button - open autopause options submenu
-                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnAutopauseOpt @ 0x006de2c0
-                    if (_currentState == GameState.OptionsMenu)
-                    {
-                        Console.WriteLine("[Odyssey] Autopause options button clicked - autopause options submenu not yet implemented");
-                        // TODO: Implement autopause options submenu
-                    }
-                    break;
-                
-                case "BTN_GRAPHICS":
-                    // Graphics options button - open graphics options submenu
-                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
-                    if (_currentState == GameState.OptionsMenu)
-                    {
-                        Console.WriteLine("[Odyssey] Graphics options button clicked - graphics options submenu not yet implemented");
-                        // TODO: Implement graphics options submenu
-                    }
-                    break;
-                
-                case "BTN_SOUND":
-                    // Sound options button - open sound options submenu
-                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnSoundOpt @ 0x006e3e00
-                    if (_currentState == GameState.OptionsMenu)
-                    {
-                        Console.WriteLine("[Odyssey] Sound options button clicked - sound options submenu not yet implemented");
-                        // TODO: Implement sound options submenu
-                    }
+                    Console.WriteLine("[Odyssey] Options button clicked - options menu not yet implemented");
+                    // TODO: Implement options menu
                     break;
 
                 case "BTN_EXIT":
@@ -780,48 +721,8 @@ namespace Andastra.Runtime.Game.Core
 
                 case "BTN_MUSIC":
                     // Music button (K2 only) - toggle music
-                    // Based on swkotor2.exe FUN_006d0790: BTN_MUSIC button handler
-                    // Toggles music playback on/off for main menu
-                    if (_musicPlayer != null)
-                    {
-                        if (_musicEnabled)
-                        {
-                            // Disable music: stop current playback
-                            if (_musicStarted)
-                            {
-                                _musicPlayer.Stop();
-                                _musicStarted = false;
-                            }
-                            _musicEnabled = false;
-                            Console.WriteLine("[Odyssey] Music disabled by user");
-                        }
-                        else
-                        {
-                            // Enable music: start playback if in main menu
-                            _musicEnabled = true;
-                            if (_currentState == GameState.MainMenu && !_musicStarted)
-                            {
-                                string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
-                                if (_musicPlayer.Play(musicResRef, 1.0f))
-                                {
-                                    _musicStarted = true;
-                                    Console.WriteLine($"[Odyssey] Music enabled and started: {musicResRef}");
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"[Odyssey] WARNING: Failed to play main menu music after toggle: {musicResRef}");
-                                }
-                            }
-                            else
-                            {
-                                Console.WriteLine("[Odyssey] Music enabled by user");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("[Odyssey] WARNING: Music button clicked but music player is not available");
-                    }
+                    Console.WriteLine("[Odyssey] Music button clicked - music toggle not yet implemented");
+                    // TODO: Implement music toggle
                     break;
 
                 default:
@@ -4524,6 +4425,265 @@ namespace Andastra.Runtime.Game.Core
             _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
 
             _spriteBatch.End();
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            if (_spriteBatch != null)
+            {
+                _spriteBatch.Dispose();
+                _spriteBatch = null;
+            }
+
+            if (_menuTexture != null)
+            {
+                _menuTexture.Dispose();
+                _menuTexture = null;
+            }
+
+            // Dispose ground plane buffers
+            if (_groundVertexBuffer != null)
+            {
+                _groundVertexBuffer.Dispose();
+                _groundVertexBuffer = null;
+            }
+
+            if (_groundIndexBuffer != null)
+            {
+                _groundIndexBuffer.Dispose();
+                _groundIndexBuffer = null;
+            }
+
+            if (_graphicsBackend != null)
+            {
+                _graphicsBackend.Dispose();
+            }
+        }
+    }
+}
+
+
+            // Draw title
+            if (_font != null)
+            {
+                string title = "OPTIONS";
+                Vector2 titleSize = _font.MeasureString(title);
+                _spriteBatch.DrawString(_font, title,
+                    new Vector2(centerX - titleSize.X / 2, 50),
+                    Color.White);
+            }
+
+            // Draw tabs
+            string[] tabNames = { "Graphics", "Sound", "Gameplay", "Controls" };
+            int tabWidth = viewportWidth / 4;
+            int tabHeight = 40;
+
+            for (int i = 0; i < tabNames.Length; i++)
+            {
+                Color tabColor = (_selectedOptionsTab == i) ? Color.Yellow : Color.Gray;
+                Rectangle tabRect = new Rectangle(i * tabWidth, 100, tabWidth, tabHeight);
+
+                // Draw tab background
+                if (_menuTexture != null)
+                {
+                    _spriteBatch.Draw(_menuTexture, tabRect, tabColor * 0.3f);
+                }
+
+                // Draw tab text
+                if (_font != null)
+                {
+                    Vector2 tabTextSize = _font.MeasureString(tabNames[i]);
+                    _spriteBatch.DrawString(_font, tabNames[i],
+                        new Vector2(tabRect.X + tabRect.Width / 2 - tabTextSize.X / 2,
+                                   tabRect.Y + tabRect.Height / 2 - tabTextSize.Y / 2),
+                        tabColor);
+                }
+            }
+
+            // Draw options for current tab
+            DrawCurrentTabOptions();
+
+            // Draw instructions
+            if (_font != null)
+            {
+                string instructions = "Use Arrow Keys to navigate, Enter/Space to toggle, Left/Right to adjust values, ESC to return";
+                Vector2 instrSize = _font.MeasureString(instructions);
+                _spriteBatch.DrawString(_font, instructions,
+                    new Vector2(centerX - instrSize.X / 2, viewportHeight - 50),
+                    Color.LightGray);
+            }
+
+            _spriteBatch.End();
+        }
+
+        /// <summary>
+        /// Draws the options for the currently selected tab.
+        /// </summary>
+        private void DrawCurrentTabOptions()
+        {
+            int startY = 160;
+            int itemHeight = 30;
+            int labelX = 50;
+            int valueX = 400;
+
+            switch (_selectedOptionsTab)
+            {
+                case 0: // Graphics
+                    DrawGraphicsOptions(startY, itemHeight, labelX, valueX);
+                    break;
+                case 1: // Sound
+                    DrawSoundOptions(startY, itemHeight, labelX, valueX);
+                    break;
+                case 2: // Gameplay
+                    DrawGameplayOptions(startY, itemHeight, labelX, valueX);
+                    break;
+                case 3: // Controls
+                    DrawControlsOptions(startY, itemHeight, labelX, valueX);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Draws graphics options.
+        /// </summary>
+        private void DrawGraphicsOptions(int startY, int itemHeight, int labelX, int valueX)
+        {
+            string[] labels = {
+                "Resolution Width:", "Resolution Height:", "Fullscreen:", "Texture Quality:",
+                "Shadow Quality:", "Anisotropic Filtering:", "VSync:", "Anti-Aliasing:", "Apply Changes"
+            };
+
+            string[] values = {
+                _gameOptions.ResolutionWidth.ToString(),
+                _gameOptions.ResolutionHeight.ToString(),
+                _gameOptions.Fullscreen ? "On" : "Off",
+                GetTextureQualityString(_gameOptions.TextureQuality),
+                GetShadowQualityString(_gameOptions.ShadowQuality),
+                _gameOptions.AnisotropicFiltering == 0 ? "Off" : $"{_gameOptions.AnisotropicFiltering}x",
+                _gameOptions.VSync ? "On" : "Off",
+                _gameOptions.AntiAliasing ? "On" : "Off",
+                "[Press Enter to Apply]"
+            };
+
+            DrawOptionItems(labels, values, startY, itemHeight, labelX, valueX);
+        }
+
+        /// <summary>
+        /// Draws sound options.
+        /// </summary>
+        private void DrawSoundOptions(int startY, int itemHeight, int labelX, int valueX)
+        {
+            string[] labels = {
+                "Master Volume:", "Music Volume:", "Effects Volume:", "Voice Volume:",
+                "Sound Enabled:", "Music Enabled:", "Apply Changes"
+            };
+
+            string[] values = {
+                $"{(_gameOptions.MasterVolume * 100):F0}%",
+                $"{(_gameOptions.MusicVolume * 100):F0}%",
+                $"{(_gameOptions.EffectsVolume * 100):F0}%",
+                $"{(_gameOptions.VoiceVolume * 100):F0}%",
+                _gameOptions.SoundEnabled ? "On" : "Off",
+                _gameOptions.MusicEnabled ? "On" : "Off",
+                "[Press Enter to Apply]"
+            };
+
+            DrawOptionItems(labels, values, startY, itemHeight, labelX, valueX);
+        }
+
+        /// <summary>
+        /// Draws gameplay options.
+        /// </summary>
+        private void DrawGameplayOptions(int startY, int itemHeight, int labelX, int valueX)
+        {
+            string[] labels = {
+                "Mouse Sensitivity:", "Invert Mouse Y:", "Auto-save:", "Auto-save Interval:",
+                "Tooltips:", "Subtitles:", "Dialogue Speed:", "Apply Changes"
+            };
+
+            string[] values = {
+                $"{_gameOptions.MouseSensitivity:F1}",
+                _gameOptions.InvertMouseY ? "On" : "Off",
+                _gameOptions.AutoSave ? "On" : "Off",
+                $"{_gameOptions.AutoSaveInterval / 60} min",
+                _gameOptions.Tooltips ? "On" : "Off",
+                _gameOptions.Subtitles ? "On" : "Off",
+                $"{_gameOptions.DialogueSpeed:F1}x",
+                "[Press Enter to Apply]"
+            };
+
+            DrawOptionItems(labels, values, startY, itemHeight, labelX, valueX);
+        }
+
+        /// <summary>
+        /// Draws controls options.
+        /// </summary>
+        private void DrawControlsOptions(int startY, int itemHeight, int labelX, int valueX)
+        {
+            string[] labels = { "Classic Controls:", "Apply Changes" };
+            string[] values = {
+                _gameOptions.ClassicControls ? "On" : "Off",
+                "[Press Enter to Apply]"
+            };
+
+            DrawOptionItems(labels, values, startY, itemHeight, labelX, valueX);
+        }
+
+        /// <summary>
+        /// Draws option items with labels and values.
+        /// </summary>
+        private void DrawOptionItems(string[] labels, string[] values, int startY, int itemHeight, int labelX, int valueX)
+        {
+            if (_font == null) return;
+
+            for (int i = 0; i < labels.Length; i++)
+            {
+                int y = startY + i * itemHeight;
+                Color textColor = (_selectedOptionsItem == i) ? Color.Yellow : Color.White;
+
+                // Draw label
+                _spriteBatch.DrawString(_font, labels[i], new Vector2(labelX, y), textColor);
+
+                // Draw value
+                _spriteBatch.DrawString(_font, values[i], new Vector2(valueX, y), textColor);
+
+                // Draw selection indicator
+                if (_selectedOptionsItem == i)
+                {
+                    _spriteBatch.DrawString(_font, ">", new Vector2(labelX - 20, y), Color.Yellow);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets texture quality string representation.
+        /// </summary>
+        private string GetTextureQualityString(int quality)
+        {
+            switch (quality)
+            {
+                case 0: return "Low";
+                case 1: return "Medium";
+                case 2: return "High";
+                default: return "Unknown";
+            }
+        }
+
+        /// <summary>
+        /// Gets shadow quality string representation.
+        /// </summary>
+        private string GetShadowQualityString(int quality)
+        {
+            switch (quality)
+            {
+                case 0: return "Off";
+                case 1: return "Low";
+                case 2: return "Medium";
+                case 3: return "High";
+                default: return "Unknown";
+            }
         }
 
         #endregion
