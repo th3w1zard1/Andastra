@@ -10,8 +10,10 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Odyssey.Fonts;
+using Andastra.Runtime.MonoGame.Converters;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.GUI
@@ -261,6 +263,84 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             _currentGui.ButtonMap.TryGetValue(tag, out var button);
             return button;
+        }
+
+        /// <summary>
+        /// Updates the border fill texture for a control by tag.
+        /// Based on swkotor.exe and swkotor2.exe: Control texture updates
+        /// - Original implementation: Controls can have their border fill textures updated dynamically
+        /// - Used for loading screen images, dynamic backgrounds, etc.
+        /// - This method updates the Border.Fill ResRef and invalidates texture cache for the control
+        /// </summary>
+        /// <param name="controlTag">Tag of the control to update. If null or empty, updates root control.</param>
+        /// <param name="textureResRef">New texture ResRef to set as border fill (TPC format).</param>
+        /// <returns>True if control was found and updated, false otherwise.</returns>
+        public bool SetControlTexture(string controlTag, string textureResRef)
+        {
+            if (_currentGui == null || _currentGui.Gui == null)
+            {
+                return false;
+            }
+
+            GUIControl control = null;
+
+            // If controlTag is null/empty, update root control
+            if (string.IsNullOrEmpty(controlTag))
+            {
+                // Get root control from GUI
+                if (_currentGui.Gui.Root != null)
+                {
+                    control = _currentGui.Gui.Root;
+                }
+                else if (_currentGui.Gui.Controls != null && _currentGui.Gui.Controls.Count > 0)
+                {
+                    // Fallback: use first top-level control as root
+                    control = _currentGui.Gui.Controls[0];
+                }
+            }
+            else
+            {
+                // Find control by tag
+                control = GetControl(controlTag);
+            }
+
+            if (control == null)
+            {
+                Console.WriteLine($"[KotorGuiManager] WARNING: Control not found for tag: {controlTag ?? "(root)"}");
+                return false;
+            }
+
+            // Ensure border exists
+            if (control.Border == null)
+            {
+                control.Border = new GUIBorder();
+            }
+
+            // Update border fill ResRef
+            if (string.IsNullOrEmpty(textureResRef))
+            {
+                control.Border.Fill = ResRef.FromBlank();
+            }
+            else
+            {
+                control.Border.Fill = ResRef.FromString(textureResRef);
+            }
+
+            // Invalidate texture cache for this texture to force reload on next render
+            string textureKey = textureResRef?.ToLowerInvariant() ?? string.Empty;
+            if (!string.IsNullOrEmpty(textureKey) && _textureCache.ContainsKey(textureKey))
+            {
+                // Remove from cache so it will be reloaded with new texture
+                var oldTexture = _textureCache[textureKey];
+                if (oldTexture != null && !oldTexture.IsDisposed)
+                {
+                    oldTexture.Dispose();
+                }
+                _textureCache.Remove(textureKey);
+            }
+
+            Console.WriteLine($"[KotorGuiManager] Updated control texture: tag={controlTag ?? "(root)"}, texture={textureResRef}");
+            return true;
         }
 
         /// <summary>
@@ -1539,14 +1619,45 @@ namespace Andastra.Runtime.MonoGame.GUI
                     return null;
                 }
 
-                // TODO: Convert TPC to Texture2D using TpcToMonoGameTextureConverter
-                // For now, return null - texture conversion should be handled by texture loading system
-                // This is a placeholder that indicates texture loading needs to be integrated
-                return null;
+                // Parse TPC from resource data
+                // Based on swkotor.exe and swkotor2.exe: GUI texture loading pattern
+                // Original engine loads TPC textures for GUI elements (buttons, panels, backgrounds)
+                // TPC format: BioWare texture format supporting DXT1/DXT3/DXT5 compression, RGB/RGBA, grayscale
+                // Original implementation: Uses DirectX texture creation APIs (D3DXCreateTextureFromFileInMemory)
+                // This MonoGame implementation: Uses TpcToMonoGameTextureConverter to convert TPC to Texture2D
+                TPC tpc = TPCAuto.ReadTpc(resourceResult.Data);
+                if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+                {
+                    Console.WriteLine($"[KotorGuiManager] ERROR: Failed to parse TPC texture: {textureName}");
+                    return null;
+                }
+
+                // Convert TPC to MonoGame Texture2D
+                // GUI textures are always 2D (not cube maps), so set generateMipmaps to false for better performance
+                // Based on swkotor.exe and swkotor2.exe: GUI textures loaded without mipmaps for immediate rendering
+                // Original engine: DirectX GUI textures created with D3DX_DEFAULT (no mipmap generation for GUI)
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _graphicsDevice, false);
+                if (convertedTexture is TextureCube)
+                {
+                    Console.WriteLine($"[KotorGuiManager] ERROR: GUI texture cannot be a cube map: {textureName}");
+                    return null;
+                }
+
+                Texture2D texture2D = convertedTexture as Texture2D;
+                if (texture2D == null)
+                {
+                    Console.WriteLine($"[KotorGuiManager] ERROR: Failed to convert texture to Texture2D: {textureName}");
+                    return null;
+                }
+
+                // Cache the converted texture
+                _textureCache[key] = texture2D;
+                return texture2D;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[KotorGuiManager] ERROR loading texture {textureName}: {ex.Message}");
+                Console.WriteLine($"[KotorGuiManager] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
