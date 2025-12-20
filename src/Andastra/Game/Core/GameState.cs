@@ -64,6 +64,44 @@ namespace Andastra.Runtime.Game.Core
         /// - Load Screen: K1 uses "load_chargen", K2 uses "load_default"
         /// - Flow: Main Menu → Character Creation → Module Load
         /// </remarks>
-        CharacterCreation
+        CharacterCreation,
+
+        /// <summary>
+        /// Options menu - player is configuring game settings.
+        /// </summary>
+        /// <remarks>
+        /// Options Menu State:
+        /// - Based on swkotor.exe and swkotor2.exe options menu system
+        /// - Located via string references: "BTN_OPTIONS" (options button in main menu)
+        /// - GUI Panel: "optionsmain" (main menu options) or "optionsingame" (in-game options)
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain class @ 0x006e3e80 (constructor), FUN_006de240 (OnGameplayOpt), FUN_006de2c0 (OnAutopauseOpt), FUN_006e2df0 (OnFeedbackOpt), FUN_006e3d80 (OnGraphicsOpt), FUN_006e3e00 (OnSoundOpt), FUN_006de340 (SetDescription), FUN_006dff10 (HandleInputEvent)
+        /// - Settings categories: Graphics, Sound, Gameplay, Feedback, Autopause
+        /// - Graphics: Resolution, Texture Quality, Shadow Quality, VSync, Fullscreen
+        /// - Sound: Master Volume, Music Volume, Effects Volume, Voice Volume
+        /// - Gameplay: Mouse Sensitivity, Invert Mouse Y, Auto-save, Tooltips
+        /// - Feedback: Tooltip options, combat feedback, etc.
+        /// - Autopause: Autopause triggers (on enemy sighted, trap found, etc.)
+        /// - Original implementation: Tabbed interface with Apply/Cancel buttons
+        /// - Settings persistence: Saved to configuration files
+        /// - Flow: Main Menu → Options Menu → (Apply/Cancel) → Main Menu
+        /// </remarks>
+        OptionsMenu,
+
+        /// <summary>
+        /// Movies menu - player can view and replay cutscenes/cinematics.
+        /// </summary>
+        /// <remarks>
+        /// Movies Menu State:
+        /// - Based on swkotor.exe and swkotor2.exe movies menu system
+        /// - Located via string references: "BTN_MOVIES" (movies button in main menu)
+        /// - Movies are stored as BIK (Bink Video) files in the movies directory
+        /// - Movie playback: Uses CExoMoviePlayerInternal (swkotor.exe/swkotor2.exe)
+        /// - Function: FUN_00404c80 @ 0x00404c80 (main playback loop in swkotor.exe)
+        /// - Function: FUN_004053e0 @ 0x004053e0 (movie initialization in swkotor.exe)
+        /// - Movie file paths: "MOVIES:%s" format, ".\\movies" or "d:\\movies" directories
+        /// - Original implementation: Movies menu lists available BIK files, player selects to play
+        /// - Playback: Fullscreen, blocking until completion or cancellation
+        /// </remarks>
+        MoviesMenu
     }
 }

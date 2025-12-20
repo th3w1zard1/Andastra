@@ -17,6 +17,8 @@ using Andastra.Runtime.Games.Odyssey.Collision;
 using Andastra.Runtime.Games.Odyssey.Content.ResourceProviders;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
+using System.Collections.Generic;
+using System.Linq;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Kotor.Game;
 using Andastra.Runtime.Scripting.EngineApi;
@@ -437,6 +439,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
             }
+            else if (_currentState == GameState.MoviesMenu)
+            {
+                UpdateMoviesMenu(deltaTime, keyboardState, mouseState);
+            }
             else if (_currentState == GameState.CharacterCreation)
             {
                 if (_characterCreationScreen != null)
@@ -694,8 +700,70 @@ namespace Andastra.Runtime.Game.Core
 
                 case "BTN_OPTIONS":
                     // Options button - show options menu
-                    Console.WriteLine("[Odyssey] Options button clicked - options menu not yet implemented");
-                    // TODO: Implement options menu
+                    // Based on swkotor.exe and swkotor2.exe: Options menu system
+                    // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 (constructor), loads "optionsmain" GUI
+                    Console.WriteLine("[Odyssey] Options button clicked - opening options menu");
+                    OpenOptionsMenu();
+                    break;
+                
+                case "BTN_BACK":
+                    // Back button - return to previous menu
+                    // Based on swkotor.exe and swkotor2.exe: Back button handler in options menu
+                    if (_currentState == GameState.OptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Back button clicked - closing options menu");
+                        CloseOptionsMenu();
+                    }
+                    break;
+                
+                case "BTN_GAMEPLAY":
+                    // Gameplay options button - open gameplay options submenu
+                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
+                    if (_currentState == GameState.OptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Gameplay options button clicked - gameplay options submenu not yet implemented");
+                        // TODO: Implement gameplay options submenu
+                    }
+                    break;
+                
+                case "BTN_FEEDBACK":
+                    // Feedback options button - open feedback options submenu
+                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
+                    if (_currentState == GameState.OptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Feedback options button clicked - feedback options submenu not yet implemented");
+                        // TODO: Implement feedback options submenu
+                    }
+                    break;
+                
+                case "BTN_AUTOPAUSE":
+                    // Autopause options button - open autopause options submenu
+                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnAutopauseOpt @ 0x006de2c0
+                    if (_currentState == GameState.OptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Autopause options button clicked - autopause options submenu not yet implemented");
+                        // TODO: Implement autopause options submenu
+                    }
+                    break;
+                
+                case "BTN_GRAPHICS":
+                    // Graphics options button - open graphics options submenu
+                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
+                    if (_currentState == GameState.OptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Graphics options button clicked - graphics options submenu not yet implemented");
+                        // TODO: Implement graphics options submenu
+                    }
+                    break;
+                
+                case "BTN_SOUND":
+                    // Sound options button - open sound options submenu
+                    // Based on swkotor2.exe: CSWGuiOptionsMain::OnSoundOpt @ 0x006e3e00
+                    if (_currentState == GameState.OptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Sound options button clicked - sound options submenu not yet implemented");
+                        // TODO: Implement sound options submenu
+                    }
                     break;
 
                 case "BTN_EXIT":
@@ -712,8 +780,48 @@ namespace Andastra.Runtime.Game.Core
 
                 case "BTN_MUSIC":
                     // Music button (K2 only) - toggle music
-                    Console.WriteLine("[Odyssey] Music button clicked - music toggle not yet implemented");
-                    // TODO: Implement music toggle
+                    // Based on swkotor2.exe FUN_006d0790: BTN_MUSIC button handler
+                    // Toggles music playback on/off for main menu
+                    if (_musicPlayer != null)
+                    {
+                        if (_musicEnabled)
+                        {
+                            // Disable music: stop current playback
+                            if (_musicStarted)
+                            {
+                                _musicPlayer.Stop();
+                                _musicStarted = false;
+                            }
+                            _musicEnabled = false;
+                            Console.WriteLine("[Odyssey] Music disabled by user");
+                        }
+                        else
+                        {
+                            // Enable music: start playback if in main menu
+                            _musicEnabled = true;
+                            if (_currentState == GameState.MainMenu && !_musicStarted)
+                            {
+                                string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
+                                if (_musicPlayer.Play(musicResRef, 1.0f))
+                                {
+                                    _musicStarted = true;
+                                    Console.WriteLine($"[Odyssey] Music enabled and started: {musicResRef}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"[Odyssey] WARNING: Failed to play main menu music after toggle: {musicResRef}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("[Odyssey] Music enabled by user");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: Music button clicked but music player is not available");
+                    }
                     break;
 
                 default:
