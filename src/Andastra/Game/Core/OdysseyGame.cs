@@ -1129,6 +1129,20 @@ namespace Andastra.Runtime.Game.Core
                             {
                                 var materialResolver = new Func<string, Microsoft.Xna.Framework.Graphics.BasicEffect>(textureName =>
                                 {
+                                    // Handle null, empty, or "NULL" texture names
+                                    // Based on swkotor.exe and swkotor2.exe: Texture names can be null, empty, or "NULL" string
+                                    // Original implementation: Skips texture loading for invalid texture names, uses default material
+                                    if (string.IsNullOrEmpty(textureName) || 
+                                        textureName.Equals("NULL", StringComparison.OrdinalIgnoreCase) ||
+                                        textureName.Equals("NONE", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        // Return default effect for invalid texture names
+                                        var defaultEffect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
+                                        defaultEffect.EnableDefaultLighting();
+                                        defaultEffect.LightingEnabled = true;
+                                        return defaultEffect;
+                                    }
+
                                     try
                                     {
                                         // Load TPC texture and convert to MonoGame Texture2D
