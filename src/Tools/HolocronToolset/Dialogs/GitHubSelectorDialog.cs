@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Dialogs
 {
@@ -179,12 +181,17 @@ namespace HolocronToolset.Dialogs
             _selectedPath = GetSelectedPath();
             if (string.IsNullOrEmpty(_selectedPath))
             {
-                // TODO: Show warning message when MessageBox is available
-                System.Console.WriteLine("You must select a file.");
+                // Show warning message
+                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                    "Warning",
+                    "You must select a file.",
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning);
+                msgBox.ShowAsync();
                 return;
             }
             System.Console.WriteLine($"User selected '{_selectedPath}'");
-            Close();
+            Close(true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:426-431

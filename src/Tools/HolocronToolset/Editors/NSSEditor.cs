@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
@@ -10,6 +12,7 @@ using Andastra.Parsing.Common.Script;
 using HolocronToolset.Common;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
+using HolocronToolset.Dialogs;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
 using System.Text.Json;
@@ -433,31 +436,8 @@ namespace HolocronToolset.Editors
                 bool errorOccurred = false;
                 try
                 {
-                    // Matching PyKotor implementation: self._handle_user_ncs(data, resref)
-                    // In full implementation, this would show a dialog asking to decompile or download
-                    // TODO: SIMPLIFIED - For now, we'll attempt decompilation directly
-                    if (_installation != null)
-                    {
-                        // Attempt decompilation using DeNCS (matching Python _decompile_ncs_dencs)
-                        string source = DecompileNcsDencs(data);
-                        if (string.IsNullOrEmpty(source))
-                        {
-                            // Decompilation failed - show error dialog (matching Python ValueError handling)
-                            errorOccurred = HandleExceptionDebugMode("Decompilation/Download Failed", new InvalidOperationException("Decompilation failed: decompile_ncs returned None or empty string"));
-                        }
-                        else
-                        {
-                            if (_codeEdit != null)
-                            {
-                                _codeEdit.SetPlainText(source);
-                            }
-                            _isDecompiled = true;
-                        }
-                    }
-                    else
-                    {
-                        errorOccurred = HandleExceptionDebugMode("Filepath is not set", new InvalidOperationException("Installation path is not set"));
-                    }
+                // Matching PyKotor implementation: self._handle_user_ncs(data, resref)
+                HandleUserNcs(data, resref);
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -1101,6 +1081,153 @@ namespace HolocronToolset.Editors
 #endif
 
             return true;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2170-2194
+        // Original: def _handle_user_ncs(self, data: bytes, resname: str) -> None:
+        /// <summary>
+        /// Handles user interaction when loading an NCS file - shows dialog to choose between decompiling or downloading.
+        /// </summary>
+        /// <param name="data">The NCS bytecode data</param>
+        /// <param name="resname">The resource name (resref)</param>
+        private void HandleUserNcs(byte[] data, string resname)
+        {
+            // Show dialog asking user to decompile or download
+            var dialog = new DecompileOrDownloadDialog(_sourcerepoUrl);
+            dialog.ShowDialogAsync(this).GetAwaiter().GetResult();
+            
+            string source = null;
+            bool errorOccurred = false;
+
+            if (dialog.Choice == DecompileOrDownloadDialog.UserChoice.Decompile)
+            {
+                // Matching PyKotor implementation: choice == QMessageBox.StandardButton.Yes
+                if (_installation == null)
+                {
+                    errorOccurred = HandleExceptionDebugMode("Installation not set", new InvalidOperationException("Installation not set, cannot determine path"));
+                    if (errorOccurred)
+                    {
+                        New();
+                        return;
+                    }
+                }
+
+                System.Console.WriteLine($"Decompiling NCS data: {data?.Length ?? 0} bytes");
+                source = DecompileNcsDencs(data);
+                if (string.IsNullOrEmpty(source))
+                {
+                    errorOccurred = HandleExceptionDebugMode("Decompilation/Download Failed", new InvalidOperationException("Decompilation failed: decompile_ncs returned None or empty string"));
+                }
+            }
+            else if (dialog.Choice == DecompileOrDownloadDialog.UserChoice.Download)
+            {
+                // Matching PyKotor implementation: choice == QMessageBox.StandardButton.Ok
+                System.Console.WriteLine($"Downloading NCS data: {data?.Length ?? 0} bytes");
+                try
+                {
+                    source = DownloadAndLoadRemoteScript(resname);
+                }
+                catch (Exception ex)
+                {
+                    errorOccurred = HandleExceptionDebugMode("Decompilation/Download Failed", ex);
+                }
+            }
+            else
+            {
+                // Matching PyKotor implementation: choice == Cancel
+                // User cancelled - return without loading
+                return;
+            }
+
+            if (errorOccurred)
+            {
+                New();
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(source) && _codeEdit != null)
+            {
+                _codeEdit.SetPlainText(source);
+                _isDecompiled = true;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2109-2117
+        // Original: def determine_script_path(self, resref: str) -> str:
+        /// <summary>
+        /// Determines the script path by showing a GitHub file selector dialog.
+        /// </summary>
+        /// <param name="resref">The resource reference (script name)</param>
+        /// <returns>The selected script path from the repository</returns>
+        private string DetermineScriptPath(string resref)
+        {
+            string scriptFilename = $"{resref.ToLowerInvariant()}.nss";
+            var selectedFiles = new List<string> { scriptFilename };
+            
+            var dialog = new GitHubSelectorDialog(_owner, _repo, selectedFiles, this);
+            dialog.ShowDialogAsync(this).GetAwaiter().GetResult();
+            
+            string selectedPath = dialog.SelectedPath;
+            if (string.IsNullOrEmpty(selectedPath) || !selectedPath.Trim().Any())
+            {
+                throw new InvalidOperationException("No script selected.");
+            }
+
+            return selectedPath;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2248-2267
+        // Original: def _download_and_load_remote_script(self, resref: str) -> str:
+        /// <summary>
+        /// Downloads a script from GitHub and loads it into the editor.
+        /// </summary>
+        /// <param name="resref">The resource reference (script name)</param>
+        /// <returns>The downloaded script source code</returns>
+        private string DownloadAndLoadRemoteScript(string resref)
+        {
+            // Determine script path using GitHub selector dialog
+            string scriptPath = DetermineScriptPath(resref);
+            
+            // Get log directory for download location
+            string logDir = LogDirectoryHelper.GetLogDirectory(null, _globalSettings.ExtractPath);
+            string localPath = Path.Combine(logDir, Path.GetFileName(scriptPath));
+            
+            System.Console.WriteLine($"Local path: {localPath}");
+
+            // Download the script from GitHub
+            try
+            {
+                Task.Run(async () =>
+                {
+                    await GitHubDownloader.DownloadGitHubFileAsync(_owner, _repo, scriptPath, localPath);
+                }).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to download the script: '{localPath}' did not exist after download completed. Error: {ex.Message}", ex);
+            }
+
+            if (!File.Exists(localPath))
+            {
+                throw new InvalidOperationException($"Failed to download the script: '{localPath}' did not exist after download completed.");
+            }
+
+            // Try multiple encodings to read the file (matching Python implementation)
+            try
+            {
+                return File.ReadAllText(localPath, Encoding.UTF8);
+            }
+            catch (DecoderFallbackException)
+            {
+                try
+                {
+                    return File.ReadAllText(localPath, Encoding.GetEncoding("windows-1252"));
+                }
+                catch (DecoderFallbackException)
+                {
+                    return File.ReadAllText(localPath, Encoding.GetEncoding("latin-1"));
+                }
+            }
         }
 
         // Helper class to store bookmark data
