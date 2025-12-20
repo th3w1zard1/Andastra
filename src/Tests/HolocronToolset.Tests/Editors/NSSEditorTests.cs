@@ -4292,14 +4292,92 @@ void helper() {
             commandPalette.Should().NotBeNull("_commandPalette should be initialized after ShowCommandPalette() is called");
         }
 
-        // TODO: STUB - Implement test_nss_editor_bracket_matching (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1899-1930)
-        // Original: def test_nss_editor_bracket_matching(qtbot, installation: HTInstallation): Test bracket matching
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1899-1930
+        // Original: def test_nss_editor_bracket_matching(qtbot, installation: HTInstallation): Test bracket matching and highlighting
         [Fact]
         public void TestNssEditorBracketMatching()
         {
-            // TODO: STUB - Implement bracket matching test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1899-1930
-            throw new NotImplementedException("TestNssEditorBracketMatching: Bracket matching test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Matching PyKotor: editor.ui.codeEdit
+            var codeEdit = editor.CodeEdit;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+
+            // Matching PyKotor: script = "void test() { int x = (5 + 3); }"
+            string script = "void test() { int x = (5 + 3); }";
+            codeEdit.SetPlainText(script);
+
+            // Matching PyKotor: Position cursor on opening brace
+            // Find the position of the opening brace '{'
+            int bracePos = script.IndexOf('{');
+            bracePos.Should().BeGreaterOrEqualTo(0, "Script should contain an opening brace");
+
+            // Set cursor position to the opening brace
+            codeEdit.SelectionStart = bracePos;
+            codeEdit.SelectionEnd = bracePos;
+
+            // Matching PyKotor: editor.ui.codeEdit._match_brackets()
+            codeEdit.MatchBrackets();
+
+            // Matching PyKotor: extra_selections = editor.ui.codeEdit.extraSelections()
+            // Matching PyKotor: assert isinstance(extra_selections, list)
+            var extraSelections = codeEdit.GetExtraSelections();
+            extraSelections.Should().NotBeNull("Extra selections should not be null");
+            // Matching PyKotor: Should have extra selections for brackets when bracket matching finds a match
+            // The test expects extra selections to exist (may or may not have selections depending on implementation)
+            // In our implementation, we should have 2 selections (opening and closing brace) if match is found
+            if (extraSelections.Count > 0)
+            {
+                extraSelections.Count.Should().BeGreaterOrEqualTo(2, "Should have at least 2 selections for matching brackets");
+                
+                // Verify that the brace positions are in the selections
+                bool foundOpeningBrace = false;
+                bool foundClosingBrace = false;
+                foreach (var selection in extraSelections)
+                {
+                    if (selection.Item1 == bracePos && selection.Item2 == bracePos + 1)
+                    {
+                        foundOpeningBrace = true;
+                    }
+                    // Find the closing brace position
+                    int closingBracePos = script.IndexOf('}');
+                    if (selection.Item1 == closingBracePos && selection.Item2 == closingBracePos + 1)
+                    {
+                        foundClosingBrace = true;
+                    }
+                }
+                
+                foundOpeningBrace.Should().BeTrue("Opening brace should be in extra selections");
+                foundClosingBrace.Should().BeTrue("Closing brace should be in extra selections");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1932-1956

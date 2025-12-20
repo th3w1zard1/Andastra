@@ -2181,6 +2181,27 @@ namespace Andastra.Runtime.Game.Core
         private void OnCharacterCreationCancel()
         {
             Console.WriteLine("[Odyssey] Character creation cancelled - returning to main menu");
+            
+            // Stop character creation music and restart main menu music
+            // Based on swkotor.exe and swkotor2.exe: When canceling character creation, return to main menu music
+            if (_musicPlayer != null && _musicStarted)
+            {
+                _musicPlayer.Stop();
+                _musicStarted = false;
+                Console.WriteLine("[Odyssey] Character creation music stopped");
+            }
+            
+            // Restart main menu music
+            if (_musicPlayer != null && _musicEnabled)
+            {
+                string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
+                if (_musicPlayer.Play(musicResRef, 1.0f))
+                {
+                    _musicStarted = true;
+                    Console.WriteLine($"[Odyssey] Main menu music restarted: {musicResRef}");
+                }
+            }
+            
             _currentState = GameState.MainMenu;
             _characterCreationScreen = null; // Allow recreation on next New Game click
         }
