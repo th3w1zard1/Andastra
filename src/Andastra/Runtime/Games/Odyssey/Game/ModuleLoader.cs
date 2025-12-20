@@ -725,6 +725,28 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 {
                     module.SetScript(ScriptEvent.OnModuleHeartbeat, _currentIfo.OnHeartbeat.ToString());
                 }
+
+                // Load area list from Mod_Area_list field in IFO.
+                // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs.
+                // Each entry in Mod_Area_list contains an Area_Name field with the area ResRef.
+                // This list is used for resolving transition targets by index (TransPendNextID).
+                // Stored during module loading to avoid re-reading the IFO file.
+                if (_currentIfo.AreaList != null && _currentIfo.AreaList.Count > 0)
+                {
+                    List<string> areaResRefs = new List<string>();
+                    foreach (ResRef areaResRef in _currentIfo.AreaList)
+                    {
+                        if (areaResRef != null && !string.IsNullOrEmpty(areaResRef.ToString()))
+                        {
+                            areaResRefs.Add(areaResRef.ToString());
+                        }
+                    }
+                    module.AreaList = areaResRefs;
+                }
+                else
+                {
+                    module.AreaList = new List<string>();
+                }
             }
             else
             {
@@ -732,6 +754,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 module.EntryArea = moduleName;
                 module.DawnHour = 6;
                 module.DuskHour = 18;
+                module.AreaList = new List<string>();
             }
 
             return module;
@@ -1589,6 +1612,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             runtimeModule.EntryArea = moduleName;
             runtimeModule.DawnHour = 6;
             runtimeModule.DuskHour = 18;
+            // Initialize empty area list (placeholder module has no IFO data)
+            runtimeModule.AreaList = new List<string>();
             _world.CurrentModule = runtimeModule;
 
             var runtimeArea = new RuntimeArea();
