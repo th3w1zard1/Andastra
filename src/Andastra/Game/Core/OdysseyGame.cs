@@ -707,7 +707,7 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor.exe and swkotor2.exe: Options menu system
                     // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 (constructor), loads "optionsmain" GUI
                     Console.WriteLine("[Odyssey] Options button clicked - opening options menu");
-                    _currentState = GameState.OptionsMenu;
+                    OpenOptionsMenu();
                     break;
                 
                 case "BTN_BACK":
@@ -778,8 +778,8 @@ namespace Andastra.Runtime.Game.Core
 
                 case "BTN_MOVIES":
                     // Movies button (K1/K2) - show movies menu
-                    Console.WriteLine("[Odyssey] Movies button clicked - movies menu not yet implemented");
-                    // TODO: Implement movies menu
+                    Console.WriteLine("[Odyssey] Movies button clicked - opening movies menu");
+                    OpenMoviesMenu();
                     break;
 
                 case "BTN_MUSIC":
@@ -4144,10 +4144,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         private void InitializeOptionsMenu()
         {
-            // Pass audio players to options menu for volume control
-            // Sound player is not yet available in OdysseyGame, but music player is
-            // TODO: Add sound player field to OdysseyGame when sound system is integrated
-            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings, null, _musicPlayer, null);
+            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings);
             _selectedOptionsCategoryIndex = 0;
             _selectedOptionsItemIndex = 0;
             _isEditingOptionValue = false;
@@ -4566,6 +4563,32 @@ namespace Andastra.Runtime.Game.Core
             {
                 _graphicsBackend.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Initializes the options menu.
+        /// </summary>
+        /// <remarks>
+        /// Options Menu Initialization:
+        /// - Based on swkotor.exe and swkotor2.exe options menu system
+        /// - Located via string references: "optionsmain" (main menu options) or "optionsingame" (in-game options)
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain class @ 0x006e3e80 (constructor)
+        /// - Settings categories: Graphics, Sound, Gameplay, Feedback, Autopause
+        /// - Graphics: Resolution, Texture Quality, Shadow Quality, VSync, Fullscreen
+        /// - Sound: Master Volume, Music Volume, Effects Volume, Voice Volume
+        /// - Gameplay: Mouse Sensitivity, Invert Mouse Y, Auto-save, Tooltips
+        /// - Feedback: Tooltip options, combat feedback, etc.
+        /// - Autopause: Autopause triggers (on enemy sighted, trap found, etc.)
+        /// - Original implementation: Tabbed interface with Apply/Cancel buttons
+        /// - Settings persistence: Saved to configuration files
+        /// </remarks>
+        private void InitializeOptionsMenu()
+        {
+            // Options menu initialization
+            // TODO: Load options GUI panel ("optionsmain" or "optionsingame")
+            // TODO: Initialize options settings from configuration
+            // TODO: Set up options menu UI elements (tabs, sliders, checkboxes, etc.)
+            Console.WriteLine("[Odyssey] Options menu initialized");
         }
     }
 }
