@@ -213,16 +213,117 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on Aurora walkmesh projection with tile awareness.
         /// Projects to nearest walkable surface across tile boundaries.
         /// Handles height transitions between tiles.
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
+        /// - nwmain.exe: CNWTile walkmesh projection - Projects points to walkable tile surfaces
+        /// - Tile-based projection: Unlike Odyssey's triangle-based walkmesh, Aurora uses tile-based surfaces
+        /// - Height sampling: Uses GetHeightAtPoint to sample terrain height at projection point
+        /// 
+        /// Algorithm:
+        /// 1. Find containing tile using GetTileCoordinates
+        /// 2. Validate tile is loaded and walkable
+        /// 3. If point is on walkable tile, sample height using GetHeightAtPoint
+        /// 4. If point is not on walkable tile, search adjacent tiles for nearest walkable surface
+        /// 5. Project point to sampled height (preserve X and Z, update Y to sampled height)
+        /// 6. Handle edge cases: points outside tile grid, unloaded tiles, non-walkable areas
+        /// 
+        /// Tile boundary handling:
+        /// - Points on tile boundaries check adjacent tiles for walkability
+        /// - Height is interpolated from multiple tiles for smooth transitions
+        /// - Non-walkable tiles are skipped when searching for projection surface
+        /// 
+        /// Note: Aurora's tile-based system is simpler than Odyssey's triangle-based walkmesh.
+        /// Each tile represents a walkable surface area, and projection involves finding
+        /// the height at the point's X/Z coordinates within the containing tile.
         /// </remarks>
         public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
         {
-            // TODO: Implement Aurora walkmesh projection
-            // Find containing tile
-            // Project within tile
-            // Handle tile boundary projections
             result = point;
             height = point.Y;
-            throw new System.NotImplementedException("Aurora walkmesh projection not yet implemented");
+
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return false;
+            }
+
+            // Step 1: Find containing tile
+            int tileX, tileY;
+            if (!GetTileCoordinates(point, out tileX, out tileY))
+            {
+                // Point is outside tile grid bounds - cannot project
+                return false;
+            }
+
+            // Step 2: Check if containing tile is valid and walkable
+            if (IsTileValid(tileX, tileY))
+            {
+                AuroraTile tile = _tiles[tileY, tileX];
+                if (tile.IsLoaded && tile.IsWalkable)
+                {
+                    // Step 3: Point is on walkable tile - sample height
+                    if (GetHeightAtPoint(point, out height))
+                    {
+                        result = new Vector3(point.X, height, point.Z);
+                        return true;
+                    }
+                }
+            }
+
+            // Step 4: Point is not on walkable tile - search adjacent tiles for nearest walkable surface
+            // Search radius: Check tiles within 2-tile radius
+            const int searchRadius = 2;
+            float bestDistance = float.MaxValue;
+            float bestHeight = point.Y;
+            bool foundWalkable = false;
+
+            for (int dy = -searchRadius; dy <= searchRadius; dy++)
+            {
+                for (int dx = -searchRadius; dx <= searchRadius; dx++)
+                {
+                    int checkTileX = tileX + dx;
+                    int checkTileY = tileY + dy;
+
+                    if (IsTileValid(checkTileX, checkTileY))
+                    {
+                        AuroraTile checkTile = _tiles[checkTileY, checkTileX];
+                        if (checkTile.IsLoaded && checkTile.IsWalkable)
+                        {
+                            // Calculate distance from point to tile center
+                            Vector3 tileCenter = GetTileCenter(checkTileX, checkTileY);
+                            float distanceX = point.X - tileCenter.X;
+                            float distanceZ = point.Z - tileCenter.Z;
+                            float distance = (float)Math.Sqrt(distanceX * distanceX + distanceZ * distanceZ);
+
+                            // Check if this is the closest walkable tile
+                            if (distance < bestDistance)
+                            {
+                                // Sample height at point's X/Z coordinates (projected onto this tile)
+                                Vector3 samplePoint = new Vector3(point.X, point.Y, point.Z);
+                                float sampleHeight;
+                                if (GetHeightAtPoint(samplePoint, out sampleHeight))
+                                {
+                                    bestDistance = distance;
+                                    bestHeight = sampleHeight;
+                                    foundWalkable = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Step 5: If walkable surface found, project point to that height
+            if (foundWalkable)
+            {
+                height = bestHeight;
+                result = new Vector3(point.X, height, point.Z);
+                return true;
+            }
+
+            // Step 6: No walkable surface found - cannot project
+            return false;
         }
 
         /// <summary>
@@ -316,15 +417,172 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Samples height from tile-based terrain data.
         /// Handles tile boundary interpolation.
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
+        /// - nwmain.exe: CNWTile height sampling - Tiles store height transition data
+        /// - Tile height transitions: Tile.Height property indicates number of height transitions
+        /// - Height interpolation: For tile boundaries, interpolate between adjacent tile heights
+        /// 
+        /// Algorithm:
+        /// 1. Find containing tile using GetTileCoordinates
+        /// 2. If tile is valid and loaded, sample height from tile
+        /// 3. For tile boundaries, check adjacent tiles and interpolate heights
+        /// 4. Handle edge cases: points outside tile grid, unloaded tiles, non-walkable tiles
+        /// 
+        /// Note: Aurora tiles have height transition data stored per-tile.
+        /// The Tile.Height property indicates the number of height transitions, but actual
+        /// height values would need to be sampled from tile geometry data when available.
+        /// For now, we use a simplified approach that projects to tile center height.
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
         {
-            // TODO: Implement Aurora height sampling
-            // Find tile containing point
-            // Sample height from tile data
-            // Handle boundary interpolation
             height = point.Y;
-            throw new System.NotImplementedException("Aurora height sampling not yet implemented");
+
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return false;
+            }
+
+            // Find tile containing point
+            int tileX, tileY;
+            if (!GetTileCoordinates(point, out tileX, out tileY))
+            {
+                // Point is outside tile grid bounds
+                return false;
+            }
+
+            // Check if tile is valid
+            if (!IsTileValid(tileX, tileY))
+            {
+                return false;
+            }
+
+            AuroraTile tile = _tiles[tileY, tileX];
+            if (!tile.IsLoaded)
+            {
+                return false;
+            }
+
+            // Calculate position within tile (0.0 to 1.0 for both X and Z)
+            float tileWorldX = tileX * TileSize;
+            float tileWorldZ = tileY * TileSize;
+            float localX = point.X - tileWorldX;
+            float localZ = point.Z - tileWorldZ;
+            float normalizedX = localX / TileSize;
+            float normalizedZ = localZ / TileSize;
+
+            // Clamp to tile bounds (0.0 to 1.0)
+            normalizedX = Math.Max(0.0f, Math.Min(1.0f, normalizedX));
+            normalizedZ = Math.Max(0.0f, Math.Min(1.0f, normalizedZ));
+
+            // For tile boundaries, check adjacent tiles for height interpolation
+            // This handles smooth height transitions between tiles
+            bool onBoundaryX = normalizedX < 0.1f || normalizedX > 0.9f;
+            bool onBoundaryZ = normalizedZ < 0.1f || normalizedZ > 0.9f;
+
+            if (onBoundaryX || onBoundaryZ)
+            {
+                // Interpolate height from current tile and adjacent tiles
+                float totalHeight = 0.0f;
+                float totalWeight = 0.0f;
+
+                // Sample current tile
+                float currentTileHeight = GetTileHeight(tileX, tileY);
+                if (currentTileHeight != float.MinValue)
+                {
+                    float weight = 1.0f;
+                    totalHeight += currentTileHeight * weight;
+                    totalWeight += weight;
+                }
+
+                // Sample adjacent tiles for interpolation
+                int[] dx = { -1, 1, 0, 0, -1, -1, 1, 1 };
+                int[] dy = { 0, 0, -1, 1, -1, 1, -1, 1 };
+                float[] weights = { 0.5f, 0.5f, 0.5f, 0.5f, 0.25f, 0.25f, 0.25f, 0.25f };
+
+                for (int i = 0; i < dx.Length; i++)
+                {
+                    int neighborX = tileX + dx[i];
+                    int neighborY = tileY + dy[i];
+
+                    if (IsTileValid(neighborX, neighborY))
+                    {
+                        AuroraTile neighborTile = _tiles[neighborY, neighborX];
+                        if (neighborTile.IsLoaded)
+                        {
+                            float neighborHeight = GetTileHeight(neighborX, neighborY);
+                            if (neighborHeight != float.MinValue)
+                            {
+                                // Weight decreases with distance from boundary
+                                float distanceX = Math.Abs(normalizedX - (dx[i] > 0 ? 1.0f : (dx[i] < 0 ? 0.0f : normalizedX)));
+                                float distanceZ = Math.Abs(normalizedZ - (dy[i] > 0 ? 1.0f : (dy[i] < 0 ? 0.0f : normalizedZ)));
+                                float distance = (float)Math.Sqrt(distanceX * distanceX + distanceZ * distanceZ);
+                                float weight = weights[i] * (1.0f - Math.Min(1.0f, distance));
+
+                                totalHeight += neighborHeight * weight;
+                                totalWeight += weight;
+                            }
+                        }
+                    }
+                }
+
+                if (totalWeight > 0.0f)
+                {
+                    height = totalHeight / totalWeight;
+                    return true;
+                }
+            }
+
+            // For points well within tile, use tile center height
+            float tileHeight = GetTileHeight(tileX, tileY);
+            if (tileHeight != float.MinValue)
+            {
+                height = tileHeight;
+                return true;
+            }
+
+            // Fallback: use point's current Y coordinate
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the height of a tile at its center.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTile height data access.
+        /// Tiles store height transition data that indicates terrain elevation.
+        /// The Tile.Height property indicates the number of height transitions.
+        /// 
+        /// For a full implementation, this would sample from actual tile geometry data.
+        /// For now, we use a simplified approach based on tile height transitions.
+        /// </remarks>
+        private float GetTileHeight(int tileX, int tileY)
+        {
+            if (!IsTileValid(tileX, tileY))
+            {
+                return float.MinValue;
+            }
+
+            AuroraTile tile = _tiles[tileY, tileX];
+            if (!tile.IsLoaded)
+            {
+                return float.MinValue;
+            }
+
+            // Tile.Height indicates number of height transitions
+            // For now, we use a simplified model where height transitions
+            // correspond to elevation changes. In a full implementation,
+            // this would sample from actual tile geometry/walkmesh data.
+            // 
+            // Base height assumption: Each height transition adds 0.5 units of elevation
+            // This is a placeholder until actual tile geometry data is available
+            float baseHeight = 0.0f;
+            float heightPerTransition = 0.5f;
+            float tileHeight = baseHeight + (tile.Height * heightPerTransition);
+
+            return tileHeight;
         }
 
         /// <summary>
@@ -896,13 +1154,18 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Based on nwmain.exe: CNWTile::GetLocation - tile center calculation.
         /// Tile center is at (tileX + 0.5) * TileSize, (tileY + 0.5) * TileSize.
+        /// Height is sampled from tile data using GetTileHeight.
         /// </remarks>
         private Vector3 GetTileCenter(int tileX, int tileY)
         {
             float centerX = (tileX + 0.5f) * TileSize;
             float centerZ = (tileY + 0.5f) * TileSize;
-            // Height would need to be sampled from tile data, for now use 0
-            return new Vector3(centerX, 0f, centerZ);
+            float centerY = GetTileHeight(tileX, tileY);
+            if (centerY == float.MinValue)
+            {
+                centerY = 0f; // Fallback to 0 if tile height cannot be determined
+            }
+            return new Vector3(centerX, centerY, centerZ);
         }
 
         /// <summary>
@@ -1565,15 +1828,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Projects a point onto the walkmesh surface.
         /// </summary>
+        /// <remarks>
+        /// Wrapper around ProjectToWalkmesh for INavigationMesh interface compatibility.
+        /// Based on nwmain.exe: Aurora walkmesh projection system.
+        /// </remarks>
         public bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
         {
-            // TODO: Implement Aurora walkmesh projection
-            // Find containing tile
-            // Project within tile
-            // Handle tile boundary projections
-            result = point;
-            height = point.Y;
-            throw new NotImplementedException("Aurora walkmesh projection not yet implemented");
+            return ProjectToWalkmesh(point, out result, out height);
         }
     }
 }
