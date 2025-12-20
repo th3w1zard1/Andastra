@@ -292,12 +292,19 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             {
                 if (doorComponent.IsLocked)
                 {
-                    // Try to unlock the door
-                    bool unlocked = TryUnlockDoor(doorComponent);
+                    // Try to unlock the door (key, lockpicking, or bashing)
+                    bool unlocked = TryUnlockDoor(door, doorComponent);
                     if (!unlocked)
                     {
                         // Could not unlock - could try bashing or show message
                         Console.WriteLine("[PlayerController] Door is locked and cannot be unlocked");
+                        return;
+                    }
+                    
+                    // If door is still locked after TryUnlockDoor (bashing is in progress), don't try to open it yet
+                    // The bashing action will open it when the door is destroyed
+                    if (doorComponent.IsLocked)
+                    {
                         return;
                     }
                 }
@@ -324,6 +331,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// <summary>
         /// Attempts to unlock a door using key, lockpicking, or bashing.
         /// </summary>
+        /// <param name="door">The door entity.</param>
+        /// <param name="doorComponent">The door component.</param>
         /// <remarks>
         /// Door Unlocking Logic:
         /// - Based on swkotor2.exe door unlocking system
@@ -332,7 +341,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// - Lockpicking: Security skill + d20 vs LockDC
         /// - Bashing: Attack door (damage - hardness) until destroyed
         /// </remarks>
-        private bool TryUnlockDoor(IDoorComponent doorComponent)
+        private bool TryUnlockDoor(IEntity door, IDoorComponent doorComponent)
         {
             if (doorComponent == null || !doorComponent.IsLocked)
             {
@@ -378,8 +387,28 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 }
             }
 
-            // 3. If no key required and not lockable, could try bashing
-            // TODO: STUB - For now, return false - bashing would be a separate action
+
+            // 3. Try bashing: Queue bash door action to repeatedly attack door until destroyed
+            // Based on swkotor.exe and swkotor2.exe: Door bashing system
+            // Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (swkotor2.exe door bash GUI panels)
+            // Original implementation: If key and lockpicking fail, player can bash door to destroy it
+            // Bashing repeatedly applies damage (STR modifier + 1d4) until door HP reaches 0
+            // Damage is reduced by door Hardness (minimum 1 damage per hit)
+            // When door HP <= 0, door is marked as bashed (IsBashed=true), unlocked, and opened
+            if (door != null)
+            {
+                IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+                if (actionQueue != null)
+                {
+                    actionQueue.Clear();
+                    actionQueue.Add(new ActionBashDoor(door.ObjectId));
+                    Console.WriteLine("[PlayerController] Door is locked and cannot be unlocked - attempting to bash door");
+                    // Return true to indicate we're attempting to unlock (via bashing)
+                    // The action will handle the actual bashing process
+                    return true;
+                }
+            }
+
             return false;
         }
 

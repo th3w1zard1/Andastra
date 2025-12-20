@@ -12,7 +12,7 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
-using Andastra.Parsing.Formats.GFF.Generics;
+using Andastra.Parsing.Resource.Generics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Vector3 = System.Numerics.Vector3;
@@ -676,8 +676,39 @@ namespace HolocronToolset.Data
             return bwm;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:245-270
-        // Original: def _get_room_walkmesh(self, model_name: str) -> BWM | None:
+        /// <summary>
+        /// Loads a room's walkmesh (WOK file) from the module.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function loads a walkmesh file (WOK) from the module. Each room in a module has a
+        /// corresponding WOK file that defines where characters can walk in that room.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Find the WOK Resource
+        /// - Looks for a resource with the given model name and type WOK
+        /// - WOK files are stored in the module's resource archive (RIM or MOD file)
+        /// 
+        /// STEP 2: Read the Resource Data
+        /// - Gets the raw bytes from the resource
+        /// - If the resource doesn't exist or has no data, returns null
+        /// 
+        /// STEP 3: Parse the BWM
+        /// - Uses BWMAuto.ReadBwm to parse the raw bytes into a BWM object
+        /// - If parsing fails (invalid data), logs a warning and returns null
+        /// 
+        /// FALLBACK BEHAVIOR:
+        /// 
+        /// If a room's walkmesh is missing or cannot be loaded, the caller should create a placeholder
+        /// walkmesh using _CreatePlaceholderBwm. This ensures that every component has a walkmesh,
+        /// even if the original is missing.
+        /// 
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:245-270
+        /// Original: def _get_room_walkmesh(self, model_name: str) -> BWM | None:
+        /// </summary>
+        /// <param name="modelName">The name of the room model (without extension)</param>
+        /// <returns>The loaded BWM object, or null if the walkmesh could not be loaded</returns>
         private BWM _GetRoomWalkmesh(string modelName)
         {
             if (_module == null)
