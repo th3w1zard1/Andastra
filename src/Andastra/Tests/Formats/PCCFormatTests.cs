@@ -154,8 +154,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             PCC pcc = new PCCBinaryReader(BinaryTestFile).Load();
 
-            // Validate package type
-            pcc.PackageType.Should().NotBeNull("Package type should be set");
+            // Validate package type (enum, so it always has a value)
+            pcc.PackageType.Should().BeDefined("Package type should be a valid enum value");
         }
 
         [Fact(Timeout = 120000)]
