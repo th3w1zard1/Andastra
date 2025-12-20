@@ -320,10 +320,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 _menuAnimationTime += deltaTime;
                 
-                // Start main menu music if not already started
+                // Start main menu music if not already started and music is enabled
                 // Based on swkotor.exe FUN_005f9af0: Plays "mus_theme_cult" for K1 main menu
                 // Based on swkotor2.exe FUN_006456b0: Plays "mus_sion" for K2 main menu
-                if (!_musicStarted && _musicPlayer != null)
+                if (!_musicStarted && _musicPlayer != null && _musicEnabled)
                 {
                     string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
                     if (_musicPlayer.Play(musicResRef, 1.0f))
@@ -335,6 +335,13 @@ namespace Andastra.Runtime.Game.Core
                     {
                         Console.WriteLine($"[Odyssey] WARNING: Failed to play main menu music: {musicResRef}");
                     }
+                }
+                else if (_musicStarted && !_musicEnabled && _musicPlayer != null)
+                {
+                    // Stop music if it was playing but music is now disabled
+                    _musicPlayer.Stop();
+                    _musicStarted = false;
+                    Console.WriteLine("[Odyssey] Main menu music stopped (music disabled)");
                 }
                 
                 UpdateMainMenu(deltaTime, keyboardState, mouseState);
@@ -397,6 +404,27 @@ namespace Andastra.Runtime.Game.Core
                 }
             }
 
+            // Load options menu GUI if needed
+            if (_currentState == GameState.OptionsMenu && !_optionsMenuGuiLoaded && _guiManager != null)
+            {
+                // Load options menu GUI
+                // Based on swkotor.exe and swkotor2.exe: Options menu GUI loading
+                // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 loads "optionsmain" GUI
+                string guiName = "optionsmain"; // Options menu GUI file
+                int viewportWidth = _graphicsDevice.Viewport.Width;
+                int viewportHeight = _graphicsDevice.Viewport.Height;
+                
+                if (_guiManager.LoadGui(guiName, viewportWidth, viewportHeight))
+                {
+                    _optionsMenuGuiLoaded = true;
+                    Console.WriteLine($"[Odyssey] Options menu GUI loaded: {guiName}");
+                }
+                else
+                {
+                    Console.WriteLine($"[Odyssey] ERROR: Failed to load options menu GUI: {guiName}");
+                }
+            }
+
             if (_currentState == GameState.SaveMenu)
             {
                 UpdateSaveMenu(deltaTime, keyboardState, mouseState);
@@ -404,6 +432,10 @@ namespace Andastra.Runtime.Game.Core
             else if (_currentState == GameState.LoadMenu)
             {
                 UpdateLoadMenu(deltaTime, keyboardState, mouseState);
+            }
+            else if (_currentState == GameState.OptionsMenu)
+            {
+                UpdateOptionsMenu(deltaTime, keyboardState, mouseState);
             }
             else if (_currentState == GameState.CharacterCreation)
             {
@@ -515,32 +547,12 @@ namespace Andastra.Runtime.Game.Core
             if (_mainMenuGuiLoaded && _guiManager != null)
             {
                 // Update GUI manager with input
-                _guiManager.Update(deltaTime, _graphicsDevice, _graphicsBackend.InputManager);
+                // GUI manager internally handles mouse/keyboard input and button click detection
+                // Button clicks are automatically detected and OnButtonClicked event is fired
+                // HandleGuiButtonClick method handles the button click events
+                _guiManager.Update(deltaTime);
                 
-                // Handle button clicks from GUI
-                // Check for button clicks on main menu buttons
-                var btnNewGame = _guiManager.GetButton("BTN_NEWGAME");
-                var btnLoadGame = _guiManager.GetButton("BTN_LOADGAME");
-                var btnOptions = _guiManager.GetButton("BTN_OPTIONS");
-                var btnExit = _guiManager.GetButton("BTN_EXIT");
-                
-                // Handle button clicks (check if button was clicked this frame)
-                // TODO: Implement proper button click detection from GUI manager
-                // For now, use mouse position to detect clicks on GUI buttons
-                Point mousePos = mouseState.Position;
-                
-                // Check if mouse was clicked
-                bool mouseClicked = mouseState.LeftButton == ButtonState.Pressed && 
-                                   _previousMenuMouseState.LeftButton == ButtonState.Released;
-                
-                if (mouseClicked)
-                {
-                    // Check which GUI button was clicked
-                    // GUI manager should handle this, but for now check manually
-                    // TODO: Use GUI manager's button click detection
-                }
-                
-                // Update previous mouse state
+                // Update previous mouse/keyboard state for fallback input handling if needed
                 _previousMenuMouseState = mouseState;
                 _previousMenuKeyboardState = keyboardState;
                 return; // GUI handles input, no need for fallback input handling
