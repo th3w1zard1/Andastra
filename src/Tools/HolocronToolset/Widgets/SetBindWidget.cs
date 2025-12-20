@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using HolocronToolset.Utils;
 
 namespace HolocronToolset.Widgets
 {
@@ -138,9 +139,15 @@ namespace HolocronToolset.Widgets
                 return;
             }
 
-            // TODO: Implement key string localization when available
-            var sortedKeys = _keybind.OrderBy(k => k.ToString()).ToList();
-            string text = string.Join("+", sortedKeys.Select(k => k.ToString().ToUpperInvariant()));
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:93-98
+            // Original: modifiers: list[Qt.Key] = [key for key in self.keybind if key in MODIFIER_KEY_NAMES]
+            //           other_keys: list[Qt.Key] = [key for key in self.keybind if key not in MODIFIER_KEY_NAMES]
+            //           sorted_keys: list[Qt.Key] = modifiers + other_keys
+            //           text: str = "+".join(get_qt_key_string_localized(key) for key in sorted_keys)
+            var modifiers = _keybind.Where(k => MiscUtils.IsModifierKey(k)).ToList();
+            var otherKeys = _keybind.Where(k => !MiscUtils.IsModifierKey(k)).ToList();
+            var sortedKeys = modifiers.Concat(otherKeys).ToList();
+            string text = string.Join("+", sortedKeys.Select(k => MiscUtils.GetKeyStringLocalized(k)));
             _setKeysEdit.Text = text;
         }
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Avalonia.Input;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 
@@ -128,6 +129,75 @@ namespace HolocronToolset.Utils
                 // Regular file
                 return System.IO.File.ReadAllBytes(filepath);
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:25-34
+        // Original: MODIFIER_KEY_NAMES: dict[Qt.Key, str] = { ... }
+        private static readonly Dictionary<Key, string> ModifierKeyNames = new Dictionary<Key, string>
+        {
+            { Key.LeftCtrl, "CTRL" },
+            { Key.RightCtrl, "CTRL" },
+            { Key.LeftShift, "SHIFT" },
+            { Key.RightShift, "SHIFT" },
+            { Key.LeftAlt, "ALT" },
+            { Key.RightAlt, "ALT" },
+            { Key.LWin, "META" },
+            { Key.RWin, "META" },
+            { Key.AltLeft, "ALT" },
+            { Key.AltRight, "ALT" },
+            { Key.CapsLock, "CAPSLOCK" },
+            { Key.NumLock, "NUMLOCK" },
+            { Key.Scroll, "SCROLLLOCK" }
+        };
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:185-188
+        // Original: def get_qt_key_string_localized(key: Qt.Key | str | int | bytes) -> str:
+        /// <summary>
+        /// Gets a localized, user-friendly string representation of an Avalonia Key.
+        /// Matches PyKotor's get_qt_key_string_localized function behavior.
+        /// </summary>
+        /// <param name="key">The Avalonia Key to convert to string</param>
+        /// <returns>A user-friendly string representation of the key (e.g., "CTRL", "SHIFT", "A", "F1")</returns>
+        public static string GetKeyStringLocalized(Key key)
+        {
+            // Check if it's a modifier key first
+            if (ModifierKeyNames.TryGetValue(key, out string modifierName))
+            {
+                return modifierName;
+            }
+
+            // For non-modifier keys, convert to readable format
+            // Remove "Key_" prefix if present and convert to uppercase
+            string keyName = key.ToString();
+            
+            // Remove common prefixes
+            if (keyName.StartsWith("Key", StringComparison.OrdinalIgnoreCase))
+            {
+                keyName = keyName.Substring(3);
+            }
+            
+            // Handle special cases
+            if (keyName.StartsWith("D", StringComparison.OrdinalIgnoreCase) && keyName.Length == 2 && char.IsDigit(keyName[1]))
+            {
+                // D0-D9 -> 0-9
+                return keyName[1].ToString();
+            }
+            
+            // Convert CONTROL to CTRL for consistency
+            keyName = keyName.Replace("CONTROL", "CTRL", StringComparison.OrdinalIgnoreCase);
+            
+            // Return uppercase, stripped of common prefixes
+            return keyName.ToUpperInvariant().Trim();
+        }
+
+        /// <summary>
+        /// Checks if a key is a modifier key (Ctrl, Shift, Alt, etc.)
+        /// </summary>
+        /// <param name="key">The key to check</param>
+        /// <returns>True if the key is a modifier key</returns>
+        public static bool IsModifierKey(Key key)
+        {
+            return ModifierKeyNames.ContainsKey(key);
         }
     }
 }

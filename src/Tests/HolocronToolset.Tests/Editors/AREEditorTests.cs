@@ -2593,14 +2593,122 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorComprehensiveGffRoundtrip: Comprehensive GFF roundtrip test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_map_coordinates_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1806-1898)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1806-1898
         // Original: def test_are_editor_map_coordinates_roundtrip(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test that map coordinates are preserved exactly through roundtrip.
         [Fact]
         public void TestAreEditorMapCoordinatesRoundtrip()
         {
-            // TODO: STUB - Implement map coordinates roundtrip test (validates MapPt1X, MapPt1Y, MapPt2X, MapPt2Y, WorldPt1X, WorldPt1Y, WorldPt2X, WorldPt2Y, NorthAxis, MapZoom, MapResX preserved exactly)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1806-1898
-            throw new NotImplementedException("TestAreEditorMapCoordinatesRoundtrip: Map coordinates roundtrip test not yet implemented");
+            // Test that map coordinates (MapPt1X, MapPt1Y, etc.) are preserved exactly through roundtrip.
+            // This is critical because the map rendering depends on these values being accurate.
+            // The rendering may transform these values differently, but serialization must preserve them.
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find tat001.are
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new AREEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+            GFF originalGff = GFF.FromBytes(originalData);
+
+            // Get original map coordinates from the Map struct
+            GFFStruct originalMap = originalGff.Root.Acquire<GFFStruct>("Map", new GFFStruct());
+            originalMap.Should().NotBeNull("ARE file should have Map struct");
+            originalMap.Count.Should().BeGreaterThan(0, "Map struct should not be empty");
+
+            float origMapPt1X = originalMap.Acquire<float>("MapPt1X", 0.0f);
+            float origMapPt1Y = originalMap.Acquire<float>("MapPt1Y", 0.0f);
+            float origMapPt2X = originalMap.Acquire<float>("MapPt2X", 0.0f);
+            float origMapPt2Y = originalMap.Acquire<float>("MapPt2Y", 0.0f);
+            float origWorldPt1X = originalMap.Acquire<float>("WorldPt1X", 0.0f);
+            float origWorldPt1Y = originalMap.Acquire<float>("WorldPt1Y", 0.0f);
+            float origWorldPt2X = originalMap.Acquire<float>("WorldPt2X", 0.0f);
+            float origWorldPt2Y = originalMap.Acquire<float>("WorldPt2Y", 0.0f);
+            int origNorthAxis = originalMap.Acquire<int>("NorthAxis", 0);
+            int origMapZoom = originalMap.Acquire<int>("MapZoom", 0);
+            int origMapResX = originalMap.Acquire<int>("MapResX", 0);
+
+            // Load into editor and build
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+            var (newData, _) = editor.Build();
+            GFF newGff = GFF.FromBytes(newData);
+
+            // Get new map coordinates
+            GFFStruct newMap = newGff.Root.Acquire<GFFStruct>("Map", new GFFStruct());
+            newMap.Should().NotBeNull("Roundtrip ARE should have Map struct");
+            newMap.Count.Should().BeGreaterThan(0, "Map struct should not be empty");
+
+            float newMapPt1X = newMap.Acquire<float>("MapPt1X", 0.0f);
+            float newMapPt1Y = newMap.Acquire<float>("MapPt1Y", 0.0f);
+            float newMapPt2X = newMap.Acquire<float>("MapPt2X", 0.0f);
+            float newMapPt2Y = newMap.Acquire<float>("MapPt2Y", 0.0f);
+            float newWorldPt1X = newMap.Acquire<float>("WorldPt1X", 0.0f);
+            float newWorldPt1Y = newMap.Acquire<float>("WorldPt1Y", 0.0f);
+            float newWorldPt2X = newMap.Acquire<float>("WorldPt2X", 0.0f);
+            float newWorldPt2Y = newMap.Acquire<float>("WorldPt2Y", 0.0f);
+            int newNorthAxis = newMap.Acquire<int>("NorthAxis", 0);
+            int newMapZoom = newMap.Acquire<int>("MapZoom", 0);
+            int newMapResX = newMap.Acquire<int>("MapResX", 0);
+
+            // Verify all map coordinates match (with floating point tolerance)
+            const float tolerance = 0.0001f;
+
+            Math.Abs(origMapPt1X - newMapPt1X).Should().BeLessThan(tolerance, $"MapPt1X mismatch: {origMapPt1X} vs {newMapPt1X}");
+            Math.Abs(origMapPt1Y - newMapPt1Y).Should().BeLessThan(tolerance, $"MapPt1Y mismatch: {origMapPt1Y} vs {newMapPt1Y}");
+            Math.Abs(origMapPt2X - newMapPt2X).Should().BeLessThan(tolerance, $"MapPt2X mismatch: {origMapPt2X} vs {newMapPt2X}");
+            Math.Abs(origMapPt2Y - newMapPt2Y).Should().BeLessThan(tolerance, $"MapPt2Y mismatch: {origMapPt2Y} vs {newMapPt2Y}");
+            Math.Abs(origWorldPt1X - newWorldPt1X).Should().BeLessThan(tolerance, $"WorldPt1X mismatch: {origWorldPt1X} vs {newWorldPt1X}");
+            Math.Abs(origWorldPt1Y - newWorldPt1Y).Should().BeLessThan(tolerance, $"WorldPt1Y mismatch: {origWorldPt1Y} vs {newWorldPt1Y}");
+            Math.Abs(origWorldPt2X - newWorldPt2X).Should().BeLessThan(tolerance, $"WorldPt2X mismatch: {origWorldPt2X} vs {newWorldPt2X}");
+            Math.Abs(origWorldPt2Y - newWorldPt2Y).Should().BeLessThan(tolerance, $"WorldPt2Y mismatch: {origWorldPt2Y} vs {newWorldPt2Y}");
+            newNorthAxis.Should().Be(origNorthAxis, $"NorthAxis mismatch: {origNorthAxis} vs {newNorthAxis}");
+            newMapZoom.Should().Be(origMapZoom, $"MapZoom mismatch: {origMapZoom} vs {newMapZoom}");
+            newMapResX.Should().Be(origMapResX, $"MapResX mismatch: {origMapResX} vs {newMapResX}");
+
+            // Also verify ARE object level values match
+            ARE originalAre = AREHelpers.ConstructAre(originalGff);
+            ARE newAre = AREHelpers.ConstructAre(newGff);
+
+            Math.Abs(originalAre.MapPoint1.X - newAre.MapPoint1.X).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.MapPoint1.Y - newAre.MapPoint1.Y).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.MapPoint2.X - newAre.MapPoint2.X).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.MapPoint2.Y - newAre.MapPoint2.Y).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.WorldPoint1.X - newAre.WorldPoint1.X).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.WorldPoint1.Y - newAre.WorldPoint1.Y).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.WorldPoint2.X - newAre.WorldPoint2.X).Should().BeLessThan(tolerance);
+            Math.Abs(originalAre.WorldPoint2.Y - newAre.WorldPoint2.Y).Should().BeLessThan(tolerance);
+            newAre.NorthAxis.Should().Be(originalAre.NorthAxis);
         }
 
         // Comprehensive tests for AREHelpers with all game types

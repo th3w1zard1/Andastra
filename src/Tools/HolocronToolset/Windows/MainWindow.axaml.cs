@@ -1180,8 +1180,35 @@ namespace HolocronToolset.Windows
                 return;
             }
 
-            // TODO: Implement file search dialog when available
-            System.Console.WriteLine("File search dialog not yet implemented");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1508-1514
+            // Original: dialog = FileSearcher(self, self.installations)
+            //           dialog.file_results.connect(self.on_file_search_results)
+            //           dialog.exec()
+            var dialog = new Dialogs.FileSearcherDialog(this, _installations);
+            
+            // Connect file results event
+            dialog.FileResults += (results, installation) =>
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1517-1522
+                // Original: def on_file_search_results(self, results: list[FileResource], installation: HTInstallation):
+                //           dialog = FileResults(self, results, installation)
+                //           dialog.sig_searchresults_selected.connect(self.on_open_resources)
+                //           dialog.exec()
+                var resultsDialog = new Dialogs.FileResultsDialog(this, results, installation);
+                resultsDialog.SearchResultsSelected += (resource) =>
+                {
+                    // Open the selected resource
+                    if (resource != null)
+                    {
+                        OnOpenResources(new List<FileResource> { resource });
+                    }
+                };
+                resultsDialog.Show();
+                WindowUtils.AddWindow(resultsDialog);
+            };
+            
+            dialog.Show();
+            WindowUtils.AddWindow(dialog);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1585-1604
