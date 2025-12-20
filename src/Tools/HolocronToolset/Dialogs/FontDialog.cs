@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using System.Reactive.Linq;
 
 namespace HolocronToolset.Dialogs
 {
@@ -73,19 +74,15 @@ namespace HolocronToolset.Dialogs
             _fontSizeComboBox = new ComboBox { MinWidth = 100, IsEditable = true };
             PopulateFontSizes();
             _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-            // Note: ComboBox doesn't have TextChanged in Avalonia - use observable pattern for editable ComboBox
-            // In Avalonia, for editable ComboBox, subscribe to property changes
-            // Since ComboBox doesn't have GetObservable, use PropertyChanged event or SelectionChanged
-            // For editable ComboBox, we'll also handle when user types in the text box part
+            // Matching PyKotor implementation: SizeWidget._size_line_edit.textEdited.connect(self._text_edited)
+            // PyQt's textEdited signal fires when user types in QLineEdit (not when programmatically set)
+            // In Avalonia, GetObservable(ComboBox.TextProperty) is the equivalent - it fires on all text changes
+            // We use Skip(1) to skip the initial value, making it equivalent to textEdited which doesn't fire on initial set
             if (_fontSizeComboBox != null)
             {
-                _fontSizeComboBox.PropertyChanged += (s, e) =>
-                {
-                    if (e.Property == ComboBox.TextProperty || e.Property == ComboBox.SelectedItemProperty)
-                    {
-                        UpdatePreview();
-                    }
-                };
+                _fontSizeComboBox.GetObservable(ComboBox.TextProperty)
+                    .Skip(1) // Skip initial value to match PyQt textEdited behavior (doesn't fire on initial set)
+                    .Subscribe(text => UpdatePreview());
             }
             fontSizePanel.Children.Add(_fontSizeComboBox);
             mainPanel.Children.Add(fontSizePanel);
@@ -156,20 +153,13 @@ namespace HolocronToolset.Dialogs
             {
                 PopulateFontSizes();
                 _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-                // TODO: determine if this is 1:1 equivalent with TextChanged in avalonia, or if there's a closer equivalent.
-                // In Avalonia, for editable ComboBox, subscribe to property changes
-            // Since ComboBox doesn't have GetObservable, use PropertyChanged event or SelectionChanged
-            // For editable ComboBox, we'll also handle when user types in the text box part
-            if (_fontSizeComboBox != null)
-            {
-                _fontSizeComboBox.PropertyChanged += (s, e) =>
-                {
-                    if (e.Property == ComboBox.TextProperty || e.Property == ComboBox.SelectedItemProperty)
-                    {
-                        UpdatePreview();
-                    }
-                };
-            }
+                // Matching PyKotor implementation: SizeWidget._size_line_edit.textEdited.connect(self._text_edited)
+                // PyQt's textEdited signal fires when user types in QLineEdit (not when programmatically set)
+                // In Avalonia, GetObservable(ComboBox.TextProperty) is the equivalent - it fires on all text changes
+                // We use Skip(1) to skip the initial value, making it equivalent to textEdited which doesn't fire on initial set
+                _fontSizeComboBox.GetObservable(ComboBox.TextProperty)
+                    .Skip(1) // Skip initial value to match PyQt textEdited behavior (doesn't fire on initial set)
+                    .Subscribe(text => UpdatePreview());
             }
             if (_boldCheckBox != null)
             {
