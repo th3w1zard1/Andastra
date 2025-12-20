@@ -354,12 +354,6 @@ namespace HolocronToolset.Editors
                 _mainSplitter.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
                 _mainSplitter.RowDefinitions[1].Height = new GridLength(0);
                 _panelTabs.IsVisible = false;
-
-                // Remove grid splitter if it exists
-                if (_gridSplitter != null && _mainSplitter.Children.Contains(_gridSplitter))
-                {
-                    _mainSplitter.Children.Remove(_gridSplitter);
-                }
             }
             else
             {
