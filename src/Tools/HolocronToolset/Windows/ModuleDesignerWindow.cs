@@ -4,6 +4,7 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
+using HolocronToolset.Dialogs;
 using HolocronToolset.Windows;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
@@ -124,9 +125,31 @@ namespace HolocronToolset.Windows
         // Original: def open_module_with_dialog(self):
         public void OpenModuleWithDialog()
         {
+            if (_installation == null)
+            {
+                return;
+            }
+
             // Matching Python: dialog = SelectModuleDialog(self, self._installation)
-            // TODO: Implement SelectModuleDialog when available
-            // For now, this is a placeholder matching the Python interface
+            var dialog = new SelectModuleDialog(this, _installation);
+
+            // Matching Python: if dialog.exec():
+            if (dialog.ShowDialog(this))
+            {
+                // Matching Python: mod_filepath = self._installation.module_path().joinpath(dialog.module)
+                string selectedModule = dialog.SelectedModule;
+                if (string.IsNullOrEmpty(selectedModule))
+                {
+                    return;
+                }
+
+                // Construct full module filepath by combining module path with selected module filename
+                string modulePath = _installation.ModulePath();
+                string modFilepath = System.IO.Path.Combine(modulePath, selectedModule);
+
+                // Matching Python: self.open_module(mod_filepath)
+                OpenModule(modFilepath);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1008-1095

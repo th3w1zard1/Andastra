@@ -147,7 +147,7 @@ namespace HolocronToolset.Dialogs
             }
             if (_cancelButton != null)
             {
-                _cancelButton.Click += (s, e) => Close();
+                _cancelButton.Click += (s, e) => { Close(false); };
             }
             if (_browseButton != null)
             {
@@ -286,9 +286,12 @@ namespace HolocronToolset.Dialogs
             }
 
             // Matching Python: Module.filepath_to_root(filepath)
-            string moduleRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(filepath);
-            _selectedModule = moduleRoot;
-            Confirm();
+            // Note: In Python, browse() sets self.module to the root, but we need the full filename
+            // So we'll use the original filepath's filename instead
+            string fileName = System.IO.Path.GetFileName(filepath);
+            _selectedModule = fileName;
+            // Close with true result for ShowDialogAsync<bool> support
+            Close(true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:113-127
@@ -299,7 +302,8 @@ namespace HolocronToolset.Dialogs
             {
                 _selectedModule = item.Data;
             }
-            Close();
+            // Close with true result for ShowDialogAsync<bool> support
+            Close(true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:129-130
@@ -379,19 +383,19 @@ namespace HolocronToolset.Dialogs
             }
 
             // ShowDialogAsync<bool> will handle setting the parent relationship
-            // We return true if a module was selected (SelectedModule is not empty), false otherwise
-            bool? result = null;
+            // We return true if dialog was closed with true result (user clicked Open) and a module was selected
+            bool result = false;
             if (dialogParent != null)
             {
-                result = await ShowDialogAsync<bool?>(dialogParent);
+                result = await ShowDialogAsync<bool>(dialogParent);
             }
             else
             {
-                result = await ShowDialogAsync<bool?>(this);
+                result = await ShowDialogAsync<bool>(this);
             }
 
-            // Return true if dialog was closed with a result (user clicked Open) and a module was selected
-            return result == true && !string.IsNullOrEmpty(_selectedModule);
+            // Return true if dialog was closed with true result and a module was selected
+            return result && !string.IsNullOrEmpty(_selectedModule);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:50-52
@@ -405,3 +409,5 @@ namespace HolocronToolset.Dialogs
             public Button CancelButton { get; set; }
             public Button BrowseButton { get; set; }
         }
+    }
+}
