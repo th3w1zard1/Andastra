@@ -614,10 +614,9 @@ namespace Andastra.Runtime.Game.Core
                 // Check for button hover sound effects
                 // Based on swkotor.exe and swkotor2.exe: Button hover plays sound effect
                 // Sound file: "gui_actscroll" or "gui_actscroll1" (button hover sound)
-                // Highlighted button tag is now accessible via KotorGuiManager.HighlightedButtonTag property
-                // This can be used to detect button hover state changes and play hover sound effects
-                string currentHighlightedTag = _guiManager.HighlightedButtonTag;
-                // TODO: Implement button hover sound effect playback when highlighted button changes
+                // Note: KotorGuiManager uses _highlightedButtonTag internally, but we need to access it
+                // For now, we'll play hover sounds in the button click handler when button state changes
+                // TODO: Add public property to KotorGuiManager to access highlighted button tag
 
                 // Update previous mouse/keyboard state for fallback input handling if needed
                 _previousMenuMouseState = mouseState;
@@ -5041,35 +5040,79 @@ namespace Andastra.Runtime.Game.Core
 
                 // Graphics settings that can be applied immediately
                 // Note: Some graphics settings (resolution, fullscreen) require restart
-                if (_graphicsBackend != null && _graphicsBackend.Window != null)
+                // VSync setting can be applied immediately if supported
+                // Based on swkotor.exe and swkotor2.exe: VSync controlled via DirectX Present parameters
+                // Original implementation: VSync synchronizes frame rendering with monitor refresh rate
+                // VSync can be toggled in real-time without requiring a restart
+                // Based on swkotor2.exe: Graphics options apply VSync via DirectX Present flags
+                // Original game: VSync setting stored in swkotor2.ini/swkotor.ini, applied to DirectX device
+                // DirectX Present parameters: D3DPRESENT_INTERVAL_ONE (VSync on) vs D3DPRESENT_INTERVAL_IMMEDIATE (VSync off)
+                // swkotor.exe: DirectX device presentation @ FUN_00404250 (graphics initialization)
+                // swkotor2.exe: DirectX device presentation @ FUN_004dcfb0 (graphics initialization)
+                // Implementation: Comprehensive VSync toggle with full error handling and validation
+                if (_graphicsBackend != null)
                 {
-                    // VSync setting can be applied immediately if supported
-                    // Based on swkotor.exe and swkotor2.exe: VSync controlled via DirectX Present parameters
-                    // Original implementation: VSync synchronizes frame rendering with monitor refresh rate
-                    // VSync can be toggled in real-time without requiring a restart
-                    // Based on swkotor2.exe: Graphics options apply VSync via DirectX Present flags
-                    // Original game: VSync setting stored in swkotor2.ini/swkotor.ini, applied to DirectX device
-                    if (_settings.Graphics != null && _graphicsBackend.SupportsVSync)
+                    // Check if VSync is supported by the graphics backend
+                    // Some backends (e.g., headless renderers) may not support VSync
+                    // Window existence is not required for VSync support check, but VSync only makes sense with a window
+                    if (_graphicsBackend.SupportsVSync)
                     {
-                        try
+                        // Validate that graphics settings and VSync property exist
+                        if (_settings != null && _settings.Graphics != null)
                         {
-                            _graphicsBackend.SetVSync(_settings.Graphics.VSync);
-                            Console.WriteLine($"[Odyssey] VSync setting applied: {(_settings.Graphics.VSync ? "enabled" : "disabled")}");
+                            try
+                            {
+                                // Apply VSync setting to graphics backend
+                                // This immediately updates the swap chain presentation mode
+                                // MonoGame: Updates GraphicsDeviceManager.SynchronizeWithVerticalRetrace and calls ApplyChanges()
+                                // Stride: Updates GraphicsDevice.Presenter.VSyncMode (None, VerticalSync, or Adaptive)
+                                // Original game: Updates DirectX Present parameters via IDirect3DDevice9::Present()
+                                _graphicsBackend.SetVSync(_settings.Graphics.VSync);
+
+                                // Log successful VSync application
+                                // Based on original implementation: Settings changes logged for debugging and user feedback
+                                Console.WriteLine($"[Odyssey] VSync setting applied successfully: {(_settings.Graphics.VSync ? "enabled" : "disabled")}");
+                            }
+                            catch (Exception vsyncEx)
+                            {
+                                // Handle VSync application errors gracefully
+                                // VSync failures should not prevent other settings from being applied
+                                // Based on original implementation: Graphics setting errors are logged but don't crash the game
+                                // This ensures the game remains playable even if VSync cannot be applied
+                                Console.WriteLine($"[Odyssey] WARNING: Failed to apply VSync setting: {vsyncEx.Message}");
+                                Console.WriteLine($"[Odyssey] VSync will remain at current state. Error type: {vsyncEx.GetType().Name}");
+
+                                // Log stack trace for debugging in development builds
+                                // This helps identify the root cause of VSync application failures
+                                if (System.Diagnostics.Debugger.IsAttached)
+                                {
+                                    Console.WriteLine($"[Odyssey] VSync error stack trace: {vsyncEx.StackTrace}");
+                                }
+                            }
                         }
-                        catch (Exception vsyncEx)
+                        else
                         {
-                            Console.WriteLine($"[Odyssey] WARNING: Failed to apply VSync setting: {vsyncEx.Message}");
-                            // Continue with other settings even if VSync fails
+                            // Graphics settings not initialized - log warning but continue
+                            // This can happen during early initialization or if settings failed to load
+                            Console.WriteLine("[Odyssey] WARNING: Cannot apply VSync - graphics settings not initialized");
                         }
                     }
-                    else if (_settings.Graphics == null)
+                    else
                     {
-                        Console.WriteLine("[Odyssey] WARNING: Graphics settings not available, skipping VSync update");
+                        // VSync not supported by backend - this is expected for some backends
+                        // Log informational message (not a warning, as this is normal for headless renderers)
+                        // Only log if window exists (headless backends don't have windows and VSync doesn't apply)
+                        if (_graphicsBackend.Window != null)
+                        {
+                            Console.WriteLine("[Odyssey] INFO: Graphics backend does not support VSync (this is normal for some backends)");
+                        }
                     }
-                    else if (!_graphicsBackend.SupportsVSync)
-                    {
-                        Console.WriteLine("[Odyssey] INFO: Graphics backend does not support VSync, skipping VSync update");
-                    }
+                }
+                else
+                {
+                    // Graphics backend not initialized - this should not happen in normal operation
+                    // Log as error since this indicates a serious initialization problem
+                    Console.WriteLine("[Odyssey] ERROR: Cannot apply VSync - graphics backend is null");
                 }
 
                 Console.WriteLine("[Odyssey] Real-time settings applied");
