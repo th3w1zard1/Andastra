@@ -31,6 +31,10 @@ namespace Andastra.Parsing.Formats.MDL
         // Track animation nodes separately from geometry nodes
         private List<MDLNode> _animNodes;
         private Dictionary<string, int> _animNodeIndex;
+        // Track animation nodes that have model nodes as parents (by node name -> parent model node name)
+        private Dictionary<string, string> _animNodeModelParents;
+        // Track animation nodes that have model node parents (animation node index -> model node parent name)
+        private Dictionary<int, string> _animNodeModelParents;
 
         // Controller name mappings (matching Python _CONTROLLER_NAMES)
         private static readonly Dictionary<int, Dictionary<int, string>> ControllerNames = new Dictionary<int, Dictionary<int, string>>
@@ -208,6 +212,7 @@ namespace Andastra.Parsing.Formats.MDL
                 _nodes = new List<MDLNode>();
                 _animNodes = new List<MDLNode>();
                 _animNodeIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["null"] = -1 };
+                _animNodeModelParents = new Dictionary<int, string>();
                 _currentNode = null;
                 _isGeometry = false;
                 _isAnimation = false;
@@ -333,6 +338,7 @@ namespace Andastra.Parsing.Formats.MDL
                         _animNodes.Clear();
                         _animNodeIndex.Clear();
                         _animNodeIndex["null"] = -1;
+                        _animNodeModelParents.Clear();
                         _isAnimation = false;
                         continue;
                     }
@@ -548,22 +554,25 @@ namespace Andastra.Parsing.Formats.MDL
             var match = Regex.Match(line, @"^\s*parent\s+(\S+)", RegexOptions.IgnoreCase);
             if (match.Success)
             {
-                var parentName = match.Groups[1].Value.ToLowerInvariant();
+                var parentNameOriginal = match.Groups[1].Value;
+                var parentName = parentNameOriginal.ToLowerInvariant();
                 // For animation nodes, parent can be either an animation node or a model node
                 // Check animation node index first, then model node index
                 if (_isAnimation)
                 {
                     if (_animNodeIndex.ContainsKey(parentName))
                     {
+                        // Parent is an animation node - use animation node index
                         _currentNode.ParentId = _animNodeIndex[parentName];
                     }
                     else if (_nodeIndex.ContainsKey(parentName))
                     {
-                        // Parent is a model node - store as negative to distinguish from animation nodes
-                        // Actually, we need to handle this differently - animation nodes reference model nodes by name,
-                        // but we can't use indices across different lists. For now, use -1 and handle in hierarchy building.
-                        // TODO: Properly handle model node parents in animation nodes
-                        _currentNode.ParentId = -1; // Will need special handling
+                        // Parent is a model node - store the original parent name (preserving case)
+                        // Animation nodes with model node parents are treated as root-level nodes in the animation hierarchy
+                        // but their model node parent reference is preserved for animation application
+                        int animNodeIndex = _animNodes.Count - 1; // Current node was just added to _animNodes
+                        _animNodeModelParents[animNodeIndex] = parentNameOriginal;
+                        _currentNode.ParentId = -1; // Mark as root-level in animation tree
                     }
                     else
                     {
@@ -1731,14 +1740,34 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             // Build parent-child relationships (same logic as BuildNodeHierarchy)
-            foreach (var node in _animNodes)
+            for (int i = 0; i < _animNodes.Count; i++)
             {
+                var node = _animNodes[i];
+                
                 if (node.ParentId == -1)
                 {
-                    // Attach to root (but not if it IS the root)
-                    if (anim.Root != null && node != anim.Root)
+                    // Check if this node has a model node parent
+                    if (_animNodeModelParents.ContainsKey(i))
                     {
-                        anim.Root.Children.Add(node);
+                        // Parent is a model node - look it up by name and attach this animation node to it
+                        string modelParentName = _animNodeModelParents[i];
+                        if (_nodeIndex.ContainsKey(modelParentName))
+                        {
+                            int modelParentIndex = _nodeIndex[modelParentName];
+                            if (modelParentIndex >= 0 && modelParentIndex < _nodes.Count)
+                            {
+                                var modelParent = _nodes[modelParentIndex];
+                                modelParent.Children.Add(node);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // No parent - attach to animation root (but not if it IS the root)
+                        if (anim.Root != null && node != anim.Root)
+                        {
+                            anim.Root.Children.Add(node);
+                        }
                     }
                 }
                 else if (node.ParentId >= 0 && node.ParentId < _animNodes.Count)
@@ -1747,8 +1776,6 @@ namespace Andastra.Parsing.Formats.MDL
                     var parent = _animNodes[node.ParentId];
                     parent.Children.Add(node);
                 }
-                // Note: Parent references in animation nodes use names, but we resolve them to indices
-                // during parsing in ParseNodeData, so by the time we build the hierarchy, we have indices
             }
         }
 
@@ -1801,6 +1828,11 @@ namespace Andastra.Parsing.Formats.MDL
         }
 
         public void Dispose()
+        {
+            _reader?.Dispose();
+        }
+    }
+}
         {
             _reader?.Dispose();
         }
