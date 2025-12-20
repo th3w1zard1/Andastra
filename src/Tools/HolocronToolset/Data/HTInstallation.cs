@@ -725,6 +725,18 @@ namespace HolocronToolset.Data
             }
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1117-1124
+        // Original: def talktable(self) -> TalkTable:
+        /// <summary>
+        /// Returns the TalkTable linked to the Installation.
+        /// </summary>
+        /// <returns>A TalkTable object.</returns>
+        public Andastra.Parsing.Extract.TalkTable TalkTable()
+        {
+            string tlkPath = System.IO.Path.Combine(Path, "dialog.tlk");
+            return new Andastra.Parsing.Extract.TalkTable(tlkPath);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: def reload_module(self, module_name: str):
         public void ReloadModule(string moduleName)

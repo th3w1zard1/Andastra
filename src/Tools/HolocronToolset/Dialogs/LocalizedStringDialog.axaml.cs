@@ -170,9 +170,17 @@ namespace HolocronToolset.Dialogs
         {
             if (_installation != null && _stringrefSpin != null)
             {
-                // TODO: Get talktable size when TalkTable accessor is implemented
-                // For now, set to a default value
-                _stringrefSpin.Value = 1000;
+                try
+                {
+                    var talkTable = _installation.TalkTable();
+                    int size = talkTable.Size();
+                    _stringrefSpin.Value = size;
+                }
+                catch
+                {
+                    // If we can't get the talktable size, fall back to a default value
+                    _stringrefSpin.Value = 1000;
+                }
             }
         }
 
