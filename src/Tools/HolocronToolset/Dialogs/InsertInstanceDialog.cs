@@ -358,9 +358,11 @@ namespace HolocronToolset.Dialogs
             }
 
             // Add to module
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:181
+            // Original: self._module.add_locations(self.resname, self._restype, [self.filepath])
             if (_module != null && !string.IsNullOrEmpty(_resname) && !string.IsNullOrEmpty(_filepath))
             {
-                // TODO: Implement when Module.add_locations() is available
+                _module.AddLocations(_resname, _restype, new[] { _filepath });
             }
 
             Close();
@@ -626,14 +628,14 @@ namespace HolocronToolset.Dialogs
                                 // Original: erf = read_erf(resource.filepath())
                                 // Original: mdx_data = erf.get(resource.resname(), ResourceType.MDX)
                                 var erf = ERFAuto.ReadErf(resource.FilePath);
-                                mdxData = erf.GetData(resource.ResName, ResourceType.MDX);
+                                mdxData = erf.Get(resource.ResName, ResourceType.MDX);
                             }
                             else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
                             {
                                 // Original: rim = read_rim(resource.filepath())
                                 // Original: mdx_data = rim.get(resource.resname(), ResourceType.MDX)
                                 var rim = RIMAuto.ReadRim(resource.FilePath);
-                                mdxData = rim.GetData(resource.ResName, ResourceType.MDX);
+                                mdxData = rim.Get(resource.ResName, ResourceType.MDX);
                             }
                             else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(fileName))
                             {
@@ -665,14 +667,14 @@ namespace HolocronToolset.Dialogs
                                 // Original: erf = read_erf(resource.filepath())
                                 // Original: mdl_data = erf.get(resource.resname(), ResourceType.MDL)
                                 var erf = ERFAuto.ReadErf(resource.FilePath);
-                                mdlData = erf.GetData(resource.ResName, ResourceType.MDL);
+                                mdlData = erf.Get(resource.ResName, ResourceType.MDL);
                             }
                             else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
                             {
                                 // Original: rim = read_rim(resource.filepath())
                                 // Original: mdl_data = rim.get(resource.resname(), ResourceType.MDL)
                                 var rim = RIMAuto.ReadRim(resource.FilePath);
-                                mdlData = rim.GetData(resource.ResName, ResourceType.MDL);
+                                mdlData = rim.Get(resource.ResName, ResourceType.MDL);
                             }
                             else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(fileName))
                             {
