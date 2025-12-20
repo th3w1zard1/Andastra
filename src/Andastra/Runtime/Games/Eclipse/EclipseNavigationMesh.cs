@@ -898,16 +898,130 @@ namespace Andastra.Runtime.Games.Eclipse
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on daorigins.exe/DragonAge2.exe//: Advanced obstacle avoidance
+        /// Based on daorigins.exe/DragonAge2.exe: Advanced obstacle avoidance
         /// Eclipse engine has the most sophisticated obstacle avoidance with dynamic obstacles and cover system.
         /// </summary>
+        /// <remarks>
+        /// Implementation based on reverse engineering of:
+        /// - daorigins.exe: Dynamic obstacle avoidance in pathfinding (Ghidra analysis needed: search for pathfinding with obstacle avoidance)
+        /// - DragonAge2.exe: Enhanced dynamic obstacle avoidance with spatial acceleration (Ghidra analysis needed: search for navigation mesh pathfinding with obstacles)
+        /// 
+        /// Algorithm:
+        /// 1. Convert ObstacleInfo (position, radius) to DynamicObstacle (with bounds, height, influence radius)
+        /// 2. Get height at obstacle positions from navigation mesh
+        /// 3. Calculate bounding box from spherical obstacle (radius-based)
+        /// 4. Register obstacles temporarily with unique IDs (using negative range to avoid conflicts)
+        /// 5. Update dynamic obstacle system to mark affected faces
+        /// 6. Call FindPath which uses CalculateObstaclePenalty to avoid obstacles
+        /// 7. Clean up temporary obstacles after pathfinding
+        /// 
+        /// Note: Temporary obstacles use IDs in the range [-1000000, -1000000 + obstacleCount) to avoid conflicts
+        /// with permanent obstacles which typically use positive IDs.
+        /// </remarks>
         public System.Collections.Generic.IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
         {
-            // Eclipse has built-in dynamic obstacle support, so we can use the existing FindPath
-            // but we need to register the obstacles as dynamic obstacles temporarily
-            // For now, delegate to FindPath and let Eclipse's dynamic obstacle system handle it
-            // TODO: Integrate with Eclipse's dynamic obstacle system for proper avoidance
-            return FindPath(start, goal);
+            // Handle null or empty obstacles list - delegate to standard FindPath
+            if (obstacles == null || obstacles.Count == 0)
+            {
+                return FindPath(start, goal);
+            }
+
+            // Track temporary obstacle IDs for cleanup
+            var temporaryObstacleIds = new List<int>();
+            const int tempObstacleIdBase = -1000000;
+
+            try
+            {
+                // Step 1: Convert ObstacleInfo to DynamicObstacle and register temporarily
+                for (int i = 0; i < obstacles.Count; i++)
+                {
+                    Interfaces.ObstacleInfo obstacleInfo = obstacles[i];
+                    
+                    // Skip invalid obstacles (zero or negative radius)
+                    if (obstacleInfo.Radius <= 0.0f)
+                    {
+                        continue;
+                    }
+
+                    // Generate unique temporary obstacle ID
+                    int obstacleId = tempObstacleIdBase + i;
+                    temporaryObstacleIds.Add(obstacleId);
+
+                    // Get height at obstacle position from navigation mesh
+                    // This ensures the obstacle is placed at the correct height on the terrain
+                    // Note: Z is the vertical axis in Eclipse engine coordinate system
+                    float obstacleHeight;
+                    if (!GetHeightAtPoint(obstacleInfo.Position, out obstacleHeight))
+                    {
+                        // If we can't get height, use Z coordinate as fallback (Z is vertical axis)
+                        obstacleHeight = obstacleInfo.Position.Z;
+                    }
+
+                    // Step 2: Calculate bounding box from spherical obstacle
+                    // ObstacleInfo provides position and radius, representing a sphere
+                    // We convert this to an axis-aligned bounding box
+                    float radius = obstacleInfo.Radius;
+                    Vector3 position = obstacleInfo.Position;
+                    
+                    // Create axis-aligned bounding box centered at position with radius in all directions
+                    Vector3 boundsMin = new Vector3(
+                        position.X - radius,
+                        position.Y - radius,
+                        obstacleHeight - radius  // Use terrain height as base
+                    );
+                    Vector3 boundsMax = new Vector3(
+                        position.X + radius,
+                        position.Y + radius,
+                        obstacleHeight + radius  // Extend upward from terrain
+                    );
+
+                    // Step 3: Calculate obstacle height (vertical extent)
+                    // For spherical obstacles, height is 2 * radius
+                    float obstacleVerticalHeight = radius * 2.0f;
+
+                    // Step 4: Use radius as influence radius for pathfinding
+                    // Obstacles influence pathfinding within their radius
+                    float influenceRadius = radius;
+
+                    // Step 5: Register temporary obstacle
+                    // Obstacles are non-walkable by default (block movement)
+                    // They don't have walkable top surfaces unless specified
+                    RegisterObstacle(
+                        obstacleId,
+                        position,
+                        boundsMin,
+                        boundsMax,
+                        obstacleVerticalHeight,
+                        influenceRadius,
+                        isWalkable: false,  // Obstacles block movement
+                        hasTopSurface: false  // Obstacles are not walkable platforms
+                    );
+                }
+
+                // Step 6: Update dynamic obstacle system to mark affected faces
+                // This ensures pathfinding cache is invalidated for affected regions
+                UpdateDynamicObstacles();
+
+                // Step 7: Call FindPath which uses CalculateObstaclePenalty to avoid obstacles
+                // The FindPath method already integrates with dynamic obstacles through:
+                // - CalculateTacticalEdgeCost calls CalculateObstaclePenalty
+                // - CalculateObstaclePenalty checks _dynamicObstacles and adds penalties for paths near obstacles
+                // - This naturally causes A* pathfinding to prefer paths that avoid obstacles
+                return FindPath(start, goal);
+            }
+            finally
+            {
+                // Step 8: Clean up temporary obstacles
+                // Remove all temporarily registered obstacles to restore mesh state
+                foreach (int obstacleId in temporaryObstacleIds)
+                {
+                    RemoveObstacle(obstacleId);
+                }
+
+                // Clear any invalidated faces that were marked during temporary obstacle registration
+                // Note: We don't call UpdateDynamicObstacles here because we've already removed the obstacles
+                // The next call to UpdateDynamicObstacles will naturally clear the invalidated faces
+            }
         }
 
         /// <summary>
