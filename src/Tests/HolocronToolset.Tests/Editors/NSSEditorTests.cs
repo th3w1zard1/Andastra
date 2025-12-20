@@ -1622,14 +1622,76 @@ void helper() {
             }
         }
 
-        // TODO: STUB - Implement test_nss_editor_game_selector_switch (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:697-717)
-        // Original: def test_nss_editor_game_selector_switch(qtbot, installation: HTInstallation): Test game selector switch
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:697-717
+        // Original: def test_nss_editor_game_selector_switch(qtbot, installation: HTInstallation): Test switching between K1 and TSL modes
         [Fact]
         public void TestNssEditorGameSelectorSwitch()
         {
-            // TODO: STUB - Implement game selector switch test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:697-717
-            throw new NotImplementedException("TestNssEditorGameSelectorSwitch: Game selector switch test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Skip test if no installation available (matching Python behavior)
+            if (installation == null)
+            {
+                return;
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: initial_is_tsl = editor._is_tsl
+            var isTslField = editor.GetType().GetField("_isTsl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            isTslField.Should().NotBeNull("_isTsl field should exist");
+            bool initialIsTsl = (bool)isTslField.GetValue(editor);
+
+            // Matching Python: initial_function_count = editor.ui.functionList.count()
+            var functionList = editor.FunctionList;
+            functionList.Should().NotBeNull("Function list should be initialized");
+            int initialFunctionCount = functionList.Items.Count;
+
+            // Matching Python: editor._is_tsl = not initial_is_tsl
+            // Matching Python: editor._update_game_specific_data()
+            bool newIsTsl = !initialIsTsl;
+            isTslField.SetValue(editor, newIsTsl);
+            editor.UpdateGameSpecificData();
+
+            // Matching Python: assert editor._is_tsl != initial_is_tsl
+            bool currentIsTsl = (bool)isTslField.GetValue(editor);
+            currentIsTsl.Should().NotBe(initialIsTsl, "Game mode should have changed");
+
+            // Matching Python: new_function_count = editor.ui.functionList.count()
+            // Matching Python: # Counts may differ between K1 and TSL
+            int newFunctionCount = functionList.Items.Count;
+            // Note: K1 and TSL have different function counts, so the count may change
+            // We verify that UpdateGameSpecificData() was called and the list was updated
+            newFunctionCount.Should().BeGreaterThan(0, "Function list should have items after update");
         }
 
         // TODO: STUB - Implement test_nss_editor_game_selector_ui (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:719-747)
