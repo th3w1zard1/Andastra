@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks>net9.0-windows</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <!-- Explicitly disable Windows Forms and WPF to prevent NETSDK1136 error from transitive dependencies -->
+    <UseWindowsForms>false</UseWindowsForms>
+    <UseWPF>false</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

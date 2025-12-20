@@ -4,7 +4,7 @@
     <!-- Use Windows-specific target framework on Windows to satisfy SDK requirements -->
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks>net9.0-windows</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
