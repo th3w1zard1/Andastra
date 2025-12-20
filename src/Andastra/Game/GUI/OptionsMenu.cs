@@ -253,11 +253,24 @@ namespace Andastra.Runtime.Game.GUI
             var options = new Dictionary<OptionsCategory, List<OptionItem>>();
 
             // Graphics options
+            // Based on swkotor.exe and swkotor2.exe: Graphics options menu (swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80)
+            // Original implementation: Graphics options include Resolution, Texture Quality, Shadow Quality, VSync, Fullscreen
+            // VSync: Controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+            // VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing
             var graphicsOptions = new List<OptionItem>
             {
                 new OptionItem("Window Width", OptionType.Numeric, () => settings.Width, v => settings.Width = (int)v, 320, 7680),
                 new OptionItem("Window Height", OptionType.Numeric, () => settings.Height, v => settings.Height = (int)v, 240, 4320),
                 new OptionItem("Fullscreen", OptionType.Boolean, () => settings.Fullscreen ? 1 : 0, v => settings.Fullscreen = v > 0, 0, 1),
+                new OptionItem("VSync", OptionType.Boolean, 
+                    () => (settings.Graphics != null && settings.Graphics.VSync) ? 1 : 0, 
+                    v => 
+                    {
+                        if (settings.Graphics != null)
+                        {
+                            settings.Graphics.VSync = v > 0;
+                        }
+                    }, 0, 1),
                 new OptionItem("Debug Render", OptionType.Boolean, () => settings.DebugRender ? 1 : 0, v => settings.DebugRender = v > 0, 0, 1)
             };
             options[OptionsCategory.Graphics] = graphicsOptions;
@@ -289,13 +302,16 @@ namespace Andastra.Runtime.Game.GUI
                         musicPlayer.Volume = volume;
                     }
                 }, 0, 100),
-                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.Audio.SfxVolume * 100.0f),
-                    v => 
+                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.Audio.EffectsVolume * 100.0f),
+                    v =>
                     {
                         float volume = (float)v / 100.0f;
-                        settings.Audio.SfxVolume = volume;
-                        // Note: SFX volume is applied per-sound when playing, not as a master volume
-                        // The sound player's SetMasterVolume is controlled by Master Volume
+                        settings.Audio.EffectsVolume = volume;
+                        // Apply SFX volume to sound player immediately if available
+                        if (soundPlayer != null)
+                        {
+                            soundPlayer.SetMasterVolume(volume);
+                        }
                     }, 0, 100),
                 new OptionItem("Voice Volume", OptionType.Numeric, () => (int)(settings.Audio.VoiceVolume * 100.0f),
                     v => 
@@ -322,12 +338,13 @@ namespace Andastra.Runtime.Game.GUI
             // Feedback options - based on swkotor2.exe interface/feedback options
             var feedbackOptions = new List<OptionItem>
             {
-                new OptionItem("Tooltips", OptionType.Boolean, () => settings.Tooltips ? 1 : 0, v => settings.Tooltips = v > 0, 0, 1),
-                new OptionItem("Minimap", OptionType.Boolean, () => settings.Minimap ? 1 : 0, v => settings.Minimap = v > 0, 0, 1),
-                new OptionItem("Damage Numbers", OptionType.Boolean, () => settings.DamageNumbers ? 1 : 0, v => settings.DamageNumbers = v > 0, 0, 1),
-                new OptionItem("Subtitles", OptionType.Boolean, () => settings.Subtitles ? 1 : 0, v => settings.Subtitles = v > 0, 0, 1),
-                new OptionItem("Party Health Bars", OptionType.Boolean, () => settings.PartyHealthBars ? 1 : 0, v => settings.PartyHealthBars = v > 0, 0, 1),
-                new OptionItem("Combat Feedback", OptionType.Boolean, () => settings.CombatFeedback ? 1 : 0, v => settings.CombatFeedback = v > 0, 0, 1)
+                new OptionItem("Show Damage Numbers", OptionType.Boolean, () => settings.Feedback.ShowDamageNumbers ? 1 : 0, v => settings.Feedback.ShowDamageNumbers = v > 0, 0, 1),
+                new OptionItem("Show Hit/Miss Feedback", OptionType.Boolean, () => settings.Feedback.ShowHitMissFeedback ? 1 : 0, v => settings.Feedback.ShowHitMissFeedback = v > 0, 0, 1),
+                new OptionItem("Show Subtitles", OptionType.Boolean, () => settings.Feedback.ShowSubtitles ? 1 : 0, v => settings.Feedback.ShowSubtitles = v > 0, 0, 1),
+                new OptionItem("Show Action Queue", OptionType.Boolean, () => settings.Feedback.ShowActionQueue ? 1 : 0, v => settings.Feedback.ShowActionQueue = v > 0, 0, 1),
+                new OptionItem("Show Minimap", OptionType.Boolean, () => settings.Feedback.ShowMinimap ? 1 : 0, v => settings.Feedback.ShowMinimap = v > 0, 0, 1),
+                new OptionItem("Show Party Health Bars", OptionType.Boolean, () => settings.Feedback.ShowPartyHealthBars ? 1 : 0, v => settings.Feedback.ShowPartyHealthBars = v > 0, 0, 1),
+                new OptionItem("Show Floating Combat Text", OptionType.Boolean, () => settings.Feedback.ShowFloatingCombatText ? 1 : 0, v => settings.Feedback.ShowFloatingCombatText = v > 0, 0, 1)
             };
             options[OptionsCategory.Feedback] = feedbackOptions;
 

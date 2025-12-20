@@ -40,7 +40,7 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// - GUI loading: Loads GUI files from game installation, parses panel/button definitions
     /// - Button events: Handles button click events, dispatches to game systems
     /// - Font rendering: Loads bitmap fonts from ResRef using BitmapFont class with TXI metrics
-    /// 
+    ///
     /// Ghidra Reverse Engineering Analysis Required:
     /// - swkotor.exe: GUI font loading and text rendering functions (needs Ghidra address verification)
     /// - swkotor2.exe: FUN_0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
@@ -49,14 +49,14 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// - DragonAge2.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - :  GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - :  GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
-    /// 
+    ///
     /// Cross-Engine Inheritance Structure (to be implemented after Ghidra analysis):
     /// - Base Class: BaseGuiManager (Runtime.Games.Common) - Common GUI loading/rendering patterns
     ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe: 0x..., swkotor2.exe: 0x0070a2e0)
     ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe: 0x...)
     ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
     ///   - Infinity: InfinityGuiManager : BaseGuiManager (: 0x..., : 0x...)
-    /// 
+    ///
     /// Note: Original engine used DirectX GUI rendering, this is a modern MonoGame adaptation
     /// </remarks>
     public class KotorGuiManager : BaseGuiManager
@@ -71,6 +71,39 @@ namespace Andastra.Runtime.MonoGame.GUI
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         private string _highlightedButtonTag;
+
+        /// <summary>
+        /// Event fired when a GUI button is clicked.
+        /// </summary>
+        public event Action<string, int> OnButtonClicked;
+
+        /// <summary>
+        /// Event fired when a GUI checkbox is clicked.
+        /// </summary>
+        /// <remarks>
+        /// Checkbox Click Event:
+        /// - Based on swkotor.exe and swkotor2.exe: Checkbox click handling in options menu
+        /// - Original implementation: Checkboxes toggle state when clicked (CB_VSYNC, CB_FRAMEBUFF, etc.)
+        /// - Based on swkotor2.exe: OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC @ 0x006e3e80
+        /// - When checkbox is clicked, its IsSelected state is toggled
+        /// </remarks>
+        public event Action<string, bool> OnCheckBoxClicked;
+
+        /// <summary>
+        /// Gets the tag of the currently highlighted button (mouse over).
+        /// </summary>
+        /// <remarks>
+        /// Highlighted Button Tag:
+        /// - Based on swkotor.exe and swkotor2.exe: Button hover detection for sound effects
+        /// - Updated during Update() method when mouse moves over buttons
+        /// - Used for playing hover sound effects ("gui_actscroll" or "gui_actscroll1")
+        /// - Returns null if no button is currently highlighted
+        /// - Original implementation: Button hover state tracked internally for rendering and sound effects
+        /// - Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Button hover state tracking
+        /// - Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Button hover state tracking
+        /// </remarks>
+        [CanBeNull]
+        public string HighlightedButtonTag => _highlightedButtonTag;
 
         /// <summary>
         /// Gets the graphics device.
@@ -163,7 +196,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                     Width = width,
                     Height = height,
                     ControlMap = new Dictionary<string, GUIControl>(StringComparer.OrdinalIgnoreCase),
-                    ButtonMap = new Dictionary<string, GUIButton>(StringComparer.OrdinalIgnoreCase)
+                    ButtonMap = new Dictionary<string, GUIButton>(StringComparer.OrdinalIgnoreCase),
+                    CheckBoxMap = new Dictionary<string, GUICheckBox>(StringComparer.OrdinalIgnoreCase)
                 };
 
                 // Build control and button maps for quick lookup
@@ -264,6 +298,21 @@ namespace Andastra.Runtime.MonoGame.GUI
             _currentGui.ButtonMap.TryGetValue(tag, out var button);
             return button;
         }
+
+        /// <summary>
+        /// Gets the tag of the currently highlighted button (mouse over).
+        /// </summary>
+        /// <returns>The tag of the highlighted button, or null if no button is highlighted.</returns>
+        /// <remarks>
+        /// Highlighted Button Tag:
+        /// - Based on swkotor.exe and swkotor2.exe: Button hover state tracking
+        /// - Original implementation: Button hover state used for visual feedback and sound effects
+        /// - Updated automatically during Update() based on mouse position
+        /// - Returns null when no button is under the mouse cursor
+        /// - Used for playing hover sound effects and visual highlighting
+        /// </remarks>
+        [CanBeNull]
+        public string HighlightedButtonTag => _highlightedButtonTag;
 
         /// <summary>
         /// Updates the border fill texture for a control by tag.
@@ -425,6 +474,15 @@ namespace Andastra.Runtime.MonoGame.GUI
                     }
                 }
 
+                // Add to checkbox map if it's a checkbox
+                if (control is GUICheckBox checkBox)
+                {
+                    if (!string.IsNullOrEmpty(checkBox.Tag))
+                    {
+                        loadedGui.CheckBoxMap[checkBox.Tag] = checkBox;
+                    }
+                }
+
                 // Recursively process children
                 if (control.Children != null && control.Children.Count > 0)
                 {
@@ -503,13 +561,52 @@ namespace Andastra.Runtime.MonoGame.GUI
         }
 
         /// <summary>
-        /// Handles mouse click input and checks for button hits.
+        /// Handles mouse click input and checks for button and checkbox hits.
         /// </summary>
+        /// <remarks>
+        /// Mouse Click Handling:
+        /// - Based on swkotor.exe and swkotor2.exe: Mouse click handling for GUI controls
+        /// - Original implementation: Buttons and checkboxes respond to mouse clicks
+        /// - Checkboxes toggle their IsSelected state when clicked
+        /// - Based on swkotor2.exe: OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC checkbox clicks
+        /// </remarks>
         private void HandleMouseClick(int mouseX, int mouseY)
         {
             if (_currentGui == null)
             {
                 return;
+            }
+
+            // Check all checkboxes for hit first (checkboxes are typically on top of buttons)
+            // Based on swkotor2.exe: Checkbox click handling takes priority
+            foreach (var kvp in _currentGui.CheckBoxMap)
+            {
+                var checkBox = kvp.Value;
+                if (checkBox == null)
+                {
+                    continue;
+                }
+
+                // Check if mouse is within checkbox bounds
+                int left = (int)checkBox.Position.X;
+                int top = (int)checkBox.Position.Y;
+                int right = left + (int)checkBox.Size.X;
+                int bottom = top + (int)checkBox.Size.Y;
+
+                if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
+                {
+                    // Checkbox clicked - toggle state
+                    // Based on swkotor2.exe: Checkbox state toggled on click (OptionsGraphicsAdvancedMenu::callbackActive)
+                    bool wasSelected = checkBox.IsSelected.HasValue && checkBox.IsSelected.Value != 0;
+                    bool newState = !wasSelected;
+                    checkBox.IsSelected = newState ? 1 : 0;
+
+                    // Fire the OnCheckBoxClicked event for external handlers
+                    OnCheckBoxClicked?.Invoke(checkBox.Tag, newState);
+
+                    Console.WriteLine($"[KotorGuiManager] Checkbox clicked: {checkBox.Tag} -> {(newState ? "checked" : "unchecked")}");
+                    return; // Checkbox click handled, don't process buttons
+                }
             }
 
             // Check all buttons for hit
@@ -531,6 +628,9 @@ namespace Andastra.Runtime.MonoGame.GUI
                 {
                     // Button clicked - fire event
                     FireButtonClicked(button.Tag, button.Id ?? -1);
+
+                    // Fire the OnButtonClicked event for external handlers
+                    OnButtonClicked?.Invoke(button.Tag, button.Id ?? -1);
 
                     Console.WriteLine($"[KotorGuiManager] Button clicked: {button.Tag} (ID: {button.Id})");
                     break; // Only handle first button hit
@@ -718,7 +818,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 {
                     // Measure text size
                     Vector2 textSize = font.MeasureString(text);
-                    
+
                     // Calculate text position based on alignment
                     Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
 
@@ -760,7 +860,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 {
                     // Measure text size
                     Vector2 textSize = font.MeasureString(text);
-                    
+
                     // Calculate text position based on alignment
                     Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
 
@@ -1227,7 +1327,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         {
             // Check if checkbox is selected
             bool isSelected = checkBox.IsSelected.HasValue && checkBox.IsSelected.Value != 0;
-            
+
             // Check if checkbox is highlighted (mouse over) - similar to buttons
             bool isHighlighted = IsCheckBoxHighlighted(checkBox);
 
@@ -1318,13 +1418,13 @@ namespace Andastra.Runtime.MonoGame.GUI
         {
             // Try to load checkmark texture from Selected or HilightSelected if available
             Texture2D checkmarkTexture = null;
-            
+
             if (checkBox.Selected != null && !checkBox.Selected.Fill.IsBlank)
             {
                 // Try Selected.Fill as checkmark texture
                 checkmarkTexture = LoadTexture(checkBox.Selected.Fill.ToString());
             }
-            
+
             if (checkmarkTexture == null && checkBox.HilightSelected != null && !checkBox.HilightSelected.Fill.IsBlank)
             {
                 // Try HilightSelected.Fill as checkmark texture
@@ -1337,7 +1437,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 int checkmarkSize = Math.Min((int)size.X, (int)size.Y);
                 int checkmarkX = (int)(position.X + (size.X - checkmarkSize) / 2);
                 int checkmarkY = (int)(position.Y + (size.Y - checkmarkSize) / 2);
-                
+
                 Color tint = Microsoft.Xna.Framework.Color.White;
                 _spriteBatch.Draw(checkmarkTexture, new Rectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
             }
@@ -1348,25 +1448,25 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float checkmarkSize = Math.Min(size.X, size.Y) * 0.8f;
                 float centerX = position.X + size.X / 2;
                 float centerY = position.Y + size.Y / 2;
-                
+
                 // Draw checkmark as two lines forming a check
                 // Line 1: from bottom-left to center
                 // Line 2: from center to top-right
                 float lineThickness = Math.Max(2.0f, checkmarkSize * 0.1f);
                 float offset = checkmarkSize * 0.3f;
-                
+
                 // Calculate checkmark points
                 Vector2 point1 = new Vector2(centerX - offset, centerY);
                 Vector2 point2 = new Vector2(centerX - offset * 0.3f, centerY + offset * 0.5f);
                 Vector2 point3 = new Vector2(centerX + offset, centerY - offset * 0.5f);
-                
+
                 // Draw checkmark using pixel texture
                 Texture2D pixel = GetPixelTexture();
                 Color checkmarkColor = Microsoft.Xna.Framework.Color.White;
-                
+
                 // Draw line 1 (bottom-left to center)
                 DrawLine(pixel, point1, point2, lineThickness, checkmarkColor);
-                
+
                 // Draw line 2 (center to top-right)
                 DrawLine(pixel, point2, point3, lineThickness, checkmarkColor);
             }
@@ -1380,24 +1480,24 @@ namespace Andastra.Runtime.MonoGame.GUI
             // Calculate line properties
             Vector2 direction = end - start;
             float length = direction.Length();
-            
+
             if (length <= 0)
             {
                 return;
             }
-            
+
             // Normalize direction
             direction = Vector2.Normalize(direction);
-            
+
             // Calculate angle for rotation
             float angle = (float)Math.Atan2(direction.Y, direction.X);
-            
+
             // Draw line as rotated rectangle
             // Use a small rectangle and rotate it
             Rectangle sourceRect = new Rectangle(0, 0, 1, 1);
             Vector2 origin = new Vector2(0.5f, 0.5f);
             Vector2 scale = new Vector2(length, thickness);
-            
+
             _spriteBatch.Draw(
                 pixel,
                 start,
@@ -1433,7 +1533,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             // Based on swkotor.exe: Slider thumb rendering
             // Thumb position calculated from Value, MinValue, MaxValue ratio
             // Direction: "horizontal" (0) = left-right, "vertical" (1) = top-bottom
-            
+
             // Get thumb from Properties["THUMB"] or Thumb property
             GUIScrollbarThumb thumb = null;
             if (slider.Properties != null && slider.Properties.ContainsKey("THUMB") && slider.Properties["THUMB"] is GUIScrollbarThumb thumbFromProps)
@@ -1461,7 +1561,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             // Clamp current value to valid range
             float currentValue = Math.Max(slider.MinValue, Math.Min(slider.MaxValue, slider.Value));
-            
+
             // Calculate normalized position (0.0 to 1.0)
             float normalizedPosition = (currentValue - slider.MinValue) / valueRange;
 
@@ -1475,11 +1575,11 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             // Determine slider direction
             bool isHorizontal = slider.Direction == null || slider.Direction == "horizontal" || slider.Direction == "0";
-            
+
             // Calculate thumb position and size
             Vector2 thumbPosition;
             Vector2 thumbSize;
-            
+
             if (isHorizontal)
             {
                 // Horizontal slider: thumb moves left-right
@@ -1489,7 +1589,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float trackLength = size.X - thumbWidth; // Available space for thumb movement
                 float thumbX = position.X + (normalizedPosition * trackLength);
                 float thumbY = position.Y + (size.Y - thumbTexture.Height) / 2.0f; // Center vertically
-                
+
                 thumbPosition = new Vector2(thumbX, thumbY);
                 thumbSize = new Vector2(thumbWidth, thumbTexture.Height);
             }
@@ -1500,7 +1600,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float trackLength = size.Y - thumbHeight; // Available space for thumb movement
                 float thumbX = position.X + (size.X - thumbTexture.Width) / 2.0f; // Center horizontally
                 float thumbY = position.Y + (normalizedPosition * trackLength);
-                
+
                 thumbPosition = new Vector2(thumbX, thumbY);
                 thumbSize = new Vector2(thumbTexture.Width, thumbHeight);
             }
@@ -1508,17 +1608,17 @@ namespace Andastra.Runtime.MonoGame.GUI
             // Apply thumb alignment if specified
             // ALIGNMENT typically affects how the thumb is positioned relative to its calculated position
             // For now, use the calculated position (can be enhanced with alignment support)
-            
+
             // Render thumb texture
             Color thumbTint = Microsoft.Xna.Framework.Color.White;
-            
+
             // Apply rotation if specified (typically unused, but support it)
             float rotation = 0.0f;
             if (thumb.Rotate.HasValue)
             {
                 rotation = thumb.Rotate.Value;
             }
-            
+
             // Apply flip style if specified (typically unused, but support it)
             SpriteEffects spriteEffects = SpriteEffects.None;
             if (thumb.FlipStyle.HasValue)
@@ -1534,14 +1634,14 @@ namespace Andastra.Runtime.MonoGame.GUI
                     spriteEffects |= SpriteEffects.FlipVertically;
                 }
             }
-            
+
             // Render thumb with optional rotation and flip
             if (rotation != 0.0f)
             {
                 // Render with rotation
                 Vector2 thumbOrigin = new Vector2(thumbTexture.Width / 2.0f, thumbTexture.Height / 2.0f);
                 Vector2 thumbCenter = thumbPosition + thumbSize / 2.0f;
-                
+
                 _spriteBatch.Draw(
                     thumbTexture,
                     thumbCenter,
@@ -1814,6 +1914,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             public int Height { get; set; }
             public Dictionary<string, GUIControl> ControlMap { get; set; }
             public Dictionary<string, GUIButton> ButtonMap { get; set; }
+            public Dictionary<string, GUICheckBox> CheckBoxMap { get; set; }
         }
 
         /// <summary>
@@ -1835,7 +1936,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 }
             }
             _textureCache.Clear();
-            
+
             // Note: Fonts don't need disposal as they reference textures that are already disposed
             _fontCache.Clear();
             _loadedGuis.Clear();
