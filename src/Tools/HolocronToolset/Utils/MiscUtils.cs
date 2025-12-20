@@ -4,7 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 
@@ -40,6 +45,14 @@ namespace HolocronToolset.Utils
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:143-145
         // Original: def open_link(link: str):
+        //     url = QUrl(link)
+        //     QDesktopServices.openUrl(url)
+        /// <summary>
+        /// Opens a link (URL or file path) using the system's default application.
+        /// Matches PyKotor's open_link function behavior using QDesktopServices.openUrl.
+        /// Uses Avalonia's Launcher API for cross-platform compatibility.
+        /// </summary>
+        /// <param name="link">The URL or file path to open</param>
         public static void OpenLink(string link)
         {
             if (string.IsNullOrEmpty(link))
@@ -47,19 +60,157 @@ namespace HolocronToolset.Utils
                 return;
             }
 
+            // Fire-and-forget async operation to maintain synchronous API signature
+            // This matches PyKotor's synchronous behavior while using Avalonia's async Launcher API
+            Task.Run(async () =>
+            {
+                try
+                {
+                    // Check if the link is a URL (starts with http://, https://, mailto:, etc.)
+                    // or a file path
+                    bool isUrl = IsUrl(link);
+                    
+                    if (isUrl)
+                    {
+                        // Handle URLs using Launcher.LaunchUriAsync
+                        // This matches PyKotor's QDesktopServices.openUrl behavior
+                        if (Uri.TryCreate(link, UriKind.Absolute, out Uri uri))
+                        {
+                            // Use Avalonia's Launcher API for URLs
+                            // This provides cross-platform support and proper integration with Avalonia
+                            var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                            
+                            if (launcher != null && launcher.MainWindow != null)
+                            {
+                                // Use TopLevel-aware Launcher when available
+                                await launcher.MainWindow.StorageProvider.LaunchUriAsync(uri);
+                            }
+                            else
+                            {
+                                // Fallback: Use static Launcher API when TopLevel is not available
+                                // This works in all Avalonia contexts
+                                await Avalonia.Platform.Storage.Launcher.LaunchUriAsync(uri);
+                            }
+                        }
+                        else
+                        {
+                            // Invalid URI format, try as file path
+                            await OpenFileAsync(link);
+                        }
+                    }
+                    else
+                    {
+                        // Handle file paths using Launcher.LaunchFileAsync
+                        await OpenFileAsync(link);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors - matches PyKotor's behavior of silently failing
+                    // This ensures the application continues to function even if link opening fails
+                }
+            });
+        }
+
+        /// <summary>
+        /// Determines if a string is a URL (http://, https://, mailto:, etc.) or a file path.
+        /// </summary>
+        /// <param name="link">The string to check</param>
+        /// <returns>True if the string appears to be a URL, false if it's a file path</returns>
+        private static bool IsUrl(string link)
+        {
+            if (string.IsNullOrEmpty(link))
+            {
+                return false;
+            }
+
+            // Trim whitespace
+            link = link.Trim();
+
+            // Check for common URL schemes
+            // This matches how QUrl in PyKotor determines if something is a URL
+            string lowerLink = link.ToLowerInvariant();
+            
+            // Common URL schemes that QDesktopServices.openUrl handles
+            return lowerLink.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                   lowerLink.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                   lowerLink.StartsWith("ftp://", StringComparison.OrdinalIgnoreCase) ||
+                   lowerLink.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) ||
+                   lowerLink.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
+                   lowerLink.StartsWith("tel:", StringComparison.OrdinalIgnoreCase) ||
+                   lowerLink.StartsWith("sms:", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Opens a file using Avalonia's Launcher API.
+        /// Handles both absolute and relative file paths.
+        /// </summary>
+        /// <param name="filePath">The file path to open</param>
+        private static async Task OpenFileAsync(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                return;
+            }
+
             try
             {
-                var uri = new Uri(link);
-                // TODO: SIMPLIFIED - Using Process.Start as workaround, should use Avalonia's Launcher when TopLevel is available
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                // Resolve relative paths to absolute paths
+                string absolutePath = Path.IsPathRooted(filePath) 
+                    ? filePath 
+                    : Path.GetFullPath(filePath);
+
+                // Check if file exists
+                if (!File.Exists(absolutePath) && !Directory.Exists(absolutePath))
                 {
-                    FileName = link,
-                    UseShellExecute = true
-                });
+                    // File doesn't exist, try opening as URL anyway (might be a protocol handler)
+                    if (Uri.TryCreate(filePath, UriKind.Absolute, out Uri uri))
+                    {
+                        var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                        
+                        if (launcher != null && launcher.MainWindow != null)
+                        {
+                            await launcher.MainWindow.StorageProvider.LaunchUriAsync(uri);
+                        }
+                        else
+                        {
+                            await Avalonia.Platform.Storage.Launcher.LaunchUriAsync(uri);
+                        }
+                    }
+                    return;
+                }
+
+                // Create FileInfo for the file
+                var fileInfo = new FileInfo(absolutePath);
+                
+                // Use Avalonia's Launcher API for files
+                // This provides cross-platform support and proper integration with Avalonia
+                var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                
+                if (launcher != null && launcher.MainWindow != null)
+                {
+                    // Use TopLevel-aware Launcher when available
+                    // Create IStorageFile from FileInfo
+                    var storageFile = await launcher.MainWindow.StorageProvider.TryGetFileFromPathAsync(absolutePath);
+                    if (storageFile != null)
+                    {
+                        await launcher.MainWindow.StorageProvider.LaunchFileAsync(storageFile);
+                    }
+                    else
+                    {
+                        // Fallback: Use static Launcher API
+                        await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
+                    }
+                }
+                else
+                {
+                    // Fallback: Use static Launcher API when TopLevel is not available
+                    await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
+                }
             }
             catch
             {
-                // Ignore errors
+                // Ignore errors - matches PyKotor's behavior
             }
         }
 

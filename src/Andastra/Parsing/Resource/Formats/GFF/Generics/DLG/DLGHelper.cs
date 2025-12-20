@@ -599,10 +599,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             return GFFAuto.BytesGff(gff, fileFormat);
         }
 
-        // TODO: Re-enable CNV conversion when CNV files are included in build
-        // CNV files are currently excluded from Andastra.Parsing.csproj (line 139)
         // Matching pattern from CNVHelper - conversion between formats
-        /*
         /// <summary>
         /// Converts a DLG object to a CNV object.
         /// </summary>
@@ -616,21 +613,21 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         /// - K2-specific fields are preserved where possible or mapped to closest CNV equivalent
         /// - Used for converting Aurora/Odyssey conversation files to Eclipse format
         /// </remarks>
-        public static object ToCnv(DLG dlg)
+        public static CNV.CNV ToCnv(DLG dlg)
         {
             if (dlg == null)
             {
                 throw new ArgumentNullException(nameof(dlg));
             }
 
-            var cnv = new object(); // CNV type not available
+            var cnv = new CNV.CNV();
 
             // Copy metadata fields (identical structure)
             cnv.AmbientTrack = dlg.AmbientTrack;
             cnv.AnimatedCut = dlg.AnimatedCut;
             cnv.CameraModel = dlg.CameraModel;
-            // cnv.ComputerType = (CNVComputerType)(int)dlg.ComputerType;
-            // cnv.ConversationType = (CNVConversationType)(int)dlg.ConversationType;
+            cnv.ComputerType = (CNV.CNVComputerType)(int)dlg.ComputerType;
+            cnv.ConversationType = (CNV.CNVConversationType)(int)dlg.ConversationType;
             cnv.OnAbort = dlg.OnAbort;
             cnv.OnEnd = dlg.OnEnd;
             cnv.WordCount = dlg.WordCount;
@@ -647,7 +644,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert stunts
             foreach (DLGStunt dlgStunt in dlg.Stunts)
             {
-                var cnvStunt = new CNVStunt
+                var cnvStunt = new CNV.CNVStunt
                 {
                     Participant = dlgStunt.Participant,
                     StuntModel = dlgStunt.StuntModel
@@ -678,13 +675,13 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert links in entries
             foreach (DLGEntry dlgEntry in allDlgEntries)
             {
-                CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
+                CNV.CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
                 foreach (DLGLink dlgLink in dlgEntry.Links)
                 {
                     if (dlgLink.Node is DLGReply dlgReply && dlgReplyToCnvReply.ContainsKey(dlgReply))
                     {
-                        CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
-                        CNVLink cnvLink = ConvertLink(dlgLink, cnvReply);
+                        CNV.CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
+                        CNV.CNVLink cnvLink = ConvertLink(dlgLink, cnvReply);
                         cnvEntry.Links.Add(cnvLink);
                     }
                 }
@@ -693,13 +690,13 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert links in replies
             foreach (DLGReply dlgReply in allDlgReplies)
             {
-                CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
+                CNV.CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
                 foreach (DLGLink dlgLink in dlgReply.Links)
                 {
                     if (dlgLink.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
                     {
-                        CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
-                        CNVLink cnvLink = ConvertLink(dlgLink, cnvEntry);
+                        CNV.CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
+                        CNV.CNVLink cnvLink = ConvertLink(dlgLink, cnvEntry);
                         cnvReply.Links.Add(cnvLink);
                     }
                 }
@@ -710,8 +707,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             {
                 if (dlgStarter.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
                 {
-                    CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
-                    CNVLink cnvLink = ConvertLink(dlgStarter, cnvEntry);
+                    CNV.CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
+                    CNV.CNVLink cnvLink = ConvertLink(dlgStarter, cnvEntry);
                     cnv.Starters.Add(cnvLink);
                 }
             }
@@ -720,9 +717,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Helper method to convert DLGEntry to CNVEntry
-        private static CNVEntry ConvertNode(DLGEntry dlgEntry)
+        private static CNV.CNVEntry ConvertNode(DLGEntry dlgEntry)
         {
-            var cnvEntry = new CNVEntry
+            var cnvEntry = new CNV.CNVEntry
             {
                 Speaker = dlgEntry.Speaker,
                 ListIndex = dlgEntry.ListIndex,
@@ -773,7 +770,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert animations
             foreach (DLGAnimation dlgAnim in dlgEntry.Animations)
             {
-                var cnvAnim = new CNVAnimation
+                var cnvAnim = new CNV.CNVAnimation
                 {
                     AnimationId = dlgAnim.AnimationId,
                     Participant = dlgAnim.Participant
@@ -784,9 +781,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             return cnvEntry;
         }
 
-        private static CNVReply ConvertNode(DLGReply dlgReply)
+        private static CNV.CNVReply ConvertNode(DLGReply dlgReply)
         {
-            var cnvReply = new CNVReply
+            var cnvReply = new CNV.CNVReply
             {
                 ListIndex = dlgReply.ListIndex,
                 Comment = dlgReply.Comment,
@@ -836,7 +833,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert animations
             foreach (DLGAnimation dlgAnim in dlgReply.Animations)
             {
-                var cnvAnim = new CNVAnimation
+                var cnvAnim = new CNV.CNVAnimation
                 {
                     AnimationId = dlgAnim.AnimationId,
                     Participant = dlgAnim.Participant
@@ -848,9 +845,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Helper method to convert DLGLink to CNVLink
-        private static CNVLink ConvertLink(DLGLink dlgLink, CNVNode cnvNode)
+        private static CNV.CNVLink ConvertLink(DLGLink dlgLink, CNV.CNVNode cnvNode)
         {
-            return new CNVLink(cnvNode, dlgLink.ListIndex)
+            return new CNV.CNVLink(cnvNode, dlgLink.ListIndex)
             {
                 Active1 = dlgLink.Active1,
                 Active2 = dlgLink.Active2,
@@ -873,6 +870,5 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 Comment = dlgLink.Comment
             };
         }
-        */
     }
 }

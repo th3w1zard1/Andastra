@@ -135,8 +135,7 @@ namespace Andastra.Runtime.Engines.Aurora
                 throw new InvalidOperationException("Engine must be initialized before creating game session");
             }
 
-            // TODO: STUB - Implement AuroraGameSession
-            throw new NotImplementedException("Aurora game session not yet implemented");
+            return new AuroraGameSession(this);
         }
 
         protected override IGameResourceProvider CreateResourceProvider(string installationPath)

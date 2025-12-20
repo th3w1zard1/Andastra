@@ -7,7 +7,10 @@ using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Games.Eclipse.GUI;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -32,6 +35,16 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </remarks>
     public class EclipseUpgradeScreen : BaseUpgradeScreen
     {
+        // GUI management
+        private EclipseGuiManager _guiManager;
+        private GUI _loadedGui;
+        private string _guiName;
+        private Dictionary<string, GUIControl> _controlMap;
+        private Dictionary<string, GUIButton> _buttonMap;
+        private bool _guiInitialized;
+        private const int DefaultScreenWidth = 1024;
+        private const int DefaultScreenHeight = 768;
+
         /// <summary>
         /// Initializes a new instance of the Eclipse upgrade screen.
         /// </summary>
@@ -40,6 +53,9 @@ namespace Andastra.Runtime.Games.Eclipse
         public EclipseUpgradeScreen(Installation installation, IWorld world)
             : base(installation, world)
         {
+            _controlMap = new Dictionary<string, GUIControl>(StringComparer.OrdinalIgnoreCase);
+            _buttonMap = new Dictionary<string, GUIButton>(StringComparer.OrdinalIgnoreCase);
+            _guiInitialized = false;
         }
 
         /// <summary>

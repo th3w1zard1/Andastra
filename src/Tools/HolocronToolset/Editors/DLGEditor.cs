@@ -21,6 +21,7 @@ using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
 using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
 using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
 using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
+using CNVHelper = Andastra.Parsing.Resource.Generics.CNV.CNVHelper;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Editors.Actions;
@@ -39,9 +40,9 @@ namespace HolocronToolset.Editors
     //   K2-specific link fields: Active2, Logic, Not, Not2, Param1-5, ParamStrA/B, etc.
     // - Eclipse Engine games (Dragon Age Origins, Dragon Age 2, Mass Effect 1/2):
     //   Eclipse games primarily use .cnv "conversation" format, but DLG files follow K1-style base format
-    //   (no K2-specific fields). This editor supports DLG files for Eclipse games using K1 format.
+    //   (no K2-specific fields). This editor supports both DLG and CNV files for Eclipse games.
+    //   CNV files are automatically converted to DLG for editing, and can be saved back as CNV.
     //   Ghidra analysis: daorigins.exe, DragonAge2.exe, MassEffect.exe use "conversation" strings
-    //   TODO: Add CNV format support (and conversion between DLG/CNV)
     public class DLGEditor : Editor
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
@@ -144,8 +145,8 @@ namespace HolocronToolset.Editors
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
         public DLGEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Dialog Editor", "dialog",
-                new[] { ResourceType.DLG },
-                new[] { ResourceType.DLG },
+                new[] { ResourceType.DLG, ResourceType.CNV },
+                new[] { ResourceType.DLG, ResourceType.CNV },
                 installation)
         {
             _coreDlg = new DLGType();
@@ -266,7 +267,16 @@ namespace HolocronToolset.Editors
         {
             base.Load(filepath, resref, restype, data);
 
-            _coreDlg = DLGHelper.ReadDlg(data);
+            // Handle CNV format by converting to DLG for editing
+            if (restype == ResourceType.CNV)
+            {
+                var cnv = CNVHelper.ReadCnv(data);
+                _coreDlg = CNVHelper.ToDlg(cnv);
+            }
+            else
+            {
+                _coreDlg = DLGHelper.ReadDlg(data);
+            }
             LoadDLG(_coreDlg);
             UpdateUIForGame(); // Update UI visibility after loading (game may have changed)
         }
@@ -315,30 +325,45 @@ namespace HolocronToolset.Editors
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1229-1254
-        // Original: def build(self) -> tuple[bytes, bytes]:
+        // Original: def build(self) -> tuple[bytes, byte[]]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // Handle CNV format by converting DLG to CNV
+            if (_restype == ResourceType.CNV)
+            {
+                // CNV format is only used by Eclipse Engine games
+                Game gameToUse = _installation?.Game ?? Game.DA;
+                if (!gameToUse.IsEclipse())
+                {
+                    // Default to DA if not Eclipse game
+                    gameToUse = Game.DA;
+                }
+                var cnv = DLGHelper.ToCnv(_coreDlg);
+                byte[] data = CNVHelper.BytesCnv(cnv, gameToUse, ResourceType.CNV);
+                return Tuple.Create(data, new byte[0]);
+            }
+
             // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2/ME)
             // Game-specific format handling:
             // - K2 (TSL): Extended DLG format with K2-specific fields (ActionParam1-5, Script2, etc.)
             // - K1, NWN, Eclipse (DA/DA2/ME): Base DLG format (no K2-specific fields)
             //   Eclipse games use K1-style DLG format (no K2 extensions)
             //   Note: Eclipse games may also use .cnv format, but DLG files follow K1 format
-            Game gameToUse = _installation?.Game ?? Game.K2;
+            Game gameToUseDlg = _installation?.Game ?? Game.K2;
 
             // For Eclipse games, use K1 format (no K2-specific fields)
             // Matching PyKotor: Eclipse games don't have K2 extensions
-            if (gameToUse.IsEclipse())
+            if (gameToUseDlg.IsEclipse())
             {
-                gameToUse = Game.K1; // Use K1 format for Eclipse (no K2-specific fields)
+                gameToUseDlg = Game.K1; // Use K1 format for Eclipse (no K2-specific fields)
             }
             // For Aurora (NWN), use K1 format (base DLG, no K2 extensions)
-            else if (gameToUse.IsAurora())
+            else if (gameToUseDlg.IsAurora())
             {
-                gameToUse = Game.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
+                gameToUseDlg = Game.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
             }
 
-            byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUse, ResourceType.DLG);
+            byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUseDlg, ResourceType.DLG);
             return Tuple.Create(data, new byte[0]);
         }
 
