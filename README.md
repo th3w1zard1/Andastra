@@ -92,7 +92,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 - `HoloPatcher.UI` - Mod installation and patching tool
 - `NCSDecomp` - NWScript bytecode decompiler
-- `KNSSComp.NET` - NWScript compiler
+- `NSSComp` - NWScript compiler
 - `HolocronToolset.NET` - Content creation and editing tools
 - `KotorDiff.NET` - File comparison and diff tool
 
@@ -192,7 +192,7 @@ dotnet run --project src/Tools/HoloPatcher.UI/HoloPatcher.UI.csproj
 dotnet run --project src/Tools/NCSDecomp/NCSDecomp.csproj
 
 # Run script compiler
-dotnet run --project src/Tools/KNSSComp.NET/KNSSComp.NET.csproj
+dotnet run --project src/Tools/NSSComp/NSSComp.NET.csproj
 ```
 
 ## Project Structure
@@ -214,7 +214,7 @@ Andastra/
 │   └── Tools/                 # Development tools
 │       ├── HoloPatcher.UI/
 │       ├── NCSDecomp/
-│       ├── KNSSComp.NET/
+│       ├── NSSComp/
 │       └── ...
 ├── docs/                      # Documentation
 ├── scripts/                   # Build and utility scripts

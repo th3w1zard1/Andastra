@@ -9,7 +9,7 @@ using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.Optimizers;
 
-namespace NSSComp.NET
+namespace NSSComp
 {
     /// <summary>
     /// Unified CLI entrypoint for NSS compilation/decompilation.
@@ -74,7 +74,7 @@ namespace NSSComp.NET
 
         private static void PrintUsage()
         {
-            Console.WriteLine("NSSComp.NET - Unified NSS Compiler/Decompiler");
+            Console.WriteLine("NSSComp - Unified NSS Compiler/Decompiler");
             Console.WriteLine("Drop-in compatible with all nwnnsscomp.exe variants");
             Console.WriteLine();
             Console.WriteLine("USAGE:");
@@ -167,7 +167,7 @@ namespace NSSComp.NET
 
         private static void PrintVersion()
         {
-            Console.WriteLine("NSSComp.NET 1.0.0");
+            Console.WriteLine("NSSComp 1.0.0");
             Console.WriteLine("Unified NSS Compiler/Decompiler for KOTOR and TSL");
             Console.WriteLine("Drop-in compatible with all nwnnsscomp.exe variants");
         }
