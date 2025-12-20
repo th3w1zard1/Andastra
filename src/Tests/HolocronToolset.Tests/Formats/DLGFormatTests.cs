@@ -69,7 +69,8 @@ namespace HolocronToolset.Tests.Formats
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
             
             // Verify base fields are written
-            gff.Root.Acquire("NumWords", 0).Should().Be(100);
+            // NumWords is stored as uint32, so use GetUInt32 to read it
+            gff.Root.GetUInt32("NumWords").Should().Be(100u);
             gff.Root.Acquire("EndConverAbort", ResRef.FromBlank()).Should().Be(new ResRef("k_pdan_abort"));
             gff.Root.Acquire("AnimatedCut", (byte)0).Should().Be((byte)1);
             
@@ -180,7 +181,8 @@ namespace HolocronToolset.Tests.Formats
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K2);
             
             // Verify base fields
-            gff.Root.Acquire("NumWords", 0).Should().Be(200);
+            // NumWords is stored as uint32, so use GetUInt32 to read it
+            gff.Root.GetUInt32("NumWords").Should().Be(200u);
             gff.Root.Acquire("ComputerType", (byte)0).Should().Be((byte)1, "Ancient = 1");
             gff.Root.Acquire("ConversationType", 0).Should().Be(1, "Computer = 1");
             
