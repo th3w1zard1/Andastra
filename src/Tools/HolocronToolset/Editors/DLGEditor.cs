@@ -1239,9 +1239,8 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // Get the node or link to find paths for
             // Matching PyKotor: copy_path is called with selected_item.link.node
-            // But it can also accept a link directly, so we'll use the link's node
+            // The Python implementation accepts either a node or link, but in practice it's called with the node
             DLGNode targetNode = selectedItem.Link.Node;
             if (targetNode == null)
             {
@@ -2428,14 +2427,10 @@ namespace HolocronToolset.Editors
             // Matching PyKotor: pasted_link.is_child = not isinstance(parent_item, DLGStandardItem)
             linkToPaste.IsChild = (parentItem != null);
 
-            // Update hash cache to ensure it's unique (using reflection since _hashCache is private)
-            // Matching PyKotor: pasted_link._hash_cache = hash(uuid.uuid4().hex)
-            var hashCacheField = typeof(DLGLink).GetField("_hashCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (hashCacheField != null)
-            {
-                int newHash = Guid.NewGuid().GetHashCode();
-                hashCacheField.SetValue(linkToPaste, newHash);
-            }
+            // Note: When as_new_branches is True, we create a deep copy via ToDict/FromDict,
+            // which creates new objects with new hash caches automatically (set in constructors).
+            // The Python code explicitly sets _hash_cache, but in C# the hash cache is readonly
+            // and set in the constructor, so new objects created via FromDict already have unique hashes.
 
             // Ensure the link is not already in link_to_items
             // Matching PyKotor: assert pasted_link not in self.link_to_items
@@ -2758,4 +2753,103 @@ namespace HolocronToolset.Editors
                 children = new List<DLGStandardItem>(parentItem.Children);
             }
 
-            // Iterate in reve
+            // Iterate in reverse to safely remove items while iterating
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                var childItem = children[i];
+                if (childItem == null)
+                {
+                    continue;
+                }
+
+                var childLink = childItem.Link;
+                if (childLink == null)
+                {
+                    continue;
+                }
+
+                // Check if this child item's node is the one we want to remove
+                if (childLink.Node == nodeToRemove)
+                {
+                    // First, recursively remove all children of this item
+                    RemoveLinksRecursive(childLink.Node, childItem);
+
+                    // Remove the link from the parent node's Links collection
+                    if (parentItem != null && parentItem.Link != null && parentItem.Link.Node != null)
+                    {
+                        parentItem.Link.Node.Links.Remove(childLink);
+                    }
+
+                    // Remove the item from the model
+                    if (parentItem == null)
+                    {
+                        // Remove from root items
+                        _rootItems.Remove(childItem);
+                    }
+                    else
+                    {
+                        // Remove from parent's children
+                        parentItem.RemoveChild(childItem);
+                    }
+                }
+                else
+                {
+                    // Continue searching recursively in this child
+                    RemoveLinksRecursive(nodeToRemove, childItem);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all links from CoreDlg that point to the specified node.
+        /// This includes links from Starters and from all nodes' Links collections.
+        /// </summary>
+        /// <param name="nodeToRemove">The node to remove links to.</param>
+        private void RemoveLinksToNode(DLGNode nodeToRemove)
+        {
+            if (nodeToRemove == null || _editor == null || _editor.CoreDlg == null)
+            {
+                return;
+            }
+
+            // Remove from Starters
+            for (int i = _editor.CoreDlg.Starters.Count - 1; i >= 0; i--)
+            {
+                if (_editor.CoreDlg.Starters[i]?.Node == nodeToRemove)
+                {
+                    _editor.CoreDlg.Starters.RemoveAt(i);
+                }
+            }
+
+            // Remove links from all entries
+            foreach (var entry in _editor.CoreDlg.AllEntries())
+            {
+                if (entry != null && entry.Links != null)
+                {
+                    for (int i = entry.Links.Count - 1; i >= 0; i--)
+                    {
+                        if (entry.Links[i]?.Node == nodeToRemove)
+                        {
+                            entry.Links.RemoveAt(i);
+                        }
+                    }
+                }
+            }
+
+            // Remove links from all replies
+            foreach (var reply in _editor.CoreDlg.AllReplies())
+            {
+                if (reply != null && reply.Links != null)
+                {
+                    for (int i = reply.Links.Count - 1; i >= 0; i--)
+                    {
+                        if (reply.Links[i]?.Node == nodeToRemove)
+                        {
+                            reply.Links.RemoveAt(i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
