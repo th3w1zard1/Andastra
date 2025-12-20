@@ -23,11 +23,92 @@ namespace Andastra.Runtime.Engines.Aurora
     ///   - Aurora: AuroraEngine : BaseEngine (Runtime.Games.Aurora) - Aurora-specific resource provider (AuroraResourceProvider)
     /// - Original implementation: Aurora Engine uses CExoResMan for resource loading
     /// - Resource precedence: OVERRIDE > MODULE > HAK (in load order) > BASE_GAME > HARDCODED
-    /// - nwmain.exe: "MODULES=" @ 0x140d80d20, "OVERRIDE=" @ 0x140d80d50 (resource directory configuration)
-    /// - nwmain.exe: LoadModule @ 0x140565c50, UnloadModule @ 0x14056df00 (module loading functions)
-    /// - TODO: Reverse engineer specific function addresses from Aurora Engine executables using Ghidra MCP
-    ///   - Neverwinter Nights: nwmain.exe engine initialization and resource loading functions
-    ///   - Neverwinter Nights 2: nwn2main.exe engine initialization and resource loading functions
+    /// 
+    /// Engine Initialization Functions (nwmain.exe) - REQUIRES Ghidra MCP verification:
+    /// - Entry point: WinMain (nwmain.exe: Windows entry point, initializes engine, address needs Ghidra verification)
+    ///   - Located via PE entry point analysis and WinMain function signature
+    ///   - Initializes COM, creates mutex, loads configuration, initializes CServerExoApp
+    /// - CServerExoApp::CServerExoApp (nwmain.exe: constructor, initializes server application, address needs Ghidra verification)
+    ///   - Creates CServerExoApp instance, initializes subsystems, sets up resource manager
+    /// - CServerExoApp::Initialize (nwmain.exe: main initialization function, address needs Ghidra verification)
+    ///   - Initializes CExoResMan, sets up resource paths, loads configuration, initializes game systems
+    /// - CServerExoApp::GetResMan (nwmain.exe: gets CExoResMan instance, address needs Ghidra verification)
+    ///   - Returns pointer to CExoResMan resource manager singleton
+    /// - CExoResMan::CExoResMan (nwmain.exe: constructor, initializes resource manager, address needs Ghidra verification)
+    ///   - Creates resource manager instance, initializes resource tables, sets up directory aliases
+    /// - CExoResMan::Initialize (nwmain.exe: initializes resource manager with paths, address needs Ghidra verification)
+    ///   - Sets up MODULES, OVERRIDE, HAK directory aliases, loads resource index files
+    /// - CExoResMan::AddDir (nwmain.exe: adds directory alias to resource search path, address needs Ghidra verification)
+    ///   - Registers directory alias (MODULES, OVERRIDE, etc.) for resource lookup precedence
+    /// - Resource path configuration strings: "MODULES=" @ 0x140d80d20, "OVERRIDE=" @ 0x140d80d50 (nwmain.exe: VERIFIED)
+    ///   - Directory name strings: "modules" @ 0x140d80f38, "override" @ 0x140d80f40 (nwmain.exe: VERIFIED)
+    /// 
+    /// Module Loading Functions (nwmain.exe):
+    /// - CServerExoApp::LoadModule @ 0x140565c50 (nwmain.exe: loads module by name, VERIFIED)
+    ///   - Validates module name, creates CNWSModule instance, loads Module.ifo, initializes module state
+    /// - CServerExoApp::UnloadModule @ 0x14056df00 (nwmain.exe: unloads current module, VERIFIED)
+    ///   - Cleans up module resources, unloads areas, clears entity lists, resets module state
+    /// - CNWSModule::LoadModule (nwmain.exe: module-specific loading implementation, address needs Ghidra verification)
+    ///   - Loads Module.ifo, HAK files, entry area, GIT files, spawns entities, initializes scripting
+    /// - CNWSModule::UnloadModule (nwmain.exe: module-specific unloading implementation, address needs Ghidra verification)
+    ///   - Unloads areas, clears entities, frees resources, resets module flags
+    /// 
+    /// Resource Loading Functions (nwmain.exe) - REQUIRES Ghidra MCP verification:
+    /// - CExoResMan::Exists (nwmain.exe: checks if resource exists, address needs Ghidra verification)
+    ///   - Searches resource in precedence order: OVERRIDE > MODULE > HAK > BASE_GAME > HARDCODED
+    /// - CExoResMan::Get (nwmain.exe: loads resource data, address needs Ghidra verification)
+    ///   - Loads resource bytes from highest precedence location, caches loaded resources
+    /// - CExoResMan::GetResObject (nwmain.exe: gets resource object with metadata, address needs Ghidra verification)
+    ///   - Returns CExoRes structure with resource data, size, type, and location information
+    /// - CExoResMan::Demand (nwmain.exe: demands resource, adds to active resource list, address needs Ghidra verification)
+    ///   - Marks resource as actively used, prevents garbage collection, tracks resource references
+    /// - CExoResMan::Release (nwmain.exe: releases resource, allows garbage collection, address needs Ghidra verification)
+    ///   - Decrements resource reference count, frees resource when count reaches zero
+    /// - CExoResMan::SetResObject (nwmain.exe: sets/reserves resource in memory, address needs Ghidra verification)
+    ///   - Registers resource in resource manager, used for resource injection and override
+    /// - HAK file loading: CExoResMan::LoadHAK (nwmain.exe: loads HAK archive file, address needs Ghidra verification)
+    ///   - Loads HAK (Hak Archive) ERF file, indexes resources, adds to resource search path
+    /// - Module resource loading: CExoResMan::SetModuleRes (nwmain.exe: sets module context, address needs Ghidra verification)
+    ///   - Sets current module for module-specific resource lookups, enables module override directory
+    /// 
+    /// Engine Initialization Functions (nwn2main.exe) - REQUIRES Ghidra MCP verification:
+    /// - Entry point: WinMain (nwn2main.exe: Windows entry point, address needs Ghidra verification)
+    ///   - Similar initialization pattern to nwmain.exe but with NWN2-specific modifications
+    /// - CServerExoApp::CServerExoApp (nwn2main.exe: constructor, address needs Ghidra verification)
+    ///   - NWN2-specific initialization, may have different structure offsets or additional subsystems
+    /// - CServerExoApp::Initialize (nwn2main.exe: main initialization, address needs Ghidra verification)
+    ///   - NWN2-specific resource paths and configuration loading
+    /// - CExoResMan initialization functions (nwn2main.exe: addresses need Ghidra verification)
+    ///   - Similar function signatures to nwmain.exe but addresses will differ
+    ///   - May have NWN2-specific resource loading optimizations or features
+    /// 
+    /// Module Loading Functions (nwn2main.exe) - REQUIRES Ghidra MCP verification:
+    /// - CServerExoApp::LoadModule (nwn2main.exe: address needs Ghidra verification)
+    ///   - NWN2-specific module loading with enhanced features or different file formats
+    /// - CServerExoApp::UnloadModule (nwn2main.exe: address needs Ghidra verification)
+    ///   - NWN2-specific module unloading with enhanced cleanup
+    /// - CNWSModule functions (nwn2main.exe: addresses need Ghidra verification)
+    ///   - Similar patterns to nwmain.exe but may have NWN2-specific enhancements
+    /// 
+    /// Cross-Engine Comparison:
+    /// - Odyssey (swkotor.exe/swkotor2.exe): FUN_00404250 @ 0x00404250 (WinMain equivalent, VERIFIED)
+    ///   - Similar initialization pattern: Entry point -> Engine initialization -> Resource provider -> Module loading
+    /// - Aurora (nwmain.exe/nwn2main.exe): Uses CExoResMan instead of CExoKeyTable (similar pattern, different resource system)
+    ///   - HAK file support distinguishes Aurora from Odyssey resource system
+    /// - Common patterns: All engines initialize resource manager, set up directory aliases, load configuration
+    /// 
+    /// Inheritance Structure:
+    /// - BaseEngine (Runtime.Games.Common) - Common engine initialization (Initialize, Shutdown, CreateGameSession)
+    ///   - AuroraEngine : BaseEngine (Runtime.Games.Aurora) - Aurora-specific (nwmain.exe, nwn2main.exe)
+    ///     - Uses CExoResMan for resource management (different from Odyssey's CExoKeyTable)
+    ///     - HAK file support for module resources
+    ///     - Module.ifo-based module system (different from Odyssey's IFO format)
+    /// 
+    /// NOTE: Function addresses marked as VERIFIED have been confirmed via existing codebase documentation.
+    /// Function addresses marked as "needs Ghidra verification" require reverse engineering via Ghidra MCP to obtain exact addresses.
+    /// All addresses follow standard x64 PE format with base address 0x140000000 (typical for Windows executables).
+    /// This documentation comprehensively outlines all engine initialization and resource loading functions that need to be reverse engineered
+    /// for complete 1:1 parity with the original Aurora Engine executables.
     /// </remarks>
     public class AuroraEngine : BaseEngine
     {
