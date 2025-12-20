@@ -195,6 +195,96 @@ namespace Andastra.Parsing.Tests.Formats
             TestCompileToLanguage(language);
         }
 
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToPython()
+        {
+            TestCompileToLanguage("python");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToJava()
+        {
+            TestCompileToLanguage("java");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToJavaScript()
+        {
+            TestCompileToLanguage("javascript");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToCSharp()
+        {
+            TestCompileToLanguage("csharp");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToCpp()
+        {
+            TestCompileToLanguage("cpp_stl");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToGo()
+        {
+            TestCompileToLanguage("go");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToRuby()
+        {
+            TestCompileToLanguage("ruby");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToPhp()
+        {
+            TestCompileToLanguage("php");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToRust()
+        {
+            TestCompileToLanguage("rust");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToSwift()
+        {
+            TestCompileToLanguage("swift");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToPerl()
+        {
+            TestCompileToLanguage("perl");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToNim()
+        {
+            TestCompileToLanguage("nim");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToLua()
+        {
+            TestCompileToLanguage("lua");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToKotlin()
+        {
+            TestCompileToLanguage("kotlin");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileJrlToTypeScript()
+        {
+            TestCompileToLanguage("typescript");
+        }
+
         private void TestCompileToLanguage(string language)
         {
             var normalizedKsyPath = Path.GetFullPath(KsyFile);
@@ -432,7 +522,7 @@ namespace Andastra.Parsing.Tests.Formats
             public int ExitCode { get; set; }
         }
 
-        [Fact(Timeout = 300000)]
+        [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
         public void TestKaitaiStructCompilesToAllLanguages()
         {
             // Test compilation to all supported languages
@@ -477,12 +567,9 @@ namespace Andastra.Parsing.Tests.Formats
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least 12 languages should compile successfully (as required)
-            // (We allow some failures as not all languages may be fully supported in all environments)
-            successful.Count.Should().BeGreaterThanOrEqualTo(12,
-                $"At least 12 languages should compile successfully. " +
-                $"Success: {successful.Count}/{SupportedLanguages.Length}. " +
-                $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+            // At least some languages should compile successfully
+            successful.Count.Should().BeGreaterThan(0,
+                $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
             // Log successful compilations
             foreach (var success in successful)
@@ -496,6 +583,11 @@ namespace Andastra.Parsing.Tests.Formats
                         $"Language {success.Key} should generate output files");
                 }
             }
+
+            // Verify at least 12 languages compiled (as required)
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
+                $"At least 12 languages should compile successfully. Only {successful.Count} succeeded: {string.Join(", ", successful.Select(s => s.Key))}. " +
+                $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage?.Substring(0, Math.Min(100, f.Value.ErrorMessage?.Length ?? 0))}"))}");
 
             // Log all results
             foreach (var result in results)
@@ -615,56 +707,6 @@ namespace Andastra.Parsing.Tests.Formats
             ksyContent.Should().Contain("xref:", "Should have cross-reference section");
         }
 
-        [Fact(Timeout = 300000)]
-        public void TestKaitaiStructCompilesToAtLeastDozenLanguages()
-        {
-            // Ensure we test at least a dozen languages (12 languages)
-            var normalizedKsyPath = Path.GetFullPath(KsyFile);
-            if (!File.Exists(normalizedKsyPath))
-            {
-                Assert.True(true, "JRL.ksy not found - skipping compilation test");
-                return;
-            }
-
-            // Check if Java is available (required for Kaitai Struct compiler)
-            var javaCheck = RunCommand("java", "-version");
-            if (javaCheck.ExitCode != 0)
-            {
-                Assert.True(true, "Java not available - skipping compilation test");
-                return;
-            }
-
-            Directory.CreateDirectory(KaitaiOutputDir);
-
-            var results = new Dictionary<string, CompileResult>();
-
-            // Test at least 12 languages
-            string[] languagesToTest = SupportedLanguages.Take(12).ToArray();
-            foreach (string lang in languagesToTest)
-            {
-                try
-                {
-                    var result = CompileToLanguage(normalizedKsyPath, lang);
-                    results[lang] = result;
-                }
-                catch (Exception ex)
-                {
-                    results[lang] = new CompileResult
-                    {
-                        Success = false,
-                        ErrorMessage = ex.Message,
-                        Output = ex.ToString()
-                    };
-                }
-            }
-
-            // At least 12 languages should compile successfully
-            int successCount = results.Values.Count(r => r.Success);
-            successCount.Should().BeGreaterThanOrEqualTo(12,
-                $"At least 12 languages should compile successfully. " +
-                $"Success: {successCount}/{languagesToTest.Length}. " +
-                $"Results: {string.Join(", ", results.Select(kvp => $"{kvp.Key}: {(kvp.Value.Success ? "OK" : "FAIL")}"))}");
-        }
 
         [Fact(Timeout = 300000)]
         public void TestJrlFileStructureValidation()
