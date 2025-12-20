@@ -594,18 +594,276 @@ namespace HolocronToolset.Data
             for (int i = 0; i < insertions.Count; i++)
             {
                 var insert = insertions[i];
+                string doorResname = $"{ModuleId}_dor{i:D2}";
                 var door = new GITDoor
                 {
                     Position = insert.Position,
-                    ResRef = new ResRef($"{ModuleId}_dor{i:00}")
+                    ResRef = new ResRef(doorResname)
                 };
                 door.Bearing = (float)(Math.PI / 180.0 * insert.Rotation);
                 door.TweakColor = null;
                 _git.Doors.Add(door);
 
-                // TODO: Implement UTD deep copy and door insertion logic
-                // This requires UTD manipulation utilities
+                // Deep copy UTD from door template (matching Python line 484)
+                // Python: utd: UTD = deepcopy(insert.door.utd_k2 if installation.tsl else insert.door.utd_k1)
+                UTD sourceUtd = installation.Tsl ? insert.Door.UtdK2 : insert.Door.UtdK1;
+                if (sourceUtd == null)
+                {
+                    new RobustLogger().Warning($"Door insertion {i} has no UTD template (UtdK1/UtdK2 is null). Skipping UTD creation.");
+                    continue;
+                }
+
+                UTD utd = DeepCopyUtd(sourceUtd);
+                utd.ResRef = door.ResRef;
+                utd.Static = insert.Static;
+                // Python: utd.tag = door_resname.title().replace("_", "")
+                // C# equivalent: capitalize first letter of each word, remove underscores
+                string tag = doorResname;
+                if (tag.Contains("_"))
+                {
+                    var parts = tag.Split('_');
+                    for (int j = 0; j < parts.Length; j++)
+                    {
+                        if (parts[j].Length > 0)
+                        {
+                            parts[j] = char.ToUpperInvariant(parts[j][0]) + (parts[j].Length > 1 ? parts[j].Substring(1) : "");
+                        }
+                    }
+                    tag = string.Join("", parts);
+                }
+                else if (tag.Length > 0)
+                {
+                    tag = char.ToUpperInvariant(tag[0]) + (tag.Length > 1 ? tag.Substring(1) : "");
+                }
+                utd.Tag = tag;
+
+                // Add UTD to module (matching Python line 488)
+                // Python: self.mod.set_data(door_resname, ResourceType.UTD, bytes_utd(utd))
+                byte[] utdData = UTDHelpers.BytesUtd(utd, installation.Tsl ? Game.K2 : Game.K1);
+                _mod.SetData(doorResname, ResourceType.UTD, utdData);
+
+                // Create door hook in layout (matching Python lines 490-491)
+                // Python: orientation: Vector4 = Vector4.from_euler(0, 0, math.radians(door.bearing))
+                // Python: self.lyt.doorhooks.append(LYTDoorHook(self.room_names[insert.room], door_resname, insert.position, orientation))
+                float bearingRadians = door.Bearing;
+                Andastra.Utility.Geometry.Quaternion orientation = QuaternionFromEuler(0.0, 0.0, bearingRadians);
+                string roomName = _roomNames[insert.Room];
+                _lyt.DoorHooks.Add(new LYTDoorHook(roomName, doorResname, insert.Position, orientation));
+
+                // Handle padding for height/width mismatches (matching Python lines 493-576)
+                if (insert.Hook1 != null && insert.Hook2 != null)
+                {
+                    // Height padding (matching Python lines 494-536)
+                    if (insert.Hook1.Door.Height != insert.Hook2.Door.Height)
+                    {
+                        IndoorMapRoom cRoom = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Room : insert.Room2;
+                        if (cRoom == null)
+                        {
+                            new RobustLogger().Warning($"No room found for door insertion {i} height padding. Skipping.");
+                        }
+                        else
+                        {
+                            KitComponentHook cHook = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook1 : insert.Hook2;
+                            KitComponentHook altHook = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook2 : insert.Hook1;
+
+                            Kit kit = cRoom.Component.Kit;
+                            int doorIndex = kit.Doors.IndexOf(cHook.Door);
+                            if (doorIndex >= 0 && kit.TopPadding.ContainsKey(doorIndex))
+                            {
+                                float height = altHook.Door.Height * 100.0f;
+                                int? paddingKey = null;
+                                foreach (var key in kit.TopPadding[doorIndex].Keys)
+                                {
+                                    if (key > height)
+                                    {
+                                        if (!paddingKey.HasValue || key < paddingKey.Value)
+                                        {
+                                            paddingKey = key;
+                                        }
+                                    }
+                                }
+
+                                if (paddingKey.HasValue)
+                                {
+                                    string paddingName = $"{ModuleId}_tpad{paddingCount}";
+                                    paddingCount++;
+
+                                    // Transform padding model (matching Python lines 518-522)
+                                    byte[] padMdl = kit.TopPadding[doorIndex][paddingKey.Value].Mdl;
+                                    padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
+
+                                    // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
+                                    // For now, use the transformed model data as-is
+                                    // Python: pad_mdl_converted: bytes = model.convert_to_k2(pad_mdl) if installation.tsl else model.convert_to_k1(pad_mdl)
+
+                                    // Change textures (matching Python line 524)
+                                    padMdl = ModelTools.ChangeTextures(padMdl, _texRenames);
+
+                                    // Process lightmaps (matching Python lines 525-532)
+                                    var lmRenames = new Dictionary<string, string>();
+                                    foreach (var lightmap in ModelTools.IterateLightmaps(padMdl))
+                                    {
+                                        string renamed = $"{ModuleId}_lm{_totalLm}";
+                                        _totalLm++;
+                                        string lightmapLower = lightmap.ToLowerInvariant();
+                                        lmRenames[lightmapLower] = renamed;
+
+                                        if (kit.Lightmaps.TryGetValue(lightmapLower, out byte[] lightmapData) ||
+                                            kit.Lightmaps.TryGetValue(lightmap, out lightmapData))
+                                        {
+                                            _mod.SetData(renamed, ResourceType.TGA, lightmapData);
+                                            if (kit.Txis.TryGetValue(lightmapLower, out byte[] txiData) ||
+                                                kit.Txis.TryGetValue(lightmap, out txiData))
+                                            {
+                                                _mod.SetData(renamed, ResourceType.TXI, txiData);
+                                            }
+                                            else
+                                            {
+                                                _mod.SetData(renamed, ResourceType.TXI, new byte[0]);
+                                            }
+                                        }
+                                    }
+
+                                    // Change lightmaps in model (matching Python line 532)
+                                    padMdl = ModelTools.ChangeLightmaps(padMdl, lmRenames);
+
+                                    // Add padding model resources (matching Python lines 533-534)
+                                    _mod.SetData(paddingName, ResourceType.MDL, padMdl);
+                                    _mod.SetData(paddingName, ResourceType.MDX, kit.TopPadding[doorIndex][paddingKey.Value].Mdx);
+
+                                    // Add padding room to layout and visibility (matching Python lines 535-536)
+                                    _lyt.Rooms.Add(new LYTRoom(paddingName, insert.Position));
+                                    _vis.AddRoom(paddingName);
+                                }
+                                else
+                                {
+                                    new RobustLogger().Info($"No padding key found for door insertion {i} height.");
+                                }
+                            }
+                        }
+                    }
+
+                    // Width padding (matching Python lines 537-576)
+                    if (insert.Hook1.Door.Width != insert.Hook2.Door.Width)
+                    {
+                        IndoorMapRoom cRoom = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Room : insert.Room2;
+                        KitComponentHook cHook = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook1 : insert.Hook2;
+                        KitComponentHook altHook = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook2 : insert.Hook1;
+
+                        if (cRoom == null)
+                        {
+                            new RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
+                        }
+                        else
+                        {
+                            Kit kit = cRoom.Component.Kit;
+                            int doorIndex = kit.Doors.IndexOf(cHook.Door);
+                            if (doorIndex >= 0 && kit.SidePadding.ContainsKey(doorIndex))
+                            {
+                                float width = altHook.Door.Width * 100.0f;
+                                int? paddingKey = null;
+                                foreach (var key in kit.SidePadding[doorIndex].Keys)
+                                {
+                                    if (key > width)
+                                    {
+                                        if (!paddingKey.HasValue || key < paddingKey.Value)
+                                        {
+                                            paddingKey = key;
+                                        }
+                                    }
+                                }
+
+                                if (paddingKey.HasValue)
+                                {
+                                    string paddingName = $"{ModuleId}_tpad{paddingCount}";
+                                    paddingCount++;
+
+                                    // Transform padding model (matching Python lines 558-562)
+                                    byte[] padMdl = kit.SidePadding[doorIndex][paddingKey.Value].Mdl;
+                                    padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
+
+                                    // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
+                                    // For now, use the transformed model data as-is
+                                    // Python: pad_mdl = model.convert_to_k2(pad_mdl) if installation.tsl else model.convert_to_k1(pad_mdl)
+
+                                    // Change textures (matching Python line 564)
+                                    padMdl = ModelTools.ChangeTextures(padMdl, _texRenames);
+
+                                    // Process lightmaps (matching Python lines 565-572)
+                                    var lmRenames = new Dictionary<string, string>();
+                                    foreach (var lightmap in ModelTools.IterateLightmaps(padMdl))
+                                    {
+                                        string renamed = $"{ModuleId}_lm{_totalLm}";
+                                        _totalLm++;
+                                        string lightmapLower = lightmap.ToLowerInvariant();
+                                        lmRenames[lightmapLower] = renamed;
+
+                                        if (kit.Lightmaps.TryGetValue(lightmapLower, out byte[] lightmapData) ||
+                                            kit.Lightmaps.TryGetValue(lightmap, out lightmapData))
+                                        {
+                                            _mod.SetData(renamed, ResourceType.TGA, lightmapData);
+                                            if (kit.Txis.TryGetValue(lightmapLower, out byte[] txiData) ||
+                                                kit.Txis.TryGetValue(lightmap, out txiData))
+                                            {
+                                                _mod.SetData(renamed, ResourceType.TXI, txiData);
+                                            }
+                                            else
+                                            {
+                                                _mod.SetData(renamed, ResourceType.TXI, new byte[0]);
+                                            }
+                                        }
+                                    }
+
+                                    // Change lightmaps in model (matching Python line 572)
+                                    padMdl = ModelTools.ChangeLightmaps(padMdl, lmRenames);
+
+                                    // Add padding model resources (matching Python lines 573-574)
+                                    _mod.SetData(paddingName, ResourceType.MDL, padMdl);
+                                    _mod.SetData(paddingName, ResourceType.MDX, kit.SidePadding[doorIndex][paddingKey.Value].Mdx);
+
+                                    // Add padding room to layout and visibility (matching Python lines 575-576)
+                                    _lyt.Rooms.Add(new LYTRoom(paddingName, insert.Position));
+                                    _vis.AddRoom(paddingName);
+                                }
+                            }
+                        }
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// Creates a deep copy of a UTD object using the Dismantle/Construct pattern.
+        /// Matching PyKotor implementation: deepcopy(utd) pattern used in handle_door_insertions.
+        /// </summary>
+        /// <param name="source">The UTD object to copy.</param>
+        /// <returns>A deep copy of the UTD object.</returns>
+        private static UTD DeepCopyUtd(UTD source)
+        {
+            // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
+            // This is the same pattern used in UTPEditor.CopyUtp() and other editor classes
+            Game game = Game.K2; // Default game for serialization
+            var gff = UTDHelpers.DismantleUtd(source, game);
+            return UTDHelpers.ConstructUtd(gff);
+        }
+
+        /// <summary>
+        /// Creates a quaternion from Euler angles (roll, pitch, yaw).
+        /// Matching PyKotor implementation at utility/common/geometry.py:887-914
+        /// </summary>
+        /// <param name="roll">Rotation around X axis in radians.</param>
+        /// <param name="pitch">Rotation around Y axis in radians.</param>
+        /// <param name="yaw">Rotation around Z axis in radians.</param>
+        /// <returns>A quaternion representing the rotation.</returns>
+        private static Andastra.Utility.Geometry.Quaternion QuaternionFromEuler(double roll, double pitch, double yaw)
+        {
+            // Matching Python implementation: Vector4.from_euler
+            double qx = Math.Sin(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) - Math.Cos(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
+            double qy = Math.Cos(roll / 2) * Math.Sin(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Cos(pitch / 2) * Math.Sin(yaw / 2);
+            double qz = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Sin(yaw / 2) - Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Cos(yaw / 2);
+            double qw = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
+
+            return new Andastra.Utility.Geometry.Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:578-608
