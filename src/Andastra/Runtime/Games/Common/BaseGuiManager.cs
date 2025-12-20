@@ -153,8 +153,5 @@ namespace Andastra.Runtime.Games.Common
         public string ButtonTag { get; set; }
         public int ButtonId { get; set; }
     }
-
-<｜tool▁call▁end｜><｜tool▁call▁begin｜>
-grep
 }
 
