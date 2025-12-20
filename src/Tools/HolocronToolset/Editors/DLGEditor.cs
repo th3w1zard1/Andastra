@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Media;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -5023,6 +5024,170 @@ namespace HolocronToolset.Editors
                 _editor.UpdateTreeView();
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:483-509
+        // Original: def mimeData(self, indexes: Iterable[QModelIndex]) -> QMimeData:
+        /// <summary>
+        /// Serializes items to MIME data format for drag-and-drop operations.
+        /// Creates a JSON-based format compatible with Avalonia drag-and-drop.
+        /// Matching PyKotor: The method receives items and serializes them with row/column/roles.
+        /// </summary>
+        /// <param name="items">The items to serialize. Items should be in the order they appear in the model.</param>
+        /// <returns>A JSON string containing the serialized MIME data.</returns>
+        public string MimeData(IEnumerable<DLGStandardItem> items)
+        {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
+            // Matching PyKotor: Create a list of item data entries
+            // Each entry contains: row, column, num_roles, and role/value pairs
+            var itemDataList = new List<Dictionary<string, object>>();
+            int itemIndex = 0;
+
+            foreach (var item in items)
+            {
+                if (item == null || item.Link == null)
+                {
+                    continue;
+                }
+
+                // Get row and column for this item
+                // In Qt, row comes from QModelIndex.row(), but since we're working with items directly,
+                // we'll use the sequential index as the row (matching the order items are passed in)
+                int row = itemIndex;
+                int column = 0; // Always 0 in our model (matching Qt's single-column tree)
+
+                // Get display text
+                string displayText = GetItemDisplayText(item);
+
+                // Serialize link to dictionary
+                Dictionary<string, object> nodeMap = new Dictionary<string, object>();
+                Dictionary<string, object> linkDict = item.Link.ToDict(nodeMap);
+
+                // Create item data entry matching Qt format structure
+                var itemData = new Dictionary<string, object>
+                {
+                    { "row", row },
+                    { "column", column },
+                    { "roles", new Dictionary<string, object>() }
+                };
+
+                var roles = (Dictionary<string, object>)itemData["roles"];
+
+                // Role 0 = DisplayRole (Qt.ItemDataRole.DisplayRole)
+                roles["0"] = displayText;
+
+                // Role 261 = _DLG_MIME_DATA_ROLE (Qt.ItemDataRole.UserRole + 5 = 256 + 5)
+                string linkJson = JsonSerializer.Serialize(linkDict, new JsonSerializerOptions
+                {
+                    WriteIndented = false
+                });
+                roles["261"] = linkJson;
+
+                // Role 262 = _MODEL_INSTANCE_ID_ROLE (Qt.ItemDataRole.UserRole + 6 = 256 + 6)
+                // Use object hash code as instance ID (similar to Python's id())
+                int modelInstanceId = RuntimeHelpers.GetHashCode(this);
+                roles["262"] = modelInstanceId;
+
+                itemDataList.Add(itemData);
+                itemIndex++;
+            }
+
+            // Serialize to JSON
+            string json = JsonSerializer.Serialize(itemDataList, new JsonSerializerOptions
+            {
+                WriteIndented = false
+            });
+
+            return json;
+        }
+
+        /// <summary>
+        /// Gets the display text for an item.
+        /// Matching PyKotor: item.data(Qt.ItemDataRole.DisplayRole)
+        /// </summary>
+        private string GetItemDisplayText(DLGStandardItem item)
+        {
+            if (item?.Link?.Node == null)
+            {
+                return "Unknown";
+            }
+
+            var node = item.Link.Node;
+            string nodeType = node is DLGEntry ? "Entry" : "Reply";
+            string text = node.Text?.GetString(0, Gender.Male) ?? "";
+            if (string.IsNullOrEmpty(text))
+            {
+                text = "<empty>";
+            }
+            return $"{nodeType}: {text}";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/tree_view.py:598-614
+        // Original: def parse_mime_data(self, mime_data: QMimeData) -> list[dict[Literal["row", "column", "roles"], Any]]:
+        /// <summary>
+        /// Parses MIME data from JSON format back into item data structures.
+        /// </summary>
+        /// <param name="jsonData">The JSON string containing serialized MIME data.</param>
+        /// <returns>A list of item data dictionaries containing row, column, and roles.</returns>
+        public List<Dictionary<string, object>> ParseMimeData(string jsonData)
+        {
+            if (string.IsNullOrEmpty(jsonData))
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
+            try
+            {
+                // Deserialize JSON using JsonDocument to handle nested dictionaries properly
+                using (JsonDocument doc = JsonDocument.Parse(jsonData))
+                {
+                    var itemDataList = new List<Dictionary<string, object>>();
+                    foreach (var element in doc.RootElement.EnumerateArray())
+                    {
+                        var itemData = new Dictionary<string, object>();
+                        if (element.TryGetProperty("row", out JsonElement rowElement))
+                        {
+                            itemData["row"] = rowElement.GetInt32();
+                        }
+                        if (element.TryGetProperty("column", out JsonElement columnElement))
+                        {
+                            itemData["column"] = columnElement.GetInt32();
+                        }
+                        if (element.TryGetProperty("roles", out JsonElement rolesElement))
+                        {
+                            var rolesDict = new Dictionary<string, object>();
+                            foreach (var prop in rolesElement.EnumerateObject())
+                            {
+                                // Get the value as string or number
+                                if (prop.Value.ValueKind == JsonValueKind.String)
+                                {
+                                    rolesDict[prop.Name] = prop.Value.GetString();
+                                }
+                                else if (prop.Value.ValueKind == JsonValueKind.Number)
+                                {
+                                    rolesDict[prop.Name] = prop.Value.GetInt64();
+                                }
+                                else
+                                {
+                                    rolesDict[prop.Name] = prop.Value.GetRawText();
+                                }
+                            }
+                            itemData["roles"] = rolesDict;
+                        }
+                        itemDataList.Add(itemData);
+                    }
+                    return itemDataList;
+                }
+            }
+            catch
+            {
+                return new List<Dictionary<string, object>>();
+            }
+        }
     }
 }
+
 

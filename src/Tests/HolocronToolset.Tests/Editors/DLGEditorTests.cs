@@ -4401,14 +4401,137 @@ namespace HolocronToolset.Tests.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:247-302
         // Original: def test_serialize_mime_data(self):
-        // Note: Qt MIME data format differs from Avalonia drag-and-drop, so this test is stubbed
-        [Fact(Skip = "Requires Qt MIME data format which differs from Avalonia drag-and-drop")]
+        [Fact]
         public void TestSerializeMimeData()
         {
-            // TODO: STUB - Implement MIME data serialization test
-            // Python test uses Qt's QMimeData/QDataStream format which is not directly compatible with Avalonia
-            // Would need to implement Avalonia-compatible drag-and-drop data format
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:247-302
+            // Step 1: Create a complex DLG tree and load it into the editor
+            var dlg = CreateComplexTree();
+            var editor = new DLGEditor(null, null);
+            editor.LoadDLG(dlg);
+
+            // Step 2: Generate a flat list of all DLGStandardItem objects
+            var allItems = new List<DLGStandardItem>();
+
+            // Helper to recursively collect all items
+            void CollectItems(DLGStandardItem parentItem)
+            {
+                if (parentItem == null)
+                {
+                    // Collect root items
+                    foreach (var rootItem in editor.Model.GetRootItems())
+                    {
+                        allItems.Add(rootItem);
+                        CollectItems(rootItem);
+                    }
+                }
+                else
+                {
+                    // Collect children
+                    foreach (var child in parentItem.Children)
+                    {
+                        allItems.Add(child);
+                        CollectItems(child);
+                    }
+                }
+            }
+
+            CollectItems(null);
+
+            // Verify we have items
+            allItems.Should().NotBeEmpty("Model should have items after loading complex tree");
+
+            // Step 3: Generate MIME data from all items
+            string mimeDataJson = editor.Model.MimeData(allItems);
+
+            // Verify MIME data is not empty
+            mimeDataJson.Should().NotBeNullOrEmpty("MIME data should not be empty");
+
+            // Step 4: Parse the MIME data back
+            var parsedMimeData = editor.Model.ParseMimeData(mimeDataJson);
+
+            // Verify parsed data matches expected structure
+            parsedMimeData.Should().NotBeNullOrEmpty("Parsed MIME data should not be empty");
+            parsedMimeData.Count.Should().Be(allItems.Count, "Parsed MIME data should have same number of items");
+
+            // Step 5: Verify the format matches expected structure
+            // Each item should have row, column, and roles
+            foreach (var itemData in parsedMimeData)
+            {
+                itemData.Should().ContainKey("row", "Each item should have a row");
+                itemData.Should().ContainKey("column", "Each item should have a column");
+                itemData.Should().ContainKey("roles", "Each item should have roles");
+
+                var roles = itemData["roles"] as Dictionary<string, object>;
+                roles.Should().NotBeNull("Roles should be a dictionary");
+                roles.Should().ContainKey("0", "Should have DisplayRole (0)");
+                roles.Should().ContainKey("261", "Should have DLG_MIME_DATA_ROLE (261)");
+                roles.Should().ContainKey("262", "Should have MODEL_INSTANCE_ID_ROLE (262)");
+            }
+
+            // Step 6: Deserialize and compare a specific item (matching Python test: all_items[4])
+            if (allItems.Count > 4)
+            {
+                var originalItem = allItems[4];
+                originalItem.Link.Should().NotBeNull("Original item should have a link");
+
+                // Get the parsed data for item at index 4
+                var itemData4 = parsedMimeData[4];
+                var roles4 = itemData4["roles"] as Dictionary<string, object>;
+                roles4.Should().NotBeNull("Item 4 should have roles");
+
+                // Extract DLG data JSON from role 261
+                string dlgDataJson = roles4["261"] as string;
+                dlgDataJson.Should().NotBeNullOrEmpty("DLG data JSON should not be empty");
+
+                // Deserialize the link
+                var linkDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(dlgDataJson);
+                linkDict.Should().NotBeNull("Link dictionary should not be null");
+
+                // Convert to DLGLink using FromDict
+                Dictionary<string, object> nodeMap = new Dictionary<string, object>();
+                var deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+
+                // Compare the deserialized link with the original
+                deserializedLink.Should().NotBeNull("Deserialized link should not be null");
+
+                // Compare link properties (excluding hash cache and node which are complex)
+                deserializedLink.Active1.Should().BeEquivalentTo(originalItem.Link.Active1, "Active1 should match");
+                deserializedLink.Active2.Should().BeEquivalentTo(originalItem.Link.Active2, "Active2 should match");
+                deserializedLink.Logic.Should().Be(originalItem.Link.Logic, "Logic should match");
+                deserializedLink.Active1Not.Should().Be(originalItem.Link.Active1Not, "Active1Not should match");
+                deserializedLink.Active2Not.Should().Be(originalItem.Link.Active2Not, "Active2Not should match");
+                deserializedLink.Active1Param1.Should().Be(originalItem.Link.Active1Param1, "Active1Param1 should match");
+                deserializedLink.Active1Param2.Should().Be(originalItem.Link.Active1Param2, "Active1Param2 should match");
+                deserializedLink.Active1Param3.Should().Be(originalItem.Link.Active1Param3, "Active1Param3 should match");
+                deserializedLink.Active1Param4.Should().Be(originalItem.Link.Active1Param4, "Active1Param4 should match");
+                deserializedLink.Active1Param5.Should().Be(originalItem.Link.Active1Param5, "Active1Param5 should match");
+                deserializedLink.Active1Param6.Should().Be(originalItem.Link.Active1Param6, "Active1Param6 should match");
+                deserializedLink.Active2Param1.Should().Be(originalItem.Link.Active2Param1, "Active2Param1 should match");
+                deserializedLink.Active2Param2.Should().Be(originalItem.Link.Active2Param2, "Active2Param2 should match");
+                deserializedLink.Active2Param3.Should().Be(originalItem.Link.Active2Param3, "Active2Param3 should match");
+                deserializedLink.Active2Param4.Should().Be(originalItem.Link.Active2Param4, "Active2Param4 should match");
+                deserializedLink.Active2Param5.Should().Be(originalItem.Link.Active2Param5, "Active2Param5 should match");
+                deserializedLink.Active2Param6.Should().Be(originalItem.Link.Active2Param6, "Active2Param6 should match");
+                deserializedLink.IsChild.Should().Be(originalItem.Link.IsChild, "IsChild should match");
+                deserializedLink.Comment.Should().Be(originalItem.Link.Comment, "Comment should match");
+
+                // Verify node structure matches
+                if (originalItem.Link.Node != null && deserializedLink.Node != null)
+                {
+                    // Compare node types
+                    deserializedLink.Node.GetType().Should().Be(originalItem.Link.Node.GetType(),
+                        "Deserialized node type should match original");
+
+                    // Compare node text if available
+                    if (originalItem.Link.Node.Text != null && deserializedLink.Node.Text != null)
+                    {
+                        string originalText = originalItem.Link.Node.Text.GetString(0, Gender.Male) ?? "";
+                        string deserializedText = deserializedLink.Node.Text.GetString(0, Gender.Male) ?? "";
+                        deserializedText.Should().Be(originalText,
+                            "Deserialized node text should match original");
+                    }
+                }
+            }
         }
 
         // Helper method matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:84-141
