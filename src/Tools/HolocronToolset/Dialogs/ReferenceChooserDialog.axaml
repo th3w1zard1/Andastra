@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editors="using:HolocronToolset.Editors"
+        x:Class="HolocronToolset.Dialogs.ReferenceChooserDialog"
+        Title="Node References"
+        Width="600"
+        Height="500"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="*,Auto">
+        <editors:DLGListWidget x:Name="ListWidget" Grid.Row="0" Margin="10"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" Margin="10">
+            <Button x:Name="BackButton" Content="◄" Width="40" Margin="5,0"/>
+            <Button x:Name="ForwardButton" Content="►" Width="40" Margin="5,0"/>
+            <Button x:Name="OkButton" Content="OK" Width="80" Margin="10,0,5,0"/>
+            <Button x:Name="CancelButton" Content="Cancel" Width="80" Margin="5,0"/>
+        </StackPanel>
+    </Grid>
+</Window>

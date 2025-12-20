@@ -1869,11 +1869,150 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Sets expand recursively for tree items.
-        /// Matching PyKotor implementation: self.set_expand_recursively(selected_item, set(), expand=..., maxdepth=...)
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1674-1709
+        /// Original: def set_expand_recursively(self, item: DLGStandardItem, seen_nodes: set[DLGNode], *, expand: bool, maxdepth: int = 11, depth: int = 0, is_root: bool = True)
         /// </summary>
+        /// <param name="expand">True to expand all items, false to collapse all items.</param>
+        /// <param name="maxDepth">Maximum depth to expand/collapse. Use -1 for unlimited depth.</param>
         private void SetExpandRecursively(bool expand, int maxDepth)
         {
-            // TODO: PLACEHOLDER - Implement set_expand_recursively when tree view UI is implemented
+            if (_dialogTree == null || _dialogTree.ItemsSource == null)
+            {
+                return;
+            }
+
+            // Get the selected item from the tree
+            DLGStandardItem selectedItem = null;
+            var treeSelectedItem = _dialogTree.SelectedItem;
+            if (treeSelectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                selectedItem = dlgItem;
+            }
+            else if (treeSelectedItem is DLGStandardItem dlgItemDirect)
+            {
+                selectedItem = dlgItemDirect;
+            }
+
+            // If no item is selected, operate on all root items
+            if (selectedItem == null)
+            {
+                var rootItems = _model?.GetRootItems();
+                if (rootItems != null)
+                {
+                    var seenNodes = new HashSet<DLGNode>();
+                    foreach (var rootItem in rootItems)
+                    {
+                        TreeViewItem rootTreeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, rootItem);
+                        if (rootTreeItem != null)
+                        {
+                            SetExpandRecursivelyInternal(rootItem, rootTreeItem, seenNodes, expand, maxDepth, 0, true);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Find the TreeViewItem corresponding to the selected DLGStandardItem
+            TreeViewItem selectedTreeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, selectedItem);
+            if (selectedTreeItem == null)
+            {
+                return;
+            }
+
+            // Recursively expand/collapse starting from the selected item
+            var seenNodes = new HashSet<DLGNode>();
+            SetExpandRecursivelyInternal(selectedItem, selectedTreeItem, seenNodes, expand, maxDepth, 0, true);
+        }
+
+        /// <summary>
+        /// Internal recursive method to expand/collapse tree items.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1674-1709
+        /// Original: def set_expand_recursively(self, item: DLGStandardItem, seen_nodes: set[DLGNode], *, expand: bool, maxdepth: int = 11, depth: int = 0, is_root: bool = True)
+        /// </summary>
+        /// <param name="item">The DLGStandardItem to process.</param>
+        /// <param name="treeItem">The corresponding TreeViewItem.</param>
+        /// <param name="seenNodes">Set of nodes already processed (prevents infinite loops).</param>
+        /// <param name="expand">True to expand, false to collapse.</param>
+        /// <param name="maxDepth">Maximum depth. Use -1 for unlimited.</param>
+        /// <param name="depth">Current depth in the tree.</param>
+        /// <param name="isRoot">True if this is the root item being processed.</param>
+        private void SetExpandRecursivelyInternal(
+            DLGStandardItem item,
+            TreeViewItem treeItem,
+            HashSet<DLGNode> seenNodes,
+            bool expand,
+            int maxDepth,
+            int depth,
+            bool isRoot)
+        {
+            // Matching PyKotor: if depth > maxdepth >= 0: return
+            if (maxDepth >= 0 && depth > maxDepth)
+            {
+                return;
+            }
+
+            // Matching PyKotor: if not isinstance(item, DLGStandardItem): return
+            if (item == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor: if item.link is None: return
+            if (item.Link == null)
+            {
+                return;
+            }
+
+            DLGLink link = item.Link;
+
+            // Matching PyKotor: if link.node in seen_nodes: return
+            if (link.Node != null && seenNodes.Contains(link.Node))
+            {
+                return;
+            }
+
+            // Matching PyKotor: seen_nodes.add(link.node)
+            if (link.Node != null)
+            {
+                seenNodes.Add(link.Node);
+            }
+
+            // Matching PyKotor: if expand: self.ui.dialogTree.expand(item_index)
+            // Matching PyKotor: elif not is_root: self.ui.dialogTree.collapse(item_index)
+            if (expand)
+            {
+                treeItem.IsExpanded = true;
+            }
+            else if (!isRoot)
+            {
+                treeItem.IsExpanded = false;
+            }
+
+            // Matching PyKotor: for row in range(item.rowCount()):
+            // Matching PyKotor:     child_item: DLGStandardItem = cast("DLGStandardItem", item.child(row))
+            // Matching PyKotor:     if child_item is None: continue
+            // Matching PyKotor:     child_index: QModelIndex = child_item.index()
+            // Matching PyKotor:     if not child_index.isValid(): continue
+            // Matching PyKotor:     self.set_expand_recursively(child_item, seen_nodes, expand=expand, maxdepth=maxdepth, depth=depth + 1, is_root=False)
+            if (treeItem.ItemsSource != null)
+            {
+                foreach (TreeViewItem childTreeItem in treeItem.ItemsSource as System.Collections.IEnumerable)
+                {
+                    if (childTreeItem == null)
+                    {
+                        continue;
+                    }
+
+                    DLGStandardItem childItem = childTreeItem.Tag as DLGStandardItem;
+                    if (childItem == null)
+                    {
+                        continue;
+                    }
+
+                    // Recursively process child
+                    SetExpandRecursivelyInternal(childItem, childTreeItem, seenNodes, expand, maxDepth, depth + 1, false);
+                }
+            }
         }
 
         /// <summary>
