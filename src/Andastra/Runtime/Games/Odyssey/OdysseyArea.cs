@@ -1601,6 +1601,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 Console.WriteLine($"[OdysseyArea] Processing pending area transitions: NextID={_transPendNextId}, CurrID={_transPendCurrId}");
 
                 // Get world reference from area entities
+                // Based on swkotor2.exe: Area transitions require world context for module/area management
                 IWorld world = GetWorldFromAreaEntities();
                 if (world == null)
                 {
@@ -1725,11 +1726,130 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         private List<string> GetAreaListFromModule(IModule module)
         {
-            // Try to get area list from RuntimeModule if it has IFO data
-            // Note: RuntimeModule doesn't currently store area list, so we may need to access IFO directly
-            // For now, return null to use fallback (loaded areas)
-            // TODO: If RuntimeModule is extended to store area list from IFO, use that here
+            if (module == null)
+            {
+                return null;
+            }
+
+            // Try to access IFO data to get Mod_Area_list
+            // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs
+            try
+            {
+                // RuntimeModule now stores the area list from IFO during loading
+                var runtimeModule = module as RuntimeModule;
+                if (runtimeModule != null)
+                {
+                    // Return the stored area list if available
+                    if (runtimeModule.AreaList != null && runtimeModule.AreaList.Count > 0)
+                    {
+                        return new List<string>(runtimeModule.AreaList);
+                    }
+                    // If AreaList is empty or null, return null to use fallback
+                    return null;
+                }
+
+                // If we can access parsing Module directly, read Mod_Area_list
+                var parsingModule = module as Andastra.Parsing.Common.Module;
+                if (parsingModule != null)
+                {
+                    return ReadAreaListFromIFO(parsingModule);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyArea] GetAreaListFromModule: Exception reading area list: {ex.Message}");
+            }
+
             return null;
+        }
+
+        /// <summary>
+        /// Reads the Mod_Area_list from the module's IFO file.
+        /// </summary>
+        /// <param name="module">Parsing Module instance with access to IFO.</param>
+        /// <returns>List of area ResRefs from Mod_Area_list, or null if not available.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Mod_Area_list is stored in module IFO file.
+        /// Each entry contains Area_Name field with the area ResRef.
+        /// This matches the IFO format specification in vendor/PyKotor/wiki/GFF-IFO.md.
+        /// </remarks>
+        private List<string> ReadAreaListFromIFO(Andastra.Parsing.Common.Module module)
+        {
+            if (module == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Get IFO resource
+                ModuleResource ifoResource = module.Info();
+                if (ifoResource == null)
+                {
+                    return null;
+                }
+
+                // Load IFO data
+                object ifoData = ifoResource.Resource();
+                if (ifoData == null)
+                {
+                    return null;
+                }
+
+                GFF ifoGff = ifoData as GFF;
+                if (ifoGff == null)
+                {
+                    return null;
+                }
+
+                GFFStruct root = ifoGff.Root;
+
+                // Check if Mod_Area_list exists
+                if (!root.Exists("Mod_Area_list"))
+                {
+                    Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: Mod_Area_list not found in IFO for module {module.GetRoot()}");
+                    return null;
+                }
+
+                // Read Mod_Area_list (list of structs)
+                GFFList areaList = root.GetList("Mod_Area_list");
+                if (areaList == null || areaList.Count == 0)
+                {
+                    Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: Mod_Area_list is empty for module {module.GetRoot()}");
+                    return null;
+                }
+
+                List<string> areaResRefs = new List<string>();
+
+                // Each entry in Mod_Area_list has an Area_Name field (ResRef)
+                foreach (GFFStruct areaEntry in areaList)
+                {
+                    if (areaEntry.Exists("Area_Name"))
+                    {
+                        ResRef areaName = areaEntry.GetResRef("Area_Name");
+                        if (areaName != null && !string.IsNullOrEmpty(areaName.ToString()))
+                        {
+                            areaResRefs.Add(areaName.ToString());
+                        }
+                    }
+                }
+
+                if (areaResRefs.Count > 0)
+                {
+                    Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: Found {areaResRefs.Count} areas in Mod_Area_list for module {module.GetRoot()}: {string.Join(", ", areaResRefs)}");
+                    return areaResRefs;
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: No valid area entries found in Mod_Area_list for module {module.GetRoot()}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: Exception reading IFO for module {module.GetRoot()}: {ex.Message}");
+                return null;
+            }
         }
 
         /// <summary>

@@ -254,6 +254,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
             // Scripts
             LoadModuleScripts(root, runtimeModule);
+
+            // Area list from Mod_Area_list
+            LoadAreaList(root, runtimeModule);
         }
 
         /// <summary>
@@ -290,6 +293,76 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                         module.SetScript(mapping.Value, scriptRef.ToString());
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Loads area list from Mod_Area_list field in IFO.
+        /// </summary>
+        /// <param name="root">IFO GFF root structure.</param>
+        /// <param name="runtimeModule">Runtime module to store area list in.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: Mod_Area_list is stored in module IFO file.
+        /// Each entry contains Area_Name field with the area ResRef.
+        /// This list is used for resolving transition targets by index (TransPendNextID).
+        /// This matches the IFO format specification in vendor/PyKotor/wiki/GFF-IFO.md.
+        /// </remarks>
+        private void LoadAreaList(GFFStruct root, RuntimeModule runtimeModule)
+        {
+            if (root == null || runtimeModule == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Check if Mod_Area_list exists
+                if (!root.Exists("Mod_Area_list"))
+                {
+                    Console.WriteLine($"[ModuleLoader] LoadAreaList: Mod_Area_list not found in IFO for module {runtimeModule.ResRef}");
+                    runtimeModule.AreaList = new List<string>();
+                    return;
+                }
+
+                // Read Mod_Area_list (list of structs)
+                GFFList areaList = root.GetList("Mod_Area_list");
+                if (areaList == null || areaList.Count == 0)
+                {
+                    Console.WriteLine($"[ModuleLoader] LoadAreaList: Mod_Area_list is empty for module {runtimeModule.ResRef}");
+                    runtimeModule.AreaList = new List<string>();
+                    return;
+                }
+
+                List<string> areaResRefs = new List<string>();
+
+                // Each entry in Mod_Area_list has an Area_Name field (ResRef)
+                foreach (GFFStruct areaEntry in areaList)
+                {
+                    if (areaEntry.Exists("Area_Name"))
+                    {
+                        ResRef areaName = areaEntry.GetResRef("Area_Name");
+                        if (areaName != null && !string.IsNullOrEmpty(areaName.ToString()))
+                        {
+                            areaResRefs.Add(areaName.ToString());
+                        }
+                    }
+                }
+
+                runtimeModule.AreaList = areaResRefs;
+
+                if (areaResRefs.Count > 0)
+                {
+                    Console.WriteLine($"[ModuleLoader] LoadAreaList: Found {areaResRefs.Count} areas in Mod_Area_list for module {runtimeModule.ResRef}: {string.Join(", ", areaResRefs)}");
+                }
+                else
+                {
+                    Console.WriteLine($"[ModuleLoader] LoadAreaList: No valid area entries found in Mod_Area_list for module {runtimeModule.ResRef}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ModuleLoader] LoadAreaList: Exception reading Mod_Area_list for module {runtimeModule.ResRef}: {ex.Message}");
+                runtimeModule.AreaList = new List<string>();
             }
         }
 

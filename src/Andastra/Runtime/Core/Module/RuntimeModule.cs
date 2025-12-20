@@ -75,6 +75,7 @@ namespace Andastra.Runtime.Core.Module
             Year = 3951; // Default KotOR2 year
             XPScale = 100;
             StartMovie = string.Empty;
+            AreaList = new List<string>();
         }
 
         #region IModule Implementation
@@ -187,6 +188,17 @@ namespace Andastra.Runtime.Core.Module
         /// Loading screen image resource reference (from IFO LoadScreenResRef field).
         /// </summary>
         public string LoadScreenResRef { get; set; }
+
+        /// <summary>
+        /// Ordered list of area ResRefs from Mod_Area_list in the module IFO file.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs.
+        /// Each entry in Mod_Area_list contains an Area_Name field with the area ResRef.
+        /// This list is used for resolving transition targets by index (TransPendNextID).
+        /// Stored during module loading to avoid re-reading the IFO file.
+        /// </remarks>
+        public List<string> AreaList { get; set; }
 
         #endregion
 
