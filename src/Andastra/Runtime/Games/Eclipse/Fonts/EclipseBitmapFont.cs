@@ -169,7 +169,14 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                     return null;
                 }
 
-                Texture2D texture = TpcToMonoGameTextureConverter.Convert(fontTexture, mgDevice, false);
+                // Fonts always use 2D textures, not cube maps
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(fontTexture, mgDevice, false);
+                if (convertedTexture is TextureCube)
+                {
+                    Console.WriteLine($"[EclipseBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");
+                    return null;
+                }
+                Texture2D texture = (Texture2D)convertedTexture;
                 if (texture == null)
                 {
                     Console.WriteLine($"[EclipseBitmapFont] ERROR: Failed to convert font texture: {fontResRef}");

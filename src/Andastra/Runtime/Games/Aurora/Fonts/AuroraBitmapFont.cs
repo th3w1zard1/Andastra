@@ -155,7 +155,14 @@ namespace Andastra.Runtime.Games.Aurora.Fonts
                     return null;
                 }
 
-                Texture2D texture = TpcToMonoGameTextureConverter.Convert(fontTexture, mgDevice, false);
+                // Fonts always use 2D textures, not cube maps
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(fontTexture, mgDevice, false);
+                if (convertedTexture is TextureCube)
+                {
+                    Console.WriteLine($"[AuroraBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");
+                    return null;
+                }
+                Texture2D texture = (Texture2D)convertedTexture;
                 if (texture == null)
                 {
                     Console.WriteLine($"[AuroraBitmapFont] ERROR: Failed to convert font texture: {fontResRef}");

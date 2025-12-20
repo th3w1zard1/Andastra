@@ -272,10 +272,18 @@ namespace Andastra.Runtime.MonoGame.Materials
             }
 
             // Convert to MonoGame texture
+            // Note: For materials, textures are always 2D (not cube maps), so we can safely cast to Texture2D
             Texture2D texture;
             try
             {
-                texture = TpcToMonoGameTextureConverter.Convert(tpc, _device);
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _device);
+                // Materials use 2D textures, not cube maps
+                if (convertedTexture is TextureCube)
+                {
+                    Console.WriteLine("[KotorMaterialFactory] Warning: Cube map texture used in material: " + key);
+                    return null; // Materials don't support cube maps
+                }
+                texture = (Texture2D)convertedTexture;
             }
             catch (Exception ex)
             {

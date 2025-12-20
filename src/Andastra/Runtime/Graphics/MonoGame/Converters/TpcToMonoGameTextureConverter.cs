@@ -41,20 +41,21 @@ namespace Andastra.Runtime.MonoGame.Converters
     public static class TpcToMonoGameTextureConverter
     {
         /// <summary>
-        /// Converts a TPC texture to a MonoGame Texture2D.
+        /// Converts a TPC texture to a MonoGame Texture (Texture2D for 2D textures, TextureCube for cube maps).
         /// </summary>
         /// <param name="tpc">The TPC texture to convert.</param>
         /// <param name="device">The graphics device.</param>
         /// <param name="generateMipmaps">Whether to generate mipmaps if not present.</param>
-        /// <returns>A MonoGame Texture2D ready for rendering.</returns>
-        // Convert TPC texture format to MonoGame Texture2D
+        /// <returns>A MonoGame Texture ready for rendering (Texture2D for 2D textures, TextureCube for cube maps).</returns>
+        // Convert TPC texture format to MonoGame Texture (Texture2D or TextureCube)
         // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
         // Texture2D represents 2D image data for rendering
-        // Method signature: static Texture2D Convert(TPC tpc, GraphicsDevice device, bool generateMipmaps)
+        // TextureCube represents cube map textures (6 faces) for environment mapping
+        // Method signature: static Texture Convert(TPC tpc, GraphicsDevice device, bool generateMipmaps)
         // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.GraphicsDevice.html
         // GraphicsDevice parameter provides access to graphics hardware for texture creation
         // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
-        public static Texture2D Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true)
+        public static Texture Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true)
         {
             if (tpc == null)
             {
@@ -76,12 +77,16 @@ namespace Andastra.Runtime.MonoGame.Converters
             int height = baseMipmap.Height;
             TPCTextureFormat format = tpc.Format();
 
-            // Handle cube maps - MonoGame doesn't have built-in cube map support in Texture2D
-            // TODO: SIMPLIFIED - For now, convert to 2D texture from first face
+            // Handle cube maps - Convert to MonoGame TextureCube
+            // Based on swkotor2.exe cube map texture loading (swkotor2.exe: texture cube map handling)
+            // TPC cube maps have 6 layers, one for each face in DirectX/OpenGL order:
+            // 0: PositiveX (right), 1: NegativeX (left), 2: PositiveY (top), 
+            // 3: NegativeY (bottom), 4: PositiveZ (front), 5: NegativeZ (back)
+            // Reference: vendor/xoreos/src/graphics/images/tpc.cpp:420-482 (cube map fixup)
+            // Reference: vendor/reone/include/reone/graphics/types.h:88-95 (CubeMapFace enum)
             if (tpc.IsCubeMap && tpc.Layers.Count == 6)
             {
-                // TODO: Implement proper cube map support using TextureCube if needed
-                return Convert2DTexture(tpc.Layers[0], device, generateMipmaps);
+                return ConvertCubeMap(tpc, device, generateMipmaps);
             }
 
             // Convert standard 2D texture
@@ -105,6 +110,175 @@ namespace Andastra.Runtime.MonoGame.Converters
 
             TPCMipmap mipmap = tpc.Layers[0].Mipmaps[0];
             return ConvertMipmapToRgba(mipmap);
+        }
+
+        /// <summary>
+        /// Converts a TPC cube map to a MonoGame TextureCube.
+        /// </summary>
+        /// <param name="tpc">The TPC cube map texture (must have 6 layers).</param>
+        /// <param name="device">The graphics device.</param>
+        /// <param name="generateMipmaps">Whether to generate mipmaps if not present.</param>
+        /// <returns>A MonoGame TextureCube ready for rendering.</returns>
+        /// <remarks>
+        /// Cube Map Conversion:
+        /// - Based on swkotor2.exe cube map texture loading system
+        /// - TPC cube maps store 6 faces as separate layers
+        /// - DirectX/XNA cube map face order: PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ
+        /// - MonoGame TextureCube uses CubeMapFace enum for face indexing
+        /// - Supports all TPC formats: DXT1/DXT3/DXT5, RGB/RGBA, grayscale
+        /// - Handles mipmaps for each cube face
+        /// - Based on MonoGame API: TextureCube(GraphicsDevice, int, bool, SurfaceFormat)
+        /// - TextureCube.SetData&lt;T&gt;(CubeMapFace, T[]) sets face pixel data
+        /// </remarks>
+        private static TextureCube ConvertCubeMap([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps)
+        {
+            if (tpc.Layers.Count != 6)
+            {
+                throw new ArgumentException("Cube map must have exactly 6 layers", "tpc");
+            }
+
+            // Get dimensions from first layer, first mipmap
+            TPCMipmap baseMipmap = tpc.Layers[0].Mipmaps[0];
+            int size = baseMipmap.Width; // Cube maps are square (width == height)
+            if (baseMipmap.Height != size)
+            {
+                throw new ArgumentException("Cube map faces must be square", "tpc");
+            }
+
+            // Determine mipmap count
+            int mipmapCount = tpc.Layers[0].Mipmaps.Count;
+            if (generateMipmaps && mipmapCount == 1)
+            {
+                // Calculate mipmap count for generation
+                int tempSize = size;
+                while (tempSize > 1)
+                {
+                    mipmapCount++;
+                    tempSize >>= 1;
+                }
+            }
+
+            // Create TextureCube
+            // Based on MonoGame API: TextureCube(GraphicsDevice graphicsDevice, int size, bool mipmap, SurfaceFormat format)
+            TextureCube cubeMap = new TextureCube(device, size, generateMipmaps || mipmapCount > 1, SurfaceFormat.Color);
+
+            // DirectX/XNA cube map face order mapping
+            // TPC layers are stored in the same order as DirectX cube map faces
+            CubeMapFace[] faceOrder = new CubeMapFace[]
+            {
+                CubeMapFace.PositiveX, // Layer 0: Right face (+X)
+                CubeMapFace.NegativeX, // Layer 1: Left face (-X)
+                CubeMapFace.PositiveY, // Layer 2: Top face (+Y)
+                CubeMapFace.NegativeY, // Layer 3: Bottom face (-Y)
+                CubeMapFace.PositiveZ, // Layer 4: Front face (+Z)
+                CubeMapFace.NegativeZ  // Layer 5: Back face (-Z)
+            };
+
+            // Convert each face
+            for (int faceIndex = 0; faceIndex < 6; faceIndex++)
+            {
+                TPCLayer layer = tpc.Layers[faceIndex];
+                CubeMapFace face = faceOrder[faceIndex];
+
+                // Process each mipmap level for this face
+                int currentSize = size;
+                for (int mipLevel = 0; mipLevel < mipmapCount; mipLevel++)
+                {
+                    // Get or generate mipmap data
+                    byte[] rgbaData;
+                    if (mipLevel < layer.Mipmaps.Count)
+                    {
+                        // Use existing mipmap
+                        TPCMipmap mipmap = layer.Mipmaps[mipLevel];
+                        if (mipmap.Width != currentSize || mipmap.Height != currentSize)
+                        {
+                            throw new ArgumentException($"Cube map face {faceIndex} mipmap {mipLevel} has incorrect dimensions", "tpc");
+                        }
+                        rgbaData = ConvertMipmapToRgba(mipmap);
+                    }
+                    else if (generateMipmaps)
+                    {
+                        // Generate mipmap by downsampling base level
+                        // For now, use the base mipmap (full implementation would downsample)
+                        TPCMipmap baseMip = layer.Mipmaps[0];
+                        rgbaData = ConvertMipmapToRgba(baseMip);
+                        // Resize to current mipmap size (simplified - full implementation would properly downsample)
+                        rgbaData = ResizeImage(rgbaData, size, size, currentSize, currentSize);
+                    }
+                    else
+                    {
+                        break; // No more mipmaps to process
+                    }
+
+                    // Convert RGBA byte array to Color array
+                    Color[] colorData = new Color[currentSize * currentSize];
+                    for (int i = 0; i < colorData.Length; i++)
+                    {
+                        int offset = i * 4;
+                        if (offset + 3 < rgbaData.Length)
+                        {
+                            colorData[i] = new Color(rgbaData[offset], rgbaData[offset + 1], rgbaData[offset + 2], rgbaData[offset + 3]);
+                        }
+                    }
+
+                    // Set face data for this mipmap level
+                    // Based on MonoGame API: void SetData&lt;T&gt;(CubeMapFace face, int level, Rectangle? rect, T[] data, int startIndex, int elementCount)
+                    cubeMap.SetData(face, mipLevel, null, colorData, 0, colorData.Length);
+
+                    // Next mipmap is half the size
+                    currentSize = Math.Max(1, currentSize >> 1);
+                }
+            }
+
+            return cubeMap;
+        }
+
+        /// <summary>
+        /// Resizes an RGBA image to the specified dimensions (simplified implementation).
+        /// </summary>
+        /// <param name="source">Source RGBA data (width x height x 4 bytes).</param>
+        /// <param name="sourceWidth">Source image width.</param>
+        /// <param name="sourceHeight">Source image height.</param>
+        /// <param name="targetWidth">Target image width.</param>
+        /// <param name="targetHeight">Target image height.</param>
+        /// <returns>Resized RGBA data.</returns>
+        /// <remarks>
+        /// This is a simplified implementation for mipmap generation.
+        /// A full implementation would use proper filtering (bilinear, etc.).
+        /// </remarks>
+        private static byte[] ResizeImage(byte[] source, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+        {
+            if (sourceWidth == targetWidth && sourceHeight == targetHeight)
+            {
+                return source;
+            }
+
+            byte[] target = new byte[targetWidth * targetHeight * 4];
+
+            for (int y = 0; y < targetHeight; y++)
+            {
+                for (int x = 0; x < targetWidth; x++)
+                {
+                    // Simple nearest-neighbor sampling
+                    int srcX = (x * sourceWidth) / targetWidth;
+                    int srcY = (y * sourceHeight) / targetHeight;
+                    srcX = Math.Min(srcX, sourceWidth - 1);
+                    srcY = Math.Min(srcY, sourceHeight - 1);
+
+                    int srcIdx = (srcY * sourceWidth + srcX) * 4;
+                    int dstIdx = (y * targetWidth + x) * 4;
+
+                    if (srcIdx + 3 < source.Length && dstIdx + 3 < target.Length)
+                    {
+                        target[dstIdx] = source[srcIdx];
+                        target[dstIdx + 1] = source[srcIdx + 1];
+                        target[dstIdx + 2] = source[srcIdx + 2];
+                        target[dstIdx + 3] = source[srcIdx + 3];
+                    }
+                }
+            }
+
+            return target;
         }
 
         private static Texture2D Convert2DTexture(TPCLayer layer, GraphicsDevice device, bool generateMipmaps)

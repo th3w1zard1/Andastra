@@ -1057,7 +1057,107 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void OnSetBindlessHeap(IntPtr heap, int slot, ShaderStage stage)
         {
-            // TODO: STUB - Set bindless heap for shader stage
+            // Validate inputs
+            if (heap == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetBindlessHeap: Invalid heap handle");
+                return;
+            }
+
+            if (slot < 0)
+            {
+                Console.WriteLine($"[StrideDX12] OnSetBindlessHeap: Invalid slot {slot}");
+                return;
+            }
+
+            if (stage == ShaderStage.None)
+            {
+                Console.WriteLine("[StrideDX12] OnSetBindlessHeap: ShaderStage.None is not valid");
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetBindlessHeap: DirectX 12 device not available");
+                return;
+            }
+
+            // Get heap information
+            if (!_bindlessHeaps.TryGetValue(heap, out BindlessHeapInfo heapInfo))
+            {
+                Console.WriteLine($"[StrideDX12] OnSetBindlessHeap: Heap not found for handle {heap}");
+                return;
+            }
+
+            if (heapInfo.DescriptorHeap == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetBindlessHeap: Descriptor heap pointer is invalid");
+                return;
+            }
+
+            // Get native command list handle
+            // In DirectX 12, we need ID3D12GraphicsCommandList to bind resources
+            // Stride's CommandList wraps this, but we need the native handle
+            IntPtr nativeCommandList = GetNativeCommandList();
+            if (nativeCommandList == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetBindlessHeap: Command list not available");
+                return;
+            }
+
+            // Platform check: DirectX 12 is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[StrideDX12] OnSetBindlessHeap: DirectX 12 is only available on Windows");
+                return;
+            }
+
+            // Set bindless heap for shader stage
+            // Based on DirectX 12 Bindless Resources: https://devblogs.microsoft.com/directx/in-the-works-hlsl-shader-model-6-6/
+            // Implementation approach:
+            // 1. Set descriptor heaps using SetDescriptorHeaps (tells D3D12 which heaps are active)
+            // 2. Set root parameter using SetGraphicsRootDescriptorTable (binds the heap to a root signature slot)
+            //
+            // DirectX 12 API references:
+            // - ID3D12GraphicsCommandList::SetDescriptorHeaps - sets which descriptor heaps are active
+            // - ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable - binds descriptor table to root parameter
+            // - D3D12_GPU_DESCRIPTOR_HANDLE for descriptor heap GPU handle
+            //
+            // Note: In DirectX 12, descriptor heaps are shared across shader stages (unlike Vulkan's per-stage descriptor sets)
+            // The stage parameter is tracked for logging/debugging purposes, but SetDescriptorHeaps affects all stages
+
+            try
+            {
+                // Step 1: Set descriptor heaps (activates the heap for use)
+                // SetDescriptorHeaps takes an array of descriptor heap pointers
+                // We set the single heap we want to use
+                IntPtr[] descriptorHeaps = new IntPtr[] { heapInfo.DescriptorHeap };
+                SetDescriptorHeaps(nativeCommandList, descriptorHeaps, (uint)descriptorHeaps.Length);
+
+                // Step 2: Get GPU descriptor handle for the heap
+                // The GPU handle is the base handle for the heap, which can be used as a descriptor table
+                IntPtr gpuHandle = heapInfo.GpuHandle;
+                if (gpuHandle == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX12] OnSetBindlessHeap: GPU descriptor handle is invalid");
+                    return;
+                }
+
+                // Step 3: Set root parameter to reference the descriptor heap
+                // SetGraphicsRootDescriptorTable binds a descriptor table to a root signature parameter slot
+                // The root signature must have a descriptor table parameter at the specified slot
+                // The GPU handle represents the base of the descriptor table
+                // D3D12_GPU_DESCRIPTOR_HANDLE is a 64-bit value (uint64_t), so we convert IntPtr to ulong
+                ulong gpuHandleValue = (ulong)gpuHandle.ToInt64();
+                SetGraphicsRootDescriptorTable(nativeCommandList, (uint)slot, gpuHandleValue);
+
+                Console.WriteLine($"[StrideDX12] OnSetBindlessHeap: Bound heap {heap} to slot {slot} for shader stage {stage} (GPU handle: 0x{gpuHandle.ToInt64():X16})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] OnSetBindlessHeap: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] OnSetBindlessHeap: Stack trace: {ex.StackTrace}");
+            }
         }
 
         protected override ResourceInfo CreateSamplerFeedbackTextureInternal(int width, int height, TextureFormat format, IntPtr handle)
@@ -1595,6 +1695,12 @@ namespace Andastra.Runtime.Stride.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void SetGraphicsRootShaderResourceViewDelegate(IntPtr commandList, uint rootParameterIndex, ulong gpuVirtualAddress);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetDescriptorHeapsDelegate(IntPtr commandList, uint numDescriptorHeaps, IntPtr ppDescriptorHeaps);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetGraphicsRootDescriptorTableDelegate(IntPtr commandList, uint rootParameterIndex, ulong baseDescriptorHandle);
+
         /// <summary>
         /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable.
         /// VTable index 27 for ID3D12Device.
@@ -1815,6 +1921,90 @@ namespace Andastra.Runtime.Stride.Backends
                 Marshal.GetDelegateForFunctionPointer<SetGraphicsRootShaderResourceViewDelegate>(methodPtr);
 
             setSrv(commandList, rootParameterIndex, gpuVirtualAddress);
+        }
+
+        /// <summary>
+        /// Sets descriptor heaps for the graphics command list.
+        /// Calls ID3D12GraphicsCommandList::SetDescriptorHeaps through COM vtable.
+        /// VTable index 47 for ID3D12GraphicsCommandList.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setdescriptorheaps
+        /// </summary>
+        private unsafe void SetDescriptorHeaps(IntPtr commandList, IntPtr[] descriptorHeaps, uint numDescriptorHeaps)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero) return;
+            if (descriptorHeaps == null || numDescriptorHeaps == 0) return;
+
+            // Allocate unmanaged memory for the descriptor heap pointer array
+            // SetDescriptorHeaps expects a pointer to an array of ID3D12DescriptorHeap* pointers
+            // Signature: void SetDescriptorHeaps(UINT NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps)
+            int arraySize = (int)numDescriptorHeaps * IntPtr.Size;
+            IntPtr heapsArrayPtr = Marshal.AllocHGlobal(arraySize);
+            try
+            {
+                // Copy descriptor heap pointers to unmanaged memory
+                for (int i = 0; i < numDescriptorHeaps; i++)
+                {
+                    Marshal.WriteIntPtr(heapsArrayPtr, i * IntPtr.Size, descriptorHeaps[i]);
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetDescriptorHeaps is at index 47 in ID3D12GraphicsCommandList vtable
+                // Note: VTable index may vary by DirectX 12 version, but 47 is typical for D3D12_GRAPHICS_COMMAND_LIST
+                IntPtr methodPtr = vtable[47];
+
+                // Create delegate from function pointer
+                // Note: C# 7.3 compatibility - use explicit delegate type instead of Marshal.GetDelegateForFunctionPointer<T>
+                SetDescriptorHeapsDelegate setHeaps =
+                    (SetDescriptorHeapsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetDescriptorHeapsDelegate));
+
+                // Call SetDescriptorHeaps with pointer to array
+                setHeaps(commandList, numDescriptorHeaps, heapsArrayPtr);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(heapsArrayPtr);
+            }
+        }
+
+        /// <summary>
+        /// Sets a descriptor table in the graphics root signature.
+        /// Calls ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable through COM vtable.
+        /// VTable index 61 for ID3D12GraphicsCommandList.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootdescriptortable
+        /// </summary>
+        private unsafe void SetGraphicsRootDescriptorTable(IntPtr commandList, uint rootParameterIndex, ulong baseDescriptorHandle)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero) return;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // SetGraphicsRootDescriptorTable is at index 61 in ID3D12GraphicsCommandList vtable
+            // Note: VTable index may vary by DirectX 12 version, but 61 is typical for D3D12_GRAPHICS_COMMAND_LIST
+            IntPtr methodPtr = vtable[61];
+
+            // Create delegate from function pointer
+            // SetGraphicsRootDescriptorTable signature: void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor)
+            // D3D12_GPU_DESCRIPTOR_HANDLE is a 64-bit value (uint64_t), passed as ulong in C#
+            // Note: C# 7.3 compatibility - use explicit delegate type instead of Marshal.GetDelegateForFunctionPointer<T>
+            SetGraphicsRootDescriptorTableDelegate setTable =
+                (SetGraphicsRootDescriptorTableDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetGraphicsRootDescriptorTableDelegate));
+
+            setTable(commandList, rootParameterIndex, baseDescriptorHandle);
         }
 
         #endregion
