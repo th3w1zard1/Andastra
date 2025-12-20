@@ -611,23 +611,25 @@ namespace Andastra.Parsing.Tests.Formats
             if (!File.Exists(TestJrlFile))
             {
                 // Create test file if needed
-                var jrl = new JRL();
-                var quest = new JRLQuest();
-                quest.Tag = "test_quest";
-                quest.Name = LocalizedString.FromString("Test Quest");
-                quest.Priority = JRLQuestPriority.Medium;
+                var testJrl = new JRL();
+                var testQuest = new JRLQuest();
+                testQuest.Tag = "test_quest";
+                testQuest.Name = LocalizedString.FromInvalid();
+                testQuest.Name.SetData(Language.English, Gender.Male, "Test Quest");
+                testQuest.Priority = JRLQuestPriority.Medium;
 
-                var entry = new JRLQuestEntry();
-                entry.EntryId = 1;
-                entry.Text = LocalizedString.FromString("Test entry text");
-                entry.End = false;
-                entry.XpPercentage = 1.0f;
-                quest.Entries.Add(entry);
+                var testEntry = new JRLQuestEntry();
+                testEntry.EntryId = 1;
+                testEntry.Text = LocalizedString.FromInvalid();
+                testEntry.Text.SetData(Language.English, Gender.Male, "Test entry text");
+                testEntry.End = false;
+                testEntry.XpPercentage = 1.0f;
+                testQuest.Entries.Add(testEntry);
 
-                jrl.Quests.Add(quest);
+                testJrl.Quests.Add(testQuest);
 
-                GFF gff = JRLHelper.DismantleJrl(jrl);
-                byte[] data = GFFAuto.BytesGff(gff);
+                GFF testGff = JRLHelper.DismantleJrl(testJrl);
+                byte[] data = GFFAuto.BytesGff(testGff);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestJrlFile));
                 File.WriteAllBytes(TestJrlFile, data);
             }
@@ -638,16 +640,16 @@ namespace Andastra.Parsing.Tests.Formats
             // 3. Comparing results across languages
             // For now, we validate the structure matches expectations
 
-            GFF gff = GFFAuto.ReadGff(TestJrlFile);
-            JRL jrl = JRLHelper.ConstructJrl(gff);
+            GFF parsedGff = GFFAuto.ReadGff(TestJrlFile, 0, null, ResourceType.JRL);
+            JRL parsedJrl = JRLHelper.ConstructJrl(parsedGff);
 
             // Validate structure matches Kaitai Struct definition
             // JRL files are GFF-based, so they follow GFF structure
-            gff.Content.Should().Be(GFFContent.JRL, "JRL file should have JRL content type");
+            parsedGff.Content.Should().Be(GFFContent.JRL, "JRL file should have JRL content type");
 
             // Validate that we can read the JRL structure
-            jrl.Should().NotBeNull("JRL should be constructed from GFF");
-            jrl.Quests.Should().NotBeNull("JRL should have quests list");
+            parsedJrl.Should().NotBeNull("JRL should be constructed from GFF");
+            parsedJrl.Quests.Should().NotBeNull("JRL should have quests list");
         }
 
         [Fact(Timeout = 300000)]
@@ -714,35 +716,38 @@ namespace Andastra.Parsing.Tests.Formats
             // Create a test JRL file and validate its structure matches the Kaitai definition
             if (!File.Exists(TestJrlFile))
             {
-                var jrl = new JRL();
-
+                var testJrl = new JRL();
+                
                 // Create a quest with multiple entries
-                var quest1 = new JRLQuest();
-                quest1.Tag = "quest_main_001";
-                quest1.Name = LocalizedString.FromString("Main Quest");
-                quest1.Priority = JRLQuestPriority.Highest;
-                quest1.PlanetId = 0;
-                quest1.PlotIndex = 0;
-                quest1.Comment = "Test quest";
+                var testQuest1 = new JRLQuest();
+                testQuest1.Tag = "quest_main_001";
+                testQuest1.Name = LocalizedString.FromInvalid();
+                testQuest1.Name.SetData(Language.English, Gender.Male, "Main Quest");
+                testQuest1.Priority = JRLQuestPriority.Highest;
+                testQuest1.PlanetId = 0;
+                testQuest1.PlotIndex = 0;
+                testQuest1.Comment = "Test quest";
+                
+                var testEntry1 = new JRLQuestEntry();
+                testEntry1.EntryId = 1;
+                testEntry1.Text = LocalizedString.FromInvalid();
+                testEntry1.Text.SetData(Language.English, Gender.Male, "Quest started");
+                testEntry1.End = false;
+                testEntry1.XpPercentage = 0.0f;
+                testQuest1.Entries.Add(testEntry1);
+                
+                var testEntry2 = new JRLQuestEntry();
+                testEntry2.EntryId = 2;
+                testEntry2.Text = LocalizedString.FromInvalid();
+                testEntry2.Text.SetData(Language.English, Gender.Male, "Quest completed");
+                testEntry2.End = true;
+                testEntry2.XpPercentage = 1.0f;
+                testQuest1.Entries.Add(testEntry2);
+                
+                testJrl.Quests.Add(testQuest1);
 
-                var entry1 = new JRLQuestEntry();
-                entry1.EntryId = 1;
-                entry1.Text = LocalizedString.FromString("Quest started");
-                entry1.End = false;
-                entry1.XpPercentage = 0.0f;
-                quest1.Entries.Add(entry1);
-
-                var entry2 = new JRLQuestEntry();
-                entry2.EntryId = 2;
-                entry2.Text = LocalizedString.FromString("Quest completed");
-                entry2.End = true;
-                entry2.XpPercentage = 1.0f;
-                quest1.Entries.Add(entry2);
-
-                jrl.Quests.Add(quest1);
-
-                GFF gff = JRLHelper.DismantleJrl(jrl);
-                byte[] data = GFFAuto.BytesGff(gff);
+                GFF testGff = JRLHelper.DismantleJrl(testJrl);
+                byte[] data = GFFAuto.BytesGff(testGff);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestJrlFile));
                 File.WriteAllBytes(TestJrlFile, data);
             }
@@ -750,25 +755,25 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate file can be read and parsed
             byte[] fileData = File.ReadAllBytes(TestJrlFile);
             fileData.Length.Should().BeGreaterThan(0, "JRL test file should not be empty");
-
+            
             // Validate GFF structure
-            GFF gff = GFFAuto.ReadGff(TestJrlFile);
-            gff.Should().NotBeNull("GFF should be readable");
-            gff.Content.Should().Be(GFFContent.JRL, "File should have JRL content type");
-
+            GFF parsedGff = GFFAuto.ReadGff(TestJrlFile, 0, null, ResourceType.JRL);
+            parsedGff.Should().NotBeNull("GFF should be readable");
+            parsedGff.Content.Should().Be(GFFContent.JRL, "File should have JRL content type");
+            
             // Validate JRL structure
-            JRL jrl = JRLHelper.ConstructJrl(gff);
-            jrl.Should().NotBeNull("JRL should be constructible from GFF");
-            jrl.Quests.Should().NotBeEmpty("JRL should have at least one quest");
-
+            JRL parsedJrl = JRLHelper.ConstructJrl(parsedGff);
+            parsedJrl.Should().NotBeNull("JRL should be constructible from GFF");
+            parsedJrl.Quests.Should().NotBeEmpty("JRL should have at least one quest");
+            
             // Validate quest structure
-            var quest = jrl.Quests[0];
-            quest.Tag.Should().NotBeNullOrEmpty("Quest should have a tag");
-            quest.Entries.Should().NotBeEmpty("Quest should have entries");
-
+            var parsedQuest = parsedJrl.Quests[0];
+            parsedQuest.Tag.Should().NotBeNullOrEmpty("Quest should have a tag");
+            parsedQuest.Entries.Should().NotBeEmpty("Quest should have entries");
+            
             // Validate entry structure
-            var entry = quest.Entries[0];
-            entry.EntryId.Should().BeGreaterThan(0, "Entry should have a valid ID");
+            var parsedEntry = parsedQuest.Entries[0];
+            parsedEntry.EntryId.Should().BeGreaterThan(0, "Entry should have a valid ID");
         }
 
         public static IEnumerable<object[]> GetSupportedLanguages()

@@ -60,39 +60,33 @@ seq:
   - id: gff_header
     type: gff_header
     doc: GFF file header (56 bytes)
-
+  
   - id: label_array
     type: label_array
     if: gff_header.label_count > 0
-    pos: gff_header.label_array_offset
     doc: Array of field name labels (16-byte null-terminated strings)
-
+  
   - id: struct_array
     type: struct_array
-    pos: gff_header.struct_array_offset
     doc: Array of struct entries (12 bytes each)
-
+  
   - id: field_array
     type: field_array
-    pos: gff_header.field_array_offset
     doc: Array of field entries (12 bytes each)
-
+  
   - id: field_data
     type: field_data_section
     if: gff_header.field_data_count > 0
-    pos: gff_header.field_data_offset
     doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
-
+  
   - id: field_indices
     type: field_indices_array
     if: gff_header.field_indices_count > 0
-    pos: gff_header.field_indices_offset
-    doc: Field indices array (MultiMap) for structs with multiple fields
-
+    doc: Field indices array (MultiMap) for structs with multiple fields)
+  
   - id: list_indices
     type: list_indices_array
     if: gff_header.list_indices_count > 0
-    pos: gff_header.list_indices_offset
     doc: List indices array for LIST type fields
 
 types:
@@ -106,7 +100,6 @@ types:
         doc: |
           File type signature. Must be "JRL " for journal files.
           Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
-        valid: "JRL "
 
       - id: file_version
         type: str
@@ -115,7 +108,6 @@ types:
         doc: |
           File format version. Typically "V3.2" for KotOR.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
-        valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
 
       - id: struct_array_offset
         type: u4
@@ -261,6 +253,7 @@ types:
     seq:
       - id: data
         type: str
+        encoding: UTF-8
         size: _root.gff_header.field_data_count
         doc: Raw field data bytes for complex types
 
@@ -285,40 +278,22 @@ types:
 enums:
   gff_field_type:
     0: uint8
-    doc: 8-bit unsigned integer (byte)
     1: int8
-    doc: 8-bit signed integer (char)
     2: uint16
-    doc: 16-bit unsigned integer (word)
     3: int16
-    doc: 16-bit signed integer (short)
     4: uint32
-    doc: 32-bit unsigned integer (dword)
     5: int32
-    doc: 32-bit signed integer (int)
     6: uint64
-    doc: 64-bit unsigned integer (stored in field_data)
     7: int64
-    doc: 64-bit signed integer (stored in field_data)
     8: single
-    doc: 32-bit floating point (float)
     9: double
-    doc: 64-bit floating point (stored in field_data)
     10: string
-    doc: Null-terminated string (CExoString, stored in field_data)
     11: resref
-    doc: Resource reference (ResRef, max 16 chars, stored in field_data)
     12: localized_string
-    doc: Localized string (CExoLocString, stored in field_data)
     13: binary
-    doc: Binary data blob (Void, stored in field_data)
     14: struct
-    doc: Nested struct (struct index stored inline)
     15: list
-    doc: List of structs (offset to list_indices stored inline)
     16: vector4
-    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
     17: vector3
-    doc: 3D vector (3×float, stored in field_data)
 
 
