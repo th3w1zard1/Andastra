@@ -7,6 +7,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -793,18 +794,120 @@ namespace HolocronToolset.Editors
         // Original: def randomize_first_name(self):
         private void RandomizeFirstName()
         {
-            // Placeholder for LTR name generation
-            // Will be implemented when LTR support is available
-            System.Console.WriteLine("First name randomization not yet implemented");
+            if (_installation == null)
+            {
+                System.Console.WriteLine("Cannot randomize first name: installation is not set");
+                return;
+            }
+
+            // Determine LTR file based on gender: "humanf" if gender is 1 (female), "humanm" if male (0)
+            // Matching Python: ltr_resname: Literal["humanf", "humanm"] = "humanf" if self.ui.genderSelect.currentIndex() == 1 else "humanm"
+            int genderIndex = _genderSelect?.SelectedIndex ?? 0;
+            string ltrResname = (genderIndex == 1) ? "humanf" : "humanm";
+
+            try
+            {
+                // Load LTR resource from installation
+                // Matching Python: ltr: LTR = read_ltr(self._installation.resource(ltr_resname, ResourceType.LTR).data)
+                var resourceResult = _installation.Resource(ltrResname, ResourceType.LTR, null);
+                if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
+                {
+                    System.Console.WriteLine($"Cannot randomize first name: LTR resource '{ltrResname}' not found");
+                    return;
+                }
+
+                // Read LTR file
+                LTR ltr = LTRAuto.ReadLtr(resourceResult.Data);
+
+                // Generate random name
+                // Matching Python: ltr.generate()
+                string generatedName = ltr.Generate();
+
+                // Update LocalizedString
+                // Matching Python: locstring: LocalizedString = self.ui.firstnameEdit.locstring()
+                // Matching Python: locstring.stringref = -1
+                // Matching Python: locstring.set_data(Language.ENGLISH, Gender.MALE, ltr.generate())
+                if (_utc.FirstName == null)
+                {
+                    _utc.FirstName = LocalizedString.FromInvalid();
+                }
+                _utc.FirstName.StringRef = -1;
+                _utc.FirstName.SetData(Language.English, Gender.Male, generatedName);
+
+                // Update UI display
+                // Matching Python: self.ui.firstnameEdit.set_locstring(locstring)
+                if (_firstNameEdit != null)
+                {
+                    _firstNameEdit.Text = _installation.String(_utc.FirstName);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error randomizing first name: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    System.Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:678-683
         // Original: def randomize_last_name(self):
         private void RandomizeLastName()
         {
-            // Placeholder for LTR name generation
-            // Will be implemented when LTR support is available
-            System.Console.WriteLine("Last name randomization not yet implemented");
+            if (_installation == null)
+            {
+                System.Console.WriteLine("Cannot randomize last name: installation is not set");
+                return;
+            }
+
+            // Always use "humanl" for last names
+            // Matching Python: ltr: LTR = read_ltr(self._installation.resource("humanl", ResourceType.LTR).data)
+            string ltrResname = "humanl";
+
+            try
+            {
+                // Load LTR resource from installation
+                var resourceResult = _installation.Resource(ltrResname, ResourceType.LTR, null);
+                if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
+                {
+                    System.Console.WriteLine($"Cannot randomize last name: LTR resource '{ltrResname}' not found");
+                    return;
+                }
+
+                // Read LTR file
+                LTR ltr = LTRAuto.ReadLtr(resourceResult.Data);
+
+                // Generate random name
+                // Matching Python: ltr.generate()
+                string generatedName = ltr.Generate();
+
+                // Update LocalizedString
+                // Matching Python: locstring: LocalizedString = self.ui.lastnameEdit.locstring()
+                // Matching Python: locstring.stringref = -1
+                // Matching Python: locstring.set_data(Language.ENGLISH, Gender.MALE, ltr.generate())
+                if (_utc.LastName == null)
+                {
+                    _utc.LastName = LocalizedString.FromInvalid();
+                }
+                _utc.LastName.StringRef = -1;
+                _utc.LastName.SetData(Language.English, Gender.Male, generatedName);
+
+                // Update UI display
+                // Matching Python: self.ui.lastnameEdit.set_locstring(locstring)
+                if (_lastNameEdit != null)
+                {
+                    _lastNameEdit.Text = _installation.String(_utc.LastName);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error randomizing last name: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    System.Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:685-686
