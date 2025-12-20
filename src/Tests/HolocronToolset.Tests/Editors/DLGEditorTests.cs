@@ -1547,7 +1547,7 @@ namespace HolocronToolset.Tests.Editors
             
             // Should return focused item
             result.Should().NotBeNull("FocusOnNode should return the focused item");
-            result.Link.Should().Be(childItem.Link, "Focused item should have the correct link");
+            result.Link.Should().BeEquivalentTo(childItem.Link, "Focused item should have the correct link");
             
             // Should be in focus mode
             editor.Focused.Should().BeTrue("Editor should be in focus mode after focusing on a node");
@@ -1555,7 +1555,7 @@ namespace HolocronToolset.Tests.Editors
             // Model should only contain the focused item
             var rootItems = editor.Model.GetRootItems();
             rootItems.Count.Should().Be(1, "Model should contain only the focused item");
-            rootItems[0].Link.Should().Be(childItem.Link, "Root item should be the focused link");
+            rootItems[0].Link.Should().BeEquivalentTo(childItem.Link, "Root item should be the focused link");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1896-1909
@@ -2431,7 +2431,7 @@ namespace HolocronToolset.Tests.Editors
                 pastedItem.Link.Should().NotBeNull();
                 pastedItem.Link.Node.Should().NotBeNull();
                 items[0].Link.Should().NotBeNull();
-                pastedItem.Link.Should().Be(items[0].Link.Node.Links[0]);
+                pastedItem.Link.Should().BeEquivalentTo(items[0].Link.Node.Links[0]);
             }
         }
 

@@ -1383,7 +1383,7 @@ namespace HolocronToolset.Tests.Formats
                 return;
             }
 
-            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF gff = GFFAuto.ReadGff(testFile, 0, null, ResourceType.DLG);
             GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K1);
 
             // Note: GFF.Compare doesn't exist in C# yet - this test is a placeholder
@@ -1403,7 +1403,7 @@ namespace HolocronToolset.Tests.Formats
                 return;
             }
 
-            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF gff = GFFAuto.ReadGff(testFile, 0, null, ResourceType.DLG);
             GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K1);
             GFF reReconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(reconstructedGff), Game.K1);
 
@@ -1418,9 +1418,8 @@ namespace HolocronToolset.Tests.Formats
         public void TestK1Serialization()
         {
             // Read TEST_DLG_XML - Note: XML format not fully supported yet, so construct DLG directly
-            // For now, skip this test or construct DLG manually from expected structure
+            // For now, construct DLG manually from expected structure
             DLG dlg = ConstructTestDlgFromXml();
-            DLG dlg = DLGHelper.ConstructDlg(gff);
 
             foreach (DLGNode node in dlg.AllEntries())
             {
@@ -1440,7 +1439,7 @@ namespace HolocronToolset.Tests.Formats
                 return;
             }
 
-            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF gff = GFFAuto.ReadGff(testFile, 0, null, ResourceType.DLG);
             GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K2);
 
             // Note: GFF.Compare doesn't exist in C# yet
@@ -1459,7 +1458,7 @@ namespace HolocronToolset.Tests.Formats
                 return;
             }
 
-            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF gff = GFFAuto.ReadGff(testFile, 0, null, ResourceType.DLG);
             GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K2);
             GFF reReconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(reconstructedGff), Game.K2);
 
