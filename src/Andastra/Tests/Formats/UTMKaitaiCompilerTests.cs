@@ -648,26 +648,10 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 try
                 {
-                    var processInfo = new ProcessStartInfo
+                    var result = RunCommand(path, "--version");
+                    if (result.ExitCode == 0)
                     {
-                        FileName = path,
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    using (var process = Process.Start(processInfo))
-                    {
-                        if (process != null)
-                        {
-                            process.WaitForExit(5000);
-                            if (process.ExitCode == 0)
-                            {
-                                return path;
-                            }
-                        }
+                        return path;
                     }
                 }
                 catch
@@ -676,7 +660,85 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
+            // Try as Java JAR
+            var jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                var result = RunCommand("java", $"-jar \"{jarPath}\" --version");
+                if (result.ExitCode == 0)
+                {
+                    // Return special marker for JAR - caller needs to use java -jar
+                    return jarPath;
+                }
+            }
+
             return null;
+        }
+
+        private static string FindKaitaiCompilerJar()
+        {
+            // Check environment variable first
+            var envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
+            if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
+            {
+                return envJar;
+            }
+
+            // Check common locations for Kaitai Struct compiler JAR
+            var searchPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "kaitai-struct-compiler.jar"),
+                Path.Combine(AppContext.BaseDirectory, "..", "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".kaitai", "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "kaitai-struct-compiler.jar"),
+            };
+
+            foreach (var path in searchPaths)
+            {
+                var normalized = Path.GetFullPath(path);
+                if (File.Exists(normalized))
+                {
+                    return normalized;
+                }
+            }
+
+            return null;
+        }
+
+        private static (int ExitCode, string Output, string Error) RunCommand(string command, string arguments)
+        {
+            try
+            {
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = AppContext.BaseDirectory
+                };
+
+                using (var process = Process.Start(processStartInfo))
+                {
+                    if (process == null)
+                    {
+                        return (-1, "", $"Failed to start process: {command}");
+                    }
+
+                    var output = process.StandardOutput.ReadToEnd();
+                    var error = process.StandardError.ReadToEnd();
+                    process.WaitForExit(30000); // 30 second timeout
+
+                    return (process.ExitCode, output, error);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (-1, "", ex.Message);
+            }
         }
 
         private static void CreateTestUtmFile(string path)
