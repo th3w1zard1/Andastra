@@ -62,6 +62,10 @@ namespace HolocronToolset.Widgets
 
             // Update foldable regions when text changes
             this.TextChanged += (s, e) => UpdateFoldableRegions();
+
+            // Match brackets when cursor position changes (for bracket highlighting)
+            // Matching PyKotor implementation: bracket matching happens on cursor position change
+            this.SelectionChanged += (s, e) => MatchBrackets();
         }
 
         private void InitializeComponent()
@@ -261,6 +265,136 @@ namespace HolocronToolset.Widgets
             return new List<Tuple<int, int>>(_extraSelections);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:677-772
+        // Original: def _match_brackets(self): Highlight matching brackets (VS Code feature)
+        /// <summary>
+        /// Highlights matching brackets when cursor is positioned at an opening or closing bracket.
+        /// Matching VS Code bracket matching behavior - highlights both the bracket at cursor and its matching pair.
+        /// </summary>
+        public void MatchBrackets()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                // Clear bracket selections if no text
+                _extraSelections.Clear();
+                return;
+            }
+
+            int pos = SelectionStart;
+            if (pos < 0 || pos > Text.Length)
+            {
+                _extraSelections.Clear();
+                return;
+            }
+
+            // Get character at cursor position
+            char charAtCursor = (pos < Text.Length) ? Text[pos] : '\0';
+
+            // Define bracket pairs
+            Dictionary<char, char> brackets = new Dictionary<char, char>
+            {
+                { '(', ')' },
+                { '[', ']' },
+                { '{', '}' }
+            };
+
+            Dictionary<char, char> closingBrackets = new Dictionary<char, char>
+            {
+                { ')', '(' },
+                { ']', '[' },
+                { '}', '{' }
+            };
+
+            char? bracket = null;
+            int direction = 0;
+            int bracketPos = pos;
+
+            // Check if cursor is at an opening bracket
+            if (brackets.ContainsKey(charAtCursor))
+            {
+                bracket = charAtCursor;
+                direction = 1;
+                bracketPos = pos;
+            }
+            // Check if cursor is before a closing bracket (cursor position is after the bracket)
+            else if (pos > 0 && closingBrackets.ContainsKey(Text[pos - 1]))
+            {
+                bracket = Text[pos - 1];
+                direction = -1;
+                bracketPos = pos - 1;
+            }
+
+            if (!bracket.HasValue)
+            {
+                // No bracket at cursor - clear bracket selections
+                // Note: We preserve other extra selections (like from SelectAllOccurrences)
+                // by only clearing bracket-specific selections
+                // For simplicity, we clear all extra selections when bracket matching is not active
+                _extraSelections.Clear();
+                return;
+            }
+
+            // Find matching bracket
+            char matchingBracket;
+            if (brackets.ContainsKey(bracket.Value))
+            {
+                matchingBracket = brackets[bracket.Value];
+            }
+            else if (closingBrackets.ContainsKey(bracket.Value))
+            {
+                matchingBracket = closingBrackets[bracket.Value];
+            }
+            else
+            {
+                _extraSelections.Clear();
+                return;
+            }
+
+            // Search for matching bracket using depth tracking
+            int depth = 0;
+            int searchPos = bracketPos + direction;
+            int foundPos = -1;
+
+            while (searchPos >= 0 && searchPos < Text.Length)
+            {
+                char charAtPos = Text[searchPos];
+
+                if (charAtPos == bracket.Value)
+                {
+                    depth++;
+                }
+                else if (charAtPos == matchingBracket)
+                {
+                    if (depth == 0)
+                    {
+                        foundPos = searchPos;
+                        break;
+                    }
+                    depth--;
+                }
+
+                searchPos += direction;
+            }
+
+            // Clear existing extra selections and add bracket selections
+            // Matching PyKotor: extra_selections list is rebuilt with bracket highlights
+            List<Tuple<int, int>> newExtraSelections = new List<Tuple<int, int>>();
+
+            if (foundPos >= 0)
+            {
+                // Add selection for opening bracket (or the bracket we started from)
+                newExtraSelections.Add(new Tuple<int, int>(bracketPos, bracketPos + 1));
+
+                // Add selection for closing bracket (the matching bracket found)
+                newExtraSelections.Add(new Tuple<int, int>(foundPos, foundPos + 1));
+            }
+
+            // Update extra selections
+            // Note: In PyKotor, this preserves current line highlight selections,
+            // but since we don't have that concept in Avalonia TextBox, we just use bracket selections
+            _extraSelections = newExtraSelections;
+        }
+
         // Get the start position of the word at the current cursor position
         // Based on common text editor word boundary detection
         // Uses word characters (letters, digits, underscore) as delimiters
@@ -415,6 +549,14 @@ namespace HolocronToolset.Widgets
             }
 
             base.OnKeyDown(e);
+
+            // Match brackets after cursor movement keys
+            // Matching PyKotor: bracket matching updates when cursor moves
+            if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down ||
+                e.Key == Key.Home || e.Key == Key.End || e.Key == Key.PageUp || e.Key == Key.PageDown)
+            {
+                MatchBrackets();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:983-1026
@@ -678,6 +820,9 @@ namespace HolocronToolset.Widgets
             _columnSelectionMode = false;
             _columnSelectionAnchor = null;
             base.OnPointerPressed(e);
+            
+            // Match brackets after cursor position changes due to mouse click
+            MatchBrackets();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1624-1680
@@ -762,6 +907,9 @@ namespace HolocronToolset.Widgets
 
             _columnSelectionAnchor = null;
             base.OnPointerReleased(e);
+            
+            // Match brackets after cursor position changes due to mouse release
+            MatchBrackets();
         }
 
         /// <summary>
