@@ -890,7 +890,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Finds a path from start to goal (INavigationMesh interface).
         /// </summary>
-        public System.Collections.Generic.IList<Vector3> FindPath(Vector3 start, Vector3 goal)
+        public override System.Collections.Generic.IList<Vector3> FindPath(Vector3 start, Vector3 goal)
         {
             // Delegate to the Eclipse-specific FindPath method
             if (FindPath(start, goal, out Vector3[] waypoints))
@@ -922,7 +922,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Note: Temporary obstacles use IDs in the range [-1000000, -1000000 + obstacleCount) to avoid conflicts
         /// with permanent obstacles which typically use positive IDs.
         /// </remarks>
-        public System.Collections.Generic.IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
+        public override System.Collections.Generic.IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
         {
             // Handle null or empty obstacles list - delegate to standard FindPath
             if (obstacles == null || obstacles.Count == 0)
@@ -1031,7 +1031,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Finds the face index at a given position (INavigationMesh interface).
         /// </summary>
-        public int FindFaceAt(Vector3 position)
+        public override int FindFaceAt(Vector3 position)
         {
             return FindStaticFaceAt(position);
         }
@@ -1039,7 +1039,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Gets the center point of a face (INavigationMesh interface).
         /// </summary>
-        public Vector3 GetFaceCenter(int faceIndex)
+        public override Vector3 GetFaceCenter(int faceIndex)
         {
             return GetStaticFaceCenter(faceIndex);
         }
@@ -1047,7 +1047,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Gets adjacent faces for a given face (INavigationMesh interface).
         /// </summary>
-        public System.Collections.Generic.IEnumerable<int> GetAdjacentFaces(int faceIndex)
+        public override System.Collections.Generic.IEnumerable<int> GetAdjacentFaces(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _staticFaceCount)
             {
@@ -1079,7 +1079,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Checks if a face is walkable (INavigationMesh interface).
         /// </summary>
-        public bool IsWalkable(int faceIndex)
+        public override bool IsWalkable(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _staticSurfaceMaterials.Length)
             {
@@ -1105,7 +1105,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Gets the surface material of a face (INavigationMesh interface).
         /// </summary>
-        public int GetSurfaceMaterial(int faceIndex)
+        public override int GetSurfaceMaterial(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _staticSurfaceMaterials.Length)
             {
@@ -1117,7 +1117,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Performs a raycast against the mesh (INavigationMesh interface).
         /// </summary>
-        public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
+        public override bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
             hitPoint = Vector3.Zero;
             hitFace = -1;
@@ -1149,7 +1149,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Tests line of sight between two points (INavigationMesh interface).
         /// </summary>
-        public bool TestLineOfSight(Vector3 from, Vector3 to)
+        public override bool TestLineOfSight(Vector3 from, Vector3 to)
         {
             Vector3 direction = Vector3.Normalize(to - from);
             float distance = Vector3.Distance(from, to);
@@ -1171,7 +1171,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Projects a point onto the walkmesh surface (INavigationMesh interface).
         /// </summary>
-        public bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
+        public override bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
         {
             return ProjectToWalkmesh(point, out result, out height);
         }
