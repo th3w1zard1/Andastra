@@ -397,10 +397,12 @@ namespace Andastra.Parsing.Tests.Formats
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least some languages should compile successfully
+            // At least 12 languages should compile successfully (as required)
             // (We allow some failures as not all languages may be fully supported in all environments)
-            successful.Count.Should().BeGreaterThan(0,
-                $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
+                $"At least 12 languages should compile successfully. " +
+                $"Success: {successful.Count}/{SupportedLanguages.Length}. " +
+                $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
             // Log successful compilations
             foreach (var success in successful)
@@ -440,7 +442,7 @@ namespace Andastra.Parsing.Tests.Formats
                 var ute = new UTE();
                 ute.Tag = "test_encounter";
                 ute.ResRef = ResRef.FromString("test_encounter");
-                
+
                 GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
                 byte[] data = GFFAuto.BytesGff(gff);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestUteFile));
