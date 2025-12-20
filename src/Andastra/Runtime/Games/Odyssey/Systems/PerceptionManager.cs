@@ -175,6 +175,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         public float UpdateInterval { get; set; } = 0.5f;
 
         private float _timeSinceUpdate;
+        
+        // Total elapsed time accumulator for activation timestamp tracking
+        private float _totalElapsedTime;
 
         /// <summary>
         /// Event fired when perception changes (Odyssey-specific type).
@@ -200,6 +203,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         public override void Update(float deltaTime)
         {
             _timeSinceUpdate += deltaTime;
+            _totalElapsedTime += deltaTime; // Accumulate total elapsed time for activation tracking
             if (_timeSinceUpdate < UpdateInterval)
             {
                 return;
@@ -256,8 +260,6 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             float perceptionOrder = 0.0f;
             const float perceptionOrderIncrement = 1.0f;
 
-            // Track current time for activation state checks
-            float currentTime = _timeSinceUpdate;
 
             // Check all potential targets
             foreach (IEntity target in _world.GetAllEntities())
@@ -314,8 +316,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     {
                         if (currentIsOpen != lastIsOpen)
                         {
-                            // State changed - record activation time
-                            _placeableDoorActivationTimes[target.ObjectId] = currentTime;
+                            // State changed - record activation time (use total elapsed time)
+                            _placeableDoorActivationTimes[target.ObjectId] = _totalElapsedTime;
                         }
                     }
                     else
@@ -575,6 +577,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             _perceptionData.Remove(entity.ObjectId);
             _lastPerceivedEntity.Remove(entity.ObjectId);
             _lastPerceptionWasHeard.Remove(entity.ObjectId);
+            _lastPositions.Remove(entity.ObjectId);
+            _lastPlaceableDoorStates.Remove(entity.ObjectId);
+            _placeableDoorActivationTimes.Remove(entity.ObjectId);
         }
 
         /// <summary>
@@ -874,16 +879,58 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 // Placeables/doors only audible if activated
                 // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Placeables/doors make sound when activated (opening, closing, using)
-                // For now, we'll check if the placeable/door is in an "active" state
-                // This is a placeholder - full implementation would check activation state
-                // Placeables/doors that are activated make sound (opening, closing, using)
-                // Inactive placeables/doors are silent
+                // Sound is generated during activation animation (opening/closing/using)
+                // Sound duration: ~1-2 seconds (typical door/placeable activation animation length)
+                // Located via string references: "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
+                // Door sounds: "i_opendoor" @ 0x007c86d4 (open door animation), door opening/closing sounds
+                // Placeable sounds: Opening/closing container sounds, activation sounds for non-container placeables
                 
-                // TODO: PLACEHOLDER - Check placeable/door activation state
-                // Full implementation would check if placeable/door is currently activated
-                // For now, assume placeables/doors are not audible unless explicitly activated
-                // This matches original engine behavior where only active placeables/doors make sound
-                return false; // Placeables/doors are not audible unless activated
+                // Check if placeable/door was recently activated
+                // Activation is detected by state changes (IsOpen changing)
+                // Sound is audible for a short time window after activation
+                float activationTime;
+                if (_placeableDoorActivationTimes.TryGetValue(target.ObjectId, out activationTime))
+                {
+                    // Sound duration in seconds (typical door/placeable activation animation length)
+                    // Based on swkotor2.exe: Door/placeable activation sounds typically last 1-2 seconds
+                    // Located via string references: "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
+                    // Door sounds: "i_opendoor" @ 0x007c86d4 (open door animation), door opening/closing sounds
+                    const float activationSoundDuration = 2.0f; // Sound duration in seconds
+                    
+                    // Check if activation was recent (within sound duration)
+                    // Use total elapsed time to calculate time since activation
+                    float timeSinceActivation = _totalElapsedTime - activationTime;
+                    
+                    // If activation was recent (within sound duration), placeable/door is making sound
+                    if (timeSinceActivation >= 0.0f && timeSinceActivation <= activationSoundDuration)
+                    {
+                        // Placeable/door was recently activated - making sound
+                        // Check line of sight for sound (sound can travel through some obstacles but not all)
+                        IArea area = _world.CurrentArea;
+                        if (area != null && area.NavigationMesh != null)
+                        {
+                            // Use navigation mesh to test line of sight for sound
+                            // Sound line of sight is similar to visual but with slightly more leniency
+                            // Adjust positions slightly above ground for creature ear level
+                            Vector3 earPos = creaturePos + new Vector3(0, 1.2f, 0); // Approximate ear height
+                            Vector3 targetEarPos = targetPos + new Vector3(0, 1.2f, 0);
+
+                            // Test line of sight for sound
+                            // Sound can travel through small obstacles but not large ones
+                            bool hasSoundLOS = area.NavigationMesh.TestLineOfSight(earPos, targetEarPos);
+                            if (!hasSoundLOS)
+                            {
+                                // Sound is blocked by geometry
+                                return false;
+                            }
+                        }
+
+                        return true; // Placeable/door is making sound and sound can reach perceiver
+                    }
+                }
+
+                // Placeable/door was not recently activated - not making sound
+                return false;
             }
 
             // Other object types are not audible

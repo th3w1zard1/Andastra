@@ -11,7 +11,6 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Eclipse.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
