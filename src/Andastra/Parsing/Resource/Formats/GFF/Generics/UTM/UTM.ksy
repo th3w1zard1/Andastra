@@ -1,6 +1,6 @@
 meta:
   id: utm
-  title: BioWare UTM (Merchant Template) File Format
+  title: "BioWare UTM (Merchant Template) File Format"
   license: MIT
   endian: le
   file-extension: utm
@@ -52,41 +52,35 @@ seq:
   - id: gff_header
     type: gff_header
     doc: GFF file header (56 bytes)
-
+  
   - id: label_array
     type: label_array
     if: gff_header.label_count > 0
-    pos: gff_header.label_array_offset
     doc: Array of field name labels (16-byte null-terminated strings)
-
+  
   - id: struct_array
     type: struct_array
     if: gff_header.struct_count > 0
-    pos: gff_header.struct_array_offset
     doc: Array of struct entries (12 bytes each)
-
+  
   - id: field_array
     type: field_array
     if: gff_header.field_count > 0
-    pos: gff_header.field_array_offset
     doc: Array of field entries (12 bytes each)
-
+  
   - id: field_data
     type: field_data_section
     if: gff_header.field_data_count > 0
-    pos: gff_header.field_data_offset
     doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
-
+  
   - id: field_indices
     type: field_indices_array
     if: gff_header.field_indices_count > 0
-    pos: gff_header.field_indices_offset
     doc: Field indices array (MultiMap) for structs with multiple fields
-
+  
   - id: list_indices
     type: list_indices_array
     if: gff_header.list_indices_count > 0
-    pos: gff_header.list_indices_offset
     doc: List indices array for LIST type fields
 
 types:
@@ -109,7 +103,6 @@ types:
         doc: |
           File format version. Typically "V3.2" for KotOR.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
-        valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
 
       - id: struct_array_offset
         type: u4
@@ -180,10 +173,6 @@ types:
           Common UTM field names: "ResRef", "LocName", "Tag", "MarkUp", "MarkDown",
           "OnOpenStore", "Comment", "BuySellFlag", "ID", "ItemList", "InventoryRes",
           "Infinite", "Dropable", "Repos_PosX", "Repos_PosY".
-    instances:
-      name_trimmed:
-        value: name.rstrip('\x00')
-        doc: "Label name with trailing nulls removed"
 
   # Struct Array
   struct_array:
@@ -245,7 +234,7 @@ types:
     seq:
       - id: field_type
         type: u4
-        enum: gff_field_type
+
         doc: |
           Field data type (see gff_field_type enum):
           0 = Byte (UInt8) - Used for: BuySellFlag, ID, Infinite, Dropable
@@ -271,7 +260,7 @@ types:
         type: u4
         doc: |
           Index into label_array for field name.
-          The label_array[label_index].name_trimmed gives the field name.
+          The label_array[label_index].name gives the field name (null-padded, null-terminated).
 
       - id: data_or_offset
         type: u4
@@ -286,16 +275,16 @@ types:
             Byte offset into list_indices array (relative to list_indices_offset)
     instances:
       is_simple_type:
-        value: field_type.value >= 0 && field_type.value <= 5 || field_type.value == 8
+        value: (field_type >= 0 and field_type <= 5) or field_type == 8
         doc: "True if field stores data inline (simple types: Byte, Char, UInt16, Int16, UInt32, Int32, Float)"
       is_complex_type:
-        value: field_type.value >= 6 && field_type.value <= 13 || field_type.value >= 16 && field_type.value <= 17
+        value: (field_type >= 6 and field_type <= 13) or (field_type >= 16 and field_type <= 17)
         doc: "True if field stores data in field_data section (complex types: UInt64, Int64, Double, String, ResRef, LocalizedString, Binary, Vector3, Vector4)"
       is_struct_type:
-        value: field_type.value == 14
+        value: field_type == 14
         doc: True if field is a nested struct
       is_list_type:
-        value: field_type.value == 15
+        value: field_type == 15
         doc: True if field is a list of structs (e.g., ItemList)
       field_data_offset_value:
         value: _root.gff_header.field_data_offset + data_or_offset
@@ -315,6 +304,7 @@ types:
     seq:
       - id: data
         type: str
+        encoding: UTF-8
         size: _root.gff_header.field_data_count
         doc: |
           Raw field data bytes for complex types. Individual field data entries are accessed via
@@ -367,8 +357,8 @@ types:
           Note: To extract the actual string value, trim trailing null bytes from 'data'.
     instances:
       data_trimmed:
-        value: data.rstrip('\x00')
-        doc: "String data with trailing nulls removed"
+        value: data
+        doc: "String data (trailing nulls should be trimmed by parser)"
 
   # Field Indices Array (MultiMap)
   field_indices_array:
@@ -389,6 +379,7 @@ types:
     seq:
       - id: raw_data
         type: str
+        encoding: UTF-8
         size: _root.gff_header.list_indices_count
         doc: |
           Raw list indices data. List entries are accessed via offsets stored in
