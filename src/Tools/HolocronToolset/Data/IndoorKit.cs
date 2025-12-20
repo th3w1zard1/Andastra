@@ -12,7 +12,7 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
-using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using Andastra.Parsing.Formats.GFF.Generics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Vector3 = System.Numerics.Vector3;
@@ -110,40 +110,68 @@ namespace HolocronToolset.Data
     }
 
     /// <summary>
-    /// A KitComponent represents a single room that can be placed in the Indoor Map Builder.
-    /// 
+    /// Represents a single reusable room component within a kit.
+    /// Each component is a building block that can be placed multiple times in an indoor map.
+    /// </summary>
+    /// <remarks>
     /// WHAT IS A KIT COMPONENT?
     /// 
-    /// A KitComponent is a reusable room template. It contains all the data needed to place
-    /// a room in an indoor module:
-    /// - Bwm: The walkmesh (BWM) that defines where characters can walk
-    /// - Mdl/Mdx: The 3D model files that define the visual appearance
-    /// - Image: A preview image (top-down view) used in the editor
-    /// - Hooks: Connection points where doors can be placed
+    /// A KitComponent is a single room piece that can be reused in multiple places. Think of it
+    /// like a stamp - you can stamp the same room design multiple times in different locations.
     /// 
-    /// HOW DOES IT WORK?
+    /// Each component contains:
     /// 
-    /// When a component is created:
-    /// 1. The walkmesh (BWM) is loaded from the module or kit
-    /// 2. If the walkmesh is missing or empty, a placeholder walkmesh is created (10x10 unit square)
-    /// 3. The walkmesh is deep-copied so each component instance has its own walkmesh
-    /// 4. The walkmesh is re-centered at the origin (0, 0, 0) so the preview image aligns correctly
-    /// 5. A preview image is generated from the walkmesh (white for walkable, gray for non-walkable)
-    /// 6. Door hooks are extracted from the walkmesh edges that have transitions
+    /// 1. BWM (Walkmesh): The collision/navigation data for the room.
+    ///    - Defines where characters can walk
+    ///    - Contains triangles with surface materials
+    ///    - Has edges with transitions (door connection points)
+    ///    - MUST be centered at origin (0, 0, 0) for proper placement
+    /// 
+    /// 2. MDL/MDX (Model): The 3D visual representation of the room.
+    ///    - MDL contains the model geometry
+    ///    - MDX contains model extensions (animations, etc.)
+    ///    - These are the files that make the room visible in-game
+    /// 
+    /// 3. IMAGE: A preview image shown in the indoor map builder.
+    ///    - Generated from the walkmesh (top-down view)
+    ///    - Shows walkable areas in white, non-walkable in gray
+    ///    - Used for visual selection in the builder UI
+    /// 
+    /// 4. HOOKS: Connection points where doors can be placed.
+    ///    - Each hook has a position, rotation, and edge index
+    ///    - Hooks are extracted from walkmesh edges with transitions
+    ///    - When two components are connected, their hooks link together
+    /// 
+    /// WHY COMPONENTS ARE CENTERED:
+    /// 
+    /// Components are stored with their walkmesh centered at (0, 0, 0). This is critical because:
+    /// 
+    /// 1. The preview image is drawn centered at the component's position
+    /// 2. The walkmesh is translated by the component's position when placed
+    /// 3. If the walkmesh isn't centered, the image and walkmesh won't align
+    /// 
+    /// For example, if a walkmesh has vertices at (100, 200, 0) to (200, 300, 0), and the component
+    /// is placed at position (50, 50, 0):
+    /// - Without centering: Walkmesh ends up at (150, 250, 0) to (250, 350, 0) - WRONG!
+    /// - With centering: Walkmesh is first centered to (-50, -50, 0) to (50, 50, 0), then
+    ///   translated to (0, 0, 0) to (100, 100, 0) - CORRECT!
+    /// 
+    /// The _RecenterBwm() method in ModuleKit ensures components are properly centered when
+    /// extracted from game modules.
     /// 
     /// DEEP COPYING:
     /// 
-    /// When DeepCopy() is called, a new KitComponent is created with:
-    /// - A deep copy of the BWM (all faces and their materials are copied)
-    /// - A copy of the MDL/MDX byte arrays
-    /// - New hook instances (so hooks can be edited independently)
+    /// When a component is placed in a map, it's deep copied so each placement can have its own
+    /// transformations (rotation, flip, position). The DeepCopy() method creates a new BWM,
+    /// new MDL/MDX byte arrays, and new hooks, ensuring no shared state between placements.
     /// 
-    /// CRITICAL: The Material property of each face is preserved during deep copying. This ensures
-    /// that walkability is maintained when components are used in multiple rooms.
+    /// ORIGINAL IMPLEMENTATION:
     /// 
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:38
-    /// Original: class KitComponent:
-    /// </summary>
+    /// Based on PyKotor's KitComponent class. Components are the fundamental building blocks
+    /// of the indoor map builder system.
+    /// </remarks>
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:38
+    // Original: class KitComponent:
     public class KitComponent
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:39-47
@@ -497,6 +525,77 @@ namespace HolocronToolset.Data
             return component;
         }
 
+        /// <summary>
+        /// Re-centers a walkmesh around the origin (0, 0, 0).
+        /// This is CRITICAL for proper component placement in the indoor map builder.
+        /// </summary>
+        /// <remarks>
+        /// WHAT THIS METHOD DOES:
+        /// 
+        /// This method moves all vertices in the walkmesh so that the walkmesh's center point
+        /// is at (0, 0, 0). The center is calculated as the midpoint between the minimum and
+        /// maximum X, Y, and Z coordinates of all vertices.
+        /// 
+        /// WHY THIS IS CRITICAL:
+        /// 
+        /// Game walkmeshes (WOK files) are stored in "world coordinates" - they have absolute
+        /// positions in the game world. For example, a room might have vertices at (100, 200, 0)
+        /// to (200, 300, 0) in world space.
+        /// 
+        /// However, the Indoor Map Builder expects components to be centered at (0, 0, 0) because:
+        /// 
+        /// 1. PREVIEW IMAGE ALIGNMENT:
+        ///    - The preview image is generated from the walkmesh and drawn CENTERED at the
+        ///      component's position in the builder UI
+        ///    - If the walkmesh isn't centered, the image and walkmesh won't align visually
+        ///    - Users will see the image in one place but the walkmesh hitbox in another
+        /// 
+        /// 2. POSITIONING LOGIC:
+        ///    - When a component is placed at position (50, 50, 0), the walkmesh is translated
+        ///      by that amount from its ORIGINAL coordinates
+        ///    - If the walkmesh starts at (100, 200, 0), translating by (50, 50, 0) gives
+        ///      (150, 250, 0) - which is NOT where the user expects it
+        ///    - If the walkmesh is centered at (0, 0, 0), translating by (50, 50, 0) gives
+        ///      (50, 50, 0) - which IS where the user expects it
+        /// 
+        /// 3. TRANSFORMATION CONSISTENCY:
+        ///    - Components can be rotated and flipped
+        ///    - Rotations and flips are applied around the origin (0, 0, 0)
+        ///    - If the walkmesh isn't centered, rotations/flips will move it unexpectedly
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// 1. Get all vertices from the walkmesh
+        /// 2. Find the minimum and maximum X, Y, Z values across all vertices
+        /// 3. Calculate the center: center = (min + max) / 2
+        /// 4. Translate all vertices by -center (move walkmesh so center is at origin)
+        /// 
+        /// Example:
+        /// - Vertices range from (100, 200, 0) to (200, 300, 0)
+        /// - Center = ((100+200)/2, (200+300)/2, (0+0)/2) = (150, 250, 0)
+        /// - Translate by (-150, -250, 0)
+        /// - New vertices range from (-50, -50, 0) to (50, 50, 0)
+        /// - Walkmesh is now centered at (0, 0, 0)
+        /// 
+        /// BUG PREVENTION:
+        /// 
+        /// Without this fix, the following bugs occur:
+        /// - Preview images don't match walkmesh positions in the builder
+        /// - Components appear in wrong locations when placed
+        /// - Rotations/flips move components unexpectedly
+        /// - Walkmesh hitboxes don't align with visual representation
+        /// 
+        /// This method is called in _CreateComponentFromLytRoom() after loading the walkmesh
+        /// from the game module, ensuring all components are properly centered before use.
+        /// 
+        /// ORIGINAL IMPLEMENTATION:
+        /// 
+        /// Based on PyKotor's _recenter_bwm() method. This fix addresses a critical alignment
+        /// issue where game walkmeshes (in world coordinates) don't match the builder's expectations
+        /// (centered coordinates).
+        /// </remarks>
+        /// <param name="bwm">The walkmesh to re-center</param>
+        /// <returns>The re-centered walkmesh (same instance, modified in place)</returns>
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:203-243
         // Original: def _recenter_bwm(self, bwm: BWM) -> BWM:
         private BWM _RecenterBwm(BWM bwm)
@@ -508,6 +607,7 @@ namespace HolocronToolset.Data
             }
 
             // Calculate current center
+            // Find the bounding box of all vertices
             float minX = vertices.Min(v => v.X);
             float maxX = vertices.Max(v => v.X);
             float minY = vertices.Min(v => v.Y);
@@ -515,12 +615,14 @@ namespace HolocronToolset.Data
             float minZ = vertices.Min(v => v.Z);
             float maxZ = vertices.Max(v => v.Z);
 
+            // Calculate center point (midpoint of bounding box)
             float centerX = (minX + maxX) / 2.0f;
             float centerY = (minY + maxY) / 2.0f;
             float centerZ = (minZ + maxZ) / 2.0f;
 
             // Translate all vertices to center around origin
             // Use BWM.translate() which handles all vertices in faces
+            // This moves the walkmesh so its center is at (0, 0, 0)
             bwm.Translate(-centerX, -centerY, -centerZ);
 
             return bwm;

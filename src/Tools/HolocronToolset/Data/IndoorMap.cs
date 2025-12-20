@@ -17,6 +17,11 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.GFF.Generics;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
 using Vector4 = Andastra.Utility.Geometry.Quaternion;
@@ -33,14 +38,14 @@ namespace HolocronToolset.Data
             List<IndoorMapRoom> rooms = null,
             string moduleId = null,
             LocalizedString name = null,
-            Color lighting = null,
+            Andastra.Parsing.Common.Color lighting = null,
             string skybox = null,
             System.Numerics.Vector3? warpPoint = null)
         {
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
             Name = name ?? LocalizedString.FromEnglish("New Module");
-            Lighting = lighting ?? new Color(0.5f, 0.5f, 0.5f);
+            Lighting = lighting ?? new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
             WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
         }
@@ -48,7 +53,7 @@ namespace HolocronToolset.Data
         public List<IndoorMapRoom> Rooms { get; set; }
         public string ModuleId { get; set; }
         public LocalizedString Name { get; set; }
-        public Color Lighting { get; set; }
+        public Andastra.Parsing.Common.Color Lighting { get; set; }
         public string Skybox { get; set; }
         public System.Numerics.Vector3 WarpPoint { get; set; }
 
@@ -223,8 +228,8 @@ namespace HolocronToolset.Data
                 // Process model
                 var (mdl, mdx) = ProcessModel(room, installation);
 
-                // Process lightmaps
-                ProcessLightmaps(room, mdl, installation);
+                // Process lightmaps and update model with renamed lightmap references
+                mdl = ProcessLightmaps(room, mdl, installation);
 
                 // Add model resources
                 AddModelResources(modelname, mdl, mdx);
@@ -269,7 +274,7 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:287-365
         // Original: def process_lightmaps(self, room: IndoorMapRoom, mdl_data: bytes, installation: HTInstallation):
-        private void ProcessLightmaps(IndoorMapRoom room, byte[] mdlData, HTInstallation installation)
+        private byte[] ProcessLightmaps(IndoorMapRoom room, byte[] mdlData, HTInstallation installation)
         {
             var lmRenames = new Dictionary<string, string>();
 
@@ -315,7 +320,16 @@ namespace HolocronToolset.Data
 
                     // Convert TPC to bytes
                     var tpcCopy = tpc.Copy();
-                    // TODO: Implement TPC format conversion (BGR/DXT1/Greyscale -> RGB, BGRA/DXT3/DXT5 -> RGBA)
+                    // Convert TPC format if needed (BGR/DXT1/Greyscale -> RGB, BGRA/DXT3/DXT5 -> RGBA)
+                    var format = tpcCopy.Format();
+                    if (format == TPCTextureFormat.BGR || format == TPCTextureFormat.DXT1 || format == TPCTextureFormat.Greyscale)
+                    {
+                        tpcCopy.Convert(TPCTextureFormat.RGB);
+                    }
+                    else if (format == TPCTextureFormat.BGRA || format == TPCTextureFormat.DXT3 || format == TPCTextureFormat.DXT5)
+                    {
+                        tpcCopy.Convert(TPCTextureFormat.RGBA);
+                    }
                     lightmapData = TPCAuto.BytesTpc(tpcCopy, ResourceType.TGA);
                     if (txiData == null)
                     {
@@ -328,8 +342,10 @@ namespace HolocronToolset.Data
                 _mod.SetData(renamed, ResourceType.TXI, txiData ?? new byte[0]);
             }
 
-            // TODO: Implement model.change_lightmaps() - requires model manipulation utilities
-            // mdlData = ModelTools.ChangeLightmaps(mdlData, lmRenames);
+            // Change lightmap names in the model data to match the renamed lightmaps
+            // This updates all references to old lightmap names with the new module-specific names
+            byte[] modifiedMdlData = ModelTools.ChangeLightmaps(mdlData, lmRenames);
+            return modifiedMdlData;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:367-388
@@ -804,7 +820,7 @@ namespace HolocronToolset.Data
             Rooms.Clear();
             ModuleId = "test01";
             Name = LocalizedString.FromEnglish("New Module");
-            Lighting = new Color(0.5f, 0.5f, 0.5f);
+            Lighting = new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:939-1022
@@ -841,16 +857,141 @@ namespace HolocronToolset.Data
             float width = (bbmax.X - bbmin.X) * 10;
             float height = (bbmax.Y - bbmin.Y) * 10;
 
-            // TODO: Implement QImage/QPixmap rendering for minimap generation
-            // This requires image manipulation utilities (Avalonia rendering)
-            // For now, return placeholder data
-            var image = new object(); // Placeholder for QImage
-            var imagePointMin = new Vector2(0, 0);
-            var imagePointMax = new Vector2(1, 1);
+            // Create initial pixmap (matching Python: QPixmap(int(width), int(height)))
+            int pixmapWidth = (int)width;
+            int pixmapHeight = (int)height;
+            var pixmap = new RenderTargetBitmap(new PixelSize(pixmapWidth, pixmapHeight));
+
+            // Fill with black (matching Python: pixmap.fill(QColor(0)))
+            using (var context = pixmap.CreateDrawingContext())
+            {
+                context.FillRectangle(Brushes.Black, new Rect(0, 0, pixmapWidth, pixmapHeight));
+
+                // Draw each room's image with transformations (matching Python lines 984-997)
+                foreach (var room in Rooms)
+                {
+                    // Get room component image
+                    var roomImage = room.Component?.Image as Bitmap;
+                    if (roomImage == null)
+                    {
+                        // Skip rooms without valid images (placeholder images are null)
+                        continue;
+                    }
+
+                    // Save transformation state (matching Python: painter.save())
+                    using (context.PushTransform())
+                    {
+                        // Translate to room position (matching Python lines 988-990)
+                        // Python: painter.translate(room.position.x * 10 - bbmin.x * 10, room.position.y * 10 - bbmin.y * 10)
+                        double translateX = room.Position.X * 10 - bbmin.X * 10;
+                        double translateY = room.Position.Y * 10 - bbmin.Y * 10;
+                        context.Transform = Matrix.CreateTranslation(translateX, translateY);
+
+                        // Rotate (matching Python line 992: painter.rotate(room.rotation))
+                        // Note: Python QPainter.rotate uses degrees, but we need radians
+                        double rotationDegrees = room.Rotation * (180.0 / Math.PI);
+                        context.Transform = context.Transform * Matrix.CreateRotation(rotationDegrees * (Math.PI / 180.0));
+
+                        // Scale for flipping (matching Python line 993: painter.scale(-1 if room.flip_x else 1, -1 if room.flip_y else 1))
+                        double scaleX = room.FlipX ? -1.0 : 1.0;
+                        double scaleY = room.FlipY ? -1.0 : 1.0;
+                        context.Transform = context.Transform * Matrix.CreateScale(scaleX, scaleY);
+
+                        // Translate to center image (matching Python line 994: painter.translate(-image.width() / 2, -image.height() / 2))
+                        double imageWidth = roomImage.PixelSize.Width;
+                        double imageHeight = roomImage.PixelSize.Height;
+                        context.Transform = context.Transform * Matrix.CreateTranslation(-imageWidth / 2, -imageHeight / 2);
+
+                        // Draw the image (matching Python line 996: painter.drawImage(0, 0, image))
+                        context.DrawImage(roomImage, new Rect(0, 0, imageWidth, imageHeight));
+                    }
+                }
+            }
+
+            // Scale pixmap to 435x256 keeping aspect ratio (matching Python line 1002)
+            // Python: pixmap = pixmap.scaled(435, 256, QtCore.Qt.KeepAspectRatio)
+            double scaleFactor = Math.Min(435.0 / pixmapWidth, 256.0 / pixmapHeight);
+            int scaledWidth = (int)(pixmapWidth * scaleFactor);
+            int scaledHeight = (int)(pixmapHeight * scaleFactor);
+            var scaledPixmap = new RenderTargetBitmap(new PixelSize(scaledWidth, scaledHeight));
+            using (var context = scaledPixmap.CreateDrawingContext())
+            {
+                context.DrawImage(pixmap, new Rect(0, 0, scaledWidth, scaledHeight));
+            }
+
+            // Create final 512x256 pixmap and center the scaled image (matching Python lines 1004-1007)
+            var finalPixmap = new RenderTargetBitmap(new PixelSize(512, 256));
+            using (var context = finalPixmap.CreateDrawingContext())
+            {
+                // Fill with black (matching Python: pixmap2.fill(QColor(0)))
+                context.FillRectangle(Brushes.Black, new Rect(0, 0, 512, 256));
+
+                // Center the scaled image vertically (matching Python line 1007)
+                // Python: painter2.drawPixmap(0, int(128 - pixmap.height() / 2), pixmap)
+                double centerY = 128.0 - scaledHeight / 2.0;
+                context.DrawImage(scaledPixmap, new Rect(0, centerY, scaledWidth, scaledHeight));
+            }
+
+            // Transform to flip Y axis (matching Python line 1009: pixmap2.transformed(QTransform().scale(1, -1)).toImage())
+            // In Avalonia, we need to manually flip by drawing with Y-axis inversion
+            var flippedImage = new RenderTargetBitmap(new PixelSize(512, 256));
+            using (var context = flippedImage.CreateDrawingContext())
+            {
+                // Draw the final pixmap flipped vertically
+                using (context.PushTransform())
+                {
+                    // Scale Y by -1 and translate to flip
+                    context.Transform = Matrix.CreateScale(1, -1) * Matrix.CreateTranslation(0, 256);
+                    context.DrawImage(finalPixmap, new Rect(0, 0, 512, 256));
+                }
+            }
+
+            // Convert to RGB888 format (matching Python line 1010: image.convertTo(QImage.Format.Format_RGB888))
+            // In Avalonia, we create a WriteableBitmap with RGB format
+            // Note: Avalonia's WriteableBitmap uses RGBA by default, but we can extract RGB data
+            var rgbImage = new WriteableBitmap(new PixelSize(512, 256), new Vector(96, 96), PixelFormat.Rgba8888);
+            using (var lockedBitmap = rgbImage.Lock())
+            {
+                // Copy pixel data from flipped image
+                using (var memoryStream = new MemoryStream())
+                {
+                    flippedImage.Save(memoryStream);
+                    memoryStream.Position = 0;
+
+                    // Load as PNG and extract RGB data
+                    var loadedBitmap = new Bitmap(memoryStream);
+                    using (var sourceLocked = loadedBitmap.Lock())
+                    {
+                        // Copy RGBA data (Avalonia uses RGBA, but we'll use it as RGB888 equivalent)
+                        unsafe
+                        {
+                            byte* sourcePtr = (byte*)sourceLocked.Address;
+                            byte* destPtr = (byte*)lockedBitmap.Address;
+                            int pixelCount = 512 * 256;
+                            for (int i = 0; i < pixelCount; i++)
+                            {
+                                // Copy RGB (skip alpha or set to 255 for RGB888)
+                                destPtr[i * 4] = sourcePtr[i * 4];         // R
+                                destPtr[i * 4 + 1] = sourcePtr[i * 4 + 1]; // G
+                                destPtr[i * 4 + 2] = sourcePtr[i * 4 + 2]; // B
+                                destPtr[i * 4 + 3] = 255;                   // A (opaque)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Calculate image points (matching Python lines 1011-1012)
+            // Python: image_point_min: Vector2 = Vector2(0 / 435, (128 - pixmap.height() / 2) / 256)
+            // Python: image_point_max: Vector2 = Vector2((image_point_min.x + pixmap.width()) / 435, (image_point_min.y + pixmap.height()) / 256)
+            var imagePointMin = new Vector2(0.0f / 435.0f, (float)((128.0 - scaledHeight / 2.0) / 256.0));
+            var imagePointMax = new Vector2((float)((imagePointMin.X + scaledWidth) / 435.0), (float)((imagePointMin.Y + scaledHeight) / 256.0));
+
+            // Calculate world points (matching Python lines 1013-1014)
             var worldPointMin = new Vector2(bbmax.X, bbmin.Y);
             var worldPointMax = new Vector2(bbmin.X, bbmax.Y);
 
-            return new MinimapData(image, imagePointMin, imagePointMax, worldPointMin, worldPointMax);
+            return new MinimapData(rgbImage, imagePointMin, imagePointMax, worldPointMin, worldPointMax);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1024-1042
