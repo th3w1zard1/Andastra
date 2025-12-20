@@ -69,15 +69,7 @@ namespace Andastra.Parsing.Tests.Formats
             compilerPath.Should().NotBeNullOrEmpty("kaitai-struct-compiler should be available in PATH or common locations");
 
             // Test compiler version
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = "--version",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+            var processInfo = CreateCompilerProcessInfo(compilerPath, "--version");
 
             using (var process = Process.Start(processInfo))
             {
@@ -175,16 +167,10 @@ namespace Andastra.Parsing.Tests.Formats
                     }
                     Directory.CreateDirectory(langOutputDir);
 
-                    var processInfo = new ProcessStartInfo
-                    {
-                        FileName = compilerPath,
-                        Arguments = $"-t {language} \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-                    };
+                    var processInfo = CreateCompilerProcessInfo(
+                        compilerPath,
+                        $"-t {language} \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                        Path.GetDirectoryName(UtmKsyPath));
 
                     using (var process = Process.Start(processInfo))
                     {
@@ -246,16 +232,10 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile to Python
-            var compileInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t python \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var compileInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t python \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             using (var process = Process.Start(compileInfo))
             {
@@ -292,16 +272,10 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile to C#
-            var compileInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t csharp \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var compileInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t csharp \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             using (var process = Process.Start(compileInfo))
             {
@@ -347,16 +321,10 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile to Java
-            var compileInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t java \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var compileInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t java \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             using (var process = Process.Start(compileInfo))
             {
@@ -393,16 +361,10 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile to JavaScript
-            var compileInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t javascript \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var compileInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t javascript \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             using (var process = Process.Start(compileInfo))
             {
@@ -448,16 +410,10 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile to target language
-            var compileInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t {language} \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var compileInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t {language} \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             int exitCode = -1;
             string stdout = "";
@@ -499,16 +455,10 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Use Python as validation target (most commonly supported)
-            var validateInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t python \"{UtmKsyPath}\" --debug",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var validateInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t python \"{UtmKsyPath}\" --debug",
+                Path.GetDirectoryName(UtmKsyPath));
 
             using (var process = Process.Start(validateInfo))
             {
@@ -545,16 +495,10 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Compile to multiple languages at once
             string languages = string.Join(" -t ", SupportedLanguages.Take(5)); // Test with first 5 languages
-            var compileInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t {languages} \"{UtmKsyPath}\" -d \"{multiLangDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var compileInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t {languages} \"{UtmKsyPath}\" -d \"{multiLangDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             using (var process = Process.Start(compileInfo))
             {
@@ -672,8 +616,8 @@ namespace Andastra.Parsing.Tests.Formats
         private static ProcessStartInfo CreateCompilerProcessInfo(string compilerPath, string arguments, string workingDirectory = null)
         {
             // Check if compiler path is a JAR file
-            bool isJar = !string.IsNullOrEmpty(compilerPath) && 
-                         (compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) || 
+            bool isJar = !string.IsNullOrEmpty(compilerPath) &&
+                         (compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ||
                           (File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".jar", StringComparison.OrdinalIgnoreCase)));
 
             if (isJar)
