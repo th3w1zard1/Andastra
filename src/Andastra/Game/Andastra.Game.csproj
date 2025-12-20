@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Use Windows-specific target framework on Windows to satisfy SDK requirements -->
+    <!-- Use cross-platform target framework for all platforms -->
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
     <TargetFrameworks>net9.0</TargetFrameworks>
