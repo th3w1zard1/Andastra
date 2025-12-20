@@ -24,7 +24,6 @@ using Andastra.Parsing.Mods.TwoDA;
 using Andastra.Parsing.Memory;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
-using Andastra.Parsing.Diff;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff

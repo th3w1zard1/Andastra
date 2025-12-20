@@ -13,6 +13,7 @@ using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Resource;
 using KotorDiff.Cache;
+using KotorDiff.Resolution;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
 
 namespace KotorDiff.Diff
@@ -350,7 +351,7 @@ namespace KotorDiff.Diff
 
                     if (modificationsByType != null)
                     {
-                        Resolution.InstallationDiffHelpers.AddToInstallFolder(
+                        InstallationDiffHelpers.AddToInstallFolder(
                             modificationsByType,
                             destination,
                             resource.Identifier,
@@ -1370,14 +1371,14 @@ namespace KotorDiff.Diff
                 if (Path.GetExtension(filename).ToLowerInvariant() == ".mod")
                 {
                     string capsuleDestination = relPath.Replace("/", "\\");
-                    Resolution.InstallationDiffHelpers.EnsureCapsuleInstall(
+                    InstallationDiffHelpers.EnsureCapsuleInstall(
                         modificationsByType,
                         capsuleDestination,
                         capsulePath: file2Path,
                         logFunc: logFunc,
                         incrementalWriter: incrementalWriter);
                 }
-                Resolution.InstallationDiffHelpers.ExtractAndAddCapsuleResources(
+                InstallationDiffHelpers.ExtractAndAddCapsuleResources(
                     file2Path,
                     modificationsByType,
                     incrementalWriter,
