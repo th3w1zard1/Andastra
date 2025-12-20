@@ -549,10 +549,313 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <summary>
         /// Loads stats from entity's stored data.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads creature data from GFF
+        /// - Loads AreaId, creature template data, DetectMode, StealthMode, CreatureSize
+        /// - Loads BonusForcePoints, AssignedPup, PlayerCreated, AmbientAnimState, Animation
+        /// - Calls FUN_0050c510 (load creature scripts), FUN_00521d40 (load creature equipment)
+        /// - Calls FUN_005f9e00 (load creature inventory), FUN_00509bf0, FUN_00513440, FUN_0051d4d0, FUN_0050b650
+        /// - FUN_005fb0f0 @ 0x005fb0f0 loads creature template data from UTC GFF including stats
+        ///   - Loads CurrentHitPoints, MaxHitPoints, CurrentForce, ForcePoints
+        ///   - Loads Str, Dex, Con, Int, Wis, Cha ability scores
+        ///   - Loads NaturalAC, fortbonus, refbonus, willbonus
+        ///   - Loads skills from SkillList (ComputerUse, Demolitions, Stealth, Awareness, Persuade, Repair, Security, TreatInjury)
+        /// - Entity data storage: Stats can be stored on entity via SetData for save games or runtime modifications
+        /// - Data keys: "CurrentHP", "MaxHP", "CurrentFP", "MaxFP", "STR", "DEX", "CON", "INT", "WIS", "CHA", etc.
+        /// - GFF serialization: OdysseyEntity.Serialize() saves stats to GFF with "CurrentHP", "MaxHP", "Abilities" struct, etc.
+        /// - This method loads stats from entity's stored data dictionary (SetData/GetData) and applies them to the component
+        /// </remarks>
         private void LoadFromEntityData()
         {
-            // Stats are now loaded via SetMaxHP, SetAbility, etc.
-            // TODO: PLACEHOLDER - This method is a placeholder for future entity data integration.
+            if (Owner == null)
+            {
+                return;
+            }
+
+            // Load HP from entity data
+            // Based on swkotor2.exe: FUN_005fb0f0 loads CurrentHitPoints and MaxHitPoints from UTC template
+            // EntityFactory stores "CurrentHP" and "HP" via SetData when loading from GIT
+            if (Owner.HasData("CurrentHP"))
+            {
+                int currentHP = Owner.GetData<int>("CurrentHP", 0);
+                if (currentHP > 0)
+                {
+                    _currentHP = currentHP;
+                }
+            }
+
+            if (Owner.HasData("MaxHP"))
+            {
+                int maxHP = Owner.GetData<int>("MaxHP", 0);
+                if (maxHP > 0)
+                {
+                    SetMaxHP(maxHP);
+                }
+            }
+            else if (Owner.HasData("HP"))
+            {
+                // Fallback: "HP" key used in EntityFactory
+                int hp = Owner.GetData<int>("HP", 0);
+                if (hp > 0)
+                {
+                    SetMaxHP(hp);
+                    // If CurrentHP wasn't set, use HP as current HP
+                    if (!Owner.HasData("CurrentHP"))
+                    {
+                        _currentHP = hp;
+                    }
+                }
+            }
+
+            // Load Force Points from entity data
+            // Based on swkotor2.exe: FUN_005fb0f0 loads CurrentForce and ForcePoints from UTC template
+            if (Owner.HasData("CurrentFP"))
+            {
+                int currentFP = Owner.GetData<int>("CurrentFP", 0);
+                if (currentFP >= 0)
+                {
+                    _currentFP = currentFP;
+                }
+            }
+
+            if (Owner.HasData("MaxFP"))
+            {
+                int maxFP = Owner.GetData<int>("MaxFP", 0);
+                if (maxFP >= 0)
+                {
+                    _maxFP = maxFP;
+                }
+            }
+
+            // Load ability scores from entity data
+            // Based on swkotor2.exe: FUN_005fb0f0 loads Str, Dex, Con, Int, Wis, Cha from UTC template
+            // OdysseyEntity.Serialize() saves abilities in "Abilities" struct with keys "STR", "DEX", etc.
+            if (Owner.HasData("Abilities"))
+            {
+                // Abilities stored as a struct/dictionary
+                object abilitiesObj = Owner.GetData("Abilities");
+                if (abilitiesObj != null)
+                {
+                    // Try to get individual ability values from the struct
+                    // This handles both GFF struct format and dictionary format
+                    System.Collections.Generic.IDictionary<string, object> abilitiesDict = abilitiesObj as System.Collections.Generic.IDictionary<string, object>;
+                    if (abilitiesDict != null)
+                    {
+                        if (abilitiesDict.ContainsKey("STR"))
+                        {
+                            int str = Convert.ToInt32(abilitiesDict["STR"]);
+                            SetAbility(Ability.Strength, str);
+                        }
+                        if (abilitiesDict.ContainsKey("DEX"))
+                        {
+                            int dex = Convert.ToInt32(abilitiesDict["DEX"]);
+                            SetAbility(Ability.Dexterity, dex);
+                        }
+                        if (abilitiesDict.ContainsKey("CON"))
+                        {
+                            int con = Convert.ToInt32(abilitiesDict["CON"]);
+                            SetAbility(Ability.Constitution, con);
+                        }
+                        if (abilitiesDict.ContainsKey("INT"))
+                        {
+                            int intel = Convert.ToInt32(abilitiesDict["INT"]);
+                            SetAbility(Ability.Intelligence, intel);
+                        }
+                        if (abilitiesDict.ContainsKey("WIS"))
+                        {
+                            int wis = Convert.ToInt32(abilitiesDict["WIS"]);
+                            SetAbility(Ability.Wisdom, wis);
+                        }
+                        if (abilitiesDict.ContainsKey("CHA"))
+                        {
+                            int cha = Convert.ToInt32(abilitiesDict["CHA"]);
+                            SetAbility(Ability.Charisma, cha);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Fallback: Load abilities from individual keys (for compatibility with EntityFactory pattern)
+                if (Owner.HasData("STR"))
+                {
+                    int str = Owner.GetData<int>("STR", 10);
+                    SetAbility(Ability.Strength, str);
+                }
+                if (Owner.HasData("DEX"))
+                {
+                    int dex = Owner.GetData<int>("DEX", 10);
+                    SetAbility(Ability.Dexterity, dex);
+                }
+                if (Owner.HasData("CON"))
+                {
+                    int con = Owner.GetData<int>("CON", 10);
+                    SetAbility(Ability.Constitution, con);
+                }
+                if (Owner.HasData("INT"))
+                {
+                    int intel = Owner.GetData<int>("INT", 10);
+                    SetAbility(Ability.Intelligence, intel);
+                }
+                if (Owner.HasData("WIS"))
+                {
+                    int wis = Owner.GetData<int>("WIS", 10);
+                    SetAbility(Ability.Wisdom, wis);
+                }
+                if (Owner.HasData("CHA"))
+                {
+                    int cha = Owner.GetData<int>("CHA", 10);
+                    SetAbility(Ability.Charisma, cha);
+                }
+            }
+
+            // Load base attack bonus from entity data
+            // Based on swkotor2.exe: BAB calculated from class levels and stored in creature object
+            if (Owner.HasData("BaseAttackBonus") || Owner.HasData("BAB"))
+            {
+                int bab = Owner.GetData<int>("BaseAttackBonus", Owner.GetData<int>("BAB", 0));
+                if (bab >= 0)
+                {
+                    SetBaseAttackBonus(bab);
+                }
+            }
+
+            // Load base saving throws from entity data
+            // Based on swkotor2.exe: FUN_005fb0f0 loads fortbonus, refbonus, willbonus from UTC template
+            int fortitude = Owner.GetData<int>("FortitudeSave", Owner.GetData<int>("fortbonus", -1));
+            int reflex = Owner.GetData<int>("ReflexSave", Owner.GetData<int>("refbonus", -1));
+            int will = Owner.GetData<int>("WillSave", Owner.GetData<int>("willbonus", -1));
+            if (fortitude >= 0 || reflex >= 0 || will >= 0)
+            {
+                SetBaseSaves(
+                    fortitude >= 0 ? fortitude : _baseFortitude,
+                    reflex >= 0 ? reflex : _baseReflex,
+                    will >= 0 ? will : _baseWill
+                );
+            }
+
+            // Load level from entity data
+            // Based on swkotor2.exe: Level stored in creature object, calculated from class levels
+            if (Owner.HasData("Level"))
+            {
+                int level = Owner.GetData<int>("Level", 1);
+                if (level >= 1)
+                {
+                    Level = level;
+                }
+            }
+
+            // Load experience from entity data
+            if (Owner.HasData("Experience") || Owner.HasData("XP"))
+            {
+                int xp = Owner.GetData<int>("Experience", Owner.GetData<int>("XP", 0));
+                if (xp >= 0)
+                {
+                    Experience = xp;
+                }
+            }
+
+            // Load armor bonuses from entity data
+            // Based on swkotor2.exe: NaturalAC loaded from UTC template, armor bonuses from equipped items
+            if (Owner.HasData("NaturalArmor") || Owner.HasData("NaturalAC"))
+            {
+                int naturalArmor = Owner.GetData<int>("NaturalArmor", Owner.GetData<int>("NaturalAC", 0));
+                if (naturalArmor >= 0)
+                {
+                    NaturalArmor = naturalArmor;
+                }
+            }
+
+            if (Owner.HasData("ArmorBonus"))
+            {
+                int armorBonus = Owner.GetData<int>("ArmorBonus", 0);
+                if (armorBonus >= 0)
+                {
+                    ArmorBonus = armorBonus;
+                }
+            }
+
+            if (Owner.HasData("DeflectionBonus"))
+            {
+                int deflectionBonus = Owner.GetData<int>("DeflectionBonus", 0);
+                if (deflectionBonus >= 0)
+                {
+                    DeflectionBonus = deflectionBonus;
+                }
+            }
+
+            // Load movement speeds from entity data
+            // Based on swkotor2.exe: WalkRate loaded from UTC template, converted to WalkSpeed/RunSpeed via appearance.2da
+            if (Owner.HasData("WalkSpeed"))
+            {
+                float walkSpeed = Owner.GetData<float>("WalkSpeed", 0f);
+                if (walkSpeed > 0f)
+                {
+                    WalkSpeed = walkSpeed;
+                }
+            }
+
+            if (Owner.HasData("RunSpeed"))
+            {
+                float runSpeed = Owner.GetData<float>("RunSpeed", 0f);
+                if (runSpeed > 0f)
+                {
+                    RunSpeed = runSpeed;
+                }
+            }
+
+            // Load skills from entity data
+            // Based on swkotor2.exe: FUN_005fb0f0 loads skills from SkillList in UTC template
+            // KOTOR has 8 skills: COMPUTER_USE (0), DEMOLITIONS (1), STEALTH (2), AWARENESS (3), PERSUADE (4), REPAIR (5), SECURITY (6), TREAT_INJURY (7)
+            for (int skillId = 0; skillId < 8; skillId++)
+            {
+                string skillKey = "Skill" + skillId;
+                if (Owner.HasData(skillKey))
+                {
+                    int skillRank = Owner.GetData<int>(skillKey, 0);
+                    if (skillRank >= 0)
+                    {
+                        SetSkillRank(skillId, skillRank);
+                    }
+                }
+            }
+
+            // Load known spells from entity data
+            // Based on swkotor2.exe: Known spells stored in creature object, loaded from UTC template or save game
+            if (Owner.HasData("KnownSpells"))
+            {
+                object spellsObj = Owner.GetData("KnownSpells");
+                if (spellsObj != null)
+                {
+                    System.Collections.Generic.IEnumerable<int> spells = spellsObj as System.Collections.Generic.IEnumerable<int>;
+                    if (spells != null)
+                    {
+                        foreach (int spellId in spells)
+                        {
+                            if (spellId >= 0)
+                            {
+                                AddSpell(spellId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Try as list of objects that can be converted to int
+                        System.Collections.IEnumerable enumerable = spellsObj as System.Collections.IEnumerable;
+                        if (enumerable != null)
+                        {
+                            foreach (object spellObj in enumerable)
+                            {
+                                int spellId = Convert.ToInt32(spellObj);
+                                if (spellId >= 0)
+                                {
+                                    AddSpell(spellId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
