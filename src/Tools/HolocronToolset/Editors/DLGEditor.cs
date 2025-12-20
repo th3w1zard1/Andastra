@@ -15,6 +15,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Avalonia.Media;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -1007,33 +1008,6 @@ namespace HolocronToolset.Editors
         public Button FindButton => _findButton;
         public TextBlock ResultsLabel => _resultsLabel;
 
-        /// <summary>
-        /// Shows the find bar (public for testing).
-        /// Matching PyKotor implementation: self.show_find_bar()
-        /// </summary>
-        public void ShowFindBar()
-        {
-            // Matching PyKotor: self.find_bar.setVisible(True)
-            if (_findBar != null)
-            {
-                _findBar.IsVisible = true;
-            }
-
-            // Matching PyKotor: self.find_input.setFocus()
-            if (_findInput != null)
-            {
-                _findInput.Focus();
-            }
-        }
-
-        /// <summary>
-        /// Handles the find operation (public for testing).
-        /// Matching PyKotor implementation: self.handle_find()
-        /// </summary>
-        public void HandleFind()
-        {
-            HandleFind();
-        }
 
         // File-level properties exposed for testing
         // Matching PyKotor implementation - expose UI controls for testing
@@ -2572,7 +2546,7 @@ namespace HolocronToolset.Editors
         /// Handles the find button click or Enter key press in the find input.
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:500-511
         /// </summary>
-        private void HandleFind()
+        public void HandleFind()
         {
             if (_findInput == null)
             {
