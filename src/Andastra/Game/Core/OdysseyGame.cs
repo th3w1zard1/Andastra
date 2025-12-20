@@ -614,9 +614,10 @@ namespace Andastra.Runtime.Game.Core
                 // Check for button hover sound effects
                 // Based on swkotor.exe and swkotor2.exe: Button hover plays sound effect
                 // Sound file: "gui_actscroll" or "gui_actscroll1" (button hover sound)
-                // Note: KotorGuiManager uses _highlightedButtonTag internally, but we need to access it
-                // For now, we'll play hover sounds in the button click handler when button state changes
-                // TODO: Add public property to KotorGuiManager to access highlighted button tag
+                // Highlighted button tag is now accessible via KotorGuiManager.HighlightedButtonTag property
+                // This can be used to detect button hover state changes and play hover sound effects
+                string currentHighlightedTag = _guiManager.HighlightedButtonTag;
+                // TODO: Implement button hover sound effect playback when highlighted button changes
 
                 // Update previous mouse/keyboard state for fallback input handling if needed
                 _previousMenuMouseState = mouseState;
