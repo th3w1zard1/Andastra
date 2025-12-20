@@ -46,11 +46,13 @@ namespace Andastra.Parsing.Resource.Generics
             // Engine default: 0.0, but if field not found, defaults to 1.0 (swkotor2.exe:0x00501fa0 lines 169, 174, swkotor.exe:0x004c9050 lines 160, 165)
             float dirX = root.Acquire<float>("Mod_Entry_Dir_X", 0.0f);
             // Engine default: 0.0, but if field not found, defaults to 0.0 (swkotor2.exe:0x00501fa0 lines 171, 175, swkotor.exe:0x004c9050 lines 162, 166)
+            // Engine behavior: After reading Mod_Entry_Dir_Y, if local_bc==0 (field not found), engine sets both dirX=1.0, dirY=0.0
+            // This means if Mod_Entry_Dir_Y is missing, both get set to defaults
             float dirY = root.Acquire<float>("Mod_Entry_Dir_Y", 0.0f);
             
-            // Engine behavior: If Mod_Entry_Dir_X/Y fields are missing, engine sets dirX=1.0, dirY=0.0
-            // We check if both are 0.0 (likely means fields were missing) and apply engine default
-            if (dirX == 0.0f && dirY == 0.0f && !root.Exists("Mod_Entry_Dir_X") && !root.Exists("Mod_Entry_Dir_Y"))
+            // Engine behavior: If Mod_Entry_Dir_Y field is missing, engine sets dirX=1.0, dirY=0.0
+            // The engine checks local_bc after reading Mod_Entry_Dir_Y - if 0, both are set to defaults
+            if (!root.Exists("Mod_Entry_Dir_Y"))
             {
                 dirX = 1.0f;
                 dirY = 0.0f;
