@@ -1,11 +1,13 @@
 using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -527,21 +529,57 @@ namespace HolocronToolset.Editors
             if (_installation == null) return;
 
             // Matching PyKotor implementation: capsules: list[Capsule] = []
-            var capsules = new List<object>(); // TODO: Use List<Capsule> when available
+            var capsules = new List<Capsule>();
 
             try
             {
                 // Matching PyKotor implementation: root: str = Module.filepath_to_root(self._filepath)
-                // Note: Module.filepath_to_root implementation would be needed
-                // For now, we'll skip capsule loading if filepath is not available
-                if (string.IsNullOrEmpty(base._filepath))
+                string root = null;
+                if (!string.IsNullOrEmpty(base._filepath))
                 {
-                    // Skip capsule loading if no filepath
+                    root = Module.FilepathToRoot(base._filepath);
                 }
-                else
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:199-205
+                // Original: case_root = root.casefold()
+                // Original: module_names: CaseInsensitiveDict[str] = self._installation.module_names()
+                // Original: filepath_str = str(self._filepath)
+                // Original: capsulesPaths: list[str] = [path for path in module_names if case_root in path and path != filepath_str]
+                // Original: capsules.extend([Capsule(self._installation.module_path() / path) for path in capsulesPaths])
+                if (root != null)
                 {
-                    // TODO: Implement capsule loading when Module.filepath_to_root is available
-                    // This would require implementing the module path resolution logic
+                    string caseRoot = root.ToLowerInvariant();
+                    var moduleNames = _installation.ModuleNames();
+                    string filepathStr = base._filepath ?? "";
+                    string filepathFilename = !string.IsNullOrEmpty(filepathStr) ? System.IO.Path.GetFileName(filepathStr) : "";
+                    
+                    foreach (var kvp in moduleNames)
+                    {
+                        // kvp.Key is the module filename (e.g., "danm13.rim"), kvp.Value is the area name
+                        // Matching PyKotor: for path in module_names - iterates over keys (filenames)
+                        string moduleFilename = kvp.Key;
+                        string moduleFilenameLower = moduleFilename.ToLowerInvariant();
+                        
+                        // Check if root is contained in module filename and it's not the same as the current filepath
+                        // Matching PyKotor: case_root in path and path != filepath_str
+                        if (moduleFilenameLower.Contains(caseRoot) && moduleFilename != filepathFilename)
+                        {
+                            // Matching PyKotor implementation: Capsule(self._installation.module_path() / path)
+                            string fullModulePath = System.IO.Path.Combine(_installation.ModulePath(), moduleFilename);
+                            if (File.Exists(fullModulePath))
+                            {
+                                try
+                                {
+                                    var capsule = new Capsule(fullModulePath, createIfNotExist: false);
+                                    capsules.Add(capsule);
+                                }
+                                catch
+                                {
+                                    // Skip invalid capsule files
+                                }
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)

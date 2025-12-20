@@ -15,12 +15,14 @@ using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using Andastra.Parsing.Formats.Capsule;
+using Avalonia.Controls.Primitives;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Utils;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using Window = Avalonia.Controls.Window;
 
 namespace HolocronToolset.Editors
 {
@@ -70,11 +72,11 @@ namespace HolocronToolset.Editors
         private NumericUpDown _difficultyModSpin;
 
         // UI Controls - Scripts
-        private Dictionary<string, TextBox> _scriptFields;
+        private Dictionary<string, TextBlock> _scriptFields;
         private List<string> _relevantScriptResnames;
 
         // UI Controls - Comments
-        private TextBox _commentsEdit;
+        private TextBlock _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:39-84
         // Original: def __init__(self, parent, installation):
@@ -86,7 +88,7 @@ namespace HolocronToolset.Editors
         {
             _installation = installation;
             _utp = new UTP();
-            _scriptFields = new Dictionary<string, TextBox>();
+            _scriptFields = new Dictionary<string, TextBlock>();
             _relevantScriptResnames = new List<string>();
 
             InitializeComponent();
@@ -312,10 +314,10 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: Load required 2da files if they have not been loaded already
             List<string> required = new List<string> { HTInstallation.TwoDAPlaceables, HTInstallation.TwoDAFactions };
-            installation.HtBatchCacheTwoDA(required);
+            installation.HtBatchCache2DA(required);
 
             // Matching PyKotor implementation: appearances: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_PLACEABLES)
-            TwoDA appearances = installation.HtGetCacheTwoDA(HTInstallation.TwoDAPlaceables);
+            TwoDA appearances = installation.HtGetCache2DA(HTInstallation.TwoDAPlaceables);
             if (_appearanceSelect != null && appearances != null)
             {
                 _appearanceSelect.Items.Clear();
@@ -327,7 +329,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
-            TwoDA factions = installation.HtGetCacheTwoDA(HTInstallation.TwoDAFactions);
+            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
             if (_factionSelect != null && factions != null)
             {
                 _factionSelect.Items.Clear();
@@ -846,7 +848,7 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:421-426
             // Original: capsules: list[Capsule] = []; with suppress(Exception): root: str = Module.filepath_to_root(...)
-            var capsules = new List<object>();
+            var capsules = new List<Capsule>();
             try
             {
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:423

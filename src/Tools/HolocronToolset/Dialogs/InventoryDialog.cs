@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.Capsule;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Dialogs
@@ -24,10 +25,11 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:72-150
         // Original: def __init__(self, parent, installation, capsules, folders, inventory, equipment, ...):
+        // Note: PyKotor uses Sequence[LazyCapsule] but UTM/UTP editors pass list[Capsule], so we use List<Capsule> for compatibility
         public InventoryDialog(
             Window parent,
             HTInstallation installation,
-            List<object> capsules,
+            List<Capsule> capsules,
             List<string> folders,
             List<InventoryItem> inventory,
             Dictionary<EquipmentSlot, InventoryItem> equipment,
