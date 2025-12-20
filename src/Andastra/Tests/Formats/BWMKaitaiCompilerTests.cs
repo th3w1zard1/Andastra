@@ -304,8 +304,9 @@ namespace Andastra.Parsing.Tests.Formats
                         errorLower.Contains("yaml") || errorLower.Contains("invalid"))
                     {
                         // This is likely a syntax error, fail the test
-                        compileResult.Error.Should().NotContainAny("syntax", "parse", "yaml", "invalid",
-                            because: $"BWM.ksy should not have syntax errors. Error: {compileResult.Error}");
+                        compileResult.Error.Should().NotContainAny(
+                            new[] { "syntax", "parse", "yaml", "invalid" },
+                            $"BWM.ksy should not have syntax errors. Error: {compileResult.Error}");
                     }
                     // Otherwise, it might be a dependency issue, which is OK for syntax validation
                 }
