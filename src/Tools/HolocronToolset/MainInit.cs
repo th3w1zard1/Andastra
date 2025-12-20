@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -19,6 +20,39 @@ namespace HolocronToolset.NET
             }
             // Check if running from a single-file executable
             return !File.Exists(entryAssembly);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/misc.py:172-182
+        // Original: def is_debug_mode() -> bool:
+        /// <summary>
+        /// Determines if the application is running in debug mode.
+        /// Checks for debugger attachment, environment variables, and frozen state.
+        /// </summary>
+        /// <returns>True if debug mode is enabled, false otherwise.</returns>
+        public static bool IsDebugMode()
+        {
+            bool ret = false;
+
+            // Check for DEBUG_MODE environment variable (equivalent to Python's DEBUG_MODE)
+            string debugMode = Environment.GetEnvironmentVariable("DEBUG_MODE");
+            if (debugMode == "1")
+            {
+                ret = true;
+            }
+
+            // Check if debugger is attached (equivalent to Python's sys.gettrace)
+            if (Debugger.IsAttached)
+            {
+                ret = true;
+            }
+
+            // If frozen, disable debug mode (equivalent to Python's sys.frozen or sys._MEIPASS check)
+            if (IsFrozen())
+            {
+                ret = false;
+            }
+
+            return ret;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:30-44
