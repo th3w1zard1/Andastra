@@ -1301,7 +1301,7 @@ namespace HolocronToolset.Data
                                     _mod.SetData(paddingName, ResourceType.MDX, kit.SidePadding[doorIndex][paddingKey.Value].Mdx);
 
                                     // Add padding room to layout and visibility (matching Python lines 575-576)
-                                    _lyt.Rooms.Add(new LYTRoom(paddingName, insert.Position));
+                                    _lyt.Rooms.Add(new LYTRoom(new ResRef(paddingName), insert.Position));
                                     _vis.AddRoom(paddingName);
                                 }
                             }
@@ -1413,7 +1413,7 @@ namespace HolocronToolset.Data
                 _mod.SetData(modelName, ResourceType.MDX, skyboxData.Mdx);
 
                 // Matching Python line 608: self.lyt.rooms.append(LYTRoom(model_name, Vector3(0, 0, 0)))
-                var lytRoom = new LYTRoom(modelName, Vector3.Zero);
+                var lytRoom = new LYTRoom(new ResRef(modelName), Vector3.Zero);
                 _lyt.Rooms.Add(lytRoom);
                 _vis.AddRoom(modelName);
             }
