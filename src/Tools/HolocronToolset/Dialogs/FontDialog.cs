@@ -100,11 +100,16 @@ namespace HolocronToolset.Dialogs
                 Padding = new Avalonia.Thickness(10),
                 Background = new SolidColorBrush(Colors.White),
                 Foreground = new SolidColorBrush(Colors.Black),
-                BorderBrush = new SolidColorBrush(Colors.Gray),
-                BorderThickness = new Avalonia.Thickness(1),
                 MinHeight = 80
             };
-            mainPanel.Children.Add(_previewTextBlock);
+            // Wrap TextBlock in Border to add border styling (TextBlock doesn't support BorderBrush/BorderThickness directly)
+            var previewBorder = new Border
+            {
+                BorderBrush = new SolidColorBrush(Colors.Gray),
+                BorderThickness = new Avalonia.Thickness(1),
+                Child = _previewTextBlock
+            };
+            mainPanel.Children.Add(previewBorder);
 
             // Buttons
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Margin = new Avalonia.Thickness(0, 15, 0, 0) };
@@ -139,7 +144,7 @@ namespace HolocronToolset.Dialogs
             {
                 PopulateFontSizes();
                 _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-                // Note: ComboBox doesn't have TextChanged in Avalonia - use observable pattern for editable ComboBox
+                // TODO: determine if this is 1:1 equivalent with TextChanged in avalonia, or if there's a closer equivalent.
                 _fontSizeComboBox.GetObservable(ComboBox.TextProperty).Subscribe(text => UpdatePreview());
             }
             if (_boldCheckBox != null)
