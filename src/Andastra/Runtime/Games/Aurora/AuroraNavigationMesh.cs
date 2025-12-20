@@ -228,19 +228,86 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Finds a path between two points using A* algorithm.
         /// </summary>
+        /// <param name="start">Start position in world coordinates.</param>
+        /// <param name="end">End position in world coordinates.</param>
+        /// <param name="waypoints">Output array of waypoints along the path.</param>
+        /// <returns>True if a path was found, false otherwise.</returns>
         /// <remarks>
         /// Aurora pathfinding works across tile boundaries.
         /// Uses hierarchical pathfinding: tile-level then within-tile.
         /// More sophisticated than Odyssey's single-mesh approach.
+        /// 
+        /// Based on nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510
+        /// - Grid-based A* pathfinding over tile grid
+        /// - Uses tile centers as waypoints
+        /// - Applies path smoothing for natural movement
+        /// 
+        /// Algorithm:
+        /// 1. Convert start and end to tile coordinates
+        /// 2. Validate both positions are on valid, walkable tiles
+        /// 3. If same tile, return direct path
+        /// 4. Run A* pathfinding on tile grid
+        /// 5. Convert tile path to world coordinates
+        /// 6. Apply path smoothing using line-of-sight checks
         /// </remarks>
         public bool FindPath(Vector3 start, Vector3 end, out Vector3[] waypoints)
         {
-            // TODO: Implement Aurora A* pathfinding
-            // High-level tile pathfinding
-            // Within-tile detailed pathfinding
-            // Smooth waypoint generation
-            waypoints = new[] { start, end };
-            throw new System.NotImplementedException("Aurora pathfinding not yet implemented");
+            waypoints = null;
+
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return false;
+            }
+
+            // Convert start and end to tile coordinates
+            int startTileX, startTileY;
+            int endTileX, endTileY;
+
+            if (!GetTileCoordinates(start, out startTileX, out startTileY))
+            {
+                return false; // Start position not on valid tile
+            }
+
+            if (!GetTileCoordinates(end, out endTileX, out endTileY))
+            {
+                return false; // End position not on valid tile
+            }
+
+            // Validate both tiles are walkable
+            if (!IsTileValid(startTileX, startTileY) || !IsTileValid(endTileX, endTileY))
+            {
+                return false;
+            }
+
+            AuroraTile startTile = _tiles[startTileY, startTileX];
+            AuroraTile endTile = _tiles[endTileY, endTileX];
+
+            if (!startTile.IsLoaded || !startTile.IsWalkable || !endTile.IsLoaded || !endTile.IsWalkable)
+            {
+                return false; // Start or end tile is not walkable
+            }
+
+            // Same tile - direct path
+            if (startTileX == endTileX && startTileY == endTileY)
+            {
+                waypoints = new[] { start, end };
+                return true;
+            }
+
+            // A* pathfinding over tile grid (without obstacles)
+            IList<Vector3> path = FindPathInternal(start, end, startTileX, startTileY, endTileX, endTileY, null);
+            if (path != null && path.Count > 0)
+            {
+                waypoints = new Vector3[path.Count];
+                for (int i = 0; i < path.Count; i++)
+                {
+                    waypoints[i] = path[i];
+                }
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -452,13 +519,161 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Finds a path from start to goal.
         /// </summary>
+        /// <param name="start">Start position in world coordinates.</param>
+        /// <param name="goal">Goal position in world coordinates.</param>
+        /// <returns>List of waypoints along the path, or null if no path found.</returns>
+        /// <remarks>
+        /// Aurora pathfinding implementation using A* algorithm over tile grid.
+        /// Based on nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510
+        /// - Grid-based A* pathfinding over tile grid
+        /// - Uses tile centers as waypoints
+        /// - Applies path smoothing for natural movement
+        /// 
+        /// Algorithm:
+        /// 1. Convert start and goal to tile coordinates
+        /// 2. Validate both positions are on valid, walkable tiles
+        /// 3. If same tile, return direct path
+        /// 4. Run A* pathfinding on tile grid
+        /// 5. Convert tile path to world coordinates
+        /// 6. Apply path smoothing using line-of-sight checks
+        /// </remarks>
         public IList<Vector3> FindPath(Vector3 start, Vector3 goal)
         {
-            // TODO: Implement Aurora A* pathfinding
-            // High-level tile pathfinding
-            // Within-tile detailed pathfinding
-            // Smooth waypoint generation
-            throw new NotImplementedException("Aurora pathfinding not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return null;
+            }
+
+            // Convert start and goal to tile coordinates
+            int startTileX, startTileY;
+            int goalTileX, goalTileY;
+
+            if (!GetTileCoordinates(start, out startTileX, out startTileY))
+            {
+                return null; // Start position not on valid tile
+            }
+
+            if (!GetTileCoordinates(goal, out goalTileX, out goalTileY))
+            {
+                return null; // Goal position not on valid tile
+            }
+
+            // Validate both tiles are walkable
+            if (!IsTileValid(startTileX, startTileY) || !IsTileValid(goalTileX, goalTileY))
+            {
+                return null;
+            }
+
+            AuroraTile startTile = _tiles[startTileY, startTileX];
+            AuroraTile goalTile = _tiles[goalTileY, goalTileX];
+
+            if (!startTile.IsLoaded || !startTile.IsWalkable || !goalTile.IsLoaded || !goalTile.IsWalkable)
+            {
+                return null; // Start or goal tile is not walkable
+            }
+
+            // Same tile - direct path
+            if (startTileX == goalTileX && startTileY == goalTileY)
+            {
+                return new List<Vector3> { start, goal };
+            }
+
+            // A* pathfinding over tile grid (without obstacles)
+            return FindPathInternal(start, goal, startTileX, startTileY, goalTileX, goalTileY, null);
+        }
+
+        /// <summary>
+        /// Internal A* pathfinding implementation shared by FindPath and FindPathAroundObstacles.
+        /// </summary>
+        /// <param name="start">Start position in world coordinates.</param>
+        /// <param name="goal">Goal position in world coordinates.</param>
+        /// <param name="startTileX">Start tile X coordinate.</param>
+        /// <param name="startTileY">Start tile Y coordinate.</param>
+        /// <param name="goalTileX">Goal tile X coordinate.</param>
+        /// <param name="goalTileY">Goal tile Y coordinate.</param>
+        /// <param name="blockedTiles">Set of blocked tile coordinates (null if no obstacles).</param>
+        /// <returns>List of waypoints along the path, or null if no path found.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510
+        /// - Grid-based A* pathfinding over tile grid
+        /// - Uses tile centers as waypoints
+        /// - Applies path smoothing for natural movement
+        /// </remarks>
+        private IList<Vector3> FindPathInternal(Vector3 start, Vector3 goal, int startTileX, int startTileY, int goalTileX, int goalTileY, HashSet<(int x, int y)> blockedTiles)
+        {
+            // A* pathfinding over tile grid
+            var openSet = new SortedSet<TileScore>(new TileScoreComparer());
+            var cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
+            var gScore = new Dictionary<(int x, int y), float>();
+            var fScore = new Dictionary<(int x, int y), float>();
+            var inOpenSet = new HashSet<(int x, int y)>();
+
+            var startTileCoord = (startTileX, startTileY);
+            var goalTileCoord = (goalTileX, goalTileY);
+
+            // Initialize start node
+            gScore[startTileCoord] = 0f;
+            fScore[startTileCoord] = TileHeuristic(startTileX, startTileY, goalTileX, goalTileY);
+            openSet.Add(new TileScore(startTileX, startTileY, fScore[startTileCoord]));
+            inOpenSet.Add(startTileCoord);
+
+            // A* main loop
+            while (openSet.Count > 0)
+            {
+                // Get tile with lowest f-score
+                TileScore currentScore = GetMinTile(openSet);
+                openSet.Remove(currentScore);
+                var current = (currentScore.X, currentScore.Y);
+                inOpenSet.Remove(current);
+
+                // Goal reached - reconstruct path
+                if (current.x == goalTileX && current.y == goalTileY)
+                {
+                    return ReconstructTilePath(cameFrom, current, start, goal);
+                }
+
+                // Check all adjacent tiles
+                foreach ((int x, int y) neighbor in GetTileNeighbors(current.x, current.y))
+                {
+                    // Skip blocked tiles (obstacle avoidance)
+                    if (blockedTiles != null && blockedTiles.Contains(neighbor))
+                    {
+                        continue;
+                    }
+
+                    // Calculate tentative g-score
+                    float tentativeG;
+                    if (gScore.TryGetValue(current, out float currentG))
+                    {
+                        tentativeG = currentG + TileEdgeCost(current.x, current.y, neighbor.x, neighbor.y);
+                    }
+                    else
+                    {
+                        tentativeG = TileEdgeCost(current.x, current.y, neighbor.x, neighbor.y);
+                    }
+
+                    // Update if this path is better
+                    float neighborG;
+                    if (!gScore.TryGetValue(neighbor, out neighborG) || tentativeG < neighborG)
+                    {
+                        cameFrom[neighbor] = current;
+                        gScore[neighbor] = tentativeG;
+                        float newF = tentativeG + TileHeuristic(neighbor.x, neighbor.y, goalTileX, goalTileY);
+                        fScore[neighbor] = newF;
+
+                        // Add to open set if not already there
+                        if (!inOpenSet.Contains(neighbor))
+                        {
+                            openSet.Add(new TileScore(neighbor.x, neighbor.y, newF));
+                            inOpenSet.Add(neighbor);
+                        }
+                    }
+                }
+            }
+
+            // No path found
+            return null;
         }
 
         /// <summary>
@@ -559,78 +774,11 @@ namespace Andastra.Runtime.Games.Aurora
                 blockedTiles = BuildBlockedTilesSet(obstacles);
             }
 
-            // A* pathfinding over tile grid
-            var openSet = new SortedSet<TileScore>(new TileScoreComparer());
-            var cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
-            var gScore = new Dictionary<(int x, int y), float>();
-            var fScore = new Dictionary<(int x, int y), float>();
-            var inOpenSet = new HashSet<(int x, int y)>();
-
-            var startTileCoord = (startTileX, startTileY);
-            var goalTileCoord = (goalTileX, goalTileY);
-
-            // Initialize start node
-            gScore[startTileCoord] = 0f;
-            fScore[startTileCoord] = TileHeuristic(startTileX, startTileY, goalTileX, goalTileY);
-            openSet.Add(new TileScore(startTileX, startTileY, fScore[startTileCoord]));
-            inOpenSet.Add(startTileCoord);
-
-            // A* main loop
-            while (openSet.Count > 0)
-            {
-                // Get tile with lowest f-score
-                TileScore currentScore = GetMinTile(openSet);
-                openSet.Remove(currentScore);
-                var current = (currentScore.X, currentScore.Y);
-                inOpenSet.Remove(current);
-
-                // Goal reached - reconstruct path
-                if (current.x == goalTileX && current.y == goalTileY)
-                {
-                    return ReconstructTilePath(cameFrom, current, start, goal);
-                }
-
-                // Check all adjacent tiles
-                foreach ((int x, int y) neighbor in GetTileNeighbors(current.x, current.y))
-                {
-                    // Skip blocked tiles (obstacle avoidance)
-                    if (blockedTiles != null && blockedTiles.Contains(neighbor))
-                    {
-                        continue;
-                    }
-
-                    // Calculate tentative g-score
-                    float tentativeG;
-                    if (gScore.TryGetValue(current, out float currentG))
-                    {
-                        tentativeG = currentG + TileEdgeCost(current.x, current.y, neighbor.x, neighbor.y);
-                    }
-                    else
-                    {
-                        tentativeG = TileEdgeCost(current.x, current.y, neighbor.x, neighbor.y);
-                    }
-
-                    // Update if this path is better
-                    float neighborG;
-                    if (!gScore.TryGetValue(neighbor, out neighborG) || tentativeG < neighborG)
-                    {
-                        cameFrom[neighbor] = current;
-                        gScore[neighbor] = tentativeG;
-                        float newF = tentativeG + TileHeuristic(neighbor.x, neighbor.y, goalTileX, goalTileY);
-                        fScore[neighbor] = newF;
-
-                        // Add to open set if not already there
-                        if (!inOpenSet.Contains(neighbor))
-                        {
-                            openSet.Add(new TileScore(neighbor.x, neighbor.y, newF));
-                            inOpenSet.Add(neighbor);
-                        }
-                    }
-                }
-            }
-
-            // No path found - try with expanded obstacle radius
-            if (obstacles != null && obstacles.Count > 0)
+            // A* pathfinding over tile grid (using shared implementation)
+            IList<Vector3> path = FindPathInternal(start, goal, startTileX, startTileY, goalTileX, goalTileY, blockedTiles);
+            
+            // If no path found, try with expanded obstacle radius
+            if (path == null && obstacles != null && obstacles.Count > 0)
             {
                 var expandedObstacles = new List<Interfaces.ObstacleInfo>();
                 foreach (Interfaces.ObstacleInfo obstacle in obstacles)
@@ -640,7 +788,7 @@ namespace Andastra.Runtime.Games.Aurora
                 return FindPathAroundObstacles(start, goal, expandedObstacles);
             }
 
-            return null;
+            return path;
         }
 
         /// <summary>
