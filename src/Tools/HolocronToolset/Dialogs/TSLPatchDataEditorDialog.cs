@@ -230,11 +230,70 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:214-266
+        // Original: def _create_2da_memory_tab(self):
         private void Create2DAMemoryTab()
         {
             var tab = new TabItem { Header = "2DA Memory" };
-            var content = new StackPanel();
-            // TODO: Add 2DA memory controls
+            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            // Header
+            content.Children.Add(new TextBlock 
+            { 
+                Text = "2DA Memory Tokens:", 
+                FontWeight = Avalonia.Media.FontWeight.Bold 
+            });
+            content.Children.Add(new TextBlock 
+            { 
+                Text = "Track row numbers in 2DA files that will change during installation." 
+            });
+
+            // Splitter for 2DA list and token details
+            var splitter = new Grid();
+            splitter.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            splitter.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+
+            // Left: List of 2DA files
+            var leftWidget = new StackPanel { Spacing = 5 };
+            leftWidget.Children.Add(new TextBlock { Text = "2DA Files:" });
+            _twodaList = new ListBox { MinHeight = 300 };
+            _twodaList.SelectionChanged += On2DASelected;
+            leftWidget.Children.Add(_twodaList);
+
+            var add2daBtn = new Button { Content = "Add 2DA Memory Token" };
+            add2daBtn.Click += (s, e) => Add2DAMemory();
+            leftWidget.Children.Add(add2daBtn);
+
+            Grid.SetColumn(leftWidget, 0);
+            splitter.Children.Add(leftWidget);
+
+            // Right: Token details
+            var rightWidget = new StackPanel { Spacing = 5 };
+            rightWidget.Children.Add(new TextBlock { Text = "Memory Tokens:" });
+            _twodaTokensTree = new TreeView { MinHeight = 300 };
+            // Note: Avalonia TreeView doesn't have built-in column headers like QTreeWidget
+            // We'll use custom item formatting to show Token Name, Column, Row Label, Used By
+            rightWidget.Children.Add(_twodaTokensTree);
+
+            var tokenBtnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            var addTokenBtn = new Button { Content = "Add Token" };
+            addTokenBtn.Click += (s, e) => Add2DAToken();
+            tokenBtnLayout.Children.Add(addTokenBtn);
+            
+            var editTokenBtn = new Button { Content = "Edit Token" };
+            editTokenBtn.Click += (s, e) => Edit2DAToken();
+            tokenBtnLayout.Children.Add(editTokenBtn);
+            
+            var removeTokenBtn = new Button { Content = "Remove Token" };
+            removeTokenBtn.Click += (s, e) => Remove2DAToken();
+            tokenBtnLayout.Children.Add(removeTokenBtn);
+            
+            rightWidget.Children.Add(tokenBtnLayout);
+
+            Grid.SetColumn(rightWidget, 1);
+            splitter.Children.Add(rightWidget);
+
+            content.Children.Add(splitter);
             tab.Content = content;
             if (_configTabs != null)
             {
@@ -373,6 +432,16 @@ namespace HolocronToolset.Dialogs
             public int TokenId { get; set; }
             public bool IsReplacement { get; set; }
             public int ModIndex { get; set; } // For replacements, this is the StrRef to replace
+            public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
+        }
+        
+        // Helper class for 2DA memory token entries
+        private class TwoDAMemoryTokenEntry
+        {
+            public string TokenName { get; set; } // e.g., "2DAMEMORY0"
+            public int TokenId { get; set; }
+            public string ColumnName { get; set; } // Column name in the 2DA file
+            public string RowLabel { get; set; } // Row label/identifier in the 2DA file
             public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
         }
 
@@ -686,6 +755,9 @@ namespace HolocronToolset.Dialogs
 
                 // Load TLK strings from INI
                 LoadTlkStringsFromIni(iniLines);
+
+                // Load 2DA memory tokens from INI
+                Load2DAMemoryFromIni(iniLines);
 
                 // Load other settings from INI using ConfigReader
                 try
@@ -1232,6 +1304,265 @@ namespace HolocronToolset.Dialogs
             }
         }
         
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:460-481
+        // Original: def _add_2da_memory(self), _on_2da_selected(self), _add_2da_token(self), _edit_2da_token(self), _remove_2da_token(self):
+        private async void Add2DAMemory()
+        {
+            if (_installation == null)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No Installation",
+                    "No installation loaded.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning);
+                await errorBox.ShowAsync();
+                return;
+            }
+            
+            // Show dialog to select 2DA file
+            var dialog = new TwoDAMemorySelectDialog(this, _installation);
+            var result = await dialog.ShowDialog<bool>(this);
+            if (result && !string.IsNullOrWhiteSpace(dialog.Selected2DAFile))
+            {
+                string twodaFile = dialog.Selected2DAFile;
+                
+                // Check if 2DA file already exists in the list
+                if (!_twodaMemoryTokens.ContainsKey(twodaFile))
+                {
+                    _twodaMemoryTokens[twodaFile] = new List<TwoDAMemoryTokenEntry>();
+                    Refresh2DAList();
+                }
+                
+                // Select the newly added 2DA file
+                if (_twodaList != null)
+                {
+                    foreach (var item in _twodaList.Items)
+                    {
+                        if (item is string itemStr && itemStr.Equals(twodaFile, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _twodaList.SelectedItem = item;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        private void On2DASelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (_twodaList == null || _twodaTokensTree == null)
+            {
+                return;
+            }
+            
+            var selectedItem = _twodaList.SelectedItem as string;
+            if (string.IsNullOrEmpty(selectedItem))
+            {
+                _twodaTokensTree.Items.Clear();
+                return;
+            }
+            
+            // Load and display tokens for selected 2DA
+            Refresh2DATokensTree(selectedItem);
+        }
+        
+        private async void Add2DAToken()
+        {
+            if (_twodaList == null || _twodaList.SelectedItem == null)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No 2DA Selected",
+                    "Please select a 2DA file from the list first.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Information);
+                await errorBox.ShowAsync();
+                return;
+            }
+            
+            string twodaFile = _twodaList.SelectedItem as string;
+            if (string.IsNullOrEmpty(twodaFile))
+            {
+                return;
+            }
+            
+            // Show dialog to add token
+            var dialog = new TwoDAMemoryTokenEditDialog(this, null, twodaFile, _installation);
+            var result = await dialog.ShowDialog<bool>(this);
+            if (result && dialog.TokenEntry != null)
+            {
+                var entry = dialog.TokenEntry;
+                
+                // Assign token ID if not set
+                if (entry.TokenId == 0)
+                {
+                    entry.TokenId = _nextTwodaTokenId++;
+                }
+                else if (entry.TokenId >= _nextTwodaTokenId)
+                {
+                    _nextTwodaTokenId = entry.TokenId + 1;
+                }
+                
+                // Generate token name if not set
+                if (string.IsNullOrWhiteSpace(entry.TokenName))
+                {
+                    entry.TokenName = $"2DAMEMORY{entry.TokenId}";
+                }
+                
+                if (!_twodaMemoryTokens.ContainsKey(twodaFile))
+                {
+                    _twodaMemoryTokens[twodaFile] = new List<TwoDAMemoryTokenEntry>();
+                }
+                
+                _twodaMemoryTokens[twodaFile].Add(entry);
+                Refresh2DATokensTree(twodaFile);
+                UpdateIniPreview();
+            }
+        }
+        
+        private async void Edit2DAToken()
+        {
+            if (_twodaTokensTree == null || _twodaList == null)
+            {
+                return;
+            }
+            
+            var selectedItem = _twodaTokensTree.SelectedItem;
+            if (selectedItem == null)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No Selection",
+                    "Please select a token to edit.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Information);
+                await errorBox.ShowAsync();
+                return;
+            }
+            
+            // Get token entry from selected item
+            TwoDAMemoryTokenEntry tokenEntry = null;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is TwoDAMemoryTokenEntry entry)
+            {
+                tokenEntry = entry;
+            }
+            else if (selectedItem is string tokenName)
+            {
+                // Try to find by token name
+                string twodaFile = _twodaList.SelectedItem as string;
+                if (!string.IsNullOrEmpty(twodaFile) && _twodaMemoryTokens.ContainsKey(twodaFile))
+                {
+                    tokenEntry = _twodaMemoryTokens[twodaFile].FirstOrDefault(t => t.TokenName == tokenName);
+                }
+            }
+            
+            if (tokenEntry == null)
+            {
+                return;
+            }
+            
+            string twodaFile = _twodaList.SelectedItem as string;
+            var dialog = new TwoDAMemoryTokenEditDialog(this, tokenEntry, twodaFile, _installation);
+            var result = await dialog.ShowDialog<bool>(this);
+            if (result && dialog.TokenEntry != null)
+            {
+                // Update the entry (it's already in the list, so just refresh)
+                Refresh2DATokensTree(twodaFile);
+                UpdateIniPreview();
+            }
+        }
+        
+        private void Remove2DAToken()
+        {
+            if (_twodaTokensTree == null || _twodaList == null)
+            {
+                return;
+            }
+            
+            var selectedItem = _twodaTokensTree.SelectedItem;
+            if (selectedItem == null)
+            {
+                return;
+            }
+            
+            // Get token entry from selected item
+            TwoDAMemoryTokenEntry tokenEntry = null;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is TwoDAMemoryTokenEntry entry)
+            {
+                tokenEntry = entry;
+            }
+            else if (selectedItem is string tokenName)
+            {
+                // Try to find by token name
+                string twodaFile = _twodaList.SelectedItem as string;
+                if (!string.IsNullOrEmpty(twodaFile) && _twodaMemoryTokens.ContainsKey(twodaFile))
+                {
+                    tokenEntry = _twodaMemoryTokens[twodaFile].FirstOrDefault(t => t.TokenName == tokenName);
+                }
+            }
+            
+            if (tokenEntry != null)
+            {
+                string twodaFile = _twodaList.SelectedItem as string;
+                if (!string.IsNullOrEmpty(twodaFile) && _twodaMemoryTokens.ContainsKey(twodaFile))
+                {
+                    _twodaMemoryTokens[twodaFile].Remove(tokenEntry);
+                    Refresh2DATokensTree(twodaFile);
+                    UpdateIniPreview();
+                }
+            }
+        }
+        
+        private void Refresh2DAList()
+        {
+            if (_twodaList == null)
+            {
+                return;
+            }
+            
+            _twodaList.Items.Clear();
+            foreach (var twodaFile in _twodaMemoryTokens.Keys.OrderBy(x => x))
+            {
+                _twodaList.Items.Add(twodaFile);
+            }
+        }
+        
+        private void Refresh2DATokensTree(string twodaFile)
+        {
+            if (_twodaTokensTree == null || string.IsNullOrEmpty(twodaFile))
+            {
+                return;
+            }
+            
+            _twodaTokensTree.Items.Clear();
+            
+            if (!_twodaMemoryTokens.ContainsKey(twodaFile))
+            {
+                return;
+            }
+            
+            var tokens = _twodaMemoryTokens[twodaFile];
+            foreach (var token in tokens.OrderBy(t => t.TokenId))
+            {
+                // Create formatted display: "TokenName | Column | RowLabel | Used By: file1, file2"
+                string usedByText = token.UsedBy != null && token.UsedBy.Count > 0
+                    ? string.Join(", ", token.UsedBy.Take(3))
+                    : "(not used)";
+                if (token.UsedBy != null && token.UsedBy.Count > 3)
+                {
+                    usedByText += $" (+{token.UsedBy.Count - 3} more)";
+                }
+                
+                string displayText = $"{token.TokenName} | {token.ColumnName ?? "(none)"} | {token.RowLabel ?? "(none)"} | Used By: {usedByText}";
+                
+                var item = new TreeViewItem
+                {
+                    Header = new TextBlock { Text = displayText },
+                    Tag = token
+                };
+                
+                _twodaTokensTree.Items.Add(item);
+            }
+        }
+        
         private void RefreshTlkStringTree()
         {
             if (_tlkStringTree == null)
@@ -1320,6 +1651,46 @@ namespace HolocronToolset.Dialogs
             // 2DAMEMORY section
             previewLines.AppendLine("[2DAMEMORY]");
             previewLines.AppendLine("; 2DA memory tokens");
+            if (_twodaMemoryTokens != null && _twodaMemoryTokens.Count > 0)
+            {
+                // For each 2DA file with memory tokens
+                foreach (var kvp in _twodaMemoryTokens.OrderBy(x => x.Key))
+                {
+                    string twodaFile = kvp.Key;
+                    var tokens = kvp.Value;
+                    if (tokens != null && tokens.Count > 0)
+                    {
+                        // Create section for this 2DA file (format: [2DA:filename.2da])
+                        previewLines.AppendLine();
+                        previewLines.AppendLine($"[2DA:{twodaFile}]");
+                        previewLines.AppendLine($"FileName={twodaFile}");
+                        
+                        foreach (var token in tokens.OrderBy(t => t.TokenId))
+                        {
+                            // Format: 2DAMEMORY#=ColumnName|RowLabel
+                            // Or: 2DAMEMORY#=RowLabel (if no column specified)
+                            string value = "";
+                            if (!string.IsNullOrEmpty(token.ColumnName) && !string.IsNullOrEmpty(token.RowLabel))
+                            {
+                                value = $"{token.ColumnName}|{token.RowLabel}";
+                            }
+                            else if (!string.IsNullOrEmpty(token.RowLabel))
+                            {
+                                value = token.RowLabel;
+                            }
+                            else if (!string.IsNullOrEmpty(token.ColumnName))
+                            {
+                                value = token.ColumnName;
+                            }
+                            
+                            if (!string.IsNullOrEmpty(value))
+                            {
+                                previewLines.AppendLine($"{token.TokenName}={value}");
+                            }
+                        }
+                    }
+                }
+            }
             previewLines.AppendLine();
 
             // TLKList section
@@ -1621,6 +1992,365 @@ namespace HolocronToolset.Dialogs
             }
             
             RefreshTlkStringTree();
+        }
+        
+        // Load 2DA memory tokens from INI file
+        private void Load2DAMemoryFromIni(string[] iniLines)
+        {
+            if (iniLines == null || iniLines.Length == 0)
+            {
+                return;
+            }
+            
+            _twodaMemoryTokens.Clear();
+            _nextTwodaTokenId = 0;
+            
+            string currentSection = null;
+            string current2DAFile = null;
+            
+            foreach (string line in iniLines)
+            {
+                string trimmedLine = line.Trim();
+                
+                // Check for section headers
+                if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
+                {
+                    string sectionName = trimmedLine.Substring(1, trimmedLine.Length - 2);
+                    currentSection = sectionName;
+                    
+                    // Check if this is a 2DA section (format: [2DA:filename.2da])
+                    if (sectionName.StartsWith("2DA:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        current2DAFile = sectionName.Substring(4); // Skip "2DA:"
+                        if (!_twodaMemoryTokens.ContainsKey(current2DAFile))
+                        {
+                            _twodaMemoryTokens[current2DAFile] = new List<TwoDAMemoryTokenEntry>();
+                        }
+                    }
+                    else
+                    {
+                        current2DAFile = null;
+                    }
+                    continue;
+                }
+                
+                // Skip empty lines and comments
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith(";") || trimmedLine.StartsWith("#"))
+                {
+                    continue;
+                }
+                
+                // Process 2DA memory tokens in 2DA sections
+                if (!string.IsNullOrEmpty(current2DAFile) && currentSection != null && currentSection.StartsWith("2DA:", StringComparison.OrdinalIgnoreCase))
+                {
+                    int equalsIndex = trimmedLine.IndexOf('=');
+                    if (equalsIndex > 0)
+                    {
+                        string key = trimmedLine.Substring(0, equalsIndex).Trim();
+                        string value = trimmedLine.Substring(equalsIndex + 1).Trim();
+                        
+                        // Skip FileName key
+                        if (key.Equals("FileName", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+                        
+                        // Check if key is a 2DAMEMORY token (format: 2DAMEMORY#)
+                        if (key.StartsWith("2DAMEMORY", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string idPart = key.Substring(9); // Skip "2DAMEMORY"
+                            if (int.TryParse(idPart, out int tokenId))
+                            {
+                                // Parse value (format: ColumnName|RowLabel or just RowLabel)
+                                string columnName = "";
+                                string rowLabel = "";
+                                
+                                int pipeIndex = value.IndexOf('|');
+                                if (pipeIndex > 0)
+                                {
+                                    columnName = value.Substring(0, pipeIndex).Trim();
+                                    rowLabel = value.Substring(pipeIndex + 1).Trim();
+                                }
+                                else
+                                {
+                                    rowLabel = value;
+                                }
+                                
+                                var entry = new TwoDAMemoryTokenEntry
+                                {
+                                    TokenName = key,
+                                    TokenId = tokenId,
+                                    ColumnName = columnName,
+                                    RowLabel = rowLabel
+                                };
+                                
+                                _twodaMemoryTokens[current2DAFile].Add(entry);
+                                
+                                if (tokenId >= _nextTwodaTokenId)
+                                {
+                                    _nextTwodaTokenId = tokenId + 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Refresh2DAList();
+        }
+    }
+    
+    // Dialog for selecting 2DA file for memory token tracking
+    // Matching PyKotor implementation pattern for dialogs
+    internal class TwoDAMemorySelectDialog : Window
+    {
+        public string Selected2DAFile { get; private set; }
+        private ListBox _twodaList;
+        private Button _okButton;
+        private Button _cancelButton;
+        private HTInstallation _installation;
+        
+        public TwoDAMemorySelectDialog(Window parent, HTInstallation installation)
+        {
+            Title = "Select 2DA File";
+            Width = 500;
+            Height = 400;
+            _installation = installation;
+            
+            InitializeComponent();
+        }
+        
+        private void InitializeComponent()
+        {
+            var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
+            
+            mainPanel.Children.Add(new TextBlock 
+            { 
+                Text = "Select a 2DA file to track memory tokens:",
+                FontWeight = Avalonia.Media.FontWeight.Bold 
+            });
+            
+            _twodaList = new ListBox { MinHeight = 250 };
+            
+            // Populate with 2DA files from installation
+            if (_installation != null)
+            {
+                try
+                {
+                    var twodaFiles = new List<string>();
+                    // Common 2DA files in KotOR/TSL
+                    string[] common2DAFiles = 
+                    {
+                        "appearance.2da", "baseitems.2da", "classes.2da", "feat.2da", "spells.2da",
+                        "placeables.2da", "upgrade.2da", "upcrystals.2da", "heads.2da", "portraits.2da",
+                        "damagetypes.2da", "ambientmusic.2da", "ambientsound.2da", "reputations.2da",
+                        "description.2da", "environment.2da", "ranges.2da", "soundset.2da", "skills.2da"
+                    };
+                    
+                    foreach (var fileName in common2DAFiles)
+                    {
+                        var resource = _installation.Resource(fileName, ResourceType.TwoDA, null);
+                        if (resource != null)
+                        {
+                            twodaFiles.Add(fileName);
+                        }
+                    }
+                    
+                    // Sort and add to list
+                    foreach (var fileName in twodaFiles.OrderBy(x => x))
+                    {
+                        _twodaList.Items.Add(fileName);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors
+                }
+            }
+            
+            mainPanel.Children.Add(_twodaList);
+            
+            // Buttons
+            var buttonLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, HorizontalAlignment = HorizontalAlignment.Right };
+            _okButton = new Button { Content = "OK", MinWidth = 80 };
+            _okButton.Click += (s, e) => OnOk();
+            _cancelButton = new Button { Content = "Cancel", MinWidth = 80 };
+            _cancelButton.Click += (s, e) => Close(false);
+            buttonLayout.Children.Add(_okButton);
+            buttonLayout.Children.Add(_cancelButton);
+            mainPanel.Children.Add(buttonLayout);
+            
+            Content = mainPanel;
+        }
+        
+        private void OnOk()
+        {
+            var selectedItem = _twodaList?.SelectedItem;
+            if (selectedItem != null)
+            {
+                Selected2DAFile = selectedItem.ToString();
+                Close(true);
+            }
+            else
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No Selection",
+                    "Please select a 2DA file.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Information);
+                errorBox.ShowAsync();
+            }
+        }
+    }
+    
+    // Dialog for adding/editing 2DA memory tokens
+    // Matching PyKotor implementation pattern for dialogs
+    internal class TwoDAMemoryTokenEditDialog : Window
+    {
+        public TwoDAMemoryTokenEntry TokenEntry { get; private set; }
+        private TextBox _tokenNameEdit;
+        private TextBox _columnNameEdit;
+        private TextBox _rowLabelEdit;
+        private Button _okButton;
+        private Button _cancelButton;
+        private TwoDAMemoryTokenEntry _originalEntry;
+        private string _twodaFile;
+        private HTInstallation _installation;
+        
+        public TwoDAMemoryTokenEditDialog(Window parent, TwoDAMemoryTokenEntry existingEntry, string twodaFile, HTInstallation installation)
+        {
+            Title = existingEntry == null ? "Add 2DA Memory Token" : "Edit 2DA Memory Token";
+            Width = 500;
+            Height = 300;
+            _originalEntry = existingEntry;
+            _twodaFile = twodaFile;
+            _installation = installation;
+            
+            InitializeComponent();
+        }
+        
+        private void InitializeComponent()
+        {
+            var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
+            
+            mainPanel.Children.Add(new TextBlock 
+            { 
+                Text = $"2DA File: {_twodaFile ?? "(none)"}",
+                FontWeight = Avalonia.Media.FontWeight.Bold 
+            });
+            
+            // Token Name
+            var tokenNameLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            tokenNameLayout.Children.Add(new TextBlock { Text = "Token Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
+            _tokenNameEdit = new TextBox { MinWidth = 300 };
+            if (_originalEntry != null)
+            {
+                _tokenNameEdit.Text = _originalEntry.TokenName ?? "";
+            }
+            else
+            {
+                _tokenNameEdit.Text = "2DAMEMORY0";
+            }
+            tokenNameLayout.Children.Add(_tokenNameEdit);
+            mainPanel.Children.Add(tokenNameLayout);
+            
+            // Column Name
+            var columnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            columnLayout.Children.Add(new TextBlock { Text = "Column Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
+            _columnNameEdit = new TextBox { MinWidth = 300 };
+            if (_originalEntry != null)
+            {
+                _columnNameEdit.Text = _originalEntry.ColumnName ?? "";
+            }
+            columnLayout.Children.Add(_columnNameEdit);
+            mainPanel.Children.Add(columnLayout);
+            
+            // Row Label
+            var rowLabelLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            rowLabelLayout.Children.Add(new TextBlock { Text = "Row Label:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
+            _rowLabelEdit = new TextBox { MinWidth = 300 };
+            if (_originalEntry != null)
+            {
+                _rowLabelEdit.Text = _originalEntry.RowLabel ?? "";
+            }
+            rowLabelLayout.Children.Add(_rowLabelEdit);
+            mainPanel.Children.Add(rowLabelLayout);
+            
+            mainPanel.Children.Add(new TextBlock 
+            { 
+                Text = "Note: Column Name and Row Label specify which cell value to store in the token.",
+                FontStyle = Avalonia.Media.FontStyle.Italic,
+                Foreground = Avalonia.Media.Brushes.Gray
+            });
+            
+            // Buttons
+            var buttonLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, HorizontalAlignment = HorizontalAlignment.Right };
+            _okButton = new Button { Content = "OK", MinWidth = 80 };
+            _okButton.Click += (s, e) => OnOk();
+            _cancelButton = new Button { Content = "Cancel", MinWidth = 80 };
+            _cancelButton.Click += (s, e) => Close(false);
+            buttonLayout.Children.Add(_okButton);
+            buttonLayout.Children.Add(_cancelButton);
+            mainPanel.Children.Add(buttonLayout);
+            
+            Content = mainPanel;
+        }
+        
+        private void OnOk()
+        {
+            string tokenName = _tokenNameEdit?.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(tokenName))
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    "Token name cannot be empty.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+            
+            // Extract token ID from token name if it matches pattern 2DAMEMORY#
+            int tokenId = 0;
+            if (tokenName.StartsWith("2DAMEMORY", StringComparison.OrdinalIgnoreCase))
+            {
+                string idPart = tokenName.Substring(9); // Skip "2DAMEMORY"
+                if (!int.TryParse(idPart, out tokenId))
+                {
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        "Token name must be in format 2DAMEMORY# where # is a number.",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error);
+                    errorBox.ShowAsync();
+                    return;
+                }
+            }
+            else
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    "Token name must start with '2DAMEMORY' followed by a number.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+            
+            TokenEntry = new TwoDAMemoryTokenEntry
+            {
+                TokenName = tokenName,
+                TokenId = tokenId,
+                ColumnName = _columnNameEdit?.Text?.Trim() ?? "",
+                RowLabel = _rowLabelEdit?.Text?.Trim() ?? ""
+            };
+            
+            if (_originalEntry != null)
+            {
+                TokenEntry.UsedBy = _originalEntry.UsedBy;
+            }
+            
+            Close(true);
         }
     }
     
