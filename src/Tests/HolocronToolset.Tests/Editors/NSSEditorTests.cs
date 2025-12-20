@@ -217,7 +217,7 @@ namespace HolocronToolset.Tests.Editors
             // Test cursor operations
             // Matching PyKotor: editor.ui.codeEdit.setPlainText("Line 1\nLine 2\nLine 3")
             codeEdit.SetPlainText("Line 1\nLine 2\nLine 3");
-            
+
             // Matching PyKotor: cursor = editor.ui.codeEdit.textCursor()
             // Matching PyKotor: cursor.setPosition(0)
             // Matching PyKotor: editor.ui.codeEdit.setTextCursor(cursor)
@@ -231,7 +231,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor: editor.ui.codeEdit.setTextCursor(cursor)
             // Matching PyKotor: line_num = editor.ui.codeEdit.textCursor().blockNumber()
             // Matching PyKotor: assert line_num == 1
-            
+
             // In Avalonia TextBox, we need to calculate line number from cursor position
             // Move cursor to the start of the second line
             string text = codeEdit.Text;
@@ -242,7 +242,7 @@ namespace HolocronToolset.Tests.Editors
                 int secondLineStart = newlineIndex + 1;
                 codeEdit.SelectionStart = secondLineStart;
                 codeEdit.SelectionEnd = secondLineStart;
-                
+
                 // Calculate line number (0-based, so line 1 is index 1)
                 int lineNumber = 0;
                 for (int i = 0; i < secondLineStart && i < text.Length; i++)
@@ -252,7 +252,7 @@ namespace HolocronToolset.Tests.Editors
                         lineNumber++;
                     }
                 }
-                
+
                 // Matching PyKotor: assert line_num == 1 (1-indexed in Qt, but we use 0-based)
                 // The Python test expects line_num == 1, which means the second line (0-indexed line 1)
                 lineNumber.Should().Be(1, "Line number should be 1 after moving cursor down one line");
@@ -547,11 +547,11 @@ int g_globalVar = 10;
 // Main function
 void main() {
     int localVar = 20;
-    
+
     if (localVar > 10) {
         SendMessageToPC(GetFirstPC(), ""Condition met"");
     }
-    
+
     for (int i = 0; i < 5; i++) {
         localVar += i;
     }
@@ -574,7 +574,7 @@ void helper() {
             {
                 // Set cursor to the specified line
                 editor.GotoLine(lineNum);
-                
+
                 // Add bookmark
                 editor.AddBookmark();
             }
@@ -596,17 +596,17 @@ void helper() {
                 {
                     // Select the item
                     bookmarkTree.SelectedItem = item;
-                    
+
                     int countBefore = itemsListMutable.Count;
-                    
+
                     // Delete bookmark
                     editor.DeleteBookmark();
-                    
+
                     // Verify count decreased
                     var itemsListAfter = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
                     int countAfter = itemsListAfter.Count();
                     countAfter.Should().Be(countBefore - 1, $"Bookmark count should decrease from {countBefore} to {countBefore - 1}");
-                    
+
                     // Update mutable list for next iteration
                     itemsListMutable = itemsListAfter.ToList();
                 }
@@ -661,11 +661,11 @@ int g_globalVar = 10;
 // Main function
 void main() {
     int localVar = 20;
-    
+
     if (localVar > 10) {
         SendMessageToPC(GetFirstPC(), ""Condition met"");
     }
-    
+
     for (int i = 0; i < 5; i++) {
         localVar += i;
     }
@@ -688,7 +688,7 @@ void helper() {
             {
                 // Set cursor to the specified line (matching Python: cursor.setPosition(block.position()))
                 editor.GotoLine(lineNum);
-                
+
                 // Add bookmark (matching Python: editor.add_bookmark())
                 editor.AddBookmark();
             }
@@ -699,7 +699,7 @@ void helper() {
 
             // Navigate to next bookmark (matching Python: editor._goto_next_bookmark())
             editor.GotoNextBookmark();
-            
+
             // Verify we're at one of the bookmark lines (matching Python: assert current_line in bookmark_lines)
             int currentLine = editor.GetCurrentLine();
             currentLine.Should().BeOneOf(bookmarkLines, "Should navigate to one of the bookmark lines");
@@ -720,20 +720,185 @@ void helper() {
 
             // Navigate to previous bookmark (matching Python: editor._goto_previous_bookmark())
             editor.GotoPreviousBookmark();
-            
+
             // Verify we're at one of the bookmark lines (matching Python: assert current_line in bookmark_lines)
             currentLine = editor.GetCurrentLine();
             currentLine.Should().BeOneOf(bookmarkLines, "Should navigate to one of the bookmark lines when going backwards");
         }
 
-        // TODO: STUB - Implement test_nss_editor_bookmark_persistence (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:352-419)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:352-419
         // Original: def test_nss_editor_bookmark_persistence(qtbot, installation: HTInstallation): Test bookmark persistence
         [Fact]
         public void TestNssEditorBookmarkPersistence()
         {
-            // TODO: STUB - Implement bookmark persistence test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:352-419
-            throw new NotImplementedException("TestNssEditorBookmarkPersistence: Bookmark persistence test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: script = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+            string script = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5";
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(script)
+            // Use Load to set the text content
+            editor.Load("test_script.nss", "test_script", ResourceType.NSS, Encoding.UTF8.GetBytes(script));
+
+            // Matching Python: # Add bookmarks
+            // Matching Python: for line_num in [2, 4]:
+            int[] bookmarkLines = { 2, 4 };
+            foreach (int lineNum in bookmarkLines)
+            {
+                // Matching Python: cursor = editor.ui.codeEdit.textCursor()
+                // Matching Python: doc = editor.ui.codeEdit.document()
+                // Matching Python: block = doc.findBlockByLineNumber(line_num - 1)
+                // Matching Python: cursor.setPosition(block.position())
+                // Matching Python: editor.ui.codeEdit.setTextCursor(cursor)
+                // Matching Python: editor.add_bookmark()
+                editor.GotoLine(lineNum);
+                editor.AddBookmark();
+            }
+
+            // Matching Python: # Verify bookmarks were added
+            // Matching Python: assert editor.ui.bookmarkTree.topLevelItemCount() >= 2, "Bookmarks should be added to tree"
+            var bookmarkTree = editor.BookmarkTree;
+            bookmarkTree.Should().NotBeNull("BookmarkTree should be initialized");
+
+            var itemsList = bookmarkTree.ItemsSource as System.Collections.Generic.List<Avalonia.Controls.TreeViewItem> ??
+                          (bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ??
+                           new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>()).ToList();
+
+            int bookmarkCount = itemsList.Count;
+            bookmarkCount.Should().BeGreaterThanOrEqualTo(2, "Bookmarks should be added to tree");
+
+            // Matching Python: # Verify bookmark items have valid data before saving
+            // Matching Python: for i in range(editor.ui.bookmarkTree.topLevelItemCount()):
+            // Matching Python:     item = editor.ui.bookmarkTree.topLevelItem(i)
+            // Matching Python:     assert item is not None, f"Item {i} should not be None"
+            // Matching Python:     from qtpy.QtCore import Qt
+            // Matching Python:     line_data = item.data(0, Qt.ItemDataRole.UserRole)
+            // Matching Python:     assert line_data is not None, f"Item {i} should have line data in UserRole, got {line_data}"
+            for (int i = 0; i < itemsList.Count; i++)
+            {
+                var item = itemsList[i];
+                item.Should().NotBeNull($"Item {i} should not be None");
+
+                if (item?.Tag is NSSEditor.BookmarkData bookmarkData)
+                {
+                    bookmarkData.LineNumber.Should().BeGreaterThan(0, $"Item {i} should have valid line number");
+                    bookmarkData.Description.Should().NotBeNull($"Item {i} should have description");
+                }
+                else
+                {
+                    throw new Exception($"Item {i} should have BookmarkData in Tag, got {item?.Tag?.GetType().Name ?? "null"}");
+                }
+            }
+
+            // Matching Python: # Store resname to verify it doesn't change
+            // Matching Python: resname_before = editor._resname
+            string resnameBefore = editor.Resname;
+
+            // Matching Python: # Save bookmarks (add_bookmark already calls _save_bookmarks, but call it again to ensure)
+            // Matching Python: editor._save_bookmarks()
+            // Call SaveBookmarks using reflection to ensure bookmarks are saved
+            var saveBookmarksMethod = typeof(NSSEditor).GetMethod("SaveBookmarks",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (saveBookmarksMethod != null)
+            {
+                saveBookmarksMethod.Invoke(editor, null);
+            }
+
+            // Matching Python: # Verify resname hasn't changed
+            // Matching Python: assert editor._resname == resname_before, f"resname changed from {resname_before} to {editor._resname}"
+            string resnameAfterSave = editor.Resname;
+            resnameAfterSave.Should().Be(resnameBefore, $"resname should not change after save: {resnameBefore} -> {resnameAfterSave}");
+
+            // Matching Python: # Verify bookmarks were actually saved by checking QSettings directly
+            // Matching Python: from qtpy.QtCore import QSettings
+            // Matching Python: settings = QSettings("HolocronToolsetV3", "NSSEditor")
+            // Matching Python: file_key = f"nss_editor/bookmarks/{resname_before}" if resname_before else "nss_editor/bookmarks/untitled"
+            // Matching Python: saved_bookmarks_json = settings.value(file_key, "[]")
+            // Matching Python: assert saved_bookmarks_json != "[]", f"Bookmarks should be saved to QSettings with key {file_key}, got {saved_bookmarks_json}"
+            var settings = new Settings("NSSEditor");
+            string fileKey = !string.IsNullOrEmpty(resnameBefore)
+                ? $"nss_editor/bookmarks/{resnameBefore}"
+                : "nss_editor/bookmarks/untitled";
+
+            string savedBookmarksJson = settings.GetValue(fileKey, "[]");
+            savedBookmarksJson.Should().NotBe("[]", $"Bookmarks should be saved to Settings with key {fileKey}, got {savedBookmarksJson}");
+
+            // Clear bookmarks from tree to test loading
+            // Matching Python: editor.ui.bookmarkTree.clear()
+            bookmarkTree.ItemsSource = new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
+
+            // Verify tree is cleared
+            var clearedItems = bookmarkTree.ItemsSource as System.Collections.Generic.List<Avalonia.Controls.TreeViewItem> ??
+                              (bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ??
+                               new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>()).ToList();
+            clearedItems.Count.Should().Be(0, "Tree should be cleared");
+
+            // Matching Python: # Verify resname still matches before loading
+            // Matching Python: assert editor._resname == resname_before, f"resname changed before load: {resname_before} -> {editor._resname}"
+            string resnameBeforeLoad = editor.Resname;
+            resnameBeforeLoad.Should().Be(resnameBefore, $"resname should not change before load: {resnameBefore} -> {resnameBeforeLoad}");
+
+            // Matching Python: editor.load_bookmarks()
+            // Call LoadBookmarks using reflection
+            var loadBookmarksMethod = typeof(NSSEditor).GetMethod("LoadBookmarks",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (loadBookmarksMethod != null)
+            {
+                loadBookmarksMethod.Invoke(editor, null);
+            }
+
+            // Matching Python: # Verify bookmarks were restored
+            // Matching Python: assert editor.ui.bookmarkTree.topLevelItemCount() >= 2, "Bookmarks should be restored after load"
+            var restoredItems = bookmarkTree.ItemsSource as System.Collections.Generic.List<Avalonia.Controls.TreeViewItem> ??
+                               (bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ??
+                                new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>()).ToList();
+
+            int restoredCount = restoredItems.Count;
+            restoredCount.Should().BeGreaterThanOrEqualTo(2, "Bookmarks should be restored after load");
+
+            // Verify the restored bookmarks have the correct line numbers
+            var restoredLineNumbers = new System.Collections.Generic.List<int>();
+            foreach (var item in restoredItems)
+            {
+                if (item?.Tag is NSSEditor.BookmarkData bookmarkData)
+                {
+                    restoredLineNumbers.Add(bookmarkData.LineNumber);
+                }
+            }
+
+            restoredLineNumbers.Should().Contain(2, "Bookmark at line 2 should be restored");
+            restoredLineNumbers.Should().Contain(4, "Bookmark at line 4 should be restored");
         }
 
         // TODO: STUB - Implement test_nss_editor_snippet_add_and_insert (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:421-456)
@@ -824,7 +989,7 @@ void helper() {
             {
                 bool currentIsTsl = (bool)isTslField.GetValue(editor);
                 isTslField.SetValue(editor, !currentIsTsl);
-                
+
                 // Update game-specific data (which also updates the highlighter)
                 editor.UpdateGameSpecificData();
             }
@@ -1042,7 +1207,7 @@ void helper() {
             {
                 // Set the selected item
                 functionList.SelectedItem = functionItem;
-                
+
                 // Insert the function
                 editor.InsertSelectedFunction();
 
@@ -1069,7 +1234,7 @@ void helper() {
                     {
                         functionList.SelectedItem = firstItem;
                         string functionName = firstItem.Content?.ToString();
-                        
+
                         if (!string.IsNullOrEmpty(functionName))
                         {
                             editor.InsertSelectedFunction();
@@ -1160,11 +1325,11 @@ int g_globalVar = 10;
 // Main function
 void main() {
     int localVar = 20;
-    
+
     if (localVar > 10) {
         SendMessageToPC(GetFirstPC(), ""Condition met"");
     }
-    
+
     for (int i = 0; i < 5; i++) {
         localVar += i;
     }
@@ -1182,10 +1347,10 @@ void helper() {
             var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
-            
+
             var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
             codeEditor.Should().NotBeNull("_codeEdit should be initialized");
-            
+
             codeEditor.SetPlainText(complexNssScript);
 
             // Update outline
@@ -1195,11 +1360,11 @@ void helper() {
             // The test verifies that topLevelItemCount >= 0 (may have items)
             var outlineView = editor.OutlineView;
             outlineView.Should().NotBeNull();
-            
+
             // Get items from outline view
             var itemsSource = outlineView.ItemsSource;
             itemsSource.Should().NotBeNull();
-            
+
             // Count items (using reflection or casting to list)
             int itemCount = 0;
             if (itemsSource is System.Collections.IEnumerable enumerable)
@@ -1214,7 +1379,7 @@ void helper() {
             // But with our complex script, we should have at least some items
             // We expect: g_globalVar (variable), main (function), helper (function)
             itemCount.Should().BeGreaterOrEqualTo(0);
-            
+
             // With the complex script, we should have found at least the functions
             // Note: The exact count may vary based on parsing, but should be >= 2 (main and helper functions)
             if (itemCount > 0)
@@ -1228,7 +1393,7 @@ void helper() {
                         itemsList.Add(item);
                     }
                 }
-                
+
                 // Should have found functions and/or variables
                 itemsList.Count.Should().BeGreaterOrEqualTo(0);
             }
@@ -1343,13 +1508,13 @@ void helper() {
             // Original: Test that compilation UI actions are set up
             var editor = new NSSEditor(null, null);
             editor.New();
-            
+
             // Compile action should exist
             // Matching Python: assert hasattr(editor.ui, 'actionCompile')
             // Matching Python: assert editor.ui.actionCompile is not None
             editor.Ui.Should().NotBeNull("UI wrapper should be initialized");
             editor.Ui.ActionCompile.Should().NotBeNull("actionCompile should exist and not be null");
-            
+
             // Compile method should exist and be callable
             // Matching Python: assert hasattr(editor, 'compile_current_script')
             // Matching Python: assert callable(editor.compile_current_script)
@@ -1358,14 +1523,78 @@ void helper() {
             compileMethod.IsPublic.Should().BeTrue("CompileCurrentScript should be public");
         }
 
-        // TODO: STUB - Implement test_nss_editor_build_returns_script_content (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:906-926)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:906-926
         // Original: def test_nss_editor_build_returns_script_content(qtbot, installation: HTInstallation, simple_nss_script: str): Test build returns script content
         [Fact]
         public void TestNssEditorBuildReturnsScriptContent()
         {
-            // TODO: STUB - Implement build returns script content test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:906-926
-            throw new NotImplementedException("TestNssEditorBuildReturnsScriptContent: Build returns script content test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: simple_nss_script fixture (from conftest.py:28-34)
+            string simpleNssScript = @"void main() {
+    int x = 5;
+    string s = ""test"";
+    SendMessageToPC(GetFirstPC(), ""Hello"");
+}";
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(simple_nss_script)
+            // Get the code editor using reflection (matching pattern used in other tests)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+            codeEdit.SetPlainText(simpleNssScript);
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: assert data is not None
+            data.Should().NotBeNull("Build should return non-null data");
+
+            // Matching Python: assert len(data) > 0
+            data.Length.Should().BeGreaterThan(0, "Build should return non-empty data");
+
+            // Matching Python: assert simple_nss_script.encode('utf-8') in data or simple_nss_script in data.decode('utf-8', errors='ignore')
+            // Check if script content is in the data (either as UTF-8 bytes or decoded text)
+            string dataText = Encoding.UTF8.GetString(data);
+            bool containsScript = dataText.Contains(simpleNssScript) ||
+                                  dataText.Contains("void main()") &&
+                                  dataText.Contains("int x = 5") &&
+                                  dataText.Contains("string s = \"test\"") &&
+                                  dataText.Contains("SendMessageToPC");
+
+            containsScript.Should().BeTrue("Build data should contain the script content");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:928-940
@@ -1379,23 +1608,23 @@ void helper() {
             {
                 k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
             }
-            
+
             HTInstallation installation = null;
             if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
             {
                 installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
             }
-            
+
             // Matching Python: editor = NSSEditor(None, installation)
             var editor = new NSSEditor(null, installation);
-            
+
             // Matching Python: editor.new()
             editor.New();
-            
+
             // Matching Python: assert hasattr(editor, 'file_system_model')
             // Matching Python: assert editor.file_system_model is not None
             editor.FileSystemModel.Should().NotBeNull("File system model should be initialized");
-            
+
             // Matching Python: assert hasattr(editor.ui, 'fileExplorerView')
             editor.FileExplorerView.Should().NotBeNull("File explorer view should exist");
         }
@@ -1650,14 +1879,42 @@ void helper() {
             noScrollFilter.Should().NotBeNull("_noScrollFilter should be initialized");
         }
 
-        // TODO: STUB - Implement test_nss_editor_output_panel_exists (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1018-1027)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1018-1027
         // Original: def test_nss_editor_output_panel_exists(qtbot, installation: HTInstallation): Test output panel exists
         [Fact]
         public void TestNssEditorOutputPanelExists()
         {
-            // TODO: STUB - Implement output panel exists test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1018-1027
-            throw new NotImplementedException("TestNssEditorOutputPanelExists: Output panel exists test not yet implemented");
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1018-1027
+            // Original: editor = NSSEditor(None, installation)
+            // Original: editor.new()
+            // Original: assert hasattr(editor.ui, 'outputEdit')
+            // Original: assert editor.output_text_edit is not None
+            HTInstallation installation = null;
+
+            // Try to find a valid installation for testing
+            if (System.Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                string k1Path = System.Environment.GetEnvironmentVariable("KOTOR_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Output panel should exist in UI wrapper (matching Python's hasattr(editor.ui, 'outputEdit'))
+            editor.Ui.Should().NotBeNull("NSSEditor should have UI wrapper");
+            editor.Ui.OutputEdit.Should().NotBeNull("NSSEditor UI should have outputEdit property");
+
+            // Output text edit property should exist and not be null (matching Python's editor.output_text_edit is not None)
+            editor.OutputTextEdit.Should().NotBeNull("NSSEditor should have OutputTextEdit property that is not null");
         }
 
         // TODO: STUB - Implement test_nss_editor_log_to_output (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1029-1046)
@@ -1679,7 +1936,7 @@ void helper() {
             var installation = _fixture.Installation;
             var editor = new NSSEditor(null, installation);
             editor.New();
-            
+
             // Status bar should exist
             var statusBar = editor.StatusBar();
             statusBar.Should().NotBeNull("Status bar should be initialized");
@@ -1784,11 +2041,11 @@ int g_globalVar = 10;
 // Main function
 void main() {
     int localVar = 20;
-    
+
     if (localVar > 10) {
         SendMessageToPC(GetFirstPC(), ""Condition met"");
     }
-    
+
     for (int i = 0; i < 5; i++) {
         localVar += i;
     }
@@ -1806,10 +2063,10 @@ void helper() {
             var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
-            
+
             var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
             codeEditor.Should().NotBeNull("_codeEdit should be initialized");
-            
+
             // Set the text (matching Python: editor.ui.codeEdit.setPlainText(complex_nss_script))
             codeEditor.SetPlainText(complexNssScript);
 
@@ -1891,14 +2148,53 @@ void helper() {
             throw new NotImplementedException("TestNssEditorFoldingVisualIndicators: Folding visual indicators test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_breadcrumbs_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1472-1484)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1472-1484
         // Original: def test_nss_editor_breadcrumbs_setup(qtbot, installation: HTInstallation): Test breadcrumbs setup
         [Fact]
         public void TestNssEditorBreadcrumbsSetup()
         {
-            // TODO: STUB - Implement breadcrumbs setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1472-1484
-            throw new NotImplementedException("TestNssEditorBreadcrumbsSetup: Breadcrumbs setup test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Matching PyKotor: assert hasattr(editor, '_breadcrumbs')
+            // Check that _breadcrumbs field exists using reflection
+            var breadcrumbsField = typeof(NSSEditor).GetField("_breadcrumbs", BindingFlags.NonPublic | BindingFlags.Instance);
+            breadcrumbsField.Should().NotBeNull("_breadcrumbs field should exist");
+
+            // Matching PyKotor: assert editor._breadcrumbs is not None
+            var breadcrumbs = breadcrumbsField.GetValue(editor) as HolocronToolset.Widgets.BreadcrumbsWidget;
+            breadcrumbs.Should().NotBeNull("Breadcrumbs should be initialized");
+
+            // Matching PyKotor: assert editor._breadcrumbs.parent() is not None
+            // In Avalonia, UserControl has a Parent property (of type IControl/Control)
+            breadcrumbs.Parent.Should().NotBeNull("Breadcrumbs should be in the UI (have a parent)");
         }
 
         // TODO: STUB - Implement test_nss_editor_breadcrumbs_update_on_cursor_move (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1486-1516)
@@ -1960,11 +2256,11 @@ int g_globalVar = 10;
 // Main function
 void main() {
     int localVar = 20;
-    
+
     if (localVar > 10) {
         SendMessageToPC(GetFirstPC(), ""Condition met"");
     }
-    
+
     for (int i = 0; i < 5; i++) {
         localVar += i;
     }
@@ -1999,7 +2295,7 @@ void helper() {
             var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
-            
+
             var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
             codeEditor.Should().NotBeNull("_codeEdit should be initialized");
 
@@ -2029,9 +2325,9 @@ void helper() {
                 // Use reflection to call private NavigateToSymbol method
                 var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 methodInfo.Should().NotBeNull("NSSEditor should have NavigateToSymbol method");
-                
+
                 if (methodInfo != null)
                 {
                     methodInfo.Invoke(editor, new object[] { "main" });
@@ -2045,7 +2341,7 @@ void helper() {
                 {
                     ex = targetEx.InnerException;
                 }
-                
+
                 // In C#, we don't have Python's TypeError, but we should check for ArgumentException or similar
                 if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
                     ex.Message.Contains("TypeError"))
@@ -2076,15 +2372,15 @@ void helper() {
 
                 // The cursor should have moved to the main function line (or close to it)
                 // We allow some flexibility since the exact position depends on GotoLine implementation
-                finalLineNumber.Should().BeGreaterThanOrEqualTo(mainLineNum - 1, 
+                finalLineNumber.Should().BeGreaterThanOrEqualTo(mainLineNum - 1,
                     $"Cursor should be at or near line {mainLineNum} (main function), but was at line {finalLineNumber}");
-                finalLineNumber.Should().BeLessThanOrEqualTo(mainLineNum + 1, 
+                finalLineNumber.Should().BeLessThanOrEqualTo(mainLineNum + 1,
                     $"Cursor should be at or near line {mainLineNum} (main function), but was at line {finalLineNumber}");
             }
 
             // Verify editor is still functional after navigation
             editor.Should().NotBeNull("Editor should still be functional after navigation");
-            
+
             // Verify the code editor still has the script content
             if (codeEditor != null)
             {
@@ -2099,7 +2395,7 @@ void helper() {
             {
                 var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 if (methodInfo != null)
                 {
                     methodInfo.Invoke(editor, new object[] { "helper" });
@@ -2111,7 +2407,7 @@ void helper() {
                 {
                     ex = targetEx.InnerException;
                 }
-                
+
                 if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
                     ex.Message.Contains("TypeError"))
                 {
@@ -2125,7 +2421,7 @@ void helper() {
             {
                 var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 if (methodInfo != null)
                 {
                     methodInfo.Invoke(editor, new object[] { "g_globalVar" });
@@ -2137,7 +2433,7 @@ void helper() {
                 {
                     ex = targetEx.InnerException;
                 }
-                
+
                 if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
                     ex.Message.Contains("TypeError"))
                 {
@@ -2151,7 +2447,7 @@ void helper() {
             {
                 var methodInfo = typeof(NSSEditor).GetMethod("NavigateToSymbol",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 if (methodInfo != null)
                 {
                     methodInfo.Invoke(editor, new object[] { "nonexistent_function_12345" });
@@ -2163,7 +2459,7 @@ void helper() {
                 {
                     ex = targetEx.InnerException;
                 }
-                
+
                 // Should not throw for non-existent symbols, but if it does, it shouldn't be a TypeError
                 if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
                     ex.Message.Contains("TypeError"))
@@ -2216,11 +2512,11 @@ int g_globalVar = 10;
 // Main function
 void main() {
     int localVar = 20;
-    
+
     if (localVar > 10) {
         SendMessageToPC(GetFirstPC(), ""Condition met"");
     }
-    
+
     for (int i = 0; i < 5; i++) {
         localVar += i;
     }
@@ -2250,7 +2546,7 @@ void helper() {
                 // Use reflection to access private method OnBreadcrumbClicked for testing
                 var methodInfo = typeof(NSSEditor).GetMethod("OnBreadcrumbClicked",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 if (methodInfo != null)
                 {
                     methodInfo.Invoke(editor, new object[] { "Function: main" });
@@ -2271,7 +2567,7 @@ void helper() {
                 {
                     ex = targetEx.InnerException;
                 }
-                
+
                 if (ex.Message.Contains("go_to_line() takes 1 positional argument but 2 were given") ||
                     ex.Message.Contains("TypeError"))
                 {
@@ -2283,7 +2579,7 @@ void helper() {
             // The main fix is verified: TypeError is gone when clicking breadcrumbs.
             // Note: The exact cursor position may vary depending on GotoLine implementation,
             // but the critical bug (TypeError) is fixed.
-            
+
             // Verify cursor moved (or stayed if already there)
             // The cursor should be at the main function definition
             // We can verify this by checking that the editor is still functional
@@ -2338,61 +2634,61 @@ void helper() {
             // Matching PyKotor implementation: Test Alt+Shift+Drag for column selection
             var editor = new NSSEditor(null, null);
             editor.New();
-            
+
             // Set up test script with multiple lines
             // Matching PyKotor test script:
             string script = @"abc def
 123 456
 xyz uvw";
-            
+
             // Access CodeEditor via reflection
             var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
-            
+
             var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
             codeEditor.Should().NotBeNull("_codeEdit should be initialized");
-            
+
             // Set the script text
             codeEditor.SetPlainText(script);
-            
+
             // Verify initial state: column selection mode should be false
             codeEditor.ColumnSelectionMode.Should().BeFalse("Column selection mode should be false initially");
-            
+
             // Simulate Alt+Shift mouse press by calling OnPointerPressed via reflection
             // Create a mock PointerPressedEventArgs
             // Since we can't easily create PointerPressedEventArgs in tests, we'll test the behavior
             // by directly invoking the method that handles the column selection mode activation
-            
+
             // Use reflection to call OnPointerPressed with Alt+Shift modifiers
             var onPointerPressedMethod = typeof(HolocronToolset.Widgets.CodeEditor).GetMethod("OnPointerPressed",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
+
             if (onPointerPressedMethod != null)
             {
                 // Create a mock pointer pressed event
                 // In Avalonia, we need to create a PointerPressedEventArgs
                 // Since this is complex, we'll test the column selection mode property directly
                 // by simulating the state change
-                
+
                 // For testing purposes, we'll verify that the ColumnSelectionMode property exists
                 // and can be accessed. The actual pointer event simulation would require
                 // a more complex setup with Avalonia's input system.
-                
+
                 // Verify the property exists and is accessible
                 var columnSelectionModeProperty = typeof(HolocronToolset.Widgets.CodeEditor).GetProperty("ColumnSelectionMode",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 columnSelectionModeProperty.Should().NotBeNull("CodeEditor should have ColumnSelectionMode property");
-                
+
                 // Test that column selection mode can be read
                 bool initialMode = codeEditor.ColumnSelectionMode;
                 initialMode.Should().BeFalse("Column selection mode should be false initially");
-                
+
                 // Note: In a full integration test with UI, we would simulate the actual pointer event
                 // with Alt+Shift modifiers. For unit testing, we verify the property exists and
                 // the initial state is correct. The actual pointer event handling is tested through
                 // the OnPointerPressed implementation which checks for Alt+Shift modifiers.
-                
+
                 // Verify that the code editor has the necessary infrastructure for column selection
                 // The OnPointerPressed method should handle Alt+Shift+LeftButton to activate column selection mode
                 // This is verified by the implementation in CodeEditor.OnPointerPressed
@@ -2403,11 +2699,11 @@ xyz uvw";
                 var columnSelectionModeProperty = typeof(HolocronToolset.Widgets.CodeEditor).GetProperty("ColumnSelectionMode",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 columnSelectionModeProperty.Should().NotBeNull("CodeEditor should have ColumnSelectionMode property");
-                
+
                 // Verify initial state
                 codeEditor.ColumnSelectionMode.Should().BeFalse("Column selection mode should be false initially");
             }
-            
+
             // Matching PyKotor assertion: assert editor.ui.codeEdit._column_selection_mode == True
             // In our implementation, we verify that:
             // 1. The ColumnSelectionMode property exists and is accessible
@@ -2456,7 +2752,7 @@ int g_var = 10;
 
 void main() {
     int local = 5;
-    
+
     if (local > 0) {
         int nested = 10;
         if (nested > 5) {
@@ -2464,7 +2760,7 @@ void main() {
             local += nested;
         }
     }
-    
+
     for (int i = 0; i < 10; i++) {
         local += i;
     }
@@ -2590,12 +2886,12 @@ void helper() {
             // Set up test script: "int x = 5; int y = x;"
             // This script has two occurrences of 'x' - one as a variable declaration and one as a variable reference
             string script = "int x = 5; int y = x;";
-            
+
             // Access CodeEditor via reflection
             var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
-            
+
             var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
             codeEditor.Should().NotBeNull("_codeEdit should be initialized");
 
@@ -2605,7 +2901,7 @@ void helper() {
             // Position cursor on first 'x' (at position 4: "int x = 5;")
             int xPos = script.IndexOf('x');
             xPos.Should().BeGreaterThanOrEqualTo(0, "Script should contain 'x' character");
-            
+
             // Set cursor position to the first 'x'
             codeEditor.SelectionStart = xPos;
             codeEditor.SelectionEnd = xPos;
@@ -2627,7 +2923,7 @@ void helper() {
             // After SelectNextOccurrence, the selection should be on the second 'x' (at position ~20: "int y = x;")
             int secondXPos = script.LastIndexOf('x');
             secondXPos.Should().BeGreaterThan(xPos, "Second 'x' should be after the first one");
-            
+
             // The selection should now be on the second occurrence of 'x'
             codeEditor.SelectionStart.Should().Be(secondXPos, "Selection should move to second 'x'");
             codeEditor.SelectionEnd.Should().Be(secondXPos + 1, "Selection should cover the 'x' character");
@@ -2637,7 +2933,7 @@ void helper() {
             // Since we're now at the second 'x', the next occurrence should wrap to the first 'x'
             bool wrapResult = codeEditor.SelectNextOccurrence();
             wrapResult.Should().BeTrue("SelectNextOccurrence should wrap to first 'x'");
-            
+
             // Verify selection wrapped to first 'x'
             codeEditor.SelectionStart.Should().Be(xPos, "Selection should wrap to first 'x'");
             codeEditor.SelectionEnd.Should().Be(xPos + 1, "Selection should cover the 'x' character");
@@ -2660,7 +2956,7 @@ void helper() {
             codeEditor.SelectionEnd = 3; // Select "int"
             bool selectedResult = codeEditor.SelectNextOccurrence();
             selectedResult.Should().BeTrue("SelectNextOccurrence should find next occurrence of selected text");
-            
+
             // Verify it found the second "int"
             int secondIntPos = script.IndexOf("int", 4); // Find "int" after position 4
             secondIntPos.Should().BeGreaterThan(0, "Script should contain second 'int'");
@@ -2680,38 +2976,38 @@ void helper() {
             editor.New();
 
             string script = "Line 1\nLine 2\nLine 3";
-            
+
             // Access CodeEditor via reflection
             var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
-            
+
             var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
             codeEditor.Should().NotBeNull("_codeEdit should be initialized");
-            
+
             // Set the script text
             codeEditor.SetPlainText(script);
-            
+
             // Store original text for comparison
             string originalText = codeEditor.ToPlainText();
             int originalCount = CountOccurrences(originalText, "Line 2");
-            
+
             // Move cursor to line 2
             // Line 1 is 7 characters ("Line 1\n"), so position 7 is the start of line 2
             int line2Start = script.IndexOf("Line 2");
             line2Start.Should().BeGreaterThan(0, "Script should contain 'Line 2'");
-            
+
             // Set cursor to start of line 2
             codeEditor.SelectionStart = line2Start;
             codeEditor.SelectionEnd = line2Start;
-            
+
             // Duplicate line
             codeEditor.DuplicateLine();
-            
+
             // Verify line was duplicated
             string newText = codeEditor.ToPlainText();
             newText.Should().Contain("Line 2", "New text should contain 'Line 2'");
-            
+
             int newCount = CountOccurrences(newText, "Line 2");
             newCount.Should().BeGreaterThan(originalCount, "New text should have more occurrences of 'Line 2' than original");
         }
@@ -2880,7 +3176,7 @@ void func2() {
             System.Threading.Thread.Sleep(200);
 
             // Move cursor to second function (line 4, 1-indexed)
-            // In the script: 
+            // In the script:
             // Line 1: "void func1() {"
             // Line 2: "}"
             // Line 3: "" (empty)
@@ -2902,9 +3198,9 @@ void func2() {
             var breadcrumbPath = editor.Breadcrumbs.Path;
             breadcrumbPath.Should().NotBeEmpty("Breadcrumb path should not be empty");
             breadcrumbPath.Count.Should().BeGreaterOrEqual(2, "Breadcrumb path should have at least filename and function");
-            
+
             // Last item should be the function we're in (func2)
-            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func2", 
+            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func2",
                 "Breadcrumb should show Function: func2 when cursor is in func2");
 
             // Additional verification: Move cursor to first function and verify breadcrumbs update
@@ -2914,7 +3210,7 @@ void func2() {
 
             // Verify breadcrumbs show first function (func1)
             breadcrumbPath = editor.Breadcrumbs.Path;
-            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func1", 
+            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func1",
                 "Breadcrumb should show Function: func1 when cursor is in func1");
 
             // Move cursor back to second function and verify
@@ -2924,7 +3220,7 @@ void func2() {
 
             // Final verification - breadcrumbs should detect correct function (func2)
             breadcrumbPath = editor.Breadcrumbs.Path;
-            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func2", 
+            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func2",
                 "Breadcrumb should show Function: func2 when cursor moves back to func2");
         }
 
