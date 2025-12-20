@@ -830,16 +830,407 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on object events: OPEN_OBJECT (7), CLOSE_OBJECT (6), LOCK_OBJECT (0xd), UNLOCK_OBJECT (0xc).
         /// Updates object state and triggers associated scripts.
         /// Handles visual/audio feedback for state changes.
+        ///
+        /// Implementation based on swkotor2.exe: DispatchEvent @ 0x004dcfb0
+        /// - EVENT_OPEN_OBJECT (case 7): Opens door/placeable, fires OnOpen script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN = 0x16)
+        /// - EVENT_CLOSE_OBJECT (case 6): Closes door/placeable, fires OnClose script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE = 0x17)
+        /// - EVENT_LOCK_OBJECT (case 0xd): Locks door/placeable, fires OnLock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
+        /// - EVENT_UNLOCK_OBJECT (case 0xc): Unlocks door/placeable, fires OnUnlock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED = 0x1d)
+        ///
+        /// Located via string references:
+        /// - "EVENT_OPEN_OBJECT" @ 0x007bcda0 (swkotor2.exe, case 7)
+        /// - "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (swkotor2.exe, case 6)
+        /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20 (swkotor2.exe, case 0xd)
+        /// - "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (swkotor2.exe, case 0xc)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (swkotor2.exe, 0x16)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (swkotor2.exe, 0x17)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (swkotor2.exe, 0x1c)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (swkotor2.exe, 0x1d)
+        ///
+        /// Object event handling flow (based on swkotor2.exe: DispatchEvent @ 0x004dcfb0):
+        /// 1. EVENT_OPEN_OBJECT (7): Opens door/placeable
+        ///    - Sets IsOpen=true, OpenState/AnimationState=1 (open)
+        ///    - Fires OnOpen script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN = 0x16)
+        ///    - Script fires after state is updated
+        /// 2. EVENT_CLOSE_OBJECT (6): Closes door/placeable
+        ///    - Sets IsOpen=false, OpenState/AnimationState=0 (closed)
+        ///    - Fires OnClose script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE = 0x17)
+        ///    - Script fires after state is updated
+        /// 3. EVENT_LOCK_OBJECT (0xd): Locks door/placeable
+        ///    - Sets IsLocked=true (only if Lockable flag is true)
+        ///    - Fires OnLock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
+        ///    - Script fires after state is updated
+        /// 4. EVENT_UNLOCK_OBJECT (0xc): Unlocks door/placeable
+        ///    - Sets IsLocked=false
+        ///    - Fires OnUnlock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED = 0x1d)
+        ///    - Script fires after state is updated
+        ///
+        /// Script execution:
+        /// - Scripts are retrieved from entity's IScriptHooksComponent for the appropriate ScriptEvent
+        /// - Scripts are executed via world's EventBus.FireScriptEvent, which queues and processes script execution
+        /// - Source entity (from DispatchEvent call) is passed as triggerer to script execution context
+        /// - Scripts can use GetEnteringObject(), GetClickingObject() to retrieve the entity that triggered the event
+        ///
+        /// Visual representation:
+        /// - OpenState (doors): 0=closed, 1=open, 2=destroyed
+        /// - AnimationState (placeables): 0=closed, 1=open
+        /// - Rendering system updates visual representation based on OpenState/AnimationState changes
+        /// - Animation system plays appropriate animations (open/close door animations, container open/close animations)
+        ///
+        /// Audio feedback:
+        /// - Door open/close sounds are handled by audio system based on OpenState changes
+        /// - Lock/unlock sounds are handled by audio system based on IsLocked changes
         /// </remarks>
         protected override void HandleObjectEvent(IEntity entity, int eventType)
         {
+            if (entity == null)
+            {
+                Console.WriteLine("[OdysseyEventDispatcher] HandleObjectEvent: Entity is null, aborting object event handling");
+                return;
+            }
+
+            // Get world and event bus
+            IWorld world = entity.World;
+            if (world == null || world.EventBus == null)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) has no world or EventBus");
+                return;
+            }
+
             string eventName = GetEventName(eventType);
-            string entityInfo = entity != null ? $"{entity.Tag ?? "null"} ({entity.ObjectId})" : "null";
+            string entityInfo = $"{entity.Tag ?? "null"} ({entity.ObjectId})";
             Console.WriteLine($"[OdysseyEventDispatcher] HandleObjectEvent: Handling {eventName} ({eventType}) for entity {entityInfo}");
-            // TODO: Implement object event handling
-            // Update door/placeable state based on event type
-            // Trigger associated scripts and effects
-            // Update visual representation
+
+            // Handle different object event types
+            switch (eventType)
+            {
+                case 7: // EVENT_OPEN_OBJECT (swkotor2.exe: 0x004dcfb0 case 7, line 66)
+                    HandleOpenObjectEvent(entity, world);
+                    break;
+
+                case 6: // EVENT_CLOSE_OBJECT (swkotor2.exe: 0x004dcfb0 case 6, line 63)
+                    HandleCloseObjectEvent(entity, world);
+                    break;
+
+                case 0xd: // EVENT_LOCK_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xd, line 84)
+                    HandleLockObjectEvent(entity, world);
+                    break;
+
+                case 0xc: // EVENT_UNLOCK_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xc, line 81)
+                    HandleUnlockObjectEvent(entity, world);
+                    break;
+
+                default:
+                    // Unknown object event type - log and ignore
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleObjectEvent: Unknown object event type {eventType} ({eventName}) for entity {entityInfo}");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Handles EVENT_OPEN_OBJECT (7) event.
+        /// </summary>
+        /// <param name="entity">The entity to open (door or placeable).</param>
+        /// <param name="world">The world containing the entity.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: EVENT_OPEN_OBJECT opens door/placeable and fires OnOpen script
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 7, line 66)
+        /// </remarks>
+        private void HandleOpenObjectEvent(IEntity entity, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Opening entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+
+            // Check if entity has door component
+            IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                // Open the door
+                // Based on swkotor2.exe: EVENT_OPEN_OBJECT sets IsOpen=true, OpenState=1
+                // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7)
+                // Original implementation: Opens door, updates OpenState to 1 (open), fires OnOpen script
+                if (!doorComponent.IsOpen)
+                {
+                    doorComponent.Open();
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) opened (IsOpen=true, OpenState={doorComponent.OpenState})");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) is already open");
+                }
+
+                // Fire OnOpen script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN (0x16) fires when door is opened
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16), "OnOpen" @ 0x007be1b0, "ScriptOnOpen" @ 0x007beeb8
+                // Original implementation: OnOpen script fires on door entity after door is opened
+                // Script fires regardless of whether door was already open (allows scripts to react to open attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnOpen, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Fired OnOpen script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Check if entity has placeable component
+            IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+            if (placeableComponent != null)
+            {
+                // Open the placeable (container)
+                // Based on swkotor2.exe: EVENT_OPEN_OBJECT sets IsOpen=true, AnimationState=1
+                // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7)
+                // Original implementation: Opens placeable container, updates AnimationState to 1 (open), fires OnOpen script
+                if (!placeableComponent.IsOpen)
+                {
+                    placeableComponent.Open();
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) opened (IsOpen=true, AnimationState={placeableComponent.AnimationState})");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) is already open");
+                }
+
+                // Fire OnOpen script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN (0x16) fires when placeable is opened
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
+                // Original implementation: OnOpen script fires on placeable entity after placeable is opened
+                // Script fires regardless of whether placeable was already open (allows scripts to react to open attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnOpen, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Fired OnOpen script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Entity is not a door or placeable - log warning
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not a door or placeable, cannot open");
+        }
+
+        /// <summary>
+        /// Handles EVENT_CLOSE_OBJECT (6) event.
+        /// </summary>
+        /// <param name="entity">The entity to close (door or placeable).</param>
+        /// <param name="world">The world containing the entity.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: EVENT_CLOSE_OBJECT closes door/placeable and fires OnClose script
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 6, line 63)
+        /// </remarks>
+        private void HandleCloseObjectEvent(IEntity entity, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Closing entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+
+            // Check if entity has door component
+            IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                // Close the door
+                // Based on swkotor2.exe: EVENT_CLOSE_OBJECT sets IsOpen=false, OpenState=0
+                // Located via string references: "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6)
+                // Original implementation: Closes door, updates OpenState to 0 (closed), fires OnClose script
+                if (doorComponent.IsOpen)
+                {
+                    doorComponent.Close();
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) closed (IsOpen=false, OpenState={doorComponent.OpenState})");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) is already closed");
+                }
+
+                // Fire OnClose script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE (0x17) fires when door is closed
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17), "OnClosed" @ 0x007be1c8, "ScriptOnClose" @ 0x007beeb8
+                // Original implementation: OnClose script fires on door entity after door is closed
+                // Script fires regardless of whether door was already closed (allows scripts to react to close attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnClose, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Fired OnClose script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Check if entity has placeable component
+            IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+            if (placeableComponent != null)
+            {
+                // Close the placeable (container)
+                // Based on swkotor2.exe: EVENT_CLOSE_OBJECT sets IsOpen=false, AnimationState=0
+                // Located via string references: "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6)
+                // Original implementation: Closes placeable container, updates AnimationState to 0 (closed), fires OnClose script
+                if (placeableComponent.IsOpen)
+                {
+                    placeableComponent.Close();
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) closed (IsOpen=false, AnimationState={placeableComponent.AnimationState})");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) is already closed");
+                }
+
+                // Fire OnClose script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE (0x17) fires when placeable is closed
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
+                // Original implementation: OnClose script fires on placeable entity after placeable is closed
+                // Script fires regardless of whether placeable was already closed (allows scripts to react to close attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnClose, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Fired OnClose script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Entity is not a door or placeable - log warning
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not a door or placeable, cannot close");
+        }
+
+        /// <summary>
+        /// Handles EVENT_LOCK_OBJECT (0xd) event.
+        /// </summary>
+        /// <param name="entity">The entity to lock (door or placeable).</param>
+        /// <param name="world">The world containing the entity.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: EVENT_LOCK_OBJECT locks door/placeable and fires OnLock script
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xd, line 84)
+        /// </remarks>
+        private void HandleLockObjectEvent(IEntity entity, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Locking entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+
+            // Check if entity has door component
+            IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                // Lock the door
+                // Based on swkotor2.exe: EVENT_LOCK_OBJECT sets IsLocked=true (only if Lockable flag is true)
+                // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd)
+                // Original implementation: Locks door if Lockable flag is true, fires OnLock script
+                // Lock validation: Only locks if Lockable flag is true (from UTD template)
+                if (!doorComponent.IsLocked)
+                {
+                    // Check if door is lockable
+                    // Based on swkotor2.exe: Lockable flag determines if door can be locked
+                    // Located via string references: "Lockable" field in UTD template
+                    // Original implementation: Only locks if Lockable flag is true
+                    if (doorComponent.LockableByScript)
+                    {
+                        doorComponent.Lock();
+                        Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) locked (IsLocked=true)");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) is not lockable, cannot lock");
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) is already locked");
+                }
+
+                // Fire OnLock script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED (0x1c) fires when door is locked
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c), "OnLock" @ 0x007c1a28, "ScriptOnLock" @ 0x007c1a0c
+                // Original implementation: OnLock script fires on door entity after door is locked
+                // Script fires regardless of whether door was already locked (allows scripts to react to lock attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnLock, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Fired OnLock script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Check if entity has placeable component
+            IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+            if (placeableComponent != null)
+            {
+                // Lock the placeable
+                // Based on swkotor2.exe: EVENT_LOCK_OBJECT sets IsLocked=true
+                // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd)
+                // Original implementation: Locks placeable, fires OnLock script
+                // Note: Placeables don't have LockableByScript flag, so we always allow locking
+                if (!placeableComponent.IsLocked)
+                {
+                    placeableComponent.IsLocked = true;
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) locked (IsLocked=true)");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) is already locked");
+                }
+
+                // Fire OnLock script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED (0x1c) fires when placeable is locked
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
+                // Original implementation: OnLock script fires on placeable entity after placeable is locked
+                // Script fires regardless of whether placeable was already locked (allows scripts to react to lock attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnLock, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Fired OnLock script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Entity is not a door or placeable - log warning
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not a door or placeable, cannot lock");
+        }
+
+        /// <summary>
+        /// Handles EVENT_UNLOCK_OBJECT (0xc) event.
+        /// </summary>
+        /// <param name="entity">The entity to unlock (door or placeable).</param>
+        /// <param name="world">The world containing the entity.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: EVENT_UNLOCK_OBJECT unlocks door/placeable and fires OnUnlock script
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xc, line 81)
+        /// </remarks>
+        private void HandleUnlockObjectEvent(IEntity entity, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Unlocking entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+
+            // Check if entity has door component
+            IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                // Unlock the door
+                // Based on swkotor2.exe: EVENT_UNLOCK_OBJECT sets IsLocked=false
+                // Located via string references: "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc)
+                // Original implementation: Unlocks door, fires OnUnlock script
+                if (doorComponent.IsLocked)
+                {
+                    doorComponent.Unlock();
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) unlocked (IsLocked=false)");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Door {entity.Tag ?? "null"} ({entity.ObjectId}) is already unlocked");
+                }
+
+                // Fire OnUnlock script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when door is unlocked
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d), "OnUnlock" @ 0x007c1a00, "ScriptOnUnlock" @ 0x007c1a00
+                // Original implementation: OnUnlock script fires on door entity after door is unlocked
+                // Script fires regardless of whether door was already unlocked (allows scripts to react to unlock attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnUnlock, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Fired OnUnlock script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Check if entity has placeable component
+            IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+            if (placeableComponent != null)
+            {
+                // Unlock the placeable
+                // Based on swkotor2.exe: EVENT_UNLOCK_OBJECT sets IsLocked=false
+                // Located via string references: "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc)
+                // Original implementation: Unlocks placeable, fires OnUnlock script
+                if (placeableComponent.IsLocked)
+                {
+                    placeableComponent.Unlock();
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) unlocked (IsLocked=false)");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Placeable {entity.Tag ?? "null"} ({entity.ObjectId}) is already unlocked");
+                }
+
+                // Fire OnUnlock script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when placeable is unlocked
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d)
+                // Original implementation: OnUnlock script fires on placeable entity after placeable is unlocked
+                // Script fires regardless of whether placeable was already unlocked (allows scripts to react to unlock attempts)
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnUnlock, null);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Fired OnUnlock script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Entity is not a door or placeable - log warning
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not a door or placeable, cannot unlock");
         }
 
         /// <summary>

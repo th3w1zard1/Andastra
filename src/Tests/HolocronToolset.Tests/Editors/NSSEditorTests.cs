@@ -586,14 +586,71 @@ void helper() {
             throw new NotImplementedException("TestNssEditorSyntaxHighlightingSetup: Syntax highlighting setup test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_syntax_highlighting_game_switch (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:547-573)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:547-573
         // Original: def test_nss_editor_syntax_highlighting_game_switch(qtbot, installation: HTInstallation): Test syntax highlighting game switch
         [Fact]
         public void TestNssEditorSyntaxHighlightingGameSwitch()
         {
-            // TODO: STUB - Implement syntax highlighting game switch test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:547-573
-            throw new NotImplementedException("TestNssEditorSyntaxHighlightingGameSwitch: Syntax highlighting game switch test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+
+            HTInstallation installation = null;
+            if (!string.IsNullOrEmpty(k2Path) && Directory.Exists(k2Path))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else if (!string.IsNullOrEmpty(k1Path) && Directory.Exists(k1Path))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Create editor with installation
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set script (matching Python test)
+            string script = "void main() { int x = OBJECT_TYPE_CREATURE; }";
+            var codeEditField = editor.GetType().GetField("_codeEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (codeEditField != null)
+            {
+                var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+                if (codeEdit != null)
+                {
+                    codeEdit.SetPlainText(script);
+                }
+            }
+
+            // Switch game modes (matching Python test)
+            // Original: original_is_tsl = editor._is_tsl
+            bool originalIsTsl = installation?.Tsl ?? false;
+
+            // Toggle game (matching Python test)
+            // Original: editor._is_tsl = not editor._is_tsl
+            // Original: editor._update_game_specific_data()
+            // In C#, we need to access the private field via reflection or use the public method
+            var isTslField = editor.GetType().GetField("_isTsl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (isTslField != null)
+            {
+                bool currentIsTsl = (bool)isTslField.GetValue(editor);
+                isTslField.SetValue(editor, !currentIsTsl);
+                
+                // Update game-specific data (which also updates the highlighter)
+                editor.UpdateGameSpecificData();
+            }
+
+            // Highlighter should be updated (matching Python test)
+            // Original: assert editor._highlighter is not None
+            editor.Highlighter.Should().NotBeNull();
+            editor.Highlighter.IsTsl.Should().Be(!originalIsTsl, "Highlighter should be updated to reflect the new game mode");
+
+            // Restore original game mode (matching Python test)
+            // Original: editor._is_tsl = original_is_tsl
+            if (isTslField != null)
+            {
+                isTslField.SetValue(editor, originalIsTsl);
+                editor.UpdateGameSpecificData();
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_autocompletion_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:575-590)
@@ -1060,14 +1117,36 @@ void helper() {
             throw new NotImplementedException("TestNssEditorBuildReturnsScriptContent: Build returns script content test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_file_explorer_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:928-940)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:928-940
         // Original: def test_nss_editor_file_explorer_setup(qtbot, installation: HTInstallation): Test file explorer setup
         [Fact]
         public void TestNssEditorFileExplorerSetup()
         {
-            // TODO: STUB - Implement file explorer setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:928-940
-            throw new NotImplementedException("TestNssEditorFileExplorerSetup: File explorer setup test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+            
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+            
+            // Matching Python: editor.new()
+            editor.New();
+            
+            // Matching Python: assert hasattr(editor, 'file_system_model')
+            // Matching Python: assert editor.file_system_model is not None
+            editor.FileSystemModel.Should().NotBeNull("File system model should be initialized");
+            
+            // Matching Python: assert hasattr(editor.ui, 'fileExplorerView')
+            editor.FileExplorerView.Should().NotBeNull("File explorer view should exist");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:942-959
