@@ -147,52 +147,30 @@ types:
     doc: |
       Instruction arguments. The format depends on the instruction type
       (determined by bytecode and qualifier combination).
+      
+      Note: Kaitai Struct doesn't support dynamic switching based on parent fields.
+      This structure reads raw argument bytes. The application must interpret
+      the arguments based on the bytecode and qualifier values.
+      
+      Common argument formats:
+      - No args (0 bytes): RSADDx, LOGANDxx, RETN, SAVEBP, RESTOREBP, NOP
+      - 4 bytes signed int: MOVSP, INCxSP, DECxSP, INCxBP, DECxBP, JMP, JSR, JZ, JNZ
+      - 4 bytes unsigned int: CONSTI (integer constant)
+      - 4 bytes float: CONSTF (float constant)
+      - 2 bytes length + string: CONSTS (string constant)
+      - 4 bytes signed int: CONSTO (object constant)
+      - 4 bytes offset + 2 bytes size: CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
+      - 2 bytes routine + 1 byte argCount: ACTION
+      - 2 bytes size + 2 bytes offset + 2 bytes sizeNoDestroy: DESTRUCT
+      - 4 bytes size + 4 bytes sizeLocals: STORE_STATE
+      - 2 bytes size (if qualifier 0x24): EQUALxx, NEQUALxx (structure comparison)
     seq:
-      - id: arg_data
-        type: instruction_arg_data
-        switch-on: _parent.bytecode
-        cases:
-          0x01: stack_copy_args  # CPDOWNSP
-          0x02: no_args  # RSADDx
-          0x03: stack_copy_args  # CPTOPSP
-          0x04: const_args  # CONSTx
-          0x05: action_args  # ACTION
-          0x06: no_args  # LOGANDxx
-          0x07: no_args  # LOGORxx
-          0x08: no_args  # INCORxx
-          0x09: no_args  # EXCORxx
-          0x0A: no_args  # BOOLANDxx
-          0x0B: comparison_args  # EQUALxx
-          0x0C: comparison_args  # NEQUALxx
-          0x0D: no_args  # GEQxx
-          0x0E: no_args  # GTxx
-          0x0F: no_args  # LTxx
-          0x10: no_args  # LEQxx
-          0x11: no_args  # SHLEFTxx
-          0x12: no_args  # SHRIGHTxx
-          0x13: no_args  # USHRIGHTxx
-          0x1A: no_args  # COMPx
-          0x1B: movsp_args  # MOVSP
-          0x1D: jump_args  # JMP
-          0x1E: jump_args  # JSR
-          0x1F: jump_args  # JZ
-          0x20: no_args  # RETN
-          0x21: destruct_args  # DESTRUCT
-          0x22: no_args  # NOTx
-          0x23: incdec_args  # DECxSP
-          0x24: incdec_args  # INCxSP
-          0x25: jump_args  # JNZ
-          0x26: stack_copy_args  # CPDOWNBP
-          0x27: stack_copy_args  # CPTOPBP
-          0x28: incdec_args  # DECxBP
-          0x29: incdec_args  # INCxBP
-          0x2A: no_args  # SAVEBP
-          0x2B: no_args  # RESTOREBP
-          0x2C: store_state_args  # STORE_STATE
-          0x2D: no_args  # NOP
+      - id: raw_args
+        type: str
+        size-eos: true
         doc: |
-          Argument data based on instruction type.
-          Defaults to no_args for instructions that don't take arguments.
+          Raw argument bytes. Size depends on instruction type.
+          Application code must parse based on bytecode and qualifier.
 
   instruction_arg_data:
     doc: Base type for instruction argument data.

@@ -9,23 +9,23 @@ using Xunit;
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for NSS.ksy Kaitai Struct compiler functionality.
-    /// Tests compile NSS.ksy to multiple languages and validate the generated parsers work correctly.
+    /// Comprehensive tests for NCS.ksy Kaitai Struct compiler functionality.
+    /// Tests compile NCS.ksy to multiple languages and validate the generated parsers work correctly.
     ///
     /// Supported languages tested (at least 12 as required):
     /// - Python, Java, JavaScript, C#, C++, Ruby, PHP, Go, Rust, Perl, Lua, Nim, Swift, VisualBasic, Kotlin, TypeScript
     /// </summary>
-    public class NSSKaitaiCompilerTests
+    public class NCSSKaitaiCompilerTests
     {
-        private static readonly string NSSKsyPath = Path.GetFullPath(Path.Combine(
+        private static readonly string NCSKsyPath = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "NSS", "NSS.ksy"
+            "src", "Andastra", "Parsing", "Resource", "Formats", "NSS", "NCS.ksy"
         ));
 
         private static readonly string TestOutputDir = Path.Combine(
             AppContext.BaseDirectory,
-            "test_files", "kaitai_nss_compiled"
+            "test_files", "kaitai_ncs_compiled"
         );
 
         // Supported languages in Kaitai Struct (at least 12 as required)
@@ -73,24 +73,24 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestNSSKsyFileExists()
+        public void TestNCSKsyFileExists()
         {
-            var normalizedPath = Path.GetFullPath(NSSKsyPath);
+            var normalizedPath = Path.GetFullPath(NCSKsyPath);
             File.Exists(normalizedPath).Should().BeTrue(
-                $"NSS.ksy file should exist at {normalizedPath}"
+                $"NCS.ksy file should exist at {normalizedPath}"
             );
 
             // Verify it's a valid YAML file
             var content = File.ReadAllText(normalizedPath);
-            content.Should().Contain("meta:", "NSS.ksy should contain meta section");
-            content.Should().Contain("id: nss", "NSS.ksy should have id: nss");
-            content.Should().Contain("seq:", "NSS.ksy should contain seq section");
+            content.Should().Contain("meta:", "NCS.ksy should contain meta section");
+            content.Should().Contain("id: ncs", "NCS.ksy should have id: ncs");
+            content.Should().Contain("seq:", "NCS.ksy should contain seq section");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestNSSKsyFileStructure()
+        public void TestNCSKsyFileStructure()
         {
-            var normalizedPath = Path.GetFullPath(NSSKsyPath);
+            var normalizedPath = Path.GetFullPath(NCSKsyPath);
             if (!File.Exists(normalizedPath))
             {
                 return;
@@ -99,111 +99,119 @@ namespace Andastra.Parsing.Tests.Formats
             var content = File.ReadAllText(normalizedPath);
 
             // Verify key components exist
-            content.Should().Contain("bom", "NSS.ksy should define bom field");
-            content.Should().Contain("source_code", "NSS.ksy should define source_code field");
-            content.Should().Contain("UTF-8", "NSS.ksy should specify UTF-8 encoding");
+            content.Should().Contain("file_type", "NCS.ksy should define file_type field");
+            content.Should().Contain("file_version", "NCS.ksy should define file_version field");
+            content.Should().Contain("size_marker", "NCS.ksy should define size_marker field");
+            content.Should().Contain("total_file_size", "NCS.ksy should define total_file_size field");
+            content.Should().Contain("instructions", "NCS.ksy should define instructions field");
+            content.Should().Contain("instruction", "NCS.ksy should define instruction type");
+            content.Should().Contain("bytecode", "NCS.ksy should define bytecode field");
+            content.Should().Contain("qualifier", "NCS.ksy should define qualifier field");
+            content.Should().Contain("NCS ", "NCS.ksy should validate NCS file type");
+            content.Should().Contain("V1.0", "NCS.ksy should validate V1.0 version");
+            content.Should().Contain("0x42", "NCS.ksy should validate 0x42 size marker");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToPython()
+        public void TestCompileNCSToPython()
         {
             TestCompileToLanguage("python");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToJava()
+        public void TestCompileNCSToJava()
         {
             TestCompileToLanguage("java");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToJavaScript()
+        public void TestCompileNCSToJavaScript()
         {
             TestCompileToLanguage("javascript");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToCSharp()
+        public void TestCompileNCSToCSharp()
         {
             TestCompileToLanguage("csharp");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToCpp()
+        public void TestCompileNCSToCpp()
         {
             TestCompileToLanguage("cpp_stl");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToGo()
+        public void TestCompileNCSToGo()
         {
             TestCompileToLanguage("go");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToRuby()
+        public void TestCompileNCSToRuby()
         {
             TestCompileToLanguage("ruby");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToPhp()
+        public void TestCompileNCSToPhp()
         {
             TestCompileToLanguage("php");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToRust()
+        public void TestCompileNCSToRust()
         {
             TestCompileToLanguage("rust");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToSwift()
+        public void TestCompileNCSToSwift()
         {
             TestCompileToLanguage("swift");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToLua()
+        public void TestCompileNCSToLua()
         {
             TestCompileToLanguage("lua");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToNim()
+        public void TestCompileNCSToNim()
         {
             TestCompileToLanguage("nim");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToPerl()
+        public void TestCompileNCSToPerl()
         {
             TestCompileToLanguage("perl");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToVisualBasic()
+        public void TestCompileNCSToVisualBasic()
         {
             TestCompileToLanguage("visualbasic");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToKotlin()
+        public void TestCompileNCSToKotlin()
         {
             TestCompileToLanguage("kotlin");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToTypeScript()
+        public void TestCompileNCSToTypeScript()
         {
             TestCompileToLanguage("typescript");
         }
 
         [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
-        public void TestCompileNSSToAllLanguages()
+        public void TestCompileNCSToAllLanguages()
         {
-            var normalizedKsyPath = Path.GetFullPath(NSSKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(NCSKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
                 // Skip if .ksy file doesn't exist
@@ -265,7 +273,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                     // Verify at least one parser file was generated (language-specific patterns)
                     var hasParserFile = files.Any(f =>
-                        f.Contains("nss") || f.Contains("Nss") || f.Contains("NSS") ||
+                        f.Contains("ncs") || f.Contains("Ncs") || f.Contains("NCS") ||
                         f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
                         f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
                         f.EndsWith(".go") || f.EndsWith(".rb") || f.EndsWith(".php") ||
@@ -279,9 +287,9 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileNSSToMultipleLanguagesSimultaneously()
+        public void TestCompileNCSToMultipleLanguagesSimultaneously()
         {
-            var normalizedKsyPath = Path.GetFullPath(NSSKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(NCSKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
                 return;
@@ -307,9 +315,9 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestNSSKsyValidation()
+        public void TestNCSKsyValidation()
         {
-            var normalizedKsyPath = Path.GetFullPath(NSSKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(NCSKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
                 return;
@@ -331,13 +339,13 @@ namespace Andastra.Parsing.Tests.Formats
             // But we allow runtime/dependency errors
             if (result.ExitCode != 0 && result.Error.Contains("syntax error"))
             {
-                Assert.True(false, $"NSS.ksy has syntax errors: {result.Error}");
+                Assert.True(false, $"NCS.ksy has syntax errors: {result.Error}");
             }
         }
 
         private void TestCompileToLanguage(string language)
         {
-            var normalizedKsyPath = Path.GetFullPath(NSSKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(NCSKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
                 // Skip if .ksy file doesn't exist
@@ -523,3 +531,4 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+
