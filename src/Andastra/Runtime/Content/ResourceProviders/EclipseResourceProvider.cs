@@ -797,15 +797,32 @@ namespace Andastra.Runtime.Content.ResourceProviders
         private string LocateInRim(ResourceIdentifier id)
         {
             // Search RIM files in reverse order (later RIM files override earlier ones)
+            // Based on Eclipse Engine resource lookup behavior (daorigins.exe):
+            // - RIM files are searched in reverse order (later RIM files override earlier ones)
+            // - Resource existence is checked before returning the RIM file path
+            // - Matches LookupInRim behavior for consistency
             for (int i = _rimFiles.Count - 1; i >= 0; i--)
             {
                 string rimPath = _rimFiles[i];
                 if (File.Exists(rimPath))
                 {
-                    // TODO: Check if resource exists in RIM file
-                    // This requires RIM file parsing which is not yet implemented
-                    // For now, return RIM file path if it exists
-                    return rimPath;
+                    try
+                    {
+                        var rim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(rimPath);
+                        // Check if resource exists in RIM file before returning path
+                        // This matches the behavior of LookupInRim and ensures we only
+                        // return paths for RIM files that actually contain the resource
+                        byte[] resourceData = rim.Get(id.ResName, id.ResType);
+                        if (resourceData != null)
+                        {
+                            return rimPath;
+                        }
+                    }
+                    catch
+                    {
+                        // Skip corrupted or invalid RIM files
+                        continue;
+                    }
                 }
             }
 
