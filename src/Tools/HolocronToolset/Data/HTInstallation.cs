@@ -1776,7 +1776,7 @@ namespace HolocronToolset.Data
         public byte[] Serialize()
         {
             using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
+            using (var writer = new System.IO.BinaryWriter(stream))
             {
                 // Write version for future compatibility
                 writer.Write(1);
@@ -1814,7 +1814,7 @@ namespace HolocronToolset.Data
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new BinaryReader(stream))
+            using (var reader = new System.IO.BinaryReader(stream))
             {
                 // Read version
                 int version = reader.ReadInt32();
