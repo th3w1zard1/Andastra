@@ -729,7 +729,12 @@ namespace Andastra.Runtime.Game.Core
                 case "BTN_BACK":
                     // Back button - return to previous menu
                     // Based on swkotor.exe and swkotor2.exe: Back button handler in options menu
-                    if (_currentState == GameState.OptionsMenu)
+                    if (_currentState == GameState.GameplayOptionsMenu)
+                    {
+                        Console.WriteLine("[Odyssey] Back button clicked - closing gameplay options submenu");
+                        CloseGameplayOptionsMenu();
+                    }
+                    else if (_currentState == GameState.OptionsMenu)
                     {
                         Console.WriteLine("[Odyssey] Back button clicked - closing options menu");
                         CloseOptionsMenu();
