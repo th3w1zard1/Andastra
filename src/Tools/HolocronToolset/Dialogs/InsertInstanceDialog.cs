@@ -837,6 +837,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:308-312
         // Original: def is_valid_resref(self, text: str) -> bool:
+        // Original: return self._module.resource(text, self._restype) is None and ResRef.is_valid(text)
         private bool IsValidResref(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -844,14 +845,27 @@ namespace HolocronToolset.Dialogs
                 return false;
             }
 
-            // Check if resource already exists in module
-            if (_module != null)
+            // Validate ResRef format first
+            if (!ResRef.IsValid(text))
             {
-                // TODO: Check when Module.resource() is available
+                return false;
             }
 
-            // Validate ResRef format
-            return ResRef.IsValid(text);
+            // Check if resource already exists in module
+            // Matching PyKotor: self._module.resource(text, self._restype) is None
+            // A resref is valid for insertion if the resource does NOT already exist in the module
+            if (_module != null)
+            {
+                var existingResource = _module.Resource(text, _restype);
+                if (existingResource != null)
+                {
+                    // Resource already exists in module, so this resref is not valid for insertion
+                    return false;
+                }
+            }
+
+            // ResRef format is valid and resource doesn't exist in module
+            return true;
         }
 
         public string ResName => _resname;

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Runtime.Games.Odyssey.Components
 {
     /// <summary>
     /// Component for ambient sound entities.
@@ -38,7 +39,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
     /// - Based on UTS file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
-    public class SoundComponent : IComponent
+    public class SoundComponent : ISoundComponent
     {
         public IEntity Owner { get; set; }
 

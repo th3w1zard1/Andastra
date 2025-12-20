@@ -129,9 +129,59 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                     break;
 
                 case ObjectType.Sound:
-                    if (!entity.HasComponent<SoundComponent>())
+                    if (!entity.HasComponent<ISoundComponent>())
                     {
-                        entity.AddComponent(new SoundComponent());
+                        var soundComponent = new SoundComponent();
+                        soundComponent.Owner = entity;
+                        
+                        // Initialize sound component properties from entity data if available (loaded from GIT)
+                        // Based on EntityFactory.CreateSoundFromGit: Sound properties are stored in entity data
+                        if (entity.GetData("Active") is bool active)
+                        {
+                            soundComponent.Active = active;
+                        }
+                        if (entity.GetData("Continuous") is bool continuous)
+                        {
+                            soundComponent.Continuous = continuous;
+                        }
+                        if (entity.GetData("Looping") is bool looping)
+                        {
+                            soundComponent.Looping = looping;
+                        }
+                        if (entity.GetData("Positional") is bool positional)
+                        {
+                            soundComponent.Positional = positional;
+                        }
+                        if (entity.GetData("Random") is bool random)
+                        {
+                            soundComponent.Random = random;
+                        }
+                        if (entity.GetData("RandomPosition") is bool randomPosition)
+                        {
+                            soundComponent.RandomPosition = randomPosition;
+                        }
+                        if (entity.GetData("Volume") is int volume)
+                        {
+                            soundComponent.Volume = volume;
+                        }
+                        if (entity.GetData("VolumeVrtn") is int volumeVrtn)
+                        {
+                            soundComponent.VolumeVrtn = volumeVrtn;
+                        }
+                        if (entity.GetData("MaxDistance") is float maxDistance)
+                        {
+                            soundComponent.MaxDistance = maxDistance;
+                        }
+                        if (entity.GetData("MinDistance") is float minDistance)
+                        {
+                            soundComponent.MinDistance = minDistance;
+                        }
+                        if (entity.GetData("Sounds") is System.Collections.Generic.List<string> sounds)
+                        {
+                            soundComponent.SoundFiles = sounds;
+                        }
+                        
+                        entity.AddComponent(soundComponent);
                     }
                     break;
 

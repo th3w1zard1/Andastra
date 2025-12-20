@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Andastra.Parsing.Formats.RIM;
 
 namespace HolocronToolset.Utils
 {
@@ -96,8 +97,19 @@ namespace HolocronToolset.Utils
             }
             else if (ext == ".rim")
             {
-                // TODO: STUB - Implement RIM file reading using Andastra.Parsing
-                throw new NotImplementedException("RIM file reading not yet implemented");
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:252-254
+                // Original: rim: RIM = read_rim(filepath); data = rim.get(resname, restype)
+                RIM rim = RIMAuto.ReadRim(filepath);
+                byte[] data = rim.Get(resname, restype);
+                
+                if (data == null)
+                {
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:258-260
+                    // Original: if data is None: raise ValueError("Could not find resource in RIM/ERF")
+                    throw new ArgumentException($"Could not find resource '{resname}.{restype.Extension}' in RIM file '{filepath}'");
+                }
+                
+                return data;
             }
             else
             {

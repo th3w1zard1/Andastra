@@ -367,12 +367,87 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
-        /// Based on sound component structure in swkotor2.exe.
+        /// Based on sound component structure in swkotor.exe and swkotor2.exe.
+        /// - FUN_004e08e0 @ 0x004e08e0 (swkotor2.exe) loads sound instances from GIT SoundList
+        ///   - Located via string reference: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+        ///   - Reads ObjectId, Tag, TemplateResRef, position (XPosition, YPosition, ZPosition)
+        ///   - Reads sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition
+        ///   - Reads volume and distance: Volume, VolumeVrtn, MaxDistance, MinDistance
+        ///   - Reads timing: Interval, IntervalVrtn, PitchVariation
+        ///   - Reads sound files: Sounds list containing Sound ResRefs
+        ///   - Reads hours: Hours bitmask for time-based activation
+        /// - Sound component attached during entity creation from GIT instances
+        /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
+        /// - Component provides: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours, IsPlaying, TimeSinceLastPlay
+        /// - Based on UTS file format: GFF with "UTS " signature containing sound template data
+        /// - Sound entities emit positional audio in the game world (Positional field for 3D audio)
+        /// - Volume: 0-127 range (Volume field), distance falloff: MinDistance (full volume) to MaxDistance (zero volume)
+        /// - Continuous sounds: Play continuously when active (Continuous field)
+        /// - Random sounds: Can play random sounds from SoundFiles list (Random field), randomize position (RandomPosition field)
+        /// - Interval: Time between plays for non-looping sounds (Interval field, IntervalVrtn for variation)
+        /// - Volume variation: VolumeVrtn field for random volume variation
+        /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
+        /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
         /// </remarks>
         private void AttachSoundComponents()
         {
-            // TODO: Attach sound-specific components
-            // SoundComponent with audio playback capabilities
+            // Attach sound component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Sound component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<ISoundComponent>())
+            {
+                var soundComponent = new Components.SoundComponent();
+                soundComponent.Owner = this;
+                
+                // Initialize sound component properties from entity data if available (loaded from GIT)
+                // Based on EntityFactory.CreateSoundFromGit: Sound properties are stored in entity data
+                if (GetData("Active") is bool active)
+                {
+                    soundComponent.Active = active;
+                }
+                if (GetData("Continuous") is bool continuous)
+                {
+                    soundComponent.Continuous = continuous;
+                }
+                if (GetData("Looping") is bool looping)
+                {
+                    soundComponent.Looping = looping;
+                }
+                if (GetData("Positional") is bool positional)
+                {
+                    soundComponent.Positional = positional;
+                }
+                if (GetData("Random") is bool random)
+                {
+                    soundComponent.Random = random;
+                }
+                if (GetData("RandomPosition") is bool randomPosition)
+                {
+                    soundComponent.RandomPosition = randomPosition;
+                }
+                if (GetData("Volume") is int volume)
+                {
+                    soundComponent.Volume = volume;
+                }
+                if (GetData("VolumeVrtn") is int volumeVrtn)
+                {
+                    soundComponent.VolumeVrtn = volumeVrtn;
+                }
+                if (GetData("MaxDistance") is float maxDistance)
+                {
+                    soundComponent.MaxDistance = maxDistance;
+                }
+                if (GetData("MinDistance") is float minDistance)
+                {
+                    soundComponent.MinDistance = minDistance;
+                }
+                if (GetData("Sounds") is List<string> sounds)
+                {
+                    soundComponent.SoundFiles = sounds;
+                }
+                
+                AddComponent<ISoundComponent>(soundComponent);
+            }
         }
 
         /// <summary>
@@ -626,6 +701,43 @@ namespace Andastra.Runtime.Games.Odyssey
                 root.SetInt32("MaxHitPoints", placeableComponent.MaxHitPoints);
                 root.SetInt32("Hardness", placeableComponent.Hardness);
                 root.SetInt32("AnimationState", placeableComponent.AnimationState);
+            }
+
+            // Serialize sound component
+            // Based on swkotor2.exe: Sound component data is serialized to GFF save data
+            // Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+            // Sound properties are saved: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
+            var soundComponent = GetComponent<ISoundComponent>();
+            if (soundComponent != null)
+            {
+                root.SetString("TemplateResRef", soundComponent.TemplateResRef ?? "");
+                root.SetUInt8("Active", soundComponent.Active ? (byte)1 : (byte)0);
+                root.SetUInt8("Continuous", soundComponent.Continuous ? (byte)1 : (byte)0);
+                root.SetUInt8("Looping", soundComponent.Looping ? (byte)1 : (byte)0);
+                root.SetUInt8("Positional", soundComponent.Positional ? (byte)1 : (byte)0);
+                root.SetUInt8("RandomPosition", soundComponent.RandomPosition ? (byte)1 : (byte)0);
+                root.SetUInt8("Random", soundComponent.Random ? (byte)1 : (byte)0);
+                root.SetInt32("Volume", soundComponent.Volume);
+                root.SetInt32("VolumeVrtn", soundComponent.VolumeVrtn);
+                root.SetSingle("MaxDistance", soundComponent.MaxDistance);
+                root.SetSingle("MinDistance", soundComponent.MinDistance);
+                root.SetUInt32("Interval", soundComponent.Interval);
+                root.SetUInt32("IntervalVrtn", soundComponent.IntervalVrtn);
+                root.SetSingle("PitchVariation", soundComponent.PitchVariation);
+                root.SetUInt32("Hours", soundComponent.Hours);
+                root.SetSingle("TimeSinceLastPlay", soundComponent.TimeSinceLastPlay);
+                root.SetUInt8("IsPlaying", soundComponent.IsPlaying ? (byte)1 : (byte)0);
+
+                // Serialize sound files list
+                if (soundComponent.SoundFiles != null && soundComponent.SoundFiles.Count > 0)
+                {
+                    var soundFilesList = root.Acquire<GFFList>("SoundFiles", new GFFList());
+                    foreach (string soundFile in soundComponent.SoundFiles)
+                    {
+                        var soundFileStruct = soundFilesList.Add();
+                        soundFileStruct.SetString("Sound", soundFile ?? "");
+                    }
+                }
             }
 
             // Serialize inventory component
@@ -1069,6 +1181,115 @@ namespace Andastra.Runtime.Games.Odyssey
                 if (root.Exists("AnimationState"))
                 {
                     placeableComponent.AnimationState = root.GetInt32("AnimationState");
+                }
+            }
+
+            // Deserialize sound component
+            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads sound component data from GFF save data
+            // Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+            // Sound properties are loaded: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
+            if (root.Exists("Active") || root.Exists("TemplateResRef"))
+            {
+                var soundComponent = GetComponent<ISoundComponent>();
+                if (soundComponent == null && _objectType == ObjectType.Sound)
+                {
+                    soundComponent = new Components.SoundComponent();
+                    soundComponent.Owner = this;
+                    AddComponent<ISoundComponent>(soundComponent);
+                }
+
+                if (soundComponent != null)
+                {
+                    if (root.Exists("TemplateResRef"))
+                    {
+                        soundComponent.TemplateResRef = root.GetString("TemplateResRef") ?? "";
+                    }
+                    if (root.Exists("Active"))
+                    {
+                        soundComponent.Active = root.GetUInt8("Active") != 0;
+                    }
+                    if (root.Exists("Continuous"))
+                    {
+                        soundComponent.Continuous = root.GetUInt8("Continuous") != 0;
+                    }
+                    if (root.Exists("Looping"))
+                    {
+                        soundComponent.Looping = root.GetUInt8("Looping") != 0;
+                    }
+                    if (root.Exists("Positional"))
+                    {
+                        soundComponent.Positional = root.GetUInt8("Positional") != 0;
+                    }
+                    if (root.Exists("RandomPosition"))
+                    {
+                        soundComponent.RandomPosition = root.GetUInt8("RandomPosition") != 0;
+                    }
+                    if (root.Exists("Random"))
+                    {
+                        soundComponent.Random = root.GetUInt8("Random") != 0;
+                    }
+                    if (root.Exists("Volume"))
+                    {
+                        soundComponent.Volume = root.GetInt32("Volume");
+                    }
+                    if (root.Exists("VolumeVrtn"))
+                    {
+                        soundComponent.VolumeVrtn = root.GetInt32("VolumeVrtn");
+                    }
+                    if (root.Exists("MaxDistance"))
+                    {
+                        soundComponent.MaxDistance = root.GetSingle("MaxDistance");
+                    }
+                    if (root.Exists("MinDistance"))
+                    {
+                        soundComponent.MinDistance = root.GetSingle("MinDistance");
+                    }
+                    if (root.Exists("Interval"))
+                    {
+                        soundComponent.Interval = root.GetUInt32("Interval");
+                    }
+                    if (root.Exists("IntervalVrtn"))
+                    {
+                        soundComponent.IntervalVrtn = root.GetUInt32("IntervalVrtn");
+                    }
+                    if (root.Exists("PitchVariation"))
+                    {
+                        soundComponent.PitchVariation = root.GetSingle("PitchVariation");
+                    }
+                    if (root.Exists("Hours"))
+                    {
+                        soundComponent.Hours = root.GetUInt32("Hours");
+                    }
+                    if (root.Exists("TimeSinceLastPlay"))
+                    {
+                        soundComponent.TimeSinceLastPlay = root.GetSingle("TimeSinceLastPlay");
+                    }
+                    if (root.Exists("IsPlaying"))
+                    {
+                        soundComponent.IsPlaying = root.GetUInt8("IsPlaying") != 0;
+                    }
+
+                    // Deserialize sound files list
+                    if (root.Exists("SoundFiles"))
+                    {
+                        var soundFilesList = root.GetList("SoundFiles");
+                        if (soundFilesList != null && soundFilesList.Count > 0)
+                        {
+                            soundComponent.SoundFiles = new List<string>();
+                            for (int i = 0; i < soundFilesList.Count; i++)
+                            {
+                                var soundFileStruct = soundFilesList.At(i);
+                                if (soundFileStruct != null && soundFileStruct.Exists("Sound"))
+                                {
+                                    string soundFile = soundFileStruct.GetString("Sound");
+                                    if (!string.IsNullOrEmpty(soundFile))
+                                    {
+                                        soundComponent.SoundFiles.Add(soundFile);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
