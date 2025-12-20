@@ -228,15 +228,16 @@ namespace HolocronToolset.Dialogs
                 }
 
                 string capsulePath = capsule.Path.ToString();
-                string fileName = Path.GetFileName(capsulePath);
                 
                 // Skip RIM files if RIM saving is disabled
-                if (FileHelpers.IsRimFile(fileName) && disableRIMSaving)
+                // Matching PyKotor: is_rim_file(capsule.filepath()) checks the full path
+                if (FileHelpers.IsRimFile(capsulePath) && disableRIMSaving)
                 {
                     continue;
                 }
 
                 // Add capsule path to location select
+                // Matching PyKotor: addItem(str(capsule.filepath()), capsule.filepath())
                 _locationSelect.Items.Add(capsulePath);
             }
 
