@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
         /// - Display mode handling: FUN_00462560 @ 0x00462560 (floating-point refresh rate comparison)
         /// - NOTE: Original engine does NOT implement this - this is a modern enhancement
         /// </remarks>
-        protected override void GenerateHiZBufferInternal(object depthBuffer)
+        private void GenerateHiZBufferInternal(object depthBuffer)
         {
             if (!Enabled)
             {
@@ -176,7 +176,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
         /// - Matches FUN_0042a100 @ 0x0042a100 texture access pattern
         /// - NOTE: Original engine does NOT implement this - this is a modern enhancement
         /// </remarks>
-        protected override float SampleHiZBufferMaxDepthInternal(int minX, int minY, int maxX, int maxY, int mipLevel)
+        private float SampleHiZBufferMaxDepthInternal(int minX, int minY, int maxX, int maxY, int mipLevel)
         {
             // Use base class implementation which uses _mipLevelCache
             // If cache is invalid, we'll need to read from OpenGL texture
@@ -207,11 +207,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                     // Generate all mip levels into the cache
                     for (int mip = 1; mip < _mipLevelCache.Length; mip++)
                     {
-                        int mipWidth = Math.Max(1, _width >> mip);
-                        int mipHeight = Math.Max(1, _height >> mip);
+                        int currentMipWidth = Math.Max(1, _width >> mip);
+                        int currentMipHeight = Math.Max(1, _height >> mip);
                         int prevMipWidth = Math.Max(1, _width >> (mip - 1));
                         int prevMipHeight = Math.Max(1, _height >> (mip - 1));
-                        GenerateMipLevelWithMaxDepth(mip, mipWidth, mipHeight, prevMipWidth, prevMipHeight);
+                        GenerateMipLevelWithMaxDepth(mip, currentMipWidth, currentMipHeight, prevMipWidth, prevMipHeight);
                     }
                     _mipLevelCacheValid = true;
                 }
@@ -221,8 +221,96 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                 }
             }
 
-            // Use base class implementation to sample from cache
-            return base.SampleHiZBufferMaxDepth(minX, minY, maxX, maxY, mipLevel);
+            // Sample from CPU-side cache
+            if (_mipLevelCache == null || mipLevel >= _mipLevelCache.Length || _mipLevelCache[mipLevel] == null)
+            {
+                return 0.0f;
+            }
+
+            float[] mipData = _mipLevelCache[mipLevel];
+            int mipWidth = Math.Max(1, _width >> mipLevel);
+            int mipHeight = Math.Max(1, _height >> mipLevel);
+
+            // Clamp coordinates to mip level bounds
+            int clampedMinX = Math.Max(0, Math.Min(minX >> mipLevel, mipWidth - 1));
+            int clampedMaxX = Math.Max(0, Math.Min(maxX >> mipLevel, mipWidth - 1));
+            int clampedMinY = Math.Max(0, Math.Min(minY >> mipLevel, mipHeight - 1));
+            int clampedMaxY = Math.Max(0, Math.Min(maxY >> mipLevel, mipHeight - 1));
+
+            // Find maximum depth in the region
+            float maxDepth = 0.0f;
+            for (int y = clampedMinY; y <= clampedMaxY; y++)
+            {
+                for (int x = clampedMinX; x <= clampedMaxX; x++)
+                {
+                    int index = y * mipWidth + x;
+                    if (index >= 0 && index < mipData.Length)
+                    {
+                        maxDepth = Math.Max(maxDepth, mipData[index]);
+                    }
+                }
+            }
+
+            return maxDepth;
+        }
+
+        /// <summary>
+        /// Generates a single mip level by calculating maximum depth from 2x2 regions of the previous mip level.
+        /// </summary>
+        /// <param name="mipLevel">The mip level index to generate.</param>
+        /// <param name="mipWidth">Width of the mip level.</param>
+        /// <param name="mipHeight">Height of the mip level.</param>
+        /// <param name="prevMipWidth">Width of the previous mip level.</param>
+        /// <param name="prevMipHeight">Height of the previous mip level.</param>
+        private void GenerateMipLevelWithMaxDepth(int mipLevel, int mipWidth, int mipHeight, int prevMipWidth, int prevMipHeight)
+        {
+            if (_mipLevelCache == null || mipLevel < 1 || mipLevel >= _mipLevelCache.Length)
+            {
+                return;
+            }
+
+            // Get previous mip level data from cache
+            float[] prevMipData = _mipLevelCache[mipLevel - 1];
+            if (prevMipData == null)
+            {
+                return;
+            }
+
+            // Calculate max depth values for current mip level from previous mip level
+            // Each texel in current mip level is the maximum of a 2x2 region in previous level
+            float[] mipData = new float[mipWidth * mipHeight];
+            for (int y = 0; y < mipHeight; y++)
+            {
+                for (int x = 0; x < mipWidth; x++)
+                {
+                    // Calculate source region in previous mip level (2x2 region)
+                    int srcX = x << 1;
+                    int srcY = y << 1;
+
+                    // Sample 2x2 region and find maximum depth
+                    float maxDepth = 0.0f;
+                    for (int sy = 0; sy < 2 && (srcY + sy) < prevMipHeight; sy++)
+                    {
+                        for (int sx = 0; sx < 2 && (srcX + sx) < prevMipWidth; sx++)
+                        {
+                            int srcIndex = (srcY + sy) * prevMipWidth + (srcX + sx);
+                            if (srcIndex >= 0 && srcIndex < prevMipData.Length)
+                            {
+                                maxDepth = Math.Max(maxDepth, prevMipData[srcIndex]);
+                            }
+                        }
+                    }
+
+                    int mipIndex = y * mipWidth + x;
+                    if (mipIndex < mipData.Length)
+                    {
+                        mipData[mipIndex] = maxDepth;
+                    }
+                }
+            }
+
+            // Store generated mip level in cache
+            _mipLevelCache[mipLevel] = mipData;
         }
 
         /// <summary>
@@ -240,7 +328,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
         /// - Format: GL_R32F (single-channel float for depth values)
         /// - Matches DAT_0082b264, DAT_0082b258 texture ID pattern (KOTOR2-specific global variables)
         /// </remarks>
-        protected override void CreateHiZBufferTexture(int width, int height, int mipLevels)
+        private void CreateHiZBufferTexture(int width, int height, int mipLevels)
         {
             // Make OpenGL context current
             if (!wglMakeCurrent(_glDevice, _glContext))
@@ -278,7 +366,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
         /// Disposes Hi-Z buffer texture using OpenGL.
         /// Matches swkotor2.exe texture cleanup pattern.
         /// </summary>
-        protected override void DisposeHiZBuffer()
+        private void DisposeHiZBuffer()
         {
             if (_hiZBufferTexture != 0)
             {
@@ -314,6 +402,99 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                 levels++;
             }
             return levels;
+        }
+
+        /// <summary>
+        /// Calculates the appropriate mip level based on screen space size.
+        /// </summary>
+        protected override int CalculateMipLevel(float screenSize)
+        {
+            // Calculate mip level based on screen space size
+            // Larger screen space objects use lower mip levels (more detail)
+            // Smaller screen space objects use higher mip levels (less detail, faster)
+            if (screenSize <= 0.0f)
+            {
+                return 0;
+            }
+
+            // Find the mip level where the screen space size matches the mip level resolution
+            int maxMipLevels = CalculateMipLevels(_width, _height);
+            for (int mip = 0; mip < maxMipLevels; mip++)
+            {
+                int mipWidth = Math.Max(1, _width >> mip);
+                int mipHeight = Math.Max(1, _height >> mip);
+                float mipSize = Math.Max(mipWidth, mipHeight);
+
+                if (screenSize >= mipSize * 0.5f)
+                {
+                    return mip;
+                }
+            }
+
+            return maxMipLevels - 1;
+        }
+
+        /// <summary>
+        /// Reads mip level 0 (full resolution) from the Hi-Z buffer.
+        /// </summary>
+        protected override float[] ReadMipLevel0()
+        {
+            if (!Enabled || _hiZBufferTexture == 0)
+            {
+                return null;
+            }
+
+            // Make OpenGL context current
+            if (!wglMakeCurrent(_glDevice, _glContext))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Read full resolution texture (mip 0) from GPU
+                float[] fullResData = new float[_width * _height];
+                glBindTexture(GL_TEXTURE_2D, _hiZBufferTexture);
+                glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, fullResData);
+                return fullResData;
+            }
+            finally
+            {
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+        }
+
+        /// <summary>
+        /// Generates Hi-Z buffer from depth buffer.
+        /// </summary>
+        public override void GenerateHiZBuffer(object depthBuffer)
+        {
+            GenerateHiZBufferInternal(depthBuffer);
+        }
+
+        /// <summary>
+        /// Checks if Hi-Z buffer is available.
+        /// </summary>
+        protected override bool HasHiZBuffer()
+        {
+            return _hiZBufferTexture != 0;
+        }
+
+        /// <summary>
+        /// Samples Hi-Z buffer to get maximum depth in a screen space region.
+        /// </summary>
+        protected override float SampleHiZBufferMaxDepth(int minX, int minY, int maxX, int maxY, int mipLevel)
+        {
+            // Use internal implementation which handles cache validation and fallback
+            return SampleHiZBufferMaxDepthInternal(minX, minY, maxX, maxY, mipLevel);
+        }
+
+        /// <summary>
+        /// Disposes the occlusion culler and releases resources.
+        /// </summary>
+        public override void Dispose()
+        {
+            DisposeHiZBuffer();
         }
 
         #region OpenGL P/Invoke Declarations (Windows-only, matches swkotor2.exe)

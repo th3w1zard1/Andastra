@@ -37,6 +37,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// </remarks>
     public class Kotor2GraphicsBackend : OdysseyGraphicsBackend
     {
+        // Delegate for window procedure
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
         #region KOTOR2 Global Variables (matching swkotor2.exe addresses)
         
         // Global variables matching swkotor2.exe addresses
@@ -538,7 +542,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     {
                         glGenTextures(1, ref _kotor2RenderTargetTexture);
                         glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor2RenderTargetTexture);
-                        glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
+                        glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
                         glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                     }
                     
@@ -591,36 +595,36 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glBindTexture(GL_TEXTURE_1D, _kotor2Texture0);
                     IntPtr textureDataPtr1 = Marshal.AllocHGlobal(textureData1.Length * sizeof(int));
                     Marshal.Copy(textureData1, 0, textureDataPtr1, textureData1.Length);
-                    glTexImage2D(GL_TEXTURE_1D, 0, GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureDataPtr1);
+                    glTexImage2D(GL_TEXTURE_1D, 0, (int)GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureDataPtr1);
                     Marshal.FreeHGlobal(textureDataPtr1);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Create texture 1
                     glGenTextures(1, ref _kotor2Texture1);
                     glBindTexture(GL_TEXTURE_1D, _kotor2Texture1);
                     IntPtr textureDataPtr2 = Marshal.AllocHGlobal(textureData2.Length * sizeof(int));
                     Marshal.Copy(textureData2, 0, textureDataPtr2, textureData2.Length);
-                    glTexImage2D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureDataPtr2);
+                    glTexImage2D(GL_TEXTURE_1D, 0, (int)GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureDataPtr2);
                     Marshal.FreeHGlobal(textureDataPtr2);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Create texture 2
                     glGenTextures(1, ref _kotor2Texture2);
                     glBindTexture(GL_TEXTURE_1D, _kotor2Texture2);
                     IntPtr textureDataPtr3 = Marshal.AllocHGlobal(textureData3.Length * sizeof(int));
                     Marshal.Copy(textureData3, 0, textureDataPtr3, textureData3.Length);
-                    glTexImage2D(GL_TEXTURE_1D, 0, GL_RGBA, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureDataPtr3);
+                    glTexImage2D(GL_TEXTURE_1D, 0, (int)GL_RGBA, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureDataPtr3);
                     Marshal.FreeHGlobal(textureDataPtr3);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Clear arrays
                     for (int i = 0; i < 6; i++)
@@ -638,10 +642,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     
                     glGenTextures(1, ref _kotor2AdditionalTextures[0]);
                     glBindTexture(GL_TEXTURE_1D, _kotor2AdditionalTextures[0]);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     wglMakeCurrent(_kotor2PrimaryDC, _kotor2PrimaryContext);
                     
@@ -656,10 +660,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         
                         glGenTextures(1, ref _kotor2AdditionalTextures[i]);
                         glBindTexture(GL_TEXTURE_1D, _kotor2AdditionalTextures[i]);
-                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                         
                         wglMakeCurrent(_kotor2PrimaryDC, _kotor2PrimaryContext);
                     }
@@ -674,10 +678,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     
                     glGenTextures(1, ref _kotor2AdditionalTexture);
                     glBindTexture(GL_TEXTURE_1D, _kotor2AdditionalTexture);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     wglMakeCurrent(_kotor2PrimaryDC, _kotor2PrimaryContext);
                     
@@ -728,34 +732,34 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glBindTexture(GL_TEXTURE_1D, _kotor2Texture3);
                     IntPtr additionalTextureDataPtr1 = Marshal.AllocHGlobal(additionalTextureData1.Length * sizeof(int));
                     Marshal.Copy(additionalTextureData1, 0, additionalTextureDataPtr1, additionalTextureData1.Length);
-                    glTexImage2D(GL_TEXTURE_1D, 0, GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, additionalTextureDataPtr1);
+                    glTexImage2D(GL_TEXTURE_1D, 0, (int)GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, additionalTextureDataPtr1);
                     Marshal.FreeHGlobal(additionalTextureDataPtr1);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     glGenTextures(1, ref _kotor2Texture4);
                     glBindTexture(GL_TEXTURE_1D, _kotor2Texture4);
                     IntPtr additionalTextureDataPtr2 = Marshal.AllocHGlobal(additionalTextureData2.Length * sizeof(int));
                     Marshal.Copy(additionalTextureData2, 0, additionalTextureDataPtr2, additionalTextureData2.Length);
-                    glTexImage2D(GL_TEXTURE_1D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, additionalTextureDataPtr2);
+                    glTexImage2D(GL_TEXTURE_1D, 0, (int)GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, additionalTextureDataPtr2);
                     Marshal.FreeHGlobal(additionalTextureDataPtr2);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     glGenTextures(1, ref _kotor2Texture5);
                     glBindTexture(GL_TEXTURE_1D, _kotor2Texture5);
                     IntPtr additionalTextureDataPtr3 = Marshal.AllocHGlobal(additionalTextureData3.Length * sizeof(int));
                     Marshal.Copy(additionalTextureData3, 0, additionalTextureDataPtr3, additionalTextureData3.Length);
-                    glTexImage2D(GL_TEXTURE_1D, 0, GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, additionalTextureDataPtr3);
+                    glTexImage2D(GL_TEXTURE_1D, 0, (int)GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, additionalTextureDataPtr3);
                     Marshal.FreeHGlobal(additionalTextureDataPtr3);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                 }
             }
             
@@ -780,7 +784,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             
             WNDCLASSA wndClass = new WNDCLASSA();
             wndClass.style = 0xb;
-            wndClass.lpfnWndProc = DefWindowProcA;
+            WndProcDelegate wndProcDelegate = DefWindowProcA;
+            wndClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProcDelegate);
             wndClass.cbClsExtra = 0;
             wndClass.cbWndExtra = 0;
             wndClass.hInstance = IntPtr.Zero; // DAT_00828398
@@ -859,14 +864,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 {
                     glGenTextures(1, ref _kotor2RenderTargetTexture);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor2RenderTargetTexture);
-                    glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
+                    glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                 }
                 
                 // Create secondary texture
                 glGenTextures(1, ref _kotor2SecondaryTexture1);
                 glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor2SecondaryTexture1);
-                glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
+                glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
                 glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -881,10 +886,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 
                 glGenTextures(1, ref _kotor2SecondaryTexture0);
                 glBindTexture(GL_TEXTURE_1D, _kotor2SecondaryTexture0);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                 
                 wglMakeCurrent(_kotor2PrimaryDC, _kotor2PrimaryContext);
                 
@@ -897,10 +902,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 
                 glGenTextures(1, ref _kotor2SecondaryTexture2);
                 glBindTexture(GL_TEXTURE_1D, _kotor2SecondaryTexture2);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                 
                 wglMakeCurrent(_kotor2PrimaryDC, _kotor2PrimaryContext);
             }
@@ -919,7 +924,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_REPEAT);
                     glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor2TextureWidth, _kotor2TextureHeight, 0);
+                    glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2TextureWidth, _kotor2TextureHeight, 0);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                 }
             }

@@ -326,7 +326,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
 
             // Get adapter display mode (original engine method)
             D3DDISPLAYMODE displayMode = new D3DDISPLAYMODE();
-            if (GetAdapterDisplayMode(_d3d, _adapterIndex, ref displayMode) < 0)
+            if (GetAdapterDisplayMode(_d3d, (uint)_adapterIndex, ref displayMode) < 0)
             {
                 Console.WriteLine("[OriginalEngine] Failed to get adapter display mode");
                 ReleaseDirectX9();
@@ -1195,7 +1195,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private const uint D3DCREATE_HARDWARE_VERTEXPROCESSING = 0x00000040;
         private const uint D3DCREATE_MULTITHREADED = 0x00000004;
         private const uint D3DMULTISAMPLE_NONE = 0;
-        private const uint D3DSWAPEFFECT_DISCARD = 1;
+        protected const uint D3DSWAPEFFECT_DISCARD = 1;
         private const uint D3DFMT_D24S8 = 75; // D3DFMT_D24S8
         private const uint D3DFMT_D32 = 71; // D3DFMT_D32
         private const uint D3DFMT_A8R8G8B8 = 21; // D3DFMT_A8R8G8B8
@@ -1203,7 +1203,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private const uint D3DFMT_INDEX32 = 102; // D3DFMT_INDEX32
         private const uint D3DPOOL_DEFAULT = 0;
         private const uint D3DUSAGE_WRITEONLY = 0x00000008;
-        private const uint D3DPRESENT_INTERVAL_ONE = 0x00000001;
+        protected const uint D3DPRESENT_INTERVAL_ONE = 0x00000001;
 
         // DirectX 9 GUIDs
         private static readonly Guid IID_IDirect3D9 = new Guid("81BDCBCA-64D4-426d-AE8D-AD0147F4275C");

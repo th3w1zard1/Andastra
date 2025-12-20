@@ -35,6 +35,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// </remarks>
     public class Kotor1GraphicsBackend : OdysseyGraphicsBackend
     {
+        // Delegate for window procedure
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
         #region KOTOR1 Global Variables (matching swkotor.exe addresses)
         
         // Global variables matching swkotor.exe addresses
@@ -921,6 +925,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         }
         
         /// <summary>
+        /// KOTOR1 context storage initialization.
+        /// Matches swkotor.exe: FUN_00425c30 @ 0x00425c30.
+        /// </summary>
+        private void InitializeKotor1ContextStorage()
+        {
+            // Matching swkotor.exe: FUN_00425c30 @ 0x00425c30
+            _kotor1PrimaryContext = wglGetCurrentContext();
+            _kotor1PrimaryDC = wglGetCurrentDC();
+        }
+
+        /// <summary>
         /// Additional setup (matching swkotor.exe: FUN_00422360 @ 0x00422360).
         /// </summary>
         private void InitializeKotor1AdditionalSetup()
@@ -1199,7 +1214,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Display parameter calculation (matching swkotor.exe: FUN_00421ac0 @ 0x00421ac0).
         /// </summary>
-        private void InitializeKotor1DisplayParameterCalculation(IntPtr[] param1, int param2, ref int param3, float param4)
+        private unsafe void InitializeKotor1DisplayParameterCalculation(IntPtr[] param1, int param2, ref int param3, float param4)
         {
             // Matching swkotor.exe: FUN_00421ac0 @ 0x00421ac0 exactly
             // This is a complex function that manages texture arrays and calculates display parameters
@@ -1381,7 +1396,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Display parameter reset (matching swkotor.exe: FUN_00420db0 @ 0x00420db0).
         /// </summary>
-        private void InitializeKotor1DisplayParameterReset(IntPtr[] param1, int* param2)
+        private unsafe void InitializeKotor1DisplayParameterReset(IntPtr[] param1, int* param2)
         {
             // Matching swkotor.exe: FUN_00420db0 @ 0x00420db0 exactly
             int iVar1 = 0;
@@ -1427,7 +1442,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Texture size calculation (matching swkotor.exe: FUN_00420710 @ 0x00420710).
         /// </summary>
-        private void InitializeKotor1TextureSizeCalculation(IntPtr thisPtr, int* param1)
+        private unsafe void InitializeKotor1TextureSizeCalculation(IntPtr thisPtr, int* param1)
         {
             // Matching swkotor.exe: FUN_00420710 @ 0x00420710 exactly
             // This is a complex function that calculates texture size based on various flags
@@ -2072,10 +2087,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // The window is used to get a device context for creating secondary contexts
             
             // Register window class (matching swkotor.exe pattern)
+            WndProcDelegate wndProcDelegate = DefWindowProcA;
             WNDCLASSA wndClass = new WNDCLASSA
             {
                 style = 0,
-                lpfnWndProc = DefWindowProcA,
+                lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProcDelegate),
                 cbClsExtra = 0,
                 cbWndExtra = 0,
                 hInstance = IntPtr.Zero,

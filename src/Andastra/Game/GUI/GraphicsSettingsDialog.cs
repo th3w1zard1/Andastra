@@ -620,7 +620,7 @@ namespace Andastra.Game.GUI
                               i == 1 ? _settings.BlendColorWriteChannels1 :
                               i == 2 ? _settings.BlendColorWriteChannels2 : _settings.BlendColorWriteChannels3;
                 colorWriteChannelsCombo.SelectedValue = channels?.ToString() ?? "All";
-                _controlMap[$"BlendColorWriteChannels{i == 0 ? "0" : i.ToString()}"] = colorWriteChannelsCombo;
+                _controlMap[$"BlendColorWriteChannels{(i == 0 ? "0" : i.ToString())}"] = colorWriteChannelsCombo;
                 layout.Rows.Add(CreateLabeledControl($"Color Write Channels {i}:", colorWriteChannelsCombo, ref row));
             }
 
