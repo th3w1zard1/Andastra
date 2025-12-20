@@ -12,6 +12,14 @@ using HolocronToolset.Editors;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
 using FileResource = Andastra.Parsing.Extract.FileResource;
+using Control = Avalonia.Controls.Control;
+using ResourceList = HolocronToolset.Widgets.ResourceList;
+using MenuItem = Avalonia.Controls.MenuItem;
+using TabItem = Avalonia.Controls.TabItem;
+using TabControl = Avalonia.Controls.TabControl;
+using Button = Avalonia.Controls.Button;
+using GlobalSettings = HolocronToolset.Data.GlobalSettings;
+using UpdateManager = HolocronToolset.Windows.UpdateManager;
 
 namespace HolocronToolset.Windows
 {
@@ -433,7 +441,7 @@ namespace HolocronToolset.Windows
                 var actionCloneModule = this.FindControl<MenuItem>("actionCloneModule");
                 if (actionCloneModule != null)
                 {
-                    actionCloneModule.Click += (s, e) => { /* TODO: Open clone module dialog */ };
+                    actionCloneModule.Click += (s, e) => OpenCloneModuleDialog();
                 }
 
                 // Edit menu
@@ -1177,6 +1185,34 @@ namespace HolocronToolset.Windows
             var dialog = new Dialogs.SettingsDialog(this);
             dialog.ShowDialog(this);
             // TODO: Reload installations if settings were edited
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Original: def open_clone_module_dialog(self):
+        private void OpenCloneModuleDialog()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            // Create installations dictionary with active installation
+            var installations = new Dictionary<string, HTInstallation>();
+            if (_active != null)
+            {
+                installations[_active.Name] = _active;
+            }
+            // Add other installations if available
+            foreach (var kvp in _installations)
+            {
+                if (!installations.ContainsKey(kvp.Key))
+                {
+                    installations[kvp.Key] = kvp.Value;
+                }
+            }
+
+            var dialog = new Dialogs.CloneModuleDialog(this, _active, installations);
+            dialog.ShowDialog(this);
         }
     }
 

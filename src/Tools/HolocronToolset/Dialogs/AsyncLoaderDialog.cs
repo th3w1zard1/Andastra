@@ -5,6 +5,8 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using HolocronToolset.Widgets;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Dialogs
 {
@@ -209,8 +211,28 @@ namespace HolocronToolset.Dialogs
         // Original: def _show_error_dialog(self):
         private void ShowErrorDialog()
         {
-            // TODO: Show error dialog when MessageBox is available
-            System.Console.WriteLine($"Error: {_errorTitle}: {_error}");
+            if (string.IsNullOrWhiteSpace(_errorTitle))
+            {
+                System.Console.WriteLine($"Error: {_error}");
+                return;
+            }
+
+            string errorMessage = _error?.Message ?? "An unknown error occurred.";
+            if (_errors != null && _errors.Count > 1)
+            {
+                errorMessage = $"Multiple errors occurred:\n\n";
+                for (int i = 0; i < _errors.Count; i++)
+                {
+                    errorMessage += $"Error in task {i + 1}: {_errors[i].Message}\n";
+                }
+            }
+
+            var errorBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                _errorTitle,
+                errorMessage,
+                MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                MsBox.Avalonia.Enums.Icon.Error);
+            errorBox.ShowAsync();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:289-306
