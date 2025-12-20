@@ -61,6 +61,9 @@ namespace Andastra.Runtime.Game.Core
 
         // Menu - Professional menu implementation
         private GameState _currentState = GameState.MainMenu;
+        
+        // Character creation
+        private CharacterCreationScreen _characterCreationScreen;
         private int _selectedMenuIndex = 0;
         private readonly string[] _menuItems = { "Start Game", "Options", "Exit" };
         private ITexture2D _menuTexture; // 1x1 white texture for drawing rectangles
@@ -291,6 +294,13 @@ namespace Andastra.Runtime.Game.Core
             if (_currentState == GameState.MainMenu)
             {
                 DrawMainMenu();
+            }
+            else if (_currentState == GameState.CharacterCreation)
+            {
+                if (_characterCreationScreen != null)
+                {
+                    _characterCreationScreen.Draw(_spriteBatch, _font);
+                }
             }
             else if (_currentState == GameState.SaveMenu)
             {
@@ -1078,7 +1088,13 @@ namespace Andastra.Runtime.Game.Core
                     RefreshSaveList();
                 }
 
-                // Start the game session
+                // Start the game session with created character (if provided)
+                if (characterData != null)
+                {
+                    // TODO: Create player entity from character data
+                    // _session.CreatePlayerCharacter(characterData);
+                }
+                
                 _session.StartNewGame();
 
                 // Initialize camera after player is created

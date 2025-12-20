@@ -51,6 +51,19 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Load menu - player is selecting a save to load.
         /// </summary>
-        LoadMenu
+        LoadMenu,
+
+        /// <summary>
+        /// Character creation - player is creating their character.
+        /// </summary>
+        /// <remarks>
+        /// Character Creation State:
+        /// - Based on swkotor.exe and swkotor2.exe character generation system
+        /// - GUI Panel: "maincg" (character generation)
+        /// - K1 Music: "mus_theme_rep", K2 Music: "mus_main"
+        /// - Load Screen: K1 uses "load_chargen", K2 uses "load_default"
+        /// - Flow: Main Menu → Character Creation → Module Load
+        /// </remarks>
+        CharacterCreation
     }
 }

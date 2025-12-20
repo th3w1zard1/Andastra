@@ -19,11 +19,19 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: Enhanced module system with transitions
     /// - nwmain.exe: Aurora module management
     /// - daorigins.exe: Eclipse module streaming
-    /// - DragonAge2.exe: Eclipse message-based module loading (LoadModuleMessage @ 0x00bf5df8, MODULES: @ 0x00bf5d10, WRITE_MODULES: @ 0x00bf5d24)
-    ///   ModuleID @ 0x00be9688, ModuleStartupInfo @ 0x00bebb64, ModuleInfoList @ 0x00bfa278
-    ///   GetMainModuleName @ 0x00c0ed00, GetCurrentModuleName @ 0x00c0ed24, CModule @ 0x00c236b4
-    ///   Architecture: UnrealScript message-based module loading (LoadModuleMessage) vs DA:O direct LoadModule call
-    ///   Module format: .rim files, area files, UnrealScript packages (same as DA:O but message-driven)
+    /// - DragonAge2.exe: Eclipse module management with message-based loading
+    ///   Module Loading: LoadModuleMessage @ 0x00bf5df8 (UnrealScript message class for module loading)
+    ///   Module Directories: MODULES: @ 0x00bf5d10, WRITE_MODULES: @ 0x00bf5d24 (module directory identifiers)
+    ///   Module Data Structures: ModuleID @ 0x00be9688, ModuleStartupInfo @ 0x00bebb64, ModuleInfoList @ 0x00bfa278
+    ///   Module Functions: GetMainModuleName @ 0x00c0ed00, GetCurrentModuleName @ 0x00c0ed24
+    ///   Module Class: CModule @ 0x00c236b4 (core module class managing module state, areas, and resources)
+    ///   Module Path Resolution: lpModuleName_00fd0250 @ 0x00fd0250 (resolves module paths from MODULES directory, Core directory, executable directory)
+    ///   Architecture: UnrealScript message-based module loading via CClientExoApp::HandleMessage(LoadModuleMessage)
+    ///   Module Loading Flow: LoadModuleMessage sent to CClientExoApp -> Module path resolution -> Load module.rim -> Initialize ModuleStartupInfo -> Add to ModuleInfoList
+    ///   Module Format: .rim files (Resource Information Manifest) containing area data, scripts, and resources in MODULES\{moduleName}\ directory
+    ///   Module Management: Uses ModuleInfoList to track loaded modules, ModuleStartupInfo for initialization data, ModuleID for identification
+    ///   Module Path Resolution: Checks MODULES\{moduleName}, then Core\{moduleName}, then executable directory using Windows API (PathFileExistsW, PathIsDirectoryW, GetModuleFileNameW)
+    ///   Differences from DA:O: Message-based loading (LoadModuleMessage) vs direct LoadModule call, same .rim file format and MODULES directory structure
     /// - Common concepts: Module definition, area loading, entity spawning, transitions
     ///
     /// Common functionality across engines:
